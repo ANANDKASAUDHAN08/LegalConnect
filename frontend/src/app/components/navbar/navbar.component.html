@@ -1,0 +1,44 @@
+<nav class="fixed top-0 left-0 right-0 z-[1000] py-4 transition-all duration-300" 
+     [ngClass]="{'bg-navy/90 backdrop-blur-xl border-b border-white/5 py-3': isScrolled}">
+  <div class="max-w-[1200px] mx-auto px-6 flex items-center gap-8">
+    <a routerLink="/" class="flex items-center gap-2.5 no-underline text-xl font-extrabold text-white">
+      <span class="text-2xl">⚖️</span>
+      <span>Legal<span class="text-primary-light">Connect</span></span>
+    </a>
+
+    <div class="hidden md:flex items-center gap-2 ml-auto">
+      <a routerLink="/laws" routerLinkActive="active" 
+         class="nav-link px-4 py-2 rounded-lg no-underline text-slate-400 text-[0.9rem] font-medium transition-colors hover:text-white hover:bg-white/5">
+        Browse Laws
+      </a>
+      <a routerLink="/about" 
+         class="nav-link px-4 py-2 rounded-lg no-underline text-slate-400 text-[0.9rem] font-medium transition-colors hover:text-white hover:bg-white/5">
+        About
+      </a>
+    </div>
+
+    <div class="hidden md:flex items-center gap-2.5">
+      <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
+        <button class="btn btn-outline btn-sm" (click)="auth.logout()">Sign Out</button>
+      </ng-container>
+      <ng-template #guestActions>
+        <a routerLink="/login" class="btn btn-outline btn-sm">Sign In</a>
+        <a routerLink="/register" class="btn btn-primary btn-sm">Get Started</a>
+      </ng-template>
+    </div>
+
+    <!-- Mobile Hamburger -->
+    <button class="hamburger flex md:hidden flex-col gap-[5px] bg-none border-none cursor-pointer p-1 ml-auto" 
+            (click)="toggleMenu()" [class.open]="menuOpen" id="hamburger-btn">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <!-- Mobile Menu -->
+  <div class="md:hidden flex flex-col gap-1 px-6 py-4 bg-navy/95 border-t border-white/5 transition-all duration-300" 
+       [ngClass]="menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'">
+    <a routerLink="/laws" class="p-3 rounded-lg no-underline text-slate-400 font-medium transition-colors hover:text-white hover:bg-white/5" (click)="menuOpen=false">Browse Laws</a>
+    <a routerLink="/login" class="p-3 rounded-lg no-underline text-slate-400 font-medium transition-colors hover:text-white hover:bg-white/5" (click)="menuOpen=false">Sign In</a>
+    <a routerLink="/register" class="p-3 rounded-lg no-underline text-primary-light font-medium transition-colors hover:text-white hover:bg-white/5" (click)="menuOpen=false">Get Started</a>
+  </div>
+</nav>

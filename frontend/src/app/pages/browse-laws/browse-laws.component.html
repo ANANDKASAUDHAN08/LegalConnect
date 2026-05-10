@@ -1,0 +1,47 @@
+<div class="page-wrapper min-h-screen pt-20">
+  <div class="page-header relative overflow-hidden py-20 px-6 text-center border-b border-white/5">
+    <div class="bg-orb bg-orb-1 opacity-[0.08]"></div>
+    <div class="container mx-auto max-w-[1200px]">
+      <span class="badge badge-primary">Legal Library</span>
+      <h1 class="page-title font-serif text-[clamp(2.2rem,5vw,4rem)] my-4 text-white">Browse <span class="gradient-text">Indian Laws</span></h1>
+      <p class="page-subtitle text-slate-400 text-[1.05rem] mb-8">Access the complete collection of Indian Bare Acts and Statutes.</p>
+      <div class="search-bar max-w-[560px] mx-auto relative flex items-center">
+        <span class="search-icon absolute left-4 text-[1.1rem] pointer-events-none">🔍</span>
+        <input id="law-search-input" type="text" placeholder="Search acts by name..."
+          class="form-control search-input pl-12 text-[1rem]" [(ngModel)]="searchQuery">
+      </div>
+    </div>
+  </div>
+
+  <div class="container mx-auto px-6 py-12 max-w-[1200px]">
+    <div *ngIf="loading" class="state-message text-center py-20 text-slate-400 flex flex-col items-center gap-3">
+      <div class="spinner w-10 h-10 border-[3px] border-white/5 border-t-primary rounded-full animate-spin"></div>
+      <p>Loading legal acts...</p>
+    </div>
+
+    <div *ngIf="error" class="state-message error text-center py-20 text-red-400 flex flex-col items-center gap-3">
+      <p>⚠️ {{ error }}</p>
+      <p class="hint text-[0.85rem] text-slate-500">Make sure the Node.js API is running: <code>npm run dev</code> in backend/node</p>
+    </div>
+
+    <div *ngIf="!loading && !error" class="acts-grid grid grid-cols-[repeat(auto-fill,minmax(300px,1fr))] gap-6">
+      <a *ngFor="let act of filteredActs"
+        [routerLink]="['/laws', act.shortName]"
+        class="act-card card p-7 no-underline text-inherit flex flex-col gap-3 cursor-pointer" [id]="'act-' + act.shortName">
+        <div class="act-header flex items-center gap-2">
+          <span class="badge badge-primary act-year">{{ act.year }}</span>
+        </div>
+        <h3 class="act-name text-[1.1rem] font-bold text-white leading-relaxed">{{ act.actName }}</h3>
+        <p class="act-desc text-slate-400 text-[0.875rem] leading-relaxed flex-1">{{ act.description }}</p>
+        <div class="act-footer flex justify-between items-center mt-2">
+          <span class="act-tag text-[0.78rem] text-slate-500 font-semibold uppercase tracking-[0.06em]">{{ act.shortName }}</span>
+          <span class="act-cta text-primary-light font-semibold text-[0.875rem]">Read Act →</span>
+        </div>
+      </a>
+      
+      <div *ngIf="filteredActs.length === 0" class="state-message text-center py-20 text-slate-400 w-full col-span-full">
+        <p>No acts found matching "<strong>{{ searchQuery }}</strong>"</p>
+      </div>
+    </div>
+  </div>
+</div>

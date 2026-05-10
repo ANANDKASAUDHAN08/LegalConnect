@@ -1,0 +1,112 @@
+<!-- Hero Section -->
+<section class="hero relative min-h-screen flex items-center overflow-hidden pt-[100px]">
+  <div class="bg-orb bg-orb-1"></div>
+  <div class="bg-orb bg-orb-2"></div>
+  <div class="bg-orb bg-orb-3"></div>
+  <div class="hero-grid absolute inset-0"></div>
+
+  <div class="container relative z-10 flex flex-col items-center text-center gap-7 pt-10 pb-20">
+    <div class="hero-badge">
+      <span class="badge badge-primary">🇮🇳 India's Legal Platform</span>
+    </div>
+    <h1 class="hero-title font-serif text-[clamp(2.8rem,7vw,5.5rem)] font-extrabold leading-[1.1] text-white">
+      Know Your Rights.<br>
+      <span class="gradient-text">Understand the Law.</span>
+    </h1>
+    <p class="hero-subtitle max-w-[620px] text-slate-400 text-[clamp(1rem,2vw,1.2rem)] leading-relaxed">
+      Access the complete collection of Indian Bare Acts, understand your fundamental rights,
+      and connect with verified legal professionals — all in one platform.
+    </p>
+    <div class="hero-actions flex gap-4 flex-wrap justify-center">
+      <a routerLink="/laws" class="btn btn-primary btn-lg">
+        📚 Browse Bare Acts
+      </a>
+      <a routerLink="/register" class="btn btn-outline btn-lg">
+        Get Started Free →
+      </a>
+    </div>
+    <div class="hero-stats flex items-center gap-8 mt-4 px-10 py-6 bg-navy-surface/80 border border-white/10 rounded-2xl backdrop-blur-xl">
+      <div class="stat text-center">
+        <span class="stat-value block text-[1.8rem] font-extrabold text-white">500+</span>
+        <span class="stat-label text-[0.8rem] text-slate-500 uppercase tracking-wider">Acts & Statutes</span>
+      </div>
+      <div class="stat-divider w-px h-10 bg-white/10"></div>
+      <div class="stat text-center">
+        <span class="stat-value block text-[1.8rem] font-extrabold text-white">10K+</span>
+        <span class="stat-label text-[0.8rem] text-slate-500 uppercase tracking-wider">Sections Indexed</span>
+      </div>
+      <div class="stat-divider w-px h-10 bg-white/10"></div>
+      <div class="stat text-center">
+        <span class="stat-value block text-[1.8rem] font-extrabold text-white">Free</span>
+        <span class="stat-label text-[0.8rem] text-slate-500 uppercase tracking-wider">Public Access</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Features Section -->
+<section class="section features-section py-24">
+  <div class="container mx-auto px-6">
+    <div class="section-header text-center mb-16 flex flex-col items-center gap-4">
+      <span class="badge badge-primary">What We Offer</span>
+      <h2 class="section-title font-serif text-[clamp(2rem,4vw,3rem)] text-white">Everything Legal, <span class="gradient-text">One Place</span></h2>
+      <p class="section-subtitle text-slate-400 max-w-[560px] text-[1.05rem]">Our platform brings together all the tools you need to navigate the Indian legal system with confidence.</p>
+    </div>
+    <div class="features-grid grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-6">
+      <div class="card feature-card p-9 flex flex-col gap-4" *ngFor="let f of features">
+        <div class="feature-icon text-[2.5rem]">{{ f.icon }}</div>
+        <h3 class="feature-title text-[1.15rem] font-bold text-white">{{ f.title }}</h3>
+        <p class="feature-desc text-slate-400 text-[0.9rem] leading-relaxed">{{ f.desc }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Acts Highlight -->
+<section class="section acts-section py-24 bg-gradient-to-b from-transparent via-primary/5 to-transparent">
+  <div class="container mx-auto px-6">
+    <div class="section-header text-center mb-16 flex flex-col items-center gap-4">
+      <span class="badge badge-accent">Legal Library</span>
+      <h2 class="section-title font-serif text-[clamp(2rem,4vw,3rem)] text-white">Key <span class="gradient-text">Indian Laws</span></h2>
+    </div>
+    <div class="acts-grid grid grid-cols-[repeat(auto-fit,minmax(280px,1fr))] gap-6">
+      <a routerLink="/laws/Constitution" class="act-card card p-8 no-underline text-inherit flex flex-col gap-3">
+        <span class="act-year badge badge-primary self-start">1950</span>
+        <h3 class="act-name text-[1.2rem] font-bold text-white">Constitution of India</h3>
+        <p class="act-desc text-slate-400 text-[0.9rem] leading-relaxed flex-1">The supreme law of India establishing government structure and fundamental rights.</p>
+        <span class="act-cta text-primary-light font-semibold text-[0.9rem]">Read Now →</span>
+      </a>
+      <a routerLink="/laws/BNS" class="act-card card p-8 no-underline text-inherit flex flex-col gap-3">
+        <span class="act-year badge badge-accent self-start">2023</span>
+        <h3 class="act-name text-[1.2rem] font-bold text-white">Bharatiya Nyaya Sanhita</h3>
+        <p class="act-desc text-slate-400 text-[0.9rem] leading-relaxed flex-1">Replaced the Indian Penal Code of 1860 as India's modern criminal code.</p>
+        <span class="act-cta text-primary-light font-semibold text-[0.9rem]">Read Now →</span>
+      </a>
+      <div class="act-card card more-card p-8 items-center text-center justify-center flex flex-col gap-3">
+        <div class="more-icon text-[3rem]">📚</div>
+        <h3 class="act-name text-[1.2rem] font-bold text-white">500+ More Acts</h3>
+        <p class="act-desc text-slate-400 text-[0.9rem] leading-relaxed">Browse the complete library of Indian Central and State Acts.</p>
+        <a routerLink="/laws" class="btn btn-primary btn-sm mt-2">Browse All</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Banner -->
+<section class="section-sm cta-section py-16">
+  <div class="container mx-auto px-6">
+    <div class="cta-card card p-16 text-center flex flex-col items-center gap-5 bg-gradient-to-br from-primary/10 to-accent/10">
+      <h2 class="font-serif text-[clamp(1.8rem,3vw,2.8rem)] text-white">Ready to <span class="gradient-text">Know Your Rights?</span></h2>
+      <p class="text-slate-400 max-w-[480px]">Create a free account to save your progress, bookmark sections, and connect with lawyers.</p>
+      <a routerLink="/register" class="btn btn-accent btn-lg">Create Free Account</a>
+    </div>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer border-t border-white/5 py-8">
+  <div class="container mx-auto px-6 flex justify-between items-center flex-wrap gap-3">
+    <span class="footer-brand font-bold text-[1.1rem]">⚖️ LegalConnect</span>
+    <span class="footer-copy text-slate-500 text-[0.85rem]">© 2024 LegalConnect. Built for the people of India.</span>
+  </div>
+</footer>

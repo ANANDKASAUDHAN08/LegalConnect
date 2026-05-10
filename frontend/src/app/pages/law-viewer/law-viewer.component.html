@@ -1,0 +1,56 @@
+<div class="page-wrapper min-h-screen pt-[72px]">
+  <div *ngIf="loading" class="state-center flex flex-col items-center justify-center min-h-[60vh] gap-4 text-slate-400">
+    <div class="spinner w-10 h-10 border-[3px] border-white/5 border-t-primary rounded-full animate-spin"></div>
+    <p>Loading act...</p>
+  </div>
+  
+  <div *ngIf="error" class="state-center error flex flex-col items-center justify-center min-h-[60vh] gap-4 text-red-400">
+    <p>⚠️ {{ error }}</p>
+    <a routerLink="/laws" class="btn btn-outline btn-sm">← Back to Library</a>
+  </div>
+
+  <div *ngIf="act && !loading" class="viewer-layout grid grid-cols-1 md:grid-cols-[300px,1fr] min-h-[calc(100vh-72px)]">
+    <!-- Sidebar -->
+    <aside class="sidebar bg-navy-surface border-r border-white/5 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto">
+      <div class="sidebar-inner p-7 flex flex-col gap-5">
+        <a routerLink="/laws" class="back-link text-slate-500 text-[0.875rem] no-underline hover:text-primary-light">← Library</a>
+        <div class="act-meta flex flex-col gap-2">
+          <span class="badge badge-primary self-start">{{ act.year }}</span>
+          <h2 class="act-title text-[1rem] font-bold text-white leading-relaxed">{{ act.actName }}</h2>
+        </div>
+        <nav class="chapters-nav flex flex-col gap-1">
+          <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-slate-500 mb-2">Chapters</p>
+          <button *ngFor="let ch of act.chapters"
+            class="chapter-btn flex gap-2.5 items-start p-2.5 rounded-lg border-none bg-none cursor-pointer text-left transition-all hover:bg-white/5 w-full" 
+            [class.active]="activeChapter === ch"
+            (click)="setChapter(ch)" [id]="'ch-' + ch.chapterNumber">
+            <span class="ch-num text-[0.75rem] font-bold text-primary-light min-w-[20px] pt-0.5">{{ ch.chapterNumber }}</span>
+            <span class="ch-title text-[0.85rem] text-slate-400 leading-relaxed">{{ ch.title }}</span>
+          </button>
+        </nav>
+      </div>
+    </aside>
+
+    <!-- Content -->
+    <main class="viewer-content p-12 md:p-14 max-w-[800px]">
+      <div class="act-header-bar mb-12 pb-8 border-b border-white/5">
+        <h1 class="act-name font-serif text-[2.2rem] text-white mb-3">{{ act.actName }}</h1>
+        <p class="act-desc text-slate-400 leading-relaxed">{{ act.description }}</p>
+      </div>
+      
+      <div *ngIf="activeChapter" class="chapter-content flex flex-col gap-6">
+        <div class="chapter-heading flex flex-col gap-2.5 mb-2">
+          <span class="badge badge-accent self-start">Chapter {{ activeChapter.chapterNumber }}</span>
+          <h2 class="chapter-title font-serif text-[1.6rem] text-white">{{ activeChapter.title }}</h2>
+        </div>
+        <div *ngFor="let sec of activeChapter.sections" class="section-card card p-7 flex flex-col gap-3" [id]="'sec-' + sec.section_number">
+          <div class="section-header flex flex-col gap-1.5">
+            <span class="sec-num text-[0.78rem] font-bold text-primary-light uppercase tracking-wider">Section {{ sec.section_number }}</span>
+            <h3 class="sec-title text-[1.05rem] font-bold text-white">{{ sec.title }}</h3>
+          </div>
+          <p class="sec-content text-slate-400 leading-relaxed text-[0.95rem]">{{ sec.content }}</p>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
