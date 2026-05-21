@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using CoreApi.Data;
 using CoreApi.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -30,12 +31,11 @@ namespace CoreApi.Controllers
                 return BadRequest("User with this email already exists.");
             }
 
-            // In a real app, hash the password using BCrypt!
             var user = new User
             {
                 FullName = request.FullName,
                 Email = request.Email,
-                PasswordHash = request.Password, // WARNING: Not hashed for simplicity in this phase
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Role = request.Role,
                 CreatedAt = DateTime.UtcNow
             };
@@ -50,7 +50,21 @@ namespace CoreApi.Controllers
         public async Task<IActionResult> Login(LoginDto request)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (user == null || user.PasswordHash != request.Password)
+            
+            bool isPasswordValid = false;
+            if (user != null)
+            {
+                if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$")) 
+                {
+                    isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                }
+                else 
+                {
+                    isPasswordValid = (user.PasswordHash == request.Password);
+                }
+            }
+
+            if (user == null || !isPasswordValid)
             {
                 return Unauthorized("Invalid credentials.");
             }
@@ -58,6 +72,65 @@ namespace CoreApi.Controllers
             var token = CreateToken(user);
 
             return Ok(new { token });
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim))
+            {
+                return Unauthorized("User ID claim not found in token.");
+            }
+
+            if (!int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("Invalid User ID claim.");
+            }
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found.");
+
+            return Ok(new
+            {
+                id = user.Id,
+                fullName = user.FullName,
+                email = user.Email,
+                role = user.Role,
+                createdAt = user.CreatedAt
+            });
+        }
+
+        [Authorize]
+        [HttpPut("me")]
+        public async Task<IActionResult> UpdateProfile(UpdateProfileDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            user.FullName = request.FullName;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Profile updated successfully!", fullName = user.FullName });
+        }
+
+        [Authorize]
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword(ChangePasswordDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound();
+
+            bool isCurrentValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
+            if (!isCurrentValid) return BadRequest("Current password is incorrect.");
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password changed successfully!" });
         }
 
         private string CreateToken(User user)
