@@ -1,0 +1,23 @@
+<div *ngIf="snackbarService.snackbar() as snackbar"
+     class="snackbar-container fixed bottom-8 left-1/2 -translate-x-1/2 z-[9999] transition-all duration-300"
+     [class.show]="snackbar.show"
+     [class.hide]="!snackbar.show">
+  
+  <div class="snackbar flex items-center justify-between gap-4 sm:gap-8 px-4 py-2.5 sm:px-6 sm:py-3.5 rounded-md shadow-md w-max max-w-[92vw] sm:max-w-fit"
+       [ngClass]="{
+         'bg-[#27ae60] text-white': snackbar.type === 'success',
+         'bg-[#e74c3c] text-white': snackbar.type === 'error',
+         'bg-[#2980b9] text-white': snackbar.type === 'info',
+         'bg-[#f59e0b] text-[#1f2937]': snackbar.type === 'warning'
+       }">
+    
+    <p class="message font-medium text-[13.5px] sm:text-[15px] tracking-wide leading-snug">{{ snackbar.message }}</p>
+
+    <button (click)="snackbarService.hide()" 
+            class="opacity-80 hover:opacity-100 transition-opacity text-lg sm:text-xl font-bold leading-none -mt-0.5"
+            [ngClass]="{'text-white': snackbar.type === 'warning'}"
+            aria-label="Close">
+      ✕
+    </button>
+  </div>
+</div>

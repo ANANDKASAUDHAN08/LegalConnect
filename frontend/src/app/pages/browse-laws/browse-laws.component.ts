@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { NgFor, NgIf } from '@angular/common';
-import { LegalService, BareActSummary } from '../../services/legal.service';
+import { LegalService, BareAct, ApiResponse } from '../../services/legal.service';
+import { NotificationService } from '../../services/notification.service';
 import { FormsModule } from '@angular/forms';
 
 @Component({
@@ -12,16 +13,20 @@ import { FormsModule } from '@angular/forms';
   styleUrls: ['./browse-laws.component.scss']
 })
 export class BrowseLawsComponent implements OnInit {
-  acts: BareActSummary[] = [];
+  acts: BareAct[] = [];
   searchQuery = '';
   loading = true;
   error = '';
 
-  constructor(private legalService: LegalService) {}
+  constructor(
+    private legalService: LegalService,
+    public notificationService: NotificationService
+  ) {}
+
 
   ngOnInit() {
-    this.legalService.getAllActs().subscribe({
-      next: res => { this.acts = res.data; this.loading = false; },
+    this.legalService.getActs().subscribe({
+      next: (res: ApiResponse<BareAct[]>) => { this.acts = res.data; this.loading = false; },
       error: () => { this.error = 'Could not load acts from the server.'; this.loading = false; }
     });
   }

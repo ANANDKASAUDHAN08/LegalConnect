@@ -1,0 +1,304 @@
+<div class="flex min-h-screen bg-bgBase relative overflow-hidden">
+
+  <!-- ===== LEFT PANEL — Brand / Illustration ===== -->
+  <aside class="hidden lg:flex flex-col flex-1 items-center justify-center p-16 bg-bgSurface relative overflow-hidden"
+    aria-hidden="true">
+    <!-- Floating orbs (Styles remain in SCSS for keyframes) -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+
+    <div class="relative z-10 flex flex-col gap-9 max-width-[520px] w-full">
+      <!-- Dynamic copy switches with tab -->
+      <div *ngIf="activeTab() === 'login'" @fadeSlide class="flex flex-col gap-3">
+        <h1 class="text-[3.2rem] font-[850] leading-[1.1] text-textPrimary tracking-tight">
+          Your Legal <span class="text-authAccent">Workspace,</span><br>Awaits.
+        </h1>
+        <p class="text-lg text-textMuted max-w-[440px] leading-relaxed">
+          Access India's most trusted legal platform — consult verified lawyers, track cases, and know your rights.
+        </p>
+      </div>
+
+      <div *ngIf="activeTab() === 'register'" @fadeSlide class="flex flex-col gap-3">
+        <h1 class="text-[3.2rem] font-[850] leading-[1.1] text-textPrimary tracking-tight">
+          Legal Help,<br><span class="text-authAccent">Simplified.</span>
+        </h1>
+        <p class="text-lg text-textMuted max-w-[440px] leading-relaxed">
+          Join thousands of clients and lawyers building a smarter, digital-first legal future.
+        </p>
+      </div>
+
+      <!-- Testimonial card -->
+      <div
+        class="p-6 bg-white/5 border border-white/10 rounded-auth backdrop-blur-xl transition-all hover:bg-white/10 hover:border-white/20 hover:translate-x-1"
+        *ngIf="activeTab() === 'login'" @fadeSlide>
+        <div class="text-lg font-medium text-textPrimary leading-relaxed italic mb-6">"Found the perfect lawyer in 10
+          minutes. The platform saved my case!"</div>
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-full bg-gradient-to-br from-authAccentLight to-authAccent text-white font-bold text-xs flex items-center justify-center flex-shrink-0">
+            AR</div>
+          <div>
+            <div class="font-semibold text-textPrimary text-sm">Anita Rao</div>
+            <div class="text-[0.78rem] text-textMuted font-medium">Verified Client</div>
+          </div>
+          <div class="ml-auto text-authAccentLight text-[0.85rem] tracking-[2px]">★★★★★</div>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-4" *ngIf="activeTab() === 'register'" @fadeSlide>
+        <div
+          class="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-auth transition-all hover:bg-white/10 hover:border-white/14 hover:translate-x-1">
+          <span class="text-2xl flex-shrink-0">👤</span>
+          <div>
+            <div class="font-semibold text-textPrimary text-sm">For Clients</div>
+            <div class="text-[0.8rem] text-textMuted mt-0.5">Find and book verified legal experts instantly.</div>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-auth transition-all hover:bg-white/10 hover:border-white/14 hover:translate-x-1">
+          <span class="text-2xl flex-shrink-0">⚖️</span>
+          <div>
+            <div class="font-semibold text-textPrimary text-sm">For Lawyers</div>
+            <div class="text-[0.8rem] text-textMuted mt-0.5">Grow your practice and manage cases digitally.</div>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-auth transition-all hover:bg-white/10 hover:border-white/14 hover:translate-x-1">
+          <span class="text-2xl flex-shrink-0">🔒</span>
+          <div>
+            <div class="font-semibold text-textPrimary text-sm">100% Secure</div>
+            <div class="text-[0.8rem] text-textMuted mt-0.5">Bank-grade security for all your communications.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trust badges -->
+      <div class="flex flex-wrap gap-2">
+        <span
+          class="px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold text-textMuted border border-borderSubtle bg-bgElevated transition hover:border-authAccent hover:text-textPrimary">🔒
+          SSL Encrypted</span>
+        <span
+          class="px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold text-textMuted border border-borderSubtle bg-bgElevated transition hover:border-authAccent hover:text-textPrimary">✅
+          Verified Lawyers</span>
+        <span
+          class="px-3.5 py-1.5 rounded-full text-[0.78rem] font-semibold text-textMuted border border-borderSubtle bg-bgElevated transition hover:border-authAccent hover:text-textPrimary">⭐
+          4.9 Rating</span>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===== RIGHT PANEL — Auth Forms ===== -->
+  <main class="flex-1 flex items-center justify-center p-6 bg-bgSurface overflow-y-auto lg:p-12 xl:p-18">
+    <div class="auth-form-wrapper">
+
+      <!-- Tab Switcher -->
+      <div class="relative flex bg-bgElevated rounded-auth p-1 mb-7 border border-borderSubtle" role="tablist">
+        <button role="tab"
+          class="relative flex-1 py-2.5 text-[0.875rem] font-semibold bg-transparent cursor-pointer rounded-[calc(var(--radius-md)-4px)] transition-colors duration-250 z-[2]"
+          [ngClass]="activeTab() === 'login' ? 'text-textPrimary' : 'text-textMuted'" (click)="switchTab('login')"
+          id="tab-login" aria-controls="panel-login">
+          Sign In
+        </button>
+        <button role="tab"
+          class="relative flex-1 py-2.5 text-[0.875rem] font-semibold bg-transparent cursor-pointer rounded-[calc(var(--radius-md)-4px)] transition-colors duration-250 z-[2]"
+          [ngClass]="activeTab() === 'register' ? 'text-textPrimary' : 'text-textMuted'" (click)="switchTab('register')"
+          id="tab-register" aria-controls="panel-register">
+          Create Account
+        </button>
+        <!-- Sliding pill indicator -->
+        <div
+          class="absolute top-1 bottom-1 left-1 w-[calc(50%-4px)] bg-gradient-to-br from-authAccentLight to-authAccent rounded-[calc(var(--radius-md)-5px)] shadow-[0_4px_16px_rgba(217,119,6,0.25)] transition-transform duration-300 z-[1]"
+          [style.transform]="activeTab() === 'login' ? 'translateX(0)' : 'translateX(100%)'">
+        </div>
+      </div>
+
+      <!-- ── LOGIN FORM ── -->
+      <form *ngIf="activeTab() === 'login'" @fadeSlide (ngSubmit)="onLogin()" id="panel-login"
+        class="flex flex-col gap-5" role="tabpanel" aria-labelledby="tab-login" novalidate>
+
+        <div class="flex flex-col gap-1 mb-1">
+          <h2 class="text-[1.6rem] font-extrabold text-textPrimary tracking-tight m-0">Welcome back</h2>
+          <p class="text-sm text-textMuted m-0">Enter your credentials to continue.</p>
+        </div>
+
+        <!-- Google Button -->
+        <button type="button"
+          class="w-full flex items-center justify-center gap-2.5 p-3 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-sm font-semibold cursor-pointer transition-all hover:border-authAccent hover:bg-authAccent/5 hover:shadow-[0_2px_12px_rgba(217,119,6,0.2)] hover:-translate-y-0.5 active:translate-y-0"
+          (click)="loginWithGoogle()" id="btn-google-login">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18"
+            alt="Google">
+          Continue with Google
+        </button>
+
+        <div
+          class="flex items-center gap-3 text-textMuted text-[0.78rem] font-medium uppercase tracking-[0.08em] before:flex-1 before:h-px before:bg-borderSubtle after:flex-1 after:h-px after:bg-borderSubtle">
+          <span>or continue with email</span>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.85rem] font-semibold text-textSecondary" for="login-email">Email address</label>
+          <input id="login-email" type="email" [(ngModel)]="loginData.email" name="email"
+            class="w-full p-3 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-[0.95rem] transition-all outline-none focus:border-authAccent focus:bg-bgSurface focus:shadow-[0_0_0_3px_rgba(217,119,6,0.12)]"
+            placeholder="name@example.com" autocomplete="email" required>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <div class="flex justify-between items-center">
+            <label class="text-[0.85rem] font-semibold text-textSecondary" for="login-password">Password</label>
+            <a routerLink="/forgot-password"
+              class="text-[0.82rem] font-semibold text-authAccent no-underline transition-opacity hover:opacity-75">Forgot
+              password?</a>
+          </div>
+          <div class="relative">
+            <input id="login-password" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="loginData.password"
+              name="password"
+              class="w-full p-3 pr-12 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-[0.95rem] transition-all outline-none focus:border-authAccent focus:bg-bgSurface focus:shadow-[0_0_0_3px_rgba(217,119,6,0.12)]"
+              placeholder="••••••••" autocomplete="current-password" required>
+            <button type="button"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none p-1 cursor-pointer text-textMuted transition-colors hover:text-authAccent flex items-center"
+              (click)="togglePassword()" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg *ngIf="showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="w-full p-3.5 bg-gradient-to-br from-authAccentLight to-authAccent text-textPrimary text-[0.975rem] font-bold border-none rounded-auth cursor-pointer transition-all duration-300 shadow-[0_4px_20px_rgba(217,119,6,0.25)] mt-1 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_12px_32px_rgba(217,119,6,0.35)] active:enabled:-translate-y-0.5 disabled:opacity-55 disabled:cursor-not-allowed"
+          [disabled]="loading()" id="btn-signin">
+          <span *ngIf="!loading()">Sign In</span>
+          <span *ngIf="loading()" class="flex items-center justify-center gap-2">
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Signing in…
+          </span>
+        </button>
+
+        <p class="text-[0.86rem] text-textMuted text-center m-0">
+          Don't have an account?
+          <button type="button"
+            class="bg-transparent border-none p-0 cursor-pointer font-bold text-authAccent text-inherit transition-opacity hover:opacity-75"
+            (click)="switchTab('register')">Create one</button>
+        </p>
+      </form>
+
+      <!-- ── REGISTER FORM ── -->
+      <form *ngIf="activeTab() === 'register'" @fadeSlide (ngSubmit)="onRegister()" id="panel-register"
+        class="flex flex-col gap-5" role="tabpanel" aria-labelledby="tab-register" novalidate>
+
+        <div class="flex flex-col gap-1 mb-1">
+          <h2 class="text-[1.6rem] font-extrabold text-textPrimary tracking-tight m-0">Create your account</h2>
+          <p class="text-sm text-textMuted m-0">Join LegalConnect in just a few steps.</p>
+        </div>
+
+        <!-- Google Button -->
+        <button type="button"
+          class="w-full flex items-center justify-center gap-2.5 p-3 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-sm font-semibold cursor-pointer transition-all hover:border-authAccent hover:bg-authAccent/5 hover:shadow-[0_2px_12px_rgba(217,119,6,0.2)] hover:-translate-y-0.5 active:translate-y-0"
+          (click)="loginWithGoogle()" id="btn-google-register">
+          <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18"
+            alt="Google">
+          Sign up with Google
+        </button>
+
+        <div
+          class="flex items-center gap-3 text-textMuted text-[0.78rem] font-medium uppercase tracking-[0.08em] before:flex-1 before:h-px before:bg-borderSubtle after:flex-1 after:h-px after:bg-borderSubtle">
+          <span>or fill in the form</span>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.85rem] font-semibold text-textSecondary" for="reg-name">Full name</label>
+          <input id="reg-name" type="text" [(ngModel)]="registerData.fullName" name="fullName"
+            class="w-full p-3 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-[0.95rem] transition-all outline-none focus:border-authAccent focus:bg-bgSurface focus:shadow-[0_0_0_3px_rgba(217,119,6,0.12)]"
+            placeholder="John Doe" autocomplete="name" required>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.85rem] font-semibold text-textSecondary" for="reg-email">Email address</label>
+          <input id="reg-email" type="email" [(ngModel)]="registerData.email" name="email"
+            class="w-full p-3 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-[0.95rem] transition-all outline-none focus:border-authAccent focus:bg-bgSurface focus:shadow-[0_0_0_3px_rgba(217,119,6,0.12)]"
+            placeholder="name@example.com" autocomplete="email" required>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.85rem] font-semibold text-textSecondary" for="reg-password">Password</label>
+          <div class="relative">
+            <input id="reg-password" [type]="showPassword() ? 'text' : 'password'" [(ngModel)]="registerData.password"
+              name="password"
+              class="w-full p-3 pr-12 bg-bgBase border-[1.5px] border-borderSubtle rounded-auth text-textPrimary text-[0.95rem] transition-all outline-none focus:border-authAccent focus:bg-bgSurface focus:shadow-[0_0_0_3px_rgba(217,119,6,0.12)]"
+              placeholder="Min. 8 characters" autocomplete="new-password" required>
+            <button type="button"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 bg-transparent border-none p-1 cursor-pointer text-textMuted transition-colors hover:text-authAccent flex items-center"
+              (click)="togglePassword()" [attr.aria-label]="showPassword() ? 'Hide password' : 'Show password'">
+              <svg *ngIf="!showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <svg *ngIf="showPassword()" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <path
+                  d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Role Selector -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[0.85rem] font-semibold text-textSecondary">I am joining as</label>
+          <div class="grid grid-cols-2 gap-2.5">
+            <button type="button"
+              class="flex flex-col items-center justify-center gap-1.5 p-4 border-[1.5px] border-borderSubtle rounded-auth bg-bgBase text-textSecondary text-[0.875rem] font-semibold cursor-pointer transition-all duration-250"
+              [ngClass]="{
+                'font-bold -translate-y-0.5 border-[#3B82F6] bg-[#3B82F6]/5 text-[#2563EB] shadow-[0_0_0_3px_rgba(59,130,246,0.12)]': registerData.role === 'Client'
+              }" (click)="registerData.role = 'Client'" id="role-client">
+              <span class="text-[1.4rem]">👤</span>
+              <span>Client</span>
+            </button>
+            <button type="button"
+              class="flex flex-col items-center justify-center gap-1.5 p-4 border-[1.5px] border-borderSubtle rounded-auth bg-bgBase text-textSecondary text-[0.875rem] font-semibold cursor-pointer transition-all duration-250"
+              [ngClass]="{
+                'font-bold -translate-y-0.5 border-authAccent bg-authAccent/5 text-authAccent shadow-[0_0_0_3px_rgba(217,119,6,0.12)]': registerData.role === 'Lawyer'
+              }" (click)="registerData.role = 'Lawyer'" id="role-lawyer">
+              <span class="text-[1.4rem]">⚖️</span>
+              <span>Lawyer</span>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="w-full p-3.5 bg-gradient-to-br from-authAccentLight to-authAccent text-textPrimary text-[0.975rem] font-bold border-none rounded-auth cursor-pointer transition-all duration-300 shadow-[0_4px_20px_rgba(217,119,6,0.25)] mt-1 hover:enabled:-translate-y-0.5 hover:enabled:shadow-[0_12px_32px_rgba(217,119,6,0.35)] active:enabled:-translate-y-0.5 disabled:opacity-55 disabled:cursor-not-allowed"
+          [disabled]="loading()" id="btn-create-account">
+          <span *ngIf="!loading()">Create Account</span>
+          <span *ngIf="loading()" class="flex items-center justify-center gap-2">
+            <span class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span> Creating
+            account…
+          </span>
+        </button>
+
+        <p class="text-[0.86rem] text-textMuted text-center m-0">
+          Already have an account?
+          <button type="button"
+            class="bg-transparent border-none p-0 cursor-pointer font-bold text-authAccent text-inherit transition-opacity hover:opacity-75"
+            (click)="switchTab('login')">Sign in</button>
+        </p>
+      </form>
+
+      <p class="text-[0.78rem] text-textMuted text-center mt-2">
+        By continuing, you agree to our
+        <a href="#" class="text-authAccent no-underline font-medium hover:underline">Terms of Service</a> and
+        <a href="#" class="text-authAccent no-underline font-medium hover:underline">Privacy Policy</a>.
+      </p>
+    </div>
+  </main>
+
+</div>

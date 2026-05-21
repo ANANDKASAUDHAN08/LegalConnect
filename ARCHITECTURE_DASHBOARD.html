@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LegalConnect | Full Architecture Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #05070a;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --accent-primary: #3b82f6;
+            --accent-secondary: #8b5cf6;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --glass-blur: blur(16px);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Background Decorations */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 0% 0%, rgba(59, 130, 246, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 100% 100%, rgba(139, 92, 246, 0.05) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        .container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 320px;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            padding: 3rem 2rem;
+            border-right: 1px solid var(--border-color);
+            background: rgba(5, 7, 10, 0.5);
+            backdrop-filter: var(--glass-blur);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 3rem;
+            background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        nav ul {
+            list-style: none;
+        }
+
+        nav li {
+            margin-bottom: 0.5rem;
+        }
+
+        nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: block;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        nav a:hover {
+            color: var(--text-primary);
+            background: var(--card-bg);
+        }
+
+        nav a.active {
+            color: var(--text-primary);
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 4rem 6rem;
+            max-width: 1000px;
+        }
+
+        .section-tag {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-primary);
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        h1 {
+            font-size: 4rem;
+            font-weight: 800;
+            letter-spacing: -2px;
+            line-height: 1.1;
+            margin-bottom: 2rem;
+        }
+
+        .intro-text {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            margin-bottom: 4rem;
+        }
+
+        h2 {
+            font-size: 2.25rem;
+            font-weight: 700;
+            margin: 4rem 0 2rem 0;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        h2::before {
+            content: '';
+            width: 40px;
+            height: 2px;
+            background: var(--accent-primary);
+        }
+
+        h3 {
+            font-size: 1.5rem;
+            margin: 2.5rem 0 1.5rem 0;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .tech-block {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .tech-block:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .tech-info {
+            display: grid;
+            gap: 1.5rem;
+        }
+
+        .info-item h4 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .info-item p {
+            color: var(--text-secondary);
+            font-size: 1rem;
+        }
+
+        .accent-box {
+            background: rgba(139, 92, 246, 0.05);
+            border-left: 4px solid var(--accent-secondary);
+            padding: 2rem;
+            border-radius: 0 16px 16px 0;
+            margin: 2rem 0;
+        }
+
+        .flow-diagram {
+            background: #0a0c12;
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 4rem 2rem;
+            margin: 3rem 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2.5rem;
+        }
+
+        .node {
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            position: relative;
+        }
+
+        .node.primary { border-color: var(--accent-primary); color: var(--accent-primary); }
+        .node.secondary { border-color: var(--accent-secondary); color: var(--accent-secondary); }
+
+        .arrow { color: var(--text-secondary); font-size: 1.5rem; }
+
+        .db-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+
+        .db-card {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+        }
+
+        hr {
+            border: 0;
+            height: 1px;
+            background: linear-gradient(to right, transparent, var(--border-color), transparent);
+            margin: 4rem 0;
+        }
+
+        /* Responsive */
+        @media (max-width: 1100px) {
+            main { padding: 3rem; }
+            aside { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <aside>
+            <div class="logo">LegalConnect</div>
+            <nav>
+                <ul>
+                    <li><a href="#overview" class="active">1. Project Overview</a></li>
+                    <li><a href="#stack">2. Technology Stack</a></li>
+                    <li><a href="#microservices">3. Microservices</a></li>
+                    <li><a href="#persistence">4. Polyglot Persistence</a></li>
+                    <li><a href="#gateway">5. API Gateway</a></li>
+                    <li><a href="#flow">6. Communication Flow</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <main>
+            <section id="overview">
+                <span class="section-tag">Introduction</span>
+                <h1>Project Overview</h1>
+                <p class="intro-text">
+                    LegalConnect is a sophisticated legal information platform designed to provide hierarchical access to legal acts, statutes, and user management. The project uses a modern <strong>Microservices Architecture</strong> to ensure scalability, maintainability, and technological flexibility. This architectural choice allows us to use the best tool for each specific job, resulting in a robust and future-proof ecosystem.
+                </p>
+            </section>
+
+            <hr>
+
+            <section id="stack">
+                <span class="section-tag">Deep Rationale</span>
+                <h2>Technology Stack & Rationale</h2>
+
+                <!-- Angular -->
+                <div class="tech-block">
+                    <h3>⚛️ Angular (Frontend)</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>A platform and framework for building single-page client applications using HTML and TypeScript.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>Angular provides a robust, enterprise-grade framework with a strict component-based architecture. It ensures consistency across large development teams and provides powerful tools like <strong>RxJS</strong> for reactive programming and <strong>Dependency Injection</strong> for better modularity.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>It serves as the "brain" of the user interface, managing state, routing between different legal modules, and communicating with the backend services through a unified API Gateway.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Node.js -->
+                <div class="tech-block">
+                    <h3>🟢 Node.js with TypeScript (Legal Service)</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>A JavaScript runtime built on Chrome's V8 engine, enhanced with TypeScript for static type checking.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>Node.js is exceptionally fast for I/O-bound tasks. Since legal data is essentially a collection of JSON-like documents, Node's native handling of JSON and its non-blocking event loop make it ideal for serving large hierarchical datasets without performance bottlenecks.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>It handles the logic for retrieving, searching, and structuring legal acts. It interfaces directly with MongoDB to serve complex data structures to the frontend.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- .NET -->
+                <div class="tech-block">
+                    <h3>🔷 .NET Core (Auth & Core Service)</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>A high-performance, open-source, cross-platform framework for building modern cloud-based apps.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>For critical systems like Authentication and Identity Management, security and performance are paramount. .NET Core offers built-in security features, high-speed execution, and a mature ecosystem for relational database management (Entity Framework).</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>It manages User accounts, Roles, Permissions, and JWT (JSON Web Token) generation. It ensures that only authorized users can access specific legal tiers.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MySQL -->
+                <div class="tech-block">
+                    <h3>🐬 MySQL (Relational Database)</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>The world's most popular open-source relational database management system (RDBMS).</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>User profiles, subscription plans, and audit logs are inherently relational. MySQL provides <strong>ACID compliance</strong> (Atomicity, Consistency, Isolation, Durability), ensuring that financial or account-related transactions are never lost or corrupted.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>It serves as the primary storage for the .NET Auth service, keeping track of who is who and what they are allowed to do.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- MongoDB -->
+                <div class="tech-block">
+                    <h3>🍃 MongoDB (NoSQL Database)</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>A document-oriented NoSQL database that stores data in flexible, JSON-like documents.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>Legal acts (Chapters -> Sections -> Sub-sections -> Clauses) are deeply nested and hierarchical. Representing this in a relational table would require complex joins and rigid schemas. MongoDB's <strong>schema flexibility</strong> allows us to store an entire law as a single, searchable document, drastically improving read speeds.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>It stores the "Knowledge Base" of the application—thousands of legal statutes and their historical versions.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nginx -->
+                <div class="tech-block">
+                    <h3>🛡️ Nginx (API Gateway)</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>A high-performance web server, reverse proxy, and load balancer.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>In a microservice world, the frontend shouldn't need to know the IP addresses of every service. Nginx acts as a <strong>Single Entry Point</strong> (Gateway), simplifying the frontend logic, providing a unified security layer, and handling Cross-Origin Resource Sharing (CORS) centrally.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>It listens on port 8888 and intelligently routes incoming traffic to either the Node.js service or the .NET service based on the URL path.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Docker -->
+                <div class="tech-block">
+                    <h3>🐳 Docker & Docker Compose</h3>
+                    <div class="tech-info">
+                        <div class="info-item">
+                            <h4>What it is</h4>
+                            <p>A platform for developing, shipping, and running applications inside isolated containers.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>Why we used it</h4>
+                            <p>"It works on my machine" is a thing of the past. Docker ensures that every developer (and the production server) runs exactly the same version of MySQL, MongoDB, and Nginx. It isolates the databases from the host system, making the setup clean and reproducible.</p>
+                        </div>
+                        <div class="info-item">
+                            <h4>How it's used</h4>
+                            <p>We use <code>docker-compose.yml</code> to spin up the entire data and routing layer with a single command, orchestrating the connection between services and their persistent volumes.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <section id="microservices">
+                <span class="section-tag">Architecture</span>
+                <h2>3. Microservices Architecture: Deep Dive</h2>
+                <p style="margin-bottom: 2rem;">We have moved away from "Monolithic" design (one giant app) to "Microservices" (many small apps).</p>
+                
+                <div class="tech-block">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">Separation of Concerns</h4>
+                    <p>By splitting <strong>Authentication</strong> (.NET) and <strong>Legal Logic</strong> (Node.js), we ensure that if the Legal service crashes under high search load, users can still log in and access other parts of the system. Each service can be updated, debugged, and deployed independently.</p>
+                </div>
+
+                <div class="tech-block">
+                    <h4 style="color: var(--accent-primary); margin-bottom: 1rem;">Independent Scaling</h4>
+                    <p>During peak hours when many users are searching for laws, we can scale the <strong>Legal Service</strong> horizontally (run multiple instances) without wasting resources on the <strong>Auth Service</strong>, which might be idle.</p>
+                </div>
+            </section>
+
+            <hr>
+
+            <section id="persistence">
+                <span class="section-tag">Data Strategy</span>
+                <h2>4. Polyglot Persistence</h2>
+                <div class="accent-box">
+                    <p>The term <strong>"Polyglot Persistence"</strong> means using different database technologies for different data storage needs. This hybrid approach gives LegalConnect the reliability of a traditional system and the speed of a modern document-based platform.</p>
+                </div>
+
+                <div class="db-grid">
+                    <div class="db-card">
+                        <strong style="color: #00758f; display: block; margin-bottom: 0.5rem;">Structured Data (MySQL)</strong>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Best for data that doesn't change its shape often and requires strict relationships (e.g., a User must have a Role).</p>
+                    </div>
+                    <div class="db-card">
+                        <strong style="color: #47a248; display: block; margin-bottom: 0.5rem;">Unstructured Data (MongoDB)</strong>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">Best for data that varies in complexity (e.g., one law might have 10 sections, another might have 100 with sub-clauses).</p>
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <section id="gateway">
+                <span class="section-tag">Routing</span>
+                <h2>5. API Gateway & Routing Logic</h2>
+                <p style="margin-bottom: 2rem;">The Nginx Gateway is the "Receptionist" of our application.</p>
+
+                <div style="display: grid; gap: 1.5rem;">
+                    <div class="tech-block" style="padding: 1.5rem;">
+                        <strong>1. Unified Entry:</strong> The frontend only ever talks to <code>http://localhost:8888</code>.
+                    </div>
+                    <div class="tech-block" style="padding: 1.5rem;">
+                        <strong>2. Path-Based Routing:</strong>
+                        <ul style="list-style: none; margin-top: 1rem; color: var(--text-secondary);">
+                            <li>• <code>GET /api/auth/profile</code> → Auth Service (.NET)</li>
+                            <li>• <code>POST /api/legal/search</code> → Legal Service (Node.js)</li>
+                        </ul>
+                    </div>
+                    <div class="tech-block" style="padding: 1.5rem;">
+                        <strong>3. Security Layer:</strong> The gateway can be configured to block suspicious traffic or limit the number of requests (Rate Limiting) before they even reach our services.
+                    </div>
+                </div>
+            </section>
+
+            <hr>
+
+            <section id="flow">
+                <span class="section-tag">Visual Flow</span>
+                <h2>6. Communication Flow</h2>
+                
+                <div class="flow-diagram">
+                    <div class="node primary">User Browser (Angular)</div>
+                    <div class="arrow">↓ HTTP Request ↓</div>
+                    <div class="node secondary">Nginx Gateway (:8888)</div>
+                    
+                    <div style="display: flex; gap: 4rem; width: 100%; justify-content: center;">
+                        <div style="text-align: center; flex: 1;">
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">/api/auth/*</div>
+                            <div class="node">.NET Auth Service (:5001)</div>
+                            <div class="arrow" style="margin: 1rem 0;">↓ SQL ↓</div>
+                            <div style="padding: 0.5rem 1rem; background: #00758f; border-radius: 8px; display: inline-block;">MySQL DB</div>
+                        </div>
+                        <div style="text-align: center; flex: 1;">
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem;">/api/legal/*</div>
+                            <div class="node">Node.js Legal Service (:5000)</div>
+                            <div class="arrow" style="margin: 1rem 0;">↓ BSON ↓</div>
+                            <div style="padding: 0.5rem 1rem; background: #47a248; border-radius: 8px; display: inline-block;">MongoDB DB</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tech-block">
+                    <ol style="padding-left: 1.5rem; color: var(--text-secondary);">
+                        <li style="margin-bottom: 1rem;"><strong>Request Phase:</strong> The user interacts with the Angular app. The app sends a request to the Nginx Gateway.</li>
+                        <li style="margin-bottom: 1rem;"><strong>Routing Phase:</strong> Nginx checks the path and proxies the request to the correct microservice.</li>
+                        <li style="margin-bottom: 1rem;"><strong>Processing Phase:</strong> The microservice (Node or .NET) performs business logic and interacts with its specific database.</li>
+                        <li><strong>Response Phase:</strong> Data flows back through the gateway to the frontend, which renders the results beautifully using Tailwind CSS.</li>
+                    </ol>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        // Smooth active link tracking
+        const sections = document.querySelectorAll('section');
+        const navLinks = document.querySelectorAll('nav a');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 200) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').slice(1) === current) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>

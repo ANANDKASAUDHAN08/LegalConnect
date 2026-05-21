@@ -1,44 +1,158 @@
 <nav class="fixed top-0 left-0 right-0 z-[1000] py-4 transition-all duration-300" 
-     [ngClass]="{'bg-navy/90 backdrop-blur-xl border-b border-white/5 py-3': isScrolled}">
-  <div class="max-w-[1200px] mx-auto px-6 flex items-center gap-8">
-    <a routerLink="/" class="flex items-center gap-2.5 no-underline text-xl font-extrabold text-white">
-      <span class="text-2xl">⚖️</span>
-      <span>Legal<span class="text-primary-light">Connect</span></span>
-    </a>
+     [ngClass]="{'bg-surface-light/90 dark:bg-surface-dark/90 backdrop-blur-xl border-b border-border-subtle py-3 shadow-sm': isScrolled}">
+  <div class="max-w-[1200px] mx-auto px-6 flex justify-between items-center w-full relative">
+    
+    <!-- LEFT: Mobile Hamburger + Logo -->
+    <div class="flex items-center gap-2">
+      <!-- Mobile Hamburger (Now on Left) -->
+      <button class="hamburger flex flex-col gap-[5px] bg-none border-none cursor-pointer p-2 relative w-10 h-10 justify-center items-center md:hidden" 
+              (click)="toggleMenu()" id="hamburger-btn" aria-label="Menu">
+        <span class="bg-text-primary dark:bg-white h-[2.5px] w-6 transition-all duration-300 rounded-full"></span>
+        <span class="bg-text-primary dark:bg-white h-[2.5px] w-6 transition-all duration-300 rounded-full"></span>
+        <span class="bg-text-primary dark:bg-white h-[2.5px] w-6 transition-all duration-300 rounded-full"></span>
+      </button>
 
-    <div class="hidden md:flex items-center gap-2 ml-auto">
-      <a routerLink="/laws" routerLinkActive="active" 
-         class="nav-link px-4 py-2 rounded-lg no-underline text-slate-400 text-[0.9rem] font-medium transition-colors hover:text-white hover:bg-white/5">
-        Browse Laws
-      </a>
-      <a routerLink="/about" 
-         class="nav-link px-4 py-2 rounded-lg no-underline text-slate-400 text-[0.9rem] font-medium transition-colors hover:text-white hover:bg-white/5">
-        About
+      <!-- Logo -->
+      <a routerLink="/" class="flex items-center gap-2.5 no-underline text-xl font-extrabold text-text-primary dark:text-white">
+        <span class="text-2xl">⚖️</span>
+        <span class="hidden md:inline">Legal<span class="text-accent dark:text-accent-light">Connect</span></span>
       </a>
     </div>
 
-    <div class="hidden md:flex items-center gap-2.5">
+    <!-- CENTER: Main Links (Desktop Only) -->
+    <div class="hidden md:flex absolute left-1/2 -translate-x-1/2 items-center justify-center gap-2">
+      <a routerLink="/laws" routerLinkActive="active" 
+         class="nav-link px-4 py-2 rounded-lg no-underline text-text-secondary dark:text-slate-400 text-[0.95rem] font-medium transition-all hover:text-text-primary dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 relative">
+        Browse Laws
+      </a>
+      <a routerLink="/lawyers" routerLinkActive="active" 
+         class="nav-link px-4 py-2 rounded-lg no-underline text-text-secondary dark:text-slate-400 text-[0.95rem] font-medium transition-all hover:text-text-primary dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 relative">
+        Find a Lawyer
+      </a>
+      <a routerLink="/about" 
+         class="nav-link px-4 py-2 rounded-lg no-underline text-text-secondary dark:text-slate-400 text-[0.95rem] font-medium transition-all hover:text-text-primary dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 relative">
+        About
+      </a>
+      <a *ngIf="(auth.isLoggedIn$ | async)" routerLink="/dashboard" routerLinkActive="active" 
+         class="nav-link px-4 py-2 rounded-lg no-underline text-text-secondary dark:text-slate-400 text-[0.95rem] font-medium transition-all hover:text-text-primary dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 relative">
+        My Library
+      </a>
+    </div>
+
+    <!-- RIGHT: Utilities (Desktop) -->
+    <div class="hidden md:flex items-center justify-end gap-3">
+      <!-- Search Icon -->
+      <a routerLink="/search" routerLinkActive="!text-accent dark:!text-accent-light" 
+         class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors no-underline text-lg text-text-secondary dark:text-slate-300 flex items-center justify-center w-10 h-10" title="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </a>
+
+      <!-- Notifications (Only if logged in) -->
+      <ng-container *ngIf="(auth.isLoggedIn$ | async)">
+        <a routerLink="/notifications" routerLinkActive="!text-accent dark:!text-accent-light" class="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors no-underline text-lg text-text-secondary dark:text-slate-300 flex items-center justify-center w-10 h-10" title="Law Alerts">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+          <span *ngIf="notificationService.followedCount() as count" 
+                class="absolute top-0 right-0 w-4 h-4 bg-accent text-black text-[9px] font-bold rounded-full flex items-center justify-center shadow-md">
+            {{ count }}
+          </span>
+        </a>
+      </ng-container>
+
+      <!-- Theme Toggle -->
+      <button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-text-secondary dark:text-slate-300 text-lg flex items-center justify-center w-10 h-10" 
+              (click)="themeService.toggleTheme()" aria-label="Toggle Dark Mode">
+        <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- Auth / Profile -->
+      <div class="h-6 w-px bg-border-subtle mx-1"></div> <!-- Divider -->
+
       <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
-        <button class="btn btn-outline btn-sm" (click)="auth.logout()">Sign Out</button>
+        <a routerLink="/profile" routerLinkActive="!text-accent dark:!text-accent-light" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors no-underline text-lg text-text-secondary dark:text-slate-300 flex items-center justify-center w-10 h-10" title="Profile">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        </a>
+        <button class="btn btn-outline btn-sm ml-1" (click)="logout()">Sign Out</button>
       </ng-container>
       <ng-template #guestActions>
-        <a routerLink="/login" class="btn btn-outline btn-sm">Sign In</a>
-        <a routerLink="/register" class="btn btn-primary btn-sm">Get Started</a>
+        <a routerLink="/login" class="text-[0.95rem] font-bold text-text-secondary hover:text-text-primary dark:text-slate-300 dark:hover:text-white transition-colors px-2">Sign In</a>
+        <a routerLink="/register" class="btn btn-accent btn-sm ml-2">Get Started</a>
       </ng-template>
     </div>
 
-    <!-- Mobile Hamburger -->
-    <button class="hamburger flex md:hidden flex-col gap-[5px] bg-none border-none cursor-pointer p-1 ml-auto" 
-            (click)="toggleMenu()" [class.open]="menuOpen" id="hamburger-btn">
-      <span></span><span></span><span></span>
-    </button>
+    <!-- Mobile Right (Theme + Search) -->
+    <div class="flex items-center justify-end gap-1 md:hidden">
+      <button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-text-secondary dark:text-slate-300 flex items-center justify-center w-10 h-10" 
+              (click)="themeService.toggleTheme()" aria-label="Toggle Dark Mode">
+        <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+
+      <!-- Search Icon (Mobile) -->
+      <a routerLink="/search" class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors no-underline text-lg text-text-secondary dark:text-slate-300 flex items-center justify-center w-10 h-10" title="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </a>
+    </div>
   </div>
 
-  <!-- Mobile Menu -->
-  <div class="md:hidden flex flex-col gap-1 px-6 py-4 bg-navy/95 border-t border-white/5 transition-all duration-300" 
-       [ngClass]="menuOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4 pointer-events-none'">
-    <a routerLink="/laws" class="p-3 rounded-lg no-underline text-slate-400 font-medium transition-colors hover:text-white hover:bg-white/5" (click)="menuOpen=false">Browse Laws</a>
-    <a routerLink="/login" class="p-3 rounded-lg no-underline text-slate-400 font-medium transition-colors hover:text-white hover:bg-white/5" (click)="menuOpen=false">Sign In</a>
-    <a routerLink="/register" class="p-3 rounded-lg no-underline text-primary-light font-medium transition-colors hover:text-white hover:bg-white/5" (click)="menuOpen=false">Get Started</a>
+  <!-- Mobile Menu Backdrop -->
+  <div class="fixed inset-0 bg-black/40 backdrop-blur-[2px] z-[999] transition-opacity duration-300 md:hidden"
+       [class.opacity-100]="menuOpen" [class.pointer-events-auto]="menuOpen"
+       [class.opacity-0]="!menuOpen" [class.pointer-events-none]="!menuOpen"
+       (click)="menuOpen = false"></div>
+
+  <!-- Mobile Menu Drawer (Slides from Left) -->
+  <div class="fixed top-0 left-0 bottom-0 w-[300px] bg-surface-light dark:bg-surface-dark shadow-[10px_0_30px_rgba(0,0,0,0.1)] dark:shadow-[10px_0_30px_rgba(0,0,0,0.5)] z-[1000] flex flex-col transition-transform duration-300 ease-in-out md:hidden"
+       [class.translate-x-0]="menuOpen" [class.-translate-x-full]="!menuOpen">
+    
+    <div class="p-6 pt-8 flex flex-col gap-2 overflow-y-auto h-full">
+      
+      <!-- Drawer Header -->
+      <div class="flex items-center justify-between mb-6 pb-6 border-b border-border-subtle">
+        <div class="flex items-center gap-2.5">
+          <span class="text-3xl">⚖️</span>
+          <span class="text-2xl font-extrabold text-text-primary dark:text-white">Legal<span class="text-accent dark:text-accent-light">Connect</span></span>
+        </div>
+        <button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-text-secondary" (click)="menuOpen=false">
+          ✕
+        </button>
+      </div>
+
+      <!-- Drawer Links -->
+      <a routerLink="/search" class="p-4 rounded-xl no-underline text-text-secondary dark:text-slate-300 font-bold transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-accent dark:hover:text-accent-light flex items-center gap-4 group" (click)="menuOpen=false">
+        <svg class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg> Search
+      </a>
+      <a routerLink="/laws" class="p-4 rounded-xl no-underline text-text-secondary dark:text-slate-300 font-bold transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-accent dark:hover:text-accent-light flex items-center gap-4 group" (click)="menuOpen=false">
+        <svg class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg> Browse Laws
+      </a>
+      <a routerLink="/lawyers" class="p-4 rounded-xl no-underline text-text-secondary dark:text-slate-300 font-bold transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-accent dark:hover:text-accent-light flex items-center gap-4 group" (click)="menuOpen=false">
+        <svg class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5c-1.1 0-2 .9-2 2v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg> Find a Lawyer
+      </a>
+      
+      <div class="h-px bg-border-subtle my-4 mx-2"></div>
+      
+      <ng-container *ngIf="(auth.isLoggedIn$ | async)">
+        <a routerLink="/notifications" class="p-4 rounded-xl no-underline text-text-secondary dark:text-slate-300 font-bold transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-accent dark:hover:text-accent-light flex items-center justify-between group" (click)="menuOpen=false">
+          <div class="flex items-center gap-4">
+            <svg class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg> Law Alerts
+          </div>
+          <span *ngIf="notificationService.followedCount() as count" class="bg-accent text-black text-[11px] font-extrabold px-2 py-0.5 rounded-full">{{ count }}</span>
+        </a>
+        <a routerLink="/dashboard" class="p-4 rounded-xl no-underline text-text-secondary dark:text-slate-300 font-bold transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-accent dark:hover:text-accent-light flex items-center gap-4 group" (click)="menuOpen=false">
+          <svg class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path></svg> My Library
+        </a>
+        <a routerLink="/profile" class="p-4 rounded-xl no-underline text-text-secondary dark:text-slate-300 font-bold transition-colors hover:bg-black/5 dark:hover:bg-white/5 hover:text-accent dark:hover:text-accent-light flex items-center gap-4 group" (click)="menuOpen=false">
+          <svg class="group-hover:scale-110 transition-transform" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> Profile
+        </a>
+      </ng-container>
+      
+      <div class="mt-auto pt-6 flex flex-col gap-3">
+        <ng-container *ngIf="!(auth.isLoggedIn$ | async)">
+          <a routerLink="/login" class="btn btn-outline w-full text-center py-3" (click)="menuOpen=false">Sign In</a>
+          <a routerLink="/register" class="btn btn-accent w-full text-center py-3" (click)="menuOpen=false">Get Started</a>
+        </ng-container>
+        <button *ngIf="(auth.isLoggedIn$ | async)" class="p-4 text-center rounded-xl no-underline text-red-500 font-bold transition-colors hover:bg-red-500/10 w-full" (click)="logout()">Sign Out</button>
+      </div>
+    </div>
   </div>
 </nav>

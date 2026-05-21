@@ -1,0 +1,49 @@
+<div class="page-wrapper min-h-screen pt-[100px] pb-24">
+  <div class="container max-w-[1000px] mx-auto px-6">
+    
+    <header class="mb-12 flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <h1 class="font-serif text-[2.5rem] text-text-primary dark:text-white mb-2">My Library</h1>
+        <p class="text-text-secondary dark:text-slate-400">Welcome back! Here are your saved legal references.</p>
+      </div>
+    </header>
+
+    <section class="bookmarks-section">
+      <h2 class="text-[1.4rem] font-bold text-text-primary dark:text-white mb-6 flex items-center gap-2">
+        <span class="text-accent">🔖</span> Saved Sections
+      </h2>
+      
+      <div *ngIf="(bookmarks$ | async)?.length === 0" class="card p-10 text-center flex flex-col items-center gap-4">
+        <span class="text-4xl opacity-50">📭</span>
+        <p class="text-text-secondary dark:text-slate-400 text-lg">You haven't bookmarked any sections yet.</p>
+        <a routerLink="/laws" class="btn btn-primary mt-2">Browse Laws</a>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div *ngFor="let bm of bookmarks$ | async" class="bookmark-card card p-6 flex flex-col gap-4 group relative overflow-hidden">
+          <div class="flex justify-between items-start gap-4 relative z-10">
+            <div class="flex flex-col gap-1">
+              <span class="badge badge-primary self-start text-xs">{{ bm.actShortName }}</span>
+              <h3 class="font-bold text-[1.1rem] text-text-primary dark:text-white mt-2">Section {{ bm.section.section_number }}: {{ bm.section.title }}</h3>
+            </div>
+            <button class="p-2 text-text-muted hover:text-red-500 transition-colors bg-surface-light dark:bg-surface-dark rounded-full shadow-sm"
+                    (click)="removeBookmark(bm.actShortName, bm.section.section_number)" title="Remove Bookmark">
+              🗑️
+            </button>
+          </div>
+          <p class="text-text-secondary dark:text-slate-400 text-sm line-clamp-3 relative z-10">{{ bm.section.content }}</p>
+          <div class="mt-auto pt-4 border-t border-border-subtle flex justify-between items-center relative z-10">
+            <span class="text-xs text-text-muted">Saved on {{ bm.savedAt | date:'mediumDate' }}</span>
+            <a [routerLink]="['/laws', bm.actShortName]" [fragment]="'sec-' + bm.section.section_number" class="text-accent text-sm font-semibold hover:underline">
+              Read Full Act →
+            </a>
+          </div>
+          
+          <!-- Subtle decorative bg -->
+          <div class="absolute -right-10 -bottom-10 text-9xl opacity-[0.02] dark:opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform duration-500">🔖</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>

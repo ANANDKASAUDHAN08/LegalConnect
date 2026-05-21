@@ -26,5 +26,32 @@
         ]
       }
     }
+  ],
+  "dataGroups": [
+    {
+      "name": "legal-api",
+      "urls": [
+        "http://localhost:5000/api/legal/**",
+        "http://localhost:5000/api/lawyers/**"
+      ],
+      "cacheConfig": {
+        "maxSize": 100,
+        "maxAge": "7d",
+        "timeout": "5s",
+        "strategy": "performance"
+      }
+    },
+    {
+      "name": "auth-api",
+      "urls": [
+        "http://localhost:5001/api/auth/me"
+      ],
+      "cacheConfig": {
+        "maxSize": 1,
+        "maxAge": "1d",
+        "timeout": "10s",
+        "strategy": "freshness"
+      }
+    }
   ]
 }

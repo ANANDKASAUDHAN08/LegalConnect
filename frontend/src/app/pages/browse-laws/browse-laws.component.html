@@ -28,8 +28,14 @@
       <a *ngFor="let act of filteredActs"
         [routerLink]="['/laws', act.shortName]"
         class="act-card card p-7 no-underline text-inherit flex flex-col gap-3 cursor-pointer" [id]="'act-' + act.shortName">
-        <div class="act-header flex items-center gap-2">
+        <div class="act-header flex items-center justify-between gap-2">
           <span class="badge badge-primary act-year">{{ act.year }}</span>
+          <button (click)="notificationService.toggleFollow(act.shortName, act.actName); $event.stopPropagation(); $event.preventDefault();"
+                  class="p-2 rounded-full hover:bg-white/5 transition-all"
+                  [title]="notificationService.isFollowing(act.shortName) ? 'Unfollow' : 'Follow for Updates'">
+            <span *ngIf="notificationService.isFollowing(act.shortName)">🔔</span>
+            <span *ngIf="!notificationService.isFollowing(act.shortName)" class="opacity-30 hover:opacity-100">🔔</span>
+          </button>
         </div>
         <h3 class="act-name text-[1.1rem] font-bold text-white leading-relaxed">{{ act.actName }}</h3>
         <p class="act-desc text-slate-400 text-[0.875rem] leading-relaxed flex-1">{{ act.description }}</p>

@@ -1,54 +1,107 @@
 <div class="page-wrapper min-h-screen pt-[72px]">
-  <div *ngIf="loading" class="state-center flex flex-col items-center justify-center min-h-[60vh] gap-4 text-slate-400">
-    <div class="spinner w-10 h-10 border-[3px] border-white/5 border-t-primary rounded-full animate-spin"></div>
+  <div *ngIf="loading" class="state-center flex flex-col items-center justify-center min-h-[60vh] gap-4 text-text-muted dark:text-slate-400">
+    <div class="spinner w-10 h-10 border-[3px] border-white/5 border-t-accent rounded-full animate-spin"></div>
     <p>Loading act...</p>
   </div>
   
-  <div *ngIf="error" class="state-center error flex flex-col items-center justify-center min-h-[60vh] gap-4 text-red-400">
+  <div *ngIf="error" class="state-center error flex flex-col items-center justify-center min-h-[60vh] gap-4 text-red-500">
     <p>⚠️ {{ error }}</p>
     <a routerLink="/laws" class="btn btn-outline btn-sm">← Back to Library</a>
   </div>
 
   <div *ngIf="act && !loading" class="viewer-layout grid grid-cols-1 md:grid-cols-[300px,1fr] min-h-[calc(100vh-72px)]">
     <!-- Sidebar -->
-    <aside class="sidebar bg-navy-surface border-r border-white/5 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto">
-      <div class="sidebar-inner p-7 flex flex-col gap-5">
-        <a routerLink="/laws" class="back-link text-slate-500 text-[0.875rem] no-underline hover:text-primary-light">← Library</a>
+    <aside class="sidebar bg-surface-light dark:bg-surface-dark border-r border-border-subtle sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto">
+      <div class="sidebar-inner p-6 flex flex-col gap-5">
+        <a routerLink="/laws" class="back-link text-text-secondary text-[0.875rem] no-underline hover:text-accent">← Library</a>
         <div class="act-meta flex flex-col gap-2">
           <span class="badge badge-primary self-start">{{ act.year }}</span>
-          <h2 class="act-title text-[1rem] font-bold text-white leading-relaxed">{{ act.actName }}</h2>
+          <h2 class="act-title text-[1rem] font-bold text-text-primary dark:text-white leading-relaxed">{{ act.actName }}</h2>
         </div>
         <nav class="chapters-nav flex flex-col gap-1">
-          <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-slate-500 mb-2">Chapters</p>
-          <button *ngFor="let ch of act.chapters"
-            class="chapter-btn flex gap-2.5 items-start p-2.5 rounded-lg border-none bg-none cursor-pointer text-left transition-all hover:bg-white/5 w-full" 
-            [class.active]="activeChapter === ch"
-            (click)="setChapter(ch)" [id]="'ch-' + ch.chapterNumber">
-            <span class="ch-num text-[0.75rem] font-bold text-primary-light min-w-[20px] pt-0.5">{{ ch.chapterNumber }}</span>
-            <span class="ch-title text-[0.85rem] text-slate-400 leading-relaxed">{{ ch.title }}</span>
-          </button>
+          <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-text-muted mb-2">Chapters</p>
+          <ng-container *ngFor="let ch of act.chapters">
+            <button class="chapter-btn flex gap-2.5 items-start p-2.5 rounded-lg border-none bg-none cursor-pointer text-left transition-all hover:bg-black/5 dark:hover:bg-white/5 w-full" 
+              [ngClass]="{'bg-black/5 dark:bg-white/5': activeChapter === ch}"
+              (click)="setChapter(ch)" [id]="'ch-' + ch.chapterNumber">
+              <span class="ch-num text-[0.75rem] font-bold text-accent min-w-[20px] pt-0.5">{{ ch.chapterNumber }}</span>
+              <span class="ch-title text-[0.85rem] text-text-secondary dark:text-slate-300 leading-relaxed font-medium" [ngClass]="{'text-accent dark:text-accent-light': activeChapter === ch}">{{ ch.title }}</span>
+            </button>
+            
+            <!-- Sections TOC for active chapter -->
+            <div *ngIf="activeChapter === ch" class="flex flex-col gap-1 pl-8 pr-2 py-2 border-l-2 border-accent/20 ml-3">
+              <a *ngFor="let sec of ch.sections" 
+                 [href]="'/laws/' + shortName + '#sec-' + sec.section_number"
+                 class="text-[0.8rem] py-1.5 px-2 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors no-underline line-clamp-1"
+                 [ngClass]="activeSectionId === 'sec-' + sec.section_number ? 'text-accent font-bold bg-accent/10' : 'text-text-muted dark:text-slate-400'">
+                 Sec {{ sec.section_number }}. {{ sec.title }}
+              </a>
+            </div>
+          </ng-container>
         </nav>
       </div>
     </aside>
 
     <!-- Content -->
-    <main class="viewer-content p-12 md:p-14 max-w-[800px]">
-      <div class="act-header-bar mb-12 pb-8 border-b border-white/5">
-        <h1 class="act-name font-serif text-[2.2rem] text-white mb-3">{{ act.actName }}</h1>
-        <p class="act-desc text-slate-400 leading-relaxed">{{ act.description }}</p>
+    <main class="viewer-content p-6 md:p-12 max-w-[800px]">
+      <div class="act-header-bar mb-10 pb-6 border-b border-border-subtle">
+        <h1 class="act-name font-serif text-[2.2rem] text-text-primary dark:text-white mb-3">{{ act.actName }}</h1>
+        <p class="act-desc text-text-secondary dark:text-slate-400 leading-relaxed">{{ act.description }}</p>
       </div>
       
-      <div *ngIf="activeChapter" class="chapter-content flex flex-col gap-6">
+      <div *ngIf="activeChapter" class="chapter-content flex flex-col gap-6 pb-20">
         <div class="chapter-heading flex flex-col gap-2.5 mb-2">
           <span class="badge badge-accent self-start">Chapter {{ activeChapter.chapterNumber }}</span>
-          <h2 class="chapter-title font-serif text-[1.6rem] text-white">{{ activeChapter.title }}</h2>
+          <h2 class="chapter-title font-serif text-[1.6rem] text-text-primary dark:text-white">{{ activeChapter.title }}</h2>
         </div>
-        <div *ngFor="let sec of activeChapter.sections" class="section-card card p-7 flex flex-col gap-3" [id]="'sec-' + sec.section_number">
-          <div class="section-header flex flex-col gap-1.5">
-            <span class="sec-num text-[0.78rem] font-bold text-primary-light uppercase tracking-wider">Section {{ sec.section_number }}</span>
-            <h3 class="sec-title text-[1.05rem] font-bold text-white">{{ sec.title }}</h3>
+        
+        <div *ngFor="let sec of activeChapter.sections" #sectionElement class="section-card card p-6 md:p-8 flex flex-col gap-3 group scroll-mt-[100px]" [id]="'sec-' + sec.section_number">
+          <div class="section-header flex flex-wrap justify-between items-start gap-4">
+            <div class="flex flex-col gap-1.5 flex-1">
+              <span class="sec-num text-[0.78rem] font-bold text-accent uppercase tracking-wider">Section {{ sec.section_number }}</span>
+              <h3 class="sec-title text-[1.05rem] font-bold text-text-primary dark:text-white">{{ sec.title }}</h3>
+            </div>
+            <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <!-- AI Summary Btn -->
+              <button class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-accent transition-colors flex items-center gap-1 text-sm font-semibold"
+                      (click)="summarizeSection(sec)" title="Summarize in Plain English">
+                🤖 <span class="hidden md:inline">Summarize</span>
+              </button>
+              <!-- Bookmark Btn -->
+              <button class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-text-secondary dark:text-slate-400 transition-colors"
+                      (click)="toggleBookmark(sec)" [title]="bookmarkService.isBookmarked(shortName, sec.section_number) ? 'Remove Bookmark' : 'Bookmark Section'">
+                <span *ngIf="bookmarkService.isBookmarked(shortName, sec.section_number)">🔖</span>
+                <span *ngIf="!bookmarkService.isBookmarked(shortName, sec.section_number)">📑</span>
+              </button>
+              <!-- Share Btn -->
+              <button class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-text-secondary dark:text-slate-400 transition-colors"
+                      (click)="shareSection(sec)" title="Copy Link">
+                🔗
+              </button>
+            </div>
           </div>
-          <p class="sec-content text-slate-400 leading-relaxed text-[0.95rem]">{{ sec.content }}</p>
+          <p class="sec-content text-text-secondary dark:text-slate-300 leading-relaxed text-[0.95rem]">{{ sec.content }}</p>
+
+          <!-- AI Summary Display Card -->
+          <div *ngIf="summaries[sec.section_number] as sumData" class="mt-4 p-5 rounded-xl bg-gradient-to-br from-accent/10 to-transparent border border-accent/20">
+            <div class="flex items-center gap-2 mb-3">
+              <span class="text-xl">🤖</span>
+              <h4 class="font-bold text-text-primary dark:text-white text-[0.95rem]">Plain English Summary</h4>
+            </div>
+            
+            <div *ngIf="sumData.loading" class="flex items-center gap-3 text-text-muted text-sm py-2">
+              <div class="spinner w-4 h-4 border-[2px] border-white/5 border-t-accent rounded-full animate-spin"></div>
+              Generating simple explanation...
+            </div>
+            
+            <div *ngIf="sumData.text" class="text-text-secondary dark:text-slate-300 text-[0.9rem] leading-relaxed whitespace-pre-wrap">
+              {{ sumData.text }}
+            </div>
+            
+            <div *ngIf="sumData.error" class="text-red-500 text-[0.9rem]">
+              ⚠️ {{ sumData.error }}
+            </div>
+          </div>
         </div>
       </div>
     </main>

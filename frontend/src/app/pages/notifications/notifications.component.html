@@ -1,0 +1,72 @@
+<div class="page-wrapper min-h-screen pt-[100px] pb-24">
+  <div class="container max-w-[900px] mx-auto px-6">
+    
+    <header class="mb-10 flex justify-between items-end">
+      <div>
+        <h1 class="font-serif text-[2.5rem] font-bold text-text-primary dark:text-white mb-2">Law Alerts</h1>
+        <p class="text-text-secondary dark:text-slate-400">Track amendments and updates for your followed laws</p>
+      </div>
+      <button *ngIf="followedActs.length > 0" (click)="clearAll()" class="text-sm text-red-500 hover:underline mb-2">Clear All</button>
+    </header>
+
+    <div *ngIf="followedActs.length === 0" class="card p-20 text-center flex flex-col items-center gap-4">
+      <span class="text-6xl opacity-20">🔔</span>
+      <h2 class="text-xl font-bold text-text-primary dark:text-white">No active alerts</h2>
+      <p class="text-text-secondary dark:text-slate-400 max-w-[400px]">
+        Follow laws from the Browse page to receive instant updates on amendments, news, and critical changes.
+      </p>
+      <a routerLink="/laws" class="btn btn-primary mt-4">Browse Laws to Follow</a>
+    </div>
+
+    <div *ngIf="followedActs.length > 0" class="flex flex-col gap-4">
+      
+      <div *ngFor="let act of followedActs" class="card p-6 flex items-center justify-between hover:border-accent/30 transition-all group">
+        <div class="flex items-center gap-6">
+          <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-2xl">
+            📜
+          </div>
+          <div>
+            <h3 class="font-bold text-text-primary dark:text-white group-hover:text-accent transition-colors">
+              <a [routerLink]="['/laws', act.shortName]" class="no-underline text-inherit">{{ act.actName }}</a>
+            </h3>
+            <p class="text-xs text-text-muted mt-1 flex items-center gap-2">
+              <span>🔔 Following since {{ formatDate(act.followedAt) }}</span>
+              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              <span class="text-green-500 font-medium">Up to date</span>
+            </p>
+          </div>
+        </div>
+        
+        <div class="flex items-center gap-4">
+          <a [routerLink]="['/laws', act.shortName]" class="btn btn-outline btn-sm py-1.5">View Law</a>
+          <button (click)="unfollow(act.shortName, $event)" class="text-text-muted hover:text-red-500 transition-colors p-2" title="Unfollow">
+            🗑️
+          </button>
+        </div>
+      </div>
+
+      <!-- Mock Amendment Notification -->
+      <div class="card p-6 border-l-4 border-l-amber-500 bg-amber-500/5 relative overflow-hidden">
+        <div class="flex items-start gap-6">
+          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">
+            ⚡
+          </div>
+          <div class="flex-1">
+            <div class="flex justify-between items-start">
+              <h3 class="font-bold text-text-primary dark:text-white">Recent Amendment Alert</h3>
+              <span class="text-[10px] uppercase tracking-widest font-bold bg-amber-500 text-black px-2 py-0.5 rounded">Critical</span>
+            </div>
+            <p class="text-sm text-text-secondary dark:text-slate-400 mt-2">
+              The Central Government has notified changes to the **Information Technology Rules** regarding data privacy and intermediary guidelines.
+            </p>
+            <div class="flex gap-4 mt-4">
+              <button class="text-xs font-bold text-accent hover:underline">Read Notification</button>
+              <button class="text-xs font-bold text-text-muted hover:underline">Dismiss</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

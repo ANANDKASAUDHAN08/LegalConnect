@@ -1,0 +1,117 @@
+<div class="page-wrapper min-h-screen pt-[100px] pb-24">
+  <div class="container max-w-[800px] mx-auto px-6">
+    
+    <header class="mb-10 text-center">
+      <h1 class="font-serif text-[2.5rem] font-bold text-text-primary dark:text-white mb-2">My Profile</h1>
+      <p class="text-text-secondary dark:text-slate-400">Manage your account settings and security</p>
+    </header>
+
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-text-muted">
+      <div class="spinner w-10 h-10 border-[3px] border-white/5 border-t-accent rounded-full animate-spin"></div>
+      <p>Loading profile...</p>
+    </div>
+
+    <div *ngIf="!loading && error" class="card p-10 text-center text-red-500 mb-6">
+      {{ error }}
+    </div>
+
+    <div *ngIf="!loading && profile" class="flex flex-col gap-8">
+      
+      <!-- Account Info Card -->
+      <div class="card p-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-2 h-full bg-accent"></div>
+        
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="flex items-center gap-6">
+            <div class="w-20 h-20 rounded-full bg-gradient-to-br from-accent to-amber-700 flex items-center justify-center text-white font-bold text-3xl shrink-0 shadow-lg">
+              {{ profile.fullName[0] }}
+            </div>
+            <div>
+              <div *ngIf="!isEditing; else editForm">
+                <h2 class="text-2xl font-bold text-text-primary dark:text-white flex items-center gap-2">
+                  {{ profile.fullName }}
+                  <button (click)="toggleEdit()" class="text-sm font-normal text-accent hover:underline">Edit</button>
+                </h2>
+              </div>
+              <ng-template #editForm>
+                <div class="flex gap-2 items-center">
+                  <input type="text" [(ngModel)]="editFullName" 
+                         class="px-3 py-1.5 rounded-lg bg-white/5 border border-border-subtle text-white outline-none focus:border-accent">
+                  <button (click)="updateProfile()" class="btn btn-accent btn-sm py-1 px-3">Save</button>
+                  <button (click)="toggleEdit()" class="text-sm text-text-muted hover:underline">Cancel</button>
+                </div>
+              </ng-template>
+              <p class="text-text-secondary dark:text-slate-400">{{ profile.email }}</p>
+              <div class="flex gap-3 mt-2">
+                <span class="badge badge-primary text-xs">{{ profile.role }}</span>
+                <span class="text-text-muted text-xs flex items-center gap-1">
+                  📅 Joined {{ formatDate(profile.createdAt) }}
+                </span>
+              </div>
+            </div>
+          </div>
+          <div *ngIf="success" class="bg-green-500/10 text-green-500 px-4 py-2 rounded-lg text-sm animate-fade-in">
+            {{ success }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Section -->
+      <div class="card p-8">
+        <h3 class="text-xl font-bold text-text-primary dark:text-white mb-6 flex items-center gap-2">
+          <span>🔒</span> Security & Password
+        </h3>
+        
+        <form (ngSubmit)="changePassword()" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="md:col-span-2">
+            <label class="label block mb-2 text-sm font-medium text-text-secondary dark:text-slate-400">Current Password</label>
+            <input type="password" [(ngModel)]="currentPassword" name="currentPassword"
+                   class="input w-full px-4 py-3 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none transition-all"
+                   placeholder="Enter current password">
+          </div>
+          
+          <div>
+            <label class="label block mb-2 text-sm font-medium text-text-secondary dark:text-slate-400">New Password</label>
+            <input type="password" [(ngModel)]="newPassword" name="newPassword"
+                   class="input w-full px-4 py-3 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none transition-all"
+                   placeholder="Minimum 6 characters">
+          </div>
+          
+          <div>
+            <label class="label block mb-2 text-sm font-medium text-text-secondary dark:text-slate-400">Confirm New Password</label>
+            <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword"
+                   class="input w-full px-4 py-3 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none transition-all"
+                   placeholder="Confirm your new password">
+          </div>
+
+          <div class="md:col-span-2">
+            <div *ngIf="passwordError" class="bg-red-500/10 text-red-500 p-4 rounded-xl text-sm mb-4">
+              {{ passwordError }}
+            </div>
+            <div *ngIf="passwordSuccess" class="bg-green-500/10 text-green-500 p-4 rounded-xl text-sm mb-4">
+              {{ passwordSuccess }}
+            </div>
+            <button type="submit" class="btn btn-primary w-full md:w-auto px-10">Update Password</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Quick Stats Card -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="card p-6 text-center">
+          <p class="text-3xl font-bold text-accent mb-1">0</p>
+          <p class="text-text-muted text-sm uppercase tracking-wider font-semibold">Bookmarks</p>
+        </div>
+        <div class="card p-6 text-center">
+          <p class="text-3xl font-bold text-accent mb-1">0</p>
+          <p class="text-text-muted text-sm uppercase tracking-wider font-semibold">Acts Viewed</p>
+        </div>
+        <div class="card p-6 text-center">
+          <p class="text-3xl font-bold text-accent mb-1">Active</p>
+          <p class="text-text-muted text-sm uppercase tracking-wider font-semibold">Status</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

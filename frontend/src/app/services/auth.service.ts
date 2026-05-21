@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, tap } from 'rxjs';
 import { Router } from '@angular/router';
 
@@ -7,9 +7,17 @@ export interface AuthUser {
   token: string;
 }
 
+export interface UserProfile {
+  id: number;
+  fullName: string;
+  email: string;
+  role: string;
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:8888/api/auth';
+  private apiUrl = 'http://localhost:5001/api/auth';
   private tokenKey = 'lc_token';
 
   private _isLoggedIn = new BehaviorSubject<boolean>(this.hasToken());
@@ -25,6 +33,10 @@ export class AuthService {
     return localStorage.getItem(this.tokenKey);
   }
 
+  private authHeaders(): HttpHeaders {
+    return new HttpHeaders({ Authorization: `Bearer ${this.getToken()}` });
+  }
+
   register(data: { fullName: string; email: string; password: string; role: string }) {
     return this.http.post(`${this.apiUrl}/register`, data);
   }
@@ -36,6 +48,18 @@ export class AuthService {
         this._isLoggedIn.next(true);
       })
     );
+  }
+
+  getProfile() {
+    return this.http.get<UserProfile>(`${this.apiUrl}/me`, { headers: this.authHeaders() });
+  }
+
+  updateProfile(fullName: string) {
+    return this.http.put<{ message: string; fullName: string }>(`${this.apiUrl}/me`, { fullName }, { headers: this.authHeaders() });
+  }
+
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.put<{ message: string }>(`${this.apiUrl}/change-password`, { currentPassword, newPassword }, { headers: this.authHeaders() });
   }
 
   logout() {

@@ -1,0 +1,143 @@
+<div class="page-wrapper min-h-screen pt-[100px] pb-24">
+  <div class="container max-w-[1200px] mx-auto px-6">
+
+    <!-- Page Header -->
+    <header class="mb-10">
+      <h1 class="font-serif text-[2.5rem] font-bold text-text-primary dark:text-white mb-3">Find a Lawyer</h1>
+      <p class="text-text-secondary dark:text-slate-400 text-lg">Connect with verified, specialized lawyers across India.</p>
+    </header>
+
+    <!-- Search + Filters Bar -->
+    <div class="flex flex-col md:flex-row gap-4 mb-10">
+      <div class="relative flex-1">
+        <input type="text" [(ngModel)]="searchQuery" (input)="onSearch()"
+               placeholder="Search by name, specialization..."
+               class="w-full pl-12 pr-6 py-3.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent text-text-primary dark:text-white outline-none transition-all">
+        <span class="absolute left-4 top-1/2 -translate-y-1/2 text-text-muted">🔍</span>
+      </div>
+      <select [(ngModel)]="selectedCity" (change)="applyFilters()"
+              class="px-4 py-3.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle text-text-primary dark:text-white outline-none transition-all focus:border-accent min-w-[180px]">
+        <option value="">All Cities</option>
+        <option *ngFor="let city of cities" [value]="city">{{ city }}</option>
+      </select>
+      <select [(ngModel)]="selectedSpecialization" (change)="applyFilters()"
+              class="px-4 py-3.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle text-text-primary dark:text-white outline-none transition-all focus:border-accent min-w-[220px]">
+        <option value="">All Specializations</option>
+        <option *ngFor="let spec of specializations" [value]="spec">{{ spec }}</option>
+      </select>
+    </div>
+
+    <!-- Results Count -->
+    <p *ngIf="!loading" class="text-text-secondary dark:text-slate-400 text-sm mb-6 font-medium">
+      Showing {{ lawyers.length }} lawyer{{ lawyers.length !== 1 ? 's' : '' }}
+      <span *ngIf="selectedCity"> in {{ selectedCity }}</span>
+      <span *ngIf="selectedSpecialization"> · {{ selectedSpecialization }}</span>
+    </p>
+
+    <!-- Loading -->
+    <div *ngIf="loading" class="flex flex-col items-center justify-center py-20 gap-4 text-text-muted">
+      <div class="w-10 h-10 border-[3px] border-white/5 border-t-accent rounded-full animate-spin"></div>
+      <p>Loading lawyers...</p>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="!loading && error" class="card p-10 text-center text-red-500">{{ error }}</div>
+
+    <!-- Empty -->
+    <div *ngIf="!loading && !error && lawyers.length === 0" class="card p-10 text-center flex flex-col items-center gap-3">
+      <span class="text-4xl opacity-50">👨‍⚖️</span>
+      <p class="text-text-secondary dark:text-slate-400">No lawyers found for these filters. Try clearing some filters.</p>
+    </div>
+
+    <!-- Lawyers Grid -->
+    <div *ngIf="!loading && lawyers.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div *ngFor="let lawyer of lawyers" class="lawyer-card card p-6 flex flex-col gap-4 hover:border-accent/50 hover:-translate-y-1 transition-all duration-200">
+
+        <!-- Avatar + Name -->
+        <div class="flex items-center gap-4">
+          <div class="avatar w-14 h-14 rounded-full bg-gradient-to-br from-accent to-amber-700 flex items-center justify-center text-white font-bold text-xl shrink-0">
+            {{ getInitials(lawyer.name) }}
+          </div>
+          <div>
+            <h3 class="font-bold text-text-primary dark:text-white text-[1rem] leading-tight">{{ lawyer.name }}</h3>
+            <p class="text-text-muted text-sm flex items-center gap-1">📍 {{ lawyer.city }}</p>
+          </div>
+        </div>
+
+        <!-- Rating + Experience -->
+        <div class="flex items-center gap-4 text-sm">
+          <span class="flex items-center gap-1 font-semibold text-amber-500">
+            ★ {{ lawyer.rating.toFixed(1) }}
+          </span>
+          <span class="text-text-muted">·</span>
+          <span class="text-text-secondary dark:text-slate-400">{{ lawyer.experience }} yrs experience</span>
+        </div>
+
+        <!-- Specializations -->
+        <div class="flex flex-wrap gap-2">
+          <span *ngFor="let spec of lawyer.specializations"
+                class="text-xs font-medium bg-accent/10 text-accent dark:text-accent-light px-2.5 py-1 rounded-full">
+            {{ spec }}
+          </span>
+        </div>
+
+        <!-- Bio -->
+        <p class="text-text-secondary dark:text-slate-400 text-[0.875rem] leading-relaxed line-clamp-3">{{ lawyer.bio }}</p>
+
+        <!-- Contact Actions -->
+        <div class="mt-auto pt-4 border-t border-border-subtle flex gap-2">
+          <a [href]="'tel:' + lawyer.phone"
+             class="flex-1 btn btn-outline btn-sm text-center no-underline text-[0.8rem]">📞 Call</a>
+          <a [href]="'mailto:' + lawyer.email"
+             class="flex-1 btn btn-outline btn-sm text-center no-underline text-[0.8rem]">✉️ Email</a>
+          <button (click)="openContact(lawyer)"
+             class="flex-1 btn btn-accent btn-sm text-[0.8rem]">💬 Message</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Contact Lawyer Modal -->
+<div *ngIf="selectedLawyer" class="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" (click)="closeContact()"></div>
+
+  <!-- Modal -->
+  <div class="relative bg-surface-light dark:bg-surface-dark rounded-2xl shadow-2xl w-full max-w-md p-8 z-10">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-6">
+      <div>
+        <h2 class="text-xl font-bold text-text-primary dark:text-white">Contact Lawyer</h2>
+        <p class="text-sm text-text-secondary dark:text-slate-400 mt-0.5">{{ selectedLawyer.name }}</p>
+      </div>
+      <button (click)="closeContact()" class="text-text-muted hover:text-text-primary dark:hover:text-white transition-colors text-xl">✕</button>
+    </div>
+
+    <!-- Draft restored notice -->
+    <div *ngIf="contactForm.message" class="mb-4 px-3 py-2 bg-blue-500/10 text-blue-500 dark:text-blue-400 text-xs rounded-lg">
+      ✍️ Your message draft is being auto-saved to session.
+    </div>
+
+    <!-- Form -->
+    <div class="flex flex-col gap-4">
+      <div>
+        <label class="block text-sm font-semibold text-text-secondary dark:text-slate-400 mb-1.5">Your Name</label>
+        <input type="text" [(ngModel)]="contactForm.name" placeholder="Enter your full name"
+               class="w-full px-4 py-3 rounded-xl bg-white/5 dark:bg-black/10 border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all" />
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-text-secondary dark:text-slate-400 mb-1.5">Email Address</label>
+        <input type="email" [(ngModel)]="contactForm.email" placeholder="your@email.com"
+               class="w-full px-4 py-3 rounded-xl bg-white/5 dark:bg-black/10 border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all" />
+      </div>
+      <div>
+        <label class="block text-sm font-semibold text-text-secondary dark:text-slate-400 mb-1.5">Your Message</label>
+        <textarea [(ngModel)]="contactForm.message" rows="4" placeholder="Describe your legal issue..."
+                  class="w-full px-4 py-3 rounded-xl bg-white/5 dark:bg-black/10 border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all resize-none"></textarea>
+      </div>
+      <button (click)="submitContact()" class="btn btn-accent py-3 font-bold">Send Message</button>
+    </div>
+  </div>
+</div>

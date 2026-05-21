@@ -3,6 +3,7 @@ import { RouterLink, Router } from '@angular/router';
 import { NgIf } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { SnackbarService } from '../../services/snackbar.service';
 
 @Component({
   selector: 'app-login',
@@ -13,12 +14,24 @@ import { AuthService } from '../../services/auth.service';
 })
 export class LoginComponent {
   email = ''; password = ''; error = ''; loading = false;
-  constructor(private auth: AuthService, private router: Router) {}
+  constructor(
+    private auth: AuthService, 
+    private router: Router,
+    private snackbar: SnackbarService
+  ) {}
+
   onSubmit() {
     this.error = ''; this.loading = true;
     this.auth.login({ email: this.email, password: this.password }).subscribe({
-      next: () => this.router.navigate(['/laws']),
-      error: (err) => { this.error = err.error || 'Invalid credentials.'; this.loading = false; }
+      next: () => {
+        this.snackbar.show('Welcome back! Signed in successfully.', 'success');
+        this.router.navigate(['/laws']);
+      },
+      error: (err) => { 
+        this.error = err.error || 'Invalid credentials.'; 
+        this.snackbar.show(this.error, 'error');
+        this.loading = false; 
+      }
     });
   }
 }
