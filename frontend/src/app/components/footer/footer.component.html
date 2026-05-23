@@ -1,0 +1,111 @@
+<footer class="footer-container">
+  <div class="footer-mesh-glow"></div>
+  
+  <div class="max-w-[1200px] mx-auto px-6 grid grid-cols-12 gap-10 md:gap-8 lg:gap-12 pb-12">
+    <!-- COLUMN 1: BRAND LOGO & DESCRIPTION (4 cols) -->
+    <div class="col-span-12 md:col-span-6 lg:col-span-4 flex flex-col gap-6">
+      <div class="flex items-center gap-3">
+        <!-- Circular logo icon "LC" -->
+        <div class="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-extrabold text-lg shadow-[0_4px_20px_rgba(37,99,235,0.4)]">
+          LC
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xl font-bold tracking-tight text-slate-900 dark:text-white m-0 leading-tight">LegalConnect</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 font-medium">Legal support simplified</span>
+        </div>
+      </div>
+      
+      <p class="text-sm text-slate-600 dark:text-slate-400 leading-relaxed m-0 max-w-[320px]">
+        LegalConnect helps individuals and businesses connect with trusted legal professionals anytime, anywhere.
+      </p>
+
+      <!-- Ambient Interactive Quotes Pod (The advanced feature) -->
+      <div class="quote-pod mt-2 p-4 rounded-xl border border-slate-200 dark:border-white/5 bg-slate-100/50 dark:bg-white/[0.02] backdrop-blur-md cursor-pointer hover:bg-slate-200/50 dark:hover:bg-white/[0.04] transition-all duration-300" 
+           (click)="cycleQuote()" 
+           title="Click to cycle quote">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-[0.7rem] uppercase tracking-wider font-extrabold text-blue-600 dark:text-blue-400">Justice Quote of the Day</span>
+          <span class="text-xs text-slate-500 dark:text-slate-400">⚖️ Click to cycle</span>
+        </div>
+        <p class="text-xs text-slate-700 dark:text-slate-300 italic mb-2 leading-relaxed">
+          "{{ quotes[currentQuoteIndex()].text }}"
+        </p>
+        <p class="text-[0.7rem] text-slate-500 dark:text-slate-400 text-right m-0 font-medium">
+          — {{ quotes[currentQuoteIndex()].author }}
+        </p>
+      </div>
+    </div>
+
+    <!-- COLUMN 2: QUICK LINKS (2 cols) -->
+    <div class="col-span-6 md:col-span-3 lg:col-span-2 flex flex-col gap-5 lg:pl-4">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider m-0">Quick Links</h3>
+      <ul class="flex flex-col gap-3 list-none p-0 m-0">
+        <li><a routerLink="/lawyers" class="footer-link">Find Lawyers</a></li>
+        <li><a routerLink="/laws" class="footer-link">Legal Services</a></li>
+        <li><a routerLink="/dashboard" class="footer-link">Case Tracking</a></li>
+        <li><a routerLink="/" class="footer-link">Blog</a></li>
+      </ul>
+    </div>
+
+    <!-- COLUMN 3: COMPANY (2 cols) -->
+    <div class="col-span-6 md:col-span-3 lg:col-span-2 flex flex-col gap-5">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider m-0">Company</h3>
+      <ul class="flex flex-col gap-3 list-none p-0 m-0">
+        <li><a routerLink="/" class="footer-link">About Us</a></li>
+        <li><a routerLink="/" class="footer-link">Careers</a></li>
+        <li><a routerLink="/" class="footer-link">Contact</a></li>
+        <li><a routerLink="/" class="footer-link">Privacy Policy</a></li>
+      </ul>
+    </div>
+
+    <!-- COLUMN 4: STAY UPDATED (4 cols) -->
+    <div class="col-span-12 md:col-span-12 lg:col-span-4 flex flex-col gap-5">
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider m-0">Stay Updated</h3>
+      <p class="text-sm text-slate-600 dark:text-slate-400 leading-normal m-0">
+        Get the latest legal updates and platform news.
+      </p>
+      
+      <form (ngSubmit)="onSubscribe()" class="newsletter-form flex items-center gap-2 mt-1">
+        <input 
+          type="email" 
+          [(ngModel)]="email" 
+          name="newsletterEmail" 
+          placeholder="Your email" 
+          class="newsletter-input"
+          required
+        >
+        <button 
+          type="submit" 
+          class="newsletter-btn"
+          [disabled]="loading()"
+        >
+          <span *ngIf="!loading()">Join</span>
+          <span *ngIf="loading()" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+        </button>
+      </form>
+
+      <!-- Live Heartbeat Operational Status -->
+      <div class="flex items-center gap-2 mt-2">
+        <div class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </div>
+        <span class="text-[0.78rem] text-slate-600 dark:text-slate-400 font-semibold tracking-wide">All Systems Operational</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM SECTION -->
+  <div class="border-t border-slate-200 dark:border-white/5 py-8 mt-4">
+    <div class="max-w-[1200px] mx-auto px-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <p class="text-xs text-slate-500 dark:text-slate-400 m-0">
+        © 2026 LegalConnect. All rights reserved.
+      </p>
+      <div class="flex gap-6">
+        <a routerLink="/" class="bottom-link">Terms</a>
+        <a routerLink="/" class="bottom-link">Privacy</a>
+        <a routerLink="/" class="bottom-link">Support</a>
+      </div>
+    </div>
+  </div>
+</footer>

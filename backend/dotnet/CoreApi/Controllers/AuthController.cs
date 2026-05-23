@@ -1,11 +1,18 @@
+using System;
+using System.Collections.Generic;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 using CoreApi.Data;
 using CoreApi.Models;
+using CoreApi.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CoreApi.Controllers
@@ -16,11 +23,13 @@ namespace CoreApi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IConfiguration _configuration;
+        private readonly IEmailService _emailService;
 
-        public AuthController(AppDbContext context, IConfiguration configuration)
+        public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService)
         {
             _context = context;
             _configuration = configuration;
+            _emailService = emailService;
         }
 
         [HttpPost("register")]
@@ -31,19 +40,30 @@ namespace CoreApi.Controllers
                 return BadRequest("User with this email already exists.");
             }
 
+            var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
+            var emailToken = Guid.NewGuid().ToString("N");
+
             var user = new User
             {
                 FullName = request.FullName,
                 Email = request.Email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
                 Role = request.Role,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsEmailVerified = !requireVerification,
+                EmailVerificationToken = requireVerification ? emailToken : null
             };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "User registered successfully!" });
+            if (requireVerification)
+            {
+                await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
+                return Ok(new { message = "User registered successfully! Please check your email to verify your account." });
+            }
+
+            return Ok(new { message = "User registered successfully! You can now sign in." });
         }
 
         [HttpPost("login")]
@@ -69,9 +89,88 @@ namespace CoreApi.Controllers
                 return Unauthorized("Invalid credentials.");
             }
 
-            var token = CreateToken(user);
+            var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
+            if (requireVerification && !user.IsEmailVerified)
+            {
+                return BadRequest("Please verify your email address before signing in.");
+            }
 
-            return Ok(new { token });
+            var token = CreateToken(user);
+            SetTokenCookie(token);
+
+            return Ok(new { token, message = "Logged in successfully!" });
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("lc_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax
+            });
+            return Ok(new { message = "Logged out successfully." });
+        }
+
+        [HttpGet("verify-email")]
+        public async Task<IActionResult> VerifyEmail(string token, string email)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.EmailVerificationToken == token);
+            if (user == null)
+            {
+                return BadRequest("Invalid or expired email verification link.");
+            }
+
+            user.IsEmailVerified = true;
+            user.EmailVerificationToken = null;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Email verified successfully! You can now log in." });
+        }
+
+        [HttpPost("forgot-password")]
+        [EnableRateLimiting("AuthPolicy")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            if (user == null)
+            {
+                // To prevent email enumeration, return a success message regardless of existence.
+                return Ok(new { message = "If the email exists, a password reset link has been sent." });
+            }
+
+            var resetToken = Guid.NewGuid().ToString("N");
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExpires = DateTime.UtcNow.AddHours(1);
+            await _context.SaveChangesAsync();
+
+            await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
+
+            return Ok(new { message = "If the email exists, a password reset link has been sent." });
+        }
+
+        [HttpPost("reset-password")]
+        [EnableRateLimiting("AuthPolicy")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => 
+                u.Email == request.Email && 
+                u.PasswordResetToken == request.Token && 
+                u.PasswordResetTokenExpires > DateTime.UtcNow);
+
+            if (user == null)
+            {
+                return BadRequest("Invalid or expired password reset link.");
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpires = null;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Password has been reset successfully! You can now log in." });
         }
 
         [Authorize]
@@ -131,6 +230,18 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Password changed successfully!" });
+        }
+
+        private void SetTokenCookie(string token)
+        {
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddDays(1)
+            };
+            Response.Cookies.Append("lc_token", token, cookieOptions);
         }
 
         private string CreateToken(User user)

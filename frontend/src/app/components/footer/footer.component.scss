@@ -1,0 +1,211 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+.footer-container {
+  position: relative;
+  background-color: #f8fafc; // Light mode: soft snow/slate-50
+  color: #1e293b; // Light mode: dark slate text
+  padding-top: 5rem;
+  overflow: hidden;
+  font-family: 'Inter', system-ui, sans-serif;
+  border-top: 1px solid rgba(15, 23, 42, 0.08);
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+
+  /* Subtle background ambient mesh glow */
+  .footer-mesh-glow {
+    position: absolute;
+    top: -200px;
+    left: -100px;
+    width: 600px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 80%);
+    pointer-events: none;
+    z-index: 1;
+    transition: background 0.3s ease;
+  }
+}
+
+.footer-link {
+  color: #475569; // Light mode: slate-600
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-block;
+
+  &:hover {
+    color: #2563eb; // Light mode: blue-600
+    transform: translateX(4px);
+  }
+}
+
+// Newsletter Form Styles
+.newsletter-form {
+  position: relative;
+  background: #ffffff; // Light mode: white input card
+  border: 1px solid #cbd5e1; // Light mode: slate-300
+  border-radius: 9999px; // Rounded capsule container
+  padding: 4px;
+  width: 100%;
+  max-width: 320px;
+  transition: all 0.3s ease;
+
+  &:focus-within {
+    border-color: #2563eb;
+    box-shadow: 0 0 12px rgba(37, 99, 235, 0.15);
+  }
+}
+
+.newsletter-input {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: #0f172a; // Light mode: dark text
+  font-size: 0.85rem;
+  padding: 8px 16px;
+  flex: 1;
+  width: 100%;
+
+  &::placeholder {
+    color: #94a3b8; // Light mode: slate-400
+  }
+}
+
+.newsletter-btn {
+  background-color: #2563eb; // Google blue color
+  color: #ffffff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 9999px; // Matching button radius
+  padding: 8px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover:not(:disabled) {
+    background-color: #1d4ed8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+// Quote Panel Animations and Styles
+.quote-pod {
+  animation: fadeIn 0.5s ease-out;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+
+  &:hover {
+    border-color: rgba(37, 99, 235, 0.2);
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08), 0 0 15px rgba(37, 99, 235, 0.05);
+  }
+}
+
+.bottom-link {
+  color: #64748b;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #0f172a; // Light mode hover
+  }
+}
+
+/* --- Dark Theme Overrides --- */
+.dark {
+  .footer-container {
+    background-color: #0d1527; // Deep midnight navy matching reference image
+    color: #f8fafc;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+
+    .footer-mesh-glow {
+      background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 80%);
+    }
+  }
+
+  .footer-link {
+    color: #94a3b8; // Dark mode: slate-400
+    
+    &:hover {
+      color: #3b82f6; // Dark mode: bright blue
+    }
+  }
+
+  .newsletter-form {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+
+    &:focus-within {
+      border-color: #3b82f6;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
+    }
+  }
+
+  .newsletter-input {
+    color: #ffffff;
+
+    &::placeholder {
+      color: #475569;
+    }
+  }
+
+  .quote-pod {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+
+    &:hover {
+      border-color: rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(37, 99, 235, 0.1);
+    }
+  }
+
+  .bottom-link {
+    &:hover {
+      color: #f8fafc;
+    }
+  }
+}
+
+// Responsive Grid overrides
+@media (max-width: 1024px) {
+  .footer-container {
+    padding-top: 4rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .footer-container {
+    padding-top: 3rem;
+  }
+  
+  .footer-link {
+    padding: 2px 0;
+  }
+
+  .newsletter-form {
+    max-width: 100%;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

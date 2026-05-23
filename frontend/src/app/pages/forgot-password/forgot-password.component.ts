@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -22,6 +22,9 @@ import { trigger, transition, style, animate } from '@angular/animations';
   ]
 })
 export class ForgotPasswordComponent {
+  @Input() isModal = false;
+  @Output() close = new EventEmitter<void>();
+
   email = '';
   loading = signal(false);
   submitted = signal(false);
@@ -32,13 +35,18 @@ export class ForgotPasswordComponent {
   ) {}
 
   onSubmit() {
+    if (!this.email) return;
     this.loading.set(true);
-    // Note: Mocking this as there might not be a forgot-password endpoint yet
-    // I'll check the auth service again to be sure
-    setTimeout(() => {
-      this.submitted.set(true);
-      this.loading.set(false);
-      this.snackbar.show('If an account exists with this email, you will receive reset instructions.', 'success');
-    }, 1500);
+    this.auth.forgotPassword(this.email).subscribe({
+      next: (res) => {
+        this.submitted.set(true);
+        this.loading.set(false);
+        this.snackbar.show(res?.message || 'Reset link sent successfully.', 'success');
+      },
+      error: (err) => {
+        this.loading.set(false);
+        this.snackbar.show(err.error || 'Failed to request password reset.', 'error');
+      }
+    });
   }
 }

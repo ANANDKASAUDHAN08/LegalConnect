@@ -14,7 +14,6 @@ import { SnackbarService } from '../../services/snackbar.service';
   styleUrls: ['./navbar.component.scss']
 })
 export class NavbarComponent {
-  isScrolled = false;
   menuOpen = false;
 
   constructor(
@@ -22,12 +21,7 @@ export class NavbarComponent {
     public themeService: ThemeService,
     public notificationService: NotificationService,
     private snackbar: SnackbarService
-  ) {
-
-    window.addEventListener('scroll', () => {
-      this.isScrolled = window.scrollY > 20;
-    });
-  }
+  ) {}
 
   toggleMenu() { this.menuOpen = !this.menuOpen; }
 

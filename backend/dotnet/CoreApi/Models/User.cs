@@ -27,6 +27,20 @@ namespace CoreApi.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        // Security & Verification Fields
+        public bool IsEmailVerified { get; set; } = false;
+        
+        [MaxLength(200)]
+        public string? EmailVerificationToken { get; set; }
+
+        [MaxLength(200)]
+        public string? PasswordResetToken { get; set; }
+
+        public DateTime? PasswordResetTokenExpires { get; set; }
+
+        [MaxLength(100)]
+        public string? GoogleId { get; set; }
+
         // Navigation property for LawyerProfile (One-to-One)
         [JsonIgnore]
         public LawyerProfile? LawyerProfile { get; set; }
