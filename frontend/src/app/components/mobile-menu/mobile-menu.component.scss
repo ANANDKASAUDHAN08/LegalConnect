@@ -1,0 +1,116 @@
+:host {
+  display: block;
+}
+
+.mobile-drawer-panel {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%);
+}
+
+:host-context(.dark) .mobile-drawer-panel {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(21, 32, 54, 0.96) 100%);
+}
+
+/* Base style for main mobile links */
+.mobile-main-link {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #334155; // slate-700
+  text-decoration: none;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(241, 245, 249, 0.5); // slate-100/50
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  svg {
+    color: #94a3b8; // slate-400
+    transition: color 0.2s ease;
+  }
+
+  &:hover {
+    color: #2563eb; // blue-600
+    padding-left: 4px;
+    
+    svg {
+      color: #2563eb;
+    }
+  }
+
+  &.active-mobile {
+    color: #2563eb;
+    border-left: 3px solid #2563eb;
+    padding-left: 8px;
+    font-weight: 800;
+
+    svg {
+      color: #2563eb;
+    }
+  }
+}
+
+:host-context(.dark) {
+  .mobile-main-link {
+    color: #cbd5e1; // slate-300
+    border-bottom: 1px solid rgba(30, 41, 59, 0.3); // slate-800/30
+
+    &:hover {
+      color: #3b82f6; // blue-500
+      
+      svg {
+        color: #3b82f6;
+      }
+    }
+
+    &.active-mobile {
+      color: #3b82f6;
+      border-left-color: #3b82f6;
+      
+      svg {
+        color: #3b82f6;
+      }
+    }
+  }
+}
+
+/* Secondary collapsible menu links */
+.mobile-sub-link {
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #64748b; // slate-500
+  text-decoration: none;
+  padding: 6px 0;
+  transition: all 0.2s ease;
+
+  &:hover {
+    color: #2563eb;
+    transform: translateX(4px);
+  }
+}
+
+:host-context(.dark) {
+  .mobile-sub-link {
+    color: #94a3b8; // slate-400
+
+    &:hover {
+      color: #3b82f6;
+    }
+  }
+}
+
+/* Pulse animation for logo node */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1);
+  }
+}
+
+.animate-pulse {
+  transform-origin: center;
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}

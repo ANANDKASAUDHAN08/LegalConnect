@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { LawyerService } from '../../services/lawyer.service';
 
 @Component({
   selector: 'app-profile',
@@ -17,6 +18,26 @@ export class ProfileComponent implements OnInit {
   error = '';
   success = '';
 
+  // Lawyer specific profile state
+  lawyerProfile: any = null;
+  isEditingLawyer = false;
+  editBarCouncilNumber = '';
+  editSpecialization = '';
+  editExperienceYears = 0;
+  editCity = '';
+  editBio = '';
+  editPhone = '';
+
+  constructor(
+    private auth: AuthService, 
+    private snackbar: SnackbarService,
+    private lawyerService: LawyerService
+  ) {}
+
+  ngOnInit() {
+    this.loadProfile();
+  }
+
   // Profile Edit
   isEditing = false;
   editFullName = '';
@@ -28,23 +49,39 @@ export class ProfileComponent implements OnInit {
   passwordError = '';
   passwordSuccess = '';
 
-  constructor(private auth: AuthService, private snackbar: SnackbarService) {}
-
-  ngOnInit() {
-    this.loadProfile();
-  }
-
   loadProfile() {
     this.loading = true;
     this.auth.getProfile().subscribe({
       next: (res) => {
         this.profile = res;
         this.editFullName = res.fullName;
-        this.loading = false;
+        if (res.role === 'Lawyer') {
+          this.loadLawyerProfile();
+        } else {
+          this.loading = false;
+        }
       },
       error: () => {
         this.error = 'Failed to load profile. Please sign in again.';
         this.snackbar.show(this.error, 'error');
+        this.loading = false;
+      }
+    });
+  }
+
+  loadLawyerProfile() {
+    this.lawyerService.getProfile().subscribe({
+      next: (res) => {
+        this.lawyerProfile = res;
+        this.editBarCouncilNumber = res.barCouncilNumber;
+        this.editSpecialization = res.specialization;
+        this.editExperienceYears = res.experienceYears;
+        this.editCity = res.city || '';
+        this.editBio = res.bio || '';
+        this.editPhone = res.phone || '';
+        this.loading = false;
+      },
+      error: () => {
         this.loading = false;
       }
     });
@@ -107,6 +144,40 @@ export class ProfileComponent implements OnInit {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
+    });
+  }
+
+  toggleEditLawyer() {
+    this.isEditingLawyer = !this.isEditingLawyer;
+    if (!this.isEditingLawyer && this.lawyerProfile) {
+      this.editBarCouncilNumber = this.lawyerProfile.barCouncilNumber;
+      this.editSpecialization = this.lawyerProfile.specialization;
+      this.editExperienceYears = this.lawyerProfile.experienceYears;
+      this.editCity = this.lawyerProfile.city || '';
+      this.editBio = this.lawyerProfile.bio || '';
+      this.editPhone = this.lawyerProfile.phone || '';
+    }
+  }
+
+  updateLawyerProfile() {
+    const data = {
+      barCouncilNumber: this.editBarCouncilNumber,
+      specialization: this.editSpecialization,
+      experienceYears: Number(this.editExperienceYears),
+      city: this.editCity,
+      bio: this.editBio,
+      phone: this.editPhone
+    };
+
+    this.lawyerService.updateProfile(data).subscribe({
+      next: () => {
+        this.lawyerProfile = { ...this.lawyerProfile, ...data };
+        this.isEditingLawyer = false;
+        this.snackbar.show('Advocate professional profile updated and synced!', 'success');
+      },
+      error: (err) => {
+        this.snackbar.show(err.error?.message || err.error || 'Failed to update professional profile.', 'error');
+      }
     });
   }
 }

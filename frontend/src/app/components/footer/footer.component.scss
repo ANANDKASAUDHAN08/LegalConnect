@@ -3,58 +3,102 @@
   width: 100%;
 }
 
-.footer-container {
-  position: relative;
-  background-color: #f8fafc; // Light mode: soft snow/slate-50
-  color: #1e293b; // Light mode: dark slate text
-  padding-top: 5rem;
-  overflow: hidden;
-  font-family: 'Inter', system-ui, sans-serif;
-  border-top: 1px solid rgba(15, 23, 42, 0.08);
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-
-  /* Subtle background ambient mesh glow */
-  .footer-mesh-glow {
-    position: absolute;
-    top: -200px;
-    left: -100px;
-    width: 600px;
-    height: 400px;
-    background: radial-gradient(circle, rgba(37, 99, 235, 0.05) 0%, transparent 80%);
-    pointer-events: none;
-    z-index: 1;
-    transition: background 0.3s ease;
-  }
+/* ============================================================
+   MESH GLOWS
+   Kept in SCSS: radial-gradient backgrounds + keyframe animations
+   ============================================================ */
+.footer-mesh-glow-1 {
+  position: absolute;
+  top: -150px;
+  left: -150px;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.04) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: floatGlow 12s ease-in-out infinite alternate;
 }
 
+.footer-mesh-glow-2 {
+  position: absolute;
+  bottom: -120px;
+  right: -80px;
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.03) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  animation: floatGlow 15s ease-in-out infinite alternate-reverse;
+}
+
+:host-context(.dark) .footer-mesh-glow-1 {
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.07) 0%, transparent 70%);
+}
+
+:host-context(.dark) .footer-mesh-glow-2 {
+  background: radial-gradient(circle, rgba(217, 119, 6, 0.05) 0%, transparent 70%);
+}
+
+/* ============================================================
+   FOOTER LINKS
+   Kept in SCSS: ::after pseudo-element sliding underline
+   ============================================================ */
 .footer-link {
-  color: #475569; // Light mode: slate-600
+  color: #94a3b8;
   text-decoration: none;
-  font-size: 0.9rem;
+  font-size: 0.875rem;
   font-weight: 500;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: color 0.2s ease;
   display: inline-block;
+  position: relative;
+  padding: 1px 0;
+  line-height: 1.5;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background-color: #60a5fa;
+    transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   &:hover {
-    color: #2563eb; // Light mode: blue-600
-    transform: translateX(4px);
+    color: #60a5fa;
+
+    &::after {
+      width: 100%;
+    }
   }
 }
 
-// Newsletter Form Styles
-.newsletter-form {
-  position: relative;
-  background: #ffffff; // Light mode: white input card
-  border: 1px solid #cbd5e1; // Light mode: slate-300
-  border-radius: 9999px; // Rounded capsule container
-  padding: 4px;
+
+/* ============================================================
+   NEWSLETTER
+   Kept in SCSS: :focus-within (not available as Tailwind on parent), ::placeholder in dark
+   ============================================================ */
+.newsletter-wrapper {
+  min-height: 44px;
   width: 100%;
-  max-width: 320px;
-  transition: all 0.3s ease;
+}
+
+.newsletter-form {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 9999px;
+  padding: 3px 3px 3px 12px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 
   &:focus-within {
-    border-color: #2563eb;
-    box-shadow: 0 0 12px rgba(37, 99, 235, 0.15);
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    background: rgba(15, 23, 42, 0.85);
   }
 }
 
@@ -62,37 +106,32 @@
   background: transparent;
   border: none;
   outline: none;
-  color: #0f172a; // Light mode: dark text
+  color: #f1f5f9;
   font-size: 0.85rem;
-  padding: 8px 16px;
   flex: 1;
   width: 100%;
+  padding: 5px 0;
 
   &::placeholder {
-    color: #94a3b8; // Light mode: slate-400
+    color: #64748b;
   }
 }
 
 .newsletter-btn {
-  background-color: #2563eb; // Google blue color
+  background-color: #3b82f6;
   color: #ffffff;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 700;
   border: none;
-  border-radius: 9999px; // Matching button radius
-  padding: 8px 20px;
+  border-radius: 9999px;
+  padding: 7px 16px;
   cursor: pointer;
-  transition: all 0.2s ease;
   white-space: nowrap;
+  transition: background-color 0.2s ease, box-shadow 0.2s ease;
 
   &:hover:not(:disabled) {
-    background-color: #1d4ed8;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  }
-
-  &:active:not(:disabled) {
-    transform: translateY(0);
+    background-color: #2563eb;
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
   }
 
   &:disabled {
@@ -101,111 +140,94 @@
   }
 }
 
-// Quote Panel Animations and Styles
-.quote-pod {
-  animation: fadeIn 0.5s ease-out;
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.05);
+/* ============================================================
+   NEWSLETTER SUCCESS PANEL
+   Kept in SCSS: scaleIn animation
+   ============================================================ */
+.newsletter-success-panel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(16, 185, 129, 0.07);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 10px;
+  padding: 9px 14px;
+  animation: scaleIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ============================================================
+   BACK TO TOP BUTTON
+   Kept in SCSS: translateY hover + box-shadow
+   ============================================================ */
+.back-to-top-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 
   &:hover {
-    border-color: rgba(37, 99, 235, 0.2);
-    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08), 0 0 15px rgba(37, 99, 235, 0.05);
+    transform: translateY(-2px);
+    color: #60a5fa;
+    border-color: #3b82f6;
+    background-color: rgba(59, 130, 246, 0.1);
+    box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
   }
 }
 
-.bottom-link {
-  color: #64748b;
-  text-decoration: none;
-  font-size: 0.78rem;
-  font-weight: 500;
-  transition: color 0.2s ease;
-
-  &:hover {
-    color: #0f172a; // Light mode hover
-  }
-}
-
-/* --- Dark Theme Overrides --- */
-.dark {
-  .footer-container {
-    background-color: #0d1527; // Deep midnight navy matching reference image
-    color: #f8fafc;
-    border-top: 1px solid rgba(255, 255, 255, 0.05);
-
-    .footer-mesh-glow {
-      background: radial-gradient(circle, rgba(37, 99, 235, 0.12) 0%, transparent 80%);
-    }
-  }
-
+/* ============================================================
+   MOBILE COMPACT (max-width: 639px)
+   Kept in SCSS: font-size reductions not expressible purely in sm: classes
+   ============================================================ */
+@media (max-width: 639px) {
   .footer-link {
-    color: #94a3b8; // Dark mode: slate-400
-    
-    &:hover {
-      color: #3b82f6; // Dark mode: bright blue
-    }
+    font-size: 0.8rem;
+    line-height: 1.4;
   }
 
-  .newsletter-form {
-    background: rgba(30, 41, 59, 0.4);
-    border: 1px solid rgba(255, 255, 255, 0.08);
-
-    &:focus-within {
-      border-color: #3b82f6;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.25);
-    }
-  }
 
   .newsletter-input {
-    color: #ffffff;
-
-    &::placeholder {
-      color: #475569;
-    }
+    font-size: 0.78rem;
   }
 
-  .quote-pod {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-
-    &:hover {
-      border-color: rgba(37, 99, 235, 0.3);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(37, 99, 235, 0.1);
-    }
+  .newsletter-btn {
+    font-size: 0.75rem;
+    padding: 6px 12px;
   }
 
-  .bottom-link {
-    &:hover {
-      color: #f8fafc;
-    }
+  .back-to-top-btn {
+    width: 1.75rem;
+    height: 1.75rem;
   }
 }
 
-// Responsive Grid overrides
-@media (max-width: 1024px) {
-  .footer-container {
-    padding-top: 4rem;
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+@keyframes floatGlow {
+  0% {
+    transform: translateY(0px) scale(1);
+  }
+
+  100% {
+    transform: translateY(-20px) scale(1.06);
   }
 }
 
-@media (max-width: 768px) {
-  .footer-container {
-    padding-top: 3rem;
-  }
-  
-  .footer-link {
-    padding: 2px 0;
-  }
-
-  .newsletter-form {
-    max-width: 100%;
-  }
-}
-
-@keyframes fadeIn {
+@keyframes scaleIn {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: scale(0.95);
   }
+
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: scale(1);
   }
 }

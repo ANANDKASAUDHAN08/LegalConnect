@@ -9,6 +9,7 @@ export interface ILawyer extends Document {
   bio: string;
   phone: string;
   email: string;
+  isVerified?: boolean;
 }
 
 const LawyerSchema = new Schema<ILawyer>({
@@ -19,7 +20,8 @@ const LawyerSchema = new Schema<ILawyer>({
   rating: { type: Number, required: true, min: 0, max: 5 },
   bio: { type: String, required: true },
   phone: { type: String },
-  email: { type: String }
+  email: { type: String },
+  isVerified: { type: Boolean, default: false }
 }, {
   timestamps: true
 });

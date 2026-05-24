@@ -25,9 +25,24 @@ export interface LawyerApiResponse<T> {
   count?: number;
 }
 
+export interface Consultation {
+  id: number;
+  clientId?: number;
+  clientName: string;
+  clientEmail: string;
+  lawyerId: number;
+  lawyerName?: string;
+  lawyerEmail?: string;
+  message: string;
+  status: string;
+  createdAt: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LawyerService {
-  private apiUrl = 'http://localhost:5000/api/lawyers';
+  private apiUrl = 'http://localhost:8888/api/lawyers';
+  private lawyerApiUrl = 'http://localhost:8888/api/lawyer';
+  private consultationApiUrl = 'http://localhost:8888/api/consultation';
 
   constructor(private http: HttpClient) {}
 
@@ -41,5 +56,31 @@ export class LawyerService {
 
   getMeta(): Observable<LawyerApiResponse<LawyerMeta>> {
     return this.http.get<LawyerApiResponse<LawyerMeta>>(`${this.apiUrl}/meta`);
+  }
+
+  // --- Lawyer Profile endpoints (MySQL backend) ---
+  getProfile(): Observable<any> {
+    return this.http.get<any>(`${this.lawyerApiUrl}/profile`, { withCredentials: true });
+  }
+
+  updateProfile(data: { barCouncilNumber: string; specialization: string; experienceYears: number; city: string; bio: string; phone: string }): Observable<any> {
+    return this.http.put<any>(`${this.lawyerApiUrl}/profile`, data, { withCredentials: true });
+  }
+
+  // --- Consultation endpoints (MySQL backend) ---
+  sendInquiry(data: { clientName: string; clientEmail: string; lawyerEmail: string; message: string }): Observable<any> {
+    return this.http.post<any>(this.consultationApiUrl, data, { withCredentials: true });
+  }
+
+  getReceivedInquiries(): Observable<Consultation[]> {
+    return this.http.get<Consultation[]>(`${this.consultationApiUrl}/received`, { withCredentials: true });
+  }
+
+  getSentInquiries(): Observable<Consultation[]> {
+    return this.http.get<Consultation[]>(`${this.consultationApiUrl}/sent`, { withCredentials: true });
+  }
+
+  updateInquiryStatus(id: number, status: string): Observable<any> {
+    return this.http.put<any>(`${this.consultationApiUrl}/${id}/status`, { status }, { withCredentials: true });
   }
 }

@@ -23,7 +23,7 @@ namespace CoreApi.Models
 
         [Required]
         [MaxLength(20)]
-        public string Role { get; set; } = "Citizen"; // Citizen or Lawyer
+        public string Role { get; set; } = "Client"; // Client or Lawyer
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

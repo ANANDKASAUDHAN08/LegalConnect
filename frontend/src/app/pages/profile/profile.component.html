@@ -56,6 +56,85 @@
         </div>
       </div>
 
+      <!-- Professional Advocate Profile (Lawyer Role Only) -->
+      <div *ngIf="profile.role === 'Lawyer' && lawyerProfile" class="card p-8 relative overflow-hidden">
+        <div class="absolute top-0 left-0 w-2 h-full bg-amber-500"></div>
+        
+        <div class="flex justify-between items-center mb-6">
+          <h3 class="text-xl font-bold text-text-primary dark:text-white flex items-center gap-2">
+            <span>👨‍⚖️</span> Professional Credentials
+          </h3>
+          <button (click)="toggleEditLawyer()" class="text-sm font-semibold text-accent hover:underline">
+            {{ isEditingLawyer ? 'Cancel' : 'Edit Credentials' }}
+          </button>
+        </div>
+
+        <div *ngIf="!isEditingLawyer; else editLawyerForm" class="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
+          <div>
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Bar Council Registration</p>
+            <p class="text-base font-semibold text-text-primary dark:text-white mt-1">{{ lawyerProfile.barCouncilNumber }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Practice City</p>
+            <p class="text-base font-semibold text-text-primary dark:text-white mt-1">{{ editCity || 'Not Specified' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Specialization Area(s)</p>
+            <p class="text-base font-semibold text-text-primary dark:text-white mt-1">{{ lawyerProfile.specialization || 'Not Specified' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Years of Experience</p>
+            <p class="text-base font-semibold text-text-primary dark:text-white mt-1">{{ lawyerProfile.experienceYears }} Years</p>
+          </div>
+          <div class="md:col-span-2">
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Advocate Bio</p>
+            <p class="text-base text-text-secondary dark:text-slate-350 leading-relaxed mt-1 whitespace-pre-line">{{ editBio || 'No professional bio added yet.' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-text-muted font-bold uppercase tracking-wider">Contact Phone</p>
+            <p class="text-base font-semibold text-text-primary dark:text-white mt-1">{{ editPhone || 'Not Specified' }}</p>
+          </div>
+        </div>
+
+        <ng-template #editLawyerForm>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label class="block text-sm font-medium text-text-secondary dark:text-slate-400 mb-1.5">Bar Council Number</label>
+              <input type="text" [(ngModel)]="editBarCouncilNumber" 
+                     class="w-full px-4 py-2.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-secondary dark:text-slate-400 mb-1.5">Years of Experience</label>
+              <input type="number" [(ngModel)]="editExperienceYears" 
+                     class="w-full px-4 py-2.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-secondary dark:text-slate-400 mb-1.5">Practice City</label>
+              <input type="text" [(ngModel)]="editCity" placeholder="e.g. Mumbai, Delhi"
+                     class="w-full px-4 py-2.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-text-secondary dark:text-slate-400 mb-1.5">Contact Phone</label>
+              <input type="text" [(ngModel)]="editPhone" placeholder="10-digit number"
+                     class="w-full px-4 py-2.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary dark:text-slate-400 mb-1.5">Specializations (Comma Separated)</label>
+              <input type="text" [(ngModel)]="editSpecialization" placeholder="e.g. Criminal Law, Corporate Law, Family Disputes"
+                     class="w-full px-4 py-2.5 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all">
+            </div>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-text-secondary dark:text-slate-400 mb-1.5">Professional Bio</label>
+              <textarea [(ngModel)]="editBio" rows="4" placeholder="Briefly describe your areas of practice and track record..."
+                        class="w-full px-4 py-3 rounded-xl bg-surface-light dark:bg-surface-dark border-2 border-border-subtle focus:border-accent outline-none text-text-primary dark:text-white transition-all resize-none"></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <button (click)="updateLawyerProfile()" class="btn btn-accent px-8 py-2.5 font-bold">Save Credentials</button>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+
       <!-- Security Section -->
       <div class="card p-8">
         <h3 class="text-xl font-bold text-text-primary dark:text-white mb-6 flex items-center gap-2">

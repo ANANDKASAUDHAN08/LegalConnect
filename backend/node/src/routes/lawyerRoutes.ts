@@ -8,7 +8,7 @@ router.get('/', async (req: Request, res: Response) => {
   try {
     const { specialization, city, q } = req.query;
 
-    const filter: any = {};
+    const filter: any = { isVerified: true };
 
     if (specialization) {
       filter.specializations = { $regex: specialization as string, $options: 'i' };
@@ -49,6 +49,37 @@ router.get('/:id', async (req: Request, res: Response) => {
     const lawyer = await Lawyer.findById(req.params.id);
     if (!lawyer) return res.status(404).json({ success: false, message: 'Lawyer not found.' });
     res.json({ success: true, data: lawyer });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// PUT /api/lawyers/sync - Sync advocate profile from .NET Core API (MySQL) to MongoDB
+router.put('/sync', async (req: Request, res: Response) => {
+  try {
+    const { name, specializations, city, experience, bio, phone, email, isVerified } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required for synchronization.' });
+    }
+
+    const updatedLawyer = await Lawyer.findOneAndUpdate(
+      { email: { $regex: new RegExp(`^${email}$`, 'i') } },
+      {
+        name,
+        specializations,
+        city,
+        experience: Number(experience),
+        bio,
+        phone,
+        email,
+        rating: 4.5,
+        isVerified: true
+      },
+      { new: true, upsert: true }
+    );
+
+    res.json({ success: true, message: 'Lawyer profile synchronized successfully.', data: updatedLawyer });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

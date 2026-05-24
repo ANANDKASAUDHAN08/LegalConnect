@@ -37,7 +37,10 @@ const seedData = async () => {
     await Lawyer.deleteMany({});
     console.log('💾 Seeding lawyers...');
     for (const lawyer of lawyers) {
-      const newLawyer = new Lawyer(lawyer);
+      const newLawyer = new Lawyer({
+        ...lawyer,
+        isVerified: true
+      });
       await newLawyer.save();
       console.log(`  ✅ Inserted: "${lawyer.name}"`);
     }

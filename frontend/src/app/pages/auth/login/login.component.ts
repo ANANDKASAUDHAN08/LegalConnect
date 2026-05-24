@@ -71,8 +71,8 @@ export class LoginComponent implements OnInit, OnDestroy {
       next: () => {
         this.snackbar.show('Welcome back! Signed in successfully.', 'success');
         
-        // Redirect back to query parameter "returnUrl" if exists, else dashboard/laws
-        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/laws';
+        // Redirect back to query parameter "returnUrl" if exists, else dashboard
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
         this.router.navigateByUrl(returnUrl);
       },
       error: (err) => {

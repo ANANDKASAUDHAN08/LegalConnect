@@ -1,145 +1,334 @@
-<nav class="fixed top-0 left-0 right-0 z-[1000] py-4 bg-white dark:bg-slate-900 shadow-sm border-b border-slate-100 dark:border-slate-800 navbar-fixed">
-  <div class="max-w-[1200px] mx-auto px-6 flex justify-between items-center w-full relative">
-    
-    <!-- LEFT: Logo Block (Exactly as in Reference Image) -->
-    <a routerLink="/" class="flex items-center gap-3 no-underline">
-      <!-- Circular "LC" Icon -->
-      <div class="w-10 h-10 rounded-full bg-[#1e3a8a] dark:bg-blue-600 flex items-center justify-center text-white font-extrabold text-sm shadow-[0_2px_10px_rgba(30,58,138,0.2)]">
-        LC
+<nav
+  class="fixed top-0 left-0 right-0 z-[1000] py-3.5 bg-white/75 dark:bg-slate-950/75 backdrop-blur-md border-b border-slate-200/40 dark:border-slate-800/40 shadow-sm navbar-fixed transition-all duration-300"
+  [class.scrolled]="isScrolled">
+  <div class="max-w-[1240px] mx-auto px-6 flex justify-between items-center w-full relative">
+
+    <!-- LEFT: Logo Block with Tagline -->
+    <a routerLink="/" class="flex items-center gap-3 no-underline group">
+      <!-- Premium SVG Logo: Balance Scale & Network Connected Node -->
+      <div
+        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_14px_rgba(79,70,229,0.25)] transition-transform duration-300 group-hover:scale-105">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="12" cy="11" r="2.2" fill="currentColor" class="animate-pulse-fast" />
+        </svg>
       </div>
       <div class="flex flex-col">
-        <span class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">LegalConnect</span>
-        <span class="text-[0.68rem] text-slate-400 font-medium">Legal help made simple</span>
+        <span
+          class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">LegalConnect</span>
+        <span class="text-[0.62rem] text-slate-400 dark:text-slate-500 font-semibold tracking-wide uppercase">Legal
+          help, simplified.</span>
       </div>
     </a>
 
-    <!-- CENTER: Navigation Links (Desktop Only - Exactly as in Reference Image) -->
-    <div class="hidden md:flex items-center justify-center gap-8">
+    <!-- CENTER: Premium Hover Dropdowns (Desktop Only) -->
+    <div class="hidden md:flex items-center justify-center gap-7">
+
+      <!-- Home -->
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
-         class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-700 dark:text-slate-300 dark:hover:text-white transition-colors no-underline">
+        class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline py-2">
         Home
       </a>
-      <a routerLink="/lawyers" routerLinkActive="active" 
-         class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-700 dark:text-slate-300 dark:hover:text-white transition-colors no-underline">
-        Find Lawyers
-      </a>
-      <a routerLink="/laws" routerLinkActive="active" 
-         class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-700 dark:text-slate-300 dark:hover:text-white transition-colors no-underline">
-        Legal Services
-      </a>
-      <a routerLink="/"
-         class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-700 dark:text-slate-300 dark:hover:text-white transition-colors no-underline">
-        About
-      </a>
+
+      <!-- Dropdown: Find Lawyers -->
+      <div class="relative group py-2">
+        <button
+          class="nav-link flex items-center gap-1.5 text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-white dark:hover:text-white transition-colors no-underline bg-transparent border-0 cursor-pointer">
+          <span>Find Lawyers</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <!-- Dropdown Panel -->
+        <div
+          class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-60 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-2.5 flex flex-col gap-1">
+          <a routerLink="/lawyers"
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            <span class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600"><svg
+                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg></span>
+            <div class="flex flex-col">
+              <span class="text-[0.88rem] font-bold">Browse All Lawyers</span>
+              <span class="text-[0.72rem] text-slate-400">View our complete network</span>
+            </div>
+          </a>
+          <div class="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2"></div>
+          <a routerLink="/lawyers" [queryParams]="{specialty: 'family'}" class="dropdown-item-small">Family Law</a>
+          <a routerLink="/lawyers" [queryParams]="{specialty: 'corporate'}" class="dropdown-item-small">Corporate
+            Law</a>
+          <a routerLink="/lawyers" [queryParams]="{specialty: 'criminal'}" class="dropdown-item-small">Criminal Law</a>
+          <a routerLink="/lawyers" [queryParams]="{specialty: 'intellectual-property'}"
+            class="dropdown-item-small">Intellectual Property</a>
+        </div>
+      </div>
+
+      <!-- Dropdown: Legal Resources -->
+      <div class="relative group py-2">
+        <button
+          class="nav-link flex items-center gap-1.5 text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline bg-transparent border-0 cursor-pointer">
+          <span>Legal Resources</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <!-- Dropdown Panel -->
+        <div
+          class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-2.5 flex flex-col gap-1">
+          <a routerLink="/laws"
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600"><svg
+                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg></span>
+            <div class="flex flex-col">
+              <span class="text-[0.88rem] font-bold">Browse Laws & Statutes</span>
+              <span class="text-[0.72rem] text-slate-400">Search legal databases</span>
+            </div>
+          </a>
+          <a routerLink="/laws"
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600"><svg
+                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg></span>
+            <div class="flex flex-col">
+              <span class="text-[0.88rem] font-bold">Document Templates</span>
+              <span class="text-[0.72rem] text-slate-400">Contracts, NDAs & Wills</span>
+            </div>
+          </a>
+          <a routerLink="/laws"
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            <span class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600"><svg
+                xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg></span>
+            <div class="flex flex-col">
+              <span class="text-[0.88rem] font-bold">Rights & FAQ</span>
+              <span class="text-[0.72rem] text-slate-400">Quick answers to common questions</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <!-- Dropdown: For Lawyers -->
+      <div class="relative group py-2">
+        <button
+          class="nav-link flex items-center gap-1.5 text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline bg-transparent border-0 cursor-pointer">
+          <span>For Lawyers</span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+        <!-- Dropdown Panel -->
+        <div
+          class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-2.5 flex flex-col gap-1">
+          <a routerLink="/register" [queryParams]="{role: 'lawyer'}"
+            class="dropdown-item-small font-bold text-blue-600 dark:text-blue-400">Join as a Lawyer</a>
+          <a routerLink="/" class="dropdown-item-small">Success Stories</a>
+          <a routerLink="/" class="dropdown-item-small">Membership Plans</a>
+        </div>
+      </div>
     </div>
 
     <!-- RIGHT: Actions / Utilities -->
-    <div class="hidden md:flex items-center justify-end gap-4">
-      <!-- Search Icon -->
-      <a routerLink="/search" routerLinkActive="active" 
-         class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-slate-500 dark:text-slate-300 flex items-center justify-center w-9 h-9" 
-         title="Search">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+    <div class="hidden md:flex items-center justify-end gap-3.5">
+
+      <!-- Search Input Trigger Button (Desktop Only) -->
+      <a routerLink="/search"
+        class="flex items-center gap-2 pl-3 pr-2 py-1 rounded-full bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800/60 text-slate-400 dark:text-slate-500 transition-colors no-underline group cursor-pointer"
+        title="Search (Ctrl+K)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+          class="text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span
+          class="text-[0.78rem] font-bold text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-350 transition-colors hidden lg:inline">Search...</span>
+        <span
+          class="hidden lg:inline-flex items-center text-[0.58rem] font-bold px-1.5 py-0.5 bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 rounded text-slate-400 dark:text-slate-500 shadow-sm ml-1 select-none">Ctrl
+          K</span>
       </a>
 
       <!-- Notifications (Only if logged in) -->
       <ng-container *ngIf="(auth.isLoggedIn$ | async)">
-        <a routerLink="/notifications" routerLinkActive="active" 
-           class="relative p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-slate-500 dark:text-slate-300 flex items-center justify-center w-9 h-9" 
-           title="Alerts">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-          <span *ngIf="notificationService.followedCount() as count" 
-                class="absolute top-0 right-0 w-4 h-4 bg-blue-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm">
+        <a routerLink="/notifications" routerLinkActive="active"
+          class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 transition-colors flex items-center justify-center w-9 h-9 notification-bell"
+          title="Alerts">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span *ngIf="notificationService.followedCount() as count"
+            class="absolute top-0.5 right-0.5 w-4 h-4 bg-blue-600 border border-white dark:border-slate-950 text-white text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-sm">
             {{ count }}
           </span>
         </a>
       </ng-container>
 
       <!-- Theme Toggle -->
-      <button class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-slate-500 dark:text-slate-300 flex items-center justify-center w-9 h-9" 
-              (click)="themeService.toggleTheme()" aria-label="Toggle Theme">
-        <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      <button
+        class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 transition-colors flex items-center justify-center w-9 h-9"
+        (click)="themeService.toggleTheme()" aria-label="Toggle Theme">
+        <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <circle cx="12" cy="12" r="5"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+        </svg>
+        <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+          stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+        </svg>
       </button>
 
-      <div class="h-5 w-px bg-slate-200 dark:bg-slate-700 mx-1"></div>
+      <div class="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
 
       <!-- Auth State Actions -->
       <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
-        <a routerLink="/dashboard" routerLinkActive="active" 
-           class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-700 dark:text-slate-300 dark:hover:text-white transition-colors no-underline">
-          Dashboard
-        </a>
-        <a routerLink="/profile" routerLinkActive="active" 
-           class="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors text-slate-500 dark:text-slate-300 flex items-center justify-center w-9 h-9" 
-           title="Profile">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-        </a>
-        <button class="nav-btn-outline" (click)="logout()">Sign Out</button>
+
+        <!-- Profile Dropdown Component Container -->
+        <div class="relative group py-2">
+          <!-- Trigger Avatar -->
+          <div
+            class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold flex items-center justify-center cursor-pointer shadow-md select-none border-2 border-white dark:border-slate-900 group-hover:scale-105 transition-transform duration-200">
+            {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
+          </div>
+
+          <!-- Dropdown Card -->
+          <div
+            class="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-4 flex flex-col gap-3">
+
+            <!-- User Summary Header -->
+            <div class="flex items-center gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/60">
+              <div
+                class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-black flex items-center justify-center text-sm shadow-inner">
+                {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-[0.88rem] font-bold text-slate-800 dark:text-slate-100 truncate leading-snug">
+                  {{ (auth.currentUser$ | async)?.fullName }}
+                </span>
+                <span class="text-[0.7rem] text-slate-400 truncate leading-none mt-0.5">
+                  {{ (auth.currentUser$ | async)?.email }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Profile Nav Links -->
+            <div class="flex flex-col gap-1">
+              <a routerLink="/dashboard"
+                class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-350 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="9"></rect>
+                  <rect x="14" y="3" width="7" height="5"></rect>
+                  <rect x="14" y="12" width="7" height="9"></rect>
+                  <rect x="3" y="16" width="7" height="5"></rect>
+                </svg>
+                <span class="text-[0.82rem] font-semibold">User Dashboard</span>
+              </a>
+              <a routerLink="/profile"
+                class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-350 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+                <span class="text-[0.82rem] font-semibold">Profile Settings</span>
+              </a>
+              <a routerLink="/notifications"
+                class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-350 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span class="text-[0.82rem] font-semibold">Alerts & Messages</span>
+              </a>
+            </div>
+
+            <!-- Sign Out Divider -->
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-0.5"></div>
+
+            <button
+              class="w-full flex items-center justify-center gap-2 py-2 border border-red-200 dark:border-red-950/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/10 hover:bg-red-100/50 dark:hover:bg-red-950/20 font-bold rounded-xl transition-colors cursor-pointer text-[0.85rem]"
+              (click)="logout()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Sign Out
+            </button>
+          </div>
+        </div>
       </ng-container>
-      
+
       <ng-template #guestActions>
         <a routerLink="/login" class="nav-btn-outline">Login</a>
         <a routerLink="/register" class="nav-btn-solid">Get Started</a>
       </ng-template>
     </div>
 
-    <!-- Mobile Hamburger Toggle -->
-    <div class="flex items-center gap-3 md:hidden">
-      <!-- Search & Theme Quick Toggles for Mobile -->
-      <button class="p-2 rounded-full text-slate-500 dark:text-slate-300" (click)="themeService.toggleTheme()" aria-label="Toggle Theme">
-        <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
-        <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-      </button>
+    <!-- Mobile Hamburger Toggle button -->
+    <div class="flex items-center gap-3 md:hidden flex-shrink-0">
+      <!-- Search Quick Link for Mobile -->
+      <a routerLink="/search"
+        class="p-2 rounded-full text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center w-9 h-9 transition-colors flex-shrink-0"
+        title="Search">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </a>
 
-      <button class="hamburger-btn" (click)="toggleMenu()" aria-label="Toggle Menu" [class.open]="menuOpen">
+      <button class="hamburger-btn flex-shrink-0" (click)="toggleMenu()" aria-label="Toggle Menu"
+        [class.open]="menuOpen">
         <span></span>
         <span></span>
         <span></span>
       </button>
-    </div>
-  </div>
-
-  <!-- Mobile Overlay Backdrop -->
-  <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[999] transition-opacity duration-300 md:hidden"
-       [class.opacity-100]="menuOpen" [class.pointer-events-auto]="menuOpen"
-       [class.opacity-0]="!menuOpen" [class.pointer-events-none]="!menuOpen"
-       (click)="menuOpen = false"></div>
-
-  <!-- Mobile Drawer Menu (Slides in) -->
-  <div class="fixed top-0 right-0 bottom-0 w-[280px] bg-white dark:bg-slate-900 shadow-2xl z-[1000] flex flex-col transition-transform duration-300 ease-in-out md:hidden"
-       [class.translate-x-0]="menuOpen" [class.translate-x-full]="!menuOpen">
-    
-    <div class="p-6 pt-24 flex flex-col gap-5 h-full overflow-y-auto">
-      
-      <div class="flex items-center gap-3 pb-5 border-b border-slate-100 dark:border-slate-800">
-        <div class="w-10 h-10 rounded-full bg-[#1e3a8a] dark:bg-blue-600 flex items-center justify-center text-white font-extrabold text-sm">
-          LC
-        </div>
-        <div class="flex flex-col">
-          <span class="text-base font-extrabold text-slate-900 dark:text-white leading-tight">LegalConnect</span>
-        </div>
-      </div>
-
-      <!-- Links -->
-      <a routerLink="/" class="mobile-nav-link" (click)="menuOpen=false">Home</a>
-      <a routerLink="/lawyers" class="mobile-nav-link" (click)="menuOpen=false">Find Lawyers</a>
-      <a routerLink="/laws" class="mobile-nav-link" (click)="menuOpen=false">Legal Services</a>
-      <a routerLink="/search" class="mobile-nav-link" (click)="menuOpen=false">Search</a>
-
-      <div class="h-px bg-slate-100 dark:bg-slate-800 my-2"></div>
-
-      <ng-container *ngIf="(auth.isLoggedIn$ | async)">
-        <a routerLink="/dashboard" class="mobile-nav-link" (click)="menuOpen=false">Dashboard</a>
-        <a routerLink="/notifications" class="mobile-nav-link" (click)="menuOpen=false">Alerts</a>
-        <a routerLink="/profile" class="mobile-nav-link" (click)="menuOpen=false">Profile</a>
-        <button class="nav-btn-outline w-full text-center mt-4" (click)="logout()">Sign Out</button>
-      </ng-container>
-
-      <ng-container *ngIf="!(auth.isLoggedIn$ | async)">
-        <a routerLink="/login" class="nav-btn-outline w-full text-center py-2.5" (click)="menuOpen=false">Login</a>
-        <a routerLink="/register" class="nav-btn-solid w-full text-center py-2.5 mt-2" (click)="menuOpen=false">Get Started</a>
-      </ng-container>
     </div>
   </div>
 </nav>
+
+<!-- Separate Mobile Menu Component (Option B) -->
+<app-mobile-menu [isOpen]="menuOpen" (closeMenu)="menuOpen = false"></app-mobile-menu>

@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { LawyerService, Lawyer } from '../../services/lawyer.service';
 import { DraftService } from '../../services/draft.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { AuthService, UserProfile } from '../../services/auth.service';
 
 interface ContactForm {
   name: string;
@@ -36,13 +37,18 @@ export class LawyersComponent implements OnInit, OnDestroy {
   private autoSaveInterval: any;
   private readonly DRAFT_KEY = 'lawyer_contact';
 
+  currentUser: UserProfile | null = null;
+
   constructor(
     private lawyerService: LawyerService,
     private draft: DraftService,
-    private snackbar: SnackbarService
+    private snackbar: SnackbarService,
+    private auth: AuthService
   ) {}
 
   ngOnInit() {
+    this.auth.currentUser$.subscribe(user => this.currentUser = user);
+    
     this.lawyerService.getMeta().subscribe({
       next: res => {
         this.cities = res.data.cities;
@@ -93,7 +99,12 @@ export class LawyersComponent implements OnInit, OnDestroy {
       this.contactForm = saved;
       this.snackbar.show('Draft restored!', 'info');
     } else {
-      this.contactForm = { name: '', email: '', message: '', lawyerId: lawyer._id };
+      this.contactForm = {
+        name: this.currentUser?.fullName || '',
+        email: this.currentUser?.email || '',
+        message: '',
+        lawyerId: lawyer._id
+      };
     }
 
     // Auto-save draft every 2 seconds
@@ -112,11 +123,23 @@ export class LawyersComponent implements OnInit, OnDestroy {
       this.snackbar.show('Please fill in all fields.', 'warning');
       return;
     }
-    // Clear the draft on successful submission
-    this.draft.clear(this.DRAFT_KEY);
-    clearInterval(this.autoSaveInterval);
-    this.snackbar.show(`Message sent to ${this.selectedLawyer?.name}!`, 'success');
-    this.selectedLawyer = null;
+
+    this.lawyerService.sendInquiry({
+      clientName: this.contactForm.name,
+      clientEmail: this.contactForm.email,
+      lawyerEmail: this.selectedLawyer?.email || '',
+      message: this.contactForm.message
+    }).subscribe({
+      next: () => {
+        this.draft.clear(this.DRAFT_KEY);
+        clearInterval(this.autoSaveInterval);
+        this.snackbar.show(`Message sent to ${this.selectedLawyer?.name}!`, 'success');
+        this.selectedLawyer = null;
+      },
+      error: (err) => {
+        this.snackbar.show(err.error?.message || err.error || 'Failed to send inquiry. Please try again.', 'error');
+      }
+    });
   }
 }
 

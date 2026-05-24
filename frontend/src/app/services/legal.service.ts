@@ -43,7 +43,7 @@ export interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class LegalService {
-  private apiUrl = 'http://localhost:5000/api/legal';
+  private apiUrl = 'http://localhost:8888/api/legal';
 
   constructor(private http: HttpClient) { }
 

@@ -57,6 +57,21 @@ namespace CoreApi.Controllers
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
+            if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
+            {
+                var lawyerProfile = new LawyerProfile
+                {
+                    UserId = user.Id,
+                    BarCouncilNumber = "PENDING",
+                    Specialization = "General Practice",
+                    ExperienceYears = 0,
+                    IsVerified = true,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.LawyerProfiles.Add(lawyerProfile);
+                await _context.SaveChangesAsync();
+            }
+
             if (requireVerification)
             {
                 await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
