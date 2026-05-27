@@ -68,6 +68,9 @@ export class AuthService {
         this._currentUser.next(user);
         this._isLoggedIn.next(true);
         this._isSessionLoaded.next(true);
+        if (user && user.role) {
+          localStorage.setItem('lc_preferred_role', user.role);
+        }
       }),
       map(() => true),
       catchError(() => {

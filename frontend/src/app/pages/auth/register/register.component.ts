@@ -1,6 +1,6 @@
-import { Component, signal, HostListener } from '@angular/core';
+import { Component, signal, HostListener, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
@@ -24,7 +24,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
     ])
   ]
 })
-export class RegisterComponent {
+export class RegisterComponent implements OnInit {
   showPassword = signal(false);
   loading = signal(false);
   error = signal<string | null>(null);
@@ -75,8 +75,23 @@ export class RegisterComponent {
   constructor(
     private auth: AuthService,
     private router: Router,
-    private snackbar: SnackbarService
+    private snackbar: SnackbarService,
+    private route: ActivatedRoute
   ) {}
+
+  ngOnInit() {
+    this.route.queryParams.subscribe(params => {
+      const roleParam = params['role'];
+      if (roleParam) {
+        const normalized = roleParam.trim().toLowerCase();
+        if (normalized === 'lawyer' || normalized === 'advocate') {
+          this.registerData.role = 'Lawyer';
+        } else if (normalized === 'client') {
+          this.registerData.role = 'Client';
+        }
+      }
+    });
+  }
 
   togglePassword() {
     this.showPassword.update(v => !v);

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterLink, ActivatedRoute } from '@angular/router';
 import { LawyerService, Lawyer } from '../../services/lawyer.service';
 import { DraftService } from '../../services/draft.service';
 import { SnackbarService } from '../../services/snackbar.service';
@@ -16,7 +17,7 @@ interface ContactForm {
 @Component({
   selector: 'app-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './lawyers.component.html',
   styleUrls: ['./lawyers.component.scss']
 })
@@ -43,7 +44,8 @@ export class LawyersComponent implements OnInit, OnDestroy {
     private lawyerService: LawyerService,
     private draft: DraftService,
     private snackbar: SnackbarService,
-    private auth: AuthService
+    private auth: AuthService,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit() {
@@ -55,7 +57,13 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.specializations = res.data.specializations;
       }
     });
-    this.loadLawyers();
+
+    this.route.queryParams.subscribe(params => {
+      this.selectedSpecialization = params['specialization'] || '';
+      this.selectedCity = params['city'] || '';
+      this.searchQuery = params['q'] || '';
+      this.loadLawyers();
+    });
   }
 
   ngOnDestroy() {
@@ -91,6 +99,10 @@ export class LawyersComponent implements OnInit, OnDestroy {
   // --- Contact Form with SessionStorage Draft ---
 
   openContact(lawyer: Lawyer) {
+    if (!this.currentUser) {
+      this.snackbar.show('Please log in to contact legal professionals.', 'warning');
+      return;
+    }
     this.selectedLawyer = lawyer;
 
     // Restore a previously saved draft if it exists for this lawyer

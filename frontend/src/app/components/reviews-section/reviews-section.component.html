@@ -1,0 +1,164 @@
+<section
+  class="section reviews-section bg-slate-50/50 dark:bg-slate-950/20 border-t border-slate-150 dark:border-slate-850 py-12 sm:py-20"
+  id="reviews">
+  <div class="container mx-auto px-4 sm:px-6">
+    <!-- Header -->
+    <div class="section-header text-center mb-8 sm:mb-12 flex flex-col items-center gap-3 sm:gap-4">
+      <span class="badge badge-primary">User Testimonials</span>
+      <h2
+        class="section-title text-xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-text-primary dark:text-white">
+        What Our Community <span
+          class="gradient-text bg-gradient-to-r from-blue-600 to-indigo-500 bg-clip-text text-transparent">Is
+          Saying</span>
+      </h2>
+      <p class="section-subtitle text-slate-500 dark:text-slate-400 max-w-[560px] text-xs sm:text-base leading-relaxed">
+        Real feedback from verified clients and advocates using our legal directory and workstation tools.
+      </p>
+    </div>
+
+    <!-- Actions & Tab Bar -->
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mb-8">
+      <!-- Tabs Switcher -->
+      <div
+        class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100/60 dark:bg-slate-950/40 border border-slate-200/20 dark:border-slate-800/40 w-full sm:w-auto min-w-[280px]">
+        <button (click)="switchTab('client')"
+          [ngClass]="activeTab === 'client' ? 'bg-white dark:bg-slate-850 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/10 dark:border-slate-700/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-white'"
+          class="py-2 md:px-3 px-2 rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+          <span>Client Success Stories</span>
+        </button>
+        <button (click)="switchTab('lawyer')"
+          [ngClass]="activeTab === 'lawyer' ? 'bg-white dark:bg-slate-850 text-amber-600 dark:text-amber-450 shadow-sm border border-slate-200/10 dark:border-slate-700/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-white'"
+          class="py-2 md:px-3 px-2 rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center justify-center gap-1.5">
+          <span>Advocate Endorsements</span>
+        </button>
+      </div>
+
+      <!-- Carousel Navigation & Write Review Trigger Button -->
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
+        <!-- Navigation Buttons (Hidden if no reviews) -->
+        <div *ngIf="filteredReviews.length > 0" class="flex items-center gap-1.5">
+          <button (click)="scrollCarousel(-1)" title="Previous testimonials"
+            class="p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/20 dark:hover:border-blue-500/20 transition-all outline-none flex items-center justify-center shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+            </svg>
+          </button>
+          <button (click)="scrollCarousel(1)" title="Next testimonials"
+            class="p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/20 dark:hover:border-blue-500/20 transition-all outline-none flex items-center justify-center shadow-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+            </svg>
+          </button>
+        </div>
+
+        <button [routerLink]="['/reviews']"
+          class="btn btn-outline border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 w-full sm:w-auto py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1 rounded-xl transition-all shadow-sm">
+          <span>View All</span>
+        </button>
+
+        <button (click)="openWriteModal()"
+          class="btn btn-inline self-start md:self-center py-2.5 px-3.5 md:px-5 text-xs font-bold flex items-center justify-center gap-1.5 rounded-xl transition-all shadow-md bg-blue-600 hover:bg-blue-700 text-white dark:bg-slate-800 dark:hover:bg-white dark:text-white dark:hover:text-slate-800">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+          </svg>
+          <span class="hidden sm:inline">Write a Review</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Shared Review Write/Edit Modal Component -->
+    <app-write-review-modal *ngIf="showWriteModal" [currentUser]="currentUser" [reviewToEdit]="editModeReview"
+      [navbarHeight]="navbarHeight" (close)="showWriteModal = false" (saved)="onReviewSaved($event)">
+    </app-write-review-modal>
+
+    <!-- Reviews snap-scroll carousel track -->
+    <div *ngIf="filteredReviews.length > 0; else noReviews" #carouselTrack
+      class="carousel-track flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none pb-4 pt-1 px-1">
+
+      <!-- Review Card -->
+      <app-review-card *ngFor="let rev of filteredReviews"
+        class="carousel-card snap-start h-[210px] block w-[280px] sm:w-[320px] flex-shrink-0"
+        [review]="rev"
+        [currentUser]="currentUser"
+        [showReadMore]="true"
+        (edit)="openEditModal($event)"
+        (delete)="onDeleteReview($event)"
+        (like)="likeReview($event)"
+        (readMore)="openReadMoreModal($event)">
+      </app-review-card>
+    </div>
+
+    <!-- Empty State -->
+    <ng-template #noReviews>
+      <div class="text-center py-16 flex flex-col items-center gap-3">
+        <span class="text-4xl">💭</span>
+        <h3 class="font-bold text-slate-800 dark:text-white text-base">No reviews found</h3>
+        <p class="text-xs text-slate-450 max-w-sm">There are no testimonials recorded for this tab yet. Be the first to
+          share your thoughts!</p>
+        <button (click)="openWriteModal()" class="btn btn-outline btn-sm text-xs mt-1">Write a Testimonial</button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- Read-Only Review Modal Overlay -->
+  <div *ngIf="showReadMoreModal && selectedReview" (click)="closeReadMoreModal()"
+    [style.top.px]="isMobile ? navbarHeight : 0"
+    [style.height]="isMobile ? 'calc(100% - ' + navbarHeight + 'px)' : '100%'"
+    class="fixed inset-x-0 bottom-0 bg-slate-950/60 backdrop-blur-md z-[1100] max-sm:z-[990] flex items-center justify-center p-4 max-sm:p-0 overflow-y-auto max-sm:overflow-hidden scrollbar-none">
+    <!-- Modal Card -->
+    <div (click)="$event.stopPropagation()"
+      class="relative w-full sm:max-w-[500px] max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:border-0 bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl max-h-[90vh] max-sm:max-h-full overflow-y-auto flex flex-col gap-5 scrollbar-none fade-in-up my-auto">
+
+      <!-- Close button -->
+      <button (click)="closeReadMoreModal()"
+        class="absolute right-4 top-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 p-1 transition-colors outline-none">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+        <div
+          class="w-10 h-10 rounded-full bg-blue-500/10 dark:bg-slate-800 text-blue-600 dark:text-slate-400 flex items-center justify-center font-extrabold text-xs">
+          {{ selectedReview.authorName.replace('Adv. ', '').substring(0, 2).toUpperCase() }}
+        </div>
+        <div>
+          <h4 class="font-bold text-slate-850 dark:text-white text-sm">{{ selectedReview.authorName }}</h4>
+          <span class="block text-[9px] text-slate-455 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{{
+            selectedReview.userRole }}</span>
+        </div>
+      </div>
+
+      <!-- Rating & Target -->
+      <div class="flex items-center justify-between text-xs">
+        <div class="flex items-center gap-0.5">
+          <span *ngFor="let s of [1,2,3,4,5]"
+            [class]="s <= selectedReview.rating ? 'text-amber-400' : 'text-slate-200 dark:text-slate-800'">★</span>
+        </div>
+        <span class="text-[9px] font-bold uppercase tracking-widest text-slate-450 dark:text-slate-555">
+          Target: {{ selectedReview.targetName }}
+        </span>
+      </div>
+
+      <!-- Full Review Content -->
+      <div
+        class="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium bg-slate-50/50 dark:bg-slate-950/30 p-4 rounded-xl border border-slate-150/30 dark:border-slate-850/30 max-h-[40vh] sm:max-h-[30vh] overflow-y-auto scrollbar-none">
+        "{{ getFormattedContent(selectedReview.content) }}"
+      </div>
+
+      <!-- Action Redirect to /reviews -->
+      <div class="flex flex-col gap-2.5 mt-2">
+        <button [routerLink]="['/reviews']" [fragment]="'review-' + selectedReview.id" (click)="closeReadMoreModal()"
+          class="w-full py-3 px-4 text-[11px] sm:text-xs font-extrabold flex items-center justify-center gap-1.5 rounded-lg transition-all shadow-md bg-blue-600 hover:bg-blue-700 text-white cursor-pointer text-center !whitespace-normal"
+          style="white-space: normal;">
+          <span>See all 150+ reviews on our dedicated reviews page</span>
+        </button>
+        <button (click)="closeReadMoreModal()" class="w-full btn btn-outline py-2.5 text-xs justify-center font-bold">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</section>

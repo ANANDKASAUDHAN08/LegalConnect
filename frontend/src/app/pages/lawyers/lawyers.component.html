@@ -86,12 +86,32 @@
 
         <!-- Contact Actions -->
         <div class="mt-auto pt-4 border-t border-border-subtle flex gap-2">
-          <a [href]="'tel:' + lawyer.phone"
-             class="flex-1 btn btn-outline btn-sm text-center no-underline text-[0.8rem]">📞 Call</a>
-          <a [href]="'mailto:' + lawyer.email"
-             class="flex-1 btn btn-outline btn-sm text-center no-underline text-[0.8rem]">✉️ Email</a>
-          <button (click)="openContact(lawyer)"
-             class="flex-1 btn btn-accent btn-sm text-[0.8rem]">💬 Message</button>
+          <!-- Case A: This is the lawyer's own profile -->
+          <ng-container *ngIf="currentUser && currentUser.email === lawyer.email; else otherLawyerButtons">
+            <a routerLink="/profile"
+               class="w-full btn btn-outline btn-sm text-center no-underline text-[0.8rem] flex items-center justify-center gap-1.5 border-dashed border-indigo-400 text-indigo-650 hover:bg-indigo-50">
+              ⚙️ Edit My Listing Profile
+            </a>
+          </ng-container>
+          
+          <!-- Case B: It is someone else's profile -->
+          <ng-template #otherLawyerButtons>
+            <a [href]="'tel:' + lawyer.phone"
+               class="flex-1 btn btn-outline btn-sm text-center no-underline text-[0.8rem]">📞 Call</a>
+            <a [href]="'mailto:' + lawyer.email"
+               class="flex-1 btn btn-outline btn-sm text-center no-underline text-[0.8rem]">✉️ Email</a>
+            
+            <!-- Message Consultation button restrictions based on role -->
+            <button *ngIf="currentUser?.role !== 'Lawyer'" (click)="openContact(lawyer)"
+               class="flex-1 btn btn-accent btn-sm text-[0.8rem]"
+               [title]="!currentUser ? 'Log in to send a consultation request' : 'Send a consultation request'">💬 Message</button>
+            
+            <button *ngIf="currentUser?.role === 'Lawyer'" [disabled]="true"
+               class="flex-1 btn btn-outline btn-sm text-[0.8rem] opacity-60 cursor-not-allowed text-slate-400 border-slate-200" 
+               title="Advocate accounts cannot submit client inquiries.">
+              💬 Message
+            </button>
+          </ng-template>
         </div>
       </div>
     </div>

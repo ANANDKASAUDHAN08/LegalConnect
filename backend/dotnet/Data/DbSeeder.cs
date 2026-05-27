@@ -74,6 +74,63 @@ namespace CoreApi.Data
                 }
                 context.SaveChanges();
             }
+
+            // Seed Reviews if none exist
+            if (!context.Reviews.Any())
+            {
+                var seededReviews = new[]
+                {
+                    new Review
+                    {
+                        UserRole = "Client",
+                        AuthorName = "Vikas M.",
+                        TargetName = "Adv. Priya Sharma",
+                        Rating = 5,
+                        Content = "Adv. Priya Sharma was extremely professional and patient. She explained our options under the criminal code clearly and got the bail request approved in record time.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-10)
+                    },
+                    new Review
+                    {
+                        UserRole = "Client",
+                        AuthorName = "Anjali R.",
+                        TargetName = "Adv. Rajesh Kumar",
+                        Rating = 5,
+                        Content = "Adv. Rajesh Kumar helped settle a complex partition suit out of court. Truly excellent property law guidance.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-8)
+                    },
+                    new Review
+                    {
+                        UserRole = "Client",
+                        AuthorName = "Rajesh K.",
+                        TargetName = "Platform",
+                        Rating = 5,
+                        Content = "The AI Legal Assistant is incredibly useful. Uploaded my rent contract and got a list of hidden risks and standard clauses instantly. Saved thousands in notary fees!",
+                        CreatedAt = DateTime.UtcNow.AddDays(-6)
+                    },
+                    new Review
+                    {
+                        UserRole = "Lawyer",
+                        AuthorName = "Adv. Sunita Mehta",
+                        TargetName = "Platform",
+                        Rating = 5,
+                        Content = "The BNS equivalent lookup tool is integrated directly into the dashboard. Saves hours of draft checking during this transition period.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-4)
+                    },
+                    new Review
+                    {
+                        UserRole = "Lawyer",
+                        AuthorName = "Adv. Amit Verma",
+                        TargetName = "Platform",
+                        Rating = 5,
+                        Content = "Client intake pre-screening helps filter out irrelevant questions. I only consult with clients who have matching legal concerns, saving time.",
+                        CreatedAt = DateTime.UtcNow.AddDays(-2)
+                    }
+                };
+
+                context.Reviews.AddRange(seededReviews);
+                context.SaveChanges();
+            }
         }
     }
 }
+

@@ -35,8 +35,9 @@
         Home
       </a>
 
-      <!-- Dropdown: Find Lawyers -->
-      <div class="relative group py-2">
+      <!-- Dropdown: Find Lawyers (Only if guest or Client) -->
+      <div *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'"
+        class="relative group py-2">
         <button
           class="nav-link flex items-center gap-1.5 text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-white dark:hover:text-white transition-colors no-underline bg-transparent border-0 cursor-pointer">
           <span>Find Lawyers</span>
@@ -50,7 +51,7 @@
         <div
           class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-60 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-2.5 flex flex-col gap-1">
           <a routerLink="/lawyers"
-            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-350 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
             <span class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600"><svg
                 xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5">
@@ -89,7 +90,7 @@
         <div
           class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-2.5 flex flex-col gap-1">
           <a routerLink="/laws"
-            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-350 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
             <span class="p-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600"><svg
                 xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5">
@@ -102,7 +103,7 @@
             </div>
           </a>
           <a routerLink="/laws"
-            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-350 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
             <span class="p-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600"><svg
                 xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5">
@@ -118,7 +119,7 @@
             </div>
           </a>
           <a routerLink="/laws"
-            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-300 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
+            class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-slate-700 dark:text-slate-350 no-underline transition-all hover:bg-slate-50 dark:hover:bg-slate-800/60 hover:text-blue-600 dark:hover:text-blue-450">
             <span class="p-1.5 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600"><svg
                 xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2.5">
@@ -134,8 +135,8 @@
         </div>
       </div>
 
-      <!-- Dropdown: For Lawyers -->
-      <div class="relative group py-2">
+      <!-- Dropdown: For Lawyers (Only if guest) -->
+      <div *ngIf="!(auth.isLoggedIn$ | async)" class="relative group py-2">
         <button
           class="nav-link flex items-center gap-1.5 text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline bg-transparent border-0 cursor-pointer">
           <span>For Lawyers</span>
@@ -154,6 +155,21 @@
           <a routerLink="/" class="dropdown-item-small">Membership Plans</a>
         </div>
       </div>
+
+      <!-- Link: Advocate Workspace (Lawyer only) -->
+      <a *ngIf="(auth.currentUser$ | async)?.role === 'Lawyer'" routerLink="/lawyer/workstation"
+        routerLinkActive="active"
+        class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline py-2">
+        Workspace
+      </a>
+
+      <!-- Link: My Saved Library (Client only) -->
+      <a *ngIf="(auth.currentUser$ | async) && (auth.currentUser$ | async)?.role !== 'Lawyer'"
+        routerLink="/client/portal" routerLinkActive="active"
+        class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline py-2">
+        My Library
+      </a>
+
     </div>
 
     <!-- RIGHT: Actions / Utilities -->
@@ -221,84 +237,7 @@
 
       <!-- Auth State Actions -->
       <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
-
-        <!-- Profile Dropdown Component Container -->
-        <div class="relative group py-2">
-          <!-- Trigger Avatar -->
-          <div
-            class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold flex items-center justify-center cursor-pointer shadow-md select-none border-2 border-white dark:border-slate-900 group-hover:scale-105 transition-transform duration-200">
-            {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
-          </div>
-
-          <!-- Dropdown Card -->
-          <div
-            class="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-4 flex flex-col gap-3">
-
-            <!-- User Summary Header -->
-            <div class="flex items-center gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/60">
-              <div
-                class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-black flex items-center justify-center text-sm shadow-inner">
-                {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
-              </div>
-              <div class="flex flex-col min-w-0">
-                <span class="text-[0.88rem] font-bold text-slate-800 dark:text-slate-100 truncate leading-snug">
-                  {{ (auth.currentUser$ | async)?.fullName }}
-                </span>
-                <span class="text-[0.7rem] text-slate-400 truncate leading-none mt-0.5">
-                  {{ (auth.currentUser$ | async)?.email }}
-                </span>
-              </div>
-            </div>
-
-            <!-- Profile Nav Links -->
-            <div class="flex flex-col gap-1">
-              <a routerLink="/dashboard"
-                class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-350 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect x="3" y="3" width="7" height="9"></rect>
-                  <rect x="14" y="3" width="7" height="5"></rect>
-                  <rect x="14" y="12" width="7" height="9"></rect>
-                  <rect x="3" y="16" width="7" height="5"></rect>
-                </svg>
-                <span class="text-[0.82rem] font-semibold">User Dashboard</span>
-              </a>
-              <a routerLink="/profile"
-                class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-350 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span class="text-[0.82rem] font-semibold">Profile Settings</span>
-              </a>
-              <a routerLink="/notifications"
-                class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-350 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
-                <span class="text-[0.82rem] font-semibold">Alerts & Messages</span>
-              </a>
-            </div>
-
-            <!-- Sign Out Divider -->
-            <div class="h-px bg-slate-100 dark:bg-slate-800 my-0.5"></div>
-
-            <button
-              class="w-full flex items-center justify-center gap-2 py-2 border border-red-200 dark:border-red-950/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/10 hover:bg-red-100/50 dark:hover:bg-red-950/20 font-bold rounded-xl transition-colors cursor-pointer text-[0.85rem]"
-              (click)="logout()">
-              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                <polyline points="16 17 21 12 16 7"></polyline>
-                <line x1="21" y1="12" x2="9" y2="12"></line>
-              </svg>
-              Sign Out
-            </button>
-          </div>
-        </div>
+        <app-user-profile-menu [currentUser]="(auth.currentUser$ | async)" (logout)="logout()"></app-user-profile-menu>
       </ng-container>
 
       <ng-template #guestActions>

@@ -1,31 +1,92 @@
 import { Routes } from '@angular/router';
-import { LandingComponent } from './pages/landing/landing.component';
-import { BrowseLawsComponent } from './pages/browse-laws/browse-laws.component';
-import { LawViewerComponent } from './pages/law-viewer/law-viewer.component';
-import { LoginComponent } from './pages/auth/login/login.component';
-import { RegisterComponent } from './pages/auth/register/register.component';
-import { ResetPasswordComponent } from './pages/auth/reset-password/reset-password.component';
-import { ForgotPasswordComponent } from './pages/forgot-password/forgot-password.component';
-import { DashboardComponent } from './pages/dashboard/dashboard.component';
-import { SearchComponent } from './pages/search/search.component';
-import { LawyersComponent } from './pages/lawyers/lawyers.component';
-import { ProfileComponent } from './pages/profile/profile.component';
-import { NotificationsComponent } from './pages/notifications/notifications.component';
 import { authGuard } from './guards/auth.guard';
+import { guestGuard } from './guards/guest.guard';
+import { roleGuard } from './guards/role.guard';
 
 export const routes: Routes = [
-  { path: '',        component: LandingComponent },
-  { path: 'laws',    component: BrowseLawsComponent },
-  { path: 'laws/:shortName', component: LawViewerComponent },
-  { path: 'login',   component: LoginComponent },
-  { path: 'register', component: RegisterComponent },
-  { path: 'forgot-password', component: ForgotPasswordComponent },
-  { path: 'reset-password', component: ResetPasswordComponent },
-  { path: 'auth',    redirectTo: 'login', pathMatch: 'full' },
-  { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard] },
-  { path: 'profile', component: ProfileComponent, canActivate: [authGuard] },
-  { path: 'notifications', component: NotificationsComponent },
-  { path: 'search',  component: SearchComponent },
-  { path: 'lawyers', component: LawyersComponent },
-  { path: '**',      redirectTo: '' }
+  // 1. Entry & Home Page
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+
+  {
+    path: 'home',
+    loadComponent: () => import('./pages/landing/landing.component').then(m => m.LandingComponent)
+  },
+
+  // 2. Authentication Flow (Guest Users Only)
+  {
+    path: 'login',
+    loadComponent: () => import('./pages/auth/login/login.component').then(m => m.LoginComponent),
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'register',
+    loadComponent: () => import('./pages/auth/register/register.component').then(m => m.RegisterComponent),
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'forgot-password',
+    loadComponent: () => import('./pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent),
+    canActivate: [guestGuard]
+  },
+  {
+    path: 'reset-password',
+    loadComponent: () => import('./pages/auth/reset-password/reset-password.component').then(m => m.ResetPasswordComponent),
+    canActivate: [guestGuard]
+  },
+  { path: 'auth', redirectTo: 'login', pathMatch: 'full' },
+
+  // 3. Indian Laws Reference Library (Public)
+  {
+    path: 'laws',
+    loadComponent: () => import('./pages/browse-laws/browse-laws.component').then(m => m.BrowseLawsComponent)
+  },
+  {
+    path: 'laws/:shortName',
+    loadComponent: () => import('./pages/law-viewer/law-viewer.component').then(m => m.LawViewerComponent)
+  },
+
+  // 4. Search, Directory & Review Sections (Public)
+  {
+    path: 'search',
+    loadComponent: () => import('./pages/search/search.component').then(m => m.SearchComponent)
+  },
+  {
+    path: 'lawyers',
+    loadComponent: () => import('./pages/lawyers/lawyers.component').then(m => m.LawyersComponent)
+  },
+  {
+    path: 'reviews',
+    loadComponent: () => import('./pages/reviews/reviews.component').then(m => m.ReviewsComponent)
+  },
+
+  // 5. User Workstations & Dashboards (Auth Required)
+  {
+    path: 'dashboard',
+    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'lawyer/workstation',
+    loadComponent: () => import('./pages/dashboard/advocate-dashboard/advocate-dashboard.component').then(m => m.AdvocateDashboardComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { expectedRoles: ['Lawyer'] }
+  },
+  {
+    path: 'client/portal',
+    loadComponent: () => import('./pages/dashboard/client-dashboard/client-dashboard.component').then(m => m.ClientDashboardComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { expectedRoles: ['Client'] }
+  },
+  {
+    path: 'profile',
+    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard]
+  },
+  {
+    path: 'notifications',
+    loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
+    canActivate: [authGuard]
+  },
+
+  { path: '**', redirectTo: '' }
 ];

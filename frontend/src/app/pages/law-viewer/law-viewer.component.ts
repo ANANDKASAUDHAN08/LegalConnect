@@ -3,6 +3,8 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { LegalService, BareAct, Chapter, Section } from '../../services/legal.service';
 import { BookmarkService } from '../../services/bookmark.service';
+import { AuthService, UserProfile } from '../../services/auth.service';
+import { SnackbarService } from '../../services/snackbar.service';
 
 @Component({
   selector: 'app-law-viewer',
@@ -18,6 +20,8 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   loading = true;
   error = '';
   shortName = '';
+  isLoggedIn = false;
+  currentUser: UserProfile | null = null;
 
   @ViewChildren('sectionElement') sectionElements!: QueryList<ElementRef>;
   private observer: IntersectionObserver | null = null;
@@ -27,10 +31,14 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   constructor(
     private route: ActivatedRoute, 
     private legalService: LegalService,
-    public bookmarkService: BookmarkService
+    public bookmarkService: BookmarkService,
+    private authService: AuthService,
+    private snackbar: SnackbarService
   ) {}
 
   ngOnInit() {
+    this.authService.isLoggedIn$.subscribe(loggedIn => this.isLoggedIn = loggedIn);
+    this.authService.currentUser$.subscribe(user => this.currentUser = user);
     this.shortName = this.route.snapshot.paramMap.get('shortName') || '';
     this.legalService.getActByShortName(this.shortName).subscribe({
       next: res => {
@@ -80,6 +88,10 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   toggleBookmark(section: Section) {
+    if (!this.isLoggedIn) {
+      this.snackbar.show('Please log in to save this section to your library.', 'warning');
+      return;
+    }
     if (this.bookmarkService.isBookmarked(this.shortName, section.section_number)) {
       this.bookmarkService.removeBookmark(this.shortName, section.section_number);
     } else {
@@ -92,7 +104,7 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   shareSection(section: Section) {
     const url = `${window.location.origin}/laws/${this.shortName}#sec-${section.section_number}`;
     navigator.clipboard.writeText(url).then(() => {
-      alert('Link copied to clipboard!');
+      this.snackbar.show('Section link copied to clipboard!', 'success');
     });
   }
 

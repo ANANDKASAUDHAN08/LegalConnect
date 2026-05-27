@@ -13,6 +13,7 @@ namespace CoreApi.Data
         public DbSet<LawyerProfile> LawyerProfiles { get; set; }
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Bookmark> Bookmarks { get; set; }
+        public DbSet<Review> Reviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

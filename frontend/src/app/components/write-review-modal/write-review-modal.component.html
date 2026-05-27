@@ -1,0 +1,98 @@
+<div (click)="onCancel()"
+  [style.top.px]="isMobile ? navbarHeight : 0"
+  [style.height]="isMobile ? 'calc(100% - ' + navbarHeight + 'px)' : '100%'"
+  class="fixed inset-x-0 bottom-0 bg-slate-950/60 backdrop-blur-md z-[1100] max-sm:z-[990] flex items-center justify-center p-4 max-sm:p-0 overflow-y-auto max-sm:overflow-hidden scrollbar-none">
+  <!-- Modal Card -->
+  <div (click)="$event.stopPropagation()"
+    class="relative w-full sm:max-w-[640px] max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:border-0 bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl max-h-[90vh] max-sm:max-h-full overflow-y-auto flex flex-col gap-6 scrollbar-none fade-in-up my-auto">
+
+    <!-- Close button -->
+    <button (click)="onCancel()"
+      class="absolute right-4 top-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 p-1 transition-colors outline-none">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+
+    <!-- Modal Header -->
+    <div>
+      <h3 class="font-bold text-slate-850 dark:text-white text-lg">{{ modalTitle }}</h3>
+      <p class="text-xs text-slate-455 dark:text-slate-500 mt-0.5">Share your experience about a lawyer or the platform itself.</p>
+    </div>
+
+    <form (submit)="onSubmit()" class="flex flex-col gap-4">
+      <!-- Auth Context Info -->
+      <div *ngIf="currentUser"
+        class="p-3 bg-blue-500/[0.04] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 rounded-xl flex items-center justify-between text-xs">
+        <span class="text-slate-600 dark:text-slate-400 font-medium">Posting Securely As:</span>
+        <span class="font-bold text-blue-600 dark:text-blue-400">{{ currentUser.fullName }} ({{ currentUser.role }})</span>
+      </div>
+
+      <!-- Guest Name Input (Only if Logged out) -->
+      <div *ngIf="!currentUser" class="flex flex-col gap-1.5">
+        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Your Name</label>
+        <input type="text" [(ngModel)]="authorName" name="authorName" placeholder="e.g. Amit K." required
+          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs shadow-sm">
+      </div>
+
+      <!-- Review Subject / Target -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Review Subject</label>
+        <input type="text" [(ngModel)]="targetName" name="targetName" placeholder="e.g. Platform, Adv. Priya Sharma" required
+          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs shadow-sm">
+      </div>
+
+      <!-- Rating Star Picker -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Rating</label>
+        <div class="flex items-center gap-1.5">
+          <button type="button" *ngFor="let star of [1,2,3,4,5]" (click)="setRating(star)"
+            class="text-2xl transition-transform hover:scale-110 outline-none">
+            <span [class]="star <= rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-700'">★</span>
+          </button>
+          <span class="text-xs font-bold text-slate-450 dark:text-slate-500 ml-2">({{ rating }} out of 5 stars)</span>
+        </div>
+      </div>
+
+      <!-- Quick Feedback Tags -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Quick Feedback Tags (Click to select)</label>
+        <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto scrollbar-none py-0.5">
+          <button type="button" *ngFor="let chip of currentChips" (click)="toggleChip(chip)"
+            [ngClass]="isChipActive(chip) ? 'bg-blue-600 border-blue-600 text-white font-semibold' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/65 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-850'"
+            class="px-2.5 py-1 text-[10px] rounded-lg border transition-all duration-200 outline-none select-none flex items-center gap-1">
+            <span>{{ chip.emoji }} {{ chip.text }}</span>
+            <span *ngIf="isChipActive(chip)" class="text-[9px]">✕</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Review Content Textarea -->
+      <div class="flex flex-col gap-1.5">
+        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Comments</label>
+        <textarea [(ngModel)]="content" name="content" required placeholder="Write details about your experience..."
+          class="w-full p-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none h-24 shadow-sm scrollbar-none"></textarea>
+      </div>
+
+      <!-- Guest Security Notice -->
+      <div *ngIf="!currentUser"
+        class="p-3 bg-amber-500/[0.04] border border-amber-500/10 text-[10px] text-amber-600 dark:text-amber-455 rounded-xl leading-normal flex items-start gap-1.5 font-medium">
+        <span>⚠️</span>
+        <span><strong>Guest Notice:</strong> Due to security and verification requirements, guest reviews are permanent once submitted. Sign up as a Client to edit/delete reviews anytime.</span>
+      </div>
+
+      <!-- Submit Actions -->
+      <div class="flex gap-2.5 mt-2">
+        <button type="button" (click)="onCancel()"
+          class="btn btn-outline py-3 flex-1 text-xs justify-center font-bold">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="isSubmitting || content.trim().length === 0"
+          class="btn btn-primary py-3 flex-1 text-xs font-bold shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
+          <span *ngIf="isSubmitting">Saving...</span>
+          <span *ngIf="!isSubmitting">Save Review</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

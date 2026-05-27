@@ -1,0 +1,85 @@
+<section class="section bg-white/40 dark:bg-slate-900/10 border-b border-slate-200/40 dark:border-slate-800/60 py-12 sm:py-20">
+  <div class="container mx-auto px-4 sm:px-6">
+    <div class="section-header text-center mb-8 sm:mb-12 flex flex-col items-center gap-4">
+      <span class="badge badge-primary">Advocate Citations Assistant</span>
+      <h2 class="section-title text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-text-primary dark:text-white">
+        BNS to IPC Section Equivalency Finder
+      </h2>
+      <p class="section-subtitle text-slate-500 dark:text-slate-400 max-w-[620px] text-sm sm:text-base leading-relaxed">
+        Instantly cross-reference new Bharatiya Nyaya Sanhita (BNS, 2023) section numbers with old Indian Penal Code (IPC) counterparts.
+      </p>
+    </div>
+
+    <!-- Citation Search Bar -->
+    <div class="w-full max-w-[640px] mx-auto mb-10 px-1">
+      <div class="relative group">
+        <input type="text" [(ngModel)]="searchQuery" (keyup)="onSearch()"
+          placeholder="Enter IPC section, BNS section, or keyword (e.g. 302, 420, Murder)..."
+          class="w-full pl-12 pr-12 py-3.5 rounded-2xl bg-white/70 dark:bg-slate-950 border border-slate-200 dark:border-slate-850 focus:border-accent dark:focus:border-accent focus:ring-4 focus:ring-accent/10 transition-all text-text-primary dark:text-white text-base placeholder-slate-400 dark:placeholder-slate-500 outline-none shadow-sm backdrop-blur-md">
+        <svg
+          class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 dark:text-slate-500 group-focus-within:text-accent transition-colors"
+          fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+        <button *ngIf="searchQuery" (click)="clearSearch()"
+          class="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 p-1">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+      <div class="flex flex-wrap gap-1.5 text-xs text-slate-450 dark:text-slate-500 mt-2 px-1">
+        <span>Try searching:</span>
+        <button (click)="searchQuery = '302'; onSearch()" class="hover:text-accent underline font-semibold transition-colors">IPC 302</button>
+        <span>•</span>
+        <button (click)="searchQuery = '420'; onSearch()" class="hover:text-accent underline font-semibold transition-colors">IPC 420</button>
+        <span>•</span>
+        <button (click)="searchQuery = 'Theft'; onSearch()" class="hover:text-accent underline font-semibold transition-colors">Theft</button>
+      </div>
+    </div>
+
+    <!-- Search Results Grid -->
+    <div *ngIf="searchResults.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 fade-in-up">
+      <div *ngFor="let sec of searchResults" 
+        class="card p-6 bg-white/70 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/80 rounded-2xl flex flex-col gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all group">
+        
+        <div class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3">
+          <span class="text-[9px] font-bold uppercase tracking-wider text-slate-450 dark:text-slate-500">
+            {{ sec.category }}
+          </span>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <h3 class="text-base font-bold text-slate-850 dark:text-white group-hover:text-accent transition-colors">
+            {{ sec.title }}
+          </h3>
+        </div>
+
+        <!-- BNS vs IPC conversion badge layout -->
+        <div class="grid grid-cols-2 gap-2 mt-1">
+          <div class="p-2.5 rounded-xl bg-amber-500/[0.04] dark:bg-amber-500/[0.02] border border-amber-500/10 dark:border-amber-500/20 text-center flex flex-col items-center">
+            <span class="text-[9px] font-bold text-amber-600 dark:text-amber-450 uppercase">BNS (New)</span>
+            <span class="text-sm font-extrabold text-amber-600 dark:text-amber-400 mt-0.5">Sec {{ sec.bnsSection }}</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-100/65 dark:bg-slate-950/40 border border-slate-200/20 dark:border-slate-800/40 text-center flex flex-col items-center">
+            <span class="text-[9px] font-bold text-slate-450 dark:text-slate-550 uppercase">IPC (Old)</span>
+            <span class="text-sm font-extrabold text-slate-700 dark:text-slate-300 mt-0.5">Sec {{ sec.ipcSection }}</span>
+          </div>
+        </div>
+
+        <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium mt-1">
+          {{ sec.description }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Empty Search State -->
+    <div *ngIf="searchResults.length === 0" class="text-center py-12 flex flex-col items-center gap-3">
+      <span class="text-4xl">🔍</span>
+      <h3 class="font-bold text-slate-800 dark:text-white text-base">No sections found</h3>
+      <p class="text-xs text-slate-450 max-w-sm">No results match your lookup query. Try entering a different section number or offense keywords.</p>
+      <button (click)="clearSearch()" class="btn btn-outline btn-sm text-xs mt-1">Reset Finder</button>
+    </div>
+
+  </div>
+</section>

@@ -264,6 +264,15 @@ h1, h2, h3, h4, h5, h6 { line-height: 1.2; font-weight: 700; }
 ::-webkit-scrollbar-thumb { background: var(--bg-elevated); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-accent); }
 
+/* Hide scrollbar utility globally */
+.scrollbar-none {
+  -ms-overflow-style: none !important;  /* IE and Edge */
+  scrollbar-width: none !important;  /* Firefox */
+  &::-webkit-scrollbar {
+    display: none !important; /* Chrome, Safari and Opera */
+  }
+}
+
 /* --- Responsive Layout Fixes --- */
 @media (max-width: 768px) {
   .section { padding: 48px 0; } /* Smaller padding on mobile */
