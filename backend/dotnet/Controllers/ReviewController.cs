@@ -212,6 +212,44 @@ namespace CoreApi.Controllers
                 return StatusCode(500, ex.Message);
             }
         }
+
+        [Authorize]
+        [HttpGet("mine")]
+        public async Task<IActionResult> GetMyReviews()
+        {
+            try
+            {
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+                {
+                    return Unauthorized("Invalid user identification.");
+                }
+
+                var user = await _context.Users.FindAsync(userId);
+                if (user == null) return NotFound("User not found.");
+
+                if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
+                {
+                    var reviews = await _context.Reviews
+                        .Where(r => r.TargetName == user.FullName)
+                        .OrderByDescending(r => r.CreatedAt)
+                        .ToListAsync();
+                    return Ok(reviews);
+                }
+                else
+                {
+                    var reviews = await _context.Reviews
+                        .Where(r => r.UserId == userId)
+                        .OrderByDescending(r => r.CreatedAt)
+                        .ToListAsync();
+                    return Ok(reviews);
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ex.Message);
+            }
+        }
     }
 
     public class CreateReviewDto

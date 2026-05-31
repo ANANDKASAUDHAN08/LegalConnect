@@ -27,13 +27,30 @@ namespace CoreApi.Models
 
         [Required]
         public string Password { get; set; } = string.Empty;
+
+        public string? TwoFactorCode { get; set; }
     }
 
     public class UpdateProfileDto
     {
-        [Required]
         [MinLength(2)]
-        public string FullName { get; set; } = string.Empty;
+        public string? FullName { get; set; }
+
+        public string? Phone { get; set; }
+
+        public string? ClientLanguage { get; set; }
+
+        public string? ClientCity { get; set; }
+
+        public string? ClientInterest { get; set; }
+
+        public DateTime? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
+        public string? AddressLine1 { get; set; }
+        public string? ClientState { get; set; }
+        public string? ClientZip { get; set; }
+        public string? ClientBio { get; set; }
+        public string? AvatarUrl { get; set; }
     }
 
     public class ChangePasswordDto
@@ -65,5 +82,25 @@ namespace CoreApi.Models
         [Required]
         [MinLength(8)]
         public string Password { get; set; } = string.Empty;
+    }
+
+    public class Toggle2FaDto
+    {
+        public bool Enable { get; set; }
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class VerifyPhoneDto
+    {
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class VerifyIdentityDto
+    {
+        [Required]
+        public string DocumentType { get; set; } = string.Empty;
+
+        [Required]
+        public string DocumentFile { get; set; } = string.Empty;
     }
 }

@@ -1,0 +1,74 @@
+<div class="space-y-6 animate-[fadeIn_0.3s_ease-out]">
+  <!-- Header -->
+  <div class="pb-4 border-b border-slate-100 dark:border-slate-800/60">
+    <h2 class="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2 font-sans">
+      <span>🔔</span> Notification Preferences
+    </h2>
+    <p class="text-xs text-slate-550 dark:text-slate-400 mt-1">Control how and when you receive emails and system alerts.</p>
+  </div>
+
+  <!-- Preference Items divided by borders -->
+  <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
+    
+    <!-- Item 1: Case Updates -->
+    <div class="py-4 flex items-center justify-between gap-4">
+      <div class="space-y-0.5">
+        <h4 class="text-xs font-bold text-slate-850 dark:text-slate-200">Case Updates</h4>
+        <p class="text-xs text-slate-450 dark:text-slate-550">Get notified when there's an update on your active cases</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer select-none">
+        <input type="checkbox" [(ngModel)]="prefs.caseUpdates" (change)="savePrefs()" class="sr-only peer" />
+        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-amber-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:height-5 after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+      </label>
+    </div>
+
+    <!-- Item 2: New Messages -->
+    <div class="py-4 flex items-center justify-between gap-4">
+      <div class="space-y-0.5">
+        <h4 class="text-xs font-bold text-slate-850 dark:text-slate-200">New Messages</h4>
+        <p class="text-xs text-slate-450 dark:text-slate-550">Receive alerts for new messages from your attorneys</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer select-none">
+        <input type="checkbox" [(ngModel)]="prefs.newMessages" (change)="savePrefs()" class="sr-only peer" />
+        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-amber-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:height-5 after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+      </label>
+    </div>
+
+    <!-- Item 3: Appointment Reminders -->
+    <div class="py-4 flex items-center justify-between gap-4">
+      <div class="space-y-0.5">
+        <h4 class="text-xs font-bold text-slate-850 dark:text-slate-200">Appointment Reminders</h4>
+        <p class="text-xs text-slate-455 dark:text-slate-550">Get reminded of upcoming consultations and court dates</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer select-none">
+        <input type="checkbox" [(ngModel)]="prefs.reminders" (change)="savePrefs()" class="sr-only peer" />
+        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-amber-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:height-5 after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+      </label>
+    </div>
+
+    <!-- Item 4: Payment Receipts -->
+    <div class="py-4 flex items-center justify-between gap-4">
+      <div class="space-y-0.5">
+        <h4 class="text-xs font-bold text-slate-855 dark:text-slate-200">Payment Receipts</h4>
+        <p class="text-xs text-slate-455 dark:text-slate-550">Receive email receipts for all payments and invoices</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer select-none">
+        <input type="checkbox" [(ngModel)]="prefs.receipts" (change)="savePrefs()" class="sr-only peer" />
+        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-amber-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:height-5 after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+      </label>
+    </div>
+
+    <!-- Item 5: Promotional Emails -->
+    <div class="py-4 flex items-center justify-between gap-4">
+      <div class="space-y-0.5">
+        <h4 class="text-xs font-bold text-slate-855 dark:text-slate-200">Promotional Emails</h4>
+        <p class="text-xs text-slate-455 dark:text-slate-555">Receive news, tips, and promotional offers</p>
+      </div>
+      <label class="relative inline-flex items-center cursor-pointer select-none">
+        <input type="checkbox" [(ngModel)]="prefs.promotional" (change)="savePrefs()" class="sr-only peer" />
+        <div class="w-11 h-6 bg-slate-200 dark:bg-slate-800 rounded-full peer peer-focus:ring-2 peer-focus:ring-amber-500/20 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:height-5 after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500"></div>
+      </label>
+    </div>
+
+  </div>
+</div>

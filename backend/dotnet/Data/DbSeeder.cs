@@ -38,11 +38,16 @@ namespace CoreApi.Data
                         PasswordHash = BCrypt.Net.BCrypt.HashPassword("password123"),
                         Role = "Lawyer",
                         IsEmailVerified = true,
+                        IsPhoneVerified = true,
                         CreatedAt = DateTime.UtcNow
                     };
 
                     context.Users.Add(user);
                     context.SaveChanges(); // Save to get the generated Id
+
+                    // Update phone with unique generated Id
+                    user.Phone = $"+91 98765 {user.Id:D5}";
+                    context.SaveChanges();
 
                     var profile = new LawyerProfile
                     {
@@ -51,6 +56,14 @@ namespace CoreApi.Data
                         Specialization = l.Specialization,
                         ExperienceYears = l.Experience,
                         IsVerified = true, // Pre-seeded default advocates are verified by default
+                        City = "Mumbai",
+                        Bio = $"Pre-seeded professional advocate specializing in {l.Specialization}.",
+                        Phone = user.Phone ?? string.Empty,
+                        ConsultationFee = 1500.00m,
+                        OfficeAddress = $"Suite {100 + user.Id}, Legal Chambers, High Court Road",
+                        Education = "LL.B., National Law School",
+                        LanguagesSpoken = "English, Hindi",
+                        IsAvailable = true,
                         UpdatedAt = DateTime.UtcNow
                     };
 

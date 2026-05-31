@@ -57,7 +57,21 @@ router.get('/:id', async (req: Request, res: Response) => {
 // PUT /api/lawyers/sync - Sync advocate profile from .NET Core API (MySQL) to MongoDB
 router.put('/sync', async (req: Request, res: Response) => {
   try {
-    const { name, specializations, city, experience, bio, phone, email, isVerified } = req.body;
+    const { 
+      name, 
+      specializations, 
+      city, 
+      experience, 
+      bio, 
+      phone, 
+      email, 
+      isVerified,
+      consultationFee,
+      officeAddress,
+      education,
+      languagesSpoken,
+      isAvailable
+    } = req.body;
 
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email is required for synchronization.' });
@@ -73,13 +87,32 @@ router.put('/sync', async (req: Request, res: Response) => {
         bio,
         phone,
         email,
-        rating: 4.5,
-        isVerified: true
+        rating: Number(req.body.rating || 4.5),
+        isVerified: true,
+        consultationFee: Number(consultationFee || 0),
+        officeAddress: officeAddress || '',
+        education: education || '',
+        languagesSpoken: languagesSpoken || [],
+        isAvailable: isAvailable !== false
       },
       { new: true, upsert: true }
     );
 
     res.json({ success: true, message: 'Lawyer profile synchronized successfully.', data: updatedLawyer });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// DELETE /api/lawyers/sync/:email - Purge synced advocate from MongoDB
+router.delete('/sync/:email', async (req: Request, res: Response) => {
+  try {
+    const { email } = req.params;
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required.' });
+    }
+    const result = await Lawyer.deleteOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+    res.json({ success: true, message: 'Synchronized lawyer profile deleted.', result });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

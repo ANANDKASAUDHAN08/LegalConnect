@@ -9,7 +9,25 @@ export interface UserProfile {
   email: string;
   role: string;
   createdAt: string;
+  phone?: string;
+  isPhoneVerified?: boolean;
+  isEmailVerified?: boolean;
+  isTwoFactorEnabled?: boolean;
+  clientLanguage?: string;
+  clientCity?: string;
+  clientInterest?: string;
+  // Extended profile fields
+  dateOfBirth?: string;
+  gender?: string;
+  addressLine1?: string;
+  clientState?: string;
+  clientZip?: string;
+  clientBio?: string;
+  avatarUrl?: string;
+  identityStatus?: string;
+  identityDocumentUrl?: string;
 }
+
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -34,10 +52,8 @@ export class AuthService {
   }
 
   constructor(private http: HttpClient, private router: Router) {
-    // Check initial session state on load
-    this.checkSession().subscribe();
-
-    // Sync auth state across multiple tabs
+    // Session is initialized via APP_INITIALIZER in app.config.ts.
+    // This listener handles cross-tab login/logout events.
     window.addEventListener('storage', (event) => {
       if (event.key === 'lc_token') {
         const newToken = event.newValue;
@@ -65,6 +81,9 @@ export class AuthService {
 
     return this.http.get<UserProfile>(`${this.apiUrl}/me`, this.httpOptions).pipe(
       tap(user => {
+        if (user && user.avatarUrl && user.avatarUrl.startsWith('/')) {
+          user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
+        }
         this._currentUser.next(user);
         this._isLoggedIn.next(true);
         this._isSessionLoaded.next(true);
@@ -88,14 +107,19 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/register`, data, this.httpOptions);
   }
 
-  login(data: { email: string; password: string }): Observable<boolean> {
+  login(data: { email: string; password: string; twoFactorCode?: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/login`, data, this.httpOptions).pipe(
       tap((res) => {
-        this.token = res.token;
-        localStorage.setItem('lc_token', res.token);
-      }),
-      switchMap(() => this.checkSession())
+        if (res.token) {
+          this.token = res.token;
+          localStorage.setItem('lc_token', res.token);
+        }
+      })
     );
+  }
+
+  completeLogin(): Observable<boolean> {
+    return this.checkSession();
   }
 
   forgotPassword(email: string) {
@@ -111,15 +135,69 @@ export class AuthService {
   }
 
   getProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${this.apiUrl}/me`, this.httpOptions);
+    return this.http.get<UserProfile>(`${this.apiUrl}/me`, this.httpOptions).pipe(
+      map(user => {
+        if (user && user.avatarUrl && user.avatarUrl.startsWith('/')) {
+          user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
+        }
+        return user;
+      })
+    );
   }
 
-  updateProfile(fullName: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/me`, { fullName }, this.httpOptions);
+  updateProfile(data: Partial<UserProfile>): Observable<any> {
+    return this.http.put<any>(`${this.apiUrl}/me`, data, this.httpOptions);
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<any> {
     return this.http.put<any>(`${this.apiUrl}/change-password`, { currentPassword, newPassword }, this.httpOptions);
+  }
+
+  deleteAccount(): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/me`, this.httpOptions).pipe(
+      tap(() => {
+        this.token = null;
+        localStorage.removeItem('lc_token');
+        this._currentUser.next(null);
+        this._isLoggedIn.next(false);
+      })
+    );
+  }
+
+  get2FASetup(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/2fa/setup`, this.httpOptions);
+  }
+
+  toggle2FA(enable: boolean, code: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/2fa/toggle`, { enable, code }, this.httpOptions);
+  }
+
+  verifyPhone(code: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/phone/verify`, { code }, this.httpOptions);
+  }
+
+  resendEmailVerification(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/email/resend-verification`, {}, this.httpOptions);
+  }
+
+  verifyIdentity(documentType: string, documentFile: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verify-identity`, { documentType, documentFile }, this.httpOptions);
+  }
+
+  getActiveSessions(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/sessions`, this.httpOptions);
+  }
+
+  revokeSession(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/sessions/${id}`, this.httpOptions);
+  }
+
+  getLoginHistory(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/login-history`, this.httpOptions);
+  }
+
+  getExportData(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/export-data`, this.httpOptions);
   }
 
   logout() {
@@ -132,7 +210,6 @@ export class AuthService {
         this.router.navigate(['/login']);
       }),
       catchError(() => {
-        // Fallback cleanup in case of request issue
         this.token = null;
         localStorage.removeItem('lc_token');
         this._currentUser.next(null);

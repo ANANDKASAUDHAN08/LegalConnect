@@ -1,0 +1,392 @@
+<div class="space-y-6 animate-[fadeIn_0.3s_ease-out]">
+  <!-- ── Section Header ── -->
+  <div class="flex items-start gap-3.5 pb-4 border-b border-slate-100 dark:border-slate-800/60">
+    <!-- Premium icon container -->
+    <div
+      class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800/40 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-indigo-650 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+        stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+      </svg>
+    </div>
+    <div>
+      <h2 class="text-base font-bold text-slate-900 dark:text-white leading-tight">Account Verification</h2>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Verify your credentials to unlock full portal
+        features.</p>
+    </div>
+  </div>
+
+  <div class="flex flex-col gap-4 sm:gap-0">
+
+    <!-- Email Verification Row / Card -->
+    <div
+      class="px-3 py-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/40 shadow-sm sm:shadow-none sm:border-0 sm:border-b sm:border-slate-200 dark:sm:border-slate-800/60 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <svg class="w-6 h-6 text-indigo-500 dark:text-indigo-400 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
+        </svg>
+        <div>
+          <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
+            Email Address
+          </h3>
+          <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1 break-all">{{ profile.email }}</p>
+        </div>
+      </div>
+      <div class="flex items-center w-full sm:w-auto">
+        <span *ngIf="profile.isEmailVerified"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-xl sm:rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Verified
+        </span>
+        <button *ngIf="!profile.isEmailVerified" (click)="resendEmailVerification()" [disabled]="resendLoading"
+          class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/15 disabled:opacity-50 flex items-center justify-center">
+          Verify Email
+        </button>
+      </div>
+    </div>
+
+    <!-- Phone Verification Row / Card -->
+    <div
+      class="px-3 py-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/40 shadow-sm sm:shadow-none sm:border-0 sm:border-b sm:border-slate-200 dark:sm:border-slate-800/60 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5 w-full sm:w-auto">
+        <svg class="w-6 h-6 text-blue-500 dark:text-blue-400 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="1.8">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M10.5 1.5H8.25A2.25 2.25 0 006 3.75v16.5a2.25 2.25 0 002.25 2.25h7.5A2.25 2.25 0 0018 20.25V3.75a2.25 2.25 0 00-2.25-2.25H13.5m-3 0V3h3V1.5m-3 0h3m-6 18.75h12" />
+        </svg>
+        <div class="flex-1 min-w-0">
+          <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Phone
+            Number</h3>
+          <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">{{ profile.phone || 'No phone number
+            added.' }}</p>
+        </div>
+      </div>
+
+      <!-- Verified Badge or Inline Form -->
+      <div class="w-full sm:w-auto flex flex-col items-stretch sm:items-end gap-3">
+        <!-- Verified state -->
+        <span *ngIf="profile.isPhoneVerified"
+          class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-xl sm:rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Verified
+        </span>
+
+        <!-- Unverified state (Enter Phone Number) -->
+        <div *ngIf="!profile.isPhoneVerified && !showPhoneOtp"
+          class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+
+          <!-- Unified Premium Input Group Container -->
+          <div *ngIf="!profile.phone"
+            class="w-full sm:w-64 flex items-center bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 rounded-xl focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 transition-all duration-200 relative">
+
+            <!-- Country Dropdown Button -->
+            <div class="relative flex-shrink-0">
+              <button type="button" (click)="toggleCountryDropdown()"
+                class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none select-none">
+                <img [src]="'https://flagcdn.com/w20/' + selectedCountry.short.toLowerCase() + '.png'"
+                  class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" alt="{{ selectedCountry.name }} flag" />
+                <span class="text-[10px]">{{ selectedCountry.code }}</span>
+                <svg class="w-3 h-3 text-slate-400 transition-transform duration-200"
+                  [class.rotate-180]="showCountryDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Backdrop for closing -->
+              <div *ngIf="showCountryDropdown" class="fixed inset-0 z-40 bg-transparent"
+                (click)="showCountryDropdown = false"></div>
+
+              <!-- Country Codes List -->
+              <div *ngIf="showCountryDropdown"
+                class="absolute z-50 left-0 mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl shadow-slate-950/10 dark:shadow-black/50 animate-[fadeIn_0.12s_ease-out] flex flex-col overflow-hidden">
+
+                <!-- Search Input -->
+                <div
+                  class="p-1.5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+                  <input type="text" [(ngModel)]="countrySearchText" (click)="$event.stopPropagation()"
+                    placeholder="Search..."
+                    class="w-full px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-slate-200 focus:border-amber-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600" />
+                </div>
+
+                <!-- Scrollable list wrapper -->
+                <div class="overflow-y-auto max-h-48 scrollbar-none">
+                  <button *ngFor="let country of getFilteredCountries()" type="button" (click)="selectCountry(country)"
+                    class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left transition-colors border-0 bg-transparent outline-none cursor-pointer">
+                    <img [src]="'https://flagcdn.com/w20/' + country.short.toLowerCase() + '.png'"
+                      class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" alt="{{ country.name }} flag" />
+                    <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase">{{ country.short
+                      }}</span>
+                    <span class="text-[9px] text-slate-500 dark:text-slate-400 font-medium ml-auto">{{ country.code
+                      }}</span>
+                  </button>
+
+                  <!-- No results message -->
+                  <div *ngIf="getFilteredCountries().length === 0"
+                    class="px-3 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                    No matches found
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Digits Only Text Field -->
+            <input type="text" [(ngModel)]="phoneBody" (keypress)="onlyNumbers($event)" (input)="filterPhoneDigits()"
+              placeholder="" autocomplete="off" maxlength="10"
+              class="w-full flex-1 bg-transparent px-3 py-2 outline-none border-0 text-xs text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-650" />
+          </div>
+
+          <button (click)="sendPhoneOtp()"
+            class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all flex items-center justify-center shadow-md shadow-amber-500/15 hover:shadow-lg hover:shadow-amber-500/10 whitespace-nowrap">
+            Send Code
+          </button>
+        </div>
+
+        <!-- Unverified state (OTP verification inputs) -->
+        <div *ngIf="showPhoneOtp && !profile.isPhoneVerified"
+          class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto animate-[fadeIn_0.2s_ease-out]">
+          <input type="text" [(ngModel)]="phoneOtpCode" placeholder="Enter verification code"
+            class="w-full sm:w-56 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-center font-mono tracking-wider text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-500 dark:placeholder:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700" />
+          <div class="flex items-center gap-2.5 w-full sm:w-auto">
+            <button (click)="cancelPhoneVerification()" type="button"
+              class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+              Cancel
+            </button>
+            <button (click)="verifyPhoneOtp()" [disabled]="otpLoading"
+              class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center shadow-md shadow-emerald-500/15">
+              Confirm
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Identity Verification Card -->
+    <div
+      class="px-3 py-4 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/40 shadow-sm sm:shadow-none sm:border-0 sm:rounded-none sm:bg-transparent sm:px-0 sm:py-5 flex flex-col gap-4">
+
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-center gap-3.5">
+          <svg class="w-6 h-6 text-amber-500 dark:text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5zm6-10.125a1.875 1.875 0 11-3.75 0 1.875 1.875 0 013.75 0zm1.294 6.336a6.721 6.721 0 01-3.17.789 6.721 6.721 0 01-3.168-.789 3.376 3.376 0 016.338 0z" />
+          </svg>
+          <div>
+            <h3 class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">
+              Identity Verification</h3>
+            <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">
+              {{ profile.role === 'Lawyer' ? 'Verify your BCI registration or citizen identity.' : 'Verify your identity
+              to request legal consultations.' }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center self-start sm:self-auto">
+          <span *ngIf="identityStatus === 'Verified'"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-xl sm:rounded-lg text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Verified
+          </span>
+          <span *ngIf="identityStatus === 'Pending'"
+            class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3 py-1.5 sm:py-1 rounded-xl sm:rounded-lg text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+            Pending Verification
+          </span>
+        </div>
+      </div>
+
+      <!-- Verification Actions panel (Visible when not verified) -->
+      <div *ngIf="identityStatus !== 'Verified' && identityStatus !== 'Pending'"
+        class="mt-1 p-0 sm:p-4 bg-transparent sm:bg-slate-50 dark:bg-transparent dark:sm:bg-slate-900/35 border-0 sm:border border-slate-200 dark:border-slate-800/80 rounded-2xl flex flex-col gap-4 animate-[fadeIn_0.25s_ease-out]">
+
+        <!-- Select Document Type (Segmented control) -->
+        <div class="flex flex-col gap-2">
+          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Select ID
+            Type</label>
+          <div
+            class="flex flex-col sm:flex-row p-1 bg-slate-100 dark:bg-slate-950/60 rounded-xl border-0 sm:border border-slate-200/50 dark:border-slate-800/80 w-full gap-1">
+            <button *ngIf="profile.role === 'Lawyer'" type="button"
+              (click)="indianIdType = 'Bar Council Card'; showIdentityOtp = false"
+              [class]="indianIdType === 'Bar Council Card' 
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm shadow-slate-900/5 dark:shadow-black/20 font-bold' 
+                : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/20'"
+              class="py-2 px-3 rounded-xl border-0 bg-transparent text-xs text-center transition-all cursor-pointer outline-none select-none w-full sm:flex-1">
+              Bar Council
+            </button>
+            <button type="button" (click)="indianIdType = 'Aadhaar'; showIdentityOtp = false"
+              [class]="indianIdType === 'Aadhaar' 
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm shadow-slate-900/5 dark:shadow-black/20 font-bold' 
+                : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/20'"
+              class="py-2 px-3 rounded-xl border-0 bg-transparent text-xs text-center transition-all cursor-pointer outline-none select-none w-full sm:flex-1">
+              Aadhaar Card
+            </button>
+            <button type="button" (click)="indianIdType = 'PAN'; showIdentityOtp = false"
+              [class]="indianIdType === 'PAN' 
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm shadow-slate-900/5 dark:shadow-black/20 font-bold' 
+                : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/20'"
+              class="py-2 px-3 rounded-xl border-0 bg-transparent text-xs text-center transition-all cursor-pointer outline-none select-none w-full sm:flex-1">
+              PAN Card
+            </button>
+            <button type="button" (click)="indianIdType = 'Voter ID'; showIdentityOtp = false"
+              [class]="indianIdType === 'Voter ID' 
+                ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm shadow-slate-900/5 dark:shadow-black/20 font-bold' 
+                : 'text-slate-500 dark:text-slate-400 font-semibold hover:text-slate-800 dark:hover:text-slate-200 hover:bg-white/40 dark:hover:bg-slate-800/20'"
+              class="py-2 px-3 rounded-xl border-0 bg-transparent text-xs text-center transition-all cursor-pointer outline-none select-none flex-1 min-w-[120px]">
+              Voter ID
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Inputs based on selection -->
+
+        <!-- 1. Bar Council Verification -->
+        <div *ngIf="indianIdType === 'Bar Council Card'" class="space-y-3 max-w-2xl animate-[fadeIn_0.15s_ease-out]">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full">
+            <div class="flex-1 space-y-1.5">
+              <label
+                class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Enrollment
+                Number</label>
+              <input type="text" [(ngModel)]="barEnrollmentNumber" placeholder="e.g. MAH/2451/2019" autocomplete="off"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-slate-900 dark:text-white transition-all font-mono hover:border-slate-400 dark:hover:border-slate-700" />
+            </div>
+            <div class="flex-1 space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Upload
+                Bar ID Card (Photo/PDF)</label>
+              <label
+                class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-amber-400 transition-all select-none">
+                <span
+                  class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[150px] sm:max-w-[200px] font-medium">
+                  {{ idUploadFileName || 'Select document...' }}
+                </span>
+                <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">Browse</span>
+                <input type="file" (change)="onIdFileSelected($event)" accept="image/*,application/pdf"
+                  class="hidden" />
+              </label>
+            </div>
+            <button (click)="verifyBarCouncilCard()" [disabled]="uploadingId"
+              class="w-full sm:w-auto h-[42px] px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 whitespace-nowrap self-stretch sm:self-auto">
+              <svg *ngIf="uploadingId" class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              {{ uploadingId ? 'Submitting...' : 'Submit BCI Verification' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Aadhaar e-KYC Verification -->
+        <div *ngIf="indianIdType === 'Aadhaar'" class="space-y-3 max-w-xl animate-[fadeIn_0.15s_ease-out]">
+          <div *ngIf="!showIdentityOtp" class="space-y-2">
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full">
+              <div class="flex-1 space-y-1.5">
+                <label
+                  class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">12-Digit
+                  Aadhaar Number</label>
+                <input type="text" [(ngModel)]="aadhaarNumber" (keypress)="onlyNumbers($event)"
+                  placeholder="Enter 12-digit Aadhaar" autocomplete="off" maxlength="12"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-slate-900 dark:text-white transition-all font-mono tracking-widest hover:border-slate-400 dark:hover:border-slate-700" />
+              </div>
+              <button (click)="sendAadhaarOtp()"
+                class="w-full sm:w-auto h-[42px] px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/15 flex items-center justify-center whitespace-nowrap self-stretch sm:self-auto">
+                Send OTP
+              </button>
+            </div>
+          </div>
+
+          <div *ngIf="showIdentityOtp" class="space-y-3 animate-[fadeIn_0.2s_ease-out]">
+            <div
+              class="p-2.5 rounded-xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/20 text-xs text-amber-600 dark:text-amber-400 font-medium">
+              We sent a 6-digit verification code to your Aadhaar-registered phone number.
+            </div>
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto">
+              <input type="text" [(ngModel)]="identityOtpCode" placeholder="Enter Aadhaar OTP"
+                class="w-full sm:w-56 px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-center font-mono tracking-wider text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-500 dark:placeholder:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700" />
+              <div class="flex items-center gap-2.5 w-full sm:w-auto">
+                <button (click)="showIdentityOtp = false; identityOtpCode = ''" type="button"
+                  class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                  Cancel
+                </button>
+                <button (click)="verifyAadhaarOtp()" [disabled]="identityOtpLoading"
+                  class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center shadow-md shadow-emerald-500/15">
+                  Confirm OTP
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. PAN Verification -->
+        <div *ngIf="indianIdType === 'PAN'" class="space-y-3 max-w-xl animate-[fadeIn_0.15s_ease-out]">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full">
+            <div class="flex-1 space-y-1.5">
+              <label
+                class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">10-Character
+                PAN Card Number</label>
+              <input type="text" [(ngModel)]="panNumber" placeholder="e.g. ABCDE1234F" autocomplete="off" maxlength="10"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-slate-900 dark:text-white transition-all font-mono uppercase tracking-wider hover:border-slate-400 dark:hover:border-slate-700" />
+            </div>
+            <button (click)="verifyPanCard()" [disabled]="uploadingId"
+              class="w-full sm:w-auto h-[42px] px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 whitespace-nowrap self-stretch sm:self-auto">
+              <svg *ngIf="uploadingId" class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              {{ uploadingId ? 'Verifying...' : 'Verify PAN' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- 4. Voter ID / Other document upload -->
+        <div *ngIf="indianIdType === 'Voter ID'" class="space-y-3 animate-[fadeIn_0.15s_ease-out]">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full">
+            <div class="flex-1 space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Voter ID
+                Card Number</label>
+              <input type="text" [(ngModel)]="voterIdNumber" placeholder="Enter Voter ID number" autocomplete="off"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-slate-900 dark:text-white transition-all font-mono uppercase tracking-wider hover:border-slate-400 dark:hover:border-slate-700" />
+            </div>
+            <div class="flex-1 space-y-1.5">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-slate-500 uppercase tracking-widest">Upload
+                Scanned Document (Photo/PDF)</label>
+              <label
+                class="flex items-center justify-between px-3 py-2.5 rounded-xl bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 cursor-pointer hover:border-amber-400 transition-all select-none">
+                <span
+                  class="text-xs text-slate-500 dark:text-slate-400 truncate max-w-[150px] sm:max-w-200px font-medium">
+                  {{ idUploadFileName || 'Select file...' }}
+                </span>
+                <span class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase">Browse</span>
+                <input type="file" (change)="onIdFileSelected($event)" accept="image/*,application/pdf"
+                  class="hidden" />
+              </label>
+            </div>
+            <button (click)="verifyVoterOrPassport()" [disabled]="uploadingId"
+              class="w-full sm:w-auto h-[42px] px-6 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/15 whitespace-nowrap self-stretch sm:self-auto">
+              <svg *ngIf="uploadingId" class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              {{ uploadingId ? 'Verifying...' : 'Submit & Verify' }}
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>

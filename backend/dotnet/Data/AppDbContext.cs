@@ -14,10 +14,25 @@ namespace CoreApi.Data
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Bookmark> Bookmarks { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<ActiveSession> ActiveSessions { get; set; }
+        public DbSet<LoginHistory> LoginHistories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure ActiveSession & LoginHistory relationships
+            modelBuilder.Entity<ActiveSession>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<LoginHistory>()
+                .HasOne(h => h.User)
+                .WithMany()
+                .HasForeignKey(h => h.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             // Configure One-to-One relationship
             modelBuilder.Entity<User>()

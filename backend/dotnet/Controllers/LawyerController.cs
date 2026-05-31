@@ -55,6 +55,14 @@ namespace CoreApi.Controllers
                 specialization = profile.Specialization,
                 experienceYears = profile.ExperienceYears,
                 isVerified = profile.IsVerified,
+                city = profile.City,
+                bio = profile.Bio,
+                phone = profile.Phone,
+                consultationFee = profile.ConsultationFee,
+                officeAddress = profile.OfficeAddress,
+                education = profile.Education,
+                languagesSpoken = profile.LanguagesSpoken,
+                isAvailable = profile.IsAvailable,
                 updatedAt = profile.UpdatedAt
             });
         }
@@ -76,9 +84,33 @@ namespace CoreApi.Controllers
             profile.BarCouncilNumber = request.BarCouncilNumber;
             profile.Specialization = request.Specialization;
             profile.ExperienceYears = request.ExperienceYears;
+            profile.City = request.City ?? string.Empty;
+            profile.Bio = request.Bio ?? string.Empty;
+            profile.Phone = request.Phone ?? string.Empty;
+            profile.ConsultationFee = request.ConsultationFee;
+            profile.OfficeAddress = request.OfficeAddress ?? string.Empty;
+            profile.Education = request.Education ?? string.Empty;
+            profile.LanguagesSpoken = request.LanguagesSpoken ?? "English";
+            profile.IsAvailable = request.IsAvailable;
             profile.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();
+
+            // Calculate dynamic average rating from MySQL Reviews
+            double averageRating = 4.5;
+            var lawyerName = profile.User?.FullName;
+            if (!string.IsNullOrEmpty(lawyerName))
+            {
+                var ratings = await _context.Reviews
+                    .Where(r => r.TargetName == lawyerName)
+                    .Select(r => (double)r.Rating)
+                    .ToListAsync();
+
+                if (ratings.Any())
+                {
+                    averageRating = Math.Round(ratings.Average(), 1);
+                }
+            }
 
             // Sync to MongoDB (Node.js API)
             try
@@ -96,28 +128,65 @@ namespace CoreApi.Controllers
                     }
                 }
 
+                // Parse languages spoken string to array
+                string[] langArray = Array.Empty<string>();
+                if (!string.IsNullOrEmpty(profile.LanguagesSpoken))
+                {
+                    langArray = profile.LanguagesSpoken.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    for (int i = 0; i < langArray.Length; i++)
+                    {
+                        langArray[i] = langArray[i].Trim();
+                    }
+                }
+
                 var syncData = new
                 {
                     name = profile.User?.FullName ?? "Advocate",
                     specializations = specArray,
-                    city = request.City ?? "Unknown",
+                    city = profile.City,
                     experience = profile.ExperienceYears,
-                    bio = request.Bio ?? string.Empty,
-                    phone = request.Phone ?? string.Empty,
+                    bio = profile.Bio,
+                    phone = profile.Phone,
                     email = profile.User?.Email ?? string.Empty,
-                    isVerified = profile.IsVerified
+                    isVerified = profile.IsVerified,
+                    consultationFee = (double)profile.ConsultationFee,
+                    officeAddress = profile.OfficeAddress,
+                    education = profile.Education,
+                    languagesSpoken = langArray,
+                    isAvailable = profile.IsAvailable,
+                    rating = averageRating
                 };
 
                 var nodeUrl = "http://host.docker.internal:5000/api/lawyers/sync";
-                var response = await httpClient.PutAsJsonAsync(nodeUrl, syncData);
-                if (!response.IsSuccessStatusCode)
+                int retries = 3;
+                bool syncSuccess = false;
+                while (retries > 0 && !syncSuccess)
                 {
-                    Console.WriteLine($"Sync Warning: Node.js responded with {response.StatusCode}");
+                    try
+                    {
+                        var response = await httpClient.PutAsJsonAsync(nodeUrl, syncData);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            syncSuccess = true;
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Sync Warning: Node.js responded with {response.StatusCode}. Retrying...");
+                            retries--;
+                            if (retries > 0) await Task.Delay(1000);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Sync Attempt Error: {ex.Message}. Retrying...");
+                        retries--;
+                        if (retries > 0) await Task.Delay(1000);
+                    }
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Sync Error: {ex.Message}");
+                Console.WriteLine($"Critical Sync Error: {ex.Message}");
             }
 
             return Ok(new { message = "Profile updated and synchronized successfully!" });
@@ -132,5 +201,10 @@ namespace CoreApi.Controllers
         public string City { get; set; } = string.Empty;
         public string Bio { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
+        public decimal ConsultationFee { get; set; }
+        public string OfficeAddress { get; set; } = string.Empty;
+        public string Education { get; set; } = string.Empty;
+        public string LanguagesSpoken { get; set; } = string.Empty;
+        public bool IsAvailable { get; set; }
     }
 }

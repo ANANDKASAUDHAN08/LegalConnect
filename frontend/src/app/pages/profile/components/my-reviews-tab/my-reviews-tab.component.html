@@ -1,0 +1,212 @@
+<div class="space-y-6 animate-[fadeIn_0.3s_ease-out]">
+  <!-- Header -->
+  <div class="flex items-start gap-3 pb-3 sm:pb-4 border-b border-slate-100 dark:border-slate-800/60">
+    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800/40 flex items-center justify-center flex-shrink-0">
+      <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M11.48 3.499c.15-.457.778-.457.927 0l1.544 4.7c.067.204.258.343.473.343h4.943c.48 0 .68.618.291.902l-3.998 2.905a.492.492 0 00-.174.536l1.54 4.697c.15.457-.37.828-.752.548l-3.999-2.905a.492.492 0 00-.579 0l-3.998 2.905c-.382.28-.902-.09-.752-.548l1.54-4.697a.492.492 0 00-.174-.536L4.2 10.44c-.389-.284-.19-.902.29-.902h4.943c.215 0 .406-.14.473-.343l1.544-4.7z" />
+      </svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-start justify-between gap-3 w-full">
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-tight">
+              {{ profile.role === 'Lawyer' ? 'Reviews Received' : 'Reviews I\'ve Written' }}
+            </h2>
+            <span class="inline-block sm:hidden text-[9px] bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md font-extrabold text-slate-500 dark:text-slate-400 border border-slate-205 dark:border-slate-700/60 flex-shrink-0 mt-0.5 shadow-sm">
+              Total: {{ reviews.length }}
+            </span>
+          </div>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 sm:mt-0.5 leading-snug">
+            {{ profile.role === 'Lawyer' ? 'Read feedback submitted by clients who consulted with you.' : 'Manage reviews and ratings you submitted for practitioners.' }}
+          </p>
+        </div>
+        <span class="hidden sm:inline-block text-xs bg-slate-100 dark:bg-slate-800 px-3.5 py-1.5 rounded-xl font-bold text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 flex-shrink-0">
+          Total: {{ reviews.length }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="flex flex-col items-center justify-center py-12 gap-3">
+    <svg class="animate-spin w-8 h-8 text-amber-500" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+    <span class="text-xs text-slate-500 dark:text-slate-400">Loading reviews...</span>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && reviews.length === 0" class="text-center py-16 px-4 bg-slate-50/30 dark:bg-slate-900/10 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 flex flex-col items-center gap-3">
+    <div class="w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800/60 flex items-center justify-center text-slate-400 dark:text-slate-500">
+      <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M7.5 8.25h9m-9 3H12m-9.75 1.51c0 1.6 1.123 2.994 2.707 3.227 1.129.166 2.27.293 3.423.379.35.026.67.21.865.501L12 21l2.755-4.133a1.14 1.14 0 01.865-.501 48.172 48.172 0 003.423-.379c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+      </svg>
+    </div>
+    <div>
+      <h3 class="text-sm font-bold text-slate-850 dark:text-slate-200">No Reviews Yet</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">You don't have any reviews to show in this list.</p>
+    </div>
+  </div>
+
+  <!-- Reviews List -->
+  <div *ngIf="!loading && reviews.length > 0" class="space-y-4">
+    <!-- ── DESKTOP VIEW (sm and up) ── -->
+    <div *ngFor="let r of reviews" class="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 items-start justify-between gap-4">
+      <div class="flex items-start gap-4">
+        <!-- Avatar Initial -->
+        <div class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center font-extrabold text-sm text-slate-700 dark:text-slate-300 flex-shrink-0">
+          {{ (profile.role === 'Lawyer' ? r.authorName : r.targetName)?.charAt(0) || 'U' }}
+        </div>
+        
+        <div class="space-y-1">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">
+            {{ profile.role === 'Lawyer' ? r.authorName : r.targetName }}
+          </h3>
+          
+          <!-- Stars row -->
+          <div class="flex items-center gap-1">
+            <span *ngFor="let s of getStars(r.rating)" class="text-amber-500 text-xs">★</span>
+            <span *ngFor="let s of getEmptyStars(r.rating)" class="text-slate-300 dark:text-slate-700 text-xs">★</span>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 ml-1.5 font-medium">
+              {{ r.createdAt | date:'mediumDate' }}
+            </span>
+          </div>
+          
+          <p class="text-xs text-slate-650 dark:text-slate-300 leading-relaxed pt-1.5 italic max-w-2xl">
+            "{{ r.content }}"
+          </p>
+
+          <div class="flex items-center gap-4 pt-2.5 text-[10px] text-slate-400 dark:text-slate-500 font-bold select-none">
+            <span class="flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+              </svg>
+              {{ r.likes || 0 }} Likes
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <button *ngIf="profile.role !== 'Lawyer'" (click)="openEditModal(r)" class="text-xs text-amber-600 dark:text-amber-400 font-bold hover:underline flex-shrink-0">
+        Edit
+      </button>
+    </div>
+
+    <!-- ── MOBILE VIEW (sm hidden) ── -->
+    <div *ngFor="let r of reviews" class="flex sm:hidden p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm hover:shadow-md transition-all duration-300 flex-col gap-3">
+      <!-- Mobile Top Header: Avatar + Author + Stars + Date -->
+      <div class="flex items-center justify-between gap-2.5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-slate-100 dark:bg-slate-800/80 flex items-center justify-center font-black text-xs text-slate-700 dark:text-slate-300 flex-shrink-0">
+            {{ (profile.role === 'Lawyer' ? r.authorName : r.targetName)?.charAt(0) || 'U' }}
+          </div>
+          <div>
+            <h3 class="text-xs font-bold text-slate-900 dark:text-white leading-tight">
+              {{ profile.role === 'Lawyer' ? r.authorName : r.targetName }}
+            </h3>
+            <!-- Stars row -->
+            <div class="flex items-center gap-0.5 mt-0.5">
+              <span *ngFor="let s of getStars(r.rating)" class="text-amber-500 text-[10px]">★</span>
+              <span *ngFor="let s of getEmptyStars(r.rating)" class="text-slate-300 dark:text-slate-700 text-[10px]">★</span>
+            </div>
+          </div>
+        </div>
+
+        <span class="text-[9px] text-slate-400 dark:text-slate-500 font-bold self-start flex-shrink-0">
+          {{ r.createdAt | date:'mediumDate' }}
+        </span>
+      </div>
+
+      <!-- Mobile Content: Review description -->
+      <div class="bg-slate-50/60 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/60 rounded-xl p-3">
+        <p class="text-xs text-slate-650 dark:text-slate-300 leading-relaxed italic">
+          "{{ r.content }}"
+        </p>
+      </div>
+
+      <!-- Mobile Footer Action Row -->
+      <div class="flex items-center justify-between mt-1 text-[10px] select-none">
+        <span class="flex items-center gap-1.5 font-bold text-slate-400 dark:text-slate-500">
+          <svg class="w-3.5 h-3.5 text-blue-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+          </svg>
+          {{ r.likes || 0 }} Likes
+        </span>
+
+        <button *ngIf="profile.role !== 'Lawyer'" (click)="openEditModal(r)" class="text-xs text-amber-600 dark:text-amber-400 font-extrabold hover:underline">
+          Edit Review
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Review Modal -->
+  <div *ngIf="editingReview" (click)="closeEditModal()"
+    class="fixed inset-0 z-[990] flex justify-center items-start overflow-y-auto pt-[80px] sm:pt-[90px] pb-4 px-4 sm:px-6 bg-slate-950/60 backdrop-blur-sm animate-[fadeIn_0.15s_ease-out]">
+
+    <!-- Modal Box -->
+    <div (click)="$event.stopPropagation()"
+      class="my-auto w-full max-w-[480px] bg-white dark:bg-[#0d1222] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 sm:p-6 space-y-5 animate-[scaleUp_0.15s_ease-out]">
+      
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/60">
+        <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">Edit Your Review</h3>
+        <button (click)="closeEditModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Rating Selector -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400">Rating</label>
+        <div class="flex items-center gap-1">
+          <button type="button" *ngFor="let s of [1, 2, 3, 4, 5]" (click)="editRating = s" 
+            class="text-2xl transition-all duration-150 focus:outline-none hover:scale-110"
+            [ngClass]="s <= editRating ? 'text-amber-500' : 'text-slate-350 dark:text-slate-700'">
+            ★
+          </button>
+          <span class="text-xs font-bold text-slate-600 dark:text-slate-405 ml-2">
+            {{ editRating }} / 5 Stars
+          </span>
+        </div>
+      </div>
+
+      <!-- Review Textarea -->
+      <div class="space-y-2">
+        <label class="block text-xs font-bold text-slate-500 dark:text-slate-400">Review Content</label>
+        <textarea [(ngModel)]="editContent" rows="4" 
+          placeholder="Share your experience..." 
+          class="w-full text-xs p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#070b19] text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 resize-none"></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex flex-col sm:flex-row gap-2 pt-2">
+        <button (click)="saveReview()" [disabled]="savingEdit || deletingReview"
+          class="flex-1 order-1 sm:order-2 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg *ngIf="savingEdit" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          {{ savingEdit ? 'Saving...' : 'Save Changes' }}
+        </button>
+        <button (click)="deleteReview(editingReview.id)" [disabled]="savingEdit || deletingReview"
+          class="order-2 sm:order-1 py-2.5 px-4 rounded-xl border border-red-200 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg *ngIf="deletingReview" class="animate-spin h-3.5 w-3.5 text-red-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          {{ deletingReview ? 'Deleting...' : 'Delete' }}
+        </button>
+        <button (click)="closeEditModal()" [disabled]="savingEdit || deletingReview"
+          class="order-3 py-2.5 px-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-900/60 text-slate-600 dark:text-slate-400 text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          Cancel
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -1,3 +1,4 @@
+using System.IO;
 using System.Text;
 using CoreApi.Data;
 using CoreApi.Services;
@@ -6,6 +7,7 @@ using Microsoft.AspNetCore.RateLimiting;
 using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.FileProviders;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -61,6 +63,21 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                     context.Token = context.Request.Cookies["lc_token"];
                 }
                 return Task.CompletedTask;
+            },
+            OnTokenValidated = async context =>
+            {
+                var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                var sessionIdClaim = context.Principal?.FindFirst("SessionId")?.Value;
+                if (string.IsNullOrEmpty(sessionIdClaim))
+                {
+                    context.Fail("Session claim is missing.");
+                    return;
+                }
+                var sessionExists = await dbContext.ActiveSessions.AnyAsync(s => s.TokenId == sessionIdClaim);
+                if (!sessionExists)
+                {
+                    context.Fail("Session has been revoked.");
+                }
             }
         };
     });
@@ -82,6 +99,18 @@ if (app.Environment.IsDevelopment())
 }
 
 // app.UseHttpsRedirection();
+var uploadsPath = Path.Combine(app.Environment.ContentRootPath, "uploads");
+if (!Directory.Exists(uploadsPath))
+{
+    Directory.CreateDirectory(uploadsPath);
+}
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(uploadsPath),
+    RequestPath = "/uploads"
+});
+
 app.UseCors("AllowAngular");
 app.UseRateLimiter();
 app.UseAuthentication();

@@ -56,13 +56,25 @@ namespace CoreApi.Controllers
 
         [Authorize(Roles = "Lawyer")]
         [HttpGet("received")]
-        public async Task<IActionResult> GetReceivedConsultations()
+        public async Task<IActionResult> GetReceivedConsultations([FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var lawyerId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var consultations = await _context.Consultations
+            var query = _context.Consultations
                 .Include(c => c.Client)
-                .Where(c => c.LawyerId == lawyerId)
+                .Where(c => c.LawyerId == lawyerId);
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(c => c.Status == status);
+            }
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var consultations = await query
                 .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(c => new {
                     c.Id,
                     c.ClientId,
@@ -75,18 +87,35 @@ namespace CoreApi.Controllers
                 })
                 .ToListAsync();
 
+            Response.Headers.Append("X-Pagination-TotalCount", totalCount.ToString());
+            Response.Headers.Append("X-Pagination-TotalPages", totalPages.ToString());
+            Response.Headers.Append("X-Pagination-CurrentPage", page.ToString());
+            Response.Headers.Append("X-Pagination-PageSize", pageSize.ToString());
+
             return Ok(consultations);
         }
 
         [Authorize(Roles = "Client")]
         [HttpGet("sent")]
-        public async Task<IActionResult> GetSentConsultations()
+        public async Task<IActionResult> GetSentConsultations([FromQuery] string? status, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
             var clientId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var consultations = await _context.Consultations
+            var query = _context.Consultations
                 .Include(c => c.Lawyer)
-                .Where(c => c.ClientId == clientId)
+                .Where(c => c.ClientId == clientId);
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(c => c.Status == status);
+            }
+
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+
+            var consultations = await query
                 .OrderByDescending(c => c.CreatedAt)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
                 .Select(c => new {
                     c.Id,
                     c.ClientId,
@@ -100,6 +129,11 @@ namespace CoreApi.Controllers
                     c.CreatedAt
                 })
                 .ToListAsync();
+
+            Response.Headers.Append("X-Pagination-TotalCount", totalCount.ToString());
+            Response.Headers.Append("X-Pagination-TotalPages", totalPages.ToString());
+            Response.Headers.Append("X-Pagination-CurrentPage", page.ToString());
+            Response.Headers.Append("X-Pagination-PageSize", pageSize.ToString());
 
             return Ok(consultations);
         }

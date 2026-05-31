@@ -10,6 +10,11 @@ export interface ILawyer extends Document {
   phone: string;
   email: string;
   isVerified?: boolean;
+  consultationFee: number;
+  officeAddress: string;
+  education: string;
+  languagesSpoken: string[];
+  isAvailable: boolean;
 }
 
 const LawyerSchema = new Schema<ILawyer>({
@@ -21,7 +26,12 @@ const LawyerSchema = new Schema<ILawyer>({
   bio: { type: String, required: true },
   phone: { type: String },
   email: { type: String },
-  isVerified: { type: Boolean, default: false }
+  isVerified: { type: Boolean, default: false },
+  consultationFee: { type: Number, default: 0 },
+  officeAddress: { type: String, default: '' },
+  education: { type: String, default: '' },
+  languagesSpoken: [{ type: String }],
+  isAvailable: { type: Boolean, default: true }
 }, {
   timestamps: true
 });

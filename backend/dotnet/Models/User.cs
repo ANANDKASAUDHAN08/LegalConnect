@@ -33,6 +33,52 @@ namespace CoreApi.Models
         [MaxLength(200)]
         public string? EmailVerificationToken { get; set; }
 
+        [MaxLength(20)]
+        public string? Phone { get; set; }
+
+        public bool IsPhoneVerified { get; set; } = false;
+
+        [Required]
+        [MaxLength(50)]
+        public string IdentityStatus { get; set; } = "Not Started";
+
+        [MaxLength(500)]
+        public string? IdentityDocumentUrl { get; set; }
+
+        public bool IsTwoFactorEnabled { get; set; } = false;
+
+        [MaxLength(100)]
+        public string? TwoFactorSecret { get; set; }
+
+        [MaxLength(30)]
+        public string? ClientLanguage { get; set; } = "English";
+
+        [MaxLength(100)]
+        public string? ClientCity { get; set; }
+
+        [MaxLength(200)]
+        public string? ClientInterest { get; set; }
+
+        public DateTime? DateOfBirth { get; set; }
+
+        [MaxLength(50)]
+        public string? Gender { get; set; }
+
+        [MaxLength(200)]
+        public string? AddressLine1 { get; set; }
+
+        [MaxLength(100)]
+        public string? ClientState { get; set; }
+
+        [MaxLength(20)]
+        public string? ClientZip { get; set; }
+
+        [MaxLength(1000)]
+        public string? ClientBio { get; set; }
+
+        [MaxLength(500)]
+        public string? AvatarUrl { get; set; }
+
         [MaxLength(200)]
         public string? PasswordResetToken { get; set; }
 
