@@ -16,6 +16,9 @@ using Microsoft.Extensions.Configuration;
 using System.IO;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 
 namespace CoreApi.Controllers
 {
@@ -27,13 +30,15 @@ namespace CoreApi.Controllers
         private readonly IConfiguration _configuration;
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _env;
+        private readonly ILawyerSyncService _syncService;
 
-        public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService, IWebHostEnvironment env)
+        public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService, IWebHostEnvironment env, ILawyerSyncService syncService)
         {
             _context = context;
             _configuration = configuration;
             _emailService = emailService;
             _env = env;
+            _syncService = syncService;
         }
 
         [HttpPost("register")]
@@ -187,7 +192,6 @@ namespace CoreApi.Controllers
             return Ok(new { token, message = "Logged in successfully!" });
         }
 
-        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
@@ -202,10 +206,11 @@ namespace CoreApi.Controllers
                 }
             }
 
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             Response.Cookies.Delete("lc_token", new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = isSecure,
                 SameSite = SameSiteMode.Lax
             });
             return Ok(new { message = "Logged out successfully." });
@@ -270,26 +275,39 @@ namespace CoreApi.Controllers
             return Ok(new { message = "Password has been reset successfully! You can now log in." });
         }
 
-        [Authorize]
         [HttpGet("me")]
         public async Task<IActionResult> GetProfile()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim))
+            var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
+            if (!isAuthenticated)
             {
-                return Unauthorized("User ID claim not found in token.");
+                return Ok(new { isAuthenticated = false });
             }
 
-            if (!int.TryParse(userIdClaim, out int userId))
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                return Unauthorized("Invalid User ID claim.");
+                return Ok(new { isAuthenticated = false });
             }
 
             var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
+            if (user == null) return Ok(new { isAuthenticated = false });
+
+            // Extract the token from Request
+            string? token = Request.Cookies["lc_token"];
+            if (string.IsNullOrEmpty(token))
+            {
+                var authHeader = Request.Headers["Authorization"].ToString();
+                if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
+                {
+                    token = authHeader.Substring(7);
+                }
+            }
 
             return Ok(new
             {
+                isAuthenticated = true,
+                token = token,
                 id = user.Id,
                 fullName = user.FullName,
                 email = user.Email,
@@ -336,6 +354,11 @@ namespace CoreApi.Controllers
             if (request.AvatarUrl != null) user.AvatarUrl = SaveBase64File(request.AvatarUrl, "avatars", $"user_{userId}");
 
             await _context.SaveChangesAsync();
+
+            if (user.Role != null && user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
+            {
+                await _syncService.SyncProfileToMongoAsync(user.Id);
+            }
 
             return Ok(new { message = "Profile updated successfully!", fullName = user.FullName });
         }
@@ -781,10 +804,11 @@ namespace CoreApi.Controllers
 
         private void SetTokenCookie(string token)
         {
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             var cookieOptions = new CookieOptions
             {
                 HttpOnly = true,
-                Secure = true,
+                Secure = isSecure,
                 SameSite = SameSiteMode.Lax,
                 Expires = DateTime.UtcNow.AddDays(1)
             };

@@ -14,6 +14,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
+builder.Services.AddHostedService<ProfileSyncWorker>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 

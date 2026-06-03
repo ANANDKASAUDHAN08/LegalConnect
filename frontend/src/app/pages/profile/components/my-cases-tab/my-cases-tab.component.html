@@ -89,10 +89,10 @@
         <div *ngIf="profile.role === 'Lawyer'" class="flex items-center">
           <div class="relative">
             <select #statusSelect (change)="updateStatus(c, statusSelect.value)"
-              class="appearance-none pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 transition-all duration-200 cursor-pointer">
-              <option value="Pending" [selected]="c.status === 'Pending'">Pending</option>
-              <option value="Contacted" [selected]="c.status === 'Contacted'">Contacted</option>
-              <option value="Closed" [selected]="c.status === 'Closed'">Closed</option>
+              class="appearance-none pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 font-semibold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 cursor-pointer">
+              <option value="Pending" [selected]="c.status === 'Pending'" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Pending</option>
+              <option value="Contacted" [selected]="c.status === 'Contacted'" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Contacted</option>
+              <option value="Closed" [selected]="c.status === 'Closed'" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Closed</option>
             </select>
             <div class="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
               <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -155,10 +155,10 @@
         <!-- Status edit for Lawyer on Mobile -->
         <div *ngIf="profile.role === 'Lawyer'" class="relative flex-1">
           <select #statusSelectMobile (change)="updateStatus(c, statusSelectMobile.value)"
-            class="w-full appearance-none pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-850 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 font-bold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/15 transition-all duration-200 cursor-pointer">
-            <option value="Pending" [selected]="c.status === 'Pending'">Pending</option>
-            <option value="Contacted" [selected]="c.status === 'Contacted'">Contacted</option>
-            <option value="Closed" [selected]="c.status === 'Closed'">Closed</option>
+            class="w-full appearance-none pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 font-bold outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 cursor-pointer">
+            <option value="Pending" [selected]="c.status === 'Pending'" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Pending</option>
+            <option value="Contacted" [selected]="c.status === 'Contacted'" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Contacted</option>
+            <option value="Closed" [selected]="c.status === 'Closed'" class="bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200">Closed</option>
           </select>
           <div class="absolute inset-y-0 right-2.5 flex items-center pointer-events-none text-slate-400 dark:text-slate-500">
             <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

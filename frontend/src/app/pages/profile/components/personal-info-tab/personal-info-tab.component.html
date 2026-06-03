@@ -32,443 +32,458 @@
 
     <!-- Edit / Save / Cancel buttons — hidden on mobile (buttons are at the bottom of the form) -->
     <div class="hidden sm:flex items-center gap-2 self-start sm:self-auto flex-shrink-0">
+      <button *ngIf="!isEditing" (click)="toggleEdit()"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:text-amber-700 dark:hover:text-amber-400 transition-all border border-slate-200 dark:border-slate-700">
+        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+        </svg>
+        Edit Profile
+      </button>
       <div *ngIf="isEditing" class="flex items-center gap-2">
         <button (click)="cancelEdit()"
           class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-semibold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
           Cancel
         </button>
         <button (click)="saveProfile()"
-          class="px-5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20">
+          class="px-5 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20">
           Save Changes
         </button>
       </div>
     </div>
   </div>
 
-  <!-- ── Form Layout ── -->
-  <div>
-
-    <!-- Form Fields -->
-    <div class="flex-1 w-full space-y-4">
-
-      <!-- Name -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">First
-            Name</label>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ editFirstName || '—' }}
-          </div>
-          <input *ngIf="isEditing" type="text" [(ngModel)]="editFirstName" placeholder="" autocomplete="off"
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-660 hover:border-slate-350 dark:hover:border-slate-700" />
+  <!-- ── View Mode ── -->
+  <div *ngIf="!isEditing" class="space-y-6">
+    <!-- Core Info Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-2 gap-4">
+      <div class="space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">First Name</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editFirstName || '—' }}</p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Last Name</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editLastName || '—' }}</p>
+      </div>
+      
+      <div class="col-span-2 sm:col-span-1 space-y-1">
+        <div class="flex items-center gap-1.5">
+          <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Email Address</p>
+          <span *ngIf="profile.isEmailVerified"
+            class="inline-flex items-center gap-0.5 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+            ✓ Verified
+          </span>
         </div>
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Last
-            Name</label>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ editLastName || '—' }}
-          </div>
-          <input *ngIf="isEditing" type="text" [(ngModel)]="editLastName" placeholder="" autocomplete="off"
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-660 hover:border-slate-350 dark:hover:border-slate-700" />
+        <p class="text-sm font-bold text-slate-900 dark:text-white select-all">{{ profile.email }}</p>
+      </div>
+      <div class="col-span-2 sm:col-span-1 space-y-1">
+        <div class="flex items-center gap-1.5">
+          <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Phone Number</p>
+          <span *ngIf="profile.isPhoneVerified"
+            class="inline-flex items-center gap-0.5 text-[9px] text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+            ✓ Verified
+          </span>
+          <button *ngIf="!profile.isPhoneVerified && profile.phone" (click)="sendPhoneOtp()"
+            class="text-[9px] text-amber-600 dark:text-amber-400 font-bold hover:underline">
+            Verify Now ›
+          </button>
+        </div>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ profile.phone || '—' }}</p>
+      </div>
+
+      <div class="space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Date of Birth</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ (editDateOfBirth | date:'longDate') || '—' }}</p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Gender</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editGender || '—' }}</p>
+      </div>
+    </div>
+
+    <!-- Location Divider -->
+    <div class="flex items-center gap-3 pt-1">
+      <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
+      <span
+        class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex-shrink-0">
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+        </svg>
+        Location
+      </span>
+      <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
+    </div>
+
+    <!-- Location Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+      <div class="col-span-2 sm:col-span-3 space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Address Line 1</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editAddressLine1 || '—' }}</p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">City</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editCity || '—' }}</p>
+      </div>
+      <div class="space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">State</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editState || '—' }}</p>
+      </div>
+      <div class="col-span-2 sm:col-span-1 space-y-1">
+        <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">ZIP Code</p>
+        <p class="text-sm font-bold text-slate-900 dark:text-white">{{ editZip || '—' }}</p>
+      </div>
+    </div>
+
+    <!-- Bio Section -->
+    <div class="space-y-1 pt-1 border-t border-slate-100 dark:border-slate-800/60">
+      <p class="text-[0.65rem] font-bold text-slate-400 uppercase tracking-widest">Brief Bio / Context</p>
+      <p class="text-sm text-slate-750 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{ editBio || 'No details provided yet.' }}</p>
+    </div>
+  </div>
+
+  <!-- ── Edit Mode ── -->
+  <div *ngIf="isEditing" class="space-y-5">
+    <!-- Name -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">First Name</label>
+        <input type="text" [(ngModel)]="editFirstName" placeholder="" autocomplete="off"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700" />
+      </div>
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Last Name</label>
+        <input type="text" [(ngModel)]="editLastName" placeholder="" autocomplete="off"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700" />
+      </div>
+    </div>
+
+    <!-- Email + Phone -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Email (always read-only) -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Email Address</label>
+          <span *ngIf="profile.isEmailVerified"
+            class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Verified
+          </span>
+        </div>
+        <div
+          class="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-500 min-h-[42px] flex items-center select-none cursor-not-allowed">
+          {{ profile.email }}
         </div>
       </div>
 
-      <!-- Email + Phone -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <!-- Email (always read-only) -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
-            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Email
-              Address</label>
-            <span *ngIf="profile.isEmailVerified"
-              class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Verified
-            </span>
-          </div>
-          <div
-            class="px-3.5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 text-sm text-slate-500 dark:text-slate-500 min-h-[42px] flex items-center select-none cursor-not-allowed">
-            {{ profile.email }}
-          </div>
+      <!-- Phone -->
+      <div class="space-y-1.5">
+        <div class="flex items-center justify-between">
+          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Phone Number</label>
+          <span *ngIf="profile.isPhoneVerified"
+            class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Verified
+          </span>
         </div>
+        <div class="space-y-2">
+          <div class="flex flex-col sm:flex-row gap-2">
+            <!-- Unified Premium Input Group Container -->
+            <div
+              class="w-full sm:flex-1 flex items-center bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 rounded-xl focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 transition-all duration-200 relative">
+              
+              <!-- Country Dropdown Button -->
+              <div class="relative flex-shrink-0">
+                <button type="button" (click)="toggleCountryDropdown()"
+                  class="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none select-none">
+                  <img [src]="'https://flagcdn.com/w20/' + selectedCountry.short.toLowerCase() + '.png'"
+                    class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" alt="{{ selectedCountry.name }} flag" />
+                  <span class="text-xs">{{ selectedCountry.code }}</span>
+                  <svg class="w-3 h-3 text-slate-400 transition-transform duration-200"
+                    [class.rotate-180]="showCountryDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
 
-        <!-- Phone -->
-        <div class="space-y-1.5">
-          <div class="flex items-center justify-between">
-            <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Phone
-              Number</label>
-            <span *ngIf="profile.isPhoneVerified"
-              class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
-              <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Verified
-            </span>
-            <button *ngIf="!profile.isPhoneVerified && !isEditing && profile.phone" (click)="sendPhoneOtp()"
-              class="text-[10px] text-amber-600 dark:text-amber-400 font-bold hover:underline">
-              Verify Now ›
-            </button>
-          </div>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ profile.phone || '—' }}
-          </div>
-          <div *ngIf="isEditing" class="space-y-2">
-            <div class="flex flex-col sm:flex-row gap-2">
+                <!-- Backdrop for closing -->
+                <div *ngIf="showCountryDropdown" class="fixed inset-0 z-45 bg-transparent" (click)="showCountryDropdown = false"></div>
 
-              <!-- Unified Premium Input Group Container -->
-              <div
-                class="w-full sm:flex-1 flex items-center bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 rounded-xl focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10 transition-all duration-200 relative">
+                <!-- Country Codes List -->
+                <div *ngIf="showCountryDropdown"
+                  class="absolute z-50 left-0 mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl shadow-slate-950/10 dark:shadow-black/50 animate-[fadeIn_0.12s_ease-out] flex flex-col overflow-hidden">
+                  
+                  <!-- Search Input -->
+                  <div class="p-1.5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+                    <input type="text" [(ngModel)]="countrySearchText" (click)="$event.stopPropagation()" placeholder="Search..."
+                      class="w-full px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-slate-200 focus:border-amber-500 transition-all placeholder:text-slate-400" />
+                  </div>
 
-                <!-- Country Dropdown Button -->
-                <div class="relative flex-shrink-0">
-                  <button type="button" (click)="toggleCountryDropdown()"
-                    class="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none select-none">
-                    <img [src]="'https://flagcdn.com/w20/' + selectedCountry.short.toLowerCase() + '.png'"
-                      class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" alt="{{ selectedCountry.name }} flag" />
-                    <span class="text-xs">{{ selectedCountry.code }}</span>
-                    <svg class="w-3 h-3 text-slate-400 transition-transform duration-200"
-                      [class.rotate-180]="showCountryDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                      stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  <!-- Backdrop for closing -->
-                  <div *ngIf="showCountryDropdown" class="fixed inset-0 z-40 bg-transparent"
-                    (click)="showCountryDropdown = false"></div>
-
-                  <!-- Country Codes List -->
-                  <div *ngIf="showCountryDropdown"
-                    class="absolute z-50 left-0 mt-1.5 w-44 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl shadow-slate-950/10 dark:shadow-black/50 animate-[fadeIn_0.12s_ease-out] flex flex-col overflow-hidden">
-
-                    <!-- Search Input -->
-                    <div
-                      class="p-1.5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
-                      <input type="text" [(ngModel)]="countrySearchText" (click)="$event.stopPropagation()"
-                        placeholder="Search..."
-                        class="w-full px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-slate-200 focus:border-amber-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-660" />
-                    </div>
-
-                    <!-- Scrollable list wrapper -->
-                    <div class="overflow-y-auto max-h-48 scrollbar-none">
-                      <button *ngFor="let country of getFilteredCountries()" type="button"
-                        (click)="selectCountry(country)"
-                        class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left transition-colors border-0 bg-transparent outline-none cursor-pointer">
-                        <img [src]="'https://flagcdn.com/w20/' + country.short.toLowerCase() + '.png'"
-                          class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" alt="{{ country.name }} flag" />
-                        <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase">{{
-                          country.short }}</span>
-                        <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium ml-auto">{{ country.code
-                          }}</span>
-                      </button>
-
-                      <!-- No results message -->
-                      <div *ngIf="getFilteredCountries().length === 0"
-                        class="px-3 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium">
-                        No matches found
-                      </div>
+                  <!-- Scrollable list wrapper -->
+                  <div class="overflow-y-auto max-h-48 scrollbar-none">
+                    <button *ngFor="let country of getFilteredCountries()" type="button" (click)="selectCountry(country)"
+                      class="w-full flex items-center gap-2 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left transition-colors border-0 bg-transparent outline-none cursor-pointer">
+                      <img [src]="'https://flagcdn.com/w20/' + country.short.toLowerCase() + '.png'"
+                        class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" alt="{{ country.name }} flag" />
+                      <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase">{{ country.short }}</span>
+                      <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium ml-auto">{{ country.code }}</span>
+                    </button>
+                    <div *ngIf="getFilteredCountries().length === 0" class="px-3 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+                      No matches found
                     </div>
                   </div>
                 </div>
-
-                <!-- Digits Only Text Field -->
-                <input type="text" [(ngModel)]="phoneBody" (keypress)="onlyNumbers($event)"
-                  (input)="filterPhoneDigits()" placeholder="" autocomplete="off" maxlength="10"
-                  class="w-full flex-1 bg-transparent px-3 py-2.5 outline-none border-0 text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-650" />
               </div>
 
-              <button (click)="sendPhoneOtp()" type="button"
-                class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/15 flex items-center justify-center whitespace-nowrap">
-                Verify
-              </button>
+              <!-- Digits Only Text Field -->
+              <input type="text" [(ngModel)]="phoneBody" (keypress)="onlyNumbers($event)" (input)="filterPhoneDigits()" placeholder="" autocomplete="off" maxlength="10"
+                class="w-full flex-1 bg-transparent px-3 py-2.5 outline-none border-0 text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-650" />
             </div>
-          </div>
 
-          <!-- OTP entry container, visible in both modes when OTP sent and not verified -->
-          <div *ngIf="showPhoneOtp && !profile.isPhoneVerified"
-            class="flex flex-col sm:flex-row gap-2.5 animate-[fadeIn_0.2s_ease-out] p-2.5 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20">
-            <input type="text" [(ngModel)]="phoneOtpCode" placeholder="Enter OTP"
-              class="w-full sm:flex-1 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-amber-500/30 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-center font-mono tracking-widest text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-500 dark:placeholder:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700" />
-            <div class="flex items-center gap-2.5 w-full sm:w-auto">
-              <button (click)="cancelPhoneVerification()" type="button"
-                class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-                Cancel
-              </button>
-              <button (click)="verifyPhoneOtp()" [disabled]="otpLoading" type="button"
-                class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center shadow-md shadow-emerald-500/15">
-                Confirm
-              </button>
-            </div>
+            <button (click)="sendPhoneOtp()" type="button"
+              class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/15 flex items-center justify-center whitespace-nowrap">
+              Verify
+            </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- DOB + Gender -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Date of
-            Birth</label>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ (editDateOfBirth | date:'longDate') || '—' }}
-          </div>
-          <!-- Custom Date Picker -->
-          <div *ngIf="isEditing" class="relative">
-            <!-- Trigger button -->
-            <button type="button" (click)="openDatePicker()"
-              class="w-full flex items-center gap-2.5 pl-3.5 pr-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border text-sm transition-all duration-200 text-left outline-none"
-              [ngClass]="showDatePicker
-                ? 'border-amber-500 ring-4 ring-amber-500/10'
-                : 'border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'">
-              <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="1.8">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-              </svg>
-              <span
-                [ngClass]="editDateOfBirth ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'">
-                {{ editDateOfBirth ? formatDateDisplay(editDateOfBirth) : 'Select date of birth' }}
-              </span>
-            </button>
+    <!-- OTP entry container -->
+    <div *ngIf="showPhoneOtp && !profile.isPhoneVerified"
+      class="flex flex-col sm:flex-row gap-2.5 animate-[fadeIn_0.2s_ease-out] p-2.5 bg-amber-500/5 dark:bg-amber-500/10 rounded-xl border border-amber-500/20">
+      <input type="text" [(ngModel)]="phoneOtpCode" placeholder="Enter OTP"
+        class="w-full sm:flex-1 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-amber-500/30 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-center font-mono tracking-widest text-slate-900 dark:text-white transition-all duration-200" />
+      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+        <button (click)="cancelPhoneVerification()" type="button"
+          class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+          Cancel
+        </button>
+        <button (click)="verifyPhoneOtp()" [disabled]="otpLoading" type="button"
+          class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center shadow-md shadow-emerald-500/15">
+          Confirm
+        </button>
+      </div>
+    </div>
 
-            <!-- Backdrop: transparent overlay to close picker on outside click -->
-            <div *ngIf="showDatePicker" class="fixed inset-0 z-20 bg-transparent" (click)="closeDatePicker()"></div>
+    <!-- DOB + Gender -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Date of Birth -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Date of Birth</label>
+        <div class="relative">
+          <button type="button" (click)="openDatePicker()"
+            class="w-full flex items-center gap-2.5 pl-3.5 pr-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border text-sm transition-all duration-200 text-left outline-none"
+            [ngClass]="showDatePicker ? 'border-amber-500 ring-4 ring-amber-500/10' : 'border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700'">
+            <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+            </svg>
+            <span [ngClass]="editDateOfBirth ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'">
+              {{ editDateOfBirth ? formatDateDisplay(editDateOfBirth) : 'Select date of birth' }}
+            </span>
+          </button>
 
-            <!-- Unified Compact Dropdown (Desktop & Mobile) -->
-            <div *ngIf="showDatePicker"
-              class="absolute z-30 left-0 right-0 sm:right-auto mt-1.5 w-full sm:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl shadow-slate-900/10 dark:shadow-black/50 overflow-hidden animate-[fadeIn_0.12s_ease-out]">
+          <!-- Backdrop -->
+          <div *ngIf="showDatePicker" class="fixed inset-0 z-20 bg-transparent" (click)="closeDatePicker()"></div>
 
-              <!-- Month / Year header -->
-              <div class="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-slate-800">
-                <button type="button" (click)="prevCalMonth(); $event.stopPropagation()"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                  </svg>
-                </button>
+          <!-- Calendar Dropdown -->
+          <div *ngIf="showDatePicker"
+            class="absolute z-30 left-0 right-0 sm:right-auto mt-1.5 w-full sm:w-72 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl shadow-slate-900/10 dark:shadow-black/50 overflow-hidden animate-[fadeIn_0.12s_ease-out]">
+            
+            <!-- Month / Year header -->
+            <div class="flex items-center justify-between px-3 py-2 border-b border-slate-100 dark:border-slate-800">
+              <button type="button" (click)="prevCalMonth(); $event.stopPropagation()"
+                class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                </svg>
+              </button>
 
-                <div class="flex items-center gap-1">
-                  <!-- Month select selector -->
+              <div class="flex items-center gap-1.5">
+                <!-- Month select -->
+                <div class="relative flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5 shadow-xs hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all">
                   <select [ngModel]="calendarMonth" (ngModelChange)="onCalMonthChange($event)"
-                    class="bg-transparent text-xs font-bold text-slate-900 dark:text-white border-0 outline-none cursor-pointer focus:ring-0 p-0.5">
-                    <option *ngFor="let name of monthNames; let i = index" [value]="i"
-                      class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    class="appearance-none bg-transparent text-[11px] font-bold text-slate-900 dark:text-white border-0 outline-none cursor-pointer focus:ring-0 p-0 pr-4">
+                    <option *ngFor="let name of monthNames; let i = index" [value]="i" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                       {{ name }}
                     </option>
                   </select>
+                  <div class="absolute right-1.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
+                </div>
 
-                  <!-- Year select selector -->
+                <!-- Year select -->
+                <div class="relative flex items-center bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-0.5 shadow-xs hover:border-amber-500/50 dark:hover:border-amber-500/50 transition-all">
                   <select [ngModel]="calendarYear" (ngModelChange)="onCalYearChange($event)"
-                    class="bg-transparent text-xs font-bold text-slate-900 dark:text-white border-0 outline-none cursor-pointer focus:ring-0 p-0.5">
-                    <option *ngFor="let y of getYearOptions()" [value]="y"
-                      class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
+                    class="appearance-none bg-transparent text-[11px] font-bold text-slate-900 dark:text-white border-0 outline-none cursor-pointer focus:ring-0 p-0 pr-4">
+                    <option *ngFor="let y of getYearOptions()" [value]="y" class="bg-white dark:bg-slate-900 text-slate-900 dark:text-white">
                       {{ y }}
                     </option>
                   </select>
-                </div>
-
-                <button type="button" (click)="nextCalMonth(); $event.stopPropagation()"
-                  class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all">
-                  <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                  </svg>
-                </button>
-              </div>
-
-              <!-- Weekday headers -->
-              <div class="grid grid-cols-7 px-3 pt-2 pb-0.5">
-                <div *ngFor="let wd of weekDays"
-                  class="text-center text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest py-0.5">
-                  {{ wd }}
+                  <div class="absolute right-1.5 flex items-center pointer-events-none text-slate-400">
+                    <svg class="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </div>
                 </div>
               </div>
 
-              <!-- Day grid -->
-              <div class="grid grid-cols-7 px-3 pb-1.5 gap-0.5">
-                <ng-container *ngFor="let date of calendarDays">
-                  <button *ngIf="date" type="button" (click)="selectCalDate(date); $event.stopPropagation()"
-                    class="w-full aspect-square h-8 flex items-center justify-center text-xs font-semibold rounded-lg transition-all duration-150 active:scale-90"
-                    [ngClass]="isCalSelected(date)
-                      ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20 scale-105'
-                      : isCalToday(date)
-                        ? 'ring-2 ring-amber-400/80 dark:ring-amber-500/80 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10'
-                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'">
-                    {{ date.getDate() }}
-                  </button>
-                  <div *ngIf="!date" class="w-full aspect-square h-8"></div>
-                </ng-container>
-              </div>
-
-              <!-- Footer -->
-              <div
-                class="flex items-center justify-between px-3.5 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
-                <button type="button" (click)="closeDatePicker()"
-                  class="text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350 font-bold transition-colors py-1 px-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
-                  Cancel
-                </button>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" (click)="editDateOfBirth = ''; closeDatePicker()"
-                    class="text-[10px] text-red-500 hover:text-red-650 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 font-semibold transition-colors py-1 px-2 rounded hover:bg-red-50 dark:hover:bg-red-900/10">
-                    Clear
-                  </button>
-                  <button type="button" (click)="goToToday(); $event.stopPropagation()"
-                    class="text-[10px] text-amber-600 dark:text-amber-400 font-bold transition-colors py-1 px-2 rounded hover:bg-amber-50 dark:hover:bg-amber-900/10">
-                    Today
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div class="space-y-1.5">
-          <label
-            class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Gender</label>
-          <!-- View mode -->
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ editGender || '\u2014' }}
-          </div>
-          <!-- Edit mode: custom dropdown -->
-          <div *ngIf="isEditing" class="relative">
-            <button type="button" (click)="showGenderDropdown = !showGenderDropdown"
-              class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border text-sm transition-all duration-200 flex items-center justify-between outline-none"
-              [class]="showGenderDropdown
-                ? 'border-amber-500 ring-4 ring-amber-500/10'
-                : 'border-slate-250 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700'">
-              <span
-                [class]="editGender ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'">
-                {{ editGender || 'Select gender...' }}
-              </span>
-              <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
-                [class.rotate-180]="showGenderDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-
-            <!-- Transparent backdrop -->
-            <div *ngIf="showGenderDropdown" class="fixed inset-0 z-10" (click)="showGenderDropdown = false"></div>
-
-            <!-- Options panel -->
-            <div *ngIf="showGenderDropdown"
-              class="absolute z-20 w-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden animate-[fadeIn_0.12s_ease-out]">
-              <!-- Clear option -->
-              <button type="button" (click)="editGender = ''; showGenderDropdown = false"
-                class="w-full px-3.5 py-2.5 text-left text-sm text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800">
-                Select gender...
-              </button>
-              <!-- Gender options -->
-              <button *ngFor="let opt of ['Male', 'Female', 'Non-Binary', 'Prefer not to say']" type="button"
-                (click)="editGender = opt; showGenderDropdown = false"
-                class="w-full px-3.5 py-2.5 text-left text-sm font-medium transition-colors flex items-center justify-between"
-                [class]="editGender === opt
-                  ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400'
-                  : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
-                {{ opt }}
-                <svg *ngIf="editGender === opt" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="none"
-                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              <button type="button" (click)="nextCalMonth(); $event.stopPropagation()"
+                class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                 </svg>
               </button>
             </div>
+
+            <!-- Weekdays -->
+            <div class="grid grid-cols-7 px-3 pt-2 pb-0.5">
+              <div *ngFor="let wd of weekDays" class="text-center text-[9px] font-bold text-slate-400 uppercase tracking-widest py-0.5">
+                {{ wd }}
+              </div>
+            </div>
+
+            <!-- Day grid -->
+            <div class="grid grid-cols-7 px-3 pb-1.5 gap-0.5">
+              <ng-container *ngFor="let date of calendarDays">
+                <button *ngIf="date" type="button" (click)="selectCalDate(date); $event.stopPropagation()"
+                  class="w-full aspect-square h-8 flex items-center justify-center text-xs font-semibold rounded-lg transition-all duration-150 active:scale-90"
+                  [ngClass]="isCalSelected(date)
+                    ? 'bg-gradient-to-br from-amber-500 to-amber-600 text-white shadow-md shadow-amber-500/20 scale-105'
+                    : isCalToday(date)
+                      ? 'ring-2 ring-amber-450 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/10'
+                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'">
+                  {{ date.getDate() }}
+                </button>
+                <div *ngIf="!date" class="w-full aspect-square h-8"></div>
+              </ng-container>
+            </div>
+
+            <!-- Footer -->
+            <div class="flex items-center justify-between px-3.5 py-2 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/40">
+              <button type="button" (click)="closeDatePicker()"
+                class="text-[10px] text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350 font-bold transition-colors py-1 px-2 rounded hover:bg-slate-100 dark:hover:bg-slate-800">
+                Cancel
+              </button>
+              <div class="flex items-center gap-1.5">
+                <button type="button" (click)="editDateOfBirth = ''; closeDatePicker()"
+                  class="text-[10px] text-red-500 hover:text-red-650 dark:text-red-400 font-semibold transition-colors py-1 px-2 rounded hover:bg-red-50 dark:hover:bg-red-900/10">
+                  Clear
+                </button>
+                <button type="button" (click)="goToToday(); $event.stopPropagation()"
+                  class="text-[10px] text-amber-600 dark:text-amber-400 font-bold transition-colors py-1 px-2 rounded hover:bg-amber-50 dark:hover:bg-amber-900/10">
+                  Today
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- ── Location divider ── -->
-      <div class="flex items-center gap-3 pt-1">
-        <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
-        <span
-          class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex-shrink-0">
-          <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
-          </svg>
-          Location
-        </span>
-        <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
-      </div>
-
-      <!-- Address -->
+      <!-- Gender -->
       <div class="space-y-1.5">
-        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Address Line
-          1</label>
-        <div *ngIf="!isEditing"
-          class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-          {{ editAddressLine1 || '—' }}
-        </div>
-        <input *ngIf="isEditing" type="text" [(ngModel)]="editAddressLine1" placeholder="" autocomplete="off"
-          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-650 hover:border-slate-350 dark:hover:border-slate-700" />
-      </div>
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Gender</label>
+        <div class="relative">
+          <button type="button" (click)="showGenderDropdown = !showGenderDropdown"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border text-sm transition-all duration-200 flex items-center justify-between outline-none"
+            [class]="showGenderDropdown ? 'border-amber-500 ring-4 ring-amber-500/10' : 'border-slate-250 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700'">
+            <span [class]="editGender ? 'text-slate-900 dark:text-white font-medium' : 'text-slate-400 dark:text-slate-500'">
+              {{ editGender || 'Select gender...' }}
+            </span>
+            <svg class="w-4 h-4 text-slate-400 flex-shrink-0 transition-transform duration-200"
+              [class.rotate-180]="showGenderDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <!-- City -->
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">City</label>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ editCity || '—' }}
+          <!-- Transparent backdrop -->
+          <div *ngIf="showGenderDropdown" class="fixed inset-0 z-10" (click)="showGenderDropdown = false"></div>
+
+          <!-- Options panel -->
+          <div *ngIf="showGenderDropdown"
+            class="absolute z-20 w-full mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl shadow-slate-900/10 dark:shadow-black/40 overflow-hidden animate-[fadeIn_0.12s_ease-out]">
+            <button type="button" (click)="editGender = ''; showGenderDropdown = false"
+              class="w-full px-3.5 py-2.5 text-left text-sm text-slate-400 dark:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800/60 transition-colors border-b border-slate-100 dark:border-slate-800">
+              Select gender...
+            </button>
+            <button *ngFor="let opt of ['Male', 'Female', 'Non-Binary', 'Prefer not to say']" type="button"
+              (click)="editGender = opt; showGenderDropdown = false"
+              class="w-full px-3.5 py-2.5 text-left text-sm font-medium transition-colors flex items-center justify-between"
+              [class]="editGender === opt ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
+              {{ opt }}
+              <svg *ngIf="editGender === opt" class="w-3.5 h-3.5 text-amber-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </button>
           </div>
-          <input *ngIf="isEditing" type="text" [(ngModel)]="editCity" placeholder="" autocomplete="off"
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-650 hover:border-slate-350 dark:hover:border-slate-700" />
-        </div>
-        <!-- State -->
-        <div class="space-y-1.5">
-          <label
-            class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">State</label>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ editState || '—' }}
-          </div>
-          <input *ngIf="isEditing" type="text" [(ngModel)]="editState" placeholder="" autocomplete="off"
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 hover:border-slate-350 dark:hover:border-slate-700" />
-        </div>
-        <!-- ZIP -->
-        <div class="space-y-1.5">
-          <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">ZIP
-            Code</label>
-          <div *ngIf="!isEditing"
-            class="px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm font-semibold text-slate-800 dark:text-slate-200 min-h-[42px] flex items-center">
-            {{ editZip || '—' }}
-          </div>
-          <input *ngIf="isEditing" type="text" [(ngModel)]="editZip" placeholder="" autocomplete="off"
-            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-600 hover:border-slate-350 dark:hover:border-slate-700" />
         </div>
       </div>
+    </div>
 
-      <!-- Bio -->
+    <!-- Location divider -->
+    <div class="flex items-center gap-3 pt-1">
+      <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
+      <span class="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500 flex-shrink-0">
+        <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+        </svg>
+        Location
+      </span>
+      <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
+    </div>
+
+    <!-- Address -->
+    <div class="space-y-1.5">
+      <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Address Line 1</label>
+      <input type="text" [(ngModel)]="editAddressLine1" placeholder="" autocomplete="off"
+        class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700" />
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <!-- City -->
       <div class="space-y-1.5">
-        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Brief Bio /
-          Context</label>
-        <div *ngIf="!isEditing"
-          class="px-3.5 py-3 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 text-sm text-slate-700 dark:text-slate-300 min-h-[80px] whitespace-pre-line leading-relaxed">
-          {{ editBio || 'No details provided yet.' }}
-        </div>
-        <textarea *ngIf="isEditing" [(ngModel)]="editBio" rows="4"
-          placeholder="" autocomplete="off"
-          class="w-full px-3.5 py-3 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 resize-y placeholder:text-slate-400 dark:placeholder:text-slate-660 hover:border-slate-350 dark:hover:border-slate-700"></textarea>
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">City</label>
+        <input type="text" [(ngModel)]="editCity" placeholder="" autocomplete="off"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700" />
       </div>
-
-      <!-- Mobile Save/Cancel Buttons at Bottom -->
-      <div *ngIf="isEditing" class="sm:hidden flex items-center gap-2 pt-2">
-        <button (click)="cancelEdit()"
-          class="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-450 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
-          Cancel
-        </button>
-        <button (click)="saveProfile()"
-          class="flex-1 px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20">
-          Save Changes
-        </button>
+      <!-- State -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">State</label>
+        <input type="text" [(ngModel)]="editState" placeholder="" autocomplete="off"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700" />
       </div>
+      <!-- ZIP -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">ZIP Code</label>
+        <input type="text" [(ngModel)]="editZip" placeholder="" autocomplete="off"
+          class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700" />
+      </div>
+    </div>
 
+    <!-- Bio -->
+    <div class="space-y-1.5">
+      <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">Brief Bio / Context</label>
+      <textarea [(ngModel)]="editBio" rows="4" placeholder="" autocomplete="off"
+        class="w-full px-3.5 py-3 rounded-xl bg-slate-50/50 dark:bg-slate-950/40 border border-slate-250 dark:border-slate-800/80 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-slate-900 dark:text-white transition-all duration-200 resize-y placeholder:text-slate-400 hover:border-slate-350 dark:hover:border-slate-700"></textarea>
+    </div>
+
+    <!-- Mobile Save/Cancel Buttons at Bottom -->
+    <div class="sm:hidden flex items-center gap-2 pt-2">
+      <button (click)="cancelEdit()"
+        class="flex-1 px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-450 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all border border-slate-200 dark:border-slate-700">
+        Cancel
+      </button>
+      <button (click)="saveProfile()"
+        class="flex-1 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20">
+        Save Changes
+      </button>
     </div>
   </div>
 

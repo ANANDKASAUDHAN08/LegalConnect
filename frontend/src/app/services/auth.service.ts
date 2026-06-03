@@ -26,6 +26,8 @@ export interface UserProfile {
   avatarUrl?: string;
   identityStatus?: string;
   identityDocumentUrl?: string;
+  isAuthenticated?: boolean;
+  token?: string;
 }
 
 
@@ -72,26 +74,31 @@ export class AuthService {
   }
 
   checkSession(): Observable<boolean> {
-    if (!this.token) {
-      this._currentUser.next(null);
-      this._isLoggedIn.next(false);
-      this._isSessionLoaded.next(true);
-      return of(false);
-    }
-
     return this.http.get<UserProfile>(`${this.apiUrl}/me`, this.httpOptions).pipe(
       tap(user => {
-        if (user && user.avatarUrl && user.avatarUrl.startsWith('/')) {
-          user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
-        }
-        this._currentUser.next(user);
-        this._isLoggedIn.next(true);
-        this._isSessionLoaded.next(true);
-        if (user && user.role) {
-          localStorage.setItem('lc_preferred_role', user.role);
+        if (user && user.isAuthenticated !== false) {
+          if (user.avatarUrl && user.avatarUrl.startsWith('/')) {
+            user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
+          }
+          this._currentUser.next(user);
+          this._isLoggedIn.next(true);
+          this._isSessionLoaded.next(true);
+          if (user.token) {
+            this.token = user.token;
+            localStorage.setItem('lc_token', user.token);
+          }
+          if (user.role) {
+            localStorage.setItem('lc_preferred_role', user.role);
+          }
+        } else {
+          this.token = null;
+          localStorage.removeItem('lc_token');
+          this._currentUser.next(null);
+          this._isLoggedIn.next(false);
+          this._isSessionLoaded.next(true);
         }
       }),
-      map(() => true),
+      map(user => user && user.isAuthenticated !== false),
       catchError(() => {
         this.token = null;
         localStorage.removeItem('lc_token');

@@ -15,7 +15,7 @@ export class ThemeService {
     if (savedTheme) {
       return savedTheme === 'dark';
     }
-    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    return true; // Default to dark mode when no theme is saved yet
   }
 
   toggleTheme() {

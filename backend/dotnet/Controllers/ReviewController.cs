@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Net.Http;
+using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
@@ -7,6 +9,7 @@ using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CoreApi.Services;
 
 namespace CoreApi.Controllers
 {
@@ -15,18 +18,25 @@ namespace CoreApi.Controllers
     public class ReviewController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly ILawyerSyncService _syncService;
 
-        public ReviewController(AppDbContext context)
+        public ReviewController(AppDbContext context, ILawyerSyncService syncService)
         {
             _context = context;
+            _syncService = syncService;
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetReviews()
+        public async Task<IActionResult> GetReviews([FromQuery] string? targetName)
         {
             try
             {
-                var reviews = await _context.Reviews
+                var query = _context.Reviews.AsQueryable();
+                if (!string.IsNullOrEmpty(targetName))
+                {
+                    query = query.Where(r => r.TargetName == targetName);
+                }
+                var reviews = await query
                     .OrderByDescending(r => r.CreatedAt)
                     .ToListAsync();
                 return Ok(reviews);
@@ -86,6 +96,7 @@ namespace CoreApi.Controllers
 
                 _context.Reviews.Add(review);
                 await _context.SaveChangesAsync();
+                await SyncLawyerRatingToMongo(review.TargetName);
 
                 return Ok(review);
             }
@@ -129,6 +140,7 @@ namespace CoreApi.Controllers
                 review.TargetName = string.IsNullOrWhiteSpace(dto.TargetName) ? "Platform" : dto.TargetName.Trim();
 
                 await _context.SaveChangesAsync();
+                await SyncLawyerRatingToMongo(review.TargetName);
                 return Ok(review);
             }
             catch (Exception ex)
@@ -158,6 +170,7 @@ namespace CoreApi.Controllers
 
                 _context.Reviews.Remove(review);
                 await _context.SaveChangesAsync();
+                await SyncLawyerRatingToMongo(review.TargetName);
                 return Ok(new { message = "Review deleted successfully." });
             }
             catch (Exception ex)
@@ -248,6 +261,27 @@ namespace CoreApi.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, ex.Message);
+            }
+        }
+
+        private async Task SyncLawyerRatingToMongo(string targetName)
+        {
+            if (string.IsNullOrEmpty(targetName) || targetName == "Platform") return;
+
+            try
+            {
+                var profile = await _context.LawyerProfiles
+                    .Include(p => p.User)
+                    .FirstOrDefaultAsync(p => p.User != null && p.User.FullName == targetName);
+
+                if (profile != null)
+                {
+                    await _syncService.SyncProfileToMongoAsync(profile.UserId);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error syncing rating to MongoDB: {ex.Message}");
             }
         }
     }

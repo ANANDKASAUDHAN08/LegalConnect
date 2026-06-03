@@ -4,6 +4,7 @@ using CoreApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260601065433_AddLawyerRevampStatsFields")]
+    partial class AddLawyerRevampStatsFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -159,18 +162,6 @@ namespace CoreApi.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("AccoladesJson")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<string>("ActiveCourts")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("varchar(500)");
-
-                    b.Property<string>("BannerUrl")
-                        .HasColumnType("longtext");
-
                     b.Property<string>("BarCouncilNumber")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -183,10 +174,6 @@ namespace CoreApi.Migrations
 
                     b.Property<int>("CasesCompleted")
                         .HasColumnType("int");
-
-                    b.Property<string>("CasesJson")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<string>("City")
                         .IsRequired()
@@ -203,10 +190,6 @@ namespace CoreApi.Migrations
 
                     b.Property<int>("ExperienceYears")
                         .HasColumnType("int");
-
-                    b.Property<string>("FaqsJson")
-                        .IsRequired()
-                        .HasColumnType("longtext");
 
                     b.Property<decimal>("InPersonFee")
                         .HasColumnType("decimal(18, 2)");
@@ -232,15 +215,6 @@ namespace CoreApi.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("varchar(20)");
 
-                    b.Property<string>("ResponseTime")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("varchar(100)");
-
-                    b.Property<string>("SocialLinksJson")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<string>("Specialization")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -249,20 +223,11 @@ namespace CoreApi.Migrations
                     b.Property<int>("SuccessRate")
                         .HasColumnType("int");
 
-                    b.Property<string>("TimeSlotsJson")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime(6)");
 
                     b.Property<int>("UserId")
                         .HasColumnType("int");
-
-                    b.Property<string>("WorkingHours")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("varchar(200)");
 
                     b.HasKey("Id");
 

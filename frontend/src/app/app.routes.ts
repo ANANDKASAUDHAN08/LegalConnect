@@ -55,8 +55,16 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/lawyers/lawyers.component').then(m => m.LawyersComponent)
   },
   {
+    path: 'lawyers/:id',
+    loadComponent: () => import('./pages/lawyer-detail/lawyer-detail.component').then(m => m.LawyerDetailComponent)
+  },
+  {
     path: 'reviews',
     loadComponent: () => import('./pages/reviews/reviews.component').then(m => m.ReviewsComponent)
+  },
+  {
+    path: 'specializations',
+    loadComponent: () => import('./pages/specializations/specializations.component').then(m => m.SpecializationsComponent)
   },
 
   // 5. User Workstations & Dashboards (Auth Required)

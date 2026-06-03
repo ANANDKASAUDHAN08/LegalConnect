@@ -22,8 +22,10 @@ export class ReviewService {
 
   constructor(private http: HttpClient) {}
 
-  getReviews(): Observable<ReviewItem[]> {
-    return this.http.get<ReviewItem[]>(this.apiUrl);
+  getReviews(targetName?: string): Observable<ReviewItem[]> {
+    const params: any = {};
+    if (targetName) params.targetName = targetName;
+    return this.http.get<ReviewItem[]>(this.apiUrl, { params });
   }
 
   submitReview(reviewData: {

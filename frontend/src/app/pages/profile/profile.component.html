@@ -45,7 +45,7 @@
       class="w-full bg-white dark:bg-[#0d1829]/65 border-b border-slate-200 dark:border-slate-800/80 px-4 sm:px-6 lg:px-8 py-2 overflow-x-auto whitespace-nowrap">
       <div class="flex gap-2 max-w-max">
         <div *ngFor="let i of [1, 2, 3, 4, 5]"
-          class="w-28 h-8 rounded-lg bg-slate-200 dark:bg-slate-850 animate-pulse inline-block"></div>
+          class="w-28 h-8 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse inline-block"></div>
       </div>
     </div>
 
@@ -158,14 +158,21 @@
                 </svg>
               </div>
               <span
-                class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0d1829]"></span>
+                class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-800"></span>
             </div>
-            <div>
-              <h1 class="text-base font-extrabold text-slate-900 dark:text-white leading-tight">{{ profile.fullName }}
+            <div class="flex flex-col gap-1">
+              <h1 class="text-base font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                {{ profile.fullName }}
               </h1>
-              <p class="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">
-                LegalConnect <span class="text-emerald-500">{{ profile.role }}</span>
-              </p>
+              <div class="flex items-center gap-2">
+                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  LegalConnect
+                </span>
+                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                <span class="bg-blue-500/15 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200/40 dark:border-blue-900/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">
+                  {{ profile.role }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -229,12 +236,19 @@
               </svg>
             </div>
             <span
-              class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0d1829]"></span>
+              class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white dark:border-slate-800"></span>
           </div>
-          <div class="flex-1 min-w-0">
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
             <h1 class="text-sm font-extrabold text-slate-900 dark:text-white truncate">{{ profile.fullName }}</h1>
-            <p class="text-[9px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-widest">LegalConnect {{
-              profile.role }}</p>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                LegalConnect
+              </span>
+              <span class="w-0.5 h-0.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+              <span class="bg-blue-500/15 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-200/40 dark:border-blue-900/30 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
+                {{ profile.role }}
+              </span>
+            </div>
           </div>
           <!-- Mobile actions -->
           <div class="flex items-center gap-2 flex-shrink-0">
@@ -595,13 +609,21 @@
                 </svg>
               </div>
               <span
-                class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0d1829]"></span>
+                class="absolute bottom-0 right-0 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white dark:border-slate-800"></span>
             </div>
-            <div>
-              <h1 class="text-base font-extrabold text-slate-900 dark:text-white leading-tight">{{ profile.fullName }}</h1>
-              <p class="text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">
-                LegalConnect <span class="text-emerald-500">{{ profile.role }}</span>
-              </p>
+            <div class="flex flex-col gap-1">
+              <h1 class="text-base font-extrabold text-slate-900 dark:text-white leading-tight tracking-tight">
+                {{ profile.fullName }}
+              </h1>
+              <div class="flex items-center gap-2">
+                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                  LegalConnect
+                </span>
+                <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+                <span class="bg-amber-500/15 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-250 dark:border-amber-900/30 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider">
+                  {{ profile.role }}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -610,7 +632,8 @@
             <!-- Profile Strength Bar -->
             <div class="w-44 xl:w-52">
               <div class="flex items-center justify-between mb-1">
-                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Profile Strength</span>
+                <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Profile
+                  Strength</span>
                 <span class="text-xs font-extrabold" [class]="getStrengthTextColor()">{{ getCompletionPct() }}%</span>
               </div>
               <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1 overflow-hidden">
@@ -664,12 +687,19 @@
               </svg>
             </div>
             <span
-              class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white dark:border-[#0d1829]"></span>
+              class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white dark:border-slate-800"></span>
           </div>
-          <div class="flex-1 min-w-0">
+          <div class="flex-1 min-w-0 flex flex-col gap-0.5">
             <h1 class="text-sm font-extrabold text-slate-900 dark:text-white truncate">{{ profile.fullName }}</h1>
-            <p class="text-[9px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-widest">LegalConnect {{
-              profile.role }}</p>
+            <div class="flex items-center gap-1.5">
+              <span class="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+                LegalConnect
+              </span>
+              <span class="w-0.5 h-0.5 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+              <span class="bg-amber-500/15 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-250 dark:border-amber-900/30 px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider">
+                {{ profile.role }}
+              </span>
+            </div>
           </div>
           <!-- Mobile actions -->
           <div class="flex items-center gap-2 flex-shrink-0">
@@ -712,14 +742,16 @@
                 d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
             <svg *ngIf="tab.id === 'verification'" class="w-4 h-4 transition-colors"
-              [class.text-amber-500]="activeTab === 'verification'" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-              stroke-width="1.8">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.624 5.372 12 12 12s12-5.376 12-12c0-2.17-.578-4.204-1.598-5.956L12 2.714z" />
+              [class.text-amber-500]="activeTab === 'verification'" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="1.8">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.624 5.372 12 12 12s12-5.376 12-12c0-2.17-.578-4.204-1.598-5.956L12 2.714z" />
             </svg>
             <svg *ngIf="tab.id === 'cases'" class="w-4 h-4 transition-colors"
               [class.text-amber-500]="activeTab === 'cases'" fill="none" viewBox="0 0 24 24" stroke="currentColor"
               stroke-width="1.8">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <svg *ngIf="tab.id === 'reviews'" class="w-4 h-4 transition-colors"
               [class.text-amber-500]="activeTab === 'reviews'" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -752,7 +784,8 @@
           <div
             class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(15,23,42,0.015)] dark:shadow-none overflow-hidden">
             <div class="px-4 pt-4 pb-2">
-              <p class="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Quick Stats</p>
+              <p class="text-[10.5px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Quick Stats
+              </p>
             </div>
             <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
               <div class="flex items-center justify-between px-4 py-2.5">
@@ -814,7 +847,8 @@
           <div
             class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(15,23,42,0.015)] dark:shadow-none overflow-hidden">
             <div class="px-4 pt-4 pb-2 flex items-center justify-between">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Profile Strength</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Profile
+                Strength</p>
               <span class="text-sm font-extrabold" [class]="getStrengthTextColor()">{{ getCompletionPct() }}%</span>
             </div>
             <!-- mini bar -->
@@ -855,7 +889,8 @@
           <div
             class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/80 shadow-[0_4px_20px_rgba(15,23,42,0.015)] dark:shadow-none overflow-hidden">
             <div class="px-4 pt-4 pb-2">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account Actions</p>
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account
+                Actions</p>
             </div>
             <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
               <button (click)="setTab('security')"
@@ -937,12 +972,15 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
               <!-- Profile strength -->
               <div
-                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-850 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
+                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
                 <div class="flex items-center justify-between">
                   <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Profile Status</span>
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/40 text-amber-500">
-                    <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/40 text-amber-500">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
                   </div>
                 </div>
@@ -954,12 +992,15 @@
 
               <!-- Rating/Reviews (dummy/based on reviews count) -->
               <div
-                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-850 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
+                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
                 <div class="flex items-center justify-between">
                   <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Consultation Fee</span>
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500">
-                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-emerald-50 dark:bg-emerald-950/40 text-emerald-500">
+                    <svg class="w-4 h-4 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                 </div>
@@ -973,12 +1014,15 @@
 
               <!-- Experience -->
               <div
-                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-850 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
+                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
                 <div class="flex items-center justify-between">
                   <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Experience</span>
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500">
-                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/40 text-indigo-500">
+                    <svg class="w-4 h-4 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                     </svg>
                   </div>
                 </div>
@@ -992,12 +1036,15 @@
 
               <!-- Availability Status -->
               <div
-                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-850 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
+                class="p-4 sm:p-5 rounded-xl border border-slate-200/65 dark:border-slate-800 bg-white dark:bg-slate-900/50 shadow-sm flex flex-col justify-between min-h-[110px]">
                 <div class="flex items-center justify-between">
                   <span class="text-[9px] font-black uppercase text-slate-400 tracking-wider">Identity Status</span>
-                  <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-violet-50 dark:bg-violet-950/40 text-violet-500">
-                    <svg class="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  <div
+                    class="w-8 h-8 rounded-lg flex items-center justify-center bg-violet-50 dark:bg-violet-950/40 text-violet-500">
+                    <svg class="w-4 h-4 text-violet-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                   </div>
                 </div>
@@ -1015,21 +1062,26 @@
               <p class="text-[10.5px] font-black uppercase text-slate-500 tracking-wider">Quick Actions</p>
               <div
                 class="rounded-xl border border-slate-200/50 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800">
-                
+
                 <a (click)="setTab('profile-details')"
                   class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3.5">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/20 text-amber-500">
-                      <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    <div
+                      class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-50 dark:bg-amber-950/20 text-amber-500">
+                      <svg class="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <div class="space-y-0.5">
                       <div class="text-xs font-black text-slate-800 dark:text-white">Personal Details</div>
-                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Edit contact details and settings</div>
+                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Edit contact details and settings
+                      </div>
                     </div>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
@@ -1037,17 +1089,22 @@
                 <a (click)="setTab('profile-details')"
                   class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3.5">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500">
-                      <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    <div
+                      class="w-9 h-9 rounded-lg flex items-center justify-center bg-indigo-50 dark:bg-indigo-950/20 text-indigo-500">
+                      <svg class="w-5 h-5 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     </div>
                     <div class="space-y-0.5">
                       <div class="text-xs font-black text-slate-800 dark:text-white">Professional Credentials</div>
-                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Update practice areas, bar license and fee</div>
+                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Update practice areas, bar license and
+                        fee</div>
                     </div>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
@@ -1055,17 +1112,22 @@
                 <a (click)="setTab('cases')"
                   class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3.5">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-50 dark:bg-purple-950/20 text-purple-500">
-                      <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    <div
+                      class="w-9 h-9 rounded-lg flex items-center justify-center bg-purple-50 dark:bg-purple-950/20 text-purple-500">
+                      <svg class="w-5 h-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                       </svg>
                     </div>
                     <div class="space-y-0.5">
                       <div class="text-xs font-black text-slate-800 dark:text-white">My Clients</div>
-                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Review consultations, files and details</div>
+                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Review consultations, files and
+                        details</div>
                     </div>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
@@ -1073,17 +1135,22 @@
                 <a (click)="setTab('security')"
                   class="p-4 flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer group">
                   <div class="flex items-center gap-3.5">
-                    <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-red-50 dark:bg-red-950/20 text-red-500">
-                      <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    <div
+                      class="w-9 h-9 rounded-lg flex items-center justify-center bg-red-50 dark:bg-red-950/20 text-red-500">
+                      <svg class="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                       </svg>
                     </div>
                     <div class="space-y-0.5">
                       <div class="text-xs font-black text-slate-800 dark:text-white">Account Security</div>
-                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Manage 2FA, logins and account deletion</div>
+                      <div class="text-[10px] text-slate-400 dark:text-slate-500">Manage 2FA, logins and account
+                        deletion</div>
                     </div>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <svg class="w-4 h-4 text-slate-400 group-hover:text-amber-500 transition-colors" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
@@ -1097,10 +1164,11 @@
             <div
               class="p-4 sm:p-7 rounded-none sm:rounded-xl bg-transparent sm:bg-white dark:bg-transparent dark:sm:bg-slate-900/60 border-none sm:border border-transparent sm:border-slate-200/50 dark:sm:border-slate-800/80 shadow-none sm:shadow-[0_4px_20px_rgba(15,23,42,0.015)]">
               <app-personal-info-tab [profile]="profile" [autoEdit]="triggerProfileEdit"
-                (profileUpdated)="onProfileUpdated($event)" (triggerAvatarChange)="openAvatarMenu()"></app-personal-info-tab>
+                (profileUpdated)="onProfileUpdated($event)"
+                (triggerAvatarChange)="openAvatarMenu()"></app-personal-info-tab>
             </div>
             <!-- Mobile divider -->
-            <div class="sm:hidden relative py-5 flex items-center justify-center">
+            <div class="sm:hidden relative py-0 flex items-center justify-center">
               <div class="absolute inset-0 flex items-center">
                 <div class="w-full border-t border-slate-200/20 dark:border-slate-800/40"></div>
               </div>
@@ -1217,7 +1285,7 @@
       <div class="p-6 flex flex-col items-center gap-6">
         <!-- Viewport container -->
         <div
-          class="relative w-64 h-64 overflow-hidden rounded-xl bg-slate-950 dark:bg-slate-900 border border-slate-200 dark:border-slate-850 flex items-center justify-center select-none cursor-move"
+          class="relative w-64 h-64 overflow-hidden rounded-xl bg-slate-950 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-center select-none cursor-move"
           (mousedown)="onDragStart($event)" (mousemove)="onDrag($event)" (mouseup)="onDragEnd()"
           (mouseleave)="onDragEnd()" (touchstart)="onDragStart($event)" (touchmove)="onDrag($event)"
           (touchend)="onDragEnd()">
@@ -1258,7 +1326,7 @@
       <div
         class="px-5 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/30 flex items-center justify-end gap-3">
         <button (click)="closeCropModal()" [disabled]="isSavingAvatar"
-          class="px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-850 transition-all disabled:opacity-50">
+          class="px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800 transition-all disabled:opacity-50">
           Cancel
         </button>
         <button (click)="saveCroppedImage()" [disabled]="isSavingAvatar"

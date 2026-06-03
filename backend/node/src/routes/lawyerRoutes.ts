@@ -57,20 +57,34 @@ router.get('/:id', async (req: Request, res: Response) => {
 // PUT /api/lawyers/sync - Sync advocate profile from .NET Core API (MySQL) to MongoDB
 router.put('/sync', async (req: Request, res: Response) => {
   try {
-    const { 
-      name, 
-      specializations, 
-      city, 
-      experience, 
-      bio, 
-      phone, 
-      email, 
+    const {
+      name,
+      specializations,
+      city,
+      experience,
+      bio,
+      phone,
+      email,
       isVerified,
       consultationFee,
+      inPersonFee,
+      casesCompleted,
+      successRate,
       officeAddress,
       education,
       languagesSpoken,
-      isAvailable
+      isAvailable,
+      avatarUrl,
+      bannerUrl,
+      // Premium fields
+      activeCourts,
+      responseTime,
+      workingHours,
+      socialLinks,
+      faqs,
+      accolades,
+      casesList,
+      availableTimeSlots
     } = req.body;
 
     if (!email) {
@@ -90,10 +104,24 @@ router.put('/sync', async (req: Request, res: Response) => {
         rating: Number(req.body.rating || 4.5),
         isVerified: true,
         consultationFee: Number(consultationFee || 0),
+        inPersonFee: Number(inPersonFee || 0),
+        casesCompleted: Number(casesCompleted || 150),
+        successRate: Number(successRate || 95),
         officeAddress: officeAddress || '',
         education: education || '',
         languagesSpoken: languagesSpoken || [],
-        isAvailable: isAvailable !== false
+        isAvailable: isAvailable !== false,
+        avatarUrl: avatarUrl || '',
+        bannerUrl: bannerUrl || '',
+        // Premium fields sync
+        activeCourts: activeCourts || [],
+        responseTime: responseTime || 'Responds within 24 hours',
+        workingHours: workingHours || { days: 'Mon - Fri', hours: '9:00 AM - 6:00 PM' },
+        socialLinks: socialLinks || { linkedin: '', website: '', barAssociation: '' },
+        faqs: faqs || [],
+        accolades: accolades || [],
+        casesList: casesList || [],
+        availableTimeSlots: availableTimeSlots || []
       },
       { new: true, upsert: true }
     );

@@ -63,10 +63,10 @@
     <div class="flex items-center gap-3">
       <!-- Like Action -->
       <button (click)="$event.stopPropagation(); onLike()"
-        [class]="hasLiked ? 'text-rose-500' : 'text-slate-400 hover:text-rose-500'"
+        [class]="hasLiked ? 'text-blue-500 dark:text-blue-400' : 'text-slate-400 hover:text-blue-500 dark:hover:text-blue-400'"
         class="flex items-center gap-1.5 transition-all outline-none text-xs md:text-sm font-bold cursor-pointer">
-        <svg class="w-4 h-4 md:w-5 md:h-5 fill-current" viewBox="0 0 24 24">
-          <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+        <svg class="w-4 h-4 md:w-5 md:h-5" [class.fill-blue-500]="hasLiked" [class.dark:fill-blue-400]="hasLiked" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
         </svg>
         <span>{{ review.likes || 0 }}</span>
       </button>
