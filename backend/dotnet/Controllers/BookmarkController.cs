@@ -39,6 +39,8 @@ namespace CoreApi.Controllers
                         title = b.SectionTitle,
                         content = b.SectionContent
                     },
+                    notes = b.Notes,
+                    collectionName = b.CollectionName,
                     savedAt = ((DateTimeOffset)b.SavedAt).ToUnixTimeMilliseconds()
                 })
                 .ToListAsync();
@@ -70,6 +72,8 @@ namespace CoreApi.Controllers
                 SectionNumber = request.SectionNumber,
                 SectionTitle = request.SectionTitle,
                 SectionContent = request.SectionContent,
+                Notes = request.Notes,
+                CollectionName = request.CollectionName,
                 SavedAt = DateTime.UtcNow
             };
 
@@ -77,6 +81,29 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Section bookmarked successfully!" });
+        }
+
+        [HttpPut("{actShortName}/{sectionNumber}")]
+        public async Task<IActionResult> UpdateBookmark(string actShortName, string sectionNumber, [FromBody] UpdateBookmarkDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var bookmark = await _context.Bookmarks.FirstOrDefaultAsync(b => 
+                b.ClientId == userId && 
+                b.ActShortName == actShortName && 
+                b.SectionNumber == sectionNumber);
+
+            if (bookmark == null)
+            {
+                return NotFound("Bookmark not found.");
+            }
+
+            bookmark.Notes = request.Notes;
+            bookmark.CollectionName = request.CollectionName;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Bookmark updated successfully." });
         }
 
         [HttpDelete("{actShortName}/{sectionNumber}")]
@@ -108,5 +135,13 @@ namespace CoreApi.Controllers
         public string SectionNumber { get; set; } = string.Empty;
         public string SectionTitle { get; set; } = string.Empty;
         public string SectionContent { get; set; } = string.Empty;
+        public string? Notes { get; set; }
+        public string? CollectionName { get; set; }
+    }
+
+    public class UpdateBookmarkDto
+    {
+        public string? Notes { get; set; }
+        public string? CollectionName { get; set; }
     }
 }

@@ -403,7 +403,8 @@ namespace CoreApi.Controllers
                 try
                 {
                     using var httpClient = new System.Net.Http.HttpClient();
-                    var nodeUrl = $"http://host.docker.internal:5000/api/lawyers/sync/{user.Email}";
+                    var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? "http://localhost:5000";
+                    var nodeUrl = $"{nodeBaseUrl}/api/lawyers/sync/{user.Email}";
                     var response = await httpClient.DeleteAsync(nodeUrl);
                     if (!response.IsSuccessStatusCode)
                     {

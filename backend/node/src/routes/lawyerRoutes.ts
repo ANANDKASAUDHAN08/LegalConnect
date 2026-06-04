@@ -123,7 +123,7 @@ router.put('/sync', async (req: Request, res: Response) => {
         casesList: casesList || [],
         availableTimeSlots: availableTimeSlots || []
       },
-      { new: true, upsert: true }
+      { returnDocument: 'after', upsert: true }
     );
 
     res.json({ success: true, message: 'Lawyer profile synchronized successfully.', data: updatedLawyer });

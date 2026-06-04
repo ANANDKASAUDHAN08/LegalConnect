@@ -315,3 +315,47 @@ h1, h2, h3, h4, h5, h6 { line-height: 1.2; font-weight: 700; }
   to   { transform: translateY(0); }
 }
 
+/* ── Modal scale-up ── */
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ── Global Print Settings ── */
+@media print {
+  /* Hide the navbar, footer, snackbar, and any other non-print layouts on the entire page */
+  app-navbar,
+  app-footer,
+  app-snackbar,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Hide the main active dashboard layout container */
+  .page-wrapper {
+    display: none !important;
+  }
+
+  /* Hide any active backdrops, dialogs, drawers or fixed panels */
+  .fixed,
+  .drawer-backdrop,
+  .drawer-panel,
+  div[class*="fixed"],
+  div[class*="backdrop"] {
+    display: none !important;
+  }
+
+  /* Force display of the print-area wrapper */
+  .print-area {
+    display: block !important;
+    visibility: visible !important;
+    position: relative !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+    color: black !important;
+  }
+}
+
+

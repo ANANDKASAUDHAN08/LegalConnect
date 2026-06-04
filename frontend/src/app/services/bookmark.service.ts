@@ -9,6 +9,8 @@ export interface Bookmark {
   actShortName: string;
   chapterNumber: string;
   section: Section;
+  notes?: string;
+  collectionName?: string;
   savedAt: number;
 }
 
@@ -19,7 +21,7 @@ export class BookmarkService {
   private bookmarksKey = 'legalconnect_bookmarks';
   private apiUrl = 'http://localhost:8888/api/bookmark';
   private bookmarksSubject = new BehaviorSubject<Bookmark[]>([]);
-  
+
   bookmarks$ = this.bookmarksSubject.asObservable();
   private isLoggedIn = false;
 
@@ -32,6 +34,26 @@ export class BookmarkService {
       this.isLoggedIn = loggedIn;
       this.loadBookmarks();
     });
+
+    // Auto-sync bookmarks when user switches back to this browser tab
+    if (typeof window !== 'undefined') {
+      window.addEventListener('focus', () => {
+        this.loadBookmarks();
+      });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          this.loadBookmarks();
+        }
+      });
+
+      // Storage event for guest mode localStorage sync across tabs
+      window.addEventListener('storage', (event) => {
+        if (event.key === this.bookmarksKey) {
+          this.loadBookmarks();
+        }
+      });
+    }
   }
 
   private loadBookmarks() {
@@ -59,7 +81,7 @@ export class BookmarkService {
     this.bookmarksSubject.next(bookmarks);
   }
 
-  addBookmark(actShortName: string, chapterNumber: string, section: Section) {
+  addBookmark(actShortName: string, chapterNumber: string, section: Section, collectionName?: string) {
     const current = this.bookmarksSubject.value;
     if (current.some(b => b.actShortName === actShortName && b.section.section_number === section.section_number)) {
       return;
@@ -69,6 +91,7 @@ export class BookmarkService {
       actShortName,
       chapterNumber,
       section,
+      collectionName,
       savedAt: Date.now()
     };
 
@@ -78,21 +101,22 @@ export class BookmarkService {
         chapterNumber,
         sectionNumber: section.section_number,
         sectionTitle: section.title,
-        sectionContent: section.content
+        sectionContent: section.content,
+        collectionName
       };
       this.http.post<any>(this.apiUrl, payload, { withCredentials: true }).subscribe({
         next: () => {
           this.bookmarksSubject.next([...current, newBookmark]);
-          this.snackbar.show('Section bookmarked to cloud!', 'success');
+          this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" successfully.` : 'Section saved to General Reference successfully.', 'success');
         },
         error: (err) => {
-          this.snackbar.show(err.error?.message || err.error || 'Failed to save bookmark.', 'error');
+          this.snackbar.show(err.error?.message || err.error || 'Failed to save section.', 'error');
         }
       });
     } else {
       const updated = [...current, newBookmark];
       this.saveLocalBookmarks(updated);
-      this.snackbar.show('Section bookmarked locally!', 'success');
+      this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" locally.` : 'Section saved to General Reference locally.', 'success');
     }
   }
 
@@ -103,16 +127,60 @@ export class BookmarkService {
         next: () => {
           const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
           this.bookmarksSubject.next(updated);
-          this.snackbar.show('Bookmark removed from cloud.', 'info');
+          this.snackbar.show('Section removed from library successfully.', 'info');
         },
         error: () => {
-          this.snackbar.show('Failed to remove bookmark.', 'error');
+          this.snackbar.show('Failed to remove section.', 'error');
         }
       });
     } else {
       const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
       this.saveLocalBookmarks(updated);
-      this.snackbar.show('Removed from local library.', 'info');
+      this.snackbar.show('Section removed from library.', 'info');
+    }
+  }
+
+  updateBookmarkMetadata(actShortName: string, sectionNumber: string, notes?: string, collectionName?: string, silent = false) {
+    const payload = { notes, collectionName };
+    if (this.isLoggedIn) {
+      this.http.put<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, payload, { withCredentials: true }).subscribe({
+        next: () => {
+          const current = this.bookmarksSubject.value;
+          const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
+          if (idx !== -1) {
+            const updated = [...current];
+            updated[idx] = {
+              ...updated[idx],
+              notes: notes,
+              collectionName: collectionName
+            };
+            this.bookmarksSubject.next(updated);
+          }
+          if (!silent) {
+            this.snackbar.show('Section notes updated successfully.', 'success');
+          }
+        },
+        error: () => {
+          if (!silent) {
+            this.snackbar.show('Failed to update section notes.', 'error');
+          }
+        }
+      });
+    } else {
+      const current = this.bookmarksSubject.value;
+      const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
+      if (idx !== -1) {
+        const updated = [...current];
+        updated[idx] = {
+          ...updated[idx],
+          notes: notes,
+          collectionName: collectionName
+        };
+        this.saveLocalBookmarks(updated);
+      }
+      if (!silent) {
+        this.snackbar.show('Section notes updated locally.', 'success');
+      }
     }
   }
 

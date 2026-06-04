@@ -34,6 +34,11 @@ namespace CoreApi.Models
         [Required]
         public string SectionContent { get; set; } = string.Empty;
 
+        public string? Notes { get; set; }
+
+        [MaxLength(50)]
+        public string? CollectionName { get; set; }
+
         public DateTime SavedAt { get; set; } = DateTime.UtcNow;
     }
 }

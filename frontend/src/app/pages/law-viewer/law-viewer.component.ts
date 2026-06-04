@@ -1,15 +1,16 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChildren, QueryList } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChildren, QueryList, HostListener } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { LegalService, BareAct, Chapter, Section } from '../../services/legal.service';
 import { BookmarkService } from '../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { BookmarkModalComponent } from '../../components/bookmark-modal/bookmark-modal.component';
 
 @Component({
   selector: 'app-law-viewer',
   standalone: true,
-  imports: [RouterLink, NgFor, NgIf, NgClass],
+  imports: [RouterLink, NgFor, NgIf, NgClass, BookmarkModalComponent],
   templateUrl: './law-viewer.component.html',
   styleUrls: ['./law-viewer.component.scss']
 })
@@ -22,6 +23,12 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   shortName = '';
   isLoggedIn = false;
   currentUser: UserProfile | null = null;
+  
+  // Reusable Bookmark Modal State
+  isBookmarkModalOpen = false;
+  modalActShortName = '';
+  modalChapterNumber = '';
+  modalSection: Section | null = null;
 
   @ViewChildren('sectionElement') sectionElements!: QueryList<ElementRef>;
   private observer: IntersectionObserver | null = null;
@@ -87,18 +94,17 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
     this.sectionElements.forEach(el => this.observer!.observe(el.nativeElement));
   }
 
-  toggleBookmark(section: Section) {
+  openBookmarkModal(section: Section) {
     if (!this.isLoggedIn) {
       this.snackbar.show('Please log in to save this section to your library.', 'warning');
       return;
     }
-    if (this.bookmarkService.isBookmarked(this.shortName, section.section_number)) {
-      this.bookmarkService.removeBookmark(this.shortName, section.section_number);
-    } else {
-      if (this.activeChapter) {
-        this.bookmarkService.addBookmark(this.shortName, this.activeChapter.chapterNumber, section);
-      }
+    this.modalActShortName = this.shortName;
+    if (this.activeChapter) {
+      this.modalChapterNumber = this.activeChapter.chapterNumber;
     }
+    this.modalSection = section;
+    this.isBookmarkModalOpen = true;
   }
 
   shareSection(section: Section) {

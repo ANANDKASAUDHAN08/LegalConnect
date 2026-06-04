@@ -6,16 +6,19 @@ using System.Threading.Tasks;
 using CoreApi.Data;
 using CoreApi.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace CoreApi.Services
 {
     public class LawyerSyncService : ILawyerSyncService
     {
         private readonly AppDbContext _context;
+        private readonly string _nodeBaseUrl;
 
-        public LawyerSyncService(AppDbContext context)
+        public LawyerSyncService(AppDbContext context, IConfiguration configuration)
         {
             _context = context;
+            _nodeBaseUrl = configuration["NodeServices:BaseUrl"] ?? "http://localhost:5000";
         }
 
         public async Task SyncProfileToMongoAsync(int userId)
@@ -148,7 +151,7 @@ namespace CoreApi.Services
                     availableTimeSlots = timeSlots
                 };
 
-                var nodeUrl = "http://host.docker.internal:5000/api/lawyers/sync";
+                var nodeUrl = $"{_nodeBaseUrl}/api/lawyers/sync";
                 int retries = 3;
                 bool syncSuccess = false;
                 while (retries > 0 && !syncSuccess)

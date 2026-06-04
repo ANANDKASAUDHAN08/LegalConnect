@@ -1,49 +1,377 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
+import { FormsModule } from '@angular/forms';
 import { BookmarkService, Bookmark } from '../../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../../services/auth.service';
 import { LawyerService, Consultation } from '../../../services/lawyer.service';
-import { Observable } from 'rxjs';
+import { LegalService } from '../../../services/legal.service';
+import { SnackbarService } from '../../../services/snackbar.service';
+import { Observable, Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, FormsModule],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']
 })
-export class ClientDashboardComponent implements OnInit {
+export class ClientDashboardComponent implements OnInit, OnDestroy {
   bookmarks$!: Observable<Bookmark[]>;
   currentUser: UserProfile | null = null;
   inquiries: Consultation[] = [];
   loadingInquiries = false;
   activeTab = 'bookmarks';
 
+  // Revamp fields
+  allBookmarks: Bookmark[] = [];
+  searchQuery = '';
+  actFilter = ''; // Exact act short name filter (set from Acts modal — does NOT substring-search content)
+  sortBy = 'newest';
+  currentPage = 1;
+  itemsPerPage = 8;
+
+  private _selectedCollection = 'All';
+  get selectedCollection(): string {
+    return this._selectedCollection;
+  }
+  set selectedCollection(val: string) {
+    this._selectedCollection = val;
+    this.currentPage = 1;
+  }
+  newCollectionName = '';
+  customCollections: string[] = [];
+  sidebarFolderSearchQuery = '';
+
+  // Dropdowns
+  showSortDropdown = false;
+  showFolderSelectDropdown = false;
+
+  // Drawer
+  selectedBookmark: Bookmark | null = null;
+  drawerNoteText = '';
+  aiSummary = '';
+  loadingAiSummary = false;
+
+  // Sharing
+  bookmarkToShare: Bookmark | null = null;
+
+  // Custom dialogs (replacing native alert/confirm/prompt)
+  customConfirmTitle = '';
+  customConfirmMessage = '';
+  customConfirmType: 'danger' | 'warning' | 'info' = 'warning';
+  customConfirmAction: (() => void) | null = null;
+
+  customPromptTitle = '';
+  customPromptLabel = '';
+  customPromptValue = '';
+  customPromptAction: ((val: string) => void) | null = null;
+
+  // ── Page Skeleton Loader
+  isPageLoading = true;
+
+  // ── Animated Stat Counters
+  displaySavedCount = 0;
+  displayCollectionsCount = 0;
+  displayActsCount = 0;
+  displayInquiriesCount = 0;
+  private animationFrames: number[] = [];
+
+  // ── Acts Breakdown Modal
+  showActsFilterModal = false;
+
+  // Mobile Folder Search toggle
+  showMobileFolderSearch = false;
+
+  /** List of [actShortName, count] pairs for the acts modal */
+  get actsBreakdown(): { name: string; count: number }[] {
+    const map = new Map<string, number>();
+    this.allBookmarks.forEach(b => {
+      map.set(b.actShortName, (map.get(b.actShortName) || 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  // Scroll lock helper
+  private updateScrollLock() {
+    if (typeof document !== 'undefined') {
+      const lock = this._showNewCollectionModal ||
+        this._showShareModal ||
+        this._drawerOpen ||
+        this._customConfirmOpen ||
+        this._customPromptOpen ||
+        this.showActsFilterModal;
+      if (lock) {
+        document.body.classList.add('overflow-hidden');
+      } else {
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+  }
+
+  private _showNewCollectionModal = false;
+  get showNewCollectionModal(): boolean {
+    return this._showNewCollectionModal;
+  }
+  set showNewCollectionModal(val: boolean) {
+    this._showNewCollectionModal = val;
+    this.updateScrollLock();
+  }
+
+  private _showShareModal = false;
+  get showShareModal(): boolean {
+    return this._showShareModal;
+  }
+  set showShareModal(val: boolean) {
+    this._showShareModal = val;
+    this.updateScrollLock();
+  }
+
+  private _drawerOpen = false;
+  get drawerOpen(): boolean {
+    return this._drawerOpen;
+  }
+  set drawerOpen(val: boolean) {
+    this._drawerOpen = val;
+    this.updateScrollLock();
+  }
+
+  private _customConfirmOpen = false;
+  get customConfirmOpen(): boolean {
+    return this._customConfirmOpen;
+  }
+  set customConfirmOpen(val: boolean) {
+    this._customConfirmOpen = val;
+    this.updateScrollLock();
+  }
+
+  private _customPromptOpen = false;
+  get customPromptOpen(): boolean {
+    return this._customPromptOpen;
+  }
+  set customPromptOpen(val: boolean) {
+    this._customPromptOpen = val;
+    this.updateScrollLock();
+  }
+
+  printCollectionName = 'All';
+  printDate = new Date();
+
+  get printItemsCount(): number {
+    if (this.printCollectionName === 'All') return this.allBookmarks.length;
+    return this.allBookmarks.filter(b => b.collectionName === this.printCollectionName).length;
+  }
+
+  private sub = new Subscription();
+
+  @HostListener('document:click')
+  clickout() {
+    this.showSortDropdown = false;
+    this.showFolderSelectDropdown = false;
+  }
+
   constructor(
     public bookmarkService: BookmarkService,
     public authService: AuthService,
     private lawyerService: LawyerService,
-    private route: ActivatedRoute
-  ) {}
+    private legalService: LegalService,
+    private snackbarService: SnackbarService,
+    private route: ActivatedRoute,
+    private eRef: ElementRef
+  ) { }
 
   ngOnInit() {
     this.bookmarks$ = this.bookmarkService.bookmarks$;
-    
-    // Support switching tab if query param matches
-    this.route.queryParams.subscribe(params => {
-      if (params['tab'] === 'inquiries' || params['tab'] === 'bookmarks') {
-        this.activeTab = params['tab'];
-      }
-    });
 
-    this.authService.currentUser$.subscribe(user => {
-      this.currentUser = user;
-      if (user) {
-        this.loadInquiries();
+    // ── Skeleton: enforce minimum 1200ms display ─────────────────────────────
+    // BehaviorSubject emits synchronously, so without a minimum timer the
+    // skeleton would be hidden before the first rendered frame.
+    this.isPageLoading = true;
+    let authResolved = false;
+    let minTimeElapsed = false;
+
+    const tryHideSkeleton = () => {
+      if (authResolved && minTimeElapsed) {
+        this.isPageLoading = false;
+        setTimeout(() => this.animateAllCounters(), 50);
       }
-    });
+    };
+
+    // Gate 1: minimum display time
+    setTimeout(() => {
+      minTimeElapsed = true;
+      tryHideSkeleton();
+    }, 500);
+
+    // Subscribe to bookmarks$ to keep allBookmarks up-to-date locally for filter/stats logic
+    this.sub.add(
+      this.bookmarkService.bookmarks$.subscribe(bms => {
+        this.allBookmarks = bms;
+        this.loadCustomCollections();
+        // If drawer is open, keep its selectedBookmark details synchronized
+        if (this.selectedBookmark) {
+          const match = bms.find(b => b.actShortName === this.selectedBookmark!.actShortName && b.section.section_number === this.selectedBookmark!.section.section_number);
+          if (match) {
+            this.selectedBookmark = match;
+          }
+        }
+        // Re-animate counters when bookmark data changes (not during initial load)
+        if (!this.isPageLoading) {
+          this.animateAllCounters();
+        }
+      })
+    );
+
+    // Support switching tab if query param matches
+    this.sub.add(
+      this.route.queryParams.subscribe(params => {
+        if (params['tab'] === 'inquiries' || params['tab'] === 'bookmarks') {
+          this.activeTab = params['tab'];
+        }
+      })
+    );
+
+    // Gate 2: auth resolved
+    this.sub.add(
+      this.authService.currentUser$.subscribe(user => {
+        this.currentUser = user;
+        if (user) {
+          this.loadInquiries();
+        }
+        this.loadCustomCollections();
+        authResolved = true;
+        tryHideSkeleton();
+      })
+    );
+
+    // Sync custom collections/folders when user switches back to this browser tab
+    if (typeof window !== 'undefined') {
+      const focusHandler = () => {
+        this.loadCustomCollections();
+      };
+      window.addEventListener('focus', focusHandler);
+      this.sub.add({
+        unsubscribe: () => window.removeEventListener('focus', focusHandler)
+      });
+    }
   }
+
+
+  ngOnDestroy() {
+    this.sub.unsubscribe();
+    // Cancel any pending animation frames
+    this.animationFrames.forEach(id => cancelAnimationFrame(id));
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('overflow-hidden');
+    }
+  }
+
+  // ── Count-up Animation
+  private animateCount(
+    targetValue: number,
+    setter: (v: number) => void,
+    durationMs = 800
+  ) {
+    const startValue = 0;
+    const startTime = performance.now();
+    const animate = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      // Quadratic ease-out
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setter(Math.round(startValue + (targetValue - startValue) * eased));
+      if (progress < 1) {
+        const frameId = requestAnimationFrame(animate);
+        this.animationFrames.push(frameId);
+      } else {
+        setter(targetValue);
+      }
+    };
+    const frameId = requestAnimationFrame(animate);
+    this.animationFrames.push(frameId);
+  }
+
+  animateAllCounters() {
+    // Cancel any in-progress animations first
+    this.animationFrames.forEach(id => cancelAnimationFrame(id));
+    this.animationFrames = [];
+    this.animateCount(this.totalSavedCount, v => this.displaySavedCount = v);
+    this.animateCount(this.collectionsList.length, v => this.displayCollectionsCount = v);
+    this.animateCount(this.distinctActsCount, v => this.displayActsCount = v);
+    this.animateCount(this.activeInquiriesCount, v => this.displayInquiriesCount = v);
+  }
+
+  // ── Mobile scroll-to-content helper ─────────────────────────────────────────
+  // On desktop (lg+) the content is always visible beside the sidebar, no scroll needed.
+  // On mobile the stat cards sit above the content, so we scroll down to show results.
+  private scrollToContent(delayMs = 120) {
+    if (typeof window === 'undefined') return;
+    const isMobile = window.innerWidth < 1024;
+    if (!isMobile) return;
+    setTimeout(() => {
+      const el = document.getElementById('content-section');
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 80; // 80px navbar offset
+      window.scrollTo({ top, behavior: 'smooth' });
+    }, delayMs);
+  }
+
+  // ── Stats Card Click Handlers ────────────────────────────────────────────────
+  onCardClick(card: 'saved' | 'collections' | 'acts' | 'inquiries') {
+    if (card === 'saved') {
+      this.activeTab = 'bookmarks';
+      this.selectedCollection = 'All';
+      this.searchQuery = '';
+      this.actFilter = '';
+      this.scrollToContent();
+    } else if (card === 'collections') {
+      this.activeTab = 'bookmarks';
+      // Desktop: scroll to sidebar; Mobile: scroll to content (folders pills are there)
+      setTimeout(() => {
+        const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
+        const targetId = isMobile ? 'content-section' : 'folders-section';
+        const el = document.getElementById(targetId);
+        if (el) {
+          const top = el.getBoundingClientRect().top + window.scrollY - 80;
+          window.scrollTo({ top, behavior: 'smooth' });
+        }
+      }, 100);
+    } else if (card === 'acts') {
+      if (this.actsBreakdown.length === 0) {
+        this.snackbarService.show('No acts referenced yet. Save some legal sections to get started.', 'info');
+        return;
+      }
+      this.showActsFilterModal = true;
+      this.updateScrollLock();
+    } else if (card === 'inquiries') {
+      this.activeTab = 'inquiries';
+      this.scrollToContent();
+    }
+  }
+
+  filterByAct(actName: string) {
+    this.showActsFilterModal = false;
+    this.updateScrollLock();
+    this.activeTab = 'bookmarks';
+    this.selectedCollection = 'All';
+    this.searchQuery = '';       // clear free-text search
+    this.actFilter = actName;    // exact match — avoids substring false positives
+    this.currentPage = 1;
+    this.scrollToContent(180);   // slightly longer delay to let modal close animate first
+  }
+
+  clearActFilter() {
+    this.actFilter = '';
+    this.currentPage = 1;
+  }
+
+  closeActsModal() {
+    this.showActsFilterModal = false;
+    this.updateScrollLock();
+  }
+
 
   loadInquiries() {
     this.loadingInquiries = true;
@@ -59,6 +387,467 @@ export class ClientDashboardComponent implements OnInit {
   }
 
   removeBookmark(actId: string, secNum: string) {
-    this.bookmarkService.removeBookmark(actId, secNum);
+    this.openCustomConfirm(
+      'Remove Bookmark',
+      'Are you sure you want to remove this bookmark reference from your library?',
+      'danger',
+      () => {
+        this.bookmarkService.removeBookmark(actId, secNum);
+        if (this.selectedBookmark && this.selectedBookmark.actShortName === actId && this.selectedBookmark.section.section_number === secNum) {
+          this.closeBookmarkDrawer();
+        }
+      }
+    );
+  }
+
+  // --- REVAMPED WORKSPACE LOGIC ---
+
+  get filteredSidebarFolders(): string[] {
+    if (!this.sidebarFolderSearchQuery || !this.sidebarFolderSearchQuery.trim()) {
+      return this.customCollections;
+    }
+    const query = this.sidebarFolderSearchQuery.toLowerCase().trim();
+    return this.customCollections.filter(c => c.toLowerCase().includes(query));
+  }
+
+  // Get dynamic unique collections
+  get collectionsList(): string[] {
+    const list = new Set<string>();
+    this.allBookmarks.forEach(b => {
+      if (b.collectionName && b.collectionName.trim()) {
+        list.add(b.collectionName.trim());
+      }
+    });
+    return Array.from(list).sort();
+  }
+
+  // Get filtered bookmarks for display
+  get filteredBookmarks(): Bookmark[] {
+    let list = [...this.allBookmarks];
+
+    // Filter by Collection Folder
+    if (this.selectedCollection === 'Unassigned') {
+      list = list.filter(b => !b.collectionName || !b.collectionName.trim());
+    } else if (this.selectedCollection !== 'All') {
+      list = list.filter(b => b.collectionName === this.selectedCollection);
+    }
+
+    // Filter by exact Act name (set from Acts modal — strict equality, not substring)
+    if (this.actFilter) {
+      list = list.filter(b => b.actShortName === this.actFilter);
+    }
+
+    // Filter by Search Query (Keyword search on free-text fields)
+    if (this.searchQuery && this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase().trim();
+      list = list.filter(b =>
+        b.actShortName.toLowerCase().includes(q) ||
+        b.section.section_number.toLowerCase().includes(q) ||
+        b.section.title.toLowerCase().includes(q) ||
+        b.section.content.toLowerCase().includes(q) ||
+        (b.notes && b.notes.toLowerCase().includes(q))
+      );
+    }
+
+    // Sort
+    if (this.sortBy === 'newest') {
+      list.sort((a, b) => b.savedAt - a.savedAt);
+    } else if (this.sortBy === 'oldest') {
+      list.sort((a, b) => a.savedAt - b.savedAt);
+    } else if (this.sortBy === 'sectionAsc') {
+      list.sort((a, b) => {
+        const numA = parseFloat(a.section.section_number);
+        const numB = parseFloat(b.section.section_number);
+        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
+        return a.section.section_number.localeCompare(b.section.section_number);
+      });
+    } else if (this.sortBy === 'sectionDesc') {
+      list.sort((a, b) => {
+        const numA = parseFloat(a.section.section_number);
+        const numB = parseFloat(b.section.section_number);
+        if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
+        return b.section.section_number.localeCompare(a.section.section_number);
+      });
+    }
+
+    return list;
+  }
+
+  get paginatedBookmarks(): Bookmark[] {
+    const list = this.filteredBookmarks;
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    if (startIndex >= list.length) {
+      this.currentPage = 1;
+      return list.slice(0, this.itemsPerPage);
+    }
+    return list.slice(startIndex, startIndex + this.itemsPerPage);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredBookmarks.length / this.itemsPerPage);
+  }
+
+  get pageNumbers(): number[] {
+    const pages = [];
+    for (let i = 1; i <= this.totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  }
+
+  get visiblePageNumbers(): (number | string)[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    if (total <= 5) {
+      const pages = [];
+      for (let i = 1; i <= total; i++) pages.push(i);
+      return pages;
+    }
+
+    const pages: (number | string)[] = [];
+    
+    // Always show first page
+    pages.push(1);
+
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    if (start > 2) {
+      pages.push('...');
+    }
+
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+
+    if (end < total - 1) {
+      pages.push('...');
+    }
+
+    // Always show last page
+    pages.push(total);
+
+    return pages;
+  }
+
+  setPage(page: number | string) {
+    if (typeof page === 'string') return;
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  get showingStart(): number {
+    if (this.filteredBookmarks.length === 0) return 0;
+    return (this.currentPage - 1) * this.itemsPerPage + 1;
+  }
+
+  get unassignedCount(): number {
+    return this.allBookmarks.filter(b => !b.collectionName || !b.collectionName.trim()).length;
+  }
+
+  getFolderCount(folderName: string): number {
+    return this.allBookmarks.filter(b => b.collectionName === folderName).length;
+  }
+
+  get showingEnd(): number {
+    const end = this.currentPage * this.itemsPerPage;
+    return end > this.filteredBookmarks.length ? this.filteredBookmarks.length : end;
+  }
+
+  // Stats Counters
+  get totalSavedCount(): number {
+    return this.allBookmarks.length;
+  }
+
+  get distinctActsCount(): number {
+    return new Set(this.allBookmarks.map(b => b.actShortName)).size;
+  }
+
+  get activeInquiriesCount(): number {
+    return this.inquiries.filter(i => i.status === 'Pending' || i.status === 'Contacted').length;
+  }
+
+  loadCustomCollections() {
+    const key = this.currentUser ? `legalconnect_custom_folders_${this.currentUser.email}` : `legalconnect_custom_folders_guest`;
+    const saved = localStorage.getItem(key);
+    const localFolders: string[] = saved ? JSON.parse(saved) : [];
+
+    const activeFolders = this.allBookmarks
+      .map(b => b.collectionName)
+      .filter((name): name is string => !!name && name.trim().length > 0);
+
+    this.customCollections = Array.from(new Set([...localFolders, ...activeFolders])).sort();
+    this.saveCustomCollections();
+  }
+
+  saveCustomCollections() {
+    const key = this.currentUser ? `legalconnect_custom_folders_${this.currentUser.email}` : `legalconnect_custom_folders_guest`;
+    localStorage.setItem(key, JSON.stringify(this.customCollections));
+  }
+
+  // Create custom Folder Collection
+  createCollection() {
+    const folder = this.newCollectionName.trim();
+    if (!folder) return;
+
+    if (this.customCollections.includes(folder)) {
+      this.snackbarService.show('Research folder already exists.', 'warning');
+      return;
+    }
+
+    this.customCollections.push(folder);
+    this.customCollections.sort();
+    this.saveCustomCollections();
+
+    this.selectedCollection = folder;
+    this.newCollectionName = '';
+    this.showNewCollectionModal = false;
+    this.snackbarService.show(`Research folder "${folder}" created successfully.`, 'success');
+  }
+
+  renameCollection(oldName: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.openCustomPrompt(
+      'Rename Research Folder',
+      'Enter a new name for this folder:',
+      oldName,
+      (newName) => {
+        if (!newName || !newName.trim() || newName.trim() === oldName) return;
+
+        const cleanNewName = newName.trim();
+        if (this.customCollections.includes(cleanNewName)) {
+          this.snackbarService.show('A folder with this name already exists.', 'warning');
+          return;
+        }
+
+        // Update list
+        this.customCollections = this.customCollections.map(c => c === oldName ? cleanNewName : c).sort();
+        this.saveCustomCollections();
+
+        // Update bookmarks (silently to prevent toast spam)
+        this.allBookmarks.forEach(bm => {
+          if (bm.collectionName === oldName) {
+            this.bookmarkService.updateBookmarkMetadata(bm.actShortName, bm.section.section_number, bm.notes, cleanNewName, true);
+          }
+        });
+
+        if (this.selectedCollection === oldName) {
+          this.selectedCollection = cleanNewName;
+        }
+        this.snackbarService.show(`Research folder "${oldName}" successfully renamed to "${cleanNewName}".`, 'success');
+      }
+    );
+  }
+
+  deleteCollection(folderName: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.openCustomConfirm(
+      'Delete Research Folder',
+      `Are you sure you want to delete the folder "${folderName}"? All saved sections in it will be moved to General Reference.`,
+      'danger',
+      () => {
+        this.customCollections = this.customCollections.filter(c => c !== folderName);
+        this.saveCustomCollections();
+
+        // Update bookmarks (silently to prevent toast spam)
+        this.allBookmarks.forEach(bm => {
+          if (bm.collectionName === folderName) {
+            this.bookmarkService.updateBookmarkMetadata(bm.actShortName, bm.section.section_number, bm.notes, undefined, true);
+          }
+        });
+
+        if (this.selectedCollection === folderName) {
+          this.selectedCollection = 'All';
+        }
+        this.snackbarService.show(`Research folder "${folderName}" deleted successfully. Saved items moved to General Reference.`, 'success');
+      }
+    );
+  }
+
+  // --- CUSTOM POPUP DIALOG UTILITIES ---
+  openCustomConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', onConfirm: () => void) {
+    this.customConfirmTitle = title;
+    this.customConfirmMessage = message;
+    this.customConfirmType = type;
+    this.customConfirmAction = onConfirm;
+    this.customConfirmOpen = true;
+  }
+
+  closeCustomConfirm() {
+    this.customConfirmOpen = false;
+    this.customConfirmAction = null;
+  }
+
+  triggerCustomConfirm() {
+    if (this.customConfirmAction) {
+      this.customConfirmAction();
+    }
+    this.closeCustomConfirm();
+  }
+
+  openCustomPrompt(title: string, label: string, initialValue: string, onConfirm: (val: string) => void) {
+    this.customPromptTitle = title;
+    this.customPromptLabel = label;
+    this.customPromptValue = initialValue;
+    this.customPromptAction = onConfirm;
+    this.customPromptOpen = true;
+  }
+
+  closeCustomPrompt() {
+    this.customPromptOpen = false;
+    this.customPromptValue = '';
+    this.customPromptAction = null;
+  }
+
+  triggerCustomPrompt() {
+    if (this.customPromptAction) {
+      this.customPromptAction(this.customPromptValue);
+    }
+    this.closeCustomPrompt();
+  }
+
+  shareCollection(folderName: string) {
+    const list = this.allBookmarks.filter(b => b.collectionName === folderName);
+    if (list.length === 0) {
+      this.snackbarService.show('No items in this collection to share.', 'warning');
+      return;
+    }
+
+    const citationText = list.map((bm, index) => {
+      const noteContent = bm.notes ? `\n   Note: "${bm.notes}"` : '';
+      return `${index + 1}. ${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}\n   Text: "${bm.section.content}"${noteContent}`;
+    }).join('\n\n');
+
+    const shareBody = `LegalConnect Research Collection - "${folderName}"\nCompiled Date: ${new Date().toLocaleDateString()}\n\n${citationText}`;
+
+    navigator.clipboard.writeText(shareBody).then(() => {
+      this.snackbarService.show(`Folder "${folderName}" citation contents copied to clipboard!`, 'success');
+    }).catch(() => {
+      this.snackbarService.show('Failed to copy folder contents to clipboard.', 'error');
+    });
+  }
+
+  getSortLabel(val: string): string {
+    if (val === 'newest') return 'Recently Saved';
+    if (val === 'oldest') return 'Oldest Saved';
+    if (val === 'sectionAsc') return 'Section No (Asc)';
+    if (val === 'sectionDesc') return 'Section No (Desc)';
+    return 'Recently Saved';
+  }
+
+  selectSort(val: string) {
+    this.sortBy = val;
+    this.showSortDropdown = false;
+    this.currentPage = 1;
+  }
+
+  // Move / Organize bookmark folder
+  moveBookmarkToCollection(bm: Bookmark, collectionName: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const target = collectionName === 'Unassigned' || !collectionName ? undefined : collectionName;
+    this.bookmarkService.updateBookmarkMetadata(bm.actShortName, bm.section.section_number, bm.notes, target);
+  }
+
+  // Quick View Drawer open/close
+  openBookmarkDrawer(bm: Bookmark) {
+    this.selectedBookmark = bm;
+    this.drawerOpen = true;
+    this.drawerNoteText = bm.notes || '';
+    this.aiSummary = '';
+    this.loadingAiSummary = false;
+  }
+
+  closeBookmarkDrawer() {
+    this.selectedBookmark = null;
+    this.drawerOpen = false;
+    this.drawerNoteText = '';
+    this.aiSummary = '';
+  }
+
+  // Save notes to cloud/db
+  saveNotes() {
+    if (!this.selectedBookmark) return;
+    this.bookmarkService.updateBookmarkMetadata(
+      this.selectedBookmark.actShortName,
+      this.selectedBookmark.section.section_number,
+      this.drawerNoteText,
+      this.selectedBookmark.collectionName
+    );
+  }
+
+  // Copy citation details to clipboard
+  copySectionToClipboard(bm: Bookmark, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const citation = `${bm.actShortName} - Section ${bm.section.section_number}: ${bm.section.title}\n\n"${bm.section.content}"`;
+    navigator.clipboard.writeText(citation).then(() => {
+      this.snackbarService.show('Section citation copied to clipboard.', 'success');
+    }).catch(() => {
+      this.snackbarService.show('Failed to copy text.', 'error');
+    });
+  }
+
+  // Gemini AI summary fetch
+  fetchAiSummary() {
+    if (!this.selectedBookmark) return;
+    this.loadingAiSummary = true;
+    this.aiSummary = '';
+    this.legalService.getSectionSummary(this.selectedBookmark.actShortName, this.selectedBookmark.section.section_number).subscribe({
+      next: (res) => {
+        if (res && res.success && res.data) {
+          this.aiSummary = res.data.summary;
+        } else {
+          this.aiSummary = 'Could not retrieve AI breakdown.';
+        }
+        this.loadingAiSummary = false;
+      },
+      error: (err) => {
+        console.error(err);
+        this.aiSummary = 'AI Summary feature is currently unavailable. Please ensure the backend is connected and configured.';
+        this.loadingAiSummary = false;
+      }
+    });
+  }
+
+  // Share with Lawyer Modal
+  openShareModal(bm: Bookmark, event: Event) {
+    event.stopPropagation();
+    this.bookmarkToShare = bm;
+    this.showShareModal = true;
+  }
+
+  shareWithSelectedLawyer(lawyer: Consultation) {
+    if (!this.bookmarkToShare) return;
+    const noteText = this.bookmarkToShare.notes ? `\n\nClient Notes: "${this.bookmarkToShare.notes}"` : '';
+    const shareText = `Hello Advocate, here is a legal section from my saved library reference:
+${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.section_number}: ${this.bookmarkToShare.section.title}
+
+"${this.bookmarkToShare.section.content}"${noteText}`;
+
+    navigator.clipboard.writeText(shareText).then(() => {
+      this.snackbarService.show(`Copied reference citation for ${lawyer.lawyerName || 'Advocate'} to clipboard.`, 'success');
+    }).catch(() => {
+      this.snackbarService.show('Failed to copy sharing text.', 'error');
+    });
+    this.showShareModal = false;
+    this.bookmarkToShare = null;
+  }
+
+  triggerPrint(collectionName: string) {
+    this.printCollectionName = collectionName;
+    this.printDate = new Date();
+    // Brief timeout to let the print template render before dialog opens
+    setTimeout(() => {
+      window.print();
+    }, 150);
   }
 }

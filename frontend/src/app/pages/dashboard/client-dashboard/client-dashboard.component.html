@@ -1,141 +1,1386 @@
-<div class="page-wrapper min-h-screen pt-[100px] pb-24 bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100/80 dark:from-[#090b14] dark:via-[#0f1224] dark:to-[#05060b] text-slate-900 dark:text-white transition-colors duration-300">
-  <div class="container max-w-[1100px] mx-auto px-6">
+<div
+  class="page-wrapper min-h-screen pt-[80px] md:pt-[100px] pb-4 bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100/80 dark:from-[#090b14] dark:via-[#0f1224] dark:to-[#05060b] text-slate-900 dark:text-white transition-colors duration-300">
+  <div class="w-full max-w-[1380px] mx-auto px-4 md:px-6">
 
-    <!-- Loading State -->
-    <div *ngIf="!currentUser" class="flex flex-col items-center justify-center py-20 gap-4 text-text-muted">
-      <div class="w-10 h-10 border-[3px] border-white/5 border-t-accent rounded-full animate-spin"></div>
-      <p>Loading your space...</p>
+    <!-- SKELETON LOADER — shown while isPageLoading is true -->
+    <div *ngIf="isPageLoading" class="space-y-6 sm:space-y-8 animate-pulse">
+
+      <!-- Skeleton: Header -->
+      <div class="flex items-start justify-between gap-4 pb-6 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div class="space-y-2.5 flex-1 min-w-0">
+          <!-- Title bar — responsive width -->
+          <div class="skeleton-bar h-7 sm:h-9 w-32 sm:w-56 rounded-xl"></div>
+          <!-- Subtitle -->
+          <div class="skeleton-bar h-4 max-w-xs sm:max-w-sm w-full rounded-lg"></div>
+        </div>
+        <!-- Action button -->
+        <div class="skeleton-bar h-8 w-16 sm:h-9 sm:w-36 rounded-xl shrink-0"></div>
+      </div>
+
+      <!-- Skeleton: Stats Cards (2-col on all screens, 4-col on lg) -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div *ngFor="let i of [1,2,3,4]"
+          class="skeleton-card p-2.5 sm:p-4 rounded-2xl flex items-center gap-2 sm:gap-4">
+          <!-- Icon box — smaller on mobile -->
+          <div class="skeleton-bar w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl shrink-0"></div>
+          <div class="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
+            <div class="skeleton-bar h-2.5 sm:h-3 w-3/4 rounded-md"></div>
+            <div class="skeleton-bar h-4 sm:h-6 w-1/2 rounded-md"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Skeleton: Main layout (sidebar + content) -->
+      <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+
+        <!-- Skeleton: Sidebar (desktop only) -->
+        <div class="hidden lg:flex flex-col w-72 shrink-0 skeleton-card rounded-2xl p-5 gap-3">
+          <div class="skeleton-bar h-4 w-28 rounded-md"></div>
+          <div class="skeleton-bar h-8 w-full rounded-xl"></div>
+          <div class="skeleton-bar h-8 w-full rounded-xl"></div>
+          <div class="h-px bg-slate-200 dark:bg-slate-800 my-1"></div>
+          <div class="skeleton-bar h-8 w-full rounded-xl"></div>
+          <div class="skeleton-bar h-8 w-full rounded-xl"></div>
+          <div class="skeleton-bar h-8 w-3/4 rounded-xl"></div>
+          <div class="skeleton-bar h-8 w-2/3 rounded-xl"></div>
+        </div>
+
+        <!-- Skeleton: Main Content area -->
+        <div class="flex-1 space-y-5 min-w-0 w-full">
+
+          <!-- Skeleton: Mobile tab switcher (hidden on desktop) -->
+          <div class="flex items-center gap-2 lg:hidden">
+            <div class="skeleton-bar h-9 flex-1 rounded-xl"></div>
+            <div class="skeleton-bar h-9 flex-1 rounded-xl"></div>
+          </div>
+
+          <!-- Skeleton: Mobile folder pills scroll strip (hidden on desktop) -->
+          <div class="flex gap-2 overflow-hidden lg:hidden">
+            <div class="skeleton-bar h-7 w-16 rounded-full shrink-0"></div>
+            <div class="skeleton-bar h-7 w-20 rounded-full shrink-0"></div>
+            <div class="skeleton-bar h-7 w-24 rounded-full shrink-0"></div>
+            <div class="skeleton-bar h-7 w-16 rounded-full shrink-0"></div>
+          </div>
+
+          <!-- Skeleton: Search + sort bar -->
+          <div class="flex gap-3">
+            <div class="skeleton-bar h-10 flex-1 rounded-xl"></div>
+            <div class="skeleton-bar h-10 w-28 rounded-xl hidden sm:block"></div>
+          </div>
+
+          <!-- Skeleton bookmark cards — 1 col mobile, 2 col sm+ -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+
+            <!-- Mobile: show 4 cards; Desktop: show 6 -->
+            <div *ngFor="let i of [1,2,3,4]" class="skeleton-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+              <!-- Card badge row -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="skeleton-bar h-5 w-12 sm:w-14 rounded-md"></div>
+                  <div class="skeleton-bar h-4 w-16 sm:w-20 rounded-md"></div>
+                </div>
+                <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+              </div>
+              <!-- Title lines -->
+              <div class="space-y-1.5 sm:space-y-2">
+                <div class="skeleton-bar h-4 w-full rounded-md"></div>
+                <div class="skeleton-bar h-4 w-4/5 rounded-md"></div>
+              </div>
+              <!-- Content preview block -->
+              <div class="skeleton-bar h-14 sm:h-16 w-full rounded-xl"></div>
+              <!-- Footer row -->
+              <div class="flex items-center justify-between pt-0.5">
+                <div class="skeleton-bar h-3 w-20 sm:w-24 rounded-md"></div>
+                <div class="flex gap-1.5 sm:gap-2">
+                  <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+                  <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Extra 2 cards visible only on sm+ (so desktop shows 6 total) -->
+            <div *ngFor="let i of [5,6]"
+              class="skeleton-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4 hidden sm:block">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="skeleton-bar h-5 w-14 rounded-md"></div>
+                  <div class="skeleton-bar h-4 w-20 rounded-md"></div>
+                </div>
+                <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+              </div>
+              <div class="space-y-2">
+                <div class="skeleton-bar h-4 w-full rounded-md"></div>
+                <div class="skeleton-bar h-4 w-3/4 rounded-md"></div>
+              </div>
+              <div class="skeleton-bar h-16 w-full rounded-xl"></div>
+              <div class="flex items-center justify-between pt-0.5">
+                <div class="skeleton-bar h-3 w-24 rounded-md"></div>
+                <div class="flex gap-2">
+                  <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+                  <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
     </div>
+    <!-- END SKELETON -->
 
-    <div *ngIf="currentUser" class="space-y-10">
-      <!-- Header -->
-      <header class="pb-6 border-b border-slate-200 dark:border-white/10">
-        <h1 class="font-serif text-3xl md:text-4xl font-light text-slate-950 dark:text-white">
-          My Workspace
-        </h1>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Manage your saved legal documents and consult history.</p>
+
+    <div *ngIf="currentUser && !isPageLoading" class="space-y-4 md:space-y-8">
+
+      <!-- Premium Workspace Header -->
+      <header
+        class="flex flex-row items-start justify-between gap-2 md:gap-4 pb-3 md:pb-6 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div class="flex-1 min-w-0">
+          <h1
+            class="font-serif text-2xl sm:text-3xl md:text-4xl font-light text-slate-950 dark:text-white flex items-center gap-3">
+            My Workspace
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+            Manage your legal research, custom collections, and client consult inquiries.
+          </p>
+        </div>
+
+        <!-- Print / PDF Dossier Button -->
+        <button *ngIf="activeTab === 'bookmarks'" (click)="triggerPrint(selectedCollection)"
+          class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95 shrink-0 mt-0.5 sm:mt-1">
+          <!-- Print SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          <span class="hidden min-[450px]:inline">Export Dossier (PDF)</span>
+          <span class="min-[450px]:hidden">Export</span>
+        </button>
       </header>
 
-      <!-- Tab Controls -->
-      <div class="flex border-b border-slate-200 dark:border-slate-800 gap-6">
-        <button (click)="activeTab = 'bookmarks'"
-                [class]="activeTab === 'bookmarks' ? 'border-b-2 border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-200 font-medium'"
-                class="pb-3 text-sm transition-all focus:outline-none flex items-center gap-2">
-          🔖 Saved Library
-        </button>
-        <button (click)="activeTab = 'inquiries'"
-                [class]="activeTab === 'inquiries' ? 'border-b-2 border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-200 font-medium'"
-                class="pb-3 text-sm transition-all focus:outline-none flex items-center gap-2">
-          ✉️ Consult Requests ({{ inquiries.length }})
-        </button>
-      </div>
+      <!-- Statistics Dashboard Summary Bar -->
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Dashboard statistics">
 
-      <!-- Tab 1: Bookmarks -->
-      <div *ngIf="activeTab === 'bookmarks'" class="space-y-6">
-        <div *ngIf="(bookmarks$ | async)?.length === 0" class="card p-12 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4">
-          <span class="text-4xl opacity-50">📭</span>
-          <p class="text-slate-500 dark:text-slate-400 text-lg">You haven't bookmarked any sections yet.</p>
-          <a routerLink="/laws" class="btn btn-primary mt-2">Browse Laws</a>
-        </div>
+        <!-- Card 1: Total Saved -->
+        <button type="button" (click)="onCardClick('saved')"
+          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
+          title="Click to view all saved items" aria-label="View all saved bookmarks">
+          <div
+            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <!-- Bookmark SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <span
+              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Saved
+              Items</span>
+            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
+              displaySavedCount }}</span>
+          </div>
+        </button>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div *ngFor="let bm of bookmarks$ | async" class="bookmark-card card p-6 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-850 hover:border-slate-300 dark:hover:border-slate-800 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col gap-4 group relative overflow-hidden">
-            <div class="flex justify-between items-start gap-4 relative z-10">
-              <div class="flex flex-col gap-1">
-                <span class="badge badge-primary self-start text-xs">{{ bm.actShortName }}</span>
-                <h3 class="font-bold text-[1.1rem] text-slate-950 dark:text-white mt-2">
-                  Section {{ bm.section.section_number }}: {{ bm.section.title }}
-                </h3>
+        <!-- Card 2: Folders -->
+        <button type="button" (click)="onCardClick('collections')"
+          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
+          title="Click to view research folders" aria-label="View research folders">
+          <div
+            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
+            <!-- Folder SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <span
+              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Collections</span>
+            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
+              displayCollectionsCount }}</span>
+          </div>
+        </button>
+
+        <!-- Card 3: Acts referenced -->
+        <button type="button" (click)="onCardClick('acts')"
+          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
+          title="Click to browse by referenced Act" aria-label="Browse Acts referenced">
+          <div
+            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <!-- Book-Open SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <span
+              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Acts
+              Referenced</span>
+            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
+              displayActsCount }}</span>
+          </div>
+        </button>
+
+        <!-- Card 4: Consultations -->
+        <button type="button" (click)="onCardClick('inquiries')"
+          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
+          title="Click to view active consultations" aria-label="View active consultations">
+          <div
+            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <!-- Mail SVG -->
+            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+          <div class="min-w-0 flex-1">
+            <span
+              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Active
+              Inquiries</span>
+            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
+              displayInquiriesCount }}</span>
+          </div>
+        </button>
+
+      </section>
+
+      <!-- Main Layout Stack: Sidebar (Folders) + Main panel -->
+      <div class="flex flex-col lg:flex-row gap-8 items-start">
+
+        <!-- SIDEBAR: Collections & Folders Manager (Desktop Only) -->
+        <aside id="folders-section"
+          class="hidden lg:flex flex-col w-72 shrink-0 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-5 shadow-xs sticky top-24 h-[550px] overflow-hidden">
+          <div
+            class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/60 mb-3 shrink-0">
+            <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Research Folders
+            </h2>
+          </div>
+
+          <!-- Collection items list container -->
+          <div class="flex flex-col flex-1 overflow-hidden">
+            <!-- All (Fixed top) -->
+            <button (click)="selectedCollection = 'All'"
+              [class]="selectedCollection === 'All' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+              class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <rect x="3" y="3" width="7" height="9"></rect>
+                  <rect x="14" y="3" width="7" height="5"></rect>
+                  <rect x="14" y="12" width="7" height="9"></rect>
+                  <rect x="3" y="16" width="7" height="5"></rect>
+                </svg>
+                All Sections
+              </span>
+              <span
+                class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-100">{{
+                allBookmarks.length }}</span>
+            </button>
+
+            <!-- Unassigned (Fixed top) -->
+            <button (click)="selectedCollection = 'Unassigned'"
+              [class]="selectedCollection === 'Unassigned' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+              class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0">
+              <span class="flex items-center gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                General Reference
+              </span>
+              <span *ngIf="unassignedCount > 0"
+                class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-200 select-none">
+                {{ unassignedCount }}
+              </span>
+              <span *ngIf="unassignedCount === 0"
+                class="text-[10px] px-1.5 py-0.5 rounded-full border border-dashed border-slate-200 dark:border-slate-800 bg-transparent text-slate-300 dark:text-slate-200 font-medium select-none"
+                title="Empty folder">
+                0
+              </span>
+            </button>
+
+            <div class="h-px bg-slate-100 dark:bg-slate-800/80 my-2 mx-1 shrink-0"></div>
+
+            <!-- Folder Management (New Folder Button & Search Bar) (Fixed top) -->
+            <div class="space-y-2 mt-1 mb-3 shrink-0">
+              <!-- Create Folder trigger (below divider) -->
+              <button (click)="showNewCollectionModal = true"
+                class="w-full py-2 border border-dashed border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/10 transition-colors rounded-xl text-xs font-bold bg-transparent cursor-pointer active:scale-95 select-none">
+                + New Folder
+              </button>
+
+              <!-- Desktop Sidebar Folder Search (now positioned below divider) -->
+              <div class="relative w-full shrink-0">
+                <input type="text" [(ngModel)]="sidebarFolderSearchQuery" placeholder="Search folders..."
+                  class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950/45 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs outline-none text-slate-900 dark:text-white" />
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
               </div>
-              <button class="p-2 text-slate-400 hover:text-red-500 transition-colors bg-slate-50 dark:bg-slate-800 rounded-full shadow-sm"
-                      (click)="removeBookmark(bm.actShortName, bm.section.section_number)" title="Remove Bookmark">
-                🗑️
+            </div>
+
+            <!-- Scrollable Custom Folders list (Scrolls independently!) -->
+            <div class="flex-1 overflow-y-auto scrollbar-none space-y-1 min-h-0 pr-0.5">
+              <div *ngIf="filteredSidebarFolders.length === 0"
+                class="px-3 py-4 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                {{ customCollections.length === 0 ? 'No custom folders created.' : 'No matching folders found.' }}
+              </div>
+
+              <div *ngFor="let folder of filteredSidebarFolders"
+                [class]="selectedCollection === folder ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+                class="group/folder w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 select-none">
+                <span (click)="selectedCollection = folder"
+                  class="flex items-center gap-2 truncate pr-2 cursor-pointer flex-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="text-indigo-500 shrink-0">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span class="truncate">{{ folder }}</span>
+                </span>
+                <div class="flex items-center gap-1 shrink-0">
+                  <!-- Count Badge -->
+                  <span *ngIf="getFolderCount(folder) > 0"
+                    class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-200 mr-1 select-none">
+                    {{ getFolderCount(folder) }}
+                  </span>
+                  <span *ngIf="getFolderCount(folder) === 0"
+                    class="text-[10px] px-1.5 py-0.5 rounded-full border border-dashed border-slate-200 dark:border-slate-800 bg-transparent text-slate-800 dark:text-slate-200 font-medium mr-1 select-none"
+                    title="Empty folder">
+                    0
+                  </span>
+                  <!-- Rename -->
+                  <button (click)="renameCollection(folder, $event)"
+                    class="text-slate-700 hover:text-indigo-650 dark:text-slate-200 dark:hover:text-indigo-400 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg bg-transparent border-0 cursor-pointer flex items-center justify-center transition-all"
+                    title="Rename Folder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.5">
+                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                      <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                  </button>
+                  <!-- Delete -->
+                  <button (click)="deleteCollection(folder, $event)"
+                    class="text-slate-700 hover:text-red-500 dark:text-slate-200 dark:hover:text-red-400 p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg bg-transparent border-0 cursor-pointer flex items-center justify-center transition-all"
+                    title="Delete Folder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.5">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- MAIN WINDOW RESULTS AREA -->
+        <main id="content-section" class="flex-1 w-full space-y-3 md:space-y-6">
+
+          <!-- Tabs Controls -->
+          <div class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6">
+            <button (click)="activeTab = 'bookmarks'"
+              [class]="activeTab === 'bookmarks' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Saved Library
+            </button>
+            <button (click)="activeTab = 'inquiries'"
+              [class]="activeTab === 'inquiries' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Consult Requests ({{ inquiries.length }})
+            </button>
+          </div>
+
+          <!-- Custom Pill scrollbar on Mobile to filter collections (with integrated folder search toggle) -->
+          <div *ngIf="activeTab === 'bookmarks'"
+            class="lg:hidden flex items-center gap-2 py-1 border-b border-slate-100 dark:border-slate-800/60 pb-3 px-4 -mx-4 select-none">
+
+            <div class="flex items-center gap-2 overflow-x-auto scrollbar-none flex-1">
+
+              <!-- Folders Search Input (expandable inline) -->
+              <div *ngIf="showMobileFolderSearch"
+                class="relative min-w-[130px] flex-1 max-w-[180px] shrink-0 animate-[fadeIn_0.15s_ease-out]">
+                <input type="text" [(ngModel)]="sidebarFolderSearchQuery" placeholder="Search..."
+                  class="w-full pl-7 pr-7 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-full text-[11px] outline-none text-slate-900 dark:text-white" />
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-400" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <!-- Clear & Close search -->
+                <button (click)="sidebarFolderSearchQuery = ''; showMobileFolderSearch = false"
+                  class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-0 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="3">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Folder Search Toggle Trigger -->
+              <button *ngIf="!showMobileFolderSearch" (click)="showMobileFolderSearch = true"
+                class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 flex items-center justify-center shrink-0 border-0 cursor-pointer active:scale-95 transition-all"
+                title="Search folders">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </button>
+
+              <!-- "+ Add" button (Moved to front start) -->
+              <button (click)="showNewCollectionModal = true"
+                class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 bg-transparent shrink-0 active:scale-95 cursor-pointer">
+                + Add
+              </button>
+
+              <!-- Standard Folder Pills -->
+              <button (click)="selectedCollection = 'All'"
+                [class]="selectedCollection === 'All' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
+                class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0">
+                All ({{ allBookmarks.length }})
+              </button>
+              <button (click)="selectedCollection = 'Unassigned'"
+                [class]="selectedCollection === 'Unassigned' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
+                class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0">
+                General ({{ unassignedCount }})
+              </button>
+              <button *ngFor="let folder of filteredSidebarFolders" (click)="selectedCollection = folder"
+                [class]="selectedCollection === folder ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
+                class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0 font-medium">
+                {{ folder }} ({{ getFolderCount(folder) }})
               </button>
             </div>
-            <p class="text-slate-500 dark:text-slate-400 text-sm line-clamp-3 relative z-10">{{ bm.section.content }}</p>
-            <div class="mt-auto pt-4 border-t border-slate-100 dark:border-white/5 flex justify-between items-center relative z-10">
-              <span class="text-xs text-slate-400">Saved {{ bm.savedAt | date:'mediumDate' }}</span>
-              <a [routerLink]="['/laws', bm.actShortName]" [fragment]="'sec-' + bm.section.section_number" class="text-accent text-sm font-semibold hover:underline">
-                Read Full Act →
+          </div>
+
+          <!-- TAB 1: BOOKMARKS GRID -->
+          <div *ngIf="activeTab === 'bookmarks'" class="space-y-3 md:space-y-6">
+
+            <!-- Collection Title & Actions Row (Rename, Delete, Share) -->
+            <div *ngIf="selectedCollection !== 'All'"
+              class="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/20 dark:bg-indigo-950/10 p-3 sm:px-4 sm:py-3 rounded-2xl border border-indigo-100/10 dark:border-indigo-900/10 gap-3 sm:gap-4 mb-0 md:mb-2">
+              <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+                <div class="flex items-center gap-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" class="text-indigo-500 shrink-0">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span
+                    class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px] sm:max-w-none">
+                    Folder: {{ selectedCollection === 'Unassigned' ? 'General Reference' : selectedCollection }}
+                  </span>
+                </div>
+                <span
+                  class="text-[10px] bg-slate-200/50 dark:bg-slate-800 dark:text-white px-1.5 py-0.5 rounded text-slate-800 font-bold shrink-0">
+                  {{ filteredBookmarks.length }} items
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2 justify-start sm:justify-end w-full sm:w-auto"
+                *ngIf="selectedCollection !== 'Unassigned'">
+                <!-- Share Collection -->
+                <button (click)="shareCollection(selectedCollection)"
+                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 hover:bg-indigo-100/80 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/60 border border-indigo-100/10 dark:border-indigo-900/10 whitespace-nowrap">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="shrink-0">
+                    <circle cx="18" cy="5" r="3"></circle>
+                    <circle cx="6" cy="12" r="3"></circle>
+                    <circle cx="18" cy="19" r="3"></circle>
+                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                  </svg>
+                  Share Folder
+                </button>
+
+                <!-- Rename -->
+                <button (click)="renameCollection(selectedCollection)"
+                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-slate-600 dark:text-slate-200 bg-slate-100/50 hover:bg-slate-200/80 dark:bg-slate-800/50 dark:hover:bg-slate-700/80 border border-slate-200/10 dark:border-white/10 whitespace-nowrap">
+                  Rename
+                </button>
+
+                <!-- Delete -->
+                <button (click)="deleteCollection(selectedCollection)"
+                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-red-650 dark:text-red-400 bg-red-50/40 hover:bg-red-100/80 dark:bg-red-950/20 dark:hover:bg-red-950/50 border border-red-100/10 dark:border-red-900/10 whitespace-nowrap">
+                  Delete
+                </button>
+              </div>
+            </div>
+
+            <!-- Filters & Search bar (Visible if bookmarks exist) -->
+            <div *ngIf="allBookmarks.length > 0"
+              class="flex flex-row justify-between items-center gap-2 bg-white/30 dark:bg-slate-900/10 p-2.5 sm:p-3 rounded-2xl border border-slate-200/50 dark:border-white/5">
+
+              <!-- Search box + Act filter chip row -->
+              <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+
+                <!-- Search input -->
+                <div class="relative w-full">
+                  <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="actFilter = ''"
+                    placeholder="Search act, title, section..."
+                    class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs outline-none text-slate-900 dark:text-white" />
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                    class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+
+                <!-- Active Act Filter chip -->
+                <div *ngIf="actFilter" class="flex items-center gap-1.5">
+                  <span
+                    class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider hidden min-[400px]:inline">Act:</span>
+                  <span
+                    class="inline-flex items-center gap-1 pl-1.5 pr-0.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 text-amber-700 dark:text-amber-400">
+                    <span class="text-[10px] font-extrabold uppercase tracking-wide">{{ actFilter }}</span>
+                    <button type="button" (click)="clearActFilter()"
+                      class="w-3.5 h-3.5 rounded-full flex items-center justify-center bg-amber-200/60 dark:bg-amber-900/40 hover:bg-amber-300 dark:hover:bg-amber-800/60 text-amber-700 dark:text-amber-300 transition-colors border-0 cursor-pointer p-0">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                    </button>
+                  </span>
+                </div>
+
+              </div>
+
+              <!-- Sorting options custom dropdown -->
+              <div class="flex items-center gap-1.5 shrink-0 relative">
+                <span
+                  class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none hidden sm:inline">Sort:</span>
+
+                <div class="relative">
+                  <button (click)="showSortDropdown = !showSortDropdown; $event.stopPropagation()"
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl px-2.5 py-2 sm:px-3.5 flex items-center gap-1.5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all select-none active:scale-95 bg-transparent cursor-pointer">
+                    <span class="max-w-[85px] sm:max-w-none truncate">{{ getSortLabel(sortBy) }}</span>
+                    <!-- Caret SVG -->
+                    <svg class="w-3 h-3 text-slate-455 dark:text-slate-500 transition-transform duration-200 shrink-0"
+                      [class.rotate-180]="showSortDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+
+                  <div *ngIf="showSortDropdown" (click)="$event.stopPropagation()"
+                    class="absolute right-0 mt-1.5 w-36 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-30 py-1.5 overflow-hidden animate-[fadeIn_0.15s_ease-out]">
+                    <button (click)="selectSort('newest')"
+                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">Recently
+                      Saved</button>
+                    <button (click)="selectSort('oldest')"
+                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">Oldest
+                      Saved</button>
+                    <button (click)="selectSort('sectionAsc')"
+                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">Section
+                      No (Asc)</button>
+                    <button (click)="selectSort('sectionDesc')"
+                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">Section
+                      No (Desc)</button>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Empty Library view -->
+            <div *ngIf="filteredBookmarks.length === 0"
+              class="card p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4 bg-white/40 dark:bg-slate-900/10">
+              <div
+                class="w-16 h-16 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-650 dark:text-indigo-400 flex items-center justify-center">
+                <!-- File-Text SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                  <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">No sections matches</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm">No saved sections found matching the current collection
+                  folder or search criteria. Browse the Reference Library to bookmark acts.</p>
+              </div>
+              <a routerLink="/laws"
+                class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 no-underline mt-2">
+                Browse Indian Laws
               </a>
             </div>
-            
-            <!-- Background indicator -->
-            <div class="absolute -right-10 -bottom-10 text-9xl opacity-[0.02] dark:opacity-[0.05] pointer-events-none group-hover:scale-110 transition-transform duration-500">🔖</div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Tab 2: Sent Inquiries -->
-      <div *ngIf="activeTab === 'inquiries'" class="space-y-6">
-        <div *ngIf="loadingInquiries" class="flex items-center justify-center py-12 gap-3 text-slate-400">
-          <div class="w-6 h-6 border-[2.5px] border-white/5 border-t-accent rounded-full animate-spin"></div>
-          <span>Fetching consultations...</span>
-        </div>
+            <!-- Bookmarks Grid -->
+            <div *ngIf="filteredBookmarks.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-6">
+              <div *ngFor="let bm of paginatedBookmarks" (click)="openBookmarkDrawer(bm)"
+                class="card-glass p-5 rounded-2xl cursor-pointer relative overflow-hidden flex flex-col gap-4 group">
 
-        <div *ngIf="!loadingInquiries && inquiries.length === 0" class="card p-12 text-center border border-dashed border-slate-300 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4">
-          <span class="text-5xl opacity-40">👨‍⚖️</span>
-          <div>
-            <h3 class="text-lg font-bold">No consultations sent</h3>
-            <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Need legal help? Search the directory to contact professional advocates.</p>
-            <a routerLink="/lawyers" class="btn btn-primary mt-4">Find a Lawyer</a>
-          </div>
-        </div>
+                <!-- Card Header -->
+                <div class="flex justify-between items-start gap-4 relative z-10">
+                  <div class="flex flex-col gap-1.5">
+                    <div class="flex flex-wrap gap-1.5 items-center">
+                      <span
+                        class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/30 dark:border-indigo-900/30">
+                        {{ bm.actShortName }}
+                      </span>
+                      <!-- Collection folder label -->
+                      <span *ngIf="bm.collectionName"
+                        class="inline-flex items-center gap-1 text-[10px] text-purple-600 dark:text-purple-400 font-bold bg-purple-50 dark:bg-purple-950/20 px-2 py-0.5 rounded border border-purple-100/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" stroke-width="2.5">
+                          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        {{ bm.collectionName }}
+                      </span>
+                    </div>
 
-        <!-- Sent Inquiries Grid -->
-        <div *ngIf="!loadingInquiries && inquiries.length > 0" class="grid grid-cols-1 gap-6">
-          <div *ngFor="let inq of inquiries" class="card p-6 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-850 rounded-2xl shadow-sm flex flex-col gap-4 relative overflow-hidden">
-            <div class="absolute left-0 top-0 bottom-0 w-1.5"
-                 [ngClass]="{
-                   'bg-amber-500': inq.status === 'Pending',
-                   'bg-blue-500': inq.status === 'Contacted',
-                   'bg-emerald-500': inq.status === 'Closed'
-                 }">
+                    <h3
+                      class="font-bold text-[1.05rem] text-slate-950 dark:text-white tracking-tight mt-1 line-clamp-1">
+                      Section {{ bm.section.section_number }}: {{ bm.section.title }}
+                    </h3>
+                  </div>
+
+                  <!-- Trash Action Button -->
+                  <button (click)="removeBookmark(bm.actShortName, bm.section.section_number); $event.stopPropagation()"
+                    class="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors bg-transparent border-0 cursor-pointer shadow-xs shrink-0 flex items-center justify-center"
+                    title="Remove Reference">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="3 6 5 6 21 6"></polyline>
+                      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                      <line x1="10" y1="11" x2="10" y2="17"></line>
+                      <line x1="14" y1="11" x2="14" y2="17"></line>
+                    </svg>
+                  </button>
+                </div>
+
+                <!-- Section excerpt text -->
+                <p class="text-slate-500 dark:text-slate-400 text-[0.82rem] leading-relaxed line-clamp-3 relative z-10">
+                  {{ bm.section.content }}
+                </p>
+
+                <!-- Personal Notes Preview (If note exists) -->
+                <div *ngIf="bm.notes"
+                  class="mt-1 p-2.5 bg-yellow-50/70 dark:bg-amber-950/10 border border-yellow-200/50 dark:border-amber-900/10 rounded-xl flex items-start gap-2 relative z-10">
+                  <!-- sticky-note SVG -->
+                  <svg xmlns="http://www.w3.org/2000/svg"
+                    class="w-4 h-4 text-amber-600 dark:text-amber-500 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                  <p class="text-[0.74rem] text-amber-800 dark:text-amber-400 line-clamp-1 italic">
+                    "{{ bm.notes }}"
+                  </p>
+                </div>
+
+                <!-- Footer details + utilities -->
+                <div
+                  class="mt-auto pt-3 border-t border-slate-100 dark:border-white/5 flex justify-between items-center relative z-10 shrink-0">
+                  <span class="text-[10px] text-slate-400">Saved {{ bm.savedAt | date:'mediumDate' }}</span>
+
+                  <div class="flex items-center gap-3.5">
+                    <!-- Copy Clipboard utility -->
+                    <button (click)="copySectionToClipboard(bm, $event)"
+                      class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-transparent border-0 cursor-pointer p-1"
+                      title="Copy Citation">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                        <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                      </svg>
+                    </button>
+
+                    <!-- Share with Lawyer utility -->
+                    <button *ngIf="inquiries.length > 0" (click)="openShareModal(bm, $event)"
+                      class="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-transparent border-0 cursor-pointer p-1"
+                      title="Share with Lawyer">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                      </svg>
+                    </button>
+
+                    <span class="text-xs text-indigo-500 font-bold hover:underline inline-flex items-center gap-1">
+                      Read Full
+                      <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="3" class="group-hover:translate-x-1 transition-transform">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Watermark background decoration -->
+                <div
+                  class="absolute -right-6 -bottom-6 text-[7rem] font-bold text-slate-100 dark:text-slate-900 opacity-[0.03] dark:opacity-[0.05] pointer-events-none group-hover:scale-105 transition-transform duration-500 select-none">
+                  {{ bm.actShortName }}
+                </div>
+
+              </div>
             </div>
 
-            <!-- Lawyer Name & Status -->
-            <div class="flex justify-between items-center flex-wrap gap-4 border-b border-slate-100 dark:border-white/5 pb-3 pl-2">
+            <!-- Pagination Controls (Stylish) -->
+            <div *ngIf="totalPages > 1"
+              class="flex flex-col sm:flex-row justify-between items-center gap-3.5 sm:gap-4 bg-white/40 dark:bg-slate-900/10 p-3.5 sm:p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 mt-4 sm:mt-6 shrink-0 select-none">
+              <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center sm:text-left">
+                Showing <span class="text-slate-900 dark:text-white font-extrabold">{{ showingStart }}</span> to
+                <span class="text-slate-900 dark:text-white font-extrabold">{{ showingEnd }}</span> of
+                <span class="text-slate-900 dark:text-white font-extrabold">{{ filteredBookmarks.length }}</span> saved
+                items
+              </div>
+
+              <div class="flex items-center justify-center gap-1 sm:gap-1.5">
+                <!-- Previous Button -->
+                <button (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1"
+                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                  </svg>
+                </button>
+
+                <!-- Page Numbers & Ellipses -->
+                <ng-container *ngFor="let page of visiblePageNumbers">
+                  <button *ngIf="page !== '...'" (click)="setPage(page)"
+                    [class]="currentPage === page ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-bold border-indigo-600' : 'bg-transparent border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 font-semibold'"
+                    class="w-8 h-8 sm:w-9 sm:h-9 p-0 border rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95">
+                    {{ page }}
+                  </button>
+                  <span *ngIf="page === '...'"
+                    class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs font-bold text-slate-450 dark:text-slate-600 select-none">
+                    ...
+                  </span>
+                </ng-container>
+
+                <!-- Next Button -->
+                <button (click)="setPage(currentPage + 1)" [disabled]="currentPage === totalPages"
+                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none"
+                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- TAB 2: CONSULT TIMELINE -->
+          <div *ngIf="activeTab === 'inquiries'" class="space-y-3 md:space-y-6">
+
+            <div *ngIf="loadingInquiries" class="flex items-center justify-center py-12 gap-3 text-slate-400">
+              <div class="w-6 h-6 border-[2.5px] border-indigo-100 border-t-indigo-650 rounded-full animate-spin"></div>
+              <span>Fetching consultations...</span>
+            </div>
+
+            <!-- Empty consultations -->
+            <div *ngIf="!loadingInquiries && inquiries.length === 0"
+              class="card p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4 bg-white/40 dark:bg-slate-900/10">
+              <div
+                class="w-16 h-16 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <!-- Scale of Justice / Gavel SVG -->
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+              </div>
               <div>
-                <h3 class="font-bold text-slate-950 dark:text-white">{{ inq.lawyerName || inq.clientName }}</h3>
-                <p class="text-xs text-slate-400 mt-0.5">Contact: {{ inq.lawyerEmail }}</p>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">No consultations sent</h3>
+                <p class="text-xs text-slate-500 mt-1 max-w-sm">Need help evaluating your saved sections? Search our
+                  verified directory to contact legal professionals.</p>
               </div>
-              <div class="flex items-center gap-3">
-                <span class="text-xs text-slate-400 font-medium">
-                  Sent {{ inq.createdAt | date:'mediumDate' }}
-                </span>
-                <span class="text-xs font-semibold px-2.5 py-1 rounded-full uppercase tracking-wider"
+              <a routerLink="/lawyers"
+                class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 no-underline mt-2">
+                Find a Lawyer
+              </a>
+            </div>
+
+            <!-- Timeline cards -->
+            <div *ngIf="!loadingInquiries && inquiries.length > 0" class="grid grid-cols-1 gap-6">
+              <div *ngFor="let inq of inquiries"
+                class="card-glass p-5 rounded-2xl flex flex-col gap-4 relative overflow-hidden">
+
+                <!-- Side Status Indicator Line -->
+                <div class="absolute left-0 top-0 bottom-0 w-1.5" [ngClass]="{
+                       'bg-amber-500': inq.status === 'Pending',
+                       'bg-blue-500': inq.status === 'Contacted',
+                       'bg-emerald-500': inq.status === 'Closed'
+                     }">
+                </div>
+
+                <!-- Lawyer details & Status header -->
+                <div
+                  class="flex justify-between items-center flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-3.5 pl-2 shrink-0">
+                  <div>
+                    <h3 class="font-bold text-sm text-slate-900 dark:text-white">{{ inq.lawyerName || inq.clientName }}
+                    </h3>
+                    <!-- Mail link with copying helper -->
+                    <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+                      <span>Contact: {{ inq.lawyerEmail }}</span>
+                    </p>
+                  </div>
+
+                  <div class="flex items-center gap-3">
+                    <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+                      Sent {{ inq.createdAt | date:'mediumDate' }}
+                    </span>
+                    <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border"
                       [ngClass]="{
-                        'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20': inq.status === 'Pending',
-                        'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20': inq.status === 'Contacted',
-                        'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20': inq.status === 'Closed'
-                      }">
-                  {{ inq.status }}
-                </span>
+                            'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20': inq.status === 'Pending',
+                            'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20': inq.status === 'Contacted',
+                            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20': inq.status === 'Closed'
+                          }">
+                      {{ inq.status }}
+                    </span>
+                  </div>
+                </div>
+
+                <!-- Inquiry Message block -->
+                <div class="pl-2 flex-1">
+                  <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed">{{ inq.message }}</p>
+                </div>
+
+                <!-- Inquiry Timeline status notifications -->
+                <div
+                  class="pl-2 pt-3.5 border-t border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-[10px] text-slate-400 shrink-0">
+                  <span class="font-mono">Inquiry ID: LC-{{ inq.id }}</span>
+
+                  <!-- Responsive Status texts -->
+                  <span *ngIf="inq.status === 'Pending'"
+                    class="text-amber-600 dark:text-amber-550 font-bold flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.5" class="animate-pulse">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    Awaiting response from advocate
+                  </span>
+                  <span *ngIf="inq.status === 'Contacted'"
+                    class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.5">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    Advocate initiated contact
+                  </span>
+                  <span *ngIf="inq.status === 'Closed'"
+                    class="text-emerald-600 dark:text-emerald-455 font-bold flex items-center gap-1">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    Consultation closed
+                  </span>
+                </div>
+
               </div>
             </div>
 
-            <!-- Message -->
-            <div class="pl-2">
-              <p class="text-sm text-slate-700 dark:text-slate-350 leading-relaxed">{{ inq.message }}</p>
-            </div>
-
-            <!-- Response Notice -->
-            <div class="pl-2 pt-2 border-t border-slate-100 dark:border-white/5 flex justify-between items-center text-xs text-slate-400">
-              <span>Inquiry ID: LC-{{ inq.id }}</span>
-              <span *ngIf="inq.status === 'Pending'" class="text-amber-500 font-medium flex items-center gap-1">
-                ⏳ Awaiting response from advocate
-              </span>
-              <span *ngIf="inq.status === 'Contacted'" class="text-blue-500 font-medium flex items-center gap-1">
-                💬 Advocate has responded or initiated contact
-              </span>
-              <span *ngIf="inq.status === 'Closed'" class="text-emerald-500 font-medium flex items-center gap-1">
-                ✓ Consultation closed
-              </span>
-            </div>
           </div>
-        </div>
+
+        </main>
       </div>
 
+    </div>
+  </div>
+</div>
+
+<!-- 1. QUICK-VIEW DETAIL SLIDE OVER DRAWER -->
+<div class="drawer-backdrop" [class.open]="drawerOpen" (click)="closeBookmarkDrawer()"></div>
+<div class="drawer-panel" [class.open]="drawerOpen">
+
+  <!-- Drawer Header -->
+  <header *ngIf="selectedBookmark"
+    class="px-4 py-3 sm:px-5 sm:py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between shrink-0 bg-slate-50/50 dark:bg-slate-900/10">
+    <div class="flex flex-col gap-1 pr-4 min-w-0 flex-1">
+      <div class="flex items-center gap-2">
+        <span
+          class="px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/30">
+          {{ selectedBookmark.actShortName }}
+        </span>
+        <span class="text-[10px] text-slate-400 font-semibold uppercase">Chapter {{ selectedBookmark.chapterNumber
+          }}</span>
+      </div>
+      <h2 class="font-bold text-sm text-slate-950 dark:text-white truncate max-w-full tracking-tight mt-1">
+        Section {{ selectedBookmark.section.section_number }}: {{ selectedBookmark.section.title }}
+      </h2>
+    </div>
+
+    <button (click)="closeBookmarkDrawer()"
+      class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center shrink-0">
+      <!-- X SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </header>
+
+  <!-- Drawer Scroll Content body -->
+  <main *ngIf="selectedBookmark" class="flex-1 overflow-y-auto scrollbar-none p-4 sm:p-5 space-y-5 sm:space-y-6">
+
+    <!-- Section Text block -->
+    <div class="space-y-2">
+      <div class="flex justify-between items-center shrink-0">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">Statute text</h3>
+        <button (click)="copySectionToClipboard(selectedBookmark)"
+          class="inline-flex items-center gap-1 text-[10px] font-bold text-indigo-600 dark:text-indigo-400 bg-transparent border-0 cursor-pointer hover:underline">
+          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+          Copy Text
+        </button>
+      </div>
+      <div class="p-4 rounded-xl bg-slate-50 dark:bg-slate-900/50 border border-slate-100 dark:border-slate-800">
+        <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">{{
+          selectedBookmark.section.content }}</p>
+      </div>
+    </div>
+
+    <!-- Organizer: Select Folder Collection Custom Dropdown -->
+    <div class="space-y-2">
+      <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Assign to Collection Folder</h3>
+      <div class="relative w-full">
+        <button (click)="showFolderSelectDropdown = !showFolderSelectDropdown; $event.stopPropagation()"
+          class="w-full text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl px-3.5 py-2.5 flex items-center justify-between shadow-xs hover:border-slate-350 dark:hover:border-slate-700 transition-all select-none active:scale-95 bg-transparent cursor-pointer">
+          <span>{{ selectedBookmark.collectionName || 'General Reference' }}</span>
+          <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200"
+            [class.rotate-180]="showFolderSelectDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <div *ngIf="showFolderSelectDropdown" (click)="$event.stopPropagation()"
+          class="absolute left-0 right-0 mt-1.5 max-h-48 overflow-y-auto bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-850 rounded-xl shadow-lg z-30 py-1.5 animate-[fadeIn_0.15s_ease-out]">
+          <button (click)="moveBookmarkToCollection(selectedBookmark, 'Unassigned'); showFolderSelectDropdown = false"
+            class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">
+            General Reference (Default)
+          </button>
+          <button *ngFor="let folder of customCollections"
+            (click)="moveBookmarkToCollection(selectedBookmark, folder); showFolderSelectDropdown = false"
+            class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer truncate">
+            {{ folder }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Private Notes Section -->
+    <div class="space-y-2.5">
+      <div class="flex justify-between items-center">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider block">My Case Notes & Annotations</h3>
+        <span class="text-[9px] text-slate-400 italic">Saved automatically on changes</span>
+      </div>
+      <div class="relative">
+        <textarea [(ngModel)]="drawerNoteText" (ngModelChange)="saveNotes()"
+          placeholder="Type any case names, notes, references, or specific notes regarding this legal section here..."
+          class="w-full p-3.5 bg-yellow-50/20 dark:bg-amber-950/5 border border-yellow-250/40 dark:border-amber-900/20 rounded-2xl text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 note-textarea"></textarea>
+      </div>
+    </div>
+
+    <!-- Gemini AI Translation Section -->
+    <div
+      class="p-5 rounded-2xl bg-gradient-to-r from-indigo-50/50 to-purple-50/30 dark:from-indigo-950/20 dark:to-purple-950/10 border border-indigo-150/40 dark:border-indigo-900/20 space-y-4">
+
+      <!-- AI Title Header -->
+      <div class="flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-2 text-indigo-650 dark:text-indigo-400">
+          <!-- Sparkles / Gemini SVG -->
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5">
+            <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+          </svg>
+          <h4 class="text-xs font-extrabold tracking-wide uppercase">AI Plain-English Simplifier</h4>
+        </div>
+
+        <span
+          class="text-[9px] font-bold px-2 py-0.5 bg-indigo-100/60 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-350 rounded-full">Gemini
+          Flash</span>
+      </div>
+
+      <!-- AI Prompt Box / Loading / Result -->
+      <div *ngIf="!aiSummary && !loadingAiSummary" class="text-center py-4 space-y-3">
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">Struggling with
+          complex statutory wording? Ask Gemini AI to simplify this clause in plain terms.</p>
+        <button (click)="fetchAiSummary()"
+          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-95 border-0">
+          Explain Section
+        </button>
+      </div>
+
+      <!-- Loading spinner -->
+      <div *ngIf="loadingAiSummary" class="flex flex-col items-center justify-center py-8 gap-3 text-slate-500">
+        <div class="w-6 h-6 border-[2.5px] border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
+        <span class="text-[10px] font-bold uppercase tracking-wider animate-pulse">Translating statute...</span>
+      </div>
+
+      <!-- AI Summary Content -->
+      <div *ngIf="aiSummary"
+        class="space-y-2 bg-white/60 dark:bg-slate-900/60 p-4 rounded-xl border border-indigo-100/30 dark:border-indigo-900/20">
+        <h5 class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">AI Explanation:</h5>
+        <p class="text-[11px] text-slate-600 dark:text-slate-350 leading-relaxed whitespace-pre-line">{{ aiSummary }}
+        </p>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<!-- ========================================== -->
+<!-- 2. CREATE NEW COLLECTION FOLDER MODAL -->
+<!-- ========================================== -->
+<div *ngIf="showNewCollectionModal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-xs" (click)="showNewCollectionModal = false"></div>
+
+  <!-- Modal Content Box -->
+  <div
+    class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-2xl z-10 space-y-5 animate-[scaleUp_0.2s_ease-out]">
+    <div>
+      <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Create Research Folder</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Group your saved laws by case or client research topic.
+      </p>
+    </div>
+
+    <div>
+      <input type="text" [(ngModel)]="newCollectionName" placeholder="e.g. Landlord Dispute, Tax Audit 2026..."
+        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500" />
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <button (click)="showNewCollectionModal = false; newCollectionName = ''"
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+        Cancel
+      </button>
+      <button (click)="createCollection()"
+        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer">
+        Create Folder
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 3. SHARE TO CONTACTED LAWYER MODAL -->
+<!-- ========================================== -->
+<div *ngIf="showShareModal && bookmarkToShare" class="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-xs" (click)="showShareModal = false"></div>
+
+  <!-- Modal Content Box -->
+  <div
+    class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-2xl z-10 space-y-4 animate-[scaleUp_0.2s_ease-out]">
+    <div>
+      <h3 class="font-serif text-base font-bold text-slate-900 dark:text-white">Share Citation reference</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Select an advocate you have contacted to format and
+        copy details to clipboard.</p>
+    </div>
+
+    <!-- Active inquiry contacts list -->
+    <div class="space-y-1.5 max-h-48 overflow-y-auto pr-1">
+      <button *ngFor="let lawyer of inquiries" (click)="shareWithSelectedLawyer(lawyer)"
+        class="w-full p-3 rounded-xl border border-slate-100 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-900 hover:bg-indigo-50/10 dark:hover:bg-indigo-950/10 flex items-center justify-between text-left transition-all bg-transparent text-slate-700 dark:text-slate-350 cursor-pointer">
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-bold text-slate-900 dark:text-white">{{ lawyer.lawyerName }}</span>
+          <span class="text-[10px] text-slate-400">Consult ID: LC-{{ lawyer.id }}</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" class="text-slate-400">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+    </div>
+
+    <div class="flex justify-end pt-2">
+      <button (click)="showShareModal = false; bookmarkToShare = null"
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- CUSTOM CONFIRM DIALOG MODAL -->
+<!-- ========================================== -->
+<div *ngIf="customConfirmOpen" class="fixed inset-0 z-[2100] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-xs" (click)="closeCustomConfirm()"></div>
+
+  <!-- Modal Content Box -->
+  <div
+    class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-2xl z-10 space-y-5 border border-slate-200/40 dark:border-slate-800 animate-[scaleUp_0.2s_ease-out]">
+    <div class="flex items-start gap-3.5">
+      <!-- Icon indicator -->
+      <div class="p-2 rounded-xl shrink-0"
+        [class]="customConfirmType === 'danger' ? 'bg-red-50 text-red-650 dark:bg-red-950/20 dark:text-red-400' : 'bg-amber-50 text-amber-600 dark:bg-amber-950/20 dark:text-amber-400'">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+      </div>
+      <div class="space-y-1">
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ customConfirmTitle }}</h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">{{ customConfirmMessage }}</p>
+      </div>
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <button (click)="closeCustomConfirm()"
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+        Cancel
+      </button>
+      <button (click)="triggerCustomConfirm()"
+        [class]="customConfirmType === 'danger' ? 'bg-red-600 hover:bg-red-500 text-white' : 'bg-indigo-650 hover:bg-indigo-600 text-white'"
+        class="px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer">
+        Confirm
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- CUSTOM PROMPT DIALOG MODAL -->
+<!-- ========================================== -->
+<div *ngIf="customPromptOpen" class="fixed inset-0 z-[2100] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-xs" (click)="closeCustomPrompt()"></div>
+
+  <!-- Modal Content Box -->
+  <div
+    class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-2xl z-10 space-y-5 border border-slate-200/40 dark:border-slate-800 animate-[scaleUp_0.2s_ease-out]">
+    <div>
+      <h3 class="font-serif text-base font-bold text-slate-900 dark:text-white">{{ customPromptTitle }}</h3>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">{{ customPromptLabel }}</p>
+    </div>
+
+    <div>
+      <input type="text" [(ngModel)]="customPromptValue" (keyup.enter)="triggerCustomPrompt()"
+        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500" />
+    </div>
+
+    <div class="flex justify-end gap-3 pt-2">
+      <button (click)="closeCustomPrompt()"
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+        Cancel
+      </button>
+      <button (click)="triggerCustomPrompt()"
+        class="px-4 py-2 bg-indigo-650 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer">
+        Submit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 4. PRINT TEMPLATE VIEW (PRINT MODE ONLY) -->
+<!-- ========================================== -->
+<div class="print-area hidden" style="font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  <!-- Print Header -->
+  <div
+    style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px;">
+    <div style="display: flex; flex-direction: column;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <!-- Premium SVG Scales Icon Container (Matching the Website's Design) -->
+        <div
+          style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #2563eb, #4f46e5); display: flex; align-items: center; justify-content: center; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; flex-shrink: 0; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.15);">
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"
+            style="width: 22px; height: 22px; color: white; display: block;">
+            <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="12" cy="11" r="2.2" fill="currentColor" />
+          </svg>
+        </div>
+        <span
+          style="font-size: 28px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+          Legal<span style="color: #6366f1;">Connect</span>
+        </span>
+      </div>
+      <p
+        style="font-size: 10px; font-weight: 800; color: #64748b; letter-spacing: 0.08em; margin: 6px 0 0 0; text-transform: uppercase; padding-left: 2px;">
+        Legal Help, Simplified.
+      </p>
+    </div>
+
+    <div style="text-align: right; display: flex; flex-direction: column; align-items: flex-end;">
+      <span
+        style="display: inline-block; font-size: 10px; font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 4px 10px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #c7d2fe; margin-bottom: 4px;">
+        Research Dossier
+      </span>
+      <p style="font-size: 11px; color: #64748b; margin: 0; font-family: monospace;">
+        Compiled: {{ printDate | date:'mediumDate' }} | {{ printDate | date:'shortTime' }}
+      </p>
+    </div>
+  </div>
+
+  <!-- Meta Info Section -->
+  <div
+    style="display: flex; gap: 20px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 18px; border-radius: 12px; margin-bottom: 28px; font-size: 12px; color: #475569;">
+    <div>
+      Research Folder: <strong style="color: #0f172a;">{{ printCollectionName }}</strong>
+    </div>
+    <div style="border-left: 1px solid #cbd5e1; height: 16px;"></div>
+    <div>
+      Total Items: <strong style="color: #0f172a;">{{ printItemsCount }}</strong>
+    </div>
+  </div>
+
+  <!-- Dossier List -->
+  <div style="display: flex; flex-direction: column; gap: 32px;">
+    <!-- Print individual items -->
+    <div *ngFor="let bm of allBookmarks"
+      [hidden]="printCollectionName !== 'All' && bm.collectionName !== printCollectionName"
+      style="page-break-inside: avoid; border-bottom: 1px solid #f1f5f9; padding-bottom: 24px; margin-bottom: 8px;">
+
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <span
+          style="font-size: 10px; font-weight: 800; background: #eff6ff; padding: 3px 8px; border-radius: 6px; color: #2563eb; border: 1px solid #bfdbfe; text-transform: uppercase; letter-spacing: 0.05em;">
+          {{ bm.actShortName }}
+        </span>
+        <span style="font-size: 11px; color: #94a3b8; font-family: monospace;">
+          Saved: {{ bm.savedAt | date:'mediumDate' }}
+        </span>
+      </div>
+
+      <h2 style="font-size: 17px; font-weight: 700; margin: 0 0 10px 0; color: #0f172a;">
+        Section {{ bm.section.section_number }}: {{ bm.section.title }}
+      </h2>
+
+      <div
+        style="background: #f8fafc; border-left: 4px solid #6366f1; padding: 12px 16px; margin-bottom: 14px; font-size: 12px; line-height: 1.6; color: #334155; border-radius: 0 8px 8px 0; border-top: 1px solid #f1f5f9; border-right: 1px solid #f1f5f9; border-bottom: 1px solid #f1f5f9;">
+        {{ bm.section.content }}
+      </div>
+
+      <!-- Notes -->
+      <div *ngIf="bm.notes"
+        style="background: #fffbeb; border: 1px solid #fef3c7; border-left: 4px solid #d97706; padding: 12px 16px; border-radius: 0 8px 8px 0; margin-top: 10px;">
+        <h4
+          style="font-size: 10px; font-weight: 800; text-transform: uppercase; margin: 0 0 4px 0; color: #b45309; letter-spacing: 0.03em;">
+          My Case Notes:</h4>
+        <p style="font-size: 11px; margin: 0; font-style: italic; color: #78350f; line-height: 1.5;">"{{ bm.notes }}"
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Print Trademark Footer -->
+  <div
+    style="margin-top: 48px; border-top: 1px solid #e2e8f0; padding-top: 16px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #94a3b8; page-break-inside: avoid;">
+    <div>
+      &copy; 2026 LegalConnect. All rights reserved.
+    </div>
+    <div style="text-align: right; font-style: italic;">
+      LegalConnect &trade; &bull; Legal Help, Simplified.
+    </div>
+  </div>
+</div>
+
+<!-- ACTS REFERENCED FILTER MODAL -->
+<div *ngIf="showActsFilterModal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-xs" (click)="closeActsModal()"></div>
+
+  <!-- Modal Content Box -->
+  <div
+    class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl shadow-2xl z-10 border border-slate-200/40 dark:border-slate-800 animate-[scaleUp_0.2s_ease-out] overflow-hidden">
+
+    <!-- Modal Header -->
+    <div class="px-5 pt-5 pb-4 border-b border-slate-100 dark:border-slate-800 flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-2 mb-1">
+          <div
+            class="w-7 h-7 rounded-lg bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+            </svg>
+          </div>
+          <h3 class="font-serif text-base font-bold text-slate-900 dark:text-white">Acts Referenced</h3>
+        </div>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Click any Act below to filter your saved sections.</p>
+      </div>
+      <button (click)="closeActsModal()"
+        class="p-1.5 rounded-full text-slate-400 hover:text-slate-700 dark:hover:text-white bg-transparent border-0 cursor-pointer shrink-0 mt-0.5">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Acts List -->
+    <div class="px-3 py-3 max-h-80 overflow-y-auto scrollbar-none space-y-1">
+      <button *ngFor="let act of actsBreakdown" (click)="filterByAct(act.name)"
+        class="w-full text-left flex items-center justify-between px-3 py-2.5 rounded-xl bg-transparent hover:bg-amber-50/60 dark:hover:bg-amber-950/20 border border-transparent hover:border-amber-200/50 dark:hover:border-amber-900/30 transition-all group cursor-pointer">
+        <div class="flex items-center gap-2.5">
+          <span
+            class="px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-[10px] font-extrabold tracking-wide uppercase border border-amber-200/40 dark:border-amber-800/30 shrink-0">
+            {{ act.name }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2">
+          <span
+            class="text-[10px] font-bold text-slate-400 dark:text-slate-500 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors tabular-nums">
+            {{ act.count }} {{ act.count === 1 ? 'section' : 'sections' }}
+          </span>
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5"
+            class="text-slate-300 dark:text-slate-700 group-hover:text-amber-500 transition-colors">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+      </button>
+    </div>
+
+    <!-- Footer -->
+    <div class="px-5 py-3.5 border-t border-slate-100 dark:border-slate-800 flex justify-end">
+      <button (click)="closeActsModal()"
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+        Close
+      </button>
     </div>
   </div>
 </div>

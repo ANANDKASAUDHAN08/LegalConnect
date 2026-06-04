@@ -67,9 +67,10 @@
                       (click)="summarizeSection(sec)" title="Summarize in Plain English">
                 🤖 <span class="hidden md:inline">Summarize</span>
               </button>
-              <!-- Bookmark Btn -->
-              <button class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-text-secondary dark:text-slate-400 transition-colors"
-                      (click)="toggleBookmark(sec)" [title]="bookmarkService.isBookmarked(shortName, sec.section_number) ? 'Remove Bookmark' : 'Bookmark Section'">
+              <!-- Bookmark Button (opens modal) -->
+              <button class="p-2 rounded hover:bg-black/5 dark:hover:bg-white/10 text-text-secondary dark:text-slate-400 transition-colors cursor-pointer bg-transparent border-0 flex items-center justify-center"
+                      (click)="openBookmarkModal(sec)" 
+                      [title]="bookmarkService.isBookmarked(shortName, sec.section_number) ? 'Edit or Remove Bookmark' : 'Bookmark Section'">
                 <span *ngIf="bookmarkService.isBookmarked(shortName, sec.section_number)">🔖</span>
                 <span *ngIf="!bookmarkService.isBookmarked(shortName, sec.section_number)">📑</span>
               </button>
@@ -108,3 +109,12 @@
     </main>
   </div>
 </div>
+
+<!-- Reusable Bookmark Organizer Modal -->
+<app-bookmark-modal
+  [isOpen]="isBookmarkModalOpen"
+  [actShortName]="modalActShortName"
+  [chapterNumber]="modalChapterNumber"
+  [section]="modalSection"
+  (close)="isBookmarkModalOpen = false">
+</app-bookmark-modal>

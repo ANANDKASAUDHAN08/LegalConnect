@@ -1,0 +1,167 @@
+<div *ngIf="isOpen && section" class="fixed inset-0 z-[2000] flex items-center justify-center p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-xs" (click)="closeModal()"></div>
+
+  <!-- Modal Box -->
+  <div
+    class="relative w-full max-w-md bg-white dark:bg-[#0f1224] border border-slate-200/50 dark:border-slate-800 rounded-2xl p-5 sm:p-6 shadow-2xl z-10 space-y-5 animate-[scaleUp_0.15s_ease-out] text-slate-900 dark:text-white">
+    <!-- Header -->
+    <div class="flex justify-between items-start gap-4">
+      <div class="min-w-0 flex-1">
+        <span
+          class="inline-flex px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/30">
+          {{ actShortName }}
+        </span>
+        <h3 class="font-serif text-base sm:text-lg font-bold mt-1.5 leading-tight truncate">
+          {{ isBookmarked ? 'Edit Library Item' : 'Save Section Reference' }}
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 truncate">
+          Sec {{ section.section_number }}: {{ section.title }}
+        </p>
+      </div>
+
+      <!-- Close Button -->
+      <button (click)="closeModal()"
+        class="p-2 text-slate-450 hover:text-slate-650 dark:text-slate-400 dark:hover:text-white rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center shrink-0 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body content -->
+    <div class="space-y-4">
+      <!-- Select Folder (Custom Dropdown) -->
+      <div class="space-y-1.5 relative">
+        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider block">
+          Select Research Folder
+        </label>
+
+        <div class="relative w-full">
+          <!-- Dropdown Trigger Button -->
+          <button (click)="toggleDropdown($event)"
+            class="w-full text-left bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl px-4 py-3 flex items-center justify-between outline-none transition-all cursor-pointer bg-transparent">
+            <span>{{ selectedFolder === 'Unassigned' ? 'General Reference (Default)' : selectedFolder }}</span>
+            <!-- Custom Chevron Down -->
+            <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200"
+              [class.rotate-180]="showFolderDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <!-- Custom Dropdown Menu -->
+          <div *ngIf="showFolderDropdown" (click)="$event.stopPropagation()"
+            class="absolute left-0 right-0 mt-1.5 bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800 rounded-xl shadow-2xl z-[3000] py-2 flex flex-col max-h-60 overflow-hidden animate-[scaleUp_0.15s_ease-out]">
+
+            <!-- Folder Search Input -->
+            <div class="px-2.5 pb-2 border-b border-slate-100 dark:border-slate-900 flex items-center gap-1.5 shrink-0">
+              <div class="relative w-full">
+                <input type="text" [(ngModel)]="folderSearchQuery" placeholder="Search folders..."
+                  class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500" />
+                <!-- Search Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg"
+                  class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none"
+                  viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+            </div>
+
+            <!-- Folders List -->
+            <div class="overflow-y-auto flex-1 py-1 max-h-36 scrollbar-none">
+              <!-- General Reference -->
+              <button (click)="selectedFolder = 'Unassigned'; showFolderDropdown = false" [ngClass]="{
+                        'bg-indigo-50/60 text-indigo-650 dark:bg-indigo-950/20 dark:text-indigo-400': selectedFolder === 'Unassigned'
+                      }"
+                class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/40 hover:text-indigo-650 dark:hover:bg-indigo-950/15 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-2">
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" [class.bg-indigo-500]="selectedFolder === 'Unassigned'"
+                  [class.bg-transparent]="selectedFolder !== 'Unassigned'"></span>
+                General Reference (Default)
+              </button>
+
+              <!-- Custom Folders -->
+              <button *ngFor="let folder of filteredFolders"
+                (click)="selectedFolder = folder; showFolderDropdown = false" [ngClass]="{
+                        'bg-indigo-50/60 text-indigo-650 dark:bg-indigo-950/20 dark:text-indigo-400': selectedFolder === folder
+                      }"
+                class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/40 hover:text-indigo-650 dark:hover:bg-indigo-950/15 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-2 truncate">
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" [class.bg-indigo-500]="selectedFolder === folder"
+                  [class.bg-transparent]="selectedFolder !== folder"></span>
+                <span class="truncate flex-1">{{ folder }}</span>
+              </button>
+
+              <!-- Empty Filter State -->
+              <div *ngIf="filteredFolders.length === 0"
+                class="px-4 py-3 text-center text-slate-450 dark:text-slate-500 text-[11px]">
+                No folders found.
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Create New Folder trigger/input -->
+      <div
+        class="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850 p-2 sm:p-3 rounded-xl">
+        <button *ngIf="!showNewFolderInput" (click)="showNewFolderInput = true"
+          class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 px-3 py-2 rounded-lg transition-all duration-200 bg-transparent border-0 cursor-pointer flex items-center gap-1.5 active:scale-95 select-none">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="3" class="shrink-0">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Create New Folder
+        </button>
+
+        <div *ngIf="showNewFolderInput" class="flex items-center gap-2">
+          <input type="text" [(ngModel)]="newFolderName" placeholder="Folder name..." (keyup.enter)="createFolder()"
+            class="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500" />
+          <button (click)="createFolder()"
+            class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition-all border-0 cursor-pointer active:scale-95 flex items-center justify-center shrink-0">
+            Add
+          </button>
+          <button (click)="showNewFolderInput = false; newFolderName = ''"
+            class="px-2.5 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-lg text-xs transition-all bg-transparent cursor-pointer">
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <!-- Notes Field -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">Research
+          Notes & Annotations</label>
+        <textarea [(ngModel)]="notesText" placeholder="Add any case citations, thoughts, or reminders..."
+          class="w-full h-24 p-3 bg-yellow-50/20 dark:bg-amber-950/5 border border-yellow-250/30 dark:border-amber-900/20 rounded-xl text-xs text-slate-800 dark:text-slate-200 outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 resize-none"></textarea>
+      </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="flex justify-between items-center gap-3 pt-2">
+      <!-- Left side: Remove button (visible only if bookmarked) -->
+      <div>
+        <button *ngIf="isBookmarked" (click)="remove()"
+          class="px-3.5 py-2 border border-red-200/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-650 dark:text-red-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+          Remove Bookmark
+        </button>
+      </div>
+
+      <!-- Right side: Cancel/Save buttons -->
+      <div class="flex gap-2 ml-auto">
+        <button (click)="closeModal()"
+          class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+          Cancel
+        </button>
+        <button (click)="save()"
+          class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer flex items-center justify-center">
+          {{ isBookmarked ? 'Save Changes' : 'Bookmark Section' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
