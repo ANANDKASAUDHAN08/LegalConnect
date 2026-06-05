@@ -1,11 +1,13 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, ElementRef, ViewChildren, QueryList, HostListener } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
+import { Subscription } from 'rxjs';
 import { LegalService, BareAct, Chapter, Section } from '../../services/legal.service';
 import { BookmarkService } from '../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { BookmarkModalComponent } from '../../components/bookmark-modal/bookmark-modal.component';
+import { DatabaseService } from '../../services/database.service';
 
 @Component({
   selector: 'app-law-viewer',
@@ -23,7 +25,7 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   shortName = '';
   isLoggedIn = false;
   currentUser: UserProfile | null = null;
-  
+
   // Reusable Bookmark Modal State
   isBookmarkModalOpen = false;
   modalActShortName = '';
@@ -34,28 +36,69 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
   private observer: IntersectionObserver | null = null;
 
   summaries: { [key: string]: { loading: boolean, text: string | null, error: string | null } } = {};
+  private streamSubs = new Map<string, Subscription>();
+
+  // Reader preferences
+  fontSize = 16;
 
   constructor(
-    private route: ActivatedRoute, 
+    private route: ActivatedRoute,
     private legalService: LegalService,
     public bookmarkService: BookmarkService,
     private authService: AuthService,
-    private snackbar: SnackbarService
-  ) {}
+    private snackbar: SnackbarService,
+    private db: DatabaseService
+  ) { }
+
+  adjustFontSize(amount: number) {
+    this.fontSize = Math.min(Math.max(12, this.fontSize + amount), 26);
+  }
 
   ngOnInit() {
     this.authService.isLoggedIn$.subscribe(loggedIn => this.isLoggedIn = loggedIn);
     this.authService.currentUser$.subscribe(user => this.currentUser = user);
     this.shortName = this.route.snapshot.paramMap.get('shortName') || '';
-    this.legalService.getActByShortName(this.shortName).subscribe({
-      next: res => {
-        this.act = res.data;
-        this.activeChapter = res.data.chapters[0] || null;
+
+    if (navigator.onLine) {
+      this.legalService.getActByShortName(this.shortName).subscribe({
+        next: res => {
+          this.act = res.data;
+          this.activeChapter = res.data.chapters[0] || null;
+          this.loading = false;
+          // Sync online data to IndexedDB cache in the background
+          this.db.syncActs([res.data]).catch(() => { });
+          setTimeout(() => this.setupIntersectionObserver(), 100);
+        },
+        error: () => {
+          this.loadOfflineAct();
+        }
+      });
+    } else {
+      this.loadOfflineAct();
+    }
+  }
+
+  private loadOfflineAct() {
+    this.db.getActByShortName(this.shortName).then(cachedAct => {
+      if (cachedAct) {
+        this.act = {
+          actName: cachedAct.actName,
+          shortName: cachedAct.shortName,
+          year: Number(cachedAct.year),
+          description: cachedAct.description,
+          chapters: cachedAct.chapters || []
+        } as any;
+        this.activeChapter = this.act?.chapters[0] || null;
         this.loading = false;
-        // Need a slight delay to allow Angular to render the *ngFor sections
+        this.snackbar.show('Loaded from offline cached data', 'warning');
         setTimeout(() => this.setupIntersectionObserver(), 100);
-      },
-      error: () => { this.error = 'Could not load this act.'; this.loading = false; }
+      } else {
+        this.error = 'This act is not cached. Please connect online to download.';
+        this.loading = false;
+      }
+    }).catch(() => {
+      this.error = 'Failed to load offline data.';
+      this.loading = false;
     });
   }
 
@@ -67,9 +110,11 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngOnDestroy() {
     if (this.observer) this.observer.disconnect();
+    this.streamSubs.forEach(sub => sub.unsubscribe());
+    this.streamSubs.clear();
   }
 
-  setChapter(ch: Chapter) { 
+  setChapter(ch: Chapter) {
     this.activeChapter = ch;
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
@@ -116,21 +161,43 @@ export class LawViewerComponent implements OnInit, OnDestroy, AfterViewInit {
 
   summarizeSection(section: Section) {
     const secKey = section.section_number;
-    
+
     // If we already have the summary loaded, don't refetch
     if (this.summaries[secKey] && this.summaries[secKey].text) {
       return;
     }
 
-    this.summaries[secKey] = { loading: true, text: null, error: null };
-    
-    this.legalService.getSectionSummary(this.shortName, secKey).subscribe({
-      next: (res) => {
-        this.summaries[secKey] = { loading: false, text: res.data.summary, error: null };
+    // Cancel existing stream for this section if any
+    if (this.streamSubs.has(secKey)) {
+      this.streamSubs.get(secKey)?.unsubscribe();
+      this.streamSubs.delete(secKey);
+    }
+
+    this.summaries[secKey] = { loading: true, text: '', error: null };
+
+    const sub = this.legalService.getSectionSummaryStream(this.shortName, secKey).subscribe({
+      next: (chunk) => {
+        this.summaries[secKey].loading = false;
+        if (this.summaries[secKey].text === null) {
+          this.summaries[secKey].text = '';
+        }
+        this.summaries[secKey].text += chunk;
       },
-      error: () => {
-        this.summaries[secKey] = { loading: false, text: null, error: 'Failed to generate AI summary. Please ensure the backend API key is configured.' };
+      error: (err) => {
+        console.error('Streaming summary error:', err);
+        if (!this.summaries[secKey].text) {
+          this.summaries[secKey] = { loading: false, text: null, error: 'Failed to generate AI summary.' };
+        } else {
+          this.summaries[secKey].loading = false;
+        }
+        this.streamSubs.delete(secKey);
+      },
+      complete: () => {
+        this.summaries[secKey].loading = false;
+        this.streamSubs.delete(secKey);
       }
     });
+
+    this.streamSubs.set(secKey, sub);
   }
 }

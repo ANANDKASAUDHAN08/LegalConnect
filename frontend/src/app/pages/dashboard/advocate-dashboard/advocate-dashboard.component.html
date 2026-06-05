@@ -35,29 +35,29 @@
 
       <!-- Stats Overview -->
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="card p-6 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex items-center gap-5">
-          <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center text-xl shrink-0">📨</div>
-          <div>
-            <p class="text-[0.68rem] text-slate-400 font-bold uppercase tracking-wider">Total Inquiries</p>
-            <p class="text-2xl font-semibold mt-0.5">{{ inquiries.length }}</p>
-          </div>
-        </div>
-        <div class="card p-6 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex items-center gap-5">
-          <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xl shrink-0">⌛</div>
-          <div>
-            <p class="text-[0.68rem] text-slate-400 font-bold uppercase tracking-wider">Pending Response</p>
-            <p class="text-2xl font-semibold mt-0.5">
-              {{ pendingInquiriesCount }}
-            </p>
-          </div>
-        </div>
-        <div class="card p-6 bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm flex items-center gap-5">
-          <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">✅</div>
-          <div>
-            <p class="text-[0.68rem] text-slate-400 font-bold uppercase tracking-wider">Active Rating</p>
-            <p class="text-2xl font-semibold mt-0.5">4.5 / 5</p>
-          </div>
-        </div>
+        <app-stat-card
+          type="inquiries"
+          label="Total Inquiries"
+          [count]="inquiries.length"
+          titleAttr="All client inquiries received"
+          ariaLabelAttr="Total Inquiries count">
+        </app-stat-card>
+
+        <app-stat-card
+          type="pending"
+          label="Pending Response"
+          [count]="pendingInquiriesCount"
+          titleAttr="Inquiries awaiting your reply"
+          ariaLabelAttr="Pending response count">
+        </app-stat-card>
+
+        <app-stat-card
+          type="rating"
+          label="Active Rating"
+          [count]="4.5"
+          titleAttr="Your aggregate rating based on client reviews"
+          ariaLabelAttr="Active Rating score">
+        </app-stat-card>
       </div>
 
       <!-- Inbound Inbox -->

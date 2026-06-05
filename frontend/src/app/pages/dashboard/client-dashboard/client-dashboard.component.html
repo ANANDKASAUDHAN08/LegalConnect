@@ -142,86 +142,41 @@
 
       <!-- Statistics Dashboard Summary Bar -->
       <section class="grid grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Dashboard statistics">
-        <!-- Card 1: Total Saved -->
-        <button type="button" (click)="onCardClick('saved')"
-          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
-          title="Click to view all saved items" aria-label="View all saved bookmarks">
-          <div
-            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </div>
-          <div class="min-w-0 flex-1">
-            <span
-              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Saved
-              Items</span>
-            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
-              displaySavedCount }}</span>
-          </div>
-        </button>
+        <app-stat-card
+          type="saved"
+          label="Saved Items"
+          [count]="totalSavedCount"
+          titleAttr="Click to view all saved items"
+          ariaLabelAttr="View all saved bookmarks"
+          (cardClick)="onCardClick('saved')">
+        </app-stat-card>
 
-        <!-- Card 2: Folders -->
-        <button type="button" (click)="onCardClick('collections')"
-          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
-          title="Click to view research folders" aria-label="View research folders">
-          <div
-            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
-          </div>
-          <div class="min-w-0 flex-1">
-            <span
-              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Collections</span>
-            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
-              displayCollectionsCount }}</span>
-          </div>
-        </button>
+        <app-stat-card
+          type="collections"
+          label="Collections"
+          [count]="customCollections.length"
+          titleAttr="Click to view research folders"
+          ariaLabelAttr="View research folders"
+          (cardClick)="onCardClick('collections')">
+        </app-stat-card>
 
-        <!-- Card 3: Acts referenced -->
-        <button type="button" (click)="onCardClick('acts')"
-          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
-          title="Click to browse by referenced Act" aria-label="Browse Acts referenced">
-          <div
-            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-            </svg>
-          </div>
-          <div class="min-w-0 flex-1">
-            <span
-              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Acts
-              Referenced</span>
-            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
-              displayActsCount }}</span>
-          </div>
-        </button>
+        <app-stat-card
+          type="acts"
+          label="Acts Referenced"
+          [count]="distinctActsCount"
+          titleAttr="Click to browse by referenced Act"
+          ariaLabelAttr="Browse Acts referenced"
+          (cardClick)="onCardClick('acts')">
+        </app-stat-card>
 
-        <!-- Card 4: Consultations -->
-        <button type="button" (click)="onCardClick('inquiries')"
-          class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full"
-          title="Click to view active consultations" aria-label="View active consultations">
-          <div
-            class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
-          </div>
-          <div class="min-w-0 flex-1">
-            <span
-              class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">Active
-              Inquiries</span>
-            <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">{{
-              displayInquiriesCount }}</span>
-          </div>
-        </button>
+        <app-stat-card
+          type="inquiries"
+          label="Active Inquiries"
+          [count]="activeInquiriesCount"
+          titleAttr="Click to view active consultations"
+          ariaLabelAttr="View active consultations"
+          (cardClick)="onCardClick('inquiries')">
+        </app-stat-card>
       </section>
 
       <!-- Main Layout Stack: Sidebar (Folders) + Main panel -->
@@ -506,7 +461,8 @@
   [drawerNoteText]="drawerNoteText" (notesChanged)="onNotesChanged($event)" [aiSummary]="aiSummary"
   [loadingAiSummary]="loadingAiSummary" (closeDrawer)="closeBookmarkDrawer()"
   (copyClicked)="copySectionToClipboard($event)"
-  (folderAssigned)="moveBookmarkToCollection($event.bookmark, $event.folder)">
+  (folderAssigned)="moveBookmarkToCollection($event.bookmark, $event.folder)"
+  (fetchSummaryClicked)="fetchAiSummary()">
 </app-bookmark-detail-drawer>
 }
 

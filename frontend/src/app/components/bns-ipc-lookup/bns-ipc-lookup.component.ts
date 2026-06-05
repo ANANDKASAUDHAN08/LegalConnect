@@ -53,6 +53,34 @@ export class BnsIpcLookupComponent {
       description: 'Replaces Section 420 of the IPC. Covers cheating that induces someone to deliver property or make/alter valuable securities.'
     },
     {
+      ipcSection: '498A',
+      bnsSection: '85',
+      title: 'Cruelty to Married Woman',
+      category: 'Offences Against Women & Children',
+      description: 'Replaces Section 498A of the IPC. Punishes cruelty against a woman by her husband or relatives of her husband with imprisonment up to three years.'
+    },
+    {
+      ipcSection: '304A',
+      bnsSection: '106',
+      title: 'Causing Death by Negligence',
+      category: 'Offences Affecting Life',
+      description: 'Replaces Section 304A of the IPC. Strengthens penalties for hit-and-run motor accidents and rash/negligent operations leading to loss of life.'
+    },
+    {
+      ipcSection: '354',
+      bnsSection: '74',
+      title: 'Outraging Modesty of Woman',
+      category: 'Offences Against Women & Children',
+      description: 'Replaces Section 354 of the IPC. Punishes assaults or use of criminal force with intent to outrage modesty.'
+    },
+    {
+      ipcSection: '304B',
+      bnsSection: '80',
+      title: 'Dowry Death',
+      category: 'Offences Against Women & Children',
+      description: 'Replaces Section 304B of the IPC. Dictates rules on dowry deaths where death occurs under abnormal circumstances within 7 years of marriage.'
+    },
+    {
       ipcSection: '120B',
       bnsSection: '61(2)',
       title: 'Criminal Conspiracy',

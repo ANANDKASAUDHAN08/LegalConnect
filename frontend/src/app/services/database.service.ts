@@ -8,6 +8,7 @@ export interface LocalAct {
   year: string;
   description: string;
   fullText: string;
+  chapters?: any[];
   lastSynced: Date;
 }
 
@@ -40,6 +41,7 @@ export class DatabaseService extends Dexie {
         year: String(act.year),
         description: act.description || '',
         fullText,
+        chapters: act.chapters || [],
         lastSynced: now
       };
 

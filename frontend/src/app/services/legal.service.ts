@@ -66,4 +66,37 @@ export class LegalService {
   getSectionSummary(shortName: string, sectionNumber: string): Observable<ApiResponse<{summary: string, cached: boolean}>> {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}/summary`);
   }
+
+  getSectionSummaryStream(shortName: string, sectionNumber: string): Observable<string> {
+    return new Observable<string>(observer => {
+      const url = `${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}/summary/stream`;
+      const eventSource = new EventSource(url);
+
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          if (data && data.chunk) {
+            observer.next(data.chunk);
+          }
+        } catch (e) {
+          console.error('Failed to parse SSE message:', e);
+        }
+      };
+
+      eventSource.addEventListener('end', () => {
+        observer.complete();
+        eventSource.close();
+      });
+
+      eventSource.addEventListener('error', (event: any) => {
+        console.error('SSE Error:', event);
+        observer.error(new Error('Streaming failed or was interrupted.'));
+        eventSource.close();
+      });
+
+      return () => {
+        eventSource.close();
+      };
+    });
+  }
 }

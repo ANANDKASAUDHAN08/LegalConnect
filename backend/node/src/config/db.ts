@@ -4,6 +4,10 @@ export const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI as string);
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    
+    // Explicitly sync/build model indexes to prevent text-search failures
+    await conn.connection.model('BareAct').createIndexes();
+    console.log('✅ MongoDB Indexes verified and synchronized.');
   } catch (error: any) {
     console.error(`Error: ${error.message}`);
     process.exit(1);

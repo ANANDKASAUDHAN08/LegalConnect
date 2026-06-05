@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject } from 'rxjs';
 import { Section } from './legal.service';
@@ -20,9 +20,15 @@ export interface Bookmark {
 export class BookmarkService {
   private bookmarksKey = 'legalconnect_bookmarks';
   private apiUrl = 'http://localhost:8888/api/bookmark';
-  private bookmarksSubject = new BehaviorSubject<Bookmark[]>([]);
 
+  // RxJS backing fields for backwards compatibility
+  private bookmarksSubject = new BehaviorSubject<Bookmark[]>([]);
   bookmarks$ = this.bookmarksSubject.asObservable();
+
+  // Modern Signals State Store
+  private bookmarksSignal = signal<Bookmark[]>([]);
+  bookmarks = this.bookmarksSignal.asReadonly();
+
   private isLoggedIn = false;
 
   constructor(
@@ -35,18 +41,7 @@ export class BookmarkService {
       this.loadBookmarks();
     });
 
-    // Auto-sync bookmarks when user switches back to this browser tab
     if (typeof window !== 'undefined') {
-      window.addEventListener('focus', () => {
-        this.loadBookmarks();
-      });
-
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-          this.loadBookmarks();
-        }
-      });
-
       // Storage event for guest mode localStorage sync across tabs
       window.addEventListener('storage', (event) => {
         if (event.key === this.bookmarksKey) {
@@ -61,13 +56,18 @@ export class BookmarkService {
       this.http.get<Bookmark[]>(this.apiUrl, { withCredentials: true }).subscribe({
         next: (bookmarks) => {
           this.bookmarksSubject.next(bookmarks);
+          this.bookmarksSignal.set(bookmarks);
         },
         error: () => {
-          this.bookmarksSubject.next(this.loadLocalBookmarks());
+          const local = this.loadLocalBookmarks();
+          this.bookmarksSubject.next(local);
+          this.bookmarksSignal.set(local);
         }
       });
     } else {
-      this.bookmarksSubject.next(this.loadLocalBookmarks());
+      const local = this.loadLocalBookmarks();
+      this.bookmarksSubject.next(local);
+      this.bookmarksSignal.set(local);
     }
   }
 
@@ -79,10 +79,11 @@ export class BookmarkService {
   private saveLocalBookmarks(bookmarks: Bookmark[]) {
     localStorage.setItem(this.bookmarksKey, JSON.stringify(bookmarks));
     this.bookmarksSubject.next(bookmarks);
+    this.bookmarksSignal.set(bookmarks);
   }
 
   addBookmark(actShortName: string, chapterNumber: string, section: Section, collectionName?: string) {
-    const current = this.bookmarksSubject.value;
+    const current = this.bookmarksSignal();
     if (current.some(b => b.actShortName === actShortName && b.section.section_number === section.section_number)) {
       return;
     }
@@ -106,7 +107,9 @@ export class BookmarkService {
       };
       this.http.post<any>(this.apiUrl, payload, { withCredentials: true }).subscribe({
         next: () => {
-          this.bookmarksSubject.next([...current, newBookmark]);
+          const updated = [...current, newBookmark];
+          this.bookmarksSubject.next(updated);
+          this.bookmarksSignal.set(updated);
           this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" successfully.` : 'Section saved to General Reference successfully.', 'success');
         },
         error: (err) => {
@@ -121,12 +124,13 @@ export class BookmarkService {
   }
 
   removeBookmark(actShortName: string, sectionNumber: string) {
-    const current = this.bookmarksSubject.value;
+    const current = this.bookmarksSignal();
     if (this.isLoggedIn) {
       this.http.delete<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, { withCredentials: true }).subscribe({
         next: () => {
           const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
           this.bookmarksSubject.next(updated);
+          this.bookmarksSignal.set(updated);
           this.snackbar.show('Section removed from library successfully.', 'info');
         },
         error: () => {
@@ -145,7 +149,7 @@ export class BookmarkService {
     if (this.isLoggedIn) {
       this.http.put<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, payload, { withCredentials: true }).subscribe({
         next: () => {
-          const current = this.bookmarksSubject.value;
+          const current = this.bookmarksSignal();
           const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
           if (idx !== -1) {
             const updated = [...current];
@@ -155,6 +159,7 @@ export class BookmarkService {
               collectionName: collectionName
             };
             this.bookmarksSubject.next(updated);
+            this.bookmarksSignal.set(updated);
           }
           if (!silent) {
             this.snackbar.show('Section notes updated successfully.', 'success');
@@ -167,7 +172,7 @@ export class BookmarkService {
         }
       });
     } else {
-      const current = this.bookmarksSubject.value;
+      const current = this.bookmarksSignal();
       const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
       if (idx !== -1) {
         const updated = [...current];
@@ -185,6 +190,6 @@ export class BookmarkService {
   }
 
   isBookmarked(actShortName: string, sectionNumber: string): boolean {
-    return this.bookmarksSubject.value.some(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
+    return this.bookmarksSignal().some(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
   }
 }

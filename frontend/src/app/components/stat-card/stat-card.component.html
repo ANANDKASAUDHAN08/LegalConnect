@@ -1,0 +1,66 @@
+<button type="button" (click)="onClick()"
+  class="stat-card text-left p-2.5 sm:p-4 bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl flex items-center gap-1.5 sm:gap-4 shadow-xs w-full hover:scale-[1.02] active:scale-[0.98] transition-all duration-300"
+  [attr.title]="titleAttr" [attr.aria-label]="ariaLabelAttr">
+  
+  <!-- Icon Wrapper -->
+  <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl flex items-center justify-center shrink-0"
+    [ngClass]="{
+      'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400': type === 'saved',
+      'bg-purple-50 dark:bg-purple-950/30 text-purple-600 dark:text-purple-400': type === 'collections',
+      'bg-amber-50 dark:bg-amber-950/30 text-amber-600 dark:text-amber-400': type === 'acts' || type === 'pending',
+      'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400': type === 'inquiries' || type === 'rating'
+    }">
+    
+    <!-- Saved / Bookmarks Icon -->
+    <svg *ngIf="type === 'saved'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+    </svg>
+
+    <!-- Collections / Folders Icon -->
+    <svg *ngIf="type === 'collections'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+    </svg>
+
+    <!-- Acts Referenced / Book Icon -->
+    <svg *ngIf="type === 'acts'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+      <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+    </svg>
+
+    <!-- Pending / Hourglass Icon -->
+    <svg *ngIf="type === 'pending'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M5 2h14"></path>
+      <path d="M5 22h14"></path>
+      <path d="M19 2v6c0 2.2-1.8 4-4 4H9c-2.2 0-4-1.8-4-4V2"></path>
+      <path d="M19 22v-6c0-2.2-1.8-4-4-4H9c-2.2 0-4 1.8-4 4v6"></path>
+    </svg>
+
+    <!-- Inquiries / Email Icon -->
+    <svg *ngIf="type === 'inquiries'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+      <polyline points="22,6 12,13 2,6"></polyline>
+    </svg>
+
+    <!-- Rating / Star Icon -->
+    <svg *ngIf="type === 'rating'" xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-5 sm:h-5" viewBox="0 0 24 24" fill="none"
+      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+    </svg>
+  </div>
+
+  <!-- Content -->
+  <div class="min-w-0 flex-1">
+    <span
+      class="text-[8px] min-[360px]:text-[9.5px] min-[400px]:text-[10.5px] sm:text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block whitespace-nowrap">
+      {{ label }}
+    </span>
+    <span class="text-sm sm:text-lg font-bold block text-slate-900 dark:text-white mt-0.5 tabular-nums">
+      {{ displayValue }}{{ type === 'rating' ? ' / 5' : '' }}
+    </span>
+  </div>
+</button>

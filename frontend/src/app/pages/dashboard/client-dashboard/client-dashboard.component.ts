@@ -17,6 +17,7 @@ import { BookmarkDetailDrawerComponent } from './components/bookmark-detail-draw
 import { InquiriesTimelineComponent } from './components/inquiries-timeline/inquiries-timeline.component';
 import { ActsFilterModalComponent } from './components/acts-filter-modal/acts-filter-modal.component';
 import { ShareCitationModalComponent } from './components/share-citation-modal/share-citation-modal.component';
+import { StatCardComponent } from '../../../components/stat-card/stat-card.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -32,7 +33,8 @@ import { ShareCitationModalComponent } from './components/share-citation-modal/s
     BookmarkDetailDrawerComponent,
     InquiriesTimelineComponent,
     ActsFilterModalComponent,
-    ShareCitationModalComponent
+    ShareCitationModalComponent,
+    StatCardComponent
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']
@@ -148,13 +150,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   // ── Page Skeleton Loader
   isPageLoading = true;
 
-  // ── Animated Stat Counters
-  displaySavedCount = 0;
-  displayCollectionsCount = 0;
-  displayActsCount = 0;
-  displayInquiriesCount = 0;
-  private animationFrames: number[] = [];
-
   // ── Acts Breakdown Modal
   showActsFilterModal = false;
 
@@ -234,6 +229,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   private sub = new Subscription();
+  private summarySub: Subscription | null = null;
   private notesSubject = new Subject<string>();
   private searchSubject = new Subject<string>();
 
@@ -286,7 +282,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     const tryHideSkeleton = () => {
       if (authResolved && minTimeElapsed) {
         this.isPageLoading = false;
-        setTimeout(() => this.animateAllCounters(), 50);
       }
     };
 
@@ -309,10 +304,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           if (match) {
             this.selectedBookmark = match;
           }
-        }
-        // Re-animate counters when bookmark data changes (not during initial load)
-        if (!this.isPageLoading) {
-          this.animateAllCounters();
         }
       })
     );
@@ -356,46 +347,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     this.sub.unsubscribe();
-    // Cancel any pending animation frames
-    this.animationFrames.forEach(id => cancelAnimationFrame(id));
+    if (this.summarySub) {
+      this.summarySub.unsubscribe();
+    }
     if (typeof document !== 'undefined') {
       document.body.classList.remove('overflow-hidden');
     }
-  }
-
-  // ── Count-up Animation
-  private animateCount(
-    targetValue: number,
-    setter: (v: number) => void,
-    durationMs = 800
-  ) {
-    const startValue = 0;
-    const startTime = performance.now();
-    const animate = (now: number) => {
-      const elapsed = now - startTime;
-      const progress = Math.min(elapsed / durationMs, 1);
-      // Quadratic ease-out
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setter(Math.round(startValue + (targetValue - startValue) * eased));
-      if (progress < 1) {
-        const frameId = requestAnimationFrame(animate);
-        this.animationFrames.push(frameId);
-      } else {
-        setter(targetValue);
-      }
-    };
-    const frameId = requestAnimationFrame(animate);
-    this.animationFrames.push(frameId);
-  }
-
-  animateAllCounters() {
-    // Cancel any in-progress animations first
-    this.animationFrames.forEach(id => cancelAnimationFrame(id));
-    this.animationFrames = [];
-    this.animateCount(this.totalSavedCount, v => this.displaySavedCount = v);
-    this.animateCount(this.customCollections.length, v => this.displayCollectionsCount = v);
-    this.animateCount(this.distinctActsCount, v => this.displayActsCount = v);
-    this.animateCount(this.activeInquiriesCount, v => this.displayInquiriesCount = v);
   }
 
   // ── Mobile scroll-to-content helper ─────────────────────────────────────────
@@ -667,7 +624,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.customCollections.sort();
     this.saveCustomCollections();
     this.refreshStats();
-    this.animateAllCounters();
 
     this.selectedCollection = folder;
     this.newCollectionName = '';
@@ -696,7 +652,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         this.customCollections = this.customCollections.map(c => c === oldName ? cleanNewName : c).sort();
         this.saveCustomCollections();
         this.refreshStats();
-        this.animateAllCounters();
 
         // Update bookmarks (silently to prevent toast spam)
         this.allBookmarks.forEach(bm => {
@@ -725,7 +680,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         this.customCollections = this.customCollections.filter(c => c !== folderName);
         this.saveCustomCollections();
         this.refreshStats();
-        this.animateAllCounters();
 
         // Update bookmarks (silently to prevent toast spam)
         this.allBookmarks.forEach(bm => {
@@ -842,6 +796,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.drawerOpen = false;
     this.drawerNoteText = '';
     this.aiSummary = '';
+    if (this.summarySub) {
+      this.summarySub.unsubscribe();
+      this.summarySub = null;
+    }
   }
 
   // Save notes to cloud/db
@@ -878,18 +836,27 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     if (!this.selectedBookmark) return;
     this.loadingAiSummary = true;
     this.aiSummary = '';
-    this.legalService.getSectionSummary(this.selectedBookmark.actShortName, this.selectedBookmark.section.section_number).subscribe({
-      next: (res) => {
-        if (res && res.success && res.data) {
-          this.aiSummary = res.data.summary;
-        } else {
-          this.aiSummary = 'Could not retrieve AI breakdown.';
+    
+    if (this.summarySub) {
+      this.summarySub.unsubscribe();
+    }
+
+    this.summarySub = this.legalService.getSectionSummaryStream(
+      this.selectedBookmark.actShortName,
+      this.selectedBookmark.section.section_number
+    ).subscribe({
+      next: (chunk) => {
+        this.loadingAiSummary = false;
+        this.aiSummary += chunk;
+      },
+      error: (err) => {
+        console.error('Streaming summary error:', err);
+        if (!this.aiSummary) {
+          this.aiSummary = 'AI Summary feature is currently unavailable. Please ensure the backend is connected and configured.';
         }
         this.loadingAiSummary = false;
       },
-      error: (err) => {
-        console.error(err);
-        this.aiSummary = 'AI Summary feature is currently unavailable. Please ensure the backend is connected and configured.';
+      complete: () => {
         this.loadingAiSummary = false;
       }
     });

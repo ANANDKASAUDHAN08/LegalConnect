@@ -41,6 +41,42 @@ Please provide a concise summary (2-3 paragraphs maximum) explaining what this s
       throw new Error('Failed to generate AI summary.');
     }
   }
+
+  async *generateSectionSummaryStream(actName: string, sectionTitle: string, content: string): AsyncGenerator<string, void, unknown> {
+    if (!this.isConfigured || !this.ai) {
+      // Return simulated mock stream typewriter-style
+      const mockText = `(Mock Summary) This section titled "${sectionTitle}" from "${actName}" outlines specific rules and conditions. Please provide a GEMINI_API_KEY in the backend/.env file to generate real AI summaries.`;
+      const words = mockText.split(' ');
+      for (const word of words) {
+        yield word + ' ';
+        await new Promise(resolve => setTimeout(resolve, 80));
+      }
+      return;
+    }
+
+    try {
+      const prompt = `You are an expert Indian legal assistant. Your task is to explain a specific section of a law in simple, "Plain English" so that a common citizen can understand it easily.
+
+Act Name: ${actName}
+Section Title: ${sectionTitle}
+Section Text: ${content}
+
+Please provide a concise summary (2-3 paragraphs maximum) explaining what this section means in simple terms. Avoid complex legal jargon where possible.`;
+
+      const model = this.ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const resultStream = await model.generateContentStream(prompt);
+
+      for await (const chunk of resultStream.stream) {
+        const text = chunk.text();
+        if (text) {
+          yield text;
+        }
+      }
+    } catch (error) {
+      console.error('Error generating AI summary stream:', error);
+      throw new Error('Failed to generate AI summary stream.');
+    }
+  }
 }
 
 export default new AiService();
