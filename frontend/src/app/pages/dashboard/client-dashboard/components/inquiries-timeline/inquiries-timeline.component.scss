@@ -1,0 +1,29 @@
+.card-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    border-color: rgba(99, 102, 241, 0.3); // indigo tint
+  }
+}
+
+:host-context(.dark) {
+  .card-glass {
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+
+    &:hover {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.08);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+  }
+}

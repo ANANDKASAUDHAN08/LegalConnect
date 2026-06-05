@@ -8,11 +8,19 @@ using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+builder.Services.AddResponseCompression(options =>
+{
+    options.EnableForHttps = true;
+    options.Providers.Add<BrotliCompressionProvider>();
+    options.Providers.Add<GzipCompressionProvider>();
+});
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
 builder.Services.AddHostedService<ProfileSyncWorker>();
@@ -117,6 +125,8 @@ app.UseCors("AllowAngular");
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();
+
+app.UseResponseCompression();
 
 app.MapControllers();
 

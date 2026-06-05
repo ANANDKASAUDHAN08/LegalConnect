@@ -46,6 +46,7 @@ router.get('/search', async (req: Request, res: Response) => {
 router.get('/acts', async (req: Request, res: Response) => {
   try {
     const acts = await BareAct.find({}, 'actName shortName year description');
+    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     res.json({ success: true, count: acts.length, data: acts });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -59,6 +60,7 @@ router.get('/acts/:shortName', async (req: Request, res: Response) => {
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
+    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     res.json({ success: true, data: act });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -92,6 +94,7 @@ router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res:
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
 
+    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     res.json({ success: true, data: foundSection });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -128,6 +131,7 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary', async (req: Reque
 
     // If summary already exists, return it from DB
     if (targetSection.aiSummary) {
+      res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
       return res.json({ success: true, data: { summary: targetSection.aiSummary, cached: true } });
     }
 
@@ -140,6 +144,7 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary', async (req: Reque
     act.markModified(`chapters.${targetChapterIndex}.sections.${targetSectionIndex}.aiSummary`);
     await act.save();
 
+    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     res.json({ success: true, data: { summary: generatedSummary, cached: false } });
   } catch (error: any) {
     console.error(error);

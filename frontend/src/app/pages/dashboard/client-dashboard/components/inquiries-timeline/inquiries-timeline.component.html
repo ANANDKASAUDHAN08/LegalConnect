@@ -1,0 +1,110 @@
+<div class="mt-4 space-y-3 md:space-y-6">
+
+  <div *ngIf="loadingInquiries" class="flex items-center justify-center py-12 gap-3 text-slate-400">
+    <div class="w-6 h-6 border-[2.5px] border-indigo-100 border-t-indigo-650 rounded-full animate-spin"></div>
+    <span>Fetching consultations...</span>
+  </div>
+
+  <!-- Empty consultations -->
+  <div *ngIf="!loadingInquiries && inquiries.length === 0"
+    class="card p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4 bg-white/40 dark:bg-slate-900/10">
+    <div
+      class="w-16 h-16 rounded-2xl bg-amber-50/50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+      <!-- Scale of Justice / Gavel SVG -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+    </div>
+    <div>
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">No consultations sent</h3>
+      <p class="text-xs text-slate-500 mt-1 max-w-sm">Need help evaluating your saved sections? Search our
+        verified directory to contact legal professionals.</p>
+    </div>
+    <a routerLink="/lawyers"
+      class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 no-underline mt-2">
+      Find a Lawyer
+    </a>
+  </div>
+
+  <!-- Timeline cards -->
+  <div *ngIf="!loadingInquiries && inquiries.length > 0" class="grid grid-cols-1 gap-6">
+    <div *ngFor="let inq of inquiries; trackBy: trackByInquiry"
+      class="card-glass p-5 rounded-2xl flex flex-col gap-4 relative overflow-hidden">
+
+      <!-- Side Status Indicator Line -->
+      <div class="absolute left-0 top-0 bottom-0 w-1.5" [ngClass]="{
+             'bg-amber-500': inq.status === 'Pending',
+             'bg-blue-500': inq.status === 'Contacted',
+             'bg-emerald-500': inq.status === 'Closed'
+           }">
+      </div>
+
+      <!-- Lawyer details & Status header -->
+      <div
+        class="flex justify-between items-center flex-wrap gap-4 border-b border-slate-100 dark:border-slate-800/80 pb-3.5 pl-2 shrink-0">
+        <div>
+          <h3 class="font-bold text-sm text-slate-900 dark:text-white">{{ inq.lawyerName || inq.clientName }}
+          </h3>
+          <!-- Mail link with copying helper -->
+          <p class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-1.5">
+            <span>Contact: {{ inq.lawyerEmail }}</span>
+          </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">
+            Sent {{ inq.createdAt | date:'mediumDate' }}
+          </span>
+          <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider border" [ngClass]="{
+                  'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20': inq.status === 'Pending',
+                  'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20': inq.status === 'Contacted',
+                  'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20': inq.status === 'Closed'
+                }">
+            {{ inq.status }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Inquiry Message block -->
+      <div class="pl-2 flex-1">
+        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed">{{ inq.message }}</p>
+      </div>
+
+      <!-- Inquiry Timeline status notifications -->
+      <div
+        class="pl-2 pt-3.5 border-t border-slate-100 dark:border-slate-800/60 flex justify-between items-center text-[10px] text-slate-400 shrink-0">
+        <span class="font-mono">Inquiry ID: LC-{{ inq.id }}</span>
+
+        <!-- Responsive Status texts -->
+        <span *ngIf="inq.status === 'Pending'"
+          class="text-amber-600 dark:text-amber-550 font-bold flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" class="animate-pulse">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+          Awaiting response from advocate
+        </span>
+        <span *ngIf="inq.status === 'Contacted'"
+          class="text-blue-600 dark:text-blue-400 font-bold flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+          Advocate initiated contact
+        </span>
+        <span *ngIf="inq.status === 'Closed'"
+          class="text-emerald-600 dark:text-emerald-455 font-bold flex items-center gap-1">
+          <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          Consultation closed
+        </span>
+      </div>
+
+    </div>
+  </div>
+
+</div>

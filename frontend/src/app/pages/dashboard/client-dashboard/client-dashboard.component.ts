@@ -7,12 +7,33 @@ import { AuthService, UserProfile } from '../../../services/auth.service';
 import { LawyerService, Consultation } from '../../../services/lawyer.service';
 import { LegalService } from '../../../services/legal.service';
 import { SnackbarService } from '../../../services/snackbar.service';
-import { Observable, Subscription } from 'rxjs';
+import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+
+import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
+import { PromptDialogComponent } from '../../../components/prompt-dialog/prompt-dialog.component';
+import { FolderSidebarComponent } from './components/folder-sidebar/folder-sidebar.component';
+import { BookmarkCardComponent } from './components/bookmark-card/bookmark-card.component';
+import { BookmarkDetailDrawerComponent } from './components/bookmark-detail-drawer/bookmark-detail-drawer.component';
+import { InquiriesTimelineComponent } from './components/inquiries-timeline/inquiries-timeline.component';
+import { ActsFilterModalComponent } from './components/acts-filter-modal/acts-filter-modal.component';
+import { ShareCitationModalComponent } from './components/share-citation-modal/share-citation-modal.component';
 
 @Component({
   selector: 'app-client-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    ConfirmDialogComponent,
+    PromptDialogComponent,
+    FolderSidebarComponent,
+    BookmarkCardComponent,
+    BookmarkDetailDrawerComponent,
+    InquiriesTimelineComponent,
+    ActsFilterModalComponent,
+    ShareCitationModalComponent
+  ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']
 })
@@ -25,11 +46,68 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // Revamp fields
   allBookmarks: Bookmark[] = [];
-  searchQuery = '';
-  actFilter = ''; // Exact act short name filter (set from Acts modal — does NOT substring-search content)
-  sortBy = 'newest';
-  currentPage = 1;
-  itemsPerPage = 8;
+
+  private _searchQuery = '';
+  get searchQuery(): string {
+    return this._searchQuery;
+  }
+  set searchQuery(val: string) {
+    this._searchQuery = val;
+    this.searchSubject.next(val);
+  }
+
+  private _actFilter = '';
+  get actFilter(): string {
+    return this._actFilter;
+  }
+  set actFilter(val: string) {
+    this._actFilter = val;
+    this._currentPage = 1;
+    this.refreshWorkspace();
+  }
+
+  private _sortBy = 'newest';
+  get sortBy(): string {
+    return this._sortBy;
+  }
+  set sortBy(val: string) {
+    this._sortBy = val;
+    this._currentPage = 1;
+    this.refreshWorkspace();
+  }
+
+  private _currentPage = 1;
+  get currentPage(): number {
+    return this._currentPage;
+  }
+  set currentPage(val: number) {
+    this._currentPage = val;
+    this.refreshWorkspace();
+  }
+
+  private _itemsPerPage = 8;
+  get itemsPerPage(): number {
+    return this._itemsPerPage;
+  }
+  set itemsPerPage(val: number) {
+    this._itemsPerPage = val;
+    this._currentPage = 1;
+    this.refreshWorkspace();
+  }
+
+  // Cached Properties (Computed in memory to optimize template rendering performance)
+  filteredBookmarks: Bookmark[] = [];
+  paginatedBookmarks: Bookmark[] = [];
+  unassignedCount = 0;
+  totalPages = 0;
+  visiblePageNumbers: (number | string)[] = [];
+  showingStart = 0;
+  showingEnd = 0;
+  totalSavedCount = 0;
+  distinctActsCount = 0;
+  activeInquiriesCount = 0;
+  collectionsList: string[] = [];
+  actsBreakdown: { name: string; count: number }[] = [];
 
   private _selectedCollection = 'All';
   get selectedCollection(): string {
@@ -37,7 +115,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
   set selectedCollection(val: string) {
     this._selectedCollection = val;
-    this.currentPage = 1;
+    this._currentPage = 1;
+    this.refreshWorkspace();
   }
   newCollectionName = '';
   customCollections: string[] = [];
@@ -45,7 +124,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // Dropdowns
   showSortDropdown = false;
-  showFolderSelectDropdown = false;
 
   // Drawer
   selectedBookmark: Bookmark | null = null;
@@ -83,16 +161,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   // Mobile Folder Search toggle
   showMobileFolderSearch = false;
 
-  /** List of [actShortName, count] pairs for the acts modal */
-  get actsBreakdown(): { name: string; count: number }[] {
-    const map = new Map<string, number>();
-    this.allBookmarks.forEach(b => {
-      map.set(b.actShortName, (map.get(b.actShortName) || 0) + 1);
-    });
-    return Array.from(map.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-  }
+
 
   // Scroll lock helper
   private updateScrollLock() {
@@ -165,11 +234,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   private sub = new Subscription();
+  private notesSubject = new Subject<string>();
+  private searchSubject = new Subject<string>();
 
   @HostListener('document:click')
   clickout() {
     this.showSortDropdown = false;
-    this.showFolderSelectDropdown = false;
   }
 
   constructor(
@@ -184,6 +254,27 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.bookmarks$ = this.bookmarkService.bookmarks$;
+
+    // Debounce note saving to optimize database/network writes
+    this.sub.add(
+      this.notesSubject.pipe(
+        debounceTime(750),
+        distinctUntilChanged()
+      ).subscribe(() => {
+        this.saveNotes();
+      })
+    );
+
+    // Debounce search query to optimize UI rendering performance on fast typing
+    this.sub.add(
+      this.searchSubject.pipe(
+        debounceTime(300),
+        distinctUntilChanged()
+      ).subscribe(() => {
+        this._currentPage = 1;
+        this.refreshWorkspace();
+      })
+    );
 
     // ── Skeleton: enforce minimum 1200ms display ─────────────────────────────
     // BehaviorSubject emits synchronously, so without a minimum timer the
@@ -210,6 +301,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       this.bookmarkService.bookmarks$.subscribe(bms => {
         this.allBookmarks = bms;
         this.loadCustomCollections();
+        this.refreshStats();
+        this.refreshWorkspace();
         // If drawer is open, keep its selectedBookmark details synchronized
         if (this.selectedBookmark) {
           const match = bms.find(b => b.actShortName === this.selectedBookmark!.actShortName && b.section.section_number === this.selectedBookmark!.section.section_number);
@@ -241,6 +334,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           this.loadInquiries();
         }
         this.loadCustomCollections();
+        this.refreshStats();
+        this.refreshWorkspace();
         authResolved = true;
         tryHideSkeleton();
       })
@@ -298,7 +393,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.animationFrames.forEach(id => cancelAnimationFrame(id));
     this.animationFrames = [];
     this.animateCount(this.totalSavedCount, v => this.displaySavedCount = v);
-    this.animateCount(this.collectionsList.length, v => this.displayCollectionsCount = v);
+    this.animateCount(this.customCollections.length, v => this.displayCollectionsCount = v);
     this.animateCount(this.distinctActsCount, v => this.displayActsCount = v);
     this.animateCount(this.activeInquiriesCount, v => this.displayInquiriesCount = v);
   }
@@ -379,6 +474,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.inquiries = res;
         this.loadingInquiries = false;
+        this.refreshStats();
       },
       error: () => {
         this.loadingInquiries = false;
@@ -402,27 +498,34 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // --- REVAMPED WORKSPACE LOGIC ---
 
-  get filteredSidebarFolders(): string[] {
-    if (!this.sidebarFolderSearchQuery || !this.sidebarFolderSearchQuery.trim()) {
-      return this.customCollections;
-    }
-    const query = this.sidebarFolderSearchQuery.toLowerCase().trim();
-    return this.customCollections.filter(c => c.toLowerCase().includes(query));
-  }
+  refreshStats() {
+    this.totalSavedCount = this.allBookmarks.length;
 
-  // Get dynamic unique collections
-  get collectionsList(): string[] {
+    const uniqueActs = new Set<string>();
+    const map = new Map<string, number>();
+    this.allBookmarks.forEach(b => {
+      uniqueActs.add(b.actShortName);
+      map.set(b.actShortName, (map.get(b.actShortName) || 0) + 1);
+    });
+    this.distinctActsCount = uniqueActs.size;
+    this.actsBreakdown = Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+
+    this.activeInquiriesCount = this.inquiries.filter(i => i.status === 'Pending' || i.status === 'Contacted').length;
+
     const list = new Set<string>();
     this.allBookmarks.forEach(b => {
       if (b.collectionName && b.collectionName.trim()) {
         list.add(b.collectionName.trim());
       }
     });
-    return Array.from(list).sort();
+    this.collectionsList = Array.from(list).sort();
+    
+    this.unassignedCount = this.allBookmarks.filter(b => !b.collectionName || !b.collectionName.trim()).length;
   }
 
-  // Get filtered bookmarks for display
-  get filteredBookmarks(): Bookmark[] {
+  refreshWorkspace() {
     let list = [...this.allBookmarks];
 
     // Filter by Collection Folder
@@ -470,64 +573,58 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       });
     }
 
-    return list;
-  }
+    this.filteredBookmarks = list;
 
-  get paginatedBookmarks(): Bookmark[] {
-    const list = this.filteredBookmarks;
+    // Calculate total pages
+    this.totalPages = Math.ceil(this.filteredBookmarks.length / this.itemsPerPage);
+
+    // Adjust current page if out of bounds
+    if (this.currentPage > this.totalPages && this.totalPages > 0) {
+      this._currentPage = 1;
+    }
+
+    // Paginated Bookmarks
     const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    if (startIndex >= list.length) {
-      this.currentPage = 1;
-      return list.slice(0, this.itemsPerPage);
+    this.paginatedBookmarks = this.filteredBookmarks.slice(startIndex, startIndex + this.itemsPerPage);
+
+    // Showing Start & End
+    if (this.filteredBookmarks.length === 0) {
+      this.showingStart = 0;
+      this.showingEnd = 0;
+    } else {
+      this.showingStart = startIndex + 1;
+      const end = this.currentPage * this.itemsPerPage;
+      this.showingEnd = end > this.filteredBookmarks.length ? this.filteredBookmarks.length : end;
     }
-    return list.slice(startIndex, startIndex + this.itemsPerPage);
-  }
 
-  get totalPages(): number {
-    return Math.ceil(this.filteredBookmarks.length / this.itemsPerPage);
-  }
-
-  get pageNumbers(): number[] {
-    const pages = [];
-    for (let i = 1; i <= this.totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  }
-
-  get visiblePageNumbers(): (number | string)[] {
+    // Calculate visible page numbers
     const total = this.totalPages;
     const current = this.currentPage;
     if (total <= 5) {
       const pages = [];
       for (let i = 1; i <= total; i++) pages.push(i);
-      return pages;
+      this.visiblePageNumbers = pages;
+    } else {
+      const pages: (number | string)[] = [];
+      pages.push(1);
+      const start = Math.max(2, current - 1);
+      const end = Math.min(total - 1, current + 1);
+
+      if (start > 2) {
+        pages.push('...');
+      }
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (end < total - 1) {
+        pages.push('...');
+      }
+
+      pages.push(total);
+      this.visiblePageNumbers = pages;
     }
-
-    const pages: (number | string)[] = [];
-    
-    // Always show first page
-    pages.push(1);
-
-    const start = Math.max(2, current - 1);
-    const end = Math.min(total - 1, current + 1);
-
-    if (start > 2) {
-      pages.push('...');
-    }
-
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-
-    if (end < total - 1) {
-      pages.push('...');
-    }
-
-    // Always show last page
-    pages.push(total);
-
-    return pages;
   }
 
   setPage(page: number | string) {
@@ -536,37 +633,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       this.currentPage = page;
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-  }
-
-  get showingStart(): number {
-    if (this.filteredBookmarks.length === 0) return 0;
-    return (this.currentPage - 1) * this.itemsPerPage + 1;
-  }
-
-  get unassignedCount(): number {
-    return this.allBookmarks.filter(b => !b.collectionName || !b.collectionName.trim()).length;
-  }
-
-  getFolderCount(folderName: string): number {
-    return this.allBookmarks.filter(b => b.collectionName === folderName).length;
-  }
-
-  get showingEnd(): number {
-    const end = this.currentPage * this.itemsPerPage;
-    return end > this.filteredBookmarks.length ? this.filteredBookmarks.length : end;
-  }
-
-  // Stats Counters
-  get totalSavedCount(): number {
-    return this.allBookmarks.length;
-  }
-
-  get distinctActsCount(): number {
-    return new Set(this.allBookmarks.map(b => b.actShortName)).size;
-  }
-
-  get activeInquiriesCount(): number {
-    return this.inquiries.filter(i => i.status === 'Pending' || i.status === 'Contacted').length;
   }
 
   loadCustomCollections() {
@@ -600,6 +666,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.customCollections.push(folder);
     this.customCollections.sort();
     this.saveCustomCollections();
+    this.refreshStats();
+    this.animateAllCounters();
 
     this.selectedCollection = folder;
     this.newCollectionName = '';
@@ -627,6 +695,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         // Update list
         this.customCollections = this.customCollections.map(c => c === oldName ? cleanNewName : c).sort();
         this.saveCustomCollections();
+        this.refreshStats();
+        this.animateAllCounters();
 
         // Update bookmarks (silently to prevent toast spam)
         this.allBookmarks.forEach(bm => {
@@ -654,6 +724,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       () => {
         this.customCollections = this.customCollections.filter(c => c !== folderName);
         this.saveCustomCollections();
+        this.refreshStats();
+        this.animateAllCounters();
 
         // Update bookmarks (silently to prevent toast spam)
         this.allBookmarks.forEach(bm => {
@@ -783,6 +855,11 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     );
   }
 
+  onNotesChanged(newNotes: string) {
+    this.drawerNoteText = newNotes;
+    this.notesSubject.next(newNotes);
+  }
+
   // Copy citation details to clipboard
   copySectionToClipboard(bm: Bookmark, event?: Event) {
     if (event) {
@@ -819,8 +896,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // Share with Lawyer Modal
-  openShareModal(bm: Bookmark, event: Event) {
-    event.stopPropagation();
+  openShareModal(bm: Bookmark, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.bookmarkToShare = bm;
     this.showShareModal = true;
   }
@@ -849,5 +928,13 @@ ${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.sect
     setTimeout(() => {
       window.print();
     }, 150);
+  }
+
+  trackByBookmark(index: number, item: Bookmark): string {
+    return `${item.actShortName}_${item.section.section_number}`;
+  }
+
+  trackByInquiry(index: number, item: Consultation): number {
+    return item.id;
   }
 }

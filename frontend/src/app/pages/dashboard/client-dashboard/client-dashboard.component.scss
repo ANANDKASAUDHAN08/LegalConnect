@@ -3,82 +3,6 @@
   background-attachment: fixed;
 }
 
-/* Glassmorphism Card Style */
-.card-glass {
-  background: rgba(255, 255, 255, 0.65);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
-    border-color: rgba(99, 102, 241, 0.3); // indigo tint
-  }
-}
-
-:host-context(.dark) {
-  .card-glass {
-    background: rgba(15, 23, 42, 0.45);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-
-    &:hover {
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 20px rgba(99, 102, 241, 0.08);
-      border-color: rgba(255, 255, 255, 0.12);
-    }
-  }
-}
-
-/* Quick-View Slide Over Drawer */
-.drawer-backdrop {
-  position: fixed;
-  inset: 0;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(4px);
-  z-index: 1050;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.3s ease;
-
-  &.open {
-    opacity: 1;
-    pointer-events: auto;
-  }
-}
-
-.drawer-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 100%;
-  max-width: 580px;
-  background: #ffffff;
-  box-shadow: -10px 0 40px rgba(15, 23, 42, 0.08);
-  z-index: 1060;
-  transform: translateX(100%);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-  display: flex;
-  flex-direction: column;
-
-  &.open {
-    transform: translateX(0);
-  }
-}
-
-:host-context(.dark) {
-  .drawer-panel {
-    background: #0d0f1a;
-    box-shadow: -10px 0 50px rgba(0, 0, 0, 0.6);
-    border-left: 1px solid rgba(255, 255, 255, 0.06);
-  }
-}
-
 /* Folder Tabs Horizontal Scroll on Mobile */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
@@ -87,12 +11,6 @@
 .scrollbar-none {
   -ms-overflow-style: none;
   scrollbar-width: none;
-}
-
-/* Auto-saving note indicators */
-.note-textarea {
-  resize: vertical;
-  min-height: 120px;
 }
 
 /* ── Skeleton Shimmer Loader */
