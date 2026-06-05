@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Bookmark } from '../../../../../services/bookmark.service';
+import { TooltipDirective } from '../../../../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-folder-sidebar',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TooltipDirective],
   templateUrl: './folder-sidebar.component.html',
   styleUrls: ['./folder-sidebar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -24,7 +25,7 @@ export class FolderSidebarComponent {
   @Output() selectedCollectionChange = new EventEmitter<string>();
   @Output() sidebarFolderSearchQueryChange = new EventEmitter<string>();
   @Output() showMobileFolderSearchChange = new EventEmitter<boolean>();
-  
+
   @Output() createNewFolder = new EventEmitter<void>();
   @Output() renameFolder = new EventEmitter<string>();
   @Output() deleteFolder = new EventEmitter<string>();

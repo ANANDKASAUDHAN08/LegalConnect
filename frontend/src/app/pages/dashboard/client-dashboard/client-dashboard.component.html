@@ -128,7 +128,8 @@
 
         <!-- Print / PDF Dossier Button -->
         <button *ngIf="activeTab === 'bookmarks'" (click)="triggerPrint(selectedCollection)"
-          class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95 shrink-0 mt-0.5 sm:mt-1">
+          class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95 shrink-0 mt-0.5 sm:mt-1"
+          appTooltip="Export current folder contents as a printable dossier PDF">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
             stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
             <polyline points="6 9 6 2 18 2 18 9"></polyline>
@@ -201,7 +202,8 @@
           <div class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6">
             <button (click)="activeTab = 'bookmarks'"
               [class]="activeTab === 'bookmarks' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              appTooltip="View and manage bookmarked legal acts & folders">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
@@ -210,7 +212,8 @@
             </button>
             <button (click)="activeTab = 'inquiries'"
               [class]="activeTab === 'inquiries' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap">
+              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              appTooltip="View sent legal consultation inquiries">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
                 <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
@@ -258,7 +261,8 @@
                 *ngIf="selectedCollection !== 'Unassigned'">
                 <!-- Share Collection -->
                 <button (click)="shareCollection(selectedCollection)"
-                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-indigo-650 dark:text-indigo-400 bg-indigo-50/50 hover:bg-indigo-100/80 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/60 border border-indigo-100/10 dark:border-indigo-900/10 whitespace-nowrap">
+                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-indigo-650 dark:text-indigo-400 bg-indigo-50/50 hover:bg-indigo-100/80 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/60 border border-indigo-100/10 dark:border-indigo-900/10 whitespace-nowrap"
+                  appTooltip="Copy folder contents as citations to clipboard">
                   <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2.5" class="shrink-0">
                     <circle cx="18" cy="5" r="3"></circle>
@@ -272,13 +276,15 @@
 
                 <!-- Rename -->
                 <button (click)="renameCollection(selectedCollection)"
-                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-slate-600 dark:text-slate-200 bg-slate-100/50 hover:bg-slate-200/80 dark:bg-slate-800/50 dark:hover:bg-slate-700/80 border border-slate-200/10 dark:border-white/10 whitespace-nowrap">
+                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-slate-600 dark:text-slate-200 bg-slate-100/50 hover:bg-slate-200/80 dark:bg-slate-800/50 dark:hover:bg-slate-700/80 border border-slate-200/10 dark:border-white/10 whitespace-nowrap"
+                  appTooltip="Rename research folder">
                   Rename
                 </button>
 
                 <!-- Delete -->
                 <button (click)="deleteCollection(selectedCollection)"
-                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-red-650 dark:text-red-400 bg-red-50/40 hover:bg-red-100/80 dark:bg-red-950/20 dark:hover:bg-red-950/50 border border-red-100/10 dark:border-red-900/10 whitespace-nowrap">
+                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-red-650 dark:text-red-400 bg-red-50/40 hover:bg-red-100/80 dark:bg-red-950/20 dark:hover:bg-red-950/50 border border-red-100/10 dark:border-red-900/10 whitespace-nowrap"
+                  appTooltip="Delete folder and move saved items to General Reference">
                   Delete
                 </button>
               </div>
@@ -329,7 +335,8 @@
 
                 <div class="relative">
                   <button (click)="showSortDropdown = !showSortDropdown; $event.stopPropagation()"
-                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl px-2.5 py-2 sm:px-3.5 flex items-center gap-1.5 shadow-xs hover:border-slate-350 dark:hover:border-slate-700 transition-all select-none active:scale-95 bg-transparent cursor-pointer">
+                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl px-2.5 py-2 sm:px-3.5 flex items-center gap-1.5 shadow-xs hover:border-slate-350 dark:hover:border-slate-700 transition-all select-none active:scale-95 bg-transparent cursor-pointer"
+                    appTooltip="Sort bookmarked sections">
                     <!-- Sort Icon (Mobile only) -->
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                       stroke-width="2.2" class="w-4 h-4 sm:hidden shrink-0">
@@ -410,7 +417,8 @@
 
               <div class="flex items-center justify-center gap-1 sm:gap-1.5">
                 <button (click)="setPage(currentPage - 1)" [disabled]="currentPage === 1"
-                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95">
+                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+                  appTooltip="Previous Page">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
@@ -420,7 +428,8 @@
                 <ng-container *ngFor="let page of visiblePageNumbers">
                   <button *ngIf="page !== '...'" (click)="setPage(page)"
                     [class]="currentPage === page ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-bold border-indigo-600' : 'bg-transparent border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 font-semibold'"
-                    class="w-8 h-8 sm:w-9 sm:h-9 p-0 border rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95">
+                    class="w-8 h-8 sm:w-9 sm:h-9 p-0 border rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+                    appTooltip="Go to Page {{ page }}">
                     {{ page }}
                   </button>
                   <span *ngIf="page === '...'"
@@ -430,7 +439,8 @@
                 </ng-container>
 
                 <button (click)="setPage(currentPage + 1)" [disabled]="currentPage === totalPages"
-                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95">
+                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+                  appTooltip="Next Page">
                   <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none"
                     viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />

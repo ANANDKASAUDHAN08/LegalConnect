@@ -1,5 +1,6 @@
 <div (click)="onCardClick()"
-  class="card-glass p-5 rounded-2xl cursor-pointer relative overflow-hidden flex flex-col gap-4 group">
+  class="card-glass p-5 rounded-2xl cursor-pointer relative overflow-hidden flex flex-col gap-4 group"
+  appTooltip="Click to view full section, notes, and AI summary">
 
   <!-- Card Header -->
   <div class="flex justify-between items-start gap-4 relative z-10">
@@ -29,7 +30,7 @@
     <!-- Trash Action Button -->
     <button (click)="onRemove($event)"
       class="p-2 text-slate-400 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors bg-transparent border-0 cursor-pointer shadow-xs shrink-0 flex items-center justify-center"
-      title="Remove Reference">
+      appTooltip="Remove Reference">
       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
         stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
         <polyline points="3 6 5 6 21 6"></polyline>
@@ -71,7 +72,7 @@
       <!-- Copy Clipboard utility -->
       <button (click)="onCopy($event)"
         class="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 bg-transparent border-0 cursor-pointer p-1"
-        title="Copy Citation">
+        appTooltip="Copy Citation">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
@@ -82,7 +83,7 @@
       <!-- Share with Lawyer utility -->
       <button *ngIf="inquiries.length > 0" (click)="onShare($event)"
         class="text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400 bg-transparent border-0 cursor-pointer p-1"
-        title="Share with Lawyer">
+        appTooltip="Share with Lawyer">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="18" cy="5" r="3"></circle>

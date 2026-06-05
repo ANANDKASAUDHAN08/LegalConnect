@@ -10,7 +10,8 @@
     <!-- All (Fixed top) -->
     <button (click)="selectCollection('All')"
       [class]="selectedCollection === 'All' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
-      class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0">
+      class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0"
+      appTooltip="View all saved items">
       <span class="flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5">
@@ -29,7 +30,8 @@
     <!-- Unassigned (Fixed top) -->
     <button (click)="selectCollection('Unassigned')"
       [class]="selectedCollection === 'Unassigned' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
-      class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0">
+      class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0"
+      appTooltip="Saved items not assigned to any folder">
       <span class="flex items-center gap-2">
         <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5">
@@ -45,7 +47,7 @@
       </span>
       <span *ngIf="unassignedCount === 0"
         class="text-[10px] px-1.5 py-0.5 rounded-full border border-dashed border-slate-200 dark:border-slate-800 bg-transparent text-slate-300 dark:text-slate-200 font-medium select-none"
-        title="Empty folder">
+        appTooltip="Empty folder">
         0
       </span>
     </button>
@@ -56,7 +58,8 @@
     <div class="space-y-2 mt-1 mb-3 shrink-0">
       <!-- Create Folder trigger (below divider) -->
       <button (click)="onCreateNewFolder()"
-        class="w-full py-2 border border-dashed border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/10 transition-colors rounded-xl text-xs font-bold bg-transparent cursor-pointer active:scale-95 select-none">
+        class="w-full py-2 border border-dashed border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/10 transition-colors rounded-xl text-xs font-bold bg-transparent cursor-pointer active:scale-95 select-none"
+        appTooltip="Create research folder">
         + New Folder
       </button>
 
@@ -83,7 +86,8 @@
 
       <div *ngFor="let folder of filteredSidebarFolders; trackBy: trackByFolder"
         [class]="selectedCollection === folder ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
-        class="group/folder w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 select-none">
+        class="group/folder w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 select-none"
+        appTooltip="Filter by folder: {{ folder }}">
         <span (click)="selectCollection(folder)" class="flex items-center gap-2 truncate pr-2 cursor-pointer flex-1">
           <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" class="text-indigo-500 shrink-0">
@@ -99,13 +103,13 @@
           </span>
           <span *ngIf="getFolderCount(folder) === 0"
             class="text-[10px] px-1.5 py-0.5 rounded-full border border-dashed border-slate-200 dark:border-slate-800 bg-transparent text-slate-800 dark:text-slate-200 font-medium mr-1 select-none"
-            title="Empty folder">
+            appTooltip="Empty folder">
             0
           </span>
           <!-- Rename -->
           <button (click)="onRenameFolder(folder, $event)"
             class="text-slate-700 hover:text-indigo-650 dark:text-slate-200 dark:hover:text-indigo-400 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg bg-transparent border-0 cursor-pointer flex items-center justify-center transition-all"
-            title="Rename Folder">
+            appTooltip="Rename Folder">
             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2.5">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -115,7 +119,7 @@
           <!-- Delete -->
           <button (click)="onDeleteFolder(folder, $event)"
             class="text-slate-700 hover:text-red-500 dark:text-slate-200 dark:hover:text-red-400 p-1.5 hover:bg-red-50 dark:hover:bg-red-950/20 rounded-lg bg-transparent border-0 cursor-pointer flex items-center justify-center transition-all"
-            title="Delete Folder">
+            appTooltip="Delete Folder">
             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2.5">
               <polyline points="3 6 5 6 21 6"></polyline>
@@ -159,7 +163,7 @@
     <!-- Folder Search Toggle Trigger -->
     <button *ngIf="!showMobileFolderSearch" (click)="toggleMobileFolderSearch(true)"
       class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 flex items-center justify-center shrink-0 border-0 cursor-pointer active:scale-95 transition-all"
-      title="Search folders">
+      appTooltip="Search folders">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
         stroke-width="2.5">
         <circle cx="11" cy="11" r="8"></circle>
@@ -169,7 +173,8 @@
 
     <!-- "+ Add" button (Moved to front start) -->
     <button (click)="onCreateNewFolder()"
-      class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 bg-transparent shrink-0 active:scale-95 cursor-pointer">
+      class="px-3.5 py-1.5 rounded-full text-xs font-bold border border-dashed border-indigo-400 text-indigo-600 dark:text-indigo-400 bg-transparent shrink-0 active:scale-95 cursor-pointer"
+      appTooltip="Create research folder">
       + Add
     </button>
 

@@ -7,11 +7,12 @@ import { NotificationService } from '../../services/notification.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu.component';
 import { UserProfileMenuComponent } from '../user-profile-menu/user-profile-menu.component';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-navbar',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, MobileMenuComponent, UserProfileMenuComponent],
+  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, MobileMenuComponent, UserProfileMenuComponent, TooltipDirective],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss']
 })

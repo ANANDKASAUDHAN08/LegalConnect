@@ -4,11 +4,12 @@ import { RouterLink } from '@angular/router';
 import { AuthService, UserProfile } from '../../../services/auth.service';
 import { LawyerService, Consultation } from '../../../services/lawyer.service';
 import { StatCardComponent } from '../../../components/stat-card/stat-card.component';
+import { TooltipDirective } from '../../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-advocate-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, StatCardComponent],
+  imports: [CommonModule, RouterLink, StatCardComponent, TooltipDirective],
   templateUrl: './advocate-dashboard.component.html',
   styleUrls: ['./advocate-dashboard.component.scss']
 })

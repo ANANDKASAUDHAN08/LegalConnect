@@ -1,10 +1,11 @@
 import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDestroy, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-stat-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipDirective],
   templateUrl: './stat-card.component.html',
   styleUrls: ['./stat-card.component.scss']
 })
@@ -54,7 +55,7 @@ export class StatCardComponent implements OnInit, OnChanges, OnDestroy {
     const animate = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / durationMs, 1);
-      
+
       // Cubic ease-out formula for a smoother final deceleration
       const eased = 1 - Math.pow(1 - progress, 3);
       const currentVal = startValue + (targetValue - startValue) * eased;

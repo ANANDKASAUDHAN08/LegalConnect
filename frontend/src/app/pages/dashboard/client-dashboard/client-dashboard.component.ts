@@ -18,6 +18,7 @@ import { InquiriesTimelineComponent } from './components/inquiries-timeline/inqu
 import { ActsFilterModalComponent } from './components/acts-filter-modal/acts-filter-modal.component';
 import { ShareCitationModalComponent } from './components/share-citation-modal/share-citation-modal.component';
 import { StatCardComponent } from '../../../components/stat-card/stat-card.component';
+import { TooltipDirective } from '../../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -34,7 +35,8 @@ import { StatCardComponent } from '../../../components/stat-card/stat-card.compo
     InquiriesTimelineComponent,
     ActsFilterModalComponent,
     ShareCitationModalComponent,
-    StatCardComponent
+    StatCardComponent,
+    TooltipDirective
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']

@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Bookmark } from '../../../../../services/bookmark.service';
 import { Consultation } from '../../../../../services/lawyer.service';
+import { TooltipDirective } from '../../../../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-bookmark-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipDirective],
   templateUrl: './bookmark-card.component.html',
   styleUrls: ['./bookmark-card.component.scss']
 })
