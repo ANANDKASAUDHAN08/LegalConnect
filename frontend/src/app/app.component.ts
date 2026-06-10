@@ -4,6 +4,7 @@ import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { SnackbarComponent } from './components/snackbar/snackbar.component';
 import { ThemeService } from './services/theme.service';
+import { SettingsService } from './services/settings.service';
 
 @Component({
   selector: 'app-root',
@@ -13,5 +14,8 @@ import { ThemeService } from './services/theme.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  constructor(private themeService: ThemeService) { }
+  constructor(
+    private themeService: ThemeService,
+    private settingsService: SettingsService
+  ) { }
 }

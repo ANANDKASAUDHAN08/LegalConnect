@@ -1,0 +1,1840 @@
+<div
+  class="min-h-screen bg-slate-50 dark:bg-slate-950 pt-20 md:pt-24 pb-4 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
+  <div class="max-w-[1400px] mx-auto">
+    <!-- Header -->
+    <div
+      class="flex flex-col md:flex-row md:items-center justify-between mb-4 md:mb-8 pb-3 md:pb-6 border-b border-slate-200/60 dark:border-slate-800/60 gap-2 md:gap-4">
+      <div class="flex flex-col gap-0.5 md:gap-1.5">
+        <div class="flex items-center gap-2.5 md:gap-3.5">
+          <div
+            class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-gradient-to-tr from-blue-500/10 to-indigo-500/15 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-100/50 dark:border-blue-800/30 text-blue-600 dark:text-blue-400 flex items-center justify-center shadow-sm">
+            <svg class="w-[18px] h-[18px] md:w-5 md:h-5" xmlns="http://www.w3.org/2000/svg" width="20" height="20"
+              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+              stroke-linejoin="round">
+              <circle cx="12" cy="12" r="3"></circle>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l-.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+              </path>
+            </svg>
+          </div>
+          <h1
+            class="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-none">
+            Settings Panel
+          </h1>
+          <p class="hidden md:inline italic text-slate-500 dark:text-slate-400 text-[0.88rem] font-medium">
+            Fine-tune and monitor your preferences, regional configuration, data privacy, and active account security.
+          </p>
+        </div>
+        <p class="md:hidden inline italic text-slate-500 dark:text-slate-400 text-[0.6rem] font-medium pl-[42px]">
+          Fine-tune and monitor your preferences, regional configuration, data privacy, and active account security.
+        </p>
+      </div>
+    </div>
+
+    <!-- Main Content Split -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-8 items-start">
+
+      <!-- Left Column: Live status HUD preview + View Mode switcher -->
+      <div class="lg:col-span-4 flex flex-col gap-3 md:gap-6 w-full lg:sticky lg:top-24">
+
+        <!-- Live HUD Control Center Card -->
+        <div class="hud-card rounded-3xl p-4 md:p-6 relative">
+          <!-- Glass effect reflections -->
+          <div class="hud-glow-1"></div>
+          <div class="hud-glow-2"></div>
+
+          <!-- HUD Parameters Metrics -->
+          <div class="flex flex-col gap-4.5 relative z-10">
+            <div class="flex items-center justify-between gap-2 mb-1 cursor-pointer select-none" (click)="toggleHud()"
+              [appTooltip]="hudExpanded ? 'Collapse HUD panel' : 'Expand HUD panel'" tooltipPlacement="top">
+              <div class="flex items-center gap-2" [class.mb-2.5]="hudExpanded">
+                <span class="w-1.5 h-3.5 bg-blue-600 dark:bg-blue-500 rounded-sm"></span>
+                <h3
+                  class="text-[0.68rem] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest leading-none">
+                  Live Status HUD
+                </h3>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" class="text-slate-400 transition-transform duration-200"
+                [class.rotate-180]="hudExpanded" [class.mb-2.5]="hudExpanded">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </div>
+
+            <div *ngIf="hudExpanded" class="grid grid-cols-2 lg:flex lg:flex-col gap-3 lg:gap-3.5 animate-scale-up">
+              <!-- Metric Row 1: Appearance Mode -->
+              <div
+                class="hud-widget hud-widget-blue flex flex-col lg:flex-row lg:items-center lg:justify-between p-3.5 lg:p-3 rounded-xl">
+                <div class="flex items-center gap-2 mb-2 lg:mb-0">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 shadow-sm shadow-blue-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path d="M12 2v20M12 2a10 10 0 0 0-10 10M12 22a10 10 0 0 0-10-10"></path>
+                    </svg>
+                  </div>
+                  <span class="text-[0.68rem] lg:text-xs font-bold text-slate-500 dark:text-slate-400">Interface
+                    Theme</span>
+                </div>
+                <span
+                  class="text-[0.7rem] lg:text-xs font-black text-slate-800 dark:text-slate-200 capitalize mt-auto lg:mt-0 lg:text-right">
+                  {{ settingsService.theme() }} Mode
+                </span>
+              </div>
+
+              <!-- Metric Row 2: Regional Locale -->
+              <div
+                class="hud-widget hud-widget-indigo flex flex-col lg:flex-row lg:items-center lg:justify-between p-3.5 lg:p-3 rounded-xl">
+                <div class="flex items-center gap-2 mb-2 lg:mb-0">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 shadow-sm shadow-indigo-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path
+                        d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                      </path>
+                    </svg>
+                  </div>
+                  <span class="text-[0.68rem] lg:text-xs font-bold text-slate-500 dark:text-slate-400">Regional
+                    Region</span>
+                </div>
+                <span
+                  class="text-[0.65rem] lg:text-xs font-black text-slate-800 dark:text-slate-200 truncate max-w-full mt-auto lg:mt-0 lg:text-right"
+                  [title]="getSelectedLanguageName() + ' (' + selectedTimezone + ')'">
+                  <span class="inline lg:hidden">{{ getSelectedLanguageName() }}</span>
+                  <span class="hidden lg:inline">{{ getSelectedLanguageName() }} ({{ selectedTimezone.split('/')[1] ||
+                    selectedTimezone }})</span>
+                </span>
+              </div>
+
+              <!-- Metric Row 3: Security Score -->
+              <div
+                class="hud-widget flex flex-col lg:flex-row lg:items-center lg:justify-between p-3.5 lg:p-3 rounded-xl"
+                [class.hud-widget-emerald]="securityRating === 'Strong'"
+                [class.hud-widget-amber]="securityRating === 'Moderate'"
+                [class.hud-widget-rose]="securityRating === 'Weak'">
+                <div class="flex items-center gap-2 mb-2 lg:mb-0">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm" [ngClass]="securityRating === 'Strong' 
+                      ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-650 dark:text-emerald-400 shadow-emerald-500/10'
+                      : securityRating === 'Moderate'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 shadow-amber-500/10'
+                        : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 shadow-rose-500/10'">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  </div>
+                  <span class="text-[0.68rem] lg:text-xs font-bold text-slate-500 dark:text-slate-400">Security
+                    Health</span>
+                </div>
+                <span
+                  class="text-[0.6rem] lg:text-xs font-black px-2 py-0.5 rounded-full border mt-auto lg:mt-0 lg:text-right w-fit"
+                  [ngClass]="securityColor">
+                  {{ securityRating }} ({{ securityScore }}%)
+                </span>
+              </div>
+
+              <!-- Metric Row 4: Device connections -->
+              <div
+                class="hud-widget hud-widget-amber flex flex-col lg:flex-row lg:items-center lg:justify-between p-3.5 lg:p-3 rounded-xl">
+                <div class="flex items-center gap-2 mb-2 lg:mb-0">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 shadow-sm shadow-amber-500/10">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                      <line x1="8" y1="21" x2="16" y2="21"></line>
+                      <line x1="12" y1="17" x2="12" y2="21"></line>
+                    </svg>
+                  </div>
+                  <span class="text-[0.68rem] lg:text-xs font-bold text-slate-500 dark:text-slate-400">Active
+                    Sessions</span>
+                </div>
+                <span
+                  class="text-[0.7rem] lg:text-xs font-black text-slate-800 dark:text-slate-200 mt-auto lg:mt-0 lg:text-right">
+                  {{ sessions.length || 1 }} Device{{ (sessions.length || 1) === 1 ? '' : 's' }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- View Mode Double Toggle Slider -->
+        <div id="mobile-settings-nav-trigger"
+          class="bg-white/60 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/60 rounded-2xl p-1 flex shadow-sm">
+          <button (click)="setOverviewMode()"
+            class="flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer focus:outline-none flex items-center justify-center gap-2"
+            [ngClass]="viewMode === 'overview'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="9"></rect>
+              <rect x="14" y="3" width="7" height="5"></rect>
+              <rect x="14" y="12" width="7" height="9"></rect>
+              <rect x="3" y="16" width="7" height="5"></rect>
+            </svg>
+            Bento Dashboard
+          </button>
+          <button (click)="setTab(activeTab)"
+            class="flex-1 py-2 rounded-xl text-xs font-bold transition-all duration-300 cursor-pointer focus:outline-none flex items-center justify-center gap-2"
+            [ngClass]="viewMode === 'focused'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'">
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            Focused Category
+          </button>
+        </div>
+
+        <!-- Sticky Quick Category Navigation Tabs (Only visible when viewMode is focused on desktop) -->
+        <div *ngIf="viewMode === 'focused'"
+          class="hidden lg:flex flex-col gap-1.5 bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-800/50 rounded-2xl p-2 shadow-sm animate-fade-in">
+          <div class="px-3.5 py-1 pb-2 border-b border-slate-100 dark:border-slate-850">
+            <span class="text-[0.68rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">Jump to
+              Category</span>
+          </div>
+          <button *ngFor="let tab of tabs" (click)="setTab(tab.id)"
+            class="flex items-center gap-3.5 px-3.5 py-2.5 rounded-xl text-[0.88rem] font-bold text-left transition-all duration-200 border-0 cursor-pointer w-full group focus:outline-none"
+            [ngClass]="activeTab === tab.id
+              ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400'
+              : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40 hover:text-slate-900 dark:hover:text-white'">
+            <!-- SVG Icon -->
+            <svg
+              [ngClass]="activeTab === tab.id ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-350'"
+              xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path [attr.d]="tab.icon"></path>
+            </svg>
+            <span class="truncate">{{ tab.label }}</span>
+            <svg class="ml-auto opacity-0 group-hover:opacity-100 transition-opacity text-slate-400 dark:text-slate-650"
+              xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Mobile Scrollable Tab Navigation (Only visible when viewMode is focused on mobile) -->
+        <div *ngIf="viewMode === 'focused'"
+          class="flex lg:hidden overflow-x-auto pb-1 gap-2 scrollbar-none snap-x mask-gradient-r w-full animate-fade-in">
+          <button *ngFor="let tab of tabs" (click)="setTab(tab.id)"
+            class="flex items-center gap-2 px-2 py-1.5 rounded-full text-[0.7rem] font-bold transition-all duration-200 snap-center shrink-0 border cursor-pointer focus:outline-none"
+            [ngClass]="activeTab === tab.id
+              ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-500/10'
+              : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50'">
+            <svg [ngClass]="activeTab === tab.id ? 'text-white' : 'text-slate-500 dark:text-slate-400'"
+              xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path [attr.d]="tab.icon"></path>
+            </svg>
+            <span>{{ tab.label }}</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Right Column: Bento Grid Dashboard OR Focused Card details -->
+      <div class="lg:col-span-8 w-full">
+
+        <!-- ==================== VIEW A: BENTO GRID DASHBOARD ==================== -->
+        <div *ngIf="viewMode === 'overview'" class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 animate-fade-in">
+
+          <!-- Card 1: Appearance Bento Card (Col Span: 2) -->
+          <div
+            class="bento-card-blue md:col-span-2 group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Configure appearance, themes, and font scale" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                  <!-- Icon SVG -->
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Visual Theme & Scale</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">
+                    Configure appearance, themes, layout scaling.
+                  </p>
+                </div>
+              </div>
+              <button (click)="setTab('appearance')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Configure
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">
+                Configure appearance, themes, layout scaling.
+              </p>
+            </div>
+
+            <!-- Quick Interactive Theme Selection -->
+            <div class="grid grid-cols-3 gap-2.5 md:gap-3.5 mb-3 md:mb-5">
+              <button (click)="setTheme('light')"
+                class="flex flex-col items-center gap-2 p-3.5 rounded-xl border text-center transition-all bg-slate-50/50 dark:bg-slate-950/30 focus:outline-none cursor-pointer"
+                [ngClass]="settingsService.theme() === 'light' ? 'border-blue-500 bg-blue-500/5 ring-1 ring-blue-500/20' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" class="text-slate-455 dark:text-slate-400"
+                  [class.text-blue-500]="settingsService.theme() === 'light'">
+                  <circle cx="12" cy="12" r="5"></circle>
+                  <line x1="12" y1="1" x2="12" y2="3"></line>
+                  <line x1="12" y1="21" x2="12" y2="23"></line>
+                  <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                  <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                  <line x1="1" y1="12" x2="3" y2="12"></line>
+                  <line x1="21" y1="12" x2="23" y2="12"></line>
+                  <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                  <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <span class="text-[0.72rem] font-bold text-slate-700 dark:text-slate-200">Light</span>
+              </button>
+
+              <button (click)="setTheme('dark')"
+                class="flex flex-col items-center gap-2 p-3.5 rounded-xl border text-center transition-all bg-slate-50/50 dark:bg-slate-950/30 focus:outline-none cursor-pointer"
+                [ngClass]="settingsService.theme() === 'dark' ? 'border-blue-500 bg-blue-500/5 ring-1 ring-blue-500/20' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" class="text-slate-455 dark:text-slate-400"
+                  [class.text-blue-500]="settingsService.theme() === 'dark'">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <span class="text-[0.72rem] font-bold text-slate-700 dark:text-slate-200">Dark</span>
+              </button>
+
+              <button (click)="setTheme('system')"
+                class="flex flex-col items-center gap-2 p-3.5 rounded-xl border text-center transition-all bg-slate-50/50 dark:bg-slate-950/30 focus:outline-none cursor-pointer"
+                [ngClass]="settingsService.theme() === 'system' ? 'border-blue-500 bg-blue-500/5 ring-1 ring-blue-500/20' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" class="text-slate-455 dark:text-slate-400"
+                  [class.text-blue-500]="settingsService.theme() === 'system'">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+                <span class="text-[0.72rem] font-bold text-slate-700 dark:text-slate-200">System</span>
+              </button>
+            </div>
+
+            <!-- Global Font scale slider mock details -->
+            <div
+              class="flex items-center justify-between p-2 md:p-3 rounded-lg md:rounded-xl bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800">
+              <span class="text-[0.6rem] md:text-[0.74rem] font-bold text-slate-500 dark:text-slate-400">
+                Scale Preference
+              </span>
+              <div class="flex gap-1 md:gap-2">
+                <span class="px-1 md:px-2 py-0 md:py-0.5 rounded text-[0.55rem] md:text-[0.68rem] font-bold"
+                  [ngClass]="settingsService.fontSize() === 'sm' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-450 border border-blue-200/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'">Small</span>
+                <span class="px-1 md:px-2 py-0 md:py-0.5 rounded text-[0.55rem] md:text-[0.68rem] font-bold"
+                  [ngClass]="settingsService.fontSize() === 'md' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-450 border border-blue-200/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'">Default</span>
+                <span class="px-1 md:px-2 py-0 md:py-0.5 rounded text-[0.55rem] md:text-[0.68rem] font-bold"
+                  [ngClass]="settingsService.fontSize() === 'lg' ? 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-450 border border-blue-200/30' : 'bg-slate-100 dark:bg-slate-800 text-slate-400'">Large</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 2: Language & Region Bento Card (Col Span: 1 or 2) -->
+          <div
+            class="bento-card-indigo md:col-span-2 group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Edit system language and regional format settings" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                      d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.313 1.565-.953 3.051-1.879 4.387M6.412 9a11.52 11.52 0 003.5 4.5M6.412 9a11.503 11.503 0 01-2.912-5">
+                    </path>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Language & Region</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Database region language and date
+                    formats.</p>
+                </div>
+              </div>
+              <button (click)="setTab('language')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Edit Settings
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Database region language and date formats.
+              </p>
+            </div>
+
+            <div class="flex flex-col gap-2.5 md:gap-3 text-[0.7rem] md:text-xs">
+              <!-- Summary display 1 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-semibold">Active Language</span>
+                <span class="font-bold text-slate-700 dark:text-slate-350">{{ getSelectedLanguageName() }}</span>
+              </div>
+              <!-- Summary display 2 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-semibold">System Timezone</span>
+                <span class="font-bold text-slate-700 dark:text-slate-350 truncate max-w-[170px]"
+                  [title]="getSelectedTimezoneName()">
+                  {{ getSelectedTimezoneName().split('GMT')[0] }}
+                </span>
+              </div>
+              <!-- Summary display 3 -->
+              <div class="flex items-center justify-between">
+                <span class="text-slate-400 font-semibold">Date format standard</span>
+                <span class="font-bold text-slate-700 dark:text-slate-350">{{ selectedDateFormat }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 3: Session & Security Bento Card (Col Span: 2) -->
+          <div
+            class="bento-card-emerald md:col-span-2 group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Manage active sessions and account security" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-650 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Security & Sessions</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Manage device security and review login
+                    logs.</p>
+                </div>
+              </div>
+              <button (click)="setTab('security')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Manage
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Manage device security and review login
+                logs.</p>
+            </div>
+
+            <!-- Dashboard visual panel representing security status -->
+            <div
+              class="flex items-center gap-3 md:gap-4 bg-slate-50/50 dark:bg-slate-950/20 p-2.5 md:p-3 rounded-2xl border border-slate-100 dark:border-slate-800 mb-3 md:mb-4">
+              <div
+                class="w-10 h-10 md:w-12 md:h-12 rounded-lg md:rounded-xl flex items-center justify-center flex-shrink-0 text-white font-extrabold text-[0.68rem] md:text-xs shadow-sm bg-gradient-to-tr from-blue-600 to-indigo-650">
+                {{ securityScore }}%
+              </div>
+              <div class="flex flex-col gap-0.5">
+                <span class="text-[0.7rem] md:text-xs font-extrabold text-slate-700 dark:text-slate-200">System security
+                  is {{
+                  securityRating }}</span>
+                <span class="text-[0.6rem] md:text-[0.68rem] text-slate-400">
+                  {{ sessions.length || 1 }} active connection points logged.
+                </span>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center text-[0.7rem] md:text-xs">
+              <span class="text-slate-400 font-semibold">2FA Authenticator</span>
+              <span class="font-bold flex items-center gap-1.5"
+                [ngClass]="currentUser?.isTwoFactorEnabled ? 'text-emerald-500' : 'text-slate-455'">
+                <span class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="currentUser?.isTwoFactorEnabled ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+                {{ currentUser?.isTwoFactorEnabled ? 'Enabled' : 'Disabled' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Card 4: Accessibility Bento Card (Col Span: 1) -->
+          <div
+            class="bento-card-purple group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Manage high contrast, reduced motion, and readability preferences" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-7 h-7 md:w-9 md:h-9 -mt-1 md:mt-0 rounded-xl bg-purple-100 md:bg-purple-50 dark:bg-purple-900/60 md:dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-[18px] md:h-[18px]" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <path d="M12 8v8M8 12h8"></path>
+                  </svg>
+                </div>
+
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Accessibility</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Reading aids, high contrast.</p>
+                </div>
+              </div>
+              <button (click)="setTab('accessibility')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Details
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Reading aids, high contrast.</p>
+            </div>
+
+            <div class="flex flex-col gap-3 md:gap-3.5">
+              <!-- Inline Switch 1 -->
+              <div class="flex items-center justify-between">
+                <span class="text-[0.7rem] md:text-xs text-slate-655 dark:text-slate-400 font-bold">Contrast mode</span>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" [ngModel]="settingsService.highContrast()"
+                    (ngModelChange)="toggleHighContrast($event)" class="sr-only peer">
+                  <div
+                    class="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+
+              <!-- Inline Switch 2 -->
+              <div class="flex items-center justify-between">
+                <span class="text-[0.7rem] md:text-xs text-slate-655 dark:text-slate-400 font-bold">Reduce motion</span>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" [ngModel]="settingsService.reduceMotion()"
+                    (ngModelChange)="toggleReduceMotion($event)" class="sr-only peer">
+                  <div
+                    class="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 5: Notifications Bento Card (Col Span: 1) -->
+          <div
+            class="bento-card-amber group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Configure email alerts and push notifications" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-7 h-7 md:w-9 md:h-9 -mt-1 md:mt-0 rounded-xl bg-amber-100 md:bg-amber-50 dark:bg-amber-900/60 md:dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-[18px] md:h-[18px]" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Notifications</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Preferences, parliament updates.</p>
+                </div>
+              </div>
+              <button (click)="setTab('notifications')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Details
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Preferences, parliament updates.</p>
+            </div>
+
+            <div class="flex flex-col gap-3 md:gap-3.5">
+              <div class="flex items-center justify-between">
+                <span class="text-[0.7rem] md:text-xs text-slate-655 dark:text-slate-400 font-bold">Law
+                  amendments</span>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="notifyLawAmendments" class="sr-only peer">
+                  <div
+                    class="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+
+              <div class="flex items-center justify-between">
+                <span class="text-[0.7rem] md:text-xs text-slate-655 dark:text-slate-400 font-bold">Weekly digest</span>
+                <label class="relative inline-flex items-center cursor-pointer select-none">
+                  <input type="checkbox" [(ngModel)]="notifyEmailDigest" class="sr-only peer">
+                  <div
+                    class="w-9 h-5 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 6: Search & Discovery Bento Card (Col Span: 1 or 2) -->
+          <div
+            class="bento-card-teal group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Update default category filters and search pagination size" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-7 h-7 md:w-9 md:h-9 -mt-1 md:mt-0 rounded-xl bg-teal-100 md:bg-teal-50 dark:bg-teal-900/60 md:dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-[18px] md:h-[18px]" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Search Queries</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Default filters and results sizes.</p>
+                </div>
+              </div>
+              <button (click)="setTab('search')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Setup
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Default filters and results sizes.</p>
+            </div>
+
+            <div class="flex flex-col gap-2.5 md:gap-3 text-[0.7rem] md:text-xs">
+              <div class="flex justify-between">
+                <span class="text-slate-400 font-semibold">Filter Mode</span>
+                <span class="font-bold text-slate-700 dark:text-slate-350">{{ getSelectedCategoryName() }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400 font-semibold">Results Size</span>
+                <span class="font-bold text-slate-700 dark:text-slate-350">{{ settingsService.resultsPerPage() }}
+                  items</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-slate-400 font-semibold">Related Statutes</span>
+                <span class="font-bold text-slate-700 dark:text-slate-350">
+                  {{ settingsService.showRelatedLaws() ? 'Enabled' : 'Disabled' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 7: Privacy & Data Bento Card (Col Span: 1) -->
+          <div
+            class="bento-card-orange group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Manage cookies consent, export personal data, or close account" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-7 h-7 md:w-9 md:h-9 -mt-1 md:mt-0 rounded-xl bg-orange-100 md:bg-orange-50 dark:bg-orange-900/60 md:dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-[18px] md:h-[18px]" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Privacy &amp; Data</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Download data, cookies settings.</p>
+                </div>
+              </div>
+              <button (click)="setTab('privacy')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Details
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Download data, cookies settings.</p>
+            </div>
+
+            <div class="flex flex-col gap-2.5 md:gap-3 text-[0.7rem] md:text-xs">
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400 font-semibold">Analytics logs</span>
+                <span class="font-bold" [ngClass]="cookiePreferences.analytics ? 'text-emerald-500' : 'text-slate-455'">
+                  {{ cookiePreferences.analytics ? 'Consented' : 'Blocked' }}
+                </span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-slate-400 font-semibold">Marketing cookies</span>
+                <span class="font-bold" [ngClass]="cookiePreferences.marketing ? 'text-emerald-500' : 'text-slate-455'">
+                  {{ cookiePreferences.marketing ? 'Consented' : 'Blocked' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Card 8: Legal Bento Card (Col Span: 2) -->
+          <div
+            class="bento-card-slate md:col-span-2 group backdrop-blur-md bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-6 shadow-sm transition-all duration-300"
+            appTooltip="Read terms of service, privacy policy, and cookies disclosures" tooltipPlacement="top">
+            <div
+              class="flex flex-wrap items-start justify-between gap-2 md:gap-3 pb-2 md:pb-4 border-b border-slate-100 dark:border-slate-800/80 mb-3 md:mb-5">
+              <div class="flex items-start gap-3 min-w-0 flex-1">
+                <div
+                  class="w-7 h-7 md:w-9 md:h-9 -mt-1 md:mt-0 rounded-xl bg-slate-200 md:bg-slate-100 dark:bg-slate-700/60 md:dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-[18px] md:h-[18px]" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                  </svg>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Terms &amp; Policies</h3>
+                  <!-- 🖥️ Desktop description: hidden on mobile -->
+                  <p class="hidden md:block text-[0.7rem] text-slate-400 mt-0.5">Review LegalConnect's official terms of
+                    service.</p>
+                </div>
+              </div>
+              <button (click)="setTab('legal')"
+                class="flex-shrink-0 text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 group-hover:bg-blue-600 group-hover:text-white hover:bg-blue-600 hover:text-white border-0 rounded-lg px-2.5 py-1.5 transition-all duration-300 flex items-center gap-1 focus:outline-none cursor-pointer">
+                Open
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5"
+                  class="hidden md:block transition-transform duration-300 group-hover:translate-x-0.5">
+                  <line x1="5" y1="12" x2="19" y2="12"></line>
+                  <polyline points="12 5 19 12 12 19"></polyline>
+                </svg>
+              </button>
+              <!-- 📱 Mobile description: spans full width below the icon and button -->
+              <p class="block md:hidden text-[0.7rem] text-slate-400 w-full">Review LegalConnect's official terms of
+                service.</p>
+            </div>
+
+
+            <div class="grid grid-cols-3 gap-3">
+              <a href="https://www.google.com" target="_blank"
+                class="p-2.5 text-center text-xs border border-slate-200 dark:border-slate-850 hover:border-blue-500 rounded-xl font-bold bg-slate-50/50 dark:bg-slate-950/25 text-slate-700 dark:text-slate-300 no-underline transition-all hover:text-blue-600 dark:hover:text-blue-400">
+                Privacy
+              </a>
+              <a href="https://www.google.com" target="_blank"
+                class="p-2.5 text-center text-xs border border-slate-200 dark:border-slate-850 hover:border-blue-500 rounded-xl font-bold bg-slate-50/50 dark:bg-slate-950/25 text-slate-700 dark:text-slate-300 no-underline transition-all hover:text-blue-600 dark:hover:text-blue-400">
+                Terms
+              </a>
+              <a href="https://www.google.com" target="_blank"
+                class="p-2.5 text-center text-xs border border-slate-200 dark:border-slate-850 hover:border-blue-500 rounded-xl font-bold bg-slate-50/50 dark:bg-slate-950/25 text-slate-700 dark:text-slate-300 no-underline transition-all hover:text-blue-600 dark:hover:text-blue-400">
+                Cookies
+              </a>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ==================== VIEW B: FOCUSED CATEGORY ==================== -->
+        <div *ngIf="viewMode === 'focused'" id="focused-category-container"
+          class="bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 rounded-3xl p-4 sm:p-6 md:p-8 shadow-sm">
+
+          <!-- Back Switcher Breadcrumb -->
+          <div
+            class="hidden md:flex flex-wrap items-center justify-between mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/80 gap-2">
+            <button (click)="setOverviewMode()"
+              class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-650 dark:text-slate-300 transition-colors border border-slate-200/35 dark:border-slate-800/40 cursor-pointer focus:outline-none">
+              ← Back to Bento Dashboard
+            </button>
+            <span class="text-[0.68rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              Editing Settings
+            </span>
+          </div>
+
+          <!-- 1. APPEARANCE TAB -->
+          <div *ngIf="activeTab === 'appearance'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-blue-100 md:bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                  Interface Appearance
+                </h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.63rem] md:text-[0.82rem] mt-0.5">
+                  Configure how LegalConnect renders on your device.
+                </p>
+              </div>
+            </div>
+
+            <!-- Theme Visual Card Selection -->
+            <div class="flex flex-col gap-3">
+              <label class="text-[0.85rem] font-bold text-slate-700 dark:text-slate-300">Theme Mode</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Light Theme Card -->
+                <button (click)="setTheme('light')"
+                  class="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border-2 text-left cursor-pointer transition-all bg-slate-50 dark:bg-slate-800/20 focus:outline-none"
+                  [ngClass]="settingsService.theme() === 'light' ? 'border-blue-500 ring-2 ring-blue-500/10' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+                  <div
+                    class="w-full h-16 md:h-24 rounded-lg bg-white border border-slate-200 shadow-sm flex items-center justify-center text-slate-400">
+                    <div class="w-4/5 h-2/3 flex flex-col gap-1.5 p-2 bg-slate-50 rounded animate-pulse">
+                      <div class="h-3 w-2/3 bg-slate-200 rounded"></div>
+                      <div class="h-2 w-full bg-slate-100 rounded"></div>
+                      <div class="h-2 w-full bg-slate-100 rounded"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between w-full">
+                    <span class="text-[0.7rem] md:text-[0.82rem] font-bold text-slate-800 dark:text-slate-200">Light
+                      Theme</span>
+                    <div class="w-3 h-3 md:w-4 md:h-4 rounded-full border flex items-center justify-center"
+                      [ngClass]="settingsService.theme() === 'light' ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'">
+                      <svg *ngIf="settingsService.theme() === 'light'" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-2.5 h-2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- Dark Theme Card -->
+                <button (click)="setTheme('dark')"
+                  class="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border-2 text-left cursor-pointer transition-all bg-slate-50 dark:bg-slate-850/20 focus:outline-none"
+                  [ngClass]="settingsService.theme() === 'dark' ? 'border-blue-500 ring-2 ring-blue-500/10' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+                  <div
+                    class="w-full h-16 md:h-24 rounded-lg bg-slate-950 border border-slate-800 shadow-sm flex items-center justify-center text-slate-650">
+                    <div class="w-4/5 h-2/3 flex flex-col gap-1.5 p-2 bg-slate-900 rounded animate-pulse">
+                      <div class="h-3 w-2/3 bg-slate-800 rounded"></div>
+                      <div class="h-2 w-full bg-slate-850 rounded"></div>
+                      <div class="h-2 w-full bg-slate-850 rounded"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between w-full">
+                    <span class="md:text-[0.82rem] text-[0.7rem] font-bold text-slate-800 dark:text-slate-700">Dark
+                      Theme</span>
+                    <div class="md:w-4 w-3 md:h-4 h-3 rounded-full border flex items-center justify-center"
+                      [ngClass]="settingsService.theme() === 'dark' ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'">
+                      <svg *ngIf="settingsService.theme() === 'dark'" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-2.5 h-2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+
+                <!-- System Theme Card -->
+                <button (click)="setTheme('system')"
+                  class="flex flex-col items-center gap-2 md:gap-3 p-3 md:p-4 rounded-xl border-2 text-left cursor-pointer transition-all bg-slate-50 dark:bg-slate-800/20 focus:outline-none"
+                  [ngClass]="settingsService.theme() === 'system' ? 'border-blue-500 ring-2 ring-blue-500/10' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+                  <div
+                    class="w-full h-16 md:h-24 rounded-lg bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm flex overflow-hidden">
+                    <div class="w-1/2 h-full bg-white flex flex-col gap-1.5 p-2 border-r border-slate-250/50">
+                      <div class="h-3 w-full bg-slate-200 rounded"></div>
+                      <div class="h-2 w-full bg-slate-100 rounded"></div>
+                    </div>
+                    <div class="w-1/2 h-full bg-slate-950 flex flex-col gap-1.5 p-2">
+                      <div class="h-3 w-full bg-slate-800 rounded"></div>
+                      <div class="h-2 w-full bg-slate-850 rounded"></div>
+                    </div>
+                  </div>
+                  <div class="flex items-center justify-between w-full">
+                    <span class="md:text-[0.82rem] text-[0.7rem] font-bold text-slate-800 dark:text-slate-200">System
+                      Preferences</span>
+                    <div class="w-3 h-3 md:w-4 md:h-4 rounded-full border flex items-center justify-center"
+                      [ngClass]="settingsService.theme() === 'system' ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-300'">
+                      <svg *ngIf="settingsService.theme() === 'system'" xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" class="w-2.5 h-2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            <!-- Global Font Size control -->
+            <div class="flex flex-col gap-3 md:gap-3.5 pt-4 border-t border-slate-200/50 dark:border-slate-800/50">
+              <div>
+                <label class="text-[0.85rem] font-bold text-slate-700 dark:text-slate-300">Global Text Scale</label>
+                <p class="text-[0.65rem] md:text-[0.75rem] text-slate-400 mt-0.5">
+                  Increases readability of legal sections and content databases.
+                </p>
+              </div>
+              <div
+                class="flex bg-slate-100 dark:bg-slate-950/80 rounded-xl p-1 w-full border border-slate-200/40 dark:border-slate-800/40">
+                <button (click)="setFontSize('sm')"
+                  class="flex-1 py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold transition-all focus:outline-none"
+                  [ngClass]="settingsService.fontSize() === 'sm' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+                  Small
+                </button>
+                <button (click)="setFontSize('md')"
+                  class="flex-1 py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold transition-all focus:outline-none"
+                  [ngClass]="settingsService.fontSize() === 'md' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+                  Default
+                </button>
+                <button (click)="setFontSize('lg')"
+                  class="flex-1 py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold transition-all focus:outline-none"
+                  [ngClass]="settingsService.fontSize() === 'lg' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+                  Large
+                </button>
+              </div>
+            </div>
+
+            <!-- UI Density selector -->
+            <div class="flex flex-col gap-3 md:gap-3.5 pt-4 border-t border-slate-200/50 dark:border-slate-800/50">
+              <div>
+                <label class="text-[0.85rem] font-bold text-slate-700 dark:text-slate-300">Layout Density</label>
+                <p class="text-[0.65rem] md:text-[0.75rem] text-slate-400 mt-0.5">Control padding, item spacing, and
+                  density across lists.
+                </p>
+              </div>
+              <div
+                class="flex bg-slate-100 dark:bg-slate-950/80 rounded-xl p-1 w-full border border-slate-200/40 dark:border-slate-800/40">
+                <button (click)="setUiDensity('compact')"
+                  class="flex-1 py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold transition-all focus:outline-none"
+                  [ngClass]="settingsService.uiDensity() === 'compact' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+                  Compact
+                </button>
+                <button (click)="setUiDensity('comfortable')"
+                  class="flex-1 py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold transition-all focus:outline-none"
+                  [ngClass]="settingsService.uiDensity() === 'comfortable' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+                  Comfortable
+                </button>
+                <button (click)="setUiDensity('spacious')"
+                  class="flex-1 py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold transition-all focus:outline-none"
+                  [ngClass]="settingsService.uiDensity() === 'spacious' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-white shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+                  Spacious
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 2. LANGUAGE & REGION TAB -->
+          <div *ngIf="activeTab === 'language'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-blue-100 md:bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <path
+                    d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5c-.313 1.565-.953 3.051-1.879 4.387M6.412 9a11.52 11.52 0 003.5 4.5M6.412 9a11.503 11.503 0 01-2.912-5">
+                  </path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">Language &
+                  Regional Settings</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.63rem] md:text-[0.82rem] mt-0.5">Configure language
+                  and date-time presentation preferences (Backed by Database).</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <!-- System Language Custom Dropdown -->
+              <div class="flex flex-col gap-2 custom-dropdown-container relative">
+                <label class="text-[0.7rem] md:text-[0.82rem] font-bold text-slate-700 dark:text-slate-400">
+                  System Language
+                </label>
+                <button type="button" (click)="toggleDropdown('language', $event)"
+                  class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 md:py-3 text-[0.7rem] md:text-[0.88rem] font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <span>{{ getSelectedLanguageName() }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="text-slate-400 transition-transform duration-200"
+                    [class.rotate-180]="activeDropdown === 'language'">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div *ngIf="activeDropdown === 'language'"
+                  class="absolute left-0 right-0 top-full z-[100] mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl p-1.5 flex flex-col gap-0.5 max-h-60 overflow-y-auto scrollbar-none animate-scale-up">
+                  <button type="button" *ngFor="let lang of languages" (click)="selectLanguage(lang.code)"
+                    class="flex items-center justify-between w-full px-3 py-1.5 md:py-2.5 rounded-lg text-[0.7rem] md:text-[0.85rem] font-semibold text-left transition-colors cursor-pointer border-0"
+                    [ngClass]="selectedLanguage === lang.code ? 'bg-blue-50 dark:bg-blue-950 text-blue-650 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'">
+                    <span>{{ lang.name }}</span>
+                    <svg *ngIf="selectedLanguage === lang.code" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="3"
+                      class="w-4 h-4 text-blue-650 dark:text-blue-400">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Preferred Timezone Custom Dropdown -->
+              <div class="flex flex-col gap-2 custom-dropdown-container relative">
+                <label class="text-[0.7rem] md:text-[0.82rem] font-bold text-slate-700 dark:text-slate-400">Preferred
+                  Timezone</label>
+                <button type="button" (click)="toggleDropdown('timezone', $event)"
+                  class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 md:py-3 text-[0.7rem] md:text-[0.88rem] font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <span class="truncate pr-4">{{ getSelectedTimezoneName() }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="text-slate-400 transition-transform duration-200"
+                    [class.rotate-180]="activeDropdown === 'timezone'">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div *ngIf="activeDropdown === 'timezone'"
+                  class="absolute left-0 right-0 top-full z-[100] mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl p-1.5 flex flex-col gap-0.5 max-h-60 overflow-y-auto scrollbar-none animate-scale-up">
+                  <button type="button" *ngFor="let tz of timezones" (click)="selectTimezone(tz.code)"
+                    class="flex items-center justify-between w-full px-3 py-1.5 md:py-2.5 rounded-lg text-[0.7rem] md:text-[0.85rem] font-semibold text-left transition-colors cursor-pointer border-0"
+                    [ngClass]="selectedTimezone === tz.code ? 'bg-blue-50 dark:bg-blue-950 text-blue-650 dark:text-blue-400' : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'">
+                    <span class="truncate pr-4">{{ tz.name }}</span>
+                    <svg *ngIf="selectedTimezone === tz.code" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="3"
+                      class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Date & Time Format Custom Dropdown -->
+              <div class="flex flex-col gap-2 md:col-span-2 custom-dropdown-container relative">
+                <label class="text-[0.7rem] md:text-[0.82rem] font-bold text-slate-700 dark:text-slate-400">Date & Time
+                  Format</label>
+                <button type="button" (click)="toggleDropdown('dateFormat', $event)"
+                  class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 md:py-3 text-[0.7rem] md:text-[0.88rem] font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <span>{{ getSelectedDateFormatLabel() }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="text-slate-400 transition-transform duration-200"
+                    [class.rotate-180]="activeDropdown === 'dateFormat'">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div *ngIf="activeDropdown === 'dateFormat'"
+                  class="absolute left-0 right-0 top-full z-[100] mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl p-1.5 flex flex-col gap-0.5 max-h-60 overflow-y-auto scrollbar-none animate-scale-up">
+                  <button type="button" *ngFor="let df of dateFormats" (click)="selectDateFormat(df.code)"
+                    class="flex items-center justify-between w-full px-3 py-1.5 md:py-2.5 rounded-lg text-[0.7rem] md:text-[0.85rem] font-semibold text-left transition-colors cursor-pointer border-0"
+                    [ngClass]="selectedDateFormat === df.code ? 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400' : 'bg-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'">
+                    <span>{{ df.label }}</span>
+                    <svg *ngIf="selectedDateFormat === df.code" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="3"
+                      class="w-4 h-4 text-blue-600 dark:text-blue-400">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-200/60 dark:border-slate-800/60">
+              <button (click)="saveLanguageRegion()" [disabled]="isSaving"
+                class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-[0.85rem] font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer focus:outline-none">
+                <svg *ngIf="isSaving" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" fill="none"
+                  viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+                {{ isSaving ? 'Saving Changes...' : 'Save Preferences' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 3. NOTIFICATIONS TAB -->
+          <div *ngIf="activeTab === 'notifications'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-amber-100 md:bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">Notification
+                  Preferences</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.65rem] md:text-[0.82rem] mt-0.5">Select the
+                  notification alerts you wish to receive.</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 md:gap-5">
+              <!-- Alert Toggle 1 -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.7rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">Law
+                    Amendment Alerts</span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">Get notified when
+                    acts or statutes you
+                    follow are amended by parliament.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [(ngModel)]="notifyLawAmendments" class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+
+              <!-- Alert Toggle 2 -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.7rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">Weekly
+                    Email Digests</span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">Receive a weekly
+                    digest summarizing
+                    important case milestones and legal updates.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [(ngModel)]="notifyEmailDigest" class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+
+              <!-- Alert Toggle 3 -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.7rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">
+                    Push Notifications
+                  </span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">
+                    Enable real-time push alerts in the browser for messages and notifications.
+                  </span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [(ngModel)]="notifyPushEnabled" class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <div class="flex justify-end pt-4 border-t border-slate-200/60 dark:border-slate-800/60">
+              <button (click)="saveNotifications()" [disabled]="isSaving"
+                class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-[0.85rem] font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors shadow-sm disabled:opacity-60 flex items-center justify-center gap-2 cursor-pointer focus:outline-none">
+                <svg *ngIf="isSaving" class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" fill="none"
+                  viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                  </path>
+                </svg>
+                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- 4. ACCESSIBILITY TAB -->
+          <div *ngIf="activeTab === 'accessibility'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-purple-100 md:bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M12 8v8M8 12h8"></path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">Accessibility
+                  Options</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.65rem] md:text-[0.82rem] mt-0.5">Preferences to
+                  facilitate reading and application navigation (stored locally).</p>
+              </div>
+            </div>
+
+            <div class="flex flex-col gap-3 md:gap-5">
+              <!-- High Contrast Toggle -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.75rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">High
+                    Contrast Mode</span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">Increase color
+                    contrast across
+                    sections to improve legibility.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [ngModel]="settingsService.highContrast()"
+                    (ngModelChange)="toggleHighContrast($event)" class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+
+              <!-- Reduce Motion Toggle -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.75rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">Reduced
+                    Motion</span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">Minimize
+                    animations and transition
+                    effects globally.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [ngModel]="settingsService.reduceMotion()"
+                    (ngModelChange)="toggleReduceMotion($event)" class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+
+              <!-- Text Spacing Toggle -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.75rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">Extra
+                    Text Spacing</span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">Adjust
+                    letters, words, and line
+                    spacing for easier document reviewing.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [ngModel]="settingsService.textSpacing()"
+                    (ngModelChange)="toggleTextSpacing($event)" class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. SEARCH & DISCOVERY TAB -->
+          <div *ngIf="activeTab === 'search'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-teal-100 md:bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">Search & Discovery
+                  Preferences</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.65rem] md:text-[0.82rem] mt-0.5">Configure your
+                  default options when searching the legal database.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+              <!-- Default Category Filter Custom Dropdown -->
+              <div class="flex flex-col gap-2 custom-dropdown-container relative">
+                <label class="text-[0.7rem] md:text-[0.82rem] font-bold text-slate-700 dark:text-slate-400">Default
+                  Category Filter
+                </label>
+                <button type="button" (click)="toggleDropdown('defaultCategory', $event)"
+                  class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 md:py-3 text-[0.7rem] md:text-[0.88rem] font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <span>{{ getSelectedCategoryName() }}</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="text-slate-400 transition-transform duration-200"
+                    [class.rotate-180]="activeDropdown === 'defaultCategory'">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div *ngIf="activeDropdown === 'defaultCategory'"
+                  class="absolute left-0 right-0 bottom-full md:bottom-auto md:top-full z-[100] mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl p-1.5 flex flex-col gap-0.5 max-h-60 overflow-y-auto scrollbar-none animate-scale-up">
+                  <button type="button" *ngFor="let cat of categories" (click)="selectCategory(cat.code)"
+                    class="flex items-center justify-between w-full px-3 py-1.5 md:py-2.5 rounded-lg text-[0.7rem] md:text-[0.85rem] font-semibold text-left transition-colors cursor-pointer border-0"
+                    [ngClass]="settingsService.defaultCategoryFilter() === cat.code ? 'bg-blue-50 dark:bg-blue-950 text-blue-650 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'">
+                    <span>{{ cat.name }}</span>
+                    <svg *ngIf="settingsService.defaultCategoryFilter() === cat.code" xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Results per page Custom Dropdown -->
+              <div class="flex flex-col gap-2 custom-dropdown-container relative">
+                <label class="text-[0.7rem] md:text-[0.82rem] font-bold text-slate-700 dark:text-slate-400">
+                  Default Results Per Page
+                </label>
+                <button type="button" (click)="toggleDropdown('resultsPerPage', $event)"
+                  class="w-full flex items-center justify-between bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 md:py-3 text-[0.7rem] md:text-[0.88rem] font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer">
+                  <span>{{ settingsService.resultsPerPage() }} results</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2.5" class="text-slate-400 transition-transform duration-200"
+                    [class.rotate-180]="activeDropdown === 'resultsPerPage'">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                  </svg>
+                </button>
+                <div *ngIf="activeDropdown === 'resultsPerPage'"
+                  class="absolute left-0 right-0 bottom-full md:bottom-auto md:top-full z-[100] mt-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/80 rounded-xl p-1.5 flex flex-col gap-0.5 max-h-60 overflow-y-auto scrollbar-none animate-scale-up">
+                  <button type="button" *ngFor="let opt of resultsPerPageOptions" (click)="selectResultsPerPage(opt)"
+                    class="flex items-center justify-between w-full px-3 py-1.5 md:py-2.5 rounded-lg text-[0.7rem] md:text-[0.85rem] font-semibold text-left transition-colors cursor-pointer border-0"
+                    [ngClass]="settingsService.resultsPerPage() === opt ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60'">
+                    <span>{{ opt }} results</span>
+                    <svg *ngIf="settingsService.resultsPerPage() === opt" xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                      class="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Toggle: Show Related Laws -->
+              <div
+                class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 md:col-span-2">
+                <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                  <span class="text-[0.7rem] md:text-[0.88rem] font-bold text-slate-800 dark:text-slate-200">Show
+                    Related Laws</span>
+                  <span class="text-[0.65rem] md:text-[0.76rem] text-slate-500 dark:text-slate-400">Display
+                    AI-suggested related laws when
+                    viewing a section.</span>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                  <input type="checkbox" [ngModel]="settingsService.showRelatedLaws()"
+                    (ngModelChange)="settingsService.updateShowRelatedLaws($event); updateSearchPreferences()"
+                    class="sr-only peer">
+                  <div
+                    class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                    after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                  </div>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- 6. SESSION & SECURITY TAB -->
+          <div *ngIf="activeTab === 'security'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-orange-100 md:bg-orange-50 dark:bg-orange-950/40 text-orange-600 dark:text-orange-400 flex items-center justify-center flex-shrink-0">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                    class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                    Session & Device Security
+                  </h2>
+                  <p
+                    class="text-slate-500 dark:text-slate-400 text-[0.65rem] md:text-[0.78rem] md:text-[0.82rem] mt-0.5">
+                    Manage current logged-in sessions and audit your account login history.
+                  </p>
+                </div>
+              </div>
+              <button (click)="revokeAllOtherSessions()"
+                class="w-full sm:w-auto px-2.5 md:px-3.5 py-1 md:py-2 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold bg-red-50 hover:bg-red-100 dark:bg-red-950/20 dark:hover:bg-red-900/30 text-red-650 dark:text-red-400 border border-red-200/50 dark:border-red-900/35 transition-colors self-start sm:self-center cursor-pointer focus:outline-none text-center">
+                Sign Out All Other Devices
+              </button>
+            </div>
+
+            <!-- Active Sessions List -->
+            <div class="flex flex-col gap-4">
+              <h3 class="text-[0.9rem] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 dark:text-blue-400">
+                  <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                  <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                </svg>
+                Active Sessions
+              </h3>
+              <div *ngIf="isLoadingSessions" class="py-8 flex justify-center">
+                <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div *ngIf="!isLoadingSessions && sessions.length === 0"
+                class="p-6 text-center text-slate-400 text-[0.88rem] bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                No active sessions found.
+              </div>
+              <div *ngIf="!isLoadingSessions && sessions.length > 0" class="flex flex-col gap-3">
+                <div *ngFor="let s of sessions"
+                  class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 gap-4">
+                  <div class="flex items-center gap-3.5 min-w-0">
+                    <div
+                      class="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-850 flex items-center justify-center text-slate-500 dark:text-slate-400 flex-shrink-0">
+                      <svg *ngIf="s.device?.toLowerCase().includes('phone')" class="w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                      </svg>
+                      <svg *ngIf="!s.device?.toLowerCase().includes('phone')" class="w-5 h-5"
+                        xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                      </svg>
+                    </div>
+                    <div class="flex flex-col gap-0.5 min-w-0">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          class="text-[0.78rem] md:text-[0.85rem] font-extrabold text-slate-800 dark:text-slate-200 truncate">{{
+                          s.device || 'Web Browser' }}</span>
+                        <span *ngIf="s.isCurrent"
+                          class="px-1.5 py-0.5 rounded-full text-[0.55rem] md:text-[0.62rem] font-extrabold bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200/40 dark:border-blue-900/30">Current
+                          Session</span>
+                      </div>
+                      <div
+                        class="text-[0.65rem] md:text-[0.72rem] text-slate-400 dark:text-slate-400 flex flex-wrap items-center gap-x-1.5 gap-y-0.5 font-medium">
+                        <span>IP: <strong class="text-slate-600 dark:text-slate-350">{{ s.ipAddress }}</strong></span>
+                        <span class="text-slate-300 dark:text-slate-700">•</span>
+                        <span class="truncate max-w-[120px] sm:max-w-none">{{ s.location || 'Unknown Location' }}</span>
+                        <span class="text-slate-300 dark:text-slate-700">•</span>
+                        <span>{{ formatDate(s.lastActive) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <button *ngIf="!s.isCurrent" (click)="revokeSession(s.id)"
+                    class="p-2 rounded-lg text-slate-400 hover:bg-red-50 hover:text-red-650 dark:hover:bg-red-950/20 dark:hover:text-red-400 transition-colors border-0 cursor-pointer focus:outline-none flex-shrink-0"
+                    title="Sign out this device">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                      <polyline points="16 17 21 12 16 7"></polyline>
+                      <line x1="21" y1="12" x2="9" y2="12"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Login Audit History -->
+            <div class="flex flex-col gap-4 pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
+              <h3 class="text-[0.9rem] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 dark:text-blue-400">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                Login History (Recent Audits)
+              </h3>
+              <div *ngIf="isLoadingHistory" class="py-8 flex justify-center">
+                <div class="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+              <div *ngIf="!isLoadingHistory && loginHistory.length === 0"
+                class="p-6 text-center text-slate-400 text-[0.88rem] bg-slate-50/50 dark:bg-slate-900/20 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+                No login audits found.
+              </div>
+              <!-- Desktop View Table (hidden on mobile) -->
+              <div *ngIf="!isLoadingHistory && loginHistory.length > 0"
+                class="hidden md:block overflow-x-auto border border-slate-200/50 dark:border-slate-800/50 rounded-xl bg-slate-50/30 dark:bg-slate-950/10 scrollbar-none">
+                <table class="w-full text-left text-[0.82rem] border-collapse min-w-[500px]">
+                  <thead>
+                    <tr
+                      class="bg-slate-100 dark:bg-slate-900 border-b border-slate-200/80 dark:border-slate-800/80 text-slate-650 dark:text-slate-400 font-bold">
+                      <th class="p-3.5">Time</th>
+                      <th class="p-3.5">Device</th>
+                      <th class="p-3.5">IP Address</th>
+                      <th class="p-3.5">Location</th>
+                      <th class="p-3.5">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody
+                    class="divide-y divide-slate-200/50 dark:divide-slate-800/50 text-slate-700 dark:text-slate-300 font-medium">
+                    <tr *ngFor="let audit of loginHistory" class="hover:bg-slate-100/30 dark:hover:bg-slate-900/10">
+                      <td class="p-3.5 whitespace-nowrap">{{ formatDate(audit.loginTime) }}</td>
+                      <td class="p-3.5 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">{{
+                        audit.device || 'Browser' }}</td>
+                      <td class="p-3.5">{{ audit.ipAddress }}</td>
+                      <td class="p-3.5 whitespace-nowrap">{{ audit.location || 'Unknown' }}</td>
+                      <td class="p-3.5">
+                        <span class="px-2 py-0.5 rounded-full text-[0.62rem] font-extrabold"
+                          [ngClass]="audit.status === 'Success' ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/40' : 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200/40'">
+                          {{ audit.status }}
+                        </span>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- Mobile View Card List (hidden on desktop) -->
+              <div *ngIf="!isLoadingHistory && loginHistory.length > 0" class="block md:hidden flex flex-col gap-2.5">
+                <div *ngFor="let audit of loginHistory"
+                  class="p-3 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20 flex flex-col gap-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-[0.76rem] font-extrabold text-slate-800 dark:text-slate-200">
+                      {{ audit.device || 'Browser' }}
+                    </span>
+                    <span class="px-2 py-0.5 rounded-full text-[0.55rem] font-extrabold"
+                      [ngClass]="audit.status === 'Success' ? 'bg-emerald-100 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200/40' : 'bg-red-100 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200/40'">
+                      {{ audit.status }}
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-1 text-[0.68rem] text-slate-550 dark:text-slate-400">
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">Time</span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-350">{{ formatDate(audit.loginTime)
+                        }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">IP Address</span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-350">{{ audit.ipAddress }}</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                      <span class="font-medium">Location</span>
+                      <span class="font-semibold text-slate-700 dark:text-slate-350">{{ audit.location || 'Unknown'
+                        }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 7. PRIVACY & DATA TAB -->
+          <div *ngIf="activeTab === 'privacy'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-slate-100 md:bg-slate-100/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">Privacy & Data
+                  Preferences</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.65rem] md:text-[0.82rem] mt-0.5">Manage your cookie
+                  consents, download your personal information, or close your account.</p>
+              </div>
+            </div>
+
+            <!-- Cookie Preferences -->
+            <div class="flex flex-col gap-3 md:gap-4">
+              <h3 class="text-[0.85rem] md:text-[0.9rem] font-bold text-slate-800 dark:text-slate-200">Cookie Consent
+                Options</h3>
+              <div class="flex flex-col gap-3 md:gap-4">
+                <!-- Essential (Disabled) -->
+                <div
+                  class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/40 dark:bg-slate-900/10 opacity-75">
+                  <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                    <span class="text-[0.7rem] md:text-[0.85rem] font-bold text-slate-800 dark:text-slate-200">
+                      Essential Session Cookies
+                    </span>
+                    <span class="text-[0.65rem] md:text-[0.72rem] text-slate-400 dark:text-slate-400">
+                      Required for core features such as secure login and form submissions. Cannot be disabled.
+                    </span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-not-allowed select-none flex-shrink-0">
+                    <input type="checkbox" checked disabled class="sr-only peer">
+                    <div
+                      class="relative w-11 h-6 bg-slate-300 dark:bg-slate-800 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 peer-checked:bg-blue-600/60 after:translate-x-full">
+                    </div>
+                  </label>
+                </div>
+
+                <!-- Analytics Cookie Toggle -->
+                <div
+                  class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                  <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                    <span class="text-[0.7rem] md:text-[0.85rem] font-bold text-slate-800 dark:text-slate-200">Analytics
+                      & Metrics</span>
+                    <span class="text-[0.65rem] md:text-[0.72rem] text-slate-400 dark:text-slate-400">Collects anonymous
+                      data about
+                      application performance, errors, and feature usage audits.</span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                    <input type="checkbox" [(ngModel)]="cookiePreferences.analytics"
+                      (ngModelChange)="saveCookiePreferences()" class="sr-only peer">
+                    <div
+                      class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                      after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                  </label>
+                </div>
+
+                <!-- Marketing Cookie Toggle -->
+                <div
+                  class="flex items-center justify-between p-2.5 md:p-4 rounded-xl border border-slate-200/50 dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-900/20">
+                  <div class="flex flex-col gap-0.5 min-w-0 flex-1 pr-1">
+                    <span class="text-[0.7rem] md:text-[0.85rem] font-bold text-slate-800 dark:text-slate-200">
+                      Marketing & Recommendations
+                    </span>
+                    <span class="text-[0.65rem] md:text-[0.72rem] text-slate-400 dark:text-slate-400">
+                      Provides personalized legal recommendations and tailored newsletter items.
+                    </span>
+                  </div>
+                  <label class="relative inline-flex items-center cursor-pointer select-none flex-shrink-0">
+                    <input type="checkbox" [(ngModel)]="cookiePreferences.marketing"
+                      (ngModelChange)="saveCookiePreferences()" class="sr-only peer">
+                    <div
+                      class="relative w-11 h-6 bg-slate-200 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-5 
+                      after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600">
+                    </div>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Export Personal Data -->
+            <div
+              class="flex flex-col gap-3 md:gap-4 pt-4 md:pt-6 border-t border-slate-200/50 dark:border-slate-800/50">
+              <h3 class="text-[0.85rem] md:text-[0.9rem] font-bold text-slate-800 dark:text-slate-200">Export Your
+                Information</h3>
+              <p class="text-[0.65rem] md:text-[0.75rem] text-slate-400 dark:text-slate-400">Download a full JSON file
+                containing all data
+                associated with your profile, cases, consultations, and reviews.</p>
+              <button (click)="exportMyData()"
+                class="px-5 py-2 md:py-3 rounded-xl text-[0.75rem] md:text-[0.82rem] font-bold bg-slate-100 dark:bg-slate-800 hover:bg-slate-200/80 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 border border-slate-300/30 dark:border-slate-700/50 transition-colors shadow-sm self-start flex items-center gap-2 cursor-pointer focus:outline-none">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export My Personal Data File
+              </button>
+            </div>
+
+            <!-- Danger Zone (Delete Account) -->
+            <div
+              class="flex flex-col gap-3 md:gap-4 pt-4 md:pt-6 border-t border-slate-300/60 dark:border-slate-800/60">
+              <h3
+                class="text-[0.85rem] md:text-[0.9rem] font-bold text-red-650 dark:text-red-400 flex items-center gap-2.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-red-600 dark:text-red-400">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                  </path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                Danger Zone
+              </h3>
+              <div
+                class="p-2.5 md:p-4 rounded-xl border border-red-200/40 dark:border-red-900/30 bg-red-50/20 dark:bg-red-950/5 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+                <div class="flex flex-col gap-1 max-w-lg">
+                  <span
+                    class="text-[0.75rem] md:text-[0.88rem] font-extrabold text-red-600 dark:text-red-400">Permanently
+                    Delete
+                    Account</span>
+                  <span class="text-[0.65rem] md:text-[0.74rem] text-slate-500 dark:text-slate-400">Once deleted, your
+                    account is gone
+                    forever. This includes all cases, billing, verified identity details, and bookmarks. This action is
+                    irreversible.</span>
+                </div>
+                <button (click)="openDeleteModal()"
+                  class="px-5 py-3 rounded-xl text-[0.7rem] md:text-[0.82rem] font-bold bg-red-650 hover:bg-red-700 text-white transition-colors shadow-md shadow-red-500/10 self-start md:self-center cursor-pointer focus:outline-none">
+                  Delete My Account
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- 8. LEGAL & POLICIES TAB -->
+          <div *ngIf="activeTab === 'legal'" class="flex flex-col gap-4 md:gap-8 animate-fade-in">
+            <div class="flex items-center gap-3">
+              <div
+                class="w-7 h-7 md:w-9 md:h-9 rounded-xl bg-slate-100 md:bg-slate-100/60 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"
+                  class="w-4 h-4 md:w-[18px] md:h-[18px]">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+              </div>
+              <div>
+                <h2 class="text-md md:text-xl font-bold text-slate-900 dark:text-white leading-tight">Legal & Policy
+                  Documents</h2>
+                <p class="text-slate-500 dark:text-slate-400 text-[0.65rem] md:text-[0.82rem] mt-0.5">Review the legal
+                  terms, conditions, and cookie disclosures that govern your use of the LegalConnect platform.</p>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <!-- Privacy Policy Link -->
+              <a href="https://www.google.com" target="_blank" rel="noopener noreferrer"
+                class="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-blue-500 dark:hover:border-blue-500 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-200 transition-all no-underline group shadow-sm hover:shadow-md">
+
+                <!-- Icon + Title Row -->
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="2.2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  </div>
+
+                  <span
+                    class="text-[0.88rem] md:text-[0.98rem] font-bold group-hover:text-blue-650 dark:group-hover:text-blue-400 transition-colors">
+                    Privacy Policy
+                  </span>
+                </div>
+
+                <!-- Description -->
+                <span class="text-[0.72rem] md:text-[0.82rem] text-slate-700 dark:text-slate-400 leading-relaxed">
+                  Learn about what data we collect and how we safeguard user profiles.
+                </span>
+
+              </a>
+
+              <!-- Terms of Service Link -->
+              <a href="https://www.google.com" target="_blank" rel="noopener noreferrer"
+                class="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-500 dark:hover:border-indigo-500 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-200 transition-all no-underline group shadow-sm hover:shadow-md">
+
+                <!-- Icon + Title Row -->
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                      <polyline points="14 2 14 8 20 8"></polyline>
+                      <line x1="16" y1="13" x2="8" y2="13"></line>
+                      <line x1="16" y1="17" x2="8" y2="17"></line>
+                    </svg>
+                  </div>
+
+                  <span
+                    class="text-[0.88rem] md:text-[0.98rem] font-bold group-hover:text-indigo-650 dark:group-hover:text-indigo-400 transition-colors">
+                    Terms of Service
+                  </span>
+                </div>
+
+                <!-- Description -->
+                <span class="text-[0.72rem] md:text-[0.82rem] text-slate-700 dark:text-slate-400 leading-relaxed">
+                  Review user agreements, advocate requirements, and service policies.
+                </span>
+              </a>
+
+              <!-- Cookie Policy Link -->
+              <a href="https://www.google.com" target="_blank" rel="noopener noreferrer"
+                class="flex flex-col gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-500 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-200 transition-all no-underline group shadow-sm hover:shadow-md">
+
+                <!-- Icon + Title Row -->
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24"
+                      fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+                      stroke-linejoin="round">
+                      <circle cx="12" cy="12" r="10"></circle>
+                      <path
+                        d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+                      </path>
+                      <path d="M2 12h20"></path>
+                    </svg>
+                  </div>
+
+                  <span
+                    class="text-[0.88rem] md:text-[0.98rem] font-bold group-hover:text-amber-660 dark:group-hover:text-amber-400 transition-colors">
+                    Cookie Policy
+                  </span>
+                </div>
+
+                <!-- Description -->
+                <span class="text-[0.72rem] md:text-[0.82rem] text-slate-700 dark:text-slate-400 leading-relaxed">
+                  Detailing our use of web beacons, session storage, and cookie preferences.
+                </span>
+              </a>
+
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<!-- Permanent Account Deletion Modal (Danger Zone) -->
+<div *ngIf="showDeleteConfirm" class="fixed inset-0 z-[10005] flex items-center justify-center p-2.5 md:p-4">
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-slate-950/70 backdrop-blur-sm animate-fade-in" (click)="closeDeleteModal()"></div>
+  <!-- Modal Content -->
+  <div
+    class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-3 md:p-4 max-w-md w-full shadow-2xl animate-scale-up">
+    <div class="flex flex-col gap-5">
+      <div class="flex items-center gap-3 text-red-650 dark:text-red-400">
+        <div class="w-10 h-10 rounded-full bg-red-50 dark:bg-red-950/20 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <h3 class="text-md md:text-lg font-bold">Permanently Delete Account?</h3>
+      </div>
+
+      <p class="text-[0.72rem] md:text-[0.82rem] text-slate-500 dark:text-slate-400 leading-relaxed">
+        This is an absolute and irreversible action. Once confirmed, all of your consultations, chat threads, bookmarks,
+        search audit logs, and cases will be permanently erased.
+      </p>
+
+      <div
+        class="flex flex-col gap-2.5 p-4 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200/60 dark:border-slate-800/60">
+        <label for="del-phrase" class="text-[0.65rem] md:text-[0.76rem] font-bold text-slate-655 dark:text-slate-400">
+          Type the phrase <strong class="text-slate-850 dark:text-slate-200 select-all">DELETE MY ACCOUNT</strong> to
+          confirm:
+        </label>
+        <input id="del-phrase" type="text" [(ngModel)]="deleteConfirmText"
+          class="w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-xl px-4 py-2 text-[0.75rem] md:text-[0.85rem] font-bold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-red-500"
+          placeholder="Type phrase here">
+      </div>
+
+      <div class="flex gap-3 justify-end pt-1 md:pt-2">
+        <button (click)="closeDeleteModal()"
+          class="px-3.5 py-2 rounded-xl text-[0.75rem] md:text-[0.82rem] font-bold bg-slate-100 hover:bg-slate-205 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors border-0 cursor-pointer">
+          Cancel
+        </button>
+        <button (click)="confirmDeleteAccount()" [disabled]="deleteConfirmText !== 'DELETE MY ACCOUNT'"
+          class="px-3.5 py-2 rounded-xl text-[0.75rem] md:text-[0.82rem] font-bold bg-red-600 hover:bg-red-750 text-white transition-colors border-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          Confirm Delete
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

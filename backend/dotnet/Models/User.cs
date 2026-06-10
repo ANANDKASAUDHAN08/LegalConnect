@@ -87,6 +87,19 @@ namespace CoreApi.Models
         [MaxLength(100)]
         public string? GoogleId { get; set; }
 
+        // ── User Preference / Settings Fields ──────────────────────────────
+        [MaxLength(80)]
+        public string? PreferredTimezone { get; set; } = "Asia/Kolkata";
+
+        [MaxLength(20)]
+        public string? DateFormat { get; set; } = "DD/MM/YYYY";
+
+        public bool NotifyLawAmendments { get; set; } = true;
+
+        public bool NotifyEmailDigest { get; set; } = true;
+
+        public bool NotifyPushEnabled { get; set; } = false;
+
         // Navigation property for LawyerProfile (One-to-One)
         [JsonIgnore]
         public LawyerProfile? LawyerProfile { get; set; }

@@ -95,6 +95,12 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
     canActivate: [authGuard]
   },
+  {
+    path: 'settings',
+    loadComponent: () => import('./pages/settings/settings.component').then(m => m.SettingsComponent),
+    canActivate: [authGuard],
+    title: 'Settings | LegalConnect'
+  },
 
   { path: '**', redirectTo: '' }
 ];

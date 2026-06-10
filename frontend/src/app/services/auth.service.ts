@@ -199,6 +199,10 @@ export class AuthService {
     return this.http.delete<any>(`${this.apiUrl}/sessions/${id}`, this.httpOptions);
   }
 
+  revokeAllOtherSessions(): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/sessions/all`, this.httpOptions);
+  }
+
   getLoginHistory(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/login-history`, this.httpOptions);
   }

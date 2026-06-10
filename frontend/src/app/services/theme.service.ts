@@ -1,35 +1,29 @@
-import { Injectable, signal } from '@angular/core';
+import { Injectable, computed, inject } from '@angular/core';
+import { SettingsService } from './settings.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ThemeService {
-  isDarkMode = signal<boolean>(this.getInitialTheme());
+  private settingsService = inject(SettingsService);
 
-  constructor() {
-    this.applyTheme(this.isDarkMode());
-  }
-
-  private getInitialTheme(): boolean {
-    const savedTheme = localStorage.getItem('theme');
-    if (savedTheme) {
-      return savedTheme === 'dark';
+  isDarkMode = computed(() => {
+    const activeTheme = this.settingsService.theme();
+    if (activeTheme === 'system') {
+      return window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
-    return true; // Default to dark mode when no theme is saved yet
-  }
+    return activeTheme === 'dark';
+  });
 
   toggleTheme() {
-    this.isDarkMode.update(v => !v);
-    this.applyTheme(this.isDarkMode());
-  }
-
-  private applyTheme(isDark: boolean) {
-    if (isDark) {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('theme', 'dark');
+    const currentTheme = this.settingsService.theme();
+    if (currentTheme === 'dark') {
+      this.settingsService.updateTheme('light');
+    } else if (currentTheme === 'light') {
+      this.settingsService.updateTheme('system');
     } else {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('theme', 'light');
+      // If 'system', toggle to 'dark' first, or 'light'
+      this.settingsService.updateTheme('dark');
     }
   }
 }

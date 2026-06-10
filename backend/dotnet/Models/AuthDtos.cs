@@ -103,4 +103,34 @@ namespace CoreApi.Models
         [Required]
         public string DocumentFile { get; set; } = string.Empty;
     }
+
+    public class UserSettingsDto
+    {
+        // Language & Region
+        public string? ClientLanguage { get; set; }
+        public string? PreferredTimezone { get; set; }
+        public string? DateFormat { get; set; }
+
+        // Notifications
+        public bool NotifyLawAmendments { get; set; }
+        public bool NotifyEmailDigest { get; set; }
+        public bool NotifyPushEnabled { get; set; }
+    }
+
+    public class UpdateSettingsDto
+    {
+        // Language & Region
+        public string? ClientLanguage { get; set; }
+
+        [MaxLength(80)]
+        public string? PreferredTimezone { get; set; }
+
+        [MaxLength(20)]
+        public string? DateFormat { get; set; }
+
+        // Notifications
+        public bool? NotifyLawAmendments { get; set; }
+        public bool? NotifyEmailDigest { get; set; }
+        public bool? NotifyPushEnabled { get; set; }
+    }
 }

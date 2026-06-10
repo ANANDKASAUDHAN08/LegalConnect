@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LawyerService, Consultation } from '../../../../services/lawyer.service';
@@ -15,6 +15,7 @@ export class MyCasesTabComponent implements OnInit {
   @Input() profile!: UserProfile;
   cases: Consultation[] = [];
   loading = true;
+  activeStatusDropdownId: number | null = null;
 
   constructor(
     private lawyerService: LawyerService,
@@ -66,6 +67,23 @@ export class MyCasesTabComponent implements OnInit {
         return 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700/50';
       default:
         return 'bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800/45';
+    }
+  }
+
+  toggleStatusDropdown(caseId: number, event: Event) {
+    event.stopPropagation();
+    this.activeStatusDropdownId = this.activeStatusDropdownId === caseId ? null : caseId;
+  }
+
+  closeStatusDropdown() {
+    this.activeStatusDropdownId = null;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.status-dropdown-container')) {
+      this.activeStatusDropdownId = null;
     }
   }
 }

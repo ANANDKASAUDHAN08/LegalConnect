@@ -763,6 +763,64 @@ namespace CoreApi.Controllers
             return Ok(historyDtos);
         }
 
+        // ── Settings Endpoints ──────────────────────────────────────────────
+
+        [Authorize]
+        [HttpGet("settings")]
+        public async Task<IActionResult> GetSettings()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found.");
+
+            return Ok(new UserSettingsDto
+            {
+                ClientLanguage      = user.ClientLanguage ?? "English",
+                PreferredTimezone   = user.PreferredTimezone ?? "Asia/Kolkata",
+                DateFormat          = user.DateFormat ?? "DD/MM/YYYY",
+                NotifyLawAmendments = user.NotifyLawAmendments,
+                NotifyEmailDigest   = user.NotifyEmailDigest,
+                NotifyPushEnabled   = user.NotifyPushEnabled
+            });
+        }
+
+        [Authorize]
+        [HttpPut("settings")]
+        public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null) return NotFound("User not found.");
+
+            if (request.ClientLanguage    != null) user.ClientLanguage    = request.ClientLanguage;
+            if (request.PreferredTimezone != null) user.PreferredTimezone = request.PreferredTimezone;
+            if (request.DateFormat        != null) user.DateFormat        = request.DateFormat;
+            if (request.NotifyLawAmendments.HasValue) user.NotifyLawAmendments = request.NotifyLawAmendments.Value;
+            if (request.NotifyEmailDigest.HasValue)   user.NotifyEmailDigest   = request.NotifyEmailDigest.Value;
+            if (request.NotifyPushEnabled.HasValue)   user.NotifyPushEnabled   = request.NotifyPushEnabled.Value;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Settings saved successfully!" });
+        }
+
+        [Authorize]
+        [HttpDelete("sessions/all")]
+        public async Task<IActionResult> RevokeAllOtherSessions()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var currentSessionId = User.FindFirst("SessionId")?.Value;
+
+            var otherSessions = await _context.ActiveSessions
+                .Where(s => s.UserId == userId && s.TokenId != currentSessionId)
+                .ToListAsync();
+
+            _context.ActiveSessions.RemoveRange(otherSessions);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = $"{otherSessions.Count} other session(s) signed out successfully." });
+        }
+
         private string ParseDeviceFromUserAgent(string userAgent)
         {
             if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
