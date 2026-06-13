@@ -714,3 +714,74 @@ select:not(.bg-transparent):not([multiple]) {
     background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   }
 }
+
+.animate-slide-up {
+  animation: slideUp 0.28s cubic-bezier(0.32, 0.94, 0.6, 1) forwards;
+}
+
+/* --- Premium Timeline Flowchart Styles --- */
+.flowchart-container {
+  box-shadow: 0 8px 32px 0 rgba(217, 119, 6, 0.03);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.flowchart-step {
+  transition: transform 0.3s ease;
+  &:hover {
+    transform: translateY(-2px);
+    .step-badge {
+      box-shadow: var(--shadow-glow);
+      border-color: var(--color-accent);
+    }
+  }
+}
+
+.step-badge {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- Pulse Waveform animation for TTS --- */
+@keyframes pulse-bar {
+  0% {
+    transform: scaleY(0.3);
+  }
+  100% {
+    transform: scaleY(1);
+  }
+}
+
+/* --- Glossary Term Tooltip Glow --- */
+.glossary-term {
+  position: relative;
+  text-decoration: none;
+  
+  &:hover {
+    text-shadow: 0 0 8px rgba(217, 119, 6, 0.2);
+  }
+}
+
+/* --- Side-by-Side Glassmorphic Modal Scrollbar --- */
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.12);
+    border-radius: 99px;
+    &:hover {
+      background: var(--color-accent);
+    }
+  }
+}
+
+.dark {
+  .custom-scrollbar {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+    }
+  }
+}

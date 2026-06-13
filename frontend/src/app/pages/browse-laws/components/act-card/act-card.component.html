@@ -1,0 +1,87 @@
+<a [routerLink]="['/laws', act.shortName]"
+  class="act-card card p-5 no-underline text-inherit flex flex-col gap-3.5 cursor-pointer transition-all rounded-2xl relative"
+  [ngClass]="{'ring-2 ring-[hsl(35,92%,47%)]/50 shadow-lg': isAiSuggested}"
+  [id]="cardId">
+
+  <div class="act-header flex items-center justify-between gap-2">
+    <span *ngIf="['BNS', 'BNSS', 'BSA'].includes(act.shortName)"
+      class="badge text-[10px] font-bold px-2.5 py-0.5 rounded-full
+                 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-700/50">
+      New Criminal Code
+    </span>
+    <span *ngIf="['IPC', 'CrPC', 'IEA'].includes(act.shortName)"
+      class="badge text-[10px] font-bold px-2.5 py-0.5 rounded-full
+                 bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10">
+      Historical
+    </span>
+    <span *ngIf="act.shortName === 'Constitution'"
+      class="badge text-[10px] font-bold px-2.5 py-0.5 rounded-full
+                 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-700/50">
+      Supreme Law
+    </span>
+    <span *ngIf="['CPC', 'MVA', 'NIA', 'HMA', 'IDA'].includes(act.shortName)"
+      class="badge text-[10px] font-bold px-2.5 py-0.5 rounded-full
+                 bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-700/50">
+      Special Statute
+    </span>
+
+    <!-- Notification Bell with Custom Tooltip -->
+    <button
+      (click)="notificationService.toggleFollow(act.shortName, act.actName); $event.stopPropagation(); $event.preventDefault();"
+      class="p-1.5 rounded-lg transition-all flex items-center justify-center shrink-0
+                   bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10
+                   border border-slate-200 dark:border-white/10 text-slate-400 dark:text-slate-500"
+      [appTooltip]="notificationService.isFollowing(act.shortName) ? 'Unfollow updates for ' + act.shortName : 'Get notified of updates for ' + act.shortName"
+      tooltipPlacement="top">
+      <svg class="w-3.5 h-3.5"
+        [ngClass]="notificationService.isFollowing(act.shortName) ? 'text-[hsl(35,92%,47%)]' : ''" fill="none"
+        stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+      </svg>
+    </button>
+  </div>
+
+  <div class="flex gap-3 items-start">
+    <div
+      class="p-2 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8 rounded-xl h-9 w-9 shrink-0 flex items-center justify-center text-slate-400 dark:text-slate-500">
+      <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+      </svg>
+    </div>
+    <div class="flex flex-col gap-0.5">
+      <h3 class="act-name text-sm font-bold text-slate-900 dark:text-white leading-snug">{{ act.actName }}</h3>
+      <span class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+        {{ act.shortName }} · {{ act.year }}
+      </span>
+    </div>
+  </div>
+
+  <p class="act-desc text-slate-500 dark:text-slate-400 text-xs leading-relaxed flex-1">
+    {{ act.description }}
+  </p>
+
+  <div class="act-footer flex justify-between items-center pt-3 border-t border-slate-100 dark:border-white/5">
+    <span *ngIf="isAiSuggested"
+      class="text-[10px] font-bold text-[hsl(35,92%,47%)] flex items-center gap-1"
+      [appTooltip]="'This statute is highly relevant to your AI query'"
+      tooltipPlacement="top">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+      </svg>
+      AI Suggested
+    </span>
+    <span *ngIf="!isAiSuggested"
+      class="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.06em]">
+      Enacted: {{ act.year }}
+    </span>
+    <span class="text-xs font-bold text-[hsl(35,92%,47%)] flex items-center gap-1">
+      Read Statute
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+      </svg>
+    </span>
+  </div>
+</a>

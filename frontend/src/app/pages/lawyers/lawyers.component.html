@@ -107,8 +107,8 @@
             </button>
           </div>
           <div class="relative">
-            <input type="text" [(ngModel)]="selectedLocation" (input)="applyFilters()"
-              placeholder="e.g. Delhi, Mumbai..."
+            <input type="text" [(ngModel)]="selectedLocation" (input)="applyFilters()" id="lawyers-sidebar-location"
+              placeholder="e.g. city, area, pin code..."
               class="w-full pl-3 pr-8 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-500/10 transition-all" />
             <svg class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none"
               viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -411,159 +411,12 @@
 
         <!-- Lawyers Listing -->
         <div *ngIf="!loading && filteredLawyers.length > 0"
-          [class]="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-6' : 'space-y-4'">
+          [class]="viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-4' : 'space-y-4'">
 
-          <div *ngFor="let lawyer of paginatedLawyers" (click)="goToDetail(lawyer._id)"
-            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-500/30 flex cursor-pointer hover:-translate-y-1.5 hover:shadow-lg dark:hover:shadow-indigo-500/5 transition-all duration-300 p-4 md:p-6"
-            [class.flex-col]="viewMode === 'grid' || viewMode === 'list'" [class.md:flex-row]="viewMode === 'list'"
-            [class.md:p-5]="viewMode === 'list'">
-
-            <!-- List View Layout Inner Wrapper -->
-            <div class="flex-1 flex"
-              [class]="viewMode === 'grid' ? 'flex-col' : 'flex-col md:flex-row gap-4 md:gap-5 md:items-start'">
-
-              <!-- Avatar Column / Top row -->
-              <div class="flex items-center justify-between w-full md:w-auto shrink-0"
-                [class.mb-4]="viewMode === 'grid'" [class.mb-3]="viewMode === 'list'"
-                [class.md:mb-0]="viewMode === 'list'">
-                <div class="flex items-center gap-4">
-                  <!-- Avatar Container -->
-                  <div *ngIf="lawyer.avatarUrl" (click)="openImagePreview(lawyer.avatarUrl, $event)"
-                    class="w-14 h-14 rounded-full overflow-hidden shrink-0 border border-slate-105 dark:border-slate-800 shadow-inner cursor-zoom-in group/avatar relative"
-                    [class.ring-2]="lawyer.isAvailable !== false"
-                    [class.ring-emerald-500]="lawyer.isAvailable !== false"
-                    [class.ring-offset-2]="lawyer.isAvailable !== false"
-                    [class.dark:ring-offset-slate-900]="lawyer.isAvailable !== false">
-                    <img [src]="lawyer.avatarUrl"
-                      class="w-full h-full object-cover group-hover/avatar:scale-115 transition-all duration-300"
-                      alt="{{ lawyer.name }} avatar" />
-                  </div>
-                  <div *ngIf="!lawyer.avatarUrl"
-                    class="w-14 h-14 rounded-full bg-gradient-to-br from-indigo-900 to-indigo-950 dark:from-amber-600 dark:to-amber-800 text-white dark:text-slate-950 font-extrabold text-lg flex items-center justify-center shrink-0 shadow-md"
-                    [class.ring-2]="lawyer.isAvailable !== false"
-                    [class.ring-emerald-500]="lawyer.isAvailable !== false"
-                    [class.ring-offset-2]="lawyer.isAvailable !== false"
-                    [class.dark:ring-offset-slate-900]="lawyer.isAvailable !== false">
-                    {{ getInitials(lawyer.name) }}
-                  </div>
-
-                  <div *ngIf="viewMode !== 'list' || isMobile" class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <h3
-                        class="font-bold text-slate-900 dark:text-white text-base leading-tight hover:text-amber-600 transition-colors">
-                        {{ lawyer.name }}
-                      </h3>
-                      <!-- Availability pill badge -->
-                      <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider border shrink-0"
-                        [class]="lawyer.isAvailable !== false ? 'bg-emerald-50/70 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-250 dark:border-emerald-900/30' : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800'">
-                        <span class="w-1.5 h-1.5 rounded-full"
-                          [class]="lawyer.isAvailable !== false ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
-                        {{ lawyer.isAvailable !== false ? 'Available' : 'Next: Mon' }}
-                      </span>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1.5 flex-wrap">
-                      <p
-                        class="text-slate-500 dark:text-slate-300 text-xs font-semibold flex items-center gap-1 whitespace-nowrap">
-                        <svg class="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" fill="none" viewBox="0 0 24 24"
-                          stroke="currentColor" stroke-width="2.2">
-                          <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                          <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                        {{ lawyer.city }}
-                      </p>
-                      <span class="text-slate-350 dark:text-slate-700 md:hidden">•</span>
-                      <span
-                        class="md:hidden text-xs font-extrabold text-amber-600 dark:text-amber-500 whitespace-nowrap">
-                        ₹{{ lawyer.consultationFee || 0 }}/hr
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Fee badge (Only Grid) -->
-                <div *ngIf="viewMode !== 'list'" class="hidden md:block text-right">
-                  <span class="text-sm font-extrabold text-slate-850 dark:text-white block">₹{{ lawyer.consultationFee
-                    || 0 }}/hr</span>
-                  <span
-                    class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">Base
-                    Fee</span>
-                </div>
-              </div>
-
-              <!-- Content Column (List view details) -->
-              <div class="flex-1">
-                <div *ngIf="viewMode !== 'grid' && !isMobile"
-                  class="flex flex-col md:flex-row md:items-start md:justify-between gap-3 md:gap-4 mb-3">
-                  <div>
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <h3
-                        class="font-bold text-slate-900 dark:text-white text-base leading-tight hover:text-amber-600 transition-colors">
-                        {{ lawyer.name }}
-                      </h3>
-                      <!-- Availability pill badge -->
-                      <span
-                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider border shrink-0"
-                        [class]="lawyer.isAvailable !== false ? 'bg-emerald-50/70 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 border-emerald-250 dark:border-emerald-900/30' : 'bg-slate-50 dark:bg-slate-950 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800'">
-                        <span class="w-1.5 h-1.5 rounded-full"
-                          [class]="lawyer.isAvailable !== false ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
-                        {{ lawyer.isAvailable !== false ? 'Available' : 'Next: Mon' }}
-                      </span>
-                    </div>
-                    <p class="text-slate-500 dark:text-slate-350 text-xs font-semibold mt-1.5 flex items-center gap-1">
-                      <svg class="w-3.5 h-3.5 text-indigo-650 dark:text-indigo-400" fill="none" viewBox="0 0 24 24"
-                        stroke="currentColor" stroke-width="2.2">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {{ lawyer.city }}
-                    </p>
-                  </div>
-
-                  <div class="text-left md:text-right">
-                    <span class="text-sm font-extrabold text-slate-850 dark:text-white">₹{{ lawyer.consultationFee || 0
-                      }}/hr</span>
-                    <span
-                      class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider block mt-0.5">Base
-                      Fee</span>
-                  </div>
-                </div>
-
-                <!-- Rating and experience row -->
-                <div class="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] md:text-xs font-semibold mb-3">
-                  <span class="flex items-center gap-1 text-amber-500 whitespace-nowrap">
-                    <svg class="w-3.5 h-3.5 fill-amber-500" viewBox="0 0 20 20">
-                      <path
-                        d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                    </svg>
-                    {{ lawyer.rating.toFixed(1) }} <span class="text-slate-400 dark:text-slate-500 font-medium">({{
-                      lawyer.experience * 7 +
-                      12 }} reviews)</span>
-                  </span>
-                  <span class="hidden sm:inline text-slate-350 dark:text-slate-700">•</span>
-                  <span class="text-slate-600 dark:text-slate-400 whitespace-nowrap">{{ lawyer.experience }} yrs
-                    experience</span>
-                </div>
-
-                <!-- Tags list -->
-                <div class="flex flex-wrap gap-1.5 mb-3.5">
-                  <span *ngFor="let spec of lawyer.specializations" (click)="goToSpecialization(spec, $event)"
-                    class="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30 px-2 py-0.5 rounded-md hover:bg-indigo-100/70 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer select-none">
-                    {{ spec }}
-                  </span>
-                </div>
-
-                <!-- Bio excerpt -->
-                <p class="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">
-                  {{ lawyer.bio }}
-                </p>
-              </div>
-
-            </div>
-
-          </div>
+          <app-lawyer-card *ngFor="let lawyer of paginatedLawyers" [lawyer]="lawyer" [viewMode]="viewMode"
+            (click)="goToDetail(lawyer._id)" (avatarClick)="openImagePreview($event)"
+            (specializationClick)="goToSpecialization($event)">
+          </app-lawyer-card>
         </div>
 
         <!-- Pagination Controls -->
@@ -687,7 +540,7 @@
               Detect Location
             </button>
           </div>
-          <input type="text" [(ngModel)]="selectedLocation" (input)="applyFilters()" placeholder="e.g. Delhi, Mumbai..."
+          <input type="text" [(ngModel)]="selectedLocation" (input)="applyFilters()" id="lawyers-mobile-location" placeholder="e.g. city, area, pin code..."
             class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white text-sm outline-none focus:border-amber-500" />
         </div>
 

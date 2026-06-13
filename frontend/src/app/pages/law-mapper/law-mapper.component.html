@@ -1,0 +1,175 @@
+<div class="page-wrapper min-h-screen pt-[100px] pb-20 px-4 md:px-8 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100">
+  <div class="max-w-7xl mx-auto flex flex-col gap-10">
+    
+    <!-- Header -->
+    <div class="text-center md:text-left flex flex-col gap-3">
+      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/20 self-center md:self-start">
+        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
+        <span class="text-[0.75rem] font-bold uppercase tracking-wider text-accent-light">BNS Transition Bridge</span>
+      </div>
+      <h1 class="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight">The Bridge of Laws</h1>
+      <p class="text-slate-400 max-w-2xl text-base leading-relaxed">
+        Seamlessly map section transitions between historical codes and the new Indian Criminal laws. Find corresponding sections and review differences instantly.
+      </p>
+    </div>
+
+    <!-- Interface Card -->
+    <div class="grid grid-cols-1 lg:grid-cols-[380px,1fr] gap-8 items-start">
+      
+      <!-- Input Panel -->
+      <div class="card p-6 md:p-8 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col gap-6 backdrop-blur-md">
+        <h3 class="text-lg font-bold text-white">Find Correspondence</h3>
+        
+        <form (ngSubmit)="getMapping()" class="flex flex-col gap-4">
+          <!-- Act Selector -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-wider">Historical Act</label>
+            <select [(ngModel)]="selectedAct" name="selectedAct" 
+                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-accent">
+              <option value="IPC">Indian Penal Code (IPC)</option>
+              <option value="CrPC">Code of Criminal Procedure (CrPC)</option>
+              <option value="IEA">Indian Evidence Act (IEA)</option>
+            </select>
+          </div>
+
+          <!-- Section Number Input -->
+          <div class="flex flex-col gap-2">
+            <label class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-wider">Section Number</label>
+            <input type="text" [(ngModel)]="sectionNumber" name="sectionNumber" placeholder="e.g. 302, 420, 154" 
+                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-accent" />
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" [disabled]="loading"
+                  class="w-full bg-accent hover:bg-accent-dark text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg hover:shadow-accent/20 cursor-pointer border-none flex items-center justify-center gap-2">
+            <span *ngIf="loading" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
+            <span>{{ loading ? 'Finding Correlation...' : 'Map Section' }}</span>
+          </button>
+        </form>
+
+        <!-- Popular Shortcuts -->
+        <div class="flex flex-col gap-3 pt-4 border-t border-slate-800/60">
+          <span class="text-[0.75rem] font-bold text-slate-500 uppercase tracking-wider">Popular Lookups</span>
+          <div class="flex flex-wrap gap-2">
+            <button *ngFor="let pill of popularSections" (click)="selectPopular(pill.act, pill.num)"
+                    class="text-xs px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
+              {{ pill.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Result Panel -->
+      <div class="flex flex-col gap-8 min-h-[400px]">
+        
+        <!-- Loading State -->
+        <div *ngIf="loading" class="flex flex-col items-center justify-center min-h-[350px] gap-4">
+          <div class="w-12 h-12 border-4 border-accent/25 border-t-accent rounded-full animate-spin"></div>
+          <p class="text-slate-400 text-sm">Consulting legal transition matrices...</p>
+        </div>
+
+        <!-- Error State -->
+        <div *ngIf="error && !loading" class="flex flex-col items-center justify-center min-h-[350px] gap-3 bg-red-950/20 border border-red-900/30 rounded-2xl p-8">
+          <span class="text-3xl">⚠️</span>
+          <p class="text-red-400 text-sm font-semibold text-center">{{ error }}</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!result && !loading && !error" class="flex flex-col items-center justify-center min-h-[350px] gap-4 bg-slate-900/20 border border-slate-800/40 border-dashed rounded-2xl p-10 text-center">
+          <div class="text-4xl text-slate-600 mb-2">🔍</div>
+          <h4 class="text-lg font-bold text-slate-350">No Section Mapped Yet</h4>
+          <p class="text-slate-500 text-sm max-w-sm">
+            Enter a section number on the left panel or click one of the popular lookups to analyze transitions instantly.
+          </p>
+        </div>
+
+        <!-- Result Display -->
+        <div *ngIf="result && !loading && !error" class="flex flex-col gap-8">
+          
+          <!-- Transition Header -->
+          <div class="flex items-center gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/60">
+            <div class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-sm font-bold text-accent">
+              {{ result.oldAct.shortName }} {{ result.oldSection?.section_number }}
+            </div>
+            <span class="text-slate-600">➔</span>
+            <div class="px-3 py-1.5 bg-accent/20 border border-accent/30 rounded-lg text-sm font-bold text-accent-light">
+              {{ result.newAct.shortName }} {{ result.newSection?.section_number }}
+            </div>
+            <span class="text-xs text-slate-500 ml-auto hidden md:inline">Correspondence Established</span>
+          </div>
+
+          <!-- Side by Side Diff -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <!-- Old Section -->
+            <div class="card p-6 bg-slate-900/40 border border-slate-800/60 rounded-2xl flex flex-col gap-4">
+              <div class="flex justify-between items-center pb-3 border-b border-slate-800/60">
+                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ result.oldAct.actName }}</span>
+                <span class="badge badge-outline text-[10px]">{{ result.oldAct.shortName }}</span>
+              </div>
+              <div *ngIf="result.oldSection" class="flex flex-col gap-3">
+                <h4 class="text-md font-bold text-white">Section {{ result.oldSection.section_number }}: {{ result.oldSection.title }}</h4>
+                <p class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{{ result.oldSection.content }}</p>
+                <a [routerLink]="['/laws', result.oldAct.shortName]" 
+                   class="text-xs text-accent hover:text-accent-light no-underline font-semibold mt-2 self-start flex items-center gap-1">
+                  View in Reference Reader ➔
+                </a>
+              </div>
+              <div *ngIf="!result.oldSection" class="text-slate-500 text-sm py-10 text-center">
+                Section details not found in database.
+              </div>
+            </div>
+
+            <!-- New Section -->
+            <div class="card p-6 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col gap-4">
+              <div class="flex justify-between items-center pb-3 border-b border-slate-800/60">
+                <span class="text-xs font-bold text-accent-light uppercase tracking-wider">{{ result.newAct.actName }}</span>
+                <span class="badge badge-primary text-[10px] bg-accent">{{ result.newAct.shortName }}</span>
+              </div>
+              <div *ngIf="result.newSection" class="flex flex-col gap-3">
+                <h4 class="text-md font-bold text-white">Section {{ result.newSection.section_number }}: {{ result.newSection.title }}</h4>
+                
+                <!-- Translation Tabs -->
+                <div class="flex flex-col gap-4 mt-2">
+                  <div class="english-text">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">English text</span>
+                    <p class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{{ result.newSection.content }}</p>
+                  </div>
+                  
+                  <div *ngIf="result.newSection.content_hi" class="hindi-text pt-3 border-t border-slate-800/40">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-accent-light/60 block mb-1">हिन्दी अनुवाद</span>
+                    <p class="text-slate-350 text-sm font-serif leading-loose whitespace-pre-wrap">{{ result.newSection.content_hi }}</p>
+                  </div>
+                </div>
+
+                <a [routerLink]="['/laws', result.newAct.shortName]" 
+                   class="text-xs text-accent hover:text-accent-light no-underline font-semibold mt-2 self-start flex items-center gap-1">
+                  Open Bilingual Reader ➔
+                </a>
+              </div>
+              <div *ngIf="!result.newSection" class="text-slate-500 text-sm py-10 text-center">
+                No corresponding section found or it has been repealed under the new framework.
+              </div>
+            </div>
+
+          </div>
+
+          <!-- AI Transition Explanation -->
+          <div class="card p-6 md:p-8 bg-gradient-to-br from-indigo-950/20 to-slate-900/60 border border-indigo-900/35 rounded-2xl flex flex-col gap-4">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-indigo-900/50 border border-indigo-500/30 flex items-center justify-center text-md">🤖</div>
+              <h4 class="font-bold text-white text-md">AI Transition Summary & Punishment Diff</h4>
+            </div>
+            <div class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-sans pl-11">
+              {{ result.comparison }}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>

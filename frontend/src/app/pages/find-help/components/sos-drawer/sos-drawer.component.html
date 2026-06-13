@@ -1,0 +1,48 @@
+<!-- Transparent Backdrop to close drawer on clicking outside -->
+<div *ngIf="showSosDrawer" (click)="toggleSosDrawer.emit(false)" class="fixed inset-0 z-[980] bg-transparent no-print"></div>
+
+<div class="fixed bottom-[92px] md:bottom-6 right-6 z-[990] no-print">
+  <button (click)="toggleSosDrawer.emit(!showSosDrawer)"
+    class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-red-500 to-red-600 border-none text-white font-extrabold text-[10px] md:text-[11px] shadow-lg hover:shadow-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 animate-pulse">
+    <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <span>SOS</span>
+  </button>
+
+  <div *ngIf="showSosDrawer"
+    class="absolute bottom-[58px] md:bottom-[66px] right-0 w-80 max-w-[calc(100vw-48px)] p-4 bg-bgSurface border border-red-500/20 shadow-2xl rounded-2xl animate-scale-up card">
+    <div class="flex justify-between items-center mb-3 border-b border-borderSubtle pb-1.5">
+      <h4 class="m-0 text-xs md:text-sm font-bold text-red-600">🚨 EMERGENCY SERVICES</h4>
+      <button (click)="toggleSosDrawer.emit(false)"
+        class="bg-transparent border-none text-lg cursor-pointer text-textMuted hover:text-textPrimary">&times;</button>
+    </div>
+    <div class="flex flex-col gap-2">
+      <div class="flex justify-between items-center bg-bgElevated p-1.5 px-3 rounded-lg">
+        <div>
+          <b class="text-[11px] md:text-xs text-textPrimary">National Emergency</b>
+          <p class="text-[9px] md:text-[10px] text-textMuted mt-0.5 m-0">Police / Fire / Ambulance</p>
+        </div>
+        <a href="tel:112"
+          class="bg-red-500 hover:bg-red-600 text-white py-1 px-2.5 rounded text-xs font-bold text-decoration-none transition-all">112</a>
+      </div>
+      <div class="flex justify-between items-center bg-bgElevated p-1.5 px-3 rounded-lg">
+        <div>
+          <b class="text-[11px] md:text-xs text-textPrimary">Women Helpline</b>
+          <p class="text-[9px] md:text-[10px] text-textMuted mt-0.5 m-0">Domestic violence / abuse rescue</p>
+        </div>
+        <a href="tel:1091"
+          class="bg-red-500 hover:bg-red-600 text-white py-1 px-2.5 rounded text-xs font-bold text-decoration-none transition-all">1091</a>
+      </div>
+      <div class="flex justify-between items-center bg-bgElevated p-1.5 px-3 rounded-lg">
+        <div>
+          <b class="text-[11px] md:text-xs text-textPrimary">Cyber Crime Reporting</b>
+          <p class="text-[9px] md:text-[10px] text-textMuted mt-0.5 m-0">Financial/identity fraud reports</p>
+        </div>
+        <a href="tel:1930"
+          class="bg-red-500 hover:bg-red-600 text-white py-1 px-2.5 rounded text-xs font-bold text-decoration-none transition-all">1930</a>
+      </div>
+    </div>
+  </div>
+</div>

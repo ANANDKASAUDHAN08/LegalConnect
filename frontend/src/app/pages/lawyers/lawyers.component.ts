@@ -1,19 +1,22 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, AfterViewInit, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { LawyerService, Lawyer } from '../../services/lawyer.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
+import { LawyerCardComponent } from '../../components/lawyer-card/lawyer-card.component';
+
+declare var google: any;
 
 @Component({
   selector: 'app-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent],
   templateUrl: './lawyers.component.html',
   styleUrls: ['./lawyers.component.scss']
 })
-export class LawyersComponent implements OnInit, OnDestroy {
+export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   // Raw and filtered lists
   allLawyers: Lawyer[] = [];
   filteredLawyers: Lawyer[] = [];
@@ -72,7 +75,9 @@ export class LawyersComponent implements OnInit, OnDestroy {
     private snackbar: SnackbarService,
     private auth: AuthService,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone
   ) { }
 
   ngOnInit() {
@@ -96,6 +101,105 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.readQueryParamsAndLoad();
       }
     });
+  }
+
+  ngAfterViewInit() {
+    this.initSidebarLocationAutocomplete();
+  }
+
+  initSidebarLocationAutocomplete() {
+    const searchInput = document.getElementById('lawyers-sidebar-location') as HTMLInputElement;
+    if (searchInput && (window as any).google?.maps?.places) {
+      const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+        componentRestrictions: { country: 'in' }
+      });
+      autocomplete.addListener('place_changed', () => {
+        this.zone.run(() => {
+          const place = autocomplete.getPlace();
+          if (place.geometry) {
+            const address = place.formatted_address || place.name;
+            this.selectedLocation = address;
+            this.applyFilters();
+            this.cdr.markForCheck();
+          } else if (place.name) {
+            const query = place.name.trim();
+            if ((window as any).google?.maps?.Geocoder) {
+              const geocoder = new google.maps.Geocoder();
+              geocoder.geocode({ address: query, componentRestrictions: { country: 'IN' } }, (results: any[], status: string) => {
+                this.zone.run(() => {
+                  if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    this.selectedLocation = address;
+                  } else {
+                    this.selectedLocation = query;
+                  }
+                  this.applyFilters();
+                  this.cdr.markForCheck();
+                });
+              });
+            } else {
+              this.selectedLocation = query;
+              this.applyFilters();
+              this.cdr.markForCheck();
+            }
+          }
+        });
+      });
+    }
+  }
+
+  initMobileLocationAutocomplete() {
+    const searchInput = document.getElementById('lawyers-mobile-location') as HTMLInputElement;
+    if (searchInput && (window as any).google?.maps?.places) {
+      const autocomplete = new google.maps.places.Autocomplete(searchInput, {
+        componentRestrictions: { country: 'in' }
+      });
+      autocomplete.addListener('place_changed', () => {
+        this.zone.run(() => {
+          const place = autocomplete.getPlace();
+          if (place.geometry) {
+            const address = place.formatted_address || place.name;
+            this.selectedLocation = address;
+            this.applyFilters();
+            this.cdr.markForCheck();
+          } else if (place.name) {
+            const query = place.name.trim();
+            if ((window as any).google?.maps?.Geocoder) {
+              const geocoder = new google.maps.Geocoder();
+              geocoder.geocode({ address: query, componentRestrictions: { country: 'IN' } }, (results: any[], status: string) => {
+                this.zone.run(() => {
+                  if (status === 'OK' && results[0]) {
+                    const address = results[0].formatted_address;
+                    this.selectedLocation = address;
+                  } else {
+                    this.selectedLocation = query;
+                  }
+                  this.applyFilters();
+                  this.cdr.markForCheck();
+                });
+              });
+            } else {
+              this.selectedLocation = query;
+              this.applyFilters();
+              this.cdr.markForCheck();
+            }
+          }
+        });
+      });
+    }
+  }
+
+  resolveLocationQuery() {
+    // Redundant since autocomplete handles Enter and click selections, keeping as no-op.
+  }
+
+  private extractCityFromAddress(address: string): string {
+    if (!address) return '';
+    const parts = address.split(',').map(p => p.trim());
+    if (parts.length >= 3) {
+      return parts[parts.length - 3].replace(/\b\d{5,}\b/g, '').trim();
+    }
+    return parts[0].replace(/\b\d{5,}\b/g, '').trim();
   }
 
   ngOnDestroy() {
@@ -167,9 +271,9 @@ export class LawyersComponent implements OnInit, OnDestroy {
 
     // 2. Location Filter
     if (this.selectedLocation.trim()) {
-      const loc = this.selectedLocation.toLowerCase().trim();
+      const cleanLoc = this.extractCityFromAddress(this.selectedLocation).toLowerCase().trim();
       result = result.filter(lawyer =>
-        lawyer.city.toLowerCase().includes(loc)
+        lawyer.city.toLowerCase().includes(cleanLoc)
       );
     }
 
@@ -339,6 +443,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
     this.showMobileFilters = !this.showMobileFilters;
     if (this.showMobileFilters) {
       document.body.classList.add('overflow-hidden');
+      setTimeout(() => this.initMobileLocationAutocomplete(), 100);
     } else {
       document.body.classList.remove('overflow-hidden');
     }
@@ -371,8 +476,10 @@ export class LawyersComponent implements OnInit, OnDestroy {
     this.router.navigate(['/lawyers', id]);
   }
 
-  openImagePreview(url: string, event: Event) {
-    event.stopPropagation();
+  openImagePreview(url: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.previewImageUrl = url;
   }
 
@@ -380,8 +487,10 @@ export class LawyersComponent implements OnInit, OnDestroy {
     this.previewImageUrl = null;
   }
 
-  goToSpecialization(specName: string, event: Event) {
-    event.stopPropagation();
+  goToSpecialization(specName: string, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
     this.router.navigate(['/specializations'], { queryParams: { name: specName } });
   }
 

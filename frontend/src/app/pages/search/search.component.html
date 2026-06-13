@@ -47,7 +47,7 @@
               <a *ngFor="let ch of result.chapters | slice:0:5" 
                  [routerLink]="['/laws', result.shortName]" [fragment]="'ch-' + ch.chapterNumber"
                  class="text-xs bg-black/5 dark:bg-white/5 text-text-secondary dark:text-slate-300 px-3 py-1.5 rounded-full hover:bg-accent/10 hover:text-accent transition-colors no-underline">
-                Ch {{ ch.chapterNumber }}: {{ ch.title }}
+                Ch {{ ch.chapterNumber }}: {{ getCleanChapterTitle(ch.title) }}
               </a>
               <span *ngIf="result.chapters.length > 5" class="text-xs text-text-muted px-2 py-1.5">+{{ result.chapters.length - 5 }} more</span>
             </div>

@@ -3,31 +3,183 @@
   [class.scrolled]="isScrolled">
   <div class="max-w-[1440px] mx-auto px-6 flex justify-between items-center w-full relative">
 
-    <!-- LEFT: Logo Block with Tagline -->
-    <a routerLink="/" class="flex items-center gap-3 no-underline group">
-      <!-- Premium SVG Logo: Balance Scale & Network Connected Node -->
-      <div
-        class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_14px_rgba(79,70,229,0.25)] transition-transform duration-300 group-hover:scale-105">
-        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-          <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-            stroke-linejoin="round" />
-          <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round" />
-          <circle cx="12" cy="11" r="2.2" fill="currentColor" class="animate-pulse-fast" />
-        </svg>
+    <!-- LEFT: Logo Block with Tagline + Location Pill -->
+    <div class="flex items-center gap-3 flex-shrink-0">
+      <a routerLink="/" class="flex items-center gap-3 no-underline group">
+        <!-- Premium SVG Logo: Balance Scale & Network Connected Node -->
+        <div
+          class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_14px_rgba(79,70,229,0.25)] transition-transform duration-300 group-hover:scale-105">
+          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+            <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+              stroke-linejoin="round" />
+            <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5"
+              stroke-linecap="round" stroke-linejoin="round" />
+            <circle cx="12" cy="11" r="2.2" fill="currentColor" class="animate-pulse-fast" />
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span
+            class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">LegalConnect</span>
+          <span class="text-[0.62rem] text-slate-400 dark:text-slate-500 font-semibold tracking-wide uppercase">Legal
+            help, simplified.</span>
+        </div>
+      </a>
+
+      <!-- Vertical divider between logo and location pill -->
+      <div class="hidden md:block h-8 w-px bg-slate-200 dark:bg-slate-700 mx-1 flex-shrink-0"></div>
+
+      <!-- Location Selector Pill (HealthConnect style, Desktop only) -->
+      <div class="location-selector-container relative hidden md:block flex-shrink-0">
+        <button id="navbar-location-btn" (click)="toggleLocationDropdown($event)"
+          class="location-pill flex items-center gap-2 px-4 py-2 rounded-full border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 hover:border-blue-500 dark:hover:border-blue-500 transition-all duration-200 cursor-pointer group"
+          [class.active]="dropdownOpen || isDetecting" [appTooltip]="getLocationTooltip()" tooltipPlacement="bottom">
+          <!-- Pin badge (or spinner when detecting) -->
+          <span
+            class="w-6 h-6 rounded-full bg-blue-50 dark:bg-blue-900/40 border border-blue-200 dark:border-blue-700 flex items-center justify-center flex-shrink-0">
+            <!-- Spinner -->
+            <svg *ngIf="isDetecting" class="animate-spin w-3.5 h-3.5 text-blue-600 dark:text-blue-400"
+              xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            <!-- Pin icon -->
+            <svg *ngIf="!isDetecting" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+              fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              class="text-blue-600 dark:text-blue-400">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+          </span>
+          <div class="flex items-baseline gap-1.5 min-w-0">
+            <span
+              class="text-[0.68rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex-shrink-0">TO:</span>
+            <span class="text-[0.85rem] font-bold text-slate-800 dark:text-white truncate max-w-[130px]">
+              {{ isDetecting ? detectingText : truncateLocation(activeLocation) }}
+            </span>
+          </div>
+          <!-- Chevron (hide when detecting) -->
+          <svg *ngIf="!isDetecting" xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="text-slate-400 dark:text-slate-500 transition-transform duration-200 flex-shrink-0 ml-0.5"
+            [class.rotate-180]="dropdownOpen">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <!-- Location Dropdown (HealthConnect style) -->
+        <div *ngIf="dropdownOpen"
+          class="location-dropdown absolute left-0 top-[calc(100%+10px)] w-80 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl shadow-2xl dark:shadow-[0_24px_60px_rgba(0,0,0,0.55)] z-[1100] overflow-hidden"
+          (click)="$event.stopPropagation()">
+
+          <!-- Search Input -->
+          <div class="px-4 pt-4 pb-3">
+            <div class="relative">
+              <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none"
+                stroke="currentColor" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input id="location-search-input" type="text" [(ngModel)]="searchQuery"
+                placeholder="Enter city name or pin code..."
+                class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 text-sm text-slate-800 dark:text-white outline-none focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder-slate-400 dark:placeholder-slate-500"
+                autofocus />
+            </div>
+          </div>
+
+          <!-- Use Current Location Card -->
+          <div class="px-4 pb-3">
+            <button (click)="useCurrentLocation()"
+              class="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 hover:bg-blue-100 dark:hover:bg-blue-900/60 hover:border-blue-200 dark:hover:border-blue-800 transition-all cursor-pointer text-left group/gps">
+              <!-- GPS Icon badge -->
+              <span
+                class="w-9 h-9 rounded-full bg-blue-600/10 dark:bg-blue-500/20 border border-blue-200 dark:border-blue-700 flex items-center justify-center flex-shrink-0">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                  class="text-blue-600 dark:text-blue-400">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path
+                    d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83">
+                  </path>
+                </svg>
+              </span>
+              <div class="flex flex-col">
+                <span class="text-sm font-bold text-slate-800 dark:text-white">Use current location</span>
+                <span
+                  class="text-[0.68rem] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">Detection
+                  via GPS/IP</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Location estimation/verification notice -->
+          <div class="mx-4 mb-3 flex items-center justify-between px-3 py-2 rounded-lg transition-all duration-300"
+            [ngClass]="isLocationEstimated ? 'bg-amber-50 dark:bg-amber-950/30 border border-amber-200/60 dark:border-amber-800/40' : 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40'">
+            <div class="flex items-center gap-1.5">
+              <!-- Estimated warning icon -->
+              <svg *ngIf="isLocationEstimated" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round" class="text-amber-500 flex-shrink-0 animate-pulse">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <!-- Verified check icon -->
+              <svg *ngIf="!isLocationEstimated" xmlns="http://www.w3.org/2000/svg" width="13" height="13"
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+                stroke-linejoin="round" class="text-emerald-500 dark:text-emerald-400 flex-shrink-0">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <span class="text-[0.72rem] font-semibold transition-colors duration-300"
+                [ngClass]="isLocationEstimated ? 'text-amber-700 dark:text-amber-400' : 'text-emerald-700 dark:text-emerald-400'">
+                {{ isLocationEstimated ? 'Location is estimated' : 'Location is verified' }}
+              </span>
+            </div>
+            <button (click)="openMapModal($event)"
+              class="text-[0.72rem] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer transition-all">
+              {{ isLocationEstimated ? 'Not your location?' : 'Change location' }}
+            </button>
+          </div>
+
+          <!-- Popular Cities - 2-column list -->
+          <div class="px-4 pb-3">
+            <p class="text-[0.68rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-3">
+              Popular Cities</p>
+            <div class="grid grid-cols-2 gap-x-4 gap-y-0.5">
+              <button
+                *ngFor="let city of ['Mumbai', 'New Delhi', 'Bengaluru', 'Hyderabad', 'Chennai', 'Kolkata', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow']"
+                (click)="selectLocation(city)"
+                class="text-left py-2 text-[0.88rem] font-semibold transition-colors cursor-pointer border-b border-slate-50 dark:border-slate-800/60 last:border-0"
+                [class.text-blue-600]="cleanLocation(activeLocation) === city" [class.dark:text-blue-400]="cleanLocation(activeLocation) === city"
+                [class.text-slate-700]="cleanLocation(activeLocation) !== city" [class.dark:text-slate-300]="cleanLocation(activeLocation) !== city"
+                [class.hover:text-blue-600]="cleanLocation(activeLocation) !== city"
+                [class.dark:hover:text-blue-400]="cleanLocation(activeLocation) !== city">
+                {{ city }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Select on Map footer -->
+          <div class="border-t border-slate-100 dark:border-slate-800 px-4 py-3">
+            <button (click)="openMapModal($event)"
+              class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-all text-sm font-semibold cursor-pointer">
+              <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+              </svg>
+              <span>Select on Map</span>
+            </button>
+          </div>
+        </div>
       </div>
-      <div class="flex flex-col">
-        <span
-          class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight transition-colors group-hover:text-blue-600 dark:group-hover:text-blue-400">LegalConnect</span>
-        <span class="text-[0.62rem] text-slate-400 dark:text-slate-500 font-semibold tracking-wide uppercase">Legal
-          help, simplified.</span>
-      </div>
-    </a>
+    </div>
 
     <!-- CENTER: Premium Hover Dropdowns (Desktop Only) -->
-    <div class="hidden md:flex items-center justify-center gap-7">
+    <div class="hidden md:flex items-center justify-center gap-4 xl:gap-7">
 
       <!-- Home -->
       <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}"
@@ -65,13 +217,27 @@
               <span class="text-[0.72rem] text-slate-400">View our complete network</span>
             </div>
           </a>
-          <div class="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2"></div>
-          <a routerLink="/lawyers" [queryParams]="{specialty: 'family'}" class="dropdown-item-small">Family Law</a>
-          <a routerLink="/lawyers" [queryParams]="{specialty: 'corporate'}" class="dropdown-item-small">Corporate
-            Law</a>
-          <a routerLink="/lawyers" [queryParams]="{specialty: 'criminal'}" class="dropdown-item-small">Criminal Law</a>
-          <a routerLink="/lawyers" [queryParams]="{specialty: 'intellectual-property'}"
-            class="dropdown-item-small">Intellectual Property</a>
+
+
+          <!-- B2B Advocate CTA placed inside Find Lawyers dropdown -->
+          <ng-container *ngIf="!(auth.isLoggedIn$ | async)">
+            <div class="h-px bg-slate-100 dark:bg-slate-800 my-1 mx-2"></div>
+            <a routerLink="/register" [queryParams]="{role: 'lawyer'}"
+              class="dropdown-item flex items-center gap-3 p-2.5 rounded-xl text-blue-650 dark:text-blue-400 no-underline transition-all hover:bg-blue-50/50 dark:hover:bg-blue-950/20 font-bold">
+              <span class="p-1.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600"><svg
+                  xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                  stroke="currentColor" stroke-width="2.5">
+                  <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="8.5" cy="7" r="4"></circle>
+                  <line x1="20" y1="8" x2="20" y2="14"></line>
+                  <line x1="23" y1="11" x2="17" y2="11"></line>
+                </svg></span>
+              <div class="flex flex-col">
+                <span class="text-[0.88rem] font-bold">Join as a Lawyer</span>
+                <span class="text-[0.72rem] text-slate-400">Register your practice</span>
+              </div>
+            </a>
+          </ng-container>
         </div>
       </div>
 
@@ -135,26 +301,7 @@
         </div>
       </div>
 
-      <!-- Dropdown: For Lawyers (Only if guest) -->
-      <div *ngIf="!(auth.isLoggedIn$ | async)" class="relative group py-2">
-        <button
-          class="nav-link flex items-center gap-1.5 text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline bg-transparent border-0 cursor-pointer">
-          <span>For Lawyers</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-            class="transition-transform duration-200 group-hover:rotate-180 text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <!-- Dropdown Panel -->
-        <div
-          class="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-56 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-2.5 flex flex-col gap-1">
-          <a routerLink="/register" [queryParams]="{role: 'lawyer'}"
-            class="dropdown-item-small font-bold text-blue-600 dark:text-blue-400">Join as a Lawyer</a>
-          <a routerLink="/" class="dropdown-item-small">Success Stories</a>
-          <a routerLink="/" class="dropdown-item-small">Membership Plans</a>
-        </div>
-      </div>
+
 
       <!-- Link: Advocate Workspace (Lawyer only) -->
       <a *ngIf="(auth.currentUser$ | async)?.role === 'Lawyer'" routerLink="/lawyer/workstation"
@@ -164,38 +311,36 @@
       </a>
 
       <!-- Link: My Saved Library (Client only) -->
-      <a *ngIf="(auth.currentUser$ | async) && (auth.currentUser$ | async)?.role !== 'Lawyer'"
+      <!-- <a *ngIf="(auth.currentUser$ | async) && (auth.currentUser$ | async)?.role !== 'Lawyer'"
         routerLink="/client/portal" routerLinkActive="active"
         class="nav-link text-[0.92rem] font-bold text-slate-600 hover:text-blue-600 dark:text-slate-350 dark:hover:text-white transition-colors no-underline py-2">
         My Library
-      </a>
+      </a> -->
 
     </div>
 
     <!-- RIGHT: Actions / Utilities -->
-    <div class="hidden md:flex items-center justify-end gap-3.5">
+    <div class="hidden md:flex items-center justify-end gap-2 xl:gap-3.5">
 
-      <!-- Search Input Trigger Button (Desktop Only) -->
-      <a routerLink="/search"
-        class="flex items-center gap-2 pl-3 pr-2 py-1 rounded-full bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/50 dark:border-slate-800/60 text-slate-400 dark:text-slate-500 transition-colors no-underline group cursor-pointer"
-        appTooltip="Search laws, acts, sections (Ctrl+K)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-          class="text-slate-500 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      <!-- Find Help Button (Innovative highlight styling) -->
+      <a routerLink="/find-help" routerLinkActive="active-btn"
+        class="find-help-btn flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 no-underline font-bold text-[0.88rem] transition-all duration-300"
+        appTooltip="Find legal aid, police stations, courts, and emergency contacts" tooltipPlacement="bottom">
+        <!-- SVG Emergency Lifebuoy Icon -->
+        <svg viewBox="0 0 24 24" fill="none"
+          class="w-4 h-4 stroke-red-600 dark:stroke-red-400 flex-shrink-0 find-help-icon" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="10" />
+          <circle cx="12" cy="12" r="4" />
+          <path d="M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24" />
         </svg>
-        <span
-          class="text-[0.78rem] font-bold text-slate-400 dark:text-slate-500 group-hover:text-slate-700 dark:group-hover:text-slate-350 transition-colors hidden lg:inline">Search...</span>
-        <span
-          class="hidden lg:inline-flex items-center text-[0.58rem] font-bold px-1.5 py-0.5 bg-white dark:bg-slate-950 border border-slate-200/60 dark:border-slate-800/80 rounded text-slate-400 dark:text-slate-500 shadow-sm ml-1 select-none">Ctrl
-          K</span>
+        <span>Find Help</span>
       </a>
 
       <!-- Notifications (Only if logged in) -->
       <ng-container *ngIf="(auth.isLoggedIn$ | async)">
         <a routerLink="/notifications" routerLinkActive="active"
-          class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 transition-colors flex items-center justify-center w-9 h-9 notification-bell"
+          class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-350 transition-colors flex items-center justify-center w-9 h-9 notification-bell mr-1"
           appTooltip="Notifications & Alerts">
           <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -209,32 +354,50 @@
         </a>
       </ng-container>
 
-      <!-- Theme Toggle -->
-      <button
-        class="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 transition-colors flex items-center justify-center w-9 h-9"
-        (click)="themeService.toggleTheme()" aria-label="Toggle Theme"
-        [appTooltip]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
-        <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-          stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
-          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-          stroke-linejoin="round">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
+      <!-- Combined Utility Capsule: Search + Theme Toggle -->
+      <div
+        class="utility-capsule flex items-center p-0.5 rounded-full border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40 ml-1.5">
+        <!-- Search Trigger -->
+        <a routerLink="/search"
+          class="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer"
+          appTooltip="Search laws, acts, sections (Ctrl+K)" tooltipPlacement="bottom">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </a>
+        <div class="w-px h-3.5 bg-slate-200 dark:bg-slate-800 mx-0.5"></div>
+        <!-- Theme Toggle Switch -->
+        <button
+          class="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer bg-transparent border-0"
+          (click)="themeService.toggleTheme()" aria-label="Toggle Theme"
+          [appTooltip]="themeService.isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          tooltipPlacement="bottom">
+          <!-- Sun Icon -->
+          <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <!-- Moon Icon -->
+          <svg *ngIf="!themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+      </div>
 
-      <div class="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-1"></div>
+      <div class="h-5 w-px bg-slate-200 dark:bg-slate-800 mx-2.5"></div>
 
       <!-- Auth State Actions -->
       <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
@@ -242,8 +405,16 @@
       </ng-container>
 
       <ng-template #guestActions>
-        <a routerLink="/login" class="nav-btn-outline">Login</a>
-        <a routerLink="/register" class="nav-btn-solid">Get Started</a>
+        <div
+          class="auth-capsule flex items-center p-1 rounded-full border border-slate-200 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/40">
+          <a routerLink="/login" [class.active]="router.url.includes('/login')"
+            class="auth-capsule-login px-3.5 py-1.5 text-[0.82rem] font-bold no-underline cursor-pointer rounded-full"
+            appTooltip="Sign in to your client or advocate account" tooltipPlacement="bottom">Login</a>
+          <div class="w-px h-4 bg-slate-200 dark:bg-slate-800 mx-1"></div>
+          <a routerLink="/register" [class.active]="router.url.includes('/register') || !router.url.includes('/login')"
+            class="auth-capsule-register px-4 py-1.5 text-[0.82rem] font-bold no-underline cursor-pointer rounded-full"
+            appTooltip="Create a new client or advocate account" tooltipPlacement="bottom">Get Started</a>
+        </div>
       </ng-template>
     </div>
 
@@ -271,4 +442,10 @@
 </nav>
 
 <!-- Separate Mobile Menu Component (Option B) -->
-<app-mobile-menu [isOpen]="menuOpen" (closeMenu)="menuOpen = false"></app-mobile-menu>
+<app-mobile-menu [isOpen]="menuOpen" (closeMenu)="menuOpen = false"
+  (openLocationSelector)="openMapModal()"></app-mobile-menu>
+
+<!-- Google Map Selector Modal -->
+<app-location-map-modal *ngIf="showMapModal" [initialCity]="activeLocation"
+  (locationConfirmed)="onMapLocationConfirmed($event)" (closed)="closeMapModal()">
+</app-location-map-modal>

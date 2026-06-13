@@ -75,57 +75,61 @@
   }
 }
 
-.nav-btn-outline {
+.auth-capsule {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 8.5px 20px;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background-color: transparent;
-  color: #334155;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s ease;
+  line-height: 1;
 
   &:hover {
-    border-color: #2563eb;
-    color: #2563eb;
-    background-color: rgba(37, 99, 235, 0.03);
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: translateY(0) scale(0.98);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border-color: #3b82f6 !important;
   }
 }
 
-.nav-btn-solid {
+.auth-capsule-login {
+  color: #475569;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 22px;
-  border-radius: 12px;
-  border: none;
-  background-image: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
-  color: #ffffff;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  text-decoration: none;
-  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.25);
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
-  &:hover {
-    box-shadow: 0 6px 20px rgba(59, 130, 246, 0.35);
-    transform: translateY(-1px);
-    filter: brightness(1.05);
+  &:hover:not(.active) {
+    background-color: rgba(37, 99, 235, 0.05);
+    color: #2563eb;
+  }
+
+  &.active {
+    background-image: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
   }
 
   &:active {
-    transform: translateY(0) scale(0.98);
+    transform: scale(0.97);
+  }
+}
+
+.auth-capsule-register {
+  color: #475569;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover:not(.active) {
+    background-color: rgba(37, 99, 235, 0.05);
+    color: #2563eb;
+  }
+
+  &.active {
+    background-image: linear-gradient(135deg, #3b82f6 0%, #4f46e5 100%);
+    color: #ffffff !important;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+  }
+
+  &:active {
+    transform: scale(0.97) !important;
   }
 }
 
@@ -208,6 +212,36 @@
   animation: pulse-fast 1.6s ease-in-out infinite;
 }
 
+/* Location Picker Pill & Dropdown */
+.location-pill {
+  line-height: 1.2;
+  white-space: nowrap;
+
+  &.active {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+  }
+
+  &:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  }
+}
+
+.location-dropdown {
+  animation: dropdown-slide-in 0.18s cubic-bezier(0.4, 0, 0.2, 1) both;
+
+  @keyframes dropdown-slide-in {
+    from {
+      opacity: 0;
+      transform: translateY(-8px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+}
+
 /* Dark Mode Overrides - Grouped to reduce CSS budget footprint */
 :host-context(.dark) {
   .navbar-fixed {
@@ -250,18 +284,149 @@
     }
   }
 
-  .nav-btn-outline {
-    border-color: #334155;
-    color: #cbd5e1;
-
+  .auth-capsule {
     &:hover {
-      border-color: #3b82f6;
+      border-color: #3b82f6 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+  }
+
+  .auth-capsule-login, .auth-capsule-register {
+    color: #94a3b8;
+
+    &:hover:not(.active) {
       color: #3b82f6;
-      background-color: rgba(59, 130, 246, 0.04);
+      background-color: rgba(59, 130, 246, 0.08);
+    }
+
+    &.active {
+      color: #ffffff !important;
     }
   }
 
   .hamburger-btn span {
     background-color: #f1f5f9;
+  }
+
+  .location-pill {
+    &.active {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+    }
+  }
+}
+
+/* Find Help Premium Action Button Style (Innovative highlight with Shimmer Hover) */
+.find-help-btn {
+  background-color: rgba(239, 68, 68, 0.05); // Soft transparent red
+  box-shadow: 0 2px 8px -1px rgba(220, 38, 38, 0.05);
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  /* Animated border shimmer/flow */
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.3),
+      transparent
+    );
+    transition: 0.5s;
+  }
+
+  &:hover {
+    background-color: rgba(220, 38, 38, 0.09);
+    border-color: #dc2626 !important;
+    color: #dc2626 !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 15px -3px rgba(220, 38, 38, 0.2), 0 0 0 1px rgba(220, 38, 38, 0.05);
+
+    &::before {
+      left: 100%;
+      transition: all 0.6s ease;
+    }
+
+    .find-help-icon {
+      transform: rotate(180deg);
+    }
+  }
+
+  &.active-btn {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    border-color: #dc2626 !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 14px rgba(220, 38, 38, 0.3);
+
+    .find-help-icon {
+      color: #ffffff !important;
+      stroke: #ffffff !important;
+    }
+
+    &:hover {
+      filter: brightness(1.1);
+      color: #ffffff !important;
+    }
+  }
+
+  .find-help-icon {
+    stroke: #dc2626;
+    transition: transform 0.6s cubic-bezier(0.19, 1, 0.22, 1);
+  }
+}
+
+:host-context(.dark) {
+  .find-help-btn {
+    background-color: rgba(239, 68, 68, 0.08);
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    color: #f87171 !important;
+
+    .find-help-icon {
+      stroke: #f87171 !important;
+    }
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.15);
+      border-color: #ef4444 !important;
+      color: #fca5a5 !important;
+      box-shadow: 0 4px 15px -3px rgba(239, 68, 68, 0.35), 0 0 0 1px rgba(239, 68, 68, 0.1);
+    }
+
+    &.active-btn {
+      background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+      color: #ffffff !important;
+      border-color: #ef4444 !important;
+      box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+
+      .find-help-icon {
+        color: #ffffff !important;
+        stroke: #ffffff !important;
+      }
+    }
+  }
+}
+
+.utility-capsule {
+  transition: all 0.2s ease;
+  line-height: 1;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    border-color: #3b82f6 !important;
+  }
+}
+
+:host-context(.dark) {
+  .utility-capsule {
+    &:hover {
+      border-color: #3b82f6 !important;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
   }
 }

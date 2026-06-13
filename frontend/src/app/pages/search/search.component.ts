@@ -126,5 +126,24 @@ export class SearchComponent implements OnInit {
       });
     }
   }
+
+  getCleanChapterTitle(title: string): string {
+    if (!title) return '';
+    let clean = title.trim().toLowerCase();
+    if (clean.startsWith('of the ')) {
+      clean = clean.substring(7);
+    } else if (clean.startsWith('of ')) {
+      clean = clean.substring(3);
+    }
+    
+    const minorWords = ['and', 'or', 'but', 'for', 'of', 'in', 'on', 'at', 'to', 'by', 'the', 'a', 'an', 'its', 'with', 'from', 'as'];
+    const words = clean.split(/\s+/);
+    return words.map((word, idx) => {
+      if (idx === 0 || !minorWords.includes(word)) {
+        return word.replace(/[a-z]/i, (char) => char.toUpperCase());
+      }
+      return word;
+    }).join(' ');
+  }
 }
 

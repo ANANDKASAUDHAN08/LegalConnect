@@ -3,8 +3,16 @@ import mongoose, { Document, Schema } from 'mongoose';
 export interface ISection {
   section_number: string;
   title: string;
+  title_hi?: string;
   content: string;
+  content_hi?: string;
   aiSummary?: string;
+  clean_title?: string;
+  clean_title_hi?: string;
+  introduction_text?: string;
+  introduction_text_hi?: string;
+  content_blocks?: { type: string; text: string }[];
+  content_blocks_hi?: { type: string; text: string }[];
 }
 
 export interface IChapter {
@@ -24,8 +32,22 @@ export interface IBareAct extends Document {
 const SectionSchema = new Schema<ISection>({
   section_number: { type: String, required: true },
   title: { type: String, required: true },
+  title_hi: { type: String },
   content: { type: String, required: true },
-  aiSummary: { type: String }
+  content_hi: { type: String },
+  aiSummary: { type: String },
+  clean_title: { type: String },
+  clean_title_hi: { type: String },
+  introduction_text: { type: String },
+  introduction_text_hi: { type: String },
+  content_blocks: [{
+    type: { type: String },
+    text: { type: String }
+  }],
+  content_blocks_hi: [{
+    type: { type: String },
+    text: { type: String }
+  }]
 });
 
 const ChapterSchema = new Schema<IChapter>({

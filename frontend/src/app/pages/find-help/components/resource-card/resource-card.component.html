@@ -1,0 +1,71 @@
+<div [ngClass]="{
+  'border-l-purple-650 dark:border-l-purple-600': resource.type === 'LegalAid',
+  'border-l-blue-600': resource.type === 'Court',
+  'border-l-orange-500': resource.type === 'GovernmentOffice',
+  'bg-purple-600/[0.04] shadow-md border-l-purple-600': resource.type === 'LegalAid' && isFreeAidEligible
+}" class="card p-5 bg-bgSurface border-l-4 transition-all animate-scale-up">
+
+  <div class="flex flex-col md:flex-row justify-between items-stretch md:items-start gap-4">
+    <div class="flex-1">
+      <div class="flex flex-wrap items-center gap-2 mb-2">
+        <!-- Type Badge -->
+        <span class="badge" [class.badge-primary]="resource.type === 'Court'"
+          [class.badge-purple]="resource.type === 'LegalAid'"
+          [class.badge-orange]="resource.type === 'GovernmentOffice'">
+          {{resource.type === 'LegalAid' ? 'Legal Aid Center' : resource.type === 'Court' ? 'District Court' :
+          'Government Office'}}
+        </span>
+
+        <!-- Open Status Badge -->
+        <span class="badge" [class.badge-green]="resource.isOpenNow" [class.badge-gray]="!resource.isOpenNow">
+          {{resource.isOpenNow ? 'Open Now' : 'Closed'}}
+        </span>
+
+        <!-- Free Aid Eligibility Highlight tag -->
+        <span *ngIf="resource.type === 'LegalAid' && isFreeAidEligible" class="badge badge-green-highlight">
+          Free Help Eligible
+        </span>
+      </div>
+
+      <h3 class="text-[17px] font-bold text-textPrimary m-0">{{resource.name}}</h3>
+      <p class="text-xs text-textSecondary mt-1 flex items-center"><svg class="w-3.5 h-3.5 mr-1 text-slate-400 shrink-0"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg> {{resource.address}}</p>
+
+      <!-- Subcategory badges mapping -->
+      <div class="flex flex-wrap gap-1.5 mt-2">
+        <span *ngFor="let sub of resource.subcategories"
+          class="text-[10px] bg-bgElevated text-textMuted px-2 py-0.5 rounded-full font-semibold">{{sub}}</span>
+      </div>
+    </div>
+
+    <div
+      class="flex flex-row md:flex-col items-center md:items-end justify-between md:justify-start gap-4 border-t border-borderSubtle md:border-none pt-3 md:pt-0 mt-1 md:mt-0">
+      <button (click)="bookmark.emit(resource._id)"
+        class="bg-transparent border-none text-textMuted hover:text-accent cursor-pointer p-1 transition-all hover:scale-110"
+        title="Bookmark resource">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+        </svg>
+      </button>
+      <div class="flex gap-2">
+        <a *ngIf="resource.contactNumber" href="tel:{{resource.contactNumber}}"
+          class="btn btn-outline btn-sm inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg> Call</a>
+        <button (click)="directions.emit(resource.coordinates)"
+          class="btn btn-primary btn-sm inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none"
+            stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+          </svg> Directions</button>
+      </div>
+    </div>
+  </div>
+</div>

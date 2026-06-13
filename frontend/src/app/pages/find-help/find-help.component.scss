@@ -1,0 +1,255 @@
+// Find Help Page - Custom Stylesheet
+// Most styling is handled via utility-first Tailwind CSS.
+// Only highly custom animations, leaflet marker wrappers, and toggle checkbox widgets are retained here.
+
+// ----------------------------------------------------
+// CUSTOM TOGGLE / SWITCH CONTROL
+// ----------------------------------------------------
+.switch-control {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 22px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-subtle);
+    border-radius: 34px;
+    transition: .3s;
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      border-radius: 50%;
+      transition: .3s;
+    }
+  }
+
+  input:checked+.slider {
+    background-color: var(--color-accent);
+  }
+
+  input:checked+.slider:before {
+    transform: translateX(22px);
+  }
+}
+
+// ----------------------------------------------------
+// DYNAMIC ANIMATIONS & KEYFRAMES
+// ----------------------------------------------------
+
+// AI Voice Search Pulse Recording State
+.voice-search-btn.recording {
+  background: hsl(0, 84%, 60%) !important;
+  animation: pulse-red 1.2s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+// Free Legal Aid Checker Highlight
+.badge-green-highlight {
+  background: #9333ea !important;
+  color: #fff !important;
+  font-weight: 700;
+  animation: pulse-purple 1.5s infinite;
+}
+
+@keyframes pulse-purple {
+  0% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0.7);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(147, 51, 234, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(147, 51, 234, 0);
+  }
+}
+
+// ----------------------------------------------------
+// LEAFLET MAP CUSTOM DOT MARKERS
+// ----------------------------------------------------
+.user-location-pulse-marker {
+  position: relative;
+
+  .pulse-ring {
+    border: 3px solid #3b82f6;
+    border-radius: 30px;
+    height: 18px;
+    width: 18px;
+    position: absolute;
+    left: -2px;
+    top: -2px;
+    animation: pulsate 1.5s ease-out;
+    animation-iteration-count: infinite;
+    opacity: 0.0;
+  }
+
+  .pulse-dot {
+    background-color: #2563eb;
+    border: 2.5px solid #fff;
+    border-radius: 50%;
+    height: 14px;
+    width: 14px;
+    position: absolute;
+    box-shadow: 0 0 6px rgba(0, 0, 0, 0.3);
+  }
+}
+
+@keyframes pulsate {
+  0% {
+    transform: scale(0.1, 0.1);
+    opacity: 0.0;
+  }
+
+  50% {
+    opacity: 1.0;
+  }
+
+  100% {
+    transform: scale(1.6, 1.6);
+    opacity: 0.0;
+  }
+}
+
+// Google Maps InfoWindow Custom Styling (dark/light themes integration)
+::ng-deep {
+  .gm-style-iw-c {
+    background-color: var(--bg-surface) !important;
+    border: 1px solid var(--border-subtle) !important;
+    border-radius: var(--radius-md) !important;
+    box-shadow: var(--shadow-md) !important;
+    padding: 6px !important;
+    font-family: var(--font-sans) !important;
+  }
+  
+  .gm-style-iw-d {
+    overflow: auto !important;
+    max-height: none !important;
+    max-width: none !important;
+  }
+
+  .gm-style-iw-t::after {
+    background: var(--bg-surface) !important;
+    box-shadow: -1px 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+  }
+
+  button.gm-ui-hover-close {
+    background-color: var(--bg-elevated) !important;
+    border-radius: 50% !important;
+    margin: 8px !important;
+    opacity: 0.7 !important;
+    &:hover {
+      opacity: 1 !important;
+    }
+  }
+}
+
+/* ── Skeleton Shimmer Loader */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-bar {
+  background: linear-gradient(90deg,
+      #e2e8f0 25%,
+      #f1f5f9 50%,
+      #e2e8f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+}
+
+.skeleton-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+:host-context(.dark) {
+  .skeleton-bar {
+    background: linear-gradient(90deg,
+        #334155 25%,
+        #475569 50%,
+        #334155 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite linear;
+  }
+
+  .skeleton-card {
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  }
+}
+
+// Scrollbar hiding helper
+.scrollbar-none {
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+// ----------------------------------------------------
+// MOBILE-FIRST PREMIUM STYLE OVERRIDES
+// ----------------------------------------------------
+@media (max-width: 768px) {
+  // Smooth slide-up transition for the bottom sheet drawer
+  .fixed.bottom-0 {
+    animation: slide-up-sheet 0.35s cubic-bezier(0.32, 0.94, 0.6, 1) forwards;
+  }
+}
+
+@keyframes slide-up-sheet {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+// Backdrop filter fallback support
+.backdrop-blur-sm {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}

@@ -114,3 +114,60 @@
   transform-origin: center;
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* Find Help Custom Mobile Styles */
+.mobile-find-help-link {
+  color: #dc2626 !important;
+  animation: red-pulse-mobile 2.5s infinite ease-in-out;
+  transition: all 0.2s ease;
+
+  svg {
+    color: #dc2626 !important;
+  }
+
+  &.active-mobile {
+    color: #dc2626 !important;
+    border-left-color: #dc2626 !important;
+  }
+
+  &:hover {
+    color: #ef4444 !important;
+    
+    svg {
+      color: #ef4444 !important;
+    }
+  }
+}
+
+@keyframes red-pulse-mobile {
+  0%, 100% {
+    opacity: 0.95;
+  }
+  50% {
+    opacity: 1;
+    text-shadow: 0 0 8px rgba(220, 38, 38, 0.25);
+  }
+}
+
+:host-context(.dark) {
+  .mobile-find-help-link {
+    color: #f87171 !important;
+
+    svg {
+      color: #f87171 !important;
+    }
+
+    &.active-mobile {
+      color: #f87171 !important;
+      border-left-color: #f87171 !important;
+    }
+
+    &:hover {
+      color: #fca5a5 !important;
+      
+      svg {
+        color: #fca5a5 !important;
+      }
+    }
+  }
+}

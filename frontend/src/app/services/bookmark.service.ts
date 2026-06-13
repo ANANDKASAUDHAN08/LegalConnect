@@ -55,19 +55,19 @@ export class BookmarkService {
     if (this.isLoggedIn) {
       this.http.get<Bookmark[]>(this.apiUrl, { withCredentials: true }).subscribe({
         next: (bookmarks) => {
-          this.bookmarksSubject.next(bookmarks);
           this.bookmarksSignal.set(bookmarks);
+          this.bookmarksSubject.next(bookmarks);
         },
         error: () => {
           const local = this.loadLocalBookmarks();
-          this.bookmarksSubject.next(local);
           this.bookmarksSignal.set(local);
+          this.bookmarksSubject.next(local);
         }
       });
     } else {
       const local = this.loadLocalBookmarks();
-      this.bookmarksSubject.next(local);
       this.bookmarksSignal.set(local);
+      this.bookmarksSubject.next(local);
     }
   }
 
@@ -78,8 +78,8 @@ export class BookmarkService {
 
   private saveLocalBookmarks(bookmarks: Bookmark[]) {
     localStorage.setItem(this.bookmarksKey, JSON.stringify(bookmarks));
-    this.bookmarksSubject.next(bookmarks);
     this.bookmarksSignal.set(bookmarks);
+    this.bookmarksSubject.next(bookmarks);
   }
 
   addBookmark(actShortName: string, chapterNumber: string, section: Section, collectionName?: string) {
@@ -108,8 +108,8 @@ export class BookmarkService {
       this.http.post<any>(this.apiUrl, payload, { withCredentials: true }).subscribe({
         next: () => {
           const updated = [...current, newBookmark];
-          this.bookmarksSubject.next(updated);
           this.bookmarksSignal.set(updated);
+          this.bookmarksSubject.next(updated);
           this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" successfully.` : 'Section saved to General Reference successfully.', 'success');
         },
         error: (err) => {
@@ -129,8 +129,8 @@ export class BookmarkService {
       this.http.delete<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, { withCredentials: true }).subscribe({
         next: () => {
           const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
-          this.bookmarksSubject.next(updated);
           this.bookmarksSignal.set(updated);
+          this.bookmarksSubject.next(updated);
           this.snackbar.show('Section removed from library successfully.', 'info');
         },
         error: () => {
@@ -158,8 +158,8 @@ export class BookmarkService {
               notes: notes,
               collectionName: collectionName
             };
-            this.bookmarksSubject.next(updated);
             this.bookmarksSignal.set(updated);
+            this.bookmarksSubject.next(updated);
           }
           if (!silent) {
             this.snackbar.show('Section notes updated successfully.', 'success');

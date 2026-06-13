@@ -1,5 +1,5 @@
 .spinner {
-  border-top-color: var(--color-primary);
+  border-top-color: var(--color-accent);
 }
 
 @keyframes spin {
@@ -12,4 +12,37 @@
   border-radius: 6px;
   font-size: 0.85rem;
   color: var(--color-primary-light);
+}
+
+/* Act card subtle hover — no big translateY to keep it compact */
+.act-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    border-color: var(--border-accent);
+    box-shadow: 0 4px 20px rgba(217, 119, 6, 0.08);
+    transform: translateY(-2px);
+  }
+}
+
+/* Feature card hover */
+.feature-card {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* AI glow animation on input focus */
+.ai-answer-card {
+  animation: fadeIn 0.25s ease forwards;
+}
+
+/* Stat pills */
+.stat-pill {
+  transition: all 0.15s ease;
+}
+
+/* Mobile: tighten up the hero on very small screens */
+@media (max-width: 400px) {
+  .search-container {
+    max-width: 100%;
+  }
 }

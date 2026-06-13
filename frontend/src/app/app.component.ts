@@ -14,6 +14,7 @@ import { SettingsService } from './services/settings.service';
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
+  title = 'frontend';
   constructor(
     private themeService: ThemeService,
     private settingsService: SettingsService

@@ -41,6 +41,14 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/browse-laws/browse-laws.component').then(m => m.BrowseLawsComponent)
   },
   {
+    path: 'laws/mapper',
+    loadComponent: () => import('./pages/law-mapper/law-mapper.component').then(m => m.LawMapperComponent)
+  },
+  {
+    path: 'laws/civil-family',
+    loadComponent: () => import('./pages/civil-family-portal/civil-family-portal.component').then(m => m.CivilFamilyPortalComponent)
+  },
+  {
     path: 'laws/:shortName',
     loadComponent: () => import('./pages/law-viewer/law-viewer.component').then(m => m.LawViewerComponent)
   },
@@ -49,6 +57,10 @@ export const routes: Routes = [
   {
     path: 'search',
     loadComponent: () => import('./pages/search/search.component').then(m => m.SearchComponent)
+  },
+  {
+    path: 'find-help',
+    loadComponent: () => import('./pages/find-help/find-help.component').then(m => m.FindHelpComponent)
   },
   {
     path: 'lawyers',
