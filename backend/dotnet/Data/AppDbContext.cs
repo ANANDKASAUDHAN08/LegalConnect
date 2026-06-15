@@ -16,6 +16,7 @@ namespace CoreApi.Data
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ActiveSession> ActiveSessions { get; set; }
         public DbSet<LoginHistory> LoginHistories { get; set; }
+        public DbSet<ResearchNote> ResearchNotes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -60,6 +61,17 @@ namespace CoreApi.Data
                 .WithMany()
                 .HasForeignKey(b => b.ClientId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ResearchNote relationship
+            modelBuilder.Entity<ResearchNote>()
+                .HasOne(n => n.Client)
+                .WithMany()
+                .HasForeignKey(n => n.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ResearchNote>()
+                .HasIndex(n => new { n.ClientId, n.ActShortName, n.SectionNumber })
+                .IsUnique();
         }
     }
 }
