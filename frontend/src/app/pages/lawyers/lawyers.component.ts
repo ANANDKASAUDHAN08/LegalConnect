@@ -101,6 +101,11 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
         this.readQueryParamsAndLoad();
       }
     });
+
+    // Register scroll event outside Angular's zone to prevent change detection on every scroll pixel
+    this.zone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
   }
 
   ngAfterViewInit() {
@@ -210,6 +215,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.loadingTimeout) {
       clearTimeout(this.loadingTimeout);
     }
+    window.removeEventListener('scroll', this.onScroll);
   }
 
   readQueryParamsAndLoad() {
@@ -494,10 +500,15 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.router.navigate(['/specializations'], { queryParams: { name: specName } });
   }
 
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.isScrolled = window.scrollY > 20;
-  }
+  private onScroll = () => {
+    const scrolled = window.scrollY > 20;
+    if (scrolled !== this.isScrolled) {
+      this.zone.run(() => {
+        this.isScrolled = scrolled;
+        this.cdr.markForCheck();
+      });
+    }
+  };
 
   openMobileSearch() {
     this.showMobileSearch = true;

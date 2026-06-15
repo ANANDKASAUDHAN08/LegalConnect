@@ -5,6 +5,8 @@ import { Observable } from 'rxjs';
 export interface ContentBlock {
   type: 'main' | 'explanation' | 'illustration' | 'clause';
   text: string;
+  sentences?: { text: string; globalIndex: number }[];
+  clauseIndicator?: string;
 }
 
 export interface Section {
@@ -40,11 +42,14 @@ export interface BareAct {
 
 export interface SearchResultItem {
   _id: string;
+  section_number: string;
+  title: string;
+  title_hi?: string;
   actName: string;
   shortName: string;
-  year: number;
-  description: string;
-  chapters: { chapterNumber: string, title: string, sectionsCount: number }[];
+  year?: number;
+  chapterNumber: string;
+  snippet: string;
 }
 
 export interface ApiResponse<T> {
@@ -74,8 +79,13 @@ export class LegalService {
     return this.http.get<ApiResponse<BareAct>>(url);
   }
 
-  getSection(shortName: string, sectionNumber: string): Observable<ApiResponse<{chapter: string, section_number: string, title: string, content: string, aiSummary?: string}>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}`);
+  getActOutline(shortName: string, refresh = false): Observable<ApiResponse<BareAct>> {
+    const url = refresh ? `${this.apiUrl}/acts/${shortName}/outline?refresh=true` : `${this.apiUrl}/acts/${shortName}/outline`;
+    return this.http.get<ApiResponse<BareAct>>(url);
+  }
+
+  getSection(shortName: string, sectionNumber: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}?t=${Date.now()}`);
   }
 
   searchLaws(query: string): Observable<ApiResponse<SearchResultItem[]>> {
@@ -130,8 +140,8 @@ export class LegalService {
     );
   }
 
-  translateSection(shortName: string, sectionNumber: string, force = false): Observable<ApiResponse<{ content_hi: string; title_hi: string; cached: boolean }>> {
-    return this.http.post<ApiResponse<{ content_hi: string; title_hi: string; cached: boolean }>>(
+  translateSection(shortName: string, sectionNumber: string, force = false): Observable<ApiResponse<{ content_hi: string; title_hi: string; clean_title_hi?: string; introduction_text_hi?: string; content_blocks_hi?: ContentBlock[]; cached: boolean }>> {
+    return this.http.post<ApiResponse<{ content_hi: string; title_hi: string; clean_title_hi?: string; introduction_text_hi?: string; content_blocks_hi?: ContentBlock[]; cached: boolean }>>(
       `${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}/translate`,
       { force }
     );

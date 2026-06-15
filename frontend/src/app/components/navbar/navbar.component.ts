@@ -74,18 +74,29 @@ export class NavbarComponent implements OnInit, OnDestroy {
         this.isLocationEstimated = est;
       })
     );
+
+    // Register scroll event outside Angular's zone to prevent change detection on every scroll pixel
+    this.zone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
   }
 
   ngOnDestroy() {
     if (this.locationSub) {
       this.locationSub.unsubscribe();
     }
+    window.removeEventListener('scroll', this.onScroll);
   }
 
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
-    this.isScrolled = window.scrollY > 20;
-  }
+  private onScroll = () => {
+    const scrolled = window.scrollY > 20;
+    if (scrolled !== this.isScrolled) {
+      this.zone.run(() => {
+        this.isScrolled = scrolled;
+        this.cdr.markForCheck();
+      });
+    }
+  };
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {

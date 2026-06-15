@@ -17,11 +17,13 @@ export interface LocalAct {
 })
 export class DatabaseService extends Dexie {
   acts!: Table<LocalAct, number>;
+  sections!: Table<any, number>;
 
   constructor() {
     super('LegalConnectDB');
-    this.version(1).stores({
-      acts: '++id, shortName, actName, fullText'
+    this.version(2).stores({
+      acts: '++id, shortName, actName, fullText',
+      sections: '++id, actShortName, section_number, [actShortName+section_number]'
     });
   }
 
@@ -32,7 +34,7 @@ export class DatabaseService extends Dexie {
       // Build a flat fullText blob from all section contents for search
       const fullText = (act.chapters || [])
         .flatMap((ch: any) => ch.sections || [])
-        .map((s: any) => `${s.title} ${s.content}`)
+        .map((s: any) => `${s.title} ${s.content || ''}`)
         .join(' ');
 
       const localAct: LocalAct = {
@@ -77,6 +79,27 @@ export class DatabaseService extends Dexie {
 
   async getCount(): Promise<number> {
     return this.acts.count();
+  }
+
+  // --- Section-level caching methods ---
+  async getLocalSection(actShortName: string, sectionNumber: string): Promise<any | undefined> {
+    return this.sections.where('[actShortName+section_number]').equals([actShortName, sectionNumber]).first();
+  }
+
+  async saveLocalSection(section: any) {
+    const existing = await this.getLocalSection(section.actShortName, section.section_number);
+    if (existing?.id) {
+      section.id = existing.id;
+    }
+    await this.sections.put(section);
+  }
+
+  async searchSections(query: string): Promise<any[]> {
+    const q = query.toLowerCase();
+    return this.sections.filter(sec => 
+      (sec.title && sec.title.toLowerCase().includes(q)) ||
+      (sec.content && sec.content.toLowerCase().includes(q))
+    ).toArray();
   }
 }
 

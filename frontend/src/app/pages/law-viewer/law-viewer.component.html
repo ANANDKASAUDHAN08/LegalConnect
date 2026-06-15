@@ -1,8 +1,113 @@
 <div class="page-wrapper min-h-screen pt-[72px]">
-  <div *ngIf="loading"
-    class="state-center flex flex-col items-center justify-center min-h-[60vh] gap-4 text-text-muted dark:text-slate-400">
-    <div class="spinner w-10 h-10 border-[3px] border-white/5 border-t-accent rounded-full animate-spin"></div>
-    <p>Loading act...</p>
+  <!-- Full Page Skeleton Loader -->
+  <!-- Full Page Skeleton Loader -->
+  <div *ngIf="loading" class="viewer-layout grid grid-cols-1 transition-all duration-300"
+    [ngClass]="isSidebarCollapsed ? 'md:grid-cols-[72px,1fr] grid-cols-1' : 'md:grid-cols-[320px,1fr] grid-cols-1'">
+
+    <!-- Left Sidebar Skeleton (Matches Sidebar) -->
+    <aside
+      class="sidebar bg-surface-light dark:bg-surface-dark border-r border-border-subtle/40 p-6 flex flex-col gap-5 h-screen overflow-hidden select-none transition-all duration-300"
+      [ngClass]="isSidebarCollapsed ? 'items-center px-2 py-6' : 'w-full'">
+      <!-- Collapsed mini sidebar loader elements -->
+      <ng-container *ngIf="isSidebarCollapsed">
+        <div class="w-10 h-10 rounded-full shimmer-element shrink-0"></div>
+        <div class="w-10 h-10 rounded-full shimmer-element shrink-0 mt-2"></div>
+        <div class="w-8 h-[1px] bg-border-subtle/50 shrink-0 my-2"></div>
+        <div class="w-8 h-16 shimmer-element rounded-xl shrink-0"></div>
+        <div class="flex flex-col gap-3 items-center w-full px-1 mt-2">
+          <div class="w-10 h-10 rounded-full shimmer-element shrink-0" *ngFor="let item of [1,2,3,4]"></div>
+        </div>
+      </ng-container>
+
+      <!-- Expanded sidebar loader elements -->
+      <ng-container *ngIf="!isSidebarCollapsed">
+        <!-- Back Link Button Skeleton -->
+        <div class="h-8 w-28 shimmer-element rounded-xl self-start"></div>
+
+        <!-- Act Title & Year Badge Skeleton -->
+        <div class="flex items-center justify-between gap-3 mt-1 pb-1 w-full">
+          <div class="h-6 shimmer-element rounded-lg w-2/3"></div>
+          <div class="h-5 w-12 shimmer-element rounded-full"></div>
+        </div>
+
+        <!-- Search Box Skeleton -->
+        <div class="h-10 shimmer-element rounded-xl w-full"></div>
+
+        <!-- Tab Switcher Skeleton -->
+        <div class="h-9 shimmer-element rounded-xl w-full"></div>
+
+        <!-- Chapters/Sections Tree List Skeleton -->
+        <div class="flex flex-col gap-4 mt-2 w-full">
+          <div class="flex items-center gap-3 p-1 rounded-lg w-full" *ngFor="let item of [1,2,3,4,5,6]">
+            <div class="h-5 w-8 shimmer-element rounded shrink-0"></div>
+            <div class="h-5 shimmer-element rounded w-2/3"></div>
+          </div>
+        </div>
+      </ng-container>
+    </aside>
+
+    <!-- Main Content Area Skeleton -->
+    <main class="viewer-content p-6 md:p-12 flex flex-col gap-8 w-full">
+      <!-- Act Header Bar Skeleton -->
+      <div
+        class="pb-6 border-b border-border-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <div class="flex flex-col gap-2 w-full md:w-2/3">
+          <div class="h-8 shimmer-element rounded-xl w-1/2"></div>
+          <div class="h-4 shimmer-element rounded w-3/4 mt-1"></div>
+        </div>
+        <div class="h-9 shimmer-element rounded-xl w-32 shrink-0 self-start md:self-center"></div>
+      </div>
+
+      <!-- Main Layout: Content Card + Companion Dashboard -->
+      <div class="grid grid-cols-1 xl:grid-cols-[1fr,340px] gap-8 items-start w-full">
+        <!-- Main Section Content Card Skeleton -->
+        <div class="card p-6 md:p-8 border border-border-subtle/50 rounded-2xl flex flex-col gap-6 w-full">
+          <!-- Section title skeleton -->
+          <div
+            class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-subtle/30">
+            <div class="flex flex-col gap-2 w-full md:w-1/2">
+              <div class="h-3 shimmer-element rounded w-1/4"></div>
+              <div class="h-6 shimmer-element rounded-lg w-3/4 mt-1"></div>
+            </div>
+            <!-- TTS button bar skeleton -->
+            <div class="h-8 w-28 shimmer-element rounded-xl shrink-0"></div>
+          </div>
+
+          <!-- Sub-tabs skeleton -->
+          <div class="flex gap-4 border-b border-border-subtle/25 pb-2">
+            <div class="h-4 shimmer-element rounded w-20"></div>
+            <div class="h-4 shimmer-element rounded w-28"></div>
+            <div class="h-4 shimmer-element rounded w-24"></div>
+          </div>
+
+          <!-- Text paragraphs skeleton -->
+          <div class="flex flex-col gap-3">
+            <div class="h-4 shimmer-element rounded w-full"></div>
+            <div class="h-4 shimmer-element rounded w-11/12"></div>
+            <div class="h-4 shimmer-element rounded w-5/6"></div>
+            <div class="h-4 shimmer-element rounded w-full mt-4"></div>
+            <div class="h-4 shimmer-element rounded w-4/5"></div>
+          </div>
+        </div>
+
+        <!-- Column 2: Sticky Companion Sidebar Skeleton -->
+        <div class="hidden xl:flex flex-col gap-5 w-[340px] shrink-0 p-5">
+          <div
+            class="p-5 card border border-border-subtle/50 rounded-2xl flex flex-col gap-5 shadow-sm bg-white/40 dark:bg-slate-900/40">
+            <!-- Header skeleton -->
+            <div class="h-4 shimmer-element rounded w-1/2 pb-3 border-b border-border-subtle/30"></div>
+            <!-- Progress tracker skeleton -->
+            <div class="h-10 shimmer-element rounded-xl w-full"></div>
+            <!-- Chapters outline list skeleton -->
+            <div class="flex flex-col gap-2 max-h-[260px] overflow-hidden">
+              <div class="h-6 shimmer-element rounded w-full" *ngFor="let item of [1,2,3,4]"></div>
+            </div>
+            <!-- Jargon detector skeleton -->
+            <div class="h-24 shimmer-element rounded-xl w-full"></div>
+          </div>
+        </div>
+      </div>
+    </main>
   </div>
 
   <div *ngIf="error"
@@ -12,35 +117,22 @@
   </div>
 
   <div *ngIf="act && !loading" class="viewer-layout grid grid-cols-1 transition-all duration-300"
-    [ngClass]="isSidebarCollapsed ? 'md:grid-cols-[72px,1fr] grid-cols-1' : 'md:grid-cols-[350px,1fr] grid-cols-1'">
+    [ngClass]="isSidebarCollapsed ? 'md:grid-cols-[72px,1fr] grid-cols-1' : 'md:grid-cols-[320px,1fr] grid-cols-1'">
     <app-law-viewer-sidebar [act]="act" [activeSection]="activeSection" [isSidebarCollapsed]="isSidebarCollapsed"
-      [isScrolled]="isScrolled" [isMobileDrawerOpen]="isMobileDrawerOpen"
-      (sidebarToggle)="toggleSidebar()"
-      (sidebarExpand)="expandSidebar()"
-      (sectionSelected)="selectSection($event)"
+      [isScrolled]="isScrolled" [isMobileDrawerOpen]="isMobileDrawerOpen" [recentSections]="recentSections"
+      (sidebarToggle)="toggleSidebar()" (sidebarExpand)="expandSidebar()" (sectionSelected)="selectSection($event)"
       (scenarioSelected)="selectScenario($event)" (searchQueryChanged)="sidebarSearchQuery = $event"
       (mobileDrawerClosed)="isMobileDrawerOpen = false">
     </app-law-viewer-sidebar>
 
     <!-- Content Area (Focused on Active Section) -->
-    <main class="viewer-content p-6 md:p-12 transition-all duration-300 w-full"
+    <main class="viewer-content px-4 py-2 md:py-6 md:px-12 transition-all duration-300 w-full"
       [ngClass]="selectedLanguage !== 'parallel' || activeSectionTab === 'text' || isSidebarCollapsed ? 'max-w-[1250px]' : 'max-w-[850px]'">
       <div
-        class="act-header-bar mb-10 pb-6 border-b border-border-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        class="act-header-bar mb-0 md:mb-6 pb-4 md:pb-6 border-b border-border-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div class="flex flex-col gap-2">
-          <!-- Sidebar Toggle & Act Name -->
-          <div class="flex items-center gap-3">
-            <button (click)="toggleSidebar()"
-              class="p-2 rounded-xl border border-border-subtle/40 bg-black/5 dark:bg-white/5 hover:bg-black/10 dark:hover:bg-white/10 text-text-secondary dark:text-slate-350 transition-all cursor-pointer flex items-center justify-center"
-              [appTooltip]="isSidebarCollapsed ? 'Expand Index Sidebar' : 'Collapse Index Sidebar'"
-              tooltipPlacement="right">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path *ngIf="!isSidebarCollapsed" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M11 19l-7-7 7-7M20 12H4" />
-                <path *ngIf="isSidebarCollapsed" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M13 5l7 7-7 7M4 12h16" />
-              </svg>
-            </button>
+          <!-- Act Name -->
+          <div class="flex flex-wrap items-center gap-3">
             <h1
               class="act-name font-serif text-2xl md:text-3xl font-bold text-text-primary dark:text-white mb-0 leading-tight">
               {{ act.actName }}
@@ -55,19 +147,17 @@
         <!-- Toolbar: Language Selector & Regenerate Btn -->
         <div class="flex items-center gap-3 self-start md:self-center shrink-0">
           <div class="lang-selector-container">
-            <button (click)="onLanguageChange('en')"
-              class="lang-btn"
-              [class.active]="selectedLanguage === 'en'">
+            <button (click)="onLanguageChange('en')" class="lang-btn" [class.active]="selectedLanguage === 'en'"
+              [appTooltip]="'View statute text in English'" tooltipPlacement="bottom">
               English
             </button>
-            <button (click)="onLanguageChange('hi')"
-              class="lang-btn"
-              [class.active]="selectedLanguage === 'hi'">
+            <button (click)="onLanguageChange('hi')" class="lang-btn" [class.active]="selectedLanguage === 'hi'"
+              [appTooltip]="'View statute text translated to Hindi'" tooltipPlacement="bottom">
               हिंदी
             </button>
-            <button (click)="onLanguageChange('parallel')"
-              class="lang-btn"
-              [class.active]="selectedLanguage === 'parallel'">
+            <button (click)="onLanguageChange('parallel')" class="lang-btn hidden md:block"
+              [class.active]="selectedLanguage === 'parallel'"
+              [appTooltip]="'Compare English and Hindi text side-by-side'" tooltipPlacement="bottom">
               Parallel
             </button>
           </div>
@@ -87,639 +177,1229 @@
       </div>
 
       <!-- Two Column Layout with Smart Reading Companion Sidebar on Desktop -->
-      <div [ngClass]="selectedLanguage !== 'parallel' ? 'grid grid-cols-1 xl:grid-cols-[1fr,320px] gap-8 items-start' : 'flex flex-col gap-6'">
-        
+      <div
+        [ngClass]="selectedLanguage !== 'parallel' ? 'grid grid-cols-1 xl:grid-cols-[1fr,340px] gap-8 items-start' : 'flex flex-col gap-6'">
+
         <!-- Column 1: Main Section Content Card -->
-        <div class="flex flex-col gap-6 w-full min-w-0">
+        <div class="flex flex-col gap-4 md:gap-6 w-full min-w-0">
           <!-- Focused Active Section Detail Card -->
-          <div *ngIf="activeSection"
-            class="section-card-focused card p-6 md:p-8 border border-border-subtle/50 rounded-2xl flex flex-col gap-6">
+          <div *ngIf="activeSection || loadingSection" [attr.data-section-num]="activeSection?.section_number"
+            id="section-card-focused"
+            class="section-card-focused card p-2.5 xs:p-4 md:p-8 border-0 md:border border-border-subtle/50 rounded-none md:rounded-2xl flex flex-col gap-2 md:gap-6 relative">
 
-        <!-- Section Title & Number with TTS Audio Bar -->
-        <div
-          class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-subtle/30">
-          <div class="flex flex-col gap-1.5">
-            <span class="sec-num text-[10px] font-bold text-accent uppercase tracking-wider">Chapter {{
-              activeChapter?.chapterNumber }} • Section {{ activeSection.section_number }}</span>
-            <h2 class="sec-title text-lg font-bold text-text-primary dark:text-white leading-snug">
-              {{ getSectionTitle(activeSection, selectedLanguage === 'hi') }}
-            </h2>
-            <div *ngIf="isMappingSupportedAct" class="flex flex-wrap gap-2 mt-1">
-              <button (click)="loadCrossReference()"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-accent/10 hover:bg-accent/20 text-accent border border-accent/25 hover:border-accent/40 transition-all cursor-pointer">
-                <svg class="w-3 h-3 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-                Compare with {{ equivalentActName }}
-              </button>
-            </div>
-          </div>
-
-          <!-- TTS Voice Controls (Innovative Audio Bar) -->
-          <div
-            class="flex items-center gap-1.5 p-1 bg-black/10 dark:bg-white/5 border border-border-subtle/20 rounded-xl self-start md:self-center shrink-0">
-            <button (click)="speakActiveContent()"
-              class="h-8 px-3 rounded-xl text-[10px] font-bold border-none cursor-pointer flex items-center gap-1.5 transition-all text-white whitespace-nowrap"
-              [ngClass]="isSpeaking ? 'bg-amber-500 hover:bg-amber-600' : 'bg-[hsl(35,92%,47%)] hover:bg-[hsl(35,92%,37%)]'"
-              [appTooltip]="isSpeaking ? 'Pause or stop speaking' : 'Read this section aloud'" tooltipPlacement="top">
-              <svg *ngIf="!isSpeaking" class="w-[16px] h-[16px]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-              </svg>
-              <!-- Waveform visualizer active when speaking -->
-              <div *ngIf="isSpeaking && !isPaused" class="flex items-center gap-0.5 h-3.5 px-0.5">
-                <span class="w-0.5 h-full bg-white rounded-full animate-[pulse-bar_0.6s_infinite_alternate]"></span>
-                <span class="w-0.5 h-1/2 bg-white rounded-full animate-[pulse-bar_0.4s_infinite_alternate_0.1s]"></span>
-                <span class="w-0.5 h-3/4 bg-white rounded-full animate-[pulse-bar_0.8s_infinite_alternate_0.2s]"></span>
-                <span
-                  class="w-0.5 h-2/5 bg-white rounded-full animate-[pulse-bar_0.5s_infinite_alternate_0.15s]"></span>
+            <!-- Premium Shimmering Section Skeleton Loader -->
+            <div *ngIf="loadingSection" class="flex flex-col gap-6">
+              <!-- Section Title & Number with TTS Audio Bar Skeleton -->
+              <div
+                class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-subtle/30">
+                <div class="flex flex-col gap-2 w-full md:w-2/3">
+                  <!-- Chapter/Section badge skeleton -->
+                  <div class="h-3.5 w-40 shimmer-element rounded"></div>
+                  <!-- Title skeleton -->
+                  <div class="h-6 w-3/4 shimmer-element rounded-lg mt-1"></div>
+                </div>
+                <!-- TTS Voice Controls skeleton -->
+                <div class="h-9 w-28 shimmer-element rounded-xl shrink-0 self-start md:self-center"></div>
               </div>
-              <svg *ngIf="isSpeaking && isPaused" class="w-[16px] h-[16px]" fill="none" stroke="currentColor"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z M9 9h6v6H9z" />
-              </svg>
-              <span *ngIf="!isSpeaking">Listen Aloud</span>
-              <span *ngIf="isSpeaking">{{ isPaused ? 'Paused' : 'Stop' }}</span>
-            </button>
-            <button *ngIf="isSpeaking && !isPaused" (click)="pauseSpeech()"
-              class="h-8 w-8 rounded-xl border-none bg-transparent hover:bg-black/10 dark:hover:bg-white/5 text-text-secondary cursor-pointer flex items-center justify-center transition-all"
-              appTooltip="Pause speech" tooltipPlacement="top">
-              <svg class="w-[22px] h-[22px] text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6" />
-              </svg>
-            </button>
-            <button *ngIf="isSpeaking && isPaused" (click)="resumeSpeech()"
-              class="h-8 w-8 rounded-xl border-none bg-transparent hover:bg-black/10 dark:hover:bg-white/5 text-text-secondary cursor-pointer flex items-center justify-center transition-all"
-              appTooltip="Resume speech" tooltipPlacement="top">
-              <svg class="w-[26px] h-[26px] text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                  d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-              </svg>
-            </button>
+
+              <!-- Section Details Sub-Tabs Skeleton -->
+              <div class="flex gap-4 border-b border-border-subtle/25 pb-2">
+                <div class="h-4 w-20 shimmer-element rounded"></div>
+                <div class="h-4 w-28 shimmer-element rounded"></div>
+                <div class="h-4 w-24 shimmer-element rounded"></div>
+              </div>
+
+              <!-- Content paragraphs skeleton -->
+              <div class="flex flex-col gap-4 py-2">
+                <div class="h-4 w-full shimmer-element rounded"></div>
+                <div class="h-4 w-11/12 shimmer-element rounded"></div>
+                <div class="h-4 w-5/6 shimmer-element rounded"></div>
+                <div class="h-4 w-full shimmer-element rounded mt-4"></div>
+                <div class="h-4 w-4/5 shimmer-element rounded"></div>
+              </div>
+            </div>
+
+            <ng-container *ngIf="activeSection && !loadingSection">
+
+              <!-- Section Title & Number with Actions Row -->
+              <div class="flex flex-col gap-1 pb-4 border-b border-border-subtle/30">
+
+                <!-- Chapter/Section & Listen Button Row -->
+                <div class="flex items-center justify-between gap-4 w-full">
+                  <span class="sec-num text-[10px] font-bold text-accent uppercase tracking-wider">Chapter {{
+                    activeChapter?.chapterNumber }} • Section {{ activeSection.section_number }}</span>
+
+                  <!-- Action Buttons Container (Right-most side) -->
+                  <div class="flex items-center gap-1.5 shrink-0">
+
+                    <!-- Compare Button (Mobile only, icon-only) -->
+                    <button *ngIf="isMappingSupportedAct" (click)="loadCrossReference()"
+                      class="inline-flex md:hidden items-center justify-center h-7 w-7 rounded-full border border-border-subtle/35 bg-slate-100/50 dark:bg-slate-900/40 text-accent hover:bg-accent/10 transition-all cursor-pointer shadow-sm"
+                      [appTooltip]="'Compare with ' + equivalentActName" tooltipPlacement="top">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                    </button>
+
+                    <!-- TTS Voice Action (Pill layout) -->
+                    <div
+                      class="flex items-center gap-1 bg-slate-100/50 dark:bg-slate-900/40 border border-border-subtle/35 rounded-full p-0.5 shadow-sm backdrop-blur-sm">
+                      <button (click)="speakActiveContent()"
+                        class="h-7 w-7 md:w-auto px-0 md:px-2.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider border-none cursor-pointer flex items-center justify-center gap-1.5 transition-all text-text-primary dark:text-white hover:bg-black/5 dark:hover:bg-white/5 bg-transparent whitespace-nowrap"
+                        [ngClass]="{'!text-amber-500 !bg-amber-500/10': isSpeaking}"
+                        [appTooltip]="isSpeaking ? 'Stop speaking' : 'Read aloud'" tooltipPlacement="top">
+                        <svg *ngIf="!isSpeaking || isPaused" class="w-3.5 h-3.5 text-text-secondary" fill="none"
+                          stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                        </svg>
+                        <!-- Waveform active visualizer -->
+                        <div *ngIf="isSpeaking && !isPaused" class="flex items-center gap-0.5 h-2.5 px-0.5">
+                          <span
+                            class="w-0.5 h-full bg-amber-500 rounded-full animate-[pulse-bar_0.6s_infinite_alternate]"></span>
+                          <span
+                            class="w-0.5 h-1/2 bg-amber-500 rounded-full animate-[pulse-bar_0.4s_infinite_alternate_0.1s]"></span>
+                          <span
+                            class="w-0.5 h-3/4 bg-amber-500 rounded-full animate-[pulse-bar_0.8s_infinite_alternate_0.2s]"></span>
+                        </div>
+                        <span class="hidden md:inline" *ngIf="!isSpeaking">Listen Aloud</span>
+                        <span class="hidden md:inline" *ngIf="isSpeaking">{{ isPaused ? 'Paused' : 'Stop' }}</span>
+                      </button>
+
+                      <!-- Pause/Play Controls inside the pill -->
+                      <button *ngIf="isSpeaking && !isPaused" (click)="pauseSpeech()"
+                        class="h-6 w-6 rounded-full border-none bg-transparent hover:bg-black/10 dark:hover:bg-white/5 text-text-secondary cursor-pointer flex items-center justify-center transition-all">
+                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 9v6m4-6v6" />
+                        </svg>
+                      </button>
+                      <button *ngIf="isSpeaking && isPaused" (click)="resumeSpeech()"
+                        class="h-6 w-6 rounded-full border-none bg-transparent hover:bg-black/10 dark:hover:bg-white/5 text-text-secondary cursor-pointer flex items-center justify-center transition-all">
+                        <svg class="w-4 h-4 text-text-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                        </svg>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+
+                <!-- Title Container -->
+                <h2
+                  class="sec-title text-base md:text-lg font-bold text-text-primary dark:text-white leading-snug mb-0 mt-1">
+                  {{ getSectionTitle(activeSection, selectedLanguage === 'hi') }}
+                </h2>
+
+              </div>
+
+              <!-- Section Details Sub-Tabs & Compare Row -->
+              <div class="flex items-center gap-2 w-full overflow-x-auto scrollbar-none py-1">
+                <!-- Sub-Tabs Pill -->
+                <div
+                  class="flex items-center p-1 bg-slate-100/60 dark:bg-slate-900/30 border border-border-subtle/30 rounded-xl w-full md:w-auto md:flex-none gap-0.5 shadow-inner backdrop-blur-sm min-w-0">
+
+                  <!-- Tab 1: Statute Text -->
+                  <button (click)="activeSectionTab = 'text'"
+                    class="flex flex-row items-center justify-center gap-1 md:gap-2 px-2.5 md:px-5 py-2 md:py-2.5 text-[10px] md:text-xs font-bold transition-all border-none rounded-xl cursor-pointer whitespace-nowrap flex-1 md:flex-none"
+                    [ngClass]="activeSectionTab === 'text' 
+                      ? 'bg-white dark:bg-slate-800 text-accent shadow-sm' 
+                      : 'bg-transparent text-text-secondary dark:text-slate-400 hover:text-text-primary dark:hover:text-white'"
+                    [appTooltip]="'Read the original official law text'" tooltipPlacement="bottom">
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                      </path>
+                    </svg>
+                    <span class="hidden sm:inline">Statute Text</span>
+                    <span class="inline sm:hidden">Statute</span>
+                  </button>
+
+                  <!-- Tab 2: AI Simplification -->
+                  <button (click)="activeSectionTab = 'ai'; summarizeSection(activeSection)"
+                    class="flex flex-row items-center justify-center gap-1 md:gap-2 px-2.5 md:px-5 py-2 md:py-2.5 text-[10px] md:text-xs font-bold transition-all border-none rounded-xl cursor-pointer whitespace-nowrap flex-1 md:flex-none"
+                    [ngClass]="activeSectionTab === 'ai' 
+                      ? 'bg-white dark:bg-slate-800 text-accent shadow-sm' 
+                      : 'bg-transparent text-text-secondary dark:text-slate-400 hover:text-text-primary dark:hover:text-white'"
+                    [appTooltip]="'Get a plain English explanation of this section'" tooltipPlacement="bottom">
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span class="hidden sm:inline">AI Simplification</span>
+                    <span class="inline sm:hidden">AI Explain</span>
+                  </button>
+
+                  <!-- Tab 3: Actions & Citations -->
+                  <button (click)="activeSectionTab = 'actions'"
+                    class="flex flex-row items-center justify-center gap-1 md:gap-2 px-2.5 md:px-5 py-2 md:py-2.5 text-[10px] md:text-xs font-bold transition-all border-none rounded-xl cursor-pointer whitespace-nowrap flex-1 md:flex-none"
+                    [ngClass]="activeSectionTab === 'actions' 
+                      ? 'bg-white dark:bg-slate-800 text-accent shadow-sm' 
+                      : 'bg-transparent text-text-secondary dark:text-slate-400 hover:text-text-primary dark:hover:text-white'"
+                    [appTooltip]="'Access bookmarking, link sharing, and notes features'" tooltipPlacement="bottom">
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
+                      </path>
+                    </svg>
+                    <span class="hidden sm:inline">Actions & Citations</span>
+                    <span class="inline sm:hidden">Actions</span>
+                  </button>
+                </div>
+
+                <!-- Compare Action (Pill item, outside the main tab pill - Desktop only) -->
+                <button *ngIf="isMappingSupportedAct" (click)="loadCrossReference()"
+                  class="hidden md:inline-flex items-center justify-center gap-1.5 h-9 px-4 rounded-xl border border-border-subtle/30 bg-slate-100/60 dark:bg-slate-900/30 hover:bg-accent/10 dark:hover:bg-accent/20 text-[10.5px] font-bold uppercase tracking-wider text-accent transition-all cursor-pointer whitespace-nowrap">
+                  <svg class="w-3.5 h-3.5 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                      d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                  </svg>
+                  <span class="hidden md:inline">Compare with {{ equivalentActName }}</span>
+                  <span class="inline md:hidden">Compare</span>
+                </button>
+              </div>
+
+              <!-- Tab Content 1: Statute Text -->
+              <div *ngIf="activeSectionTab === 'text'" class="tab-content transition-all duration-300">
+
+                <!-- Scenario Flowchart (Premium timeline display) -->
+                <div *ngIf="activeScenario && activeScenario.flowchart"
+                  class="flowchart-container p-3.5 md:p-5 bg-gradient-to-r from-accent/5 via-transparent to-transparent border border-accent/25 rounded-2xl flex flex-col gap-4 mb-6 animate-scale-up">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <span class="relative flex h-2 w-2">
+                        <span
+                          class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
+                      </span>
+                      <span class="text-xs font-bold text-accent uppercase tracking-wider">Scenario Pathway: {{
+                        activeScenario.title }}</span>
+                    </div>
+                    <button (click)="activeScenario = null"
+                      class="text-[10px] font-bold text-text-muted hover:text-accent bg-transparent border-none cursor-pointer"
+                      [appTooltip]="'Dismiss this scenario flowchart'">Hide
+                      Pathway</button>
+                  </div>
+
+                  <!-- Timeline steps -->
+                  <div
+                    class="flowchart-steps flex flex-col md:flex-row gap-4 items-center justify-between relative mt-2">
+                    <!-- Vertical Connector Line for Mobile (hidden on desktop) -->
+                    <div
+                      class="block md:hidden absolute left-4 top-4 bottom-4 w-0.5 bg-gradient-to-b from-accent/40 to-transparent -z-10">
+                    </div>
+                    <div *ngFor="let step of activeScenario.flowchart; let i = index; let last = last"
+                      class="flowchart-step flex flex-row md:flex-col items-center gap-3 md:text-center flex-1 relative z-10 w-full md:w-auto animate-fade-in">
+                      <div
+                        class="step-badge w-8 h-8 rounded-full bg-slate-900/90 dark:bg-white text-white dark:text-slate-900 text-xs font-bold flex items-center justify-center shadow-lg border-2 border-accent/40 relative">
+                        {{ i + 1 }}
+                      </div>
+                      <div class="flex flex-col gap-0.5 md:items-center">
+                        <span class="text-xs font-bold text-text-primary dark:text-white leading-tight">{{ step
+                          }}</span>
+                      </div>
+                      <!-- Connector Line -->
+                      <div *ngIf="!last"
+                        class="step-connector hidden md:block absolute top-4 left-[50%] right-[-50%] h-0.5 bg-gradient-to-r from-accent/40 to-transparent -z-10">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Single Column -->
+                <div *ngIf="selectedLanguage !== 'parallel'" class="sec-content">
+                  <!-- English Statute Text -->
+                  <div *ngIf="selectedLanguage === 'en'" class="flex flex-col gap-4 serif-reading">
+                    <div *ngFor="let block of activeSection.content_blocks">
+                      <p *ngIf="block.type === 'main'"
+                        class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
+                        [style.font-size.px]="fontSize">
+                        <ng-container *ngIf="block.sentences">
+                          <span *ngFor="let s of block.sentences"
+                            [class.speech-active]="isSentenceActive(s.globalIndex)"
+                            [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                        </ng-container>
+                        <ng-container *ngIf="!block.sentences">
+                          <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                        </ng-container>
+                      </p>
+                      <div *ngIf="block.type === 'clause'"
+                        class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
+                        [ngClass]="{
+                    'pl-3 md:pl-8': isSubClause(block.text) === 'none',
+                    'pl-6 md:pl-16': isSubClause(block.text) === 'sub',
+                    'pl-9 md:pl-24': isSubClause(block.text) === 'deep'
+                  }" [style.font-size.px]="fontSize">
+                        <ng-container *ngIf="block.sentences && block.clauseIndicator; else oldClause">
+                          <span class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                            block.clauseIndicator }}</span>
+                          <p class="whitespace-pre-wrap m-0 flex-1">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
+                          </p>
+                        </ng-container>
+                        <ng-template #oldClause>
+                          <ng-container *ngIf="extractClauseParts(block.text) as parts">
+                            <span *ngIf="parts.indicator"
+                              class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                              parts.indicator
+                              }}</span>
+                            <span *ngIf="!parts.indicator"
+                              class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
+                            <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)">
+                            </p>
+                          </ng-container>
+                        </ng-template>
+                      </div>
+                      <div *ngIf="block.type === 'explanation'"
+                        class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
+                        <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="whitespace-pre-wrap flex-1">
+                          <ng-container *ngIf="block.sentences">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!block.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                          </ng-container>
+                        </div>
+                      </div>
+                      <div *ngIf="block.type === 'illustration'"
+                        class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
+                        <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <div class="whitespace-pre-wrap flex-1">
+                          <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">Example scenario
+                            (Illustration):</span>
+                          <ng-container *ngIf="block.sentences">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!block.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hindi Statute Text -->
+                  <div *ngIf="selectedLanguage === 'hi'" class="flex flex-col gap-4">
+                    <!-- Skeleton Loader while translating -->
+                    <div *ngIf="translatingSection" class="flex flex-col gap-4 animate-pulse">
+                      <div class="flex items-center gap-3 text-accent text-xs mb-2">
+                        <div class="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
+                        <span class="font-semibold">हिन्दी अनुवाद तैयार हो रहा है...</span>
+                      </div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-11/12"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-10/12"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-9/12"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-8/12"></div>
+                    </div>
+                    <!-- Translated content -->
+                    <div *ngIf="!translatingSection" class="flex flex-col gap-4">
+                      <div *ngFor="let block of activeSection.content_blocks_hi">
+                        <p *ngIf="block.type === 'main'"
+                          class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
+                          [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="block.sentences">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!block.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                          </ng-container>
+                        </p>
+                        <div *ngIf="block.type === 'clause'"
+                          class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
+                          [ngClass]="{
+                      'pl-3 md:pl-8': isSubClause(block.text) === 'none',
+                      'pl-6 md:pl-16': isSubClause(block.text) === 'sub',
+                      'pl-9 md:pl-24': isSubClause(block.text) === 'deep'
+                    }" [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="block.sentences && block.clauseIndicator; else oldClauseHi">
+                            <span class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                              block.clauseIndicator }}</span>
+                            <p class="whitespace-pre-wrap m-0 flex-1">
+                              <span *ngFor="let s of block.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
+                            </p>
+                          </ng-container>
+                          <ng-template #oldClauseHi>
+                            <ng-container *ngIf="extractClauseParts(block.text) as parts">
+                              <span *ngIf="parts.indicator"
+                                class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                                parts.indicator
+                                }}</span>
+                              <span *ngIf="!parts.indicator"
+                                class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
+                              <p class="whitespace-pre-wrap m-0 flex-1"
+                                [innerHTML]="highlightSearchQuery(parts.content)"></p>
+                            </ng-container>
+                          </ng-template>
+                        </div>
+                        <div *ngIf="block.type === 'explanation'"
+                          class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
+                          <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <ng-container *ngIf="block.sentences">
+                              <span *ngFor="let s of block.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!block.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+                        <div *ngIf="block.type === 'illustration'"
+                          class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
+                          <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">उदाहरण
+                              (दृष्टांत):</span>
+                            <ng-container *ngIf="block.sentences">
+                              <span *ngFor="let s of block.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!block.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- Parallel Split Columns -->
+                <div *ngIf="selectedLanguage === 'parallel'" class="hidden md:grid grid-cols-2 gap-8">
+                  <!-- English Column -->
+                  <div
+                    class="english-col border-r-0 md:border-r border-border-subtle/40 md:pr-8 flex flex-col gap-4 serif-reading">
+                    <span
+                      class="text-[9px] font-bold text-accent uppercase tracking-wider block mb-1 opacity-60">English
+                      Statute Text</span>
+                    <div *ngFor="let block of activeSection.content_blocks" class="flex flex-col gap-4">
+                      <p *ngIf="block.type === 'main'"
+                        class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
+                        [style.font-size.px]="fontSize">
+                        <ng-container *ngIf="block.sentences">
+                          <span *ngFor="let s of block.sentences"
+                            [class.speech-active]="isSentenceActive(s.globalIndex)"
+                            [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                        </ng-container>
+                        <ng-container *ngIf="!block.sentences">
+                          <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                        </ng-container>
+                      </p>
+                      <div *ngIf="block.type === 'clause'"
+                        class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
+                        [ngClass]="{
+                    'pl-3 md:pl-8': isSubClause(block.text) === 'none',
+                    'pl-6 md:pl-16': isSubClause(block.text) === 'sub',
+                    'pl-9 md:pl-24': isSubClause(block.text) === 'deep'
+                  }" [style.font-size.px]="fontSize">
+                        <ng-container *ngIf="block.sentences && block.clauseIndicator; else oldClauseParallel">
+                          <span class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                            block.clauseIndicator }}</span>
+                          <p class="whitespace-pre-wrap m-0 flex-1">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
+                          </p>
+                        </ng-container>
+                        <ng-template #oldClauseParallel>
+                          <ng-container *ngIf="extractClauseParts(block.text) as parts">
+                            <span *ngIf="parts.indicator"
+                              class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                              parts.indicator
+                              }}</span>
+                            <span *ngIf="!parts.indicator"
+                              class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
+                            <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)">
+                            </p>
+                          </ng-container>
+                        </ng-template>
+                      </div>
+                      <div *ngIf="block.type === 'explanation'"
+                        class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-350 text-xs leading-relaxed">
+                        <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="whitespace-pre-wrap flex-1">
+                          <ng-container *ngIf="block.sentences">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!block.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                          </ng-container>
+                        </div>
+                      </div>
+                      <div *ngIf="block.type === 'illustration'"
+                        class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-350 text-xs leading-relaxed">
+                        <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                        </svg>
+                        <div class="whitespace-pre-wrap flex-1">
+                          <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">Example scenario
+                            (Illustration):</span>
+                          <ng-container *ngIf="block.sentences">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!block.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                          </ng-container>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Hindi Column -->
+                  <div class="hindi-col flex flex-col gap-4">
+                    <span class="text-[9px] font-bold text-accent uppercase tracking-wider block mb-1 opacity-60">हिन्दी
+                      अनुवाद</span>
+                    <!-- Skeleton Loader while translating -->
+                    <div *ngIf="translatingSection" class="flex flex-col gap-4 animate-pulse">
+                      <div class="flex items-center gap-3 text-accent text-xs mb-2">
+                        <div class="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
+                        <span class="font-semibold">हिन्दी अनुवाद तैयार हो रहा है...</span>
+                      </div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-11/12"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-10/12"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-9/12"></div>
+                      <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-8/12"></div>
+                    </div>
+                    <!-- Translated content -->
+                    <div *ngIf="!translatingSection" class="flex flex-col gap-4">
+                      <div *ngFor="let block of activeSection.content_blocks_hi" class="flex flex-col gap-4">
+                        <p *ngIf="block.type === 'main'"
+                          class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
+                          [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="block.sentences">
+                            <span *ngFor="let s of block.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!block.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                          </ng-container>
+                        </p>
+                        <div *ngIf="block.type === 'clause'"
+                          class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
+                          [ngClass]="{
+                      'pl-3 md:pl-8': isSubClause(block.text) === 'none',
+                      'pl-6 md:pl-16': isSubClause(block.text) === 'sub',
+                      'pl-9 md:pl-24': isSubClause(block.text) === 'deep'
+                    }" [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="block.sentences && block.clauseIndicator; else oldClauseHiParallel">
+                            <span class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                              block.clauseIndicator }}</span>
+                            <p class="whitespace-pre-wrap m-0 flex-1">
+                              <span *ngFor="let s of block.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
+                            </p>
+                          </ng-container>
+                          <ng-template #oldClauseHiParallel>
+                            <ng-container *ngIf="extractClauseParts(block.text) as parts">
+                              <span *ngIf="parts.indicator"
+                                class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
+                                parts.indicator
+                                }}</span>
+                              <span *ngIf="!parts.indicator"
+                                class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
+                              <p class="whitespace-pre-wrap m-0 flex-1"
+                                [innerHTML]="highlightSearchQuery(parts.content)"></p>
+                            </ng-container>
+                          </ng-template>
+                        </div>
+                        <div *ngIf="block.type === 'explanation'"
+                          class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-350 text-xs leading-relaxed">
+                          <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <ng-container *ngIf="block.sentences">
+                              <span *ngFor="let s of block.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!block.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+                        <div *ngIf="block.type === 'illustration'"
+                          class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-350 text-xs leading-relaxed">
+                          <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">उदाहरण
+                              (दृष्टांत):</span>
+                            <ng-container *ngIf="block.sentences">
+                              <span *ngFor="let s of block.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!block.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mobile Interleaved Parallel View -->
+                <div *ngIf="selectedLanguage === 'parallel'" class="block md:hidden flex flex-col gap-6">
+                  <!-- Skeleton Loader while translating -->
+                  <div *ngIf="translatingSection" class="flex flex-col gap-4 animate-pulse">
+                    <div class="flex items-center gap-3 text-accent text-xs mb-2">
+                      <div class="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
+                      <span class="font-semibold">हिन्दी अनुवाद तैयार हो रहा है...</span>
+                    </div>
+                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
+                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-11/12"></div>
+                    <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-9/12"></div>
+                  </div>
+
+                  <!-- Interleaved blocks -->
+                  <div *ngIf="!translatingSection" class="flex flex-col gap-6">
+                    <div *ngFor="let engBlock of activeSection.content_blocks; let i = index"
+                      class="p-3 md:p-5 bg-slate-50/50 md:bg-slate-50 dark:bg-slate-900/10 md:dark:bg-slate-900/30 border-x-0 border-t-0 border-b md:border border-border-subtle/20 md:border-border-subtle/30 dark:border-slate-800/40 md:dark:border-slate-800 rounded-none md:rounded-2xl flex flex-col gap-3 md:gap-4">
+
+                      <!-- English Block -->
+                      <div class="english-block flex flex-col gap-2 serif-reading">
+                        <span
+                          class="text-[9px] font-black text-accent uppercase tracking-wider block mb-1 opacity-60">English</span>
+
+                        <p *ngIf="engBlock.type === 'main'"
+                          class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
+                          [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="engBlock.sentences">
+                            <span *ngFor="let s of engBlock.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!engBlock.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(engBlock.text))"></span>
+                          </ng-container>
+                        </p>
+
+                        <div *ngIf="engBlock.type === 'clause'"
+                          class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
+                          [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="engBlock.sentences && engBlock.clauseIndicator; else oldClauseMob">
+                            <span class="text-accent font-bold shrink-0 min-w-[1.75rem] text-left select-none">{{
+                              engBlock.clauseIndicator }}</span>
+                            <p class="whitespace-pre-wrap m-0 flex-1">
+                              <span *ngFor="let s of engBlock.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
+                            </p>
+                          </ng-container>
+                          <ng-template #oldClauseMob>
+                            <ng-container *ngIf="extractClauseParts(engBlock.text) as parts">
+                              <span *ngIf="parts.indicator"
+                                class="text-accent font-bold shrink-0 min-w-[1.75rem] text-left select-none">{{
+                                parts.indicator }}</span>
+                              <span *ngIf="!parts.indicator"
+                                class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
+                              <p class="whitespace-pre-wrap m-0 flex-1"
+                                [innerHTML]="highlightSearchQuery(parts.content)"></p>
+                            </ng-container>
+                          </ng-template>
+                        </div>
+
+                        <div *ngIf="engBlock.type === 'explanation'"
+                          class="p-3 bg-blue-50/50 dark:bg-blue-955/10 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-2.5 items-start text-text-secondary dark:text-slate-350 text-[11px] leading-relaxed">
+                          <svg class="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <ng-container *ngIf="engBlock.sentences">
+                              <span *ngFor="let s of engBlock.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!engBlock.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(engBlock.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+
+                        <div *ngIf="engBlock.type === 'illustration'"
+                          class="p-3 bg-amber-50/40 dark:bg-amber-955/10 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-2.5 items-start text-text-secondary dark:text-slate-350 text-[11px] leading-relaxed">
+                          <svg class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">Example scenario
+                              (Illustration):</span>
+                            <ng-container *ngIf="engBlock.sentences">
+                              <span *ngFor="let s of engBlock.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!engBlock.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(engBlock.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Line Divider -->
+                      <div class="border-t border-border-subtle/20 dark:border-slate-800"></div>
+
+                      <!-- Hindi Block -->
+                      <div class="hindi-block flex flex-col gap-2"
+                        *ngIf="activeSection.content_blocks_hi && activeSection.content_blocks_hi[i] as hiBlock">
+                        <span
+                          class="text-[9px] font-black text-amber-500 uppercase tracking-wider block mb-1 opacity-60">हिंदी</span>
+
+                        <p *ngIf="hiBlock.type === 'main'"
+                          class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
+                          [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="hiBlock.sentences">
+                            <span *ngFor="let s of hiBlock.sentences"
+                              [class.speech-active]="isSentenceActive(s.globalIndex)"
+                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                          </ng-container>
+                          <ng-container *ngIf="!hiBlock.sentences">
+                            <span [innerHTML]="highlightSearchQuery(capitalizeText(hiBlock.text))"></span>
+                          </ng-container>
+                        </p>
+
+                        <div *ngIf="hiBlock.type === 'clause'"
+                          class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
+                          [style.font-size.px]="fontSize">
+                          <ng-container *ngIf="hiBlock.sentences && hiBlock.clauseIndicator; else oldClauseHiMob">
+                            <span class="text-accent font-bold shrink-0 min-w-[1.75rem] text-left select-none">{{
+                              hiBlock.clauseIndicator }}</span>
+                            <p class="whitespace-pre-wrap m-0 flex-1">
+                              <span *ngFor="let s of hiBlock.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
+                            </p>
+                          </ng-container>
+                          <ng-template #oldClauseHiMob>
+                            <ng-container *ngIf="extractClauseParts(hiBlock.text) as parts">
+                              <span class="text-accent font-bold shrink-0 min-w-[1.75rem] text-left select-none"
+                                *ngIf="parts.indicator">{{ parts.indicator }}</span>
+                              <span class="text-accent font-bold shrink-0 pt-0.5 select-none"
+                                *ngIf="!parts.indicator">•</span>
+                              <p class="whitespace-pre-wrap m-0 flex-1"
+                                [innerHTML]="highlightSearchQuery(parts.content)"></p>
+                            </ng-container>
+                          </ng-template>
+                        </div>
+
+                        <div *ngIf="hiBlock.type === 'explanation'"
+                          class="p-3 bg-blue-50/50 dark:bg-blue-955/10 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-2.5 items-start text-text-secondary dark:text-slate-350 text-[11px] leading-relaxed">
+                          <svg class="w-3.5 h-3.5 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <ng-container *ngIf="hiBlock.sentences">
+                              <span *ngFor="let s of hiBlock.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!hiBlock.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(hiBlock.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+
+                        <div *ngIf="hiBlock.type === 'illustration'"
+                          class="p-3 bg-amber-50/40 dark:bg-amber-955/10 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-2.5 items-start text-text-secondary dark:text-slate-350 text-[11px] leading-relaxed">
+                          <svg class="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                          </svg>
+                          <div class="whitespace-pre-wrap flex-1">
+                            <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">उदाहरण
+                              (दृष्टांत):</span>
+                            <ng-container *ngIf="hiBlock.sentences">
+                              <span *ngFor="let s of hiBlock.sentences"
+                                [class.speech-active]="isSentenceActive(s.globalIndex)"
+                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
+                            </ng-container>
+                            <ng-container *ngIf="!hiBlock.sentences">
+                              <span [innerHTML]="highlightSearchQuery(capitalizeText(hiBlock.text))"></span>
+                            </ng-container>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tab Content 2: AI Summary & Interactive Chat -->
+              <div *ngIf="activeSectionTab === 'ai'" class="tab-content flex flex-col gap-4">
+                <div *ngIf="summaries[activeSection.section_number] as sumData" class="flex flex-col gap-4">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <div
+                        class="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-accent/15 flex items-center justify-center text-accent shrink-0">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                          </path>
+                        </svg>
+                      </div>
+                      <h4 class="font-bold text-text-primary dark:text-white text-xs sm:text-sm whitespace-nowrap">Plain
+                        English Summary</h4>
+                    </div>
+                    <button *ngIf="sumData.text && !sumData.loading" (click)="regenerateSummary(activeSection)"
+                      class="flex items-center gap-1.5 p-1 px-1.5 sm:px-2.5 sm:py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/5 border border-border-subtle/30 text-text-secondary hover:text-accent dark:hover:text-white transition-all cursor-pointer shrink-0"
+                      [appTooltip]="'Regenerate this AI summary'" tooltipPlacement="left">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+                      </svg>
+                      <span class="text-[8px] md:xs">Regenerate</span>
+                    </button>
+                  </div>
+
+                  <div *ngIf="sumData.loading" class="flex items-center gap-3 text-text-muted text-xs py-4">
+                    <div class="spinner w-4 h-4 border-2 border-white/10 border-t-accent rounded-full animate-spin">
+                    </div>
+                    Analyzing statutory clauses...
+                  </div>
+
+                  <div *ngIf="sumData.text"
+                    class="text-text-secondary dark:text-slate-350 text-sm leading-relaxed font-sans bg-transparent p-0 py-2 border-none"
+                    [innerHTML]="parseMarkdown(sumData.text)">
+                  </div>
+
+                  <div *ngIf="sumData.error"
+                    class="text-red-500 text-xs bg-red-950/10 border border-red-900/30 p-3 rounded-lg flex items-center gap-2">
+                    <span>⚠️</span> <span>{{ sumData.error }}</span>
+                  </div>
+
+                  <!-- Interactive Follow-Up Chat -->
+                  <div *ngIf="sumData.text && activeSection"
+                    class="block h-[1.5px] w-full bg-gradient-to-r from-slate-400/20 via-slate-400 to-slate-400/20 dark:from-slate-300/20 dark:via-slate-300 dark:to-slate-300/20 my-0">
+                  </div>
+                  <app-law-viewer-chat *ngIf="sumData.text && activeSection" [shortName]="shortName"
+                    [sectionNumber]="activeSection.section_number" [sectionTitle]="getSectionTitle(activeSection)">
+                  </app-law-viewer-chat>
+                </div>
+              </div>
+
+              <!-- Tab Content 3: Actions Suite & Citations -->
+              <div *ngIf="activeSectionTab === 'actions'" class="tab-content flex flex-col gap-6 pt-2">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <!-- Library Actions -->
+                  <div
+                    class="p-3.5 md:p-5 bg-slate-50/40 dark:bg-slate-950/20 md:bg-slate-50 md:dark:bg-slate-950/35 border border-slate-200/50 dark:border-slate-800/50 md:border-slate-200 md:dark:border-slate-800 rounded-xl flex flex-col gap-4 justify-between">
+                    <div class="flex flex-col gap-1">
+                      <h4 class="text-xs font-bold text-text-primary dark:text-white uppercase tracking-wider">Research
+                        Library
+                      </h4>
+                      <p class="text-[11px] text-text-secondary dark:text-slate-400">Save this section to folders,
+                        organize
+                        annotations, or reference it
+                        later.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mt-2">
+                      <button (click)="openBookmarkModal(activeSection)"
+                        class="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-border-subtle/50 cursor-pointer flex items-center gap-1.5"
+                        [ngClass]="isActiveSectionBookmarked ? 'bg-accent/15 border-accent text-accent' : 'bg-transparent text-text-secondary hover:bg-slate-100 hover:text-text-primary dark:text-slate-350 dark:hover:bg-slate-900 dark:hover:text-white'"
+                        [appTooltip]="isActiveSectionBookmarked ? 'Remove this section from library folders' : 'Save this section to your personal research library'"
+                        tooltipPlacement="top">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                        {{ isActiveSectionBookmarked ? 'Bookmarked' : 'Add to Library' }}
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Sharing & Copy Citations -->
+                  <div
+                    class="p-3.5 md:p-5 bg-slate-50/40 dark:bg-slate-950/20 md:bg-slate-50 md:dark:bg-slate-950/35 border border-slate-200/50 dark:border-slate-800/50 md:border-slate-200 md:dark:border-slate-800 rounded-xl flex flex-col gap-4 justify-between">
+                    <div class="flex flex-col gap-1">
+                      <h4 class="text-xs font-bold text-text-primary dark:text-white uppercase tracking-wider">Citations
+                        &
+                        Copy
+                      </h4>
+                      <p class="text-[11px] text-text-secondary dark:text-slate-400">Copy direct links for court
+                        documents or
+                        share with clients.</p>
+                    </div>
+
+                    <div class="flex flex-wrap gap-3 mt-2">
+                      <button (click)="shareSection(activeSection)"
+                        class="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-border-subtle/50 cursor-pointer flex items-center gap-1.5 bg-transparent text-text-secondary hover:bg-slate-100 hover:text-text-primary dark:text-slate-350 dark:hover:bg-slate-900 dark:hover:text-white"
+                        [appTooltip]="'Copy a direct link to this section to clipboard'" tooltipPlacement="top">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                        </svg>
+                        Copy Reference Link
+                      </button>
+
+                      <button *ngIf="currentUser?.role === 'Lawyer'" (click)="shareSection(activeSection)"
+                        class="px-4 py-2.5 rounded-lg text-xs font-bold border-none transition-all cursor-pointer flex items-center gap-1.5 bg-indigo-650 text-white hover:bg-indigo-700 shadow-md"
+                        [appTooltip]="'Share this statutory provision directly with a client'" tooltipPlacement="top">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                          xmlns="http://www.w3.org/2000/svg">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                          </path>
+                        </svg>
+                        Share with Client
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Personal Annotations -->
+                <div
+                  class="p-3.5 md:p-5 bg-slate-50/40 dark:bg-slate-950/20 md:bg-slate-50 md:dark:bg-slate-950/35 border border-slate-200/50 dark:border-slate-800/50 md:border-slate-200 md:dark:border-slate-800 rounded-xl flex flex-col gap-3">
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                      <svg class="w-4 h-4 text-accent shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <h4
+                        class="text-[10px] sm:text-xs font-bold text-text-primary dark:text-white uppercase tracking-normal sm:tracking-wider whitespace-nowrap">
+                        <span class="hidden md:inline">Personal </span>Annotations
+                      </h4>
+                    </div>
+
+                    <!-- Real-time dynamic Cloud sync status indicator -->
+                    <div class="flex items-center gap-1.5"
+                      [appTooltip]="isLoggedIn ? 'Your notes are automatically synced to the cloud' : 'Log in to sync your notes to the cloud'"
+                      tooltipPlacement="left">
+                      <span *ngIf="noteService.syncStatus() === 'saving'"
+                        class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full">
+                        <svg class="w-2.5 h-2.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                          </circle>
+                          <path class="opacity-75" fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                          </path>
+                        </svg>
+                        <span class="hidden md:inline">syncing to cloud</span>
+                        <span class="inline md:hidden">syncing</span>
+                      </span>
+                      <span *ngIf="noteService.syncStatus() === 'synced'"
+                        class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                        </svg>
+                        <span class="hidden md:inline">Synced to Cloud</span>
+                        <span class="inline md:hidden">Synced</span>
+                      </span>
+                      <span *ngIf="noteService.syncStatus() === 'error'"
+                        class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2.5 py-0.5 rounded-full">
+                        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span class="hidden md:inline">Sync Error (Saved Locally)</span>
+                        <span class="inline md:hidden">Saved Locally</span>
+                      </span>
+                      <span *ngIf="noteService.syncStatus() === 'idle'"
+                        class="inline-flex items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-text-muted bg-black/5 dark:bg-white/5 px-2.5 py-0.5 rounded-full">
+                        <ng-container *ngIf="isLoggedIn; else localOnly">
+                          <svg class="w-2.5 h-2.5 text-emerald-500" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                              d="M5 13l4 4L19 7" />
+                          </svg>
+                          <span class="hidden md:inline">Cloud Synced</span>
+                          <span class="inline md:hidden">Synced</span>
+                        </ng-container>
+                        <ng-template #localOnly>
+                          <span class="hidden md:inline">Saved Locally</span>
+                          <span class="inline md:hidden">Local</span>
+                        </ng-template>
+                      </span>
+                    </div>
+                  </div>
+                  <p class="text-[11px] text-text-secondary dark:text-slate-400">Write research notes, client
+                    references, or
+                    cross-case citations for this section. Notes are saved automatically to your browser storage.</p>
+                  <textarea [ngModel]="currentNoteText" (ngModelChange)="saveSectionNotes($event)"
+                    placeholder="Start typing your research notes here..."
+                    class="w-full h-32 p-3 text-xs rounded-xl border border-border-subtle bg-white dark:bg-slate-900 text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all font-sans leading-relaxed resize-y"></textarea>
+                </div>
+              </div>
+
+              <!-- Next / Prev Section Navigation Footer Bar -->
+              <div class="flex items-center justify-between border-t border-border-subtle/30 pt-5 mt-4">
+                <button (click)="goToPrevSection()" [disabled]="!hasPrev"
+                  class="px-4 py-2 rounded-xl text-xs font-bold border border-border-subtle/40 bg-transparent text-text-secondary dark:text-slate-350 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1.5"
+                  [appTooltip]="'Navigate to the previous section (ArrowLeft)'" tooltipPlacement="top">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Prev<span class="hidden sm:inline">ious Section</span></span>
+                </button>
+
+                <button (click)="goToNextSection()" [disabled]="!hasNext"
+                  class="px-4 py-2 rounded-xl text-xs font-bold border border-transparent bg-accent text-white hover:bg-accent-dark disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1.5 shadow-md"
+                  [appTooltip]="'Navigate to the next section (ArrowRight)'" tooltipPlacement="top">
+                  <span>Next<span class="hidden sm:inline"> Section</span></span>
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+
+            </ng-container>
           </div>
         </div>
 
-        <!-- Section Details Sub-Tabs -->
-        <div class="flex items-center gap-2 border-b border-border-subtle/30 pb-1.5 overflow-x-auto scrollbar-none">
-          <button (click)="activeSectionTab = 'text'"
-            class="px-4 py-2 text-xs font-bold transition-all border-none bg-transparent cursor-pointer flex items-center gap-1.5 relative"
-            [ngClass]="activeSectionTab === 'text' ? 'text-accent' : 'text-text-secondary dark:text-slate-400 hover:text-text-primary'">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-              </path>
-            </svg>
-            Statute Text
-            <span *ngIf="activeSectionTab === 'text'"
-              class="absolute bottom-[-7px] left-0 right-0 h-0.5 bg-accent"></span>
-          </button>
+        <!-- Column 2: Sticky Smart Reading Companion Sidebar -->
+        <div *ngIf="selectedLanguage !== 'parallel' && (activeSection || loadingSection)"
+          class="hidden xl:flex flex-col gap-5 w-[340px] shrink-0 sticky top-[80px] p-5 select-none animate-fade-in">
 
-          <button (click)="activeSectionTab = 'ai'; summarizeSection(activeSection)"
-            class="px-4 py-2 text-xs font-bold transition-all border-none bg-transparent cursor-pointer flex items-center gap-1.5 relative"
-            [ngClass]="activeSectionTab === 'ai' ? 'text-accent' : 'text-text-secondary dark:text-slate-400 hover:text-text-primary'">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z">
-              </path>
-            </svg>
-            AI Simplification
-            <span *ngIf="activeSectionTab === 'ai'"
-              class="absolute bottom-[-7px] left-0 right-0 h-0.5 bg-accent"></span>
-          </button>
-
-          <button (click)="activeSectionTab = 'actions'"
-            class="px-4 py-2 text-xs font-bold transition-all border-none bg-transparent cursor-pointer flex items-center gap-1.5 relative"
-            [ngClass]="activeSectionTab === 'actions' ? 'text-accent' : 'text-text-secondary dark:text-slate-400 hover:text-text-primary'">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4">
-              </path>
-            </svg>
-            Actions & Citations
-            <span *ngIf="activeSectionTab === 'actions'"
-              class="absolute bottom-[-7px] left-0 right-0 h-0.5 bg-accent"></span>
-          </button>
-        </div>
-
-        <!-- Tab Content 1: Statute Text -->
-        <div *ngIf="activeSectionTab === 'text'" class="tab-content transition-all duration-300">
-
-          <!-- Scenario Flowchart (Premium timeline display) -->
-          <div *ngIf="activeScenario && activeScenario.flowchart"
-            class="flowchart-container p-5 bg-gradient-to-r from-accent/5 via-transparent to-transparent border border-accent/25 rounded-2xl flex flex-col gap-4 mb-6 animate-scale-up">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
+          <!-- Companion Card -->
+          <div
+            class="p-5 card companion-dashboard-card border border-border-subtle/50 rounded-2xl flex flex-col gap-5 shadow-sm">
+            <!-- Header -->
+            <div class="flex items-center justify-between pb-3 border-b border-border-subtle/30">
+              <span class="text-[10.5px] font-black text-accent uppercase tracking-widest flex items-center gap-2">
+                <svg class="w-3.5 h-3.5 text-accent animate-pulse" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+                Companion Dashboard
+              </span>
+              <div class="flex items-center gap-1.5">
                 <span class="relative flex h-2 w-2">
                   <span
                     class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
                 </span>
-                <span class="text-xs font-bold text-accent uppercase tracking-wider">Scenario Pathway: {{
-                  activeScenario.title }}</span>
-              </div>
-              <button (click)="activeScenario = null"
-                class="text-[10px] font-bold text-text-muted hover:text-accent bg-transparent border-none cursor-pointer">Hide
-                Pathway</button>
-            </div>
-
-            <!-- Timeline steps -->
-            <div class="flowchart-steps flex flex-col md:flex-row gap-4 items-center justify-between relative mt-2">
-              <div *ngFor="let step of activeScenario.flowchart; let i = index; let last = last"
-                class="flowchart-step flex flex-row md:flex-col items-center gap-3 md:text-center flex-1 relative z-10 w-full md:w-auto animate-fade-in">
-                <div
-                  class="step-badge w-8 h-8 rounded-full bg-slate-900/90 dark:bg-white text-white dark:text-slate-900 text-xs font-bold flex items-center justify-center shadow-lg border-2 border-accent/40 relative">
-                  {{ i + 1 }}
-                </div>
-                <div class="flex flex-col gap-0.5 md:items-center">
-                  <span class="text-xs font-bold text-text-primary dark:text-white leading-tight">{{ step }}</span>
-                </div>
-                <!-- Connector Line -->
-                <div *ngIf="!last"
-                  class="step-connector hidden md:block absolute top-4 left-[50%] right-[-50%] h-0.5 bg-gradient-to-r from-accent/40 to-transparent -z-10">
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Single Column -->
-          <div *ngIf="selectedLanguage !== 'parallel'" class="sec-content">
-            <!-- English Statute Text -->
-            <div *ngIf="selectedLanguage === 'en'" class="flex flex-col gap-4">
-              <div *ngFor="let block of activeSection.content_blocks">
-                <p *ngIf="block.type === 'main'"
-                  class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
-                  [style.font-size.px]="fontSize" [innerHTML]="highlightSearchQuery(capitalizeText(block.text))">
-                </p>
-                <div *ngIf="block.type === 'clause'"
-                  class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
-                  [ngClass]="{
-                    'pl-6 md:pl-8': isSubClause(block.text) === 'none',
-                    'pl-12 md:pl-16': isSubClause(block.text) === 'sub',
-                    'pl-18 md:pl-24': isSubClause(block.text) === 'deep'
-                  }" [style.font-size.px]="fontSize">
-                  <ng-container *ngIf="extractClauseParts(block.text) as parts">
-                    <span *ngIf="parts.indicator"
-                      class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{ parts.indicator
-                      }}</span>
-                    <span *ngIf="!parts.indicator" class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
-                    <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)"></p>
-                  </ng-container>
-                </div>
-                <div *ngIf="block.type === 'explanation'"
-                  class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                  <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div class="whitespace-pre-wrap flex-1"
-                    [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></div>
-                </div>
-                <div *ngIf="block.type === 'illustration'"
-                  class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                  <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <div class="whitespace-pre-wrap flex-1">
-                    <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">Example scenario
-                      (Illustration):</span>
-                    <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                  </div>
-                </div>
+                <span class="text-[9px] font-bold text-text-muted uppercase tracking-wider">Active</span>
               </div>
             </div>
 
-            <!-- Hindi Statute Text -->
-            <div *ngIf="selectedLanguage === 'hi'" class="flex flex-col gap-4">
-              <!-- Skeleton Loader while translating -->
-              <div *ngIf="translatingSection" class="flex flex-col gap-4 animate-pulse">
-                <div class="flex items-center gap-3 text-accent text-xs mb-2">
-                  <div class="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
-                  <span class="font-semibold">हिन्दी अनुवाद तैयार हो रहा है...</span>
-                </div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-11/12"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-10/12"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-9/12"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-8/12"></div>
-              </div>
-              <!-- Translated content -->
-              <div *ngIf="!translatingSection" class="flex flex-col gap-4">
-                <div *ngFor="let block of activeSection.content_blocks_hi">
-                  <p *ngIf="block.type === 'main'"
-                    class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
-                    [style.font-size.px]="fontSize" [innerHTML]="highlightSearchQuery(capitalizeText(block.text))">
-                  </p>
-                  <div *ngIf="block.type === 'clause'"
-                    class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
-                    [ngClass]="{
-                      'pl-6 md:pl-8': isSubClause(block.text) === 'none',
-                      'pl-12 md:pl-16': isSubClause(block.text) === 'sub',
-                      'pl-18 md:pl-24': isSubClause(block.text) === 'deep'
-                    }" [style.font-size.px]="fontSize">
-                    <ng-container *ngIf="extractClauseParts(block.text) as parts">
-                      <span *ngIf="parts.indicator"
-                        class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{ parts.indicator
-                        }}</span>
-                      <span *ngIf="!parts.indicator" class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
-                      <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)"></p>
-                    </ng-container>
-                  </div>
-                  <div *ngIf="block.type === 'explanation'"
-                    class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                    <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div class="whitespace-pre-wrap flex-1"
-                      [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></div>
-                  </div>
-                  <div *ngIf="block.type === 'illustration'"
-                    class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <div class="whitespace-pre-wrap flex-1">
-                      <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">उदाहरण (दृष्टांत):</span>
-                      <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Parallel Split Columns -->
-          <div *ngIf="selectedLanguage === 'parallel'" class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- English Column -->
-            <div class="english-col border-r-0 md:border-r border-border-subtle/40 md:pr-8 flex flex-col gap-4">
-              <span class="text-[9px] font-bold text-accent uppercase tracking-wider block mb-1 opacity-60">English
-                Statute Text</span>
-              <div *ngFor="let block of activeSection.content_blocks" class="flex flex-col gap-4">
-                <p *ngIf="block.type === 'main'"
-                  class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
-                  [style.font-size.px]="fontSize" [innerHTML]="highlightSearchQuery(capitalizeText(block.text))">
-                </p>
-                <div *ngIf="block.type === 'clause'"
-                  class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
-                  [ngClass]="{
-                    'pl-6 md:pl-8': isSubClause(block.text) === 'none',
-                    'pl-12 md:pl-16': isSubClause(block.text) === 'sub',
-                    'pl-18 md:pl-24': isSubClause(block.text) === 'deep'
-                  }" [style.font-size.px]="fontSize">
-                  <ng-container *ngIf="extractClauseParts(block.text) as parts">
-                    <span *ngIf="parts.indicator"
-                      class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{ parts.indicator
-                      }}</span>
-                    <span *ngIf="!parts.indicator" class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
-                    <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)"></p>
-                  </ng-container>
-                </div>
-                <div *ngIf="block.type === 'explanation'"
-                  class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                  <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div class="whitespace-pre-wrap flex-1"
-                    [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></div>
-                </div>
-                <div *ngIf="block.type === 'illustration'"
-                  class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                  <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                  </svg>
-                  <div class="whitespace-pre-wrap flex-1">
-                    <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">Example scenario
-                      (Illustration):</span>
-                    <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Hindi Column -->
-            <div class="hindi-col flex flex-col gap-4">
-              <span class="text-[9px] font-bold text-accent uppercase tracking-wider block mb-1 opacity-60">हिन्दी
-                अनुवाद</span>
-              <!-- Skeleton Loader while translating -->
-              <div *ngIf="translatingSection" class="flex flex-col gap-4 animate-pulse">
-                <div class="flex items-center gap-3 text-accent text-xs mb-2">
-                  <div class="w-4 h-4 border-2 border-accent/30 border-t-accent rounded-full animate-spin"></div>
-                  <span class="font-semibold">हिन्दी अनुवाद तैयार हो रहा है...</span>
-                </div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-full"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-11/12"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-10/12"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-9/12"></div>
-                <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-8/12"></div>
-              </div>
-              <!-- Translated content -->
-              <div *ngIf="!translatingSection" class="flex flex-col gap-4">
-                <div *ngFor="let block of activeSection.content_blocks_hi" class="flex flex-col gap-4">
-                  <p *ngIf="block.type === 'main'"
-                    class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
-                    [style.font-size.px]="fontSize" [innerHTML]="highlightSearchQuery(capitalizeText(block.text))">
-                  </p>
-                  <div *ngIf="block.type === 'clause'"
-                    class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
-                    [ngClass]="{
-                      'pl-6 md:pl-8': isSubClause(block.text) === 'none',
-                      'pl-12 md:pl-16': isSubClause(block.text) === 'sub',
-                      'pl-18 md:pl-24': isSubClause(block.text) === 'deep'
-                    }" [style.font-size.px]="fontSize">
-                    <ng-container *ngIf="extractClauseParts(block.text) as parts">
-                      <span *ngIf="parts.indicator"
-                        class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{ parts.indicator
-                        }}</span>
-                      <span *ngIf="!parts.indicator" class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
-                      <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)"></p>
-                    </ng-container>
-                  </div>
-                  <div *ngIf="block.type === 'explanation'"
-                    class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                    <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <div class="whitespace-pre-wrap flex-1"
-                      [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></div>
-                  </div>
-                  <div *ngIf="block.type === 'illustration'"
-                    class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                    <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                      viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                    </svg>
-                    <div class="whitespace-pre-wrap flex-1">
-                      <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">उदाहरण (दृष्टांत):</span>
-                      <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tab Content 2: AI Summary & Interactive Chat -->
-        <div *ngIf="activeSectionTab === 'ai'" class="tab-content flex flex-col gap-4">
-          <div *ngIf="summaries[activeSection.section_number] as sumData" class="flex flex-col gap-4">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-accent/15 flex items-center justify-center text-accent">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
-                    </path>
-                  </svg>
-                </div>
-                <h4 class="font-bold text-text-primary dark:text-white text-sm">Plain English Summary</h4>
-              </div>
-              <button *ngIf="sumData.text && !sumData.loading" (click)="regenerateSummary(activeSection)"
-                class="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-black/5 dark:bg-white/5 border border-border-subtle/30 text-text-secondary hover:text-accent dark:hover:text-white transition-all cursor-pointer"
-                [appTooltip]="'Regenerate this AI summary'" tooltipPlacement="left">
-                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
-                </svg>
-                <span>Regenerate</span>
-              </button>
-            </div>
-
-            <div *ngIf="sumData.loading" class="flex items-center gap-3 text-text-muted text-xs py-4">
-              <div class="spinner w-4 h-4 border-2 border-white/10 border-t-accent rounded-full animate-spin"></div>
-              Analyzing statutory clauses...
-            </div>
-
-            <div *ngIf="sumData.text"
-              class="text-text-secondary dark:text-slate-350 text-sm leading-relaxed font-sans bg-slate-50 dark:bg-slate-950/20 p-5 rounded-xl border border-border-subtle/30"
-              [innerHTML]="parseMarkdown(sumData.text)">
-            </div>
-
-            <div *ngIf="sumData.error"
-              class="text-red-500 text-xs bg-red-950/10 border border-red-900/30 p-3 rounded-lg flex items-center gap-2">
-              <span>⚠️</span> <span>{{ sumData.error }}</span>
-            </div>
-
-            <!-- Interactive Follow-Up Chat -->
-            <app-law-viewer-chat *ngIf="sumData.text && activeSection" [shortName]="shortName"
-              [sectionNumber]="activeSection.section_number" [sectionTitle]="getSectionTitle(activeSection)">
-            </app-law-viewer-chat>
-          </div>
-        </div>
-
-        <!-- Tab Content 3: Actions Suite & Citations -->
-        <div *ngIf="activeSectionTab === 'actions'" class="tab-content flex flex-col gap-6 pt-2">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Library Actions -->
-            <div
-              class="p-5 bg-slate-50 dark:bg-slate-950/35 border border-slate-200 dark:border-slate-850 rounded-xl flex flex-col gap-4 justify-between">
-              <div class="flex flex-col gap-1">
-                <h4 class="text-xs font-bold text-text-primary dark:text-white uppercase tracking-wider">Research
-                  Library
-                </h4>
-                <p class="text-[11px] text-text-secondary dark:text-slate-400">Save this section to folders, organize
-                  annotations, or reference it
-                  later.</p>
-              </div>
-
-              <div class="flex flex-wrap gap-3 mt-2">
-                <button (click)="openBookmarkModal(activeSection)"
-                  class="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-border-subtle/50 cursor-pointer flex items-center gap-1.5"
-                  [ngClass]="isActiveSectionBookmarked ? 'bg-accent/15 border-accent text-accent' : 'bg-transparent text-text-secondary hover:bg-slate-100 hover:text-text-primary dark:text-slate-350 dark:hover:bg-slate-900 dark:hover:text-white'">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-                  </svg>
-                  {{ isActiveSectionBookmarked ? 'Bookmarked' : 'Add to Library' }}
-                </button>
-              </div>
-            </div>
-
-            <!-- Sharing & Copy Citations -->
-            <div
-              class="p-5 bg-slate-50 dark:bg-slate-950/35 border border-slate-200 dark:border-slate-850 rounded-xl flex flex-col gap-4 justify-between">
-              <div class="flex flex-col gap-1">
-                <h4 class="text-xs font-bold text-text-primary dark:text-white uppercase tracking-wider">Citations &
-                  Copy
-                </h4>
-                <p class="text-[11px] text-text-secondary dark:text-slate-400">Copy direct links for court documents or
-                  share with clients.</p>
-              </div>
-
-              <div class="flex flex-wrap gap-3 mt-2">
-                <button (click)="shareSection(activeSection)"
-                  class="px-4 py-2.5 rounded-lg text-xs font-bold transition-all border border-border-subtle/50 cursor-pointer flex items-center gap-1.5 bg-transparent text-text-secondary hover:bg-slate-100 hover:text-text-primary dark:text-slate-350 dark:hover:bg-slate-900 dark:hover:text-white">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-                  </svg>
-                  Copy Reference Link
-                </button>
-
-                <button *ngIf="currentUser?.role === 'Lawyer'" (click)="shareSection(activeSection)"
-                  class="px-4 py-2.5 rounded-lg text-xs font-bold border-none transition-all cursor-pointer flex items-center gap-1.5 bg-indigo-650 text-white hover:bg-indigo-700 shadow-md">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                    </path>
-                  </svg>
-                  Share with Client
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <!-- Personal Annotations -->
-          <div
-            class="p-5 bg-slate-50 dark:bg-slate-950/35 border border-slate-200 dark:border-slate-850 rounded-xl flex flex-col gap-3">
-            <div class="flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-                <h4 class="text-xs font-bold text-text-primary dark:text-white uppercase tracking-wider">Personal
-                  Annotations
-                </h4>
-              </div>
-              <span
-                class="text-[9px] text-text-muted uppercase tracking-widest font-semibold bg-black/5 dark:bg-white/5 px-2 py-0.5 rounded">Autosaved
-                Locally</span>
-            </div>
-            <p class="text-[11px] text-text-secondary dark:text-slate-400">Write research notes, client references, or
-              cross-case citations for this section. Notes are saved automatically to your browser storage.</p>
-            <textarea [ngModel]="currentNoteText" (ngModelChange)="saveSectionNotes($event)"
-              placeholder="Start typing your research notes here..."
-              class="w-full h-32 p-3 text-xs rounded-xl border border-border-subtle bg-white dark:bg-slate-900 text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all font-sans leading-relaxed resize-y"></textarea>
-          </div>
-        </div>
-
-        <!-- Next / Prev Section Navigation Footer Bar -->
-        <div class="flex items-center justify-between border-t border-border-subtle/30 pt-5 mt-4">
-          <button (click)="goToPrevSection()" [disabled]="!hasPrev"
-            class="px-4 py-2 rounded-xl text-xs font-bold border border-border-subtle/40 bg-transparent text-text-secondary dark:text-slate-350 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
-            </svg>
-            Previous Section
-          </button>
-
-          <button (click)="goToNextSection()" [disabled]="!hasNext"
-            class="px-4 py-2 rounded-xl text-xs font-bold border border-transparent bg-accent text-white hover:bg-accent-dark disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1.5 shadow-md">
-            Next Section
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
-            </svg>
-          </button>
-        </div>
-
-        </div>
-
-      </div>
-
-      <!-- Column 2: Sticky Smart Reading Companion Sidebar -->
-        <div *ngIf="selectedLanguage !== 'parallel' && activeSection"
-          class="hidden xl:flex flex-col gap-5 w-[320px] shrink-0 sticky top-[92px] h-[calc(100vh-120px)] overflow-y-auto pr-1 pb-4 select-none animate-fade-in scrollbar-none">
-          
-          <!-- Companion Card -->
-          <div class="p-5 card border border-border-subtle/50 rounded-2xl flex flex-col gap-5 shadow-sm">
-            <!-- Header -->
-            <div class="flex items-center justify-between pb-3 border-b border-border-subtle/30">
-              <span class="text-[10px] font-black text-accent uppercase tracking-widest flex items-center gap-1.5">
-                <span class="relative flex h-2 w-2">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2 w-2 bg-accent"></span>
-                </span>
-                Companion Dashboard
-              </span>
-            </div>
-            
-            <!-- Section Progress & Quick Comparison Map -->
+            <!-- Section Progress & Reading Time -->
             <div class="flex flex-col gap-3">
-              <span class="text-[10px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider">Reading Progress</span>
-              <div class="flex flex-col gap-2 p-3 bg-black/10 dark:bg-white/5 border border-border-subtle/20 rounded-xl">
+              <button (click)="toggleWidget('progress')"
+                class="flex items-center justify-between text-left w-full border-none bg-transparent p-0 cursor-pointer group select-none outline-none">
+                <span
+                  class="text-[10.5px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Reading Progress
+                </span>
+                <svg class="w-3.5 h-3.5 text-text-muted transition-transform duration-200"
+                  [ngClass]="{ 'rotate-180': !isReadingProgressExpanded }" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div *ngIf="isReadingProgressExpanded"
+                class="flex flex-col gap-2.5 p-3 bg-black/10 dark:bg-white/5 border border-border-subtle/20 rounded-xl animate-fade-in">
                 <!-- Chapter Progress Text & Bar -->
                 <div class="flex justify-between items-center text-[10px] text-text-secondary dark:text-slate-350">
-                  <span class="font-medium">Chapter {{ activeChapter?.chapterNumber }} Progress</span>
-                  <span class="font-bold">{{ chapterProgress.current }} / {{ chapterProgress.total }} Secs</span>
+                  <span class="font-medium text-slate-500 dark:text-slate-400">Chapter {{ activeChapter?.chapterNumber
+                    }} Outline</span>
+                  <span class="font-bold text-accent">{{ chapterProgress.current }} of {{ chapterProgress.total }}
+                    Sections</span>
                 </div>
                 <!-- Progress Bar track -->
-                <div class="w-full h-1.5 bg-black/15 dark:bg-white/10 rounded-full overflow-hidden">
-                  <div class="h-full bg-accent rounded-full transition-all duration-300" [style.width.%]="chapterProgress.percentage"></div>
+                <div
+                  class="w-full h-2 bg-black/15 dark:bg-white/10 rounded-full overflow-hidden relative progress-bar-wrapper">
+                  <div
+                    class="h-full bg-gradient-to-r from-primary-light to-accent rounded-full transition-all duration-500 shadow-sm"
+                    [style.width.%]="chapterProgress.percentage"></div>
                 </div>
-                
-                <!-- Equivalent Section Quick Comparison Link -->
-                <div *ngIf="isMappingSupportedAct" class="flex items-center justify-between mt-2 pt-2 border-t border-border-subtle/30">
-                  <span class="text-[10px] text-text-secondary dark:text-slate-350">Equivalent in {{ equivalentActName }}</span>
-                  <button (click)="loadCrossReference()"
-                    class="px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all border border-border-subtle/30 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-text-secondary dark:text-slate-300 hover:text-accent cursor-pointer shadow-sm">
-                    Compare
-                  </button>
+
+                <!-- Read Time Badge (Informative) -->
+                <div
+                  class="flex items-center justify-between mt-1 pt-1.5 border-t border-border-subtle/20 text-[10px] text-text-muted">
+                  <span class="flex items-center gap-1">
+                    <svg class="w-3 h-3 text-text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    Est. Reading Time
+                  </span>
+                  <span class="font-bold text-text-secondary dark:text-slate-350 flex items-center gap-1">
+                    <svg class="w-3 h-3 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    {{ readingTime }} {{ readingTime === 1 ? 'min' : 'mins' }}
+                  </span>
                 </div>
               </div>
             </div>
 
             <!-- Chapter Navigation Timeline Map -->
             <div class="flex flex-col gap-3">
-              <span class="text-[10px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider">Chapter Outline</span>
-              <div class="flex flex-col gap-1.5 max-h-[260px] overflow-y-auto pr-1 scrollbar-none border-l border-border-subtle/40 ml-2 pl-3">
+              <button (click)="toggleWidget('outline')"
+                class="flex items-center justify-between text-left w-full border-none bg-transparent p-0 cursor-pointer group select-none outline-none">
+                <span
+                  class="text-[10.5px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
+                  </svg>
+                  Chapter Outline
+                </span>
+                <svg class="w-3.5 h-3.5 text-text-muted transition-transform duration-200"
+                  [ngClass]="{ 'rotate-180': !isChapterOutlineExpanded }" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div *ngIf="isChapterOutlineExpanded"
+                class="flex flex-col gap-1 max-h-[260px] overflow-y-auto pr-1 custom-scrollbar border-l-2 border-slate-200 dark:border-slate-800 ml-2.5 pl-3.5 timeline-container animate-fade-in">
                 <button *ngFor="let sec of activeChapter?.sections" (click)="selectSection(sec)"
-                  class="relative flex items-center gap-2 text-left py-1.5 px-2 rounded-lg transition-all cursor-pointer bg-transparent text-xs w-full hover:bg-black/5 dark:hover:bg-white/5 border border-transparent"
-                  [ngClass]="activeSection.section_number === sec.section_number ? 'text-accent font-bold bg-accent/5 border-accent/15' : 'text-text-secondary dark:text-slate-400'">
+                  class="relative flex items-center gap-2.5 text-left py-1.5 px-2 rounded-xl transition-all cursor-pointer bg-transparent text-xs w-full hover:bg-black/5 dark:hover:bg-white/5 border border-transparent timeline-item-btn"
+                  [ngClass]="activeSection?.section_number === sec.section_number ? 'text-accent font-bold bg-accent/5 border-accent/10 shadow-sm' : 'text-text-secondary dark:text-slate-400'"
+                  [appTooltip]="'Jump to Section ' + sec.section_number + ': ' + getSectionTitle(sec)"
+                  tooltipPlacement="left">
                   <!-- Indicator dot on timeline -->
-                  <span class="absolute left-[-17.5px] w-2.5 h-2.5 rounded-full border-2 border-surface-light dark:border-surface-dark transition-all"
-                    [ngClass]="activeSection.section_number === sec.section_number ? 'bg-accent scale-110' : 'bg-slate-300 dark:bg-slate-700'">
+                  <span
+                    class="absolute left-[-21px] w-3 h-3 rounded-full border-2 border-surface-light dark:border-surface-dark transition-all timeline-dot"
+                    [ngClass]="activeSection?.section_number === sec.section_number ? 'bg-accent scale-110 active-glow' : 'bg-slate-300 dark:bg-slate-700'">
                   </span>
-                  <span class="font-mono text-[10px] shrink-0" 
-                    [ngClass]="activeSection.section_number === sec.section_number ? 'text-accent' : 'text-text-muted'">
+                  <span
+                    class="font-mono text-[9px] font-bold tracking-wider shrink-0 uppercase px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5"
+                    [ngClass]="activeSection?.section_number === sec.section_number ? 'text-accent bg-accent/10' : 'text-text-muted'">
                     Sec {{ sec.section_number }}
                   </span>
-                  <span class="truncate text-[11px]">{{ getSectionTitle(sec) }}</span>
+                  <span class="truncate text-[11px] leading-tight flex-1">{{ getSectionTitle(sec) }}</span>
                 </button>
               </div>
             </div>
 
             <!-- Jargon & Legal Terms Detector -->
             <div class="flex flex-col gap-3">
-              <span class="text-[10px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider">Jargon Detector</span>
-              <div class="flex flex-col gap-2.5 p-3.5 bg-slate-50 dark:bg-slate-950/20 border border-border-subtle/30 rounded-xl max-h-[200px] overflow-y-auto scrollbar-none">
-                <div *ngIf="detectedGlossaryTerms.length === 0" class="text-[11px] text-text-muted dark:text-slate-450 italic leading-relaxed text-center py-2">
+              <button (click)="toggleWidget('jargon')"
+                class="flex items-center justify-between text-left w-full border-none bg-transparent p-0 cursor-pointer group select-none outline-none">
+                <span
+                  class="text-[10.5px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                  </svg>
+                  Jargon Detector
+                </span>
+                <svg class="w-3.5 h-3.5 text-text-muted transition-transform duration-200"
+                  [ngClass]="{ 'rotate-180': !isJargonDetectorExpanded }" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div *ngIf="isJargonDetectorExpanded"
+                class="flex flex-col gap-2 p-1 bg-slate-50/50 dark:bg-slate-950/20 border border-border-subtle/30 rounded-xl max-h-[220px] overflow-y-auto custom-scrollbar animate-fade-in">
+                <div *ngIf="detectedGlossaryTerms.length === 0"
+                  class="text-[11px] text-text-muted dark:text-slate-450 italic leading-relaxed text-center py-4 px-2">
                   No specific statutory jargon keywords detected in this section.
                 </div>
-                <div *ngFor="let item of detectedGlossaryTerms" class="flex flex-col gap-1 border-b border-border-subtle/20 last:border-0 pb-2 last:pb-0">
-                  <span class="text-[11px] font-bold text-accent uppercase tracking-wide">{{ item.term }}</span>
-                  <span class="text-[10px] text-text-secondary dark:text-slate-350 leading-normal">{{ item.definition }}</span>
+                <div *ngFor="let item of detectedGlossaryTerms"
+                  class="flex flex-col gap-1.5 py-3 px-3 hover:bg-black/5 dark:hover:bg-white/5 rounded-xl transition-colors duration-250">
+                  <div class="flex items-center gap-2">
+                    <span class="w-1.5 h-1.5 rounded-full bg-accent"></span>
+                    <span class="text-[11px] font-bold text-text-primary dark:text-white uppercase tracking-wider">{{
+                      item.term }}</span>
+                  </div>
+                  <p class="text-[10px] text-text-secondary dark:text-slate-350 leading-relaxed m-0 pl-3.5">
+                    {{ item.definition }}</p>
                 </div>
               </div>
             </div>
 
             <!-- Recently Visited Sections -->
             <div *ngIf="otherRecents.length > 0" class="flex flex-col gap-3 pt-2 border-t border-border-subtle/35">
-              <span class="text-[10px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider">Recently Viewed</span>
-              <div class="flex flex-wrap gap-2">
+              <button (click)="toggleWidget('recent')"
+                class="flex items-center justify-between text-left w-full border-none bg-transparent p-0 cursor-pointer group select-none outline-none">
+                <span
+                  class="text-[10.5px] font-bold text-text-secondary dark:text-slate-400 uppercase tracking-wider group-hover:text-accent transition-colors flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-text-muted group-hover:text-accent transition-colors" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  Recently Viewed
+                </span>
+                <svg class="w-3.5 h-3.5 text-text-muted transition-transform duration-200"
+                  [ngClass]="{ 'rotate-180': !isRecentlyViewedExpanded }" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              <div *ngIf="isRecentlyViewedExpanded" class="flex flex-wrap gap-2 animate-fade-in pt-1">
                 <button *ngFor="let sec of otherRecents" (click)="selectSection(sec)"
-                  class="px-2.5 py-1.5 rounded-lg text-[10px] font-bold border border-border-subtle/30 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-text-secondary dark:text-slate-300 hover:text-accent dark:hover:text-white transition-all cursor-pointer shadow-sm">
+                  class="px-3 py-1.5 rounded-full text-[10px] font-bold border border-border-subtle/40 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-text-secondary dark:text-slate-350 hover:text-accent dark:hover:text-white transition-all cursor-pointer shadow-sm hover:scale-[1.03] active:scale-[0.98] flex items-center gap-1"
+                  [appTooltip]="'Revisit Section ' + sec.section_number" tooltipPlacement="top">
+                  <svg class="w-2.5 h-2.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
                   Sec {{ sec.section_number }}
                 </button>
               </div>
@@ -733,31 +1413,16 @@
 </div>
 
 <!-- Mobile Float Navigation Drawer Trigger (Hidden on Desktop) -->
-<div *ngIf="act && !loading" class="fixed bottom-6 left-6 z-[90] md:hidden">
+<div *ngIf="act && !loading" class="fixed bottom-6 right-6 z-[90] md:hidden flex items-center justify-center">
+  <span class="absolute inset-0 rounded-full bg-accent/30 animate-ping -z-10"></span>
   <button (click)="isMobileDrawerOpen = true"
-    class="w-12 h-12 rounded-full bg-accent hover:bg-accent-dark text-white border-none shadow-lg cursor-pointer flex items-center justify-center transition-all hover:scale-105"
+    class="w-12 h-12 rounded-full bg-accent/90 hover:bg-accent backdrop-blur-md text-white border border-white/20 dark:border-slate-800/80 shadow-[0_8px_32px_rgba(217,119,6,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] cursor-pointer flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"
     appTooltip="Open Index" tooltipPlacement="top">
-    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 6h16M4 12h16M4 18h7"></path>
     </svg>
   </button>
 </div>
-
-<!-- Floating Reader Preference Toolbar -->
-<div
-  class="fixed bottom-6 right-6 z-[100] flex items-center gap-2 bg-white/70 dark:bg-slate-900/70 border border-slate-200/50 dark:border-white/10 p-2 rounded-2xl shadow-xl backdrop-blur-md">
-  <span class="text-[9px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider px-2">Font Size</span>
-  <button (click)="adjustFontSize(-1)"
-    class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-all border-none cursor-pointer text-slate-700 dark:text-slate-300"
-    appTooltip="Decrease font size" tooltipPlacement="top">A-</button>
-  <button (click)="fontSize = 16"
-    class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-all border-none cursor-pointer text-slate-700 dark:text-slate-300"
-    appTooltip="Reset font size" tooltipPlacement="top">A</button>
-  <button (click)="adjustFontSize(1)"
-    class="w-8 h-8 rounded-lg flex items-center justify-center bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-xs font-bold transition-all border-none cursor-pointer text-slate-700 dark:text-slate-300"
-    appTooltip="Increase font size" tooltipPlacement="top">A+</button>
-</div>
-
 <!-- Bidirectional Transition Comparison Modal -->
 <app-law-viewer-compare [isOpen]="isCrossRefModalOpen" [shortName]="shortName" [activeSection]="activeSection"
   (close)="isCrossRefModalOpen = false">

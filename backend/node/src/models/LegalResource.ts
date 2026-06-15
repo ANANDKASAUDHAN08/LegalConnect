@@ -46,5 +46,6 @@ const LegalResourceSchema = new Schema<ILegalResource>({
 
 // Create text index for easy search on name and city
 LegalResourceSchema.index({ name: 'text', city: 'text', address: 'text' });
+LegalResourceSchema.index({ city: 1 });
 
 export default mongoose.model<ILegalResource>('LegalResource', LegalResourceSchema);

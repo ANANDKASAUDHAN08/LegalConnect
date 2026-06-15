@@ -1,15 +1,15 @@
 <!-- Bidirectional Transition Comparison Modal -->
 <div *ngIf="isOpen"
-  class="fixed inset-0 bg-black/50 dark:bg-black/75 z-[2010] backdrop-blur-sm flex items-center justify-center p-4 md:p-6 transition-all duration-300 animate-fade-in"
+  class="fixed inset-0 bg-black/50 dark:bg-black/75 z-[2010] backdrop-blur-sm flex items-center justify-center p-0 sm:p-4 md:p-6 transition-all duration-300 animate-fade-in"
   (click)="closeCrossRefModal()">
 
   <div
-    class="relative w-full max-w-5xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col animate-scale-up"
+    class="relative w-full h-full sm:h-auto max-h-[100vh] sm:max-h-[90vh] max-w-5xl bg-white dark:bg-slate-900 border-0 sm:border border-slate-200 dark:border-white/10 rounded-none sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-scale-up"
     (click)="$event.stopPropagation()">
 
     <!-- Modal Header -->
     <div
-      class="flex items-center justify-between px-6 py-3 border-b border-slate-250/60 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
+      class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-3.5 border-b border-slate-250/60 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.02]">
       <div class="flex items-center gap-3">
         <div class="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -18,7 +18,8 @@
           </svg>
         </div>
         <div class="text-left">
-          <h3 class="text-base font-bold text-text-primary dark:text-white tracking-wide">Statute Transition Mapping</h3>
+          <h3 class="text-sm sm:text-base font-bold text-text-primary dark:text-white tracking-wide">Statute Transition
+            Mapping</h3>
           <p class="text-[10px] text-text-muted dark:text-slate-400">Comparing original and restructured provisions</p>
         </div>
       </div>
@@ -32,14 +33,15 @@
     </div>
 
     <!-- Modal Content -->
-    <div class="flex-1 overflow-y-auto p-6 md:p-8 flex flex-col gap-6 no-scrollbar">
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 md:p-8 flex flex-col gap-4 sm:gap-6 no-scrollbar">
 
       <!-- Loading State -->
       <div *ngIf="crossRefLoading" class="flex flex-col items-center justify-center py-16 gap-3">
         <div
           class="w-10 h-10 border-[3px] border-slate-200 dark:border-white/5 border-t-accent rounded-full animate-spin">
         </div>
-        <p class="text-xs text-text-muted dark:text-slate-400 font-medium tracking-wide">Resolving cross-reference with Gemini AI...</p>
+        <p class="text-xs text-text-muted dark:text-slate-400 font-medium tracking-wide">Resolving cross-reference with
+          Gemini AI...</p>
       </div>
 
       <!-- Loaded State -->
@@ -50,9 +52,10 @@
 
           <!-- Old Act Section Panel -->
           <div
-            class="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-5 md:p-6 flex flex-col gap-3.5 text-left">
+            class="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-3 sm:gap-3.5 text-left">
             <div class="flex items-center justify-between">
-              <span class="badge badge-accent uppercase tracking-wider text-[9px] font-bold">Old Statute</span>
+              <span class="badge badge-accent uppercase tracking-wider !text-[9px] md:!text-[0.78rem] font-bold">Old
+                Statute</span>
               <span class="text-[10px] font-bold text-text-muted dark:text-slate-455 uppercase tracking-widest">{{
                 crossRefData.oldAct?.shortName }}</span>
             </div>
@@ -63,16 +66,17 @@
                 crossRefData.oldSection?.title }}</h4>
             </div>
             <div
-              class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap max-h-60 overflow-y-auto pr-1 no-scrollbar">
+              class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap max-h-60 overflow-y-auto pr-1.5 custom-scrollbar">
               {{ crossRefData.oldSection?.content || 'Statute details not available or repealed.' }}
             </div>
           </div>
 
           <!-- New Act Section Panel -->
           <div
-            class="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-2xl p-5 md:p-6 flex flex-col gap-3.5 text-left">
+            class="bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-white/5 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-3 sm:gap-3.5 text-left">
             <div class="flex items-center justify-between">
-              <span class="badge badge-primary uppercase tracking-wider text-[9px] font-bold">New Statute</span>
+              <span class="badge badge-primary uppercase tracking-wider !text-[9px] md:!text-[0.78rem] font-bold">New
+                Statute</span>
               <span class="text-[10px] font-bold text-text-muted dark:text-slate-455 uppercase tracking-widest">{{
                 crossRefData.newAct?.shortName }}</span>
             </div>
@@ -85,20 +89,24 @@
             </div>
             <ng-template #newSectionRepealed>
               <div class="border-b border-slate-200 dark:border-white/5 pb-2.5">
-                <span class="text-[10px] font-bold text-red-500 tracking-wider block mb-1">Repealed / Re-organized</span>
-                <h4 class="text-sm font-bold text-text-muted dark:text-slate-400 leading-snug">No direct equivalent mapping</h4>
+                <span class="text-[10px] font-bold text-red-500 tracking-wider block mb-1">Repealed /
+                  Re-organized</span>
+                <h4 class="text-sm font-bold text-text-muted dark:text-slate-400 leading-snug">No direct equivalent
+                  mapping</h4>
               </div>
             </ng-template>
             <div
-              class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap max-h-60 overflow-y-auto pr-1 no-scrollbar">
-              {{ crossRefData.newSection?.content || 'This section has been repealed, merged, or has no direct equivalent in the modern Act.' }}
+              class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed font-sans whitespace-pre-wrap max-h-60 overflow-y-auto pr-1.5 custom-scrollbar">
+              {{ crossRefData.newSection?.content || 'This section has been repealed, merged, or has no direct
+              equivalent in the modern Act.' }}
             </div>
           </div>
 
         </div>
 
         <!-- Comparative AI Diff Box -->
-        <div class="bg-accent/5 border border-accent/20 rounded-2xl p-5 md:p-6 flex flex-col gap-3 text-left">
+        <div
+          class="bg-accent/5 border border-accent/20 rounded-xl sm:rounded-2xl p-4 sm:p-5 md:p-6 flex flex-col gap-3 text-left">
           <div class="flex items-center gap-2">
             <svg class="w-4 h-4 text-accent animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
@@ -116,21 +124,23 @@
 
     <!-- Modal Footer -->
     <div
-      class="flex items-center justify-between px-6 py-4 border-t border-slate-250/60 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01]">
+      class="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-250/60 dark:border-white/5 bg-slate-50/50 dark:bg-white/[0.01]">
       <button (click)="loadCrossReference(true)" [disabled]="crossRefLoading"
         [appTooltip]="'Fetch fresh comparison from Gemini AI (clears cache)'" tooltipPlacement="top"
-        class="px-4 py-2.5 rounded-xl text-xs font-bold border border-accent/30 hover:border-accent bg-accent/10 hover:bg-accent/20 text-accent cursor-pointer transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
+        class="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs font-bold border border-accent/30 hover:border-accent bg-accent/10 hover:bg-accent/20 text-accent cursor-pointer transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed">
         <svg class="w-3.5 h-3.5" [ngClass]="{'animate-spin': crossRefLoading}" fill="none" stroke="currentColor"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
             d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
         </svg>
-        Re-analyze Comparison
+        <span class="hidden sm:inline">Re-analyze Comparison</span>
+        <span class="inline sm:hidden">Re-analyze</span>
       </button>
 
       <button (click)="closeCrossRefModal()" appTooltip="Close comparison panel" tooltipPlacement="top"
-        class="px-5 py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-text-primary dark:text-white border-none cursor-pointer transition-all">
-        Close Comparison
+        class="px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-white/5 dark:hover:bg-white/10 text-text-primary dark:text-white border-none cursor-pointer transition-all">
+        <span class="hidden sm:inline">Close Comparison</span>
+        <span class="inline sm:hidden">Close</span>
       </button>
     </div>
 

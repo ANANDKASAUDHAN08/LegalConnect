@@ -27,30 +27,30 @@
     </div>
 
     <section *ngIf="!loading && results.length > 0" class="search-results">
-      <p class="text-text-secondary dark:text-slate-400 mb-6 font-medium">Found relevant acts for "{{ lastQuery }}":</p>
+      <p class="text-text-secondary dark:text-slate-400 mb-6 font-medium">Found {{ results.length }} matching sections for "{{ lastQuery }}":</p>
       
       <div class="flex flex-col gap-6">
         <div *ngFor="let result of results" class="card p-6 md:p-8 flex flex-col gap-4 hover:border-accent/50 transition-colors">
           <div class="flex justify-between items-start gap-4">
             <div class="flex flex-col gap-2">
-              <span class="badge badge-primary self-start">{{ result.year }}</span>
-              <a [routerLink]="['/laws', result.shortName]" class="font-serif text-[1.4rem] font-bold text-text-primary dark:text-white hover:text-accent dark:hover:text-accent-light no-underline">
-                {{ result.actName }}
+              <div class="flex items-center gap-2">
+                <span *ngIf="result.year" class="badge badge-primary">{{ result.year }}</span>
+                <span class="text-xs text-text-secondary dark:text-slate-400 font-bold uppercase tracking-wider">{{ result.actName }}</span>
+              </div>
+              <a [routerLink]="['/laws', result.shortName]" [fragment]="'sec-' + result.section_number" class="font-serif text-[1.4rem] font-bold text-text-primary dark:text-white hover:text-accent dark:hover:text-accent-light no-underline">
+                Section {{ result.section_number }}: {{ result.title }}
               </a>
             </div>
           </div>
-          <p class="text-text-secondary dark:text-slate-400 leading-relaxed">{{ result.description }}</p>
+          <p class="text-text-secondary dark:text-slate-350 leading-relaxed text-sm bg-black/5 dark:bg-white/5 p-4 rounded-xl font-mono" [innerHTML]="result.snippet"></p>
           
-          <div class="mt-4 pt-4 border-t border-border-subtle">
-            <p class="text-sm font-bold text-text-primary dark:text-white mb-3">Relevant Chapters:</p>
-            <div class="flex flex-wrap gap-2">
-              <a *ngFor="let ch of result.chapters | slice:0:5" 
-                 [routerLink]="['/laws', result.shortName]" [fragment]="'ch-' + ch.chapterNumber"
-                 class="text-xs bg-black/5 dark:bg-white/5 text-text-secondary dark:text-slate-300 px-3 py-1.5 rounded-full hover:bg-accent/10 hover:text-accent transition-colors no-underline">
-                Ch {{ ch.chapterNumber }}: {{ getCleanChapterTitle(ch.title) }}
-              </a>
-              <span *ngIf="result.chapters.length > 5" class="text-xs text-text-muted px-2 py-1.5">+{{ result.chapters.length - 5 }} more</span>
-            </div>
+          <div class="flex justify-end mt-2">
+            <a [routerLink]="['/laws', result.shortName]" [fragment]="'sec-' + result.section_number" class="btn btn-secondary text-xs px-4 py-2 flex items-center gap-1.5 no-underline">
+              View Section Details
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </a>
           </div>
         </div>
       </div>

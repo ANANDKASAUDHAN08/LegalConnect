@@ -5,19 +5,41 @@
 // --- Keyframes ---
 
 @keyframes shine-sweep {
-  0% { left: -100%; }
-  100% { left: 200%; }
+  0% {
+    left: -100%;
+  }
+
+  100% {
+    left: 200%;
+  }
 }
 
 @keyframes icon-nudge-left {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-3px); }
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  50% {
+    transform: translateX(-3px);
+  }
 }
 
 @keyframes icon-bounce {
-  0%, 100% { transform: translateY(0); }
-  40% { transform: translateY(-2px); }
-  60% { transform: translateY(1px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-2px);
+  }
+
+  60% {
+    transform: translateY(1px);
+  }
 }
 
 @keyframes ripple-out {
@@ -25,6 +47,7 @@
     transform: scale(0);
     opacity: 0.45;
   }
+
   100% {
     transform: scale(2.5);
     opacity: 0;
@@ -32,8 +55,15 @@
 }
 
 @keyframes glow-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0); }
-  50% { box-shadow: 0 0 10px 2px hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.2); }
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0);
+  }
+
+  50% {
+    box-shadow: 0 0 10px 2px hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.2);
+  }
 }
 
 // --- Shared icon-button base ---
@@ -52,12 +82,10 @@
     inset: 0;
     z-index: 1;
     pointer-events: none;
-    background: linear-gradient(
-      120deg,
-      transparent 30%,
-      rgba(255, 255, 255, 0.18) 50%,
-      transparent 70%
-    );
+    background: linear-gradient(120deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.18) 50%,
+        transparent 70%);
     left: -100%;
     width: 60%;
     opacity: 0;
@@ -72,11 +100,9 @@
     z-index: 0;
     border-radius: inherit;
     pointer-events: none;
-    background: radial-gradient(
-      circle at center,
-      hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.25) 0%,
-      transparent 70%
-    );
+    background: radial-gradient(circle at center,
+        hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.25) 0%,
+        transparent 70%);
     transform: scale(0);
     opacity: 0;
   }
@@ -151,12 +177,10 @@
     }
 
     &::before {
-      background: linear-gradient(
-        120deg,
-        transparent 30%,
-        rgba(255, 255, 255, 0.08) 50%,
-        transparent 70%
-      );
+      background: linear-gradient(120deg,
+          transparent 30%,
+          rgba(255, 255, 255, 0.08) 50%,
+          transparent 70%);
     }
 
     &:focus-visible {
@@ -164,5 +188,80 @@
         0 0 0 2px var(--color-bg-dark, #1e293b),
         0 0 0 4px var(--color-accent);
     }
+  }
+}
+
+/* ============================
+   Pulsing Active Voice Search
+   ============================ */
+
+@keyframes voice-pulse {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    border-color: rgba(239, 68, 68, 0.6);
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+    border-color: rgba(239, 68, 68, 0.9);
+  }
+}
+
+.voice-active {
+  animation: voice-pulse 1.5s infinite ease-in-out !important;
+}
+
+/* ============================
+   Accordion Transitions
+   ============================ */
+
+.chapter-sections-drawer {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-height 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+
+  &.expanded {
+    max-height: 500px;
+    opacity: 1;
+  }
+}
+
+/* ============================
+   Outline Timeline Dots Glow
+   ============================ */
+.timeline-dot {
+  z-index: 10;
+  box-shadow: 0 0 0 0px transparent;
+
+  &.active-glow {
+    box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.2);
+    animation: timeline-pulse-active 2.5s infinite;
+  }
+}
+
+@keyframes timeline-pulse-active {
+  0% {
+    box-shadow: 0 0 0 0px rgba(217, 119, 6, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 6px rgba(217, 119, 6, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0px rgba(217, 119, 6, 0);
+  }
+}
+
+/* Hide scrollbar but keep scroll functional */
+.hide-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

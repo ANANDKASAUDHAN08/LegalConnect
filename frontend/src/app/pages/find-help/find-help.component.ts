@@ -58,14 +58,15 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
   isMobile = false;
   showMobileFilters = false;
 
-  @HostListener('window:scroll', [])
-  onWindowScroll() {
+  private onScroll = () => {
     const scrolled = window.scrollY > 20;
     if (scrolled !== this.isScrolled) {
-      this.isScrolled = scrolled;
-      this.cdr.markForCheck();
+      this.zone.run(() => {
+        this.isScrolled = scrolled;
+        this.cdr.markForCheck();
+      });
     }
-  }
+  };
 
   @HostListener('window:resize', [])
   onResize() {
@@ -287,6 +288,11 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       }
       this.cdr.markForCheck();
     });
+
+    // Register scroll event outside Angular's zone to prevent change detection on every scroll pixel
+    this.zone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
   }
 
   ngAfterViewInit() {
@@ -311,6 +317,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       } catch (e) { }
       this.map = null;
     }
+    window.removeEventListener('scroll', this.onScroll);
   }
 
   // Clear data states

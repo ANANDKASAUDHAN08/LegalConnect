@@ -74,22 +74,32 @@ export class SearchComponent implements OnInit {
     if (this.isOffline) {
       // --- OFFLINE PATH: Query IndexedDB via Dexie ---
       try {
-        const localResults = await this.db.searchActs(query);
-        this.results = localResults.map(act => ({
-          _id: act.shortName,
-          actName: act.actName,
-          shortName: act.shortName,
-          year: Number(act.year),
-          description: act.description,
-          chapters: []
-        }));
+        const localSections = await this.db.searchSections(query);
+        const mappedResults: SearchResultItem[] = [];
+        
+        for (const sec of localSections) {
+          const act = await this.db.getActByShortName(sec.actShortName);
+          mappedResults.push({
+            _id: sec.id?.toString() || sec.section_number,
+            section_number: sec.section_number,
+            title: sec.title,
+            actName: act ? act.actName : sec.actShortName,
+            shortName: sec.actShortName,
+            year: act ? Number(act.year) : undefined,
+            chapterNumber: sec.chapterNumber,
+            snippet: sec.content ? sec.content.substring(0, 150) + '...' : ''
+          });
+        }
+        
+        this.results = mappedResults;
         this.loading = false;
         if (this.results.length === 0) {
           this.snackbar.show(`No offline results for "${query}"`, 'info');
         } else {
           this.snackbar.show(`Showing ${this.results.length} offline cached result(s)`, 'warning');
         }
-      } catch {
+      } catch (err) {
+        console.error(err);
         this.results = [];
         this.loading = false;
         this.snackbar.show('Offline search failed. No local cache available.', 'error');
@@ -107,15 +117,22 @@ export class SearchComponent implements OnInit {
         error: () => {
           // API failed — try IndexedDB as a fallback
           this.snackbar.show('API unavailable. Trying local cache...', 'warning');
-          this.db.searchActs(query).then(localResults => {
-            this.results = localResults.map(act => ({
-              _id: act.shortName,
-              actName: act.actName,
-              shortName: act.shortName,
-              year: Number(act.year),
-              description: act.description,
-              chapters: []
-            }));
+          this.db.searchSections(query).then(async (localSections) => {
+            const mappedResults: SearchResultItem[] = [];
+            for (const sec of localSections) {
+              const act = await this.db.getActByShortName(sec.actShortName);
+              mappedResults.push({
+                _id: sec.id?.toString() || sec.section_number,
+                section_number: sec.section_number,
+                title: sec.title,
+                actName: act ? act.actName : sec.actShortName,
+                shortName: sec.actShortName,
+                year: act ? Number(act.year) : undefined,
+                chapterNumber: sec.chapterNumber,
+                snippet: sec.content ? sec.content.substring(0, 150) + '...' : ''
+              });
+            }
+            this.results = mappedResults;
             this.loading = false;
           }).catch(() => {
             this.results = [];

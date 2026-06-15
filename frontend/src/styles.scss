@@ -353,6 +353,10 @@ h6 {
   border-radius: 3px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+}
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-accent);
 }
@@ -666,11 +670,16 @@ html[data-text-spacing="extra"] {
 }
 
 /* Hide scrollbar for custom select lists and dropdowns */
-.max-h-60, [class*="dropdown"] {
-  -ms-overflow-style: none !important;  /* IE and Edge */
-  scrollbar-width: none !important;  /* Firefox */
+.max-h-60,
+[class*="dropdown"] {
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+  scrollbar-width: none !important;
+
+  /* Firefox */
   &::-webkit-scrollbar {
-    display: none !important; /* Chrome, Safari and Opera */
+    display: none !important;
+    /* Chrome, Safari and Opera */
   }
 }
 
@@ -728,8 +737,10 @@ select:not(.bg-transparent):not([multiple]) {
 
 .flowchart-step {
   transition: transform 0.3s ease;
+
   &:hover {
     transform: translateY(-2px);
+
     .step-badge {
       box-shadow: var(--shadow-glow);
       border-color: var(--color-accent);
@@ -746,6 +757,7 @@ select:not(.bg-transparent):not([multiple]) {
   0% {
     transform: scaleY(0.3);
   }
+
   100% {
     transform: scaleY(1);
   }
@@ -755,33 +767,120 @@ select:not(.bg-transparent):not([multiple]) {
 .glossary-term {
   position: relative;
   text-decoration: none;
-  
+
   &:hover {
     text-shadow: 0 0 8px rgba(217, 119, 6, 0.2);
   }
 }
 
-/* --- Side-by-Side Glassmorphic Modal Scrollbar --- */
+.glossary-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: var(--tooltip-left, 50%);
+  transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, 0px));
+  margin-bottom: 8px;
+  width: 16rem; /* w-64 */
+  padding: 12px; /* p-3 */
+  background-color: rgba(15, 23, 42, 0.96); /* slate-900/96 */
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 1.625;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  z-index: 9999;
+  text-transform: none;
+  font-weight: 400;
+  text-align: center;
+  pointer-events: none;
+  
+  /* Modern CSS transition */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
+  
+  .dark & {
+    background-color: rgba(2, 6, 23, 0.96);
+  }
+
+  .glossary-term:hover &,
+  .glossary-term.active & {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y-hover, -4px));
+  }
+
+  @media (max-width: 768px) {
+    position: absolute;
+    bottom: 100%;
+    left: var(--tooltip-left, 50%);
+    transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, 10px));
+    width: 12rem; /* w-48 (192px) */
+    margin: 0;
+    margin-bottom: 8px;
+    font-size: 11px;
+    padding: 10px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
+    border-radius: 10px;
+    
+    /* Suppress hover effect on mobile to prevent sticky hovers */
+    .glossary-term:hover & {
+      opacity: 0 !important;
+      visibility: hidden !important;
+      transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, 10px)) !important;
+    }
+    
+    /* Toggled display on mobile clicks */
+    .glossary-term.active &,
+    .glossary-term.active:hover & {
+      opacity: 1 !important;
+      visibility: visible !important;
+      transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y-hover, 0px)) !important;
+    }
+  }
+}
+
+/* --- Unified Premium Custom Scrollbar --- */
 .custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(0, 0, 0, 0.25) transparent !important;
+
   &::-webkit-scrollbar {
-    width: 6px;
+    width: 6px !important;
+    height: 6px !important;
+    display: block !important;
   }
+
   &::-webkit-scrollbar-track {
-    background: transparent;
+    background: transparent !important;
+    border-radius: 99px !important;
   }
+
   &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.12);
-    border-radius: 99px;
+    background: rgba(0, 0, 0, 0.25) !important;
+    border-radius: 99px !important;
+    min-height: 40px !important;
+
     &:hover {
-      background: var(--color-accent);
+      background: var(--color-accent) !important;
     }
   }
 }
 
 .dark {
   .custom-scrollbar {
+    scrollbar-color: rgba(255, 255, 255, 0.35) rgba(255, 255, 255, 0.05) !important;
+
+    &::-webkit-scrollbar-track {
+      background: rgba(255, 255, 255, 0.05) !important;
+    }
+
     &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.35) !important;
+
+      &:hover {
+        background: var(--color-accent) !important;
+      }
     }
   }
 }

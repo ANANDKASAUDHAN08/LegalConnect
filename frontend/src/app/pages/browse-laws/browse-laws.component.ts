@@ -182,7 +182,7 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
     this.isListening = true;
     this.snackbar.show('Listening... Speak now.', 'info');
 
-    // Automatically stop after 8 seconds of silence/no results
+    // Automatically stop after 10 seconds of silence/no results
     this.voiceTimeout = setTimeout(() => {
       this.ngZone.run(() => {
         if (this.isListening) {
@@ -190,7 +190,7 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
           this.snackbar.show('Voice search timed out.', 'info');
         }
       });
-    }, 8000);
+    }, 10000);
 
     this.voiceRecognition.onresult = (event: any) => {
       if (this.voiceTimeout) {

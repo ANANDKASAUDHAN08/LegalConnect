@@ -1,8 +1,11 @@
-<div class="flex flex-col gap-4 mt-2 p-5 bg-slate-50 dark:bg-slate-950/20 rounded-xl border border-border-subtle/30 animate-fade-in">
+<div class="flex flex-col gap-2 md:gap-3 p-0 py-1 bg-transparent rounded-none border-none animate-fade-in">
   <div class="flex items-center justify-between">
-    <span class="text-xs font-bold text-text-primary dark:text-white uppercase tracking-wider">Ask AI Follow-Up Questions</span>
+    <span class="text-[10px] md:text-xs font-bold text-amber-500 dark:text-amber-400 uppercase tracking-wider">
+      Ask AI Follow-Up
+      <span class="hidden md:inline">Questions</span>
+    </span>
     <button *ngIf="chatMessages.length" (click)="clearChat()"
-      class="text-[10px] font-bold text-text-muted hover:text-accent bg-transparent border-none cursor-pointer">
+      class="text-[10px] font-bold text-red-500 hover:text-red-700 hover:bg-red-500/10 rounded-md hover:px-2 hover:py-1 bg-transparent border-none cursor-pointer">
       Clear History
     </button>
   </div>
@@ -23,8 +26,7 @@
       class="w-full pl-4 pr-12 py-2.5 text-xs rounded-xl border border-border-subtle bg-white dark:bg-slate-900 text-text-primary focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all">
     <button (click)="sendChatMessage()" [disabled]="chatLoading || !chatInput.trim()"
       class="absolute right-1.5 h-7 w-7 rounded-xl bg-accent text-white border-none flex items-center justify-center cursor-pointer transition-all hover:bg-accent-dark disabled:opacity-50 disabled:cursor-not-allowed">
-      <div *ngIf="chatLoading"
-        class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div *ngIf="chatLoading" class="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
       <svg *ngIf="!chatLoading" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
       </svg>

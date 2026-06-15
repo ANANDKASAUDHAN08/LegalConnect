@@ -1,4 +1,4 @@
-import { Directive, Input, ElementRef, Renderer2, HostListener, OnDestroy, inject } from '@angular/core';
+import { Directive, Input, ElementRef, Renderer2, HostListener, OnDestroy, inject, NgZone } from '@angular/core';
 
 @Directive({
   selector: '[appTooltip]',
@@ -13,6 +13,7 @@ export class TooltipDirective implements OnDestroy {
 
   private el = inject(ElementRef);
   private renderer = inject(Renderer2);
+  private zone = inject(NgZone);
 
   @HostListener('mouseenter')
   onMouseEnter() {
@@ -39,15 +40,17 @@ export class TooltipDirective implements OnDestroy {
     this.hide();
   }
 
-  @HostListener('window:scroll', ['$event'])
-  onWindowScroll() {
-    this.destroyTooltip();
-  }
+  private onWindowScrollBound = () => {
+    this.zone.run(() => {
+      this.destroyTooltip();
+    });
+  };
 
-  @HostListener('window:resize', ['$event'])
-  onWindowResize() {
-    this.destroyTooltip();
-  }
+  private onWindowResizeBound = () => {
+    this.zone.run(() => {
+      this.destroyTooltip();
+    });
+  };
 
   ngOnDestroy() {
     this.destroyTooltip();
@@ -83,6 +86,12 @@ export class TooltipDirective implements OnDestroy {
     // Position the tooltip element
     this.setPosition();
 
+    // Listen to scroll and resize events outside Angular zone only when tooltip is active
+    this.zone.runOutsideAngular(() => {
+      window.addEventListener('scroll', this.onWindowScrollBound, { passive: true });
+      window.addEventListener('resize', this.onWindowResizeBound, { passive: true });
+    });
+
     // Trigger transition: fade in and reset translation
     setTimeout(() => {
       if (this.tooltipEl) {
@@ -112,6 +121,11 @@ export class TooltipDirective implements OnDestroy {
       if (this.tooltipPlacement === 'right') offsetClass = '-translate-x-1';
       this.renderer.addClass(el, offsetClass);
       
+      this.zone.runOutsideAngular(() => {
+        window.removeEventListener('scroll', this.onWindowScrollBound);
+        window.removeEventListener('resize', this.onWindowResizeBound);
+      });
+      
       setTimeout(() => {
         if (!this.active && el.parentNode) {
           this.renderer.removeChild(document.body, el);
@@ -124,6 +138,10 @@ export class TooltipDirective implements OnDestroy {
   }
 
   private destroyTooltip() {
+    this.zone.runOutsideAngular(() => {
+      window.removeEventListener('scroll', this.onWindowScrollBound);
+      window.removeEventListener('resize', this.onWindowResizeBound);
+    });
     if (this.tooltipEl && this.tooltipEl.parentNode) {
       this.renderer.removeChild(document.body, this.tooltipEl);
     }

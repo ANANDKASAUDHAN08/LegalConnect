@@ -9,8 +9,20 @@ export class SpeechService {
   isSpeaking = false;
   isPaused = false;
   private currentUtterance: SpeechSynthesisUtterance | null = null;
+  
+  sentences: string[] = [];
+  activeSentenceIndex = -1;
+  activeSentenceIndex$ = new Subject<number>();
+  private isHindi = false;
 
   isListening = false;
+  isListening$ = new Subject<boolean>();
+
+  private setListeningState(state: boolean) {
+    this.isListening = state;
+    this.isListening$.next(state);
+  }
+
   private voiceRecognition: any = null;
   private voiceTimeout: any = null;
 
@@ -22,39 +34,55 @@ export class SpeechService {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
 
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      utterance.lang = isHindi ? 'hi-IN' : 'en-IN';
-
-      const voices = window.speechSynthesis.getVoices();
-      const matchingVoice = voices.find(v => v.lang.startsWith(isHindi ? 'hi' : 'en'));
-      if (matchingVoice) {
-        utterance.voice = matchingVoice;
-      }
-
-      utterance.onend = () => {
-        this.ngZone.run(() => {
-          this.isSpeaking = false;
-          this.isPaused = false;
-          this.currentUtterance = null;
-        });
-      };
-
-      utterance.onerror = (e) => {
-        console.error('Speech error:', e);
-        this.ngZone.run(() => {
-          this.isSpeaking = false;
-          this.isPaused = false;
-          this.currentUtterance = null;
-        });
-      };
-
-      this.currentUtterance = utterance;
+      this.isHindi = isHindi;
+      const regex = isHindi ? /(?<=[।!?\.])\s+/ : /(?<=[.!?])\s+/;
+      this.sentences = textToSpeak.split(regex).filter(s => s.trim().length > 0);
+      this.activeSentenceIndex = 0;
       this.isSpeaking = true;
       this.isPaused = false;
-      window.speechSynthesis.speak(utterance);
+
+      this.speakSentence();
     } else {
       this.snackbar.show('Text-to-speech is not supported in this browser.', 'warning');
     }
+  }
+
+  private speakSentence() {
+    if (this.activeSentenceIndex < 0 || this.activeSentenceIndex >= this.sentences.length) {
+      this.stop();
+      return;
+    }
+
+    this.activeSentenceIndex$.next(this.activeSentenceIndex);
+
+    const sentenceText = this.sentences[this.activeSentenceIndex];
+    const utterance = new SpeechSynthesisUtterance(sentenceText);
+    utterance.lang = this.isHindi ? 'hi-IN' : 'en-IN';
+
+    const voices = window.speechSynthesis.getVoices();
+    const matchingVoice = voices.find(v => v.lang.startsWith(this.isHindi ? 'hi' : 'en'));
+    if (matchingVoice) {
+      utterance.voice = matchingVoice;
+    }
+
+    utterance.onend = () => {
+      this.ngZone.run(() => {
+        if (this.isSpeaking && !this.isPaused) {
+          this.activeSentenceIndex++;
+          this.speakSentence();
+        }
+      });
+    };
+
+    utterance.onerror = (e) => {
+      console.error('Speech error:', e);
+      this.ngZone.run(() => {
+        this.stop();
+      });
+    };
+
+    this.currentUtterance = utterance;
+    window.speechSynthesis.speak(utterance);
   }
 
   pause() {
@@ -68,6 +96,8 @@ export class SpeechService {
     if (this.isSpeaking && this.isPaused) {
       window.speechSynthesis.resume();
       this.isPaused = false;
+      // Re-trigger the active sentence if it didn't continue properly
+      window.speechSynthesis.resume();
     }
   }
 
@@ -78,6 +108,9 @@ export class SpeechService {
     this.isSpeaking = false;
     this.isPaused = false;
     this.currentUtterance = null;
+    this.sentences = [];
+    this.activeSentenceIndex = -1;
+    this.activeSentenceIndex$.next(-1);
   }
 
   startVoiceSearch() {
@@ -100,7 +133,7 @@ export class SpeechService {
     this.voiceRecognition.interimResults = false;
     this.voiceRecognition.maxAlternatives = 1;
 
-    this.isListening = true;
+    this.setListeningState(true);
     this.snackbar.show('Listening... Speak now.', 'info');
 
     this.voiceTimeout = setTimeout(() => {
@@ -110,7 +143,7 @@ export class SpeechService {
           this.snackbar.show('Voice search timed out.', 'info');
         }
       });
-    }, 8000);
+    }, 10000);
 
     this.voiceRecognition.onresult = (event: any) => {
       if (this.voiceTimeout) {
@@ -133,7 +166,7 @@ export class SpeechService {
         this.voiceTimeout = null;
       }
       this.ngZone.run(() => {
-        this.isListening = false;
+        this.setListeningState(false);
       });
     };
 
@@ -143,7 +176,7 @@ export class SpeechService {
         this.voiceTimeout = null;
       }
       this.ngZone.run(() => {
-        this.isListening = false;
+        this.setListeningState(false);
         this.voiceRecognition = null;
       });
     };
@@ -162,7 +195,7 @@ export class SpeechService {
       } catch (e) {
         console.error('Error stopping voice search:', e);
       }
-      this.isListening = false;
+      this.setListeningState(false);
       this.voiceRecognition = null;
       this.snackbar.show('Voice search stopped.', 'info');
     }

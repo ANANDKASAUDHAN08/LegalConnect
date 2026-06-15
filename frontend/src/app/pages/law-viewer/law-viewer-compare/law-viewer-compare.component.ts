@@ -10,6 +10,7 @@ import { SnackbarService } from '../../../services/snackbar.service';
   standalone: true,
   imports: [NgIf, NgClass, TooltipDirective],
   templateUrl: './law-viewer-compare.component.html',
+  styleUrls: ['./law-viewer-compare.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LawViewerCompareComponent implements OnChanges, OnDestroy {

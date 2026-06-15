@@ -91,5 +91,6 @@ const LawyerSchema = new Schema<ILawyer>({
 });
 
 LawyerSchema.index({ name: 'text', specializations: 'text', city: 'text', bio: 'text' });
+LawyerSchema.index({ city: 1 });
 
 export default mongoose.model<ILawyer>('Lawyer', LawyerSchema);

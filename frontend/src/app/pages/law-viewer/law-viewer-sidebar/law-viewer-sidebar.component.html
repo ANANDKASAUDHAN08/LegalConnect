@@ -4,11 +4,11 @@
 
   <!-- COLLAPSED MINI SIDEBAR (72px) -->
   <div *ngIf="isSidebarCollapsed"
-    class="sidebar-inner px-2 py-6 flex flex-col items-center gap-4 select-none animate-fade-in flex-1 overflow-y-auto w-full scrollbar-none">
+    class="sidebar-inner px-2 py-6 flex flex-col items-center gap-4 select-none animate-fade-in flex-1 overflow-y-auto w-full custom-scrollbar">
 
     <!-- Back to Library Icon -->
     <a routerLink="/laws"
-      class="sidebar-icon-btn sidebar-icon-btn--back w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-400 hover:text-accent dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 transition-all duration-200 hover:scale-110 cursor-pointer"
+      class="sidebar-icon-btn sidebar-icon-btn--back w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-200 hover:text-accent dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 transition-all duration-200 hover:scale-110 cursor-pointer shrink-0"
       appTooltip="Back to Library" tooltipPlacement="right">
       <svg class="sidebar-icon-svg w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
@@ -17,7 +17,7 @@
 
     <!-- Search Icon Button -->
     <button (click)="onSearchClick()"
-      class="sidebar-icon-btn sidebar-icon-btn--search w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-350 hover:text-accent dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 transition-all duration-200 hover:scale-110 cursor-pointer"
+      class="sidebar-icon-btn sidebar-icon-btn--search w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-200 hover:text-accent dark:hover:text-white bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/10 transition-all duration-200 hover:scale-110 cursor-pointer shrink-0"
       appTooltip="Search sections" tooltipPlacement="right">
       <svg class="sidebar-icon-svg w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
@@ -26,15 +26,18 @@
     </button>
 
     <!-- Divider -->
-    <div class="w-8 h-[1px] bg-border-subtle/50"></div>
+    <div class="w-8 h-[1px] bg-border-subtle/50 shrink-0"></div>
 
     <!-- Tab Icons (Chapters vs Scenarios) -->
-    <div class="flex flex-col gap-2 bg-slate-100 dark:bg-white/5 p-1.5 rounded-xl border border-slate-200/60 dark:border-white/10">
+    <div
+      class="flex flex-col gap-2 bg-slate-100 dark:bg-white/5 p-1.5 rounded-xl border border-slate-200/60 dark:border-white/10 shrink-0"
+      role="tablist">
       <!-- Chapters Tab Icon Button -->
       <button (click)="onTabClick('chapters')"
         class="w-8 h-8 rounded-xl flex items-center justify-center bg-transparent border-none cursor-pointer transition-all text-slate-500 hover:text-accent dark:text-slate-400 dark:hover:text-white"
         [ngClass]="{'!bg-slate-800 dark:!bg-white !text-white dark:!text-slate-900 shadow-sm': sidebarTab === 'chapters'}"
-        appTooltip="Chapters Outline" tooltipPlacement="right">
+        appTooltip="Chapters Outline" tooltipPlacement="right" role="tab"
+        [attr.aria-selected]="sidebarTab === 'chapters'">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7" />
         </svg>
@@ -43,7 +46,8 @@
       <button (click)="onTabClick('topics')"
         class="w-8 h-8 rounded-lg flex items-center justify-center bg-transparent border-none cursor-pointer transition-all text-slate-500 hover:text-accent dark:text-slate-400 dark:hover:text-white relative"
         [ngClass]="{'!bg-slate-800 dark:!bg-white !text-white dark:!text-slate-900 shadow-sm': sidebarTab === 'topics'}"
-        appTooltip="Scenarios Explorer" tooltipPlacement="right">
+        appTooltip="Scenarios Explorer" tooltipPlacement="right" role="tab"
+        [attr.aria-selected]="sidebarTab === 'topics'">
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
@@ -53,12 +57,14 @@
 
     <!-- Case 1: Chapters Tab is active -->
     <div *ngIf="act && sidebarTab === 'chapters'" class="flex flex-col gap-3 items-center w-full">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] text-center mb-1">Chs</span>
+      <span
+        class="text-[9px] font-bold text-slate-400 dark:text-slate-200 uppercase tracking-[0.1em] text-center mb-1">Chs</span>
       <div class="flex flex-col gap-2 items-center w-full px-1">
-        <button *ngFor="let ch of act.chapters" (click)="onChapterClick(ch)"
-          class="w-9 h-9 rounded-xl flex items-center justify-center text-[10px] font-black border transition-all cursor-pointer shadow-sm shrink-0"
-          [ngClass]="activeChapter === ch ? 'bg-accent text-white border-accent' : 'bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-350 hover:bg-slate-200/60 dark:hover:bg-white/10'"
-          [appTooltip]="'Chapter ' + ch.chapterNumber + ': ' + (ch.cleanTitle || ch.title)" tooltipPlacement="right">
+        <button *ngFor="let ch of act.chapters; trackBy: trackByChapter" (click)="onChapterClick(ch)"
+          class="w-10 h-10 rounded-full flex items-center justify-center text-[9px] font-bold tracking-tighter border transition-all cursor-pointer shadow-sm shrink-0"
+          [ngClass]="activeChapter === ch ? 'bg-accent text-white border-accent' : 'bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-white/10'"
+          [appTooltip]="'Chapter ' + ch.chapterNumber + ': ' + (ch.cleanTitle || ch.title)" tooltipPlacement="right"
+          [attr.aria-label]="'Chapter ' + ch.chapterNumber + ': ' + (ch.cleanTitle || ch.title)">
           {{ ch.chapterNumber }}
         </button>
       </div>
@@ -66,11 +72,13 @@
 
     <!-- Case 2: Scenarios Tab is active -->
     <div *ngIf="act && sidebarTab === 'topics'" class="flex flex-col gap-3 items-center w-full">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-[0.1em] text-center mb-1">Scens</span>
+      <span
+        class="text-[9px] font-bold text-slate-400 dark:text-slate-200 uppercase tracking-[0.1em] text-center mb-1">Scens</span>
       <div class="flex flex-col gap-2 items-center w-full px-1">
-        <button *ngFor="let topic of laymanTopics" (click)="onTopicClick(topic)"
-          class="w-9 h-9 rounded-xl flex items-center justify-center border transition-all cursor-pointer shadow-sm shrink-0 bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-350 hover:bg-slate-200/60 dark:hover:bg-white/10"
-          [appTooltip]="topic.label + ': ' + topic.description" tooltipPlacement="right">
+        <button *ngFor="let topic of laymanTopics; trackBy: trackByTopic" (click)="onTopicClick(topic)"
+          class="w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-sm shrink-0 bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-350 hover:bg-slate-200/60 dark:hover:bg-white/10"
+          [appTooltip]="topic.label + ': ' + topic.description" tooltipPlacement="right"
+          [attr.aria-label]="topic.label + ': ' + topic.description">
           <span class="flex items-center justify-center">
             <svg *ngIf="topic.icon === 'shield'" class="w-4 h-4 text-accent" fill="none" stroke="currentColor"
               viewBox="0 0 24 24">
@@ -125,10 +133,11 @@
   </div>
 
   <!-- EXPANDED SIDEBAR (350px) -->
-  <div *ngIf="!isSidebarCollapsed" class="sidebar-inner p-6 flex flex-col gap-5 flex-1 overflow-y-auto scrollbar-none">
+  <div *ngIf="!isSidebarCollapsed"
+    class="sidebar-inner p-6 flex flex-col gap-5 flex-1 overflow-y-auto custom-scrollbar">
     <!-- Back Link Button -->
     <a routerLink="/laws"
-      class="back-link group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary dark:text-slate-400 no-underline bg-slate-100 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 hover:bg-accent hover:text-white hover:border-accent dark:hover:bg-accent dark:hover:border-accent transition-all duration-200 self-start">
+      class="back-link group inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-bold text-text-secondary dark:text-slate-400 no-underline bg-slate-100 dark:bg-white/5 border border-slate-200/40 dark:border-white/5 hover:bg-accent hover:text-white hover:border-accent dark:hover:bg-accent dark:hover:text-white dark:hover:border-accent transition-all duration-200 self-start">
       <svg class="w-3.5 h-3.5 transition-transform duration-200 group-hover:-translate-x-0.5" fill="none"
         stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
@@ -141,10 +150,16 @@
       <h2 class="act-title text-[1.1rem] font-black text-slate-900 dark:text-white leading-tight tracking-tight flex-1">
         {{ act.actName }}
       </h2>
-      <span
-        class="badge badge-primary bg-accent/10 border border-accent/25 text-accent dark:bg-accent/20 dark:text-accent-light text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full shrink-0 self-center">
-        {{ act.year }}
-      </span>
+      <div class="flex flex-col gap-1 items-end shrink-0">
+        <span
+          class="badge badge-primary bg-accent/10 border border-accent/25 text-accent dark:bg-accent/20 dark:text-accent-light text-[10px] font-black tracking-wider px-2 py-0.5 rounded-full shrink-0">
+          {{ act.year }}
+        </span>
+        <span *ngIf="!isOnline"
+          class="badge bg-amber-500/10 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-[8px] font-bold tracking-wider px-1.5 py-0.5 rounded-full shrink-0">
+          Offline Copy
+        </span>
+      </div>
     </div>
 
     <!-- Sidebar Search Box -->
@@ -156,8 +171,9 @@
         </svg>
       </span>
       <input #searchInput type="text" [(ngModel)]="sidebarSearchQuery" (ngModelChange)="onSearchQueryChange($event)"
-        placeholder="Search sections, titles..."
-        class="w-full pl-9 pr-16 py-2.5 text-xs rounded-xl border border-slate-200/60 dark:border-slate-800/80 bg-slate-100/50 dark:bg-slate-905/40 dark:bg-slate-900/40 text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 dark:focus:ring-accent/15 transition-all placeholder-slate-400 dark:placeholder-slate-500">
+        [placeholder]="isListening ? 'Say a section or topic name...' : 'Search sections, titles...'"
+        class="w-full pl-9 pr-16 py-2.5 text-xs rounded-xl border border-slate-200/60 dark:border-slate-800/80 bg-slate-100/50 dark:bg-slate-905/40 dark:bg-slate-900/40 text-text-primary focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/15 dark:focus:ring-accent/15 transition-all placeholder-slate-400 dark:placeholder-slate-500"
+        [class.voice-active]="isListening">
       <button (click)="startVoiceSearch()"
         class="absolute top-1 -translate-y-1/2 w-7 h-7 bg-transparent border-none text-text-muted hover:text-red-500 cursor-pointer flex items-center justify-center animate-fade-in rounded-lg hover:bg-black/5 dark:hover:bg-white/5 transition-all"
         [ngClass]="sidebarSearchQuery ? 'right-8' : 'right-2.5'"
@@ -174,7 +190,8 @@
         </svg>
       </button>
       <button *ngIf="sidebarSearchQuery" (click)="clearSearch()"
-        class="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-text-muted hover:text-text-primary cursor-pointer p-0.5">
+        class="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-text-muted hover:text-text-primary cursor-pointer p-0.5"
+        [appTooltip]="'Clear search query'">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -182,7 +199,7 @@
     </div>
 
     <!-- Tab Switcher -->
-    <div *ngIf="!sidebarSearchQuery && !selectedTopic"
+    <div *ngIf="!sidebarSearchQuery && !selectedTopic" role="tablist"
       class="relative flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/50 dark:border-white/10 w-full items-center shrink-0 mt-1 mb-2">
       <!-- Sliding highlight block -->
       <div
@@ -191,14 +208,16 @@
         [style.transform]="sidebarTab === 'topics' ? 'translateX(100%)' : 'translateX(0)'">
       </div>
 
-      <button (click)="sidebarTab = 'chapters'"
+      <button (click)="sidebarTab = 'chapters'" role="tab" [attr.aria-selected]="sidebarTab === 'chapters'"
         class="relative flex-1 z-10 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-center border-none bg-transparent cursor-pointer transition-all flex items-center justify-center gap-1.5"
-        [ngClass]="sidebarTab === 'chapters' ? 'text-white dark:text-slate-900' : 'text-text-muted hover:text-text-secondary'">
+        [ngClass]="sidebarTab === 'chapters' ? 'text-white dark:text-slate-900' : 'text-text-muted hover:text-text-secondary'"
+        [appTooltip]="'View structured chapters and sections outline'" tooltipPlacement="bottom">
         Chapters
       </button>
-      <button (click)="sidebarTab = 'topics'"
+      <button (click)="sidebarTab = 'topics'" role="tab" [attr.aria-selected]="sidebarTab === 'topics'"
         class="relative flex-1 z-10 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-center border-none bg-transparent cursor-pointer transition-all flex items-center justify-center gap-1.5"
-        [ngClass]="sidebarTab === 'topics' ? 'text-white dark:text-slate-900' : 'text-text-muted hover:text-text-secondary'">
+        [ngClass]="sidebarTab === 'topics' ? 'text-white dark:text-slate-900' : 'text-text-muted hover:text-text-secondary'"
+        [appTooltip]="'Explore chapters by typical citizen legal needs'" tooltipPlacement="bottom">
         <span>Scenarios</span>
         <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
       </button>
@@ -218,7 +237,7 @@
           </button>
         </div>
         <span class="text-xs text-text-secondary dark:text-slate-350">
-          {{ filteredSectionsCount }} sections found
+          {{ totalFilteredResultsCount }} sections found
         </span>
       </div>
 
@@ -226,25 +245,46 @@
       <div *ngIf="selectedTopic && selectedTopic.scenarios && selectedTopic.scenarios.length > 0"
         class="flex flex-col gap-2 p-2 bg-black/5 dark:bg-white/5 rounded-xl">
         <span class="text-[0.7rem] font-bold text-text-muted uppercase tracking-wider px-1">Common Scenarios:</span>
-        <button *ngFor="let sc of selectedTopic.scenarios" (click)="selectScenario(sc)"
+        <button *ngFor="let sc of selectedTopic.scenarios; trackBy: trackByScenario" (click)="selectScenario(sc)"
           class="text-left text-xs p-2 rounded-lg bg-white dark:bg-slate-900 border border-border-subtle hover:border-accent hover:-translate-y-0.5 transition-all text-text-secondary hover:text-accent font-medium leading-snug cursor-pointer shadow-sm">
           {{ sc.title }}
         </button>
       </div>
 
       <!-- Results Tree -->
-      <nav class="chapters-nav flex flex-col gap-3 max-h-[50vh] overflow-y-auto pr-1">
-        <div *ngFor="let item of filteredResults" class="flex flex-col gap-1 w-full">
+      <nav class="chapters-nav flex flex-col gap-3 max-h-[50vh] overflow-y-auto custom-scrollbar pr-1">
+        <div *ngFor="let item of filteredResults; trackBy: trackBySearchResult" class="flex flex-col gap-1 w-full">
           <div class="text-[0.65rem] font-bold text-text-muted uppercase tracking-wider mt-1 px-1">
             Ch {{ item.chapter.chapterNumber }} • {{ item.chapter.cleanTitle || item.chapter.title }}
           </div>
-          <button *ngFor="let sec of item.sections" (click)="selectSection(sec)"
+          <button *ngFor="let sec of item.sections; trackBy: trackBySection" (click)="selectSection(sec)"
             class="text-[0.8rem] text-left py-2 px-2.5 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer border-none bg-transparent flex flex-col gap-1 w-full"
             [ngClass]="activeSection === sec ? 'text-accent bg-accent/10 border border-accent/20 font-bold' : 'text-text-secondary dark:text-slate-350'">
-            <span>Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}</span>
+            <div class="flex items-center justify-between gap-1.5 w-full">
+              <span class="truncate flex-1"
+                [innerHTML]="highlightSearchQuery('Sec ' + sec.section_number + '. ' + getSectionTitle(sec))"></span>
+              <div class="flex items-center gap-1 shrink-0">
+                <svg *ngIf="isSectionBookmarked(sec.section_number)" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"
+                  fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <svg *ngIf="hasSectionNotes(sec.section_number)" class="w-3.5 h-3.5 text-blue-500" fill="none"
+                  stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+            </div>
             <span *ngIf="sidebarSearchQuery"
-              class="text-[10px] text-text-muted dark:text-slate-400 font-normal line-clamp-2 leading-relaxed border-l border-border-subtle/50 pl-2 mt-0.5"
+              class="text-[10px] text-text-muted dark:text-slate-400 font-normal line-clamp-2 leading-relaxed border-l border-border-subtle/50 pl-2 mt-0.5 w-full"
               [innerHTML]="getSearchSnippet(sec.content, sidebarSearchQuery)"></span>
+          </button>
+        </div>
+        <!-- Show More Results Button -->
+        <div *ngIf="hasMoreResults" class="flex justify-center mt-2 mb-1 shrink-0">
+          <button (click)="showMoreResults()"
+            class="px-4 py-2 text-xs font-bold text-accent bg-accent/10 border border-accent/25 hover:bg-accent hover:text-white hover:border-accent rounded-xl transition-all cursor-pointer">
+            Show More Results
           </button>
         </div>
       </nav>
@@ -254,12 +294,15 @@
     <nav *ngIf="act && !sidebarSearchQuery && !selectedTopic && sidebarTab === 'chapters'"
       class="chapters-nav flex flex-col gap-1">
       <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-text-muted mb-2">Chapters</p>
-      <ng-container *ngFor="let ch of act.chapters">
+      <ng-container *ngFor="let ch of act.chapters; trackBy: trackByChapter">
         <button
           class="chapter-btn flex gap-2.5 items-center p-2.5 rounded-lg border-none bg-none cursor-pointer text-left transition-all hover:bg-black/5 dark:hover:bg-white/5 w-full justify-between"
-          [ngClass]="{'bg-black/5 dark:bg-white/5': expandedChapter === ch}" (click)="setChapter(ch)">
+          [ngClass]="{'bg-black/5 dark:bg-white/5': expandedChapter === ch}" (click)="setChapter(ch)"
+          [attr.aria-expanded]="expandedChapter === ch ? 'true' : 'false'"
+          [appTooltip]="expandedChapter === ch ? 'Collapse chapter outline' : 'Expand chapter outline'"
+          tooltipPlacement="top">
           <div class="flex gap-2.5 items-start">
-            <span class="ch-num text-[0.75rem] font-bold text-accent min-w-[20px] pt-0.5">{{ ch.chapterNumber
+            <span class="ch-num text-[0.75rem] font-bold text-accent w-12 shrink-0 pt-0.5">{{ ch.chapterNumber
               }}</span>
             <span class="ch-title text-[0.85rem] text-text-secondary dark:text-slate-350 leading-relaxed font-medium"
               [ngClass]="{'text-accent dark:text-accent-light font-bold': activeChapter === ch}">{{ ch.cleanTitle ||
@@ -272,14 +315,28 @@
         </button>
 
         <!-- Sections TOC for active chapter -->
-        <div *ngIf="expandedChapter === ch"
-          class="flex flex-col gap-1 pl-6 pr-2 py-1.5 border-l border-accent/30 ml-3.5">
-          <button *ngFor="let sec of ch.sections" (click)="selectSection(sec)"
-            class="text-[0.8rem] text-left py-1.5 px-2 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors no-underline w-full block truncate cursor-pointer border-none bg-transparent"
-            [ngClass]="activeSection === sec ? 'text-accent font-bold bg-accent/10' : 'text-text-muted dark:text-slate-400'"
-            [appTooltip]="sec.title" tooltipPlacement="right">
-            Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}
-          </button>
+        <div
+          class="chapter-sections-drawer pl-6 pr-2 border-l border-accent/30 ml-3.5 overflow-hidden transition-all duration-300"
+          [class.expanded]="expandedChapter === ch">
+          <div class="flex flex-col gap-1 py-1.5">
+            <button *ngFor="let sec of ch.sections; trackBy: trackBySection" (click)="selectSection(sec)"
+              class="text-[0.8rem] text-left py-1.5 px-2 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors no-underline w-full flex items-center justify-between gap-1.5 cursor-pointer border-none bg-transparent"
+              [ngClass]="activeSection === sec ? 'text-accent font-bold bg-accent/10' : 'text-text-muted dark:text-slate-400'"
+              [appTooltip]="sec.title" tooltipPlacement="right">
+              <span class="truncate flex-1">Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}</span>
+              <div class="flex items-center gap-1 shrink-0">
+                <svg *ngIf="isSectionBookmarked(sec.section_number)" class="w-3 h-3 text-amber-500 fill-amber-500"
+                  fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+                <svg *ngIf="hasSectionNotes(sec.section_number)" class="w-3 h-3 text-blue-500" fill="none"
+                  stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+            </button>
+          </div>
         </div>
       </ng-container>
     </nav>
@@ -288,7 +345,7 @@
     <div *ngIf="!sidebarSearchQuery && !selectedTopic && sidebarTab === 'topics'" class="flex flex-col gap-2.5">
       <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-text-muted mb-1">Explore by
         Legal Needs</p>
-      <button *ngFor="let topic of laymanTopics" (click)="selectTopic(topic)"
+      <button *ngFor="let topic of laymanTopics; trackBy: trackByTopic" (click)="selectTopic(topic)"
         class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border-subtle/50 bg-transparent text-left hover:border-accent hover:bg-accent/5 hover:-translate-y-0.5 transition-all w-full cursor-pointer group">
         <div class="flex items-center gap-2">
           <span class="text-base group-hover:scale-110 transition-all flex items-center justify-center shrink-0">
@@ -361,16 +418,18 @@
 
 <!-- Mobile Index Drawer Panel -->
 <div *ngIf="isMobileDrawerOpen" class="fixed inset-0 bg-black/60 z-[110] backdrop-blur-sm transition-opacity md:hidden"
-  (click)="closeMobileDrawer()"></div>
+  (click)="closeMobileDrawer()">
+</div>
+
 <div *ngIf="isMobileDrawerOpen && act"
-  class="fixed bottom-0 left-0 right-0 max-h-[75vh] bg-slate-900 border-t border-slate-850 rounded-t-3xl z-[120] overflow-y-auto p-6 md:hidden transition-all duration-300 animate-slide-up">
-  <div class="flex justify-between items-center pb-4 border-b border-slate-800 mb-5">
+  class="fixed bottom-0 left-0 right-0 max-h-[75vh] bg-surface-light dark:bg-slate-900 border-t border-border-subtle/50 dark:border-slate-800 rounded-t-3xl z-[120] overflow-y-auto hide-scrollbar p-6 md:hidden transition-all duration-300 animate-slide-up text-text-primary dark:text-white">
+  <div class="flex justify-between items-center pb-4 border-b border-border-subtle/30 mb-5">
     <div class="flex flex-col gap-0.5">
-      <h3 class="text-sm font-bold text-white uppercase tracking-wider">Statute Index</h3>
-      <span class="text-[10px] text-slate-500">{{ act.actName }}</span>
+      <h3 class="text-sm font-bold text-text-primary dark:text-white uppercase tracking-wider">Statute Index</h3>
+      <span class="text-[10px] text-text-muted">{{ act.actName }}</span>
     </div>
     <button (click)="closeMobileDrawer()"
-      class="bg-transparent border-none text-slate-400 hover:text-white cursor-pointer p-1">
+      class="bg-transparent border-none text-text-secondary dark:text-slate-400 hover:text-text-primary dark:hover:text-white cursor-pointer p-1">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
       </svg>
@@ -379,17 +438,18 @@
 
   <!-- Mobile Search Box -->
   <div class="relative w-full mb-4">
-    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400">
+    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
           d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
     </span>
     <input type="text" [(ngModel)]="sidebarSearchQuery" (ngModelChange)="onSearchQueryChange($event)"
-      placeholder="Search sections, titles..."
-      class="w-full pl-9 pr-8 py-2.5 text-xs rounded-xl border border-slate-700 bg-slate-850 text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all">
+      [placeholder]="isListening ? 'Say a section or topic name...' : 'Search sections, titles...'"
+      class="w-full pl-9 pr-8 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-100/50 dark:bg-slate-800 text-text-primary dark:text-white focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/20 transition-all"
+      [class.voice-active]="isListening">
     <button *ngIf="sidebarSearchQuery" (click)="clearSearch()"
-      class="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-slate-400 hover:text-white cursor-pointer p-0.5">
+      class="absolute right-2.5 top-1/2 -translate-y-1/2 bg-transparent border-none text-text-secondary dark:text-slate-400 hover:text-text-primary dark:hover:text-white cursor-pointer p-0.5">
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
       </svg>
@@ -397,24 +457,30 @@
   </div>
 
   <!-- Mobile Tab Switcher (Visible if not actively searching) -->
-  <div *ngIf="!sidebarSearchQuery && !selectedTopic"
-    class="relative flex p-1 bg-slate-850 rounded-xl border border-slate-800 w-full items-center shrink-0 mb-4">
+  <div *ngIf="!sidebarSearchQuery && !selectedTopic" role="tablist"
+    class="relative flex p-1 bg-slate-100 dark:bg-white/5 rounded-xl border border-slate-200/60 dark:border-white/10 w-full items-center shrink-0 mb-4">
     <!-- Sliding highlight block -->
-    <div class="absolute left-1 top-1 bottom-1 rounded-lg transition-all duration-300 shadow-sm bg-white"
-      [style.width]="'calc(50% - 4px)'"
-      [style.transform]="sidebarTab === 'topics' ? 'translateX(100%)' : 'translateX(0)'">
+    <div
+      class="absolute left-1 top-1 bottom-1 rounded-xl transition-all duration-300 shadow-sm bg-slate-900 dark:bg-white"
+      [style.width]="'calc(33.333% - 4px)'"
+      [style.transform]="sidebarTab === 'topics' ? 'translateX(100%)' : (sidebarTab === 'companion' ? 'translateX(200%)' : 'translateX(0)')">
     </div>
 
-    <button (click)="sidebarTab = 'chapters'"
+    <button (click)="sidebarTab = 'chapters'" role="tab" [attr.aria-selected]="sidebarTab === 'chapters'"
       class="relative flex-1 z-10 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-center border-none bg-transparent cursor-pointer transition-all flex items-center justify-center gap-1.5"
-      [ngClass]="sidebarTab === 'chapters' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-200'">
+      [ngClass]="sidebarTab === 'chapters' ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
       Chapters
     </button>
-    <button (click)="sidebarTab = 'topics'"
+    <button (click)="sidebarTab = 'topics'" role="tab" [attr.aria-selected]="sidebarTab === 'topics'"
       class="relative flex-1 z-10 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-center border-none bg-transparent cursor-pointer transition-all flex items-center justify-center gap-1.5"
-      [ngClass]="sidebarTab === 'topics' ? 'text-slate-900' : 'text-slate-400 hover:text-slate-200'">
+      [ngClass]="sidebarTab === 'topics' ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
       <span>Scenarios</span>
       <span class="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+    </button>
+    <button (click)="sidebarTab = 'companion'" role="tab" [attr.aria-selected]="sidebarTab === 'companion'"
+      class="relative flex-1 z-10 py-1.5 text-[0.7rem] font-bold uppercase tracking-wider text-center border-none bg-transparent cursor-pointer transition-all flex items-center justify-center gap-1.5"
+      [ngClass]="sidebarTab === 'companion' ? 'text-white dark:text-slate-900' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'">
+      Companion
     </button>
   </div>
 
@@ -427,38 +493,59 @@
           {{ selectedTopic ? 'Topic: ' + selectedTopic.label : 'Search Results' }}
         </span>
         <button (click)="selectedTopic ? clearTopic() : clearSearch()"
-          class="text-[9px] font-bold text-slate-400 hover:text-accent bg-transparent border-none cursor-pointer">
+          class="text-[9px] font-bold text-text-secondary dark:text-slate-400 hover:text-accent bg-transparent border-none cursor-pointer">
           Clear
         </button>
       </div>
-      <span class="text-xs text-slate-350">
-        {{ filteredSectionsCount }} sections found
+      <span class="text-xs text-text-muted">
+        {{ totalFilteredResultsCount }} sections found
       </span>
     </div>
 
     <!-- Selected Topic Details and Scenarios Guide -->
     <div *ngIf="selectedTopic && selectedTopic.scenarios && selectedTopic.scenarios.length > 0"
-      class="flex flex-col gap-2 p-2 bg-slate-800 rounded-xl">
-      <span class="text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider px-1">Common Scenarios:</span>
-      <button *ngFor="let sc of selectedTopic.scenarios" (click)="selectScenario(sc)"
-        class="text-left text-xs p-2.5 rounded-lg bg-slate-900 border border-slate-800 hover:border-accent transition-all text-slate-300 hover:text-accent font-medium leading-snug cursor-pointer">
+      class="flex flex-col gap-2 p-2 bg-slate-100 dark:bg-slate-800 border border-border-subtle/35 rounded-xl">
+      <span class="text-[0.7rem] font-bold text-text-muted uppercase tracking-wider px-1">Common Scenarios:</span>
+      <button *ngFor="let sc of selectedTopic.scenarios; trackBy: trackByScenario" (click)="selectScenario(sc)"
+        class="text-left text-xs p-2.5 rounded-lg bg-white dark:bg-slate-900 border border-border-subtle/50 dark:border-slate-800 hover:border-accent transition-all text-text-secondary dark:text-slate-300 hover:text-accent font-medium leading-snug cursor-pointer">
         {{ sc.title }}
       </button>
     </div>
 
     <!-- Results Tree -->
     <nav class="chapters-nav flex flex-col gap-3">
-      <div *ngFor="let item of filteredResults" class="flex flex-col gap-1 w-full">
-        <div class="text-[0.65rem] font-bold text-slate-500 uppercase tracking-wider mt-1 px-1">
+      <div *ngFor="let item of filteredResults; trackBy: trackBySearchResult" class="flex flex-col gap-1 w-full">
+        <div class="text-[0.65rem] font-bold text-text-muted uppercase tracking-wider mt-1 px-1">
           Ch {{ item.chapter.chapterNumber }} • {{ item.chapter.cleanTitle || item.chapter.title }}
         </div>
-        <button *ngFor="let sec of item.sections" (click)="selectSection(sec)"
-          class="text-left text-xs py-2.5 px-2.5 rounded hover:bg-slate-800 transition-all cursor-pointer border-none bg-transparent flex flex-col gap-0.5 w-full text-slate-300"
-          [ngClass]="activeSection === sec ? 'text-accent bg-accent/10 border border-accent/20 font-bold' : 'text-slate-400'">
-          <span class="font-bold">Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}</span>
+        <button *ngFor="let sec of item.sections; trackBy: trackBySection" (click)="selectSection(sec)"
+          class="text-left text-xs py-2.5 px-2.5 rounded hover:bg-black/5 dark:hover:bg-slate-800 transition-all cursor-pointer border-none bg-transparent flex flex-col gap-0.5 w-full text-text-secondary dark:text-slate-300"
+          [ngClass]="activeSection === sec ? 'text-accent bg-accent/10 border border-accent/20 font-bold' : 'text-text-muted dark:text-slate-400'">
+          <div class="flex items-center justify-between gap-1.5 w-full">
+            <span class="font-bold truncate flex-1"
+              [innerHTML]="highlightSearchQuery('Sec ' + sec.section_number + '. ' + getSectionTitle(sec))"></span>
+            <div class="flex items-center gap-1 shrink-0">
+              <svg *ngIf="isSectionBookmarked(sec.section_number)" class="w-3.5 h-3.5 text-amber-500 fill-amber-500"
+                fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              </svg>
+              <svg *ngIf="hasSectionNotes(sec.section_number)" class="w-3.5 h-3.5 text-blue-500" fill="none"
+                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+          </div>
           <span *ngIf="sidebarSearchQuery"
-            class="text-[10px] text-slate-500 font-normal line-clamp-2 leading-relaxed border-l border-slate-700 pl-2 mt-0.5"
+            class="text-[10px] text-text-muted dark:text-slate-500 font-normal line-clamp-2 leading-relaxed border-l border-slate-250 dark:border-slate-700 pl-2 mt-0.5 w-full"
             [innerHTML]="getSearchSnippet(sec.content, sidebarSearchQuery)"></span>
+        </button>
+      </div>
+      <!-- Show More Results Button -->
+      <div *ngIf="hasMoreResults" class="flex justify-center mt-2 mb-1 shrink-0">
+        <button (click)="showMoreResults()"
+          class="px-4 py-2 text-xs font-bold text-accent bg-accent/10 border border-accent/25 hover:bg-accent hover:text-white hover:border-accent rounded-xl transition-all cursor-pointer">
+          Show More Results
         </button>
       </div>
     </nav>
@@ -467,38 +554,55 @@
   <!-- Case B: No Search & sidebarTab === 'chapters' -->
   <nav *ngIf="!sidebarSearchQuery && !selectedTopic && sidebarTab === 'chapters'"
     class="chapters-nav flex flex-col gap-1.5">
-    <ng-container *ngFor="let ch of act.chapters">
+    <ng-container *ngFor="let ch of act.chapters; trackBy: trackByChapter">
       <button
-        class="chapter-btn flex gap-2.5 items-center p-2 rounded-lg border-none bg-none cursor-pointer text-left transition-all w-full justify-between"
-        [ngClass]="{'bg-white/5': expandedChapter === ch}" (click)="setChapter(ch)">
+        class="chapter-btn flex gap-2.5 items-center p-2 rounded-lg border-none bg-none cursor-pointer text-left transition-all w-full justify-between hover:bg-black/5 dark:hover:bg-white/5"
+        [ngClass]="{'bg-black/5 dark:bg-white/5': expandedChapter === ch}" (click)="setChapter(ch)"
+        [attr.aria-expanded]="expandedChapter === ch ? 'true' : 'false'">
         <div class="flex gap-2.5 items-start">
-          <span class="ch-num text-[11px] font-bold text-accent min-w-[20px] pt-0.5">{{ ch.chapterNumber }}</span>
-          <span class="ch-title text-xs text-slate-300 font-medium"
+          <span class="ch-num text-[11px] font-bold text-accent w-12 shrink-0 pt-0.5">{{ ch.chapterNumber }}</span>
+          <span class="ch-title text-xs text-text-secondary dark:text-slate-350 font-medium"
             [ngClass]="{'text-accent font-bold': activeChapter === ch}">{{ ch.cleanTitle || ch.title }}</span>
         </div>
-        <svg class="w-3.5 h-3.5 text-slate-500 transition-transform duration-300 shrink-0"
+        <svg class="w-3.5 h-3.5 text-text-muted transition-transform duration-300 shrink-0"
           [ngClass]="{'rotate-90': expandedChapter === ch}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
         </svg>
       </button>
 
       <!-- Sections TOC inside mobile drawer -->
-      <div *ngIf="expandedChapter === ch" class="flex flex-col gap-1 pl-5 py-1 border-l border-accent/30 ml-2.5">
-        <button *ngFor="let sec of ch.sections" (click)="selectSection(sec)"
-          class="text-left text-xs py-2 px-2.5 rounded hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent"
-          [ngClass]="activeSection === sec ? 'text-accent font-bold bg-accent/10' : 'text-slate-400'">
-          Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}
-        </button>
+      <div
+        class="chapter-sections-drawer pl-5 border-l border-accent/30 ml-2.5 overflow-hidden transition-all duration-300"
+        [class.expanded]="expandedChapter === ch">
+        <div class="flex flex-col gap-1 py-1">
+          <button *ngFor="let sec of ch.sections; trackBy: trackBySection" (click)="selectSection(sec)"
+            class="text-left text-xs py-2 px-2.5 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-between gap-1.5 w-full text-text-secondary dark:text-slate-450"
+            [ngClass]="activeSection === sec ? 'text-accent font-bold bg-accent/10' : 'text-text-muted dark:text-slate-400'">
+            <span class="truncate flex-1">Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}</span>
+            <div class="flex items-center gap-1 shrink-0">
+              <svg *ngIf="isSectionBookmarked(sec.section_number)" class="w-3 h-3 text-amber-500 fill-amber-500"
+                fill="currentColor" viewBox="0 0 24 24">
+                <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+              </svg>
+              <svg *ngIf="hasSectionNotes(sec.section_number)" class="w-3 h-3 text-blue-500" fill="none"
+                stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+            </div>
+          </button>
+        </div>
       </div>
     </ng-container>
   </nav>
 
   <!-- Case C: No Search & sidebarTab === 'topics' -->
   <div *ngIf="!sidebarSearchQuery && !selectedTopic && sidebarTab === 'topics'" class="flex flex-col gap-2.5">
-    <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-slate-500 mb-1">Explore by Legal Needs
+    <p class="nav-label text-[0.75rem] font-bold uppercase tracking-[0.06em] text-text-muted mb-1">Explore by Legal
+      Needs
     </p>
-    <button *ngFor="let topic of laymanTopics" (click)="selectTopic(topic)"
-      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-slate-800 bg-transparent text-left hover:border-accent hover:bg-slate-850 transition-all w-full cursor-pointer group">
+    <button *ngFor="let topic of laymanTopics; trackBy: trackByTopic" (click)="selectTopic(topic)"
+      class="flex flex-col gap-1.5 p-3.5 rounded-xl border border-border-subtle/50 dark:border-slate-800 bg-transparent text-left hover:border-accent hover:bg-black/5 dark:hover:bg-slate-800 transition-all w-full cursor-pointer group">
       <div class="flex items-center gap-2">
         <span class="text-base group-hover:scale-110 transition-all flex items-center justify-center shrink-0">
           <svg *ngIf="topic.icon === 'shield'" class="w-4 h-4 text-accent" fill="none" stroke="currentColor"
@@ -547,9 +651,86 @@
               d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
           </svg>
         </span>
-        <span class="text-xs font-bold text-white group-hover:text-accent transition-colors">{{ topic.label }}</span>
+        <span class="text-xs font-bold text-text-primary dark:text-white group-hover:text-accent transition-colors">{{
+          topic.label }}</span>
       </div>
-      <p class="text-[10px] text-slate-400 leading-relaxed">{{ topic.description }}</p>
+      <p class="text-[10px] text-text-muted leading-relaxed">{{ topic.description }}</p>
     </button>
+  </div>
+
+  <!-- Case D: Companion Tab content -->
+  <div *ngIf="!sidebarSearchQuery && !selectedTopic && sidebarTab === 'companion'" class="flex flex-col gap-5">
+    <!-- Reading Progress -->
+    <div
+      class="flex flex-col gap-3 p-4 bg-slate-50 dark:bg-slate-905/30 dark:bg-slate-900/30 border border-border-subtle/30 rounded-xl">
+      <div class="flex justify-between items-center text-[10px]">
+        <span class="font-bold text-text-muted uppercase tracking-wider">Reading Progress</span>
+        <span class="font-bold text-accent">{{ chapterProgress.current }} of {{ chapterProgress.total }} Sections</span>
+      </div>
+      <div class="w-full h-2 bg-slate-200 dark:bg-white/10 rounded-full overflow-hidden relative">
+        <div class="h-full bg-gradient-to-r from-primary-light to-accent rounded-full transition-all duration-500"
+          [style.width.%]="chapterProgress.percentage"></div>
+      </div>
+      <div
+        class="flex items-center justify-between mt-1 text-[10px] text-text-muted pt-1.5 border-t border-border-subtle/10">
+        <span class="flex items-center gap-1">Est. Reading Time</span>
+        <span class="font-bold text-text-secondary dark:text-slate-350">{{ readingTime }} {{ readingTime === 1 ? 'min' :
+          'mins' }}</span>
+      </div>
+    </div>
+
+    <!-- Chapter Outline Timeline -->
+    <div class="flex flex-col gap-2">
+      <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider mb-1">Timeline Outline</span>
+      <div
+        class="flex flex-col gap-1 max-h-[30vh] overflow-y-auto pr-1 custom-scrollbar border-l-2 border-slate-200 dark:border-slate-800 ml-2 pl-3">
+        <button *ngFor="let sec of activeChapter?.sections; trackBy: trackBySection" (click)="selectSection(sec)"
+          class="relative flex items-center gap-2.5 text-left py-1.5 px-2 rounded-xl transition-all cursor-pointer bg-transparent text-xs w-full hover:bg-black/5 dark:hover:bg-white/5 border border-transparent"
+          [ngClass]="activeSection?.section_number === sec.section_number ? 'text-accent font-bold bg-accent/5 border-accent/10 shadow-sm' : 'text-text-secondary dark:text-slate-400'">
+          <!-- Dot indicator on timeline -->
+          <span
+            class="absolute left-[-18.5px] w-2.5 h-2.5 rounded-full border-2 border-surface-light dark:border-surface-dark transition-all"
+            [ngClass]="activeSection?.section_number === sec.section_number ? 'bg-accent scale-110 active-glow' : 'bg-slate-300 dark:bg-slate-700'">
+          </span>
+          <span
+            class="font-mono text-[8px] font-bold tracking-wider shrink-0 uppercase px-1.5 py-0.5 rounded bg-black/5 dark:bg-white/5 text-text-muted">
+            Sec {{ sec.section_number }}
+          </span>
+          <span class="truncate text-[11px] leading-tight flex-1">{{ getSectionTitle(sec) }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Jargon Detector -->
+    <div class="flex flex-col gap-2">
+      <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Jargon Detector</span>
+      <div
+        class="flex flex-col gap-2 p-1.5 bg-slate-50/50 dark:bg-slate-950/20 border border-border-subtle/20 rounded-xl max-h-[20vh] overflow-y-auto custom-scrollbar">
+        <div *ngIf="detectedGlossaryTerms.length === 0" class="text-[10px] text-text-muted italic text-center py-3">
+          No jargon detected in this section.
+        </div>
+        <div *ngFor="let item of detectedGlossaryTerms"
+          class="flex flex-col gap-1 py-2 px-2 hover:bg-black/5 dark:hover:bg-white/5 rounded-lg transition-colors">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1 h-1 rounded-full bg-accent"></span>
+            <span class="text-[10px] font-bold text-text-primary dark:text-white uppercase tracking-wider">{{ item.term
+              }}</span>
+          </div>
+          <p class="text-[9.5px] text-text-secondary dark:text-slate-350 leading-relaxed m-0 pl-2.5">{{ item.definition
+            }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recently Viewed -->
+    <div *ngIf="otherRecents.length > 0" class="flex flex-col gap-2 pt-2 border-t border-border-subtle/20">
+      <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Recently Viewed</span>
+      <div class="flex flex-wrap gap-1.5">
+        <button *ngFor="let sec of otherRecents" (click)="selectSection(sec)"
+          class="px-2.5 py-1 rounded-full text-[9px] font-bold border border-border-subtle/30 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-text-secondary dark:text-slate-350 hover:text-accent dark:hover:text-white transition-all cursor-pointer shadow-sm">
+          Sec {{ sec.section_number }}
+        </button>
+      </div>
+    </div>
   </div>
 </div>
