@@ -46,7 +46,7 @@ export function getParsedContent(text: string, introText: string = ''): ParsedBl
 
     const isExplanation = /^(?:explanation|स्पष्टीकरण)\b/i.test(trimmed);
     const isIllustration = /^(?:illustration|illustrations|दृष्टांत|उदाहरण|उद्देश्य)\b/i.test(trimmed);
-    const isClause = /^(?:\([a-z0-9अ-अँ]+\)|\d+\.)/i.test(trimmed);
+    const isClause = /^(?:\d+\[)?(?:\([a-z0-9\u0900-\u097F]+\)|\d+\.)/i.test(trimmed);
 
     if (isExplanation) {
       const isRedundant = /^(?:explanation|स्पष्टीकरण)[\.।\s—–-]*$/i.test(trimmed);

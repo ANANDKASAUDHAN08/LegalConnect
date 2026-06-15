@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { createClient } from 'redis';
-import BareAct from '../models/BareAct';
+import BareAct, { SectionModel } from '../models/BareAct';
 import aiService from '../services/AiService';
 import LegalResource from '../models/LegalResource';
 import Lawyer from '../models/Lawyer';
@@ -84,7 +84,7 @@ async function setCache(key: string, value: any, ttlSeconds: number = 86400): Pr
   }
 }
 
-// Semantic/Keyword search across all laws
+// Semantic/Keyword search across all laws (section-level)
 router.get('/search', async (req: Request, res: Response) => {
   try {
     const query = req.query.q as string;
@@ -100,26 +100,62 @@ router.get('/search', async (req: Request, res: Response) => {
       }
     }
 
-    // Using MongoDB $text index for fast full-text search
-    const results = await BareAct.find(
+    // Using MongoDB $text index for fast section-level full-text search
+    const sections = await SectionModel.find(
       { $text: { $search: query } },
       { score: { $meta: "textScore" } }
-    ).sort({ score: { $meta: "textScore" } }).limit(10);
+    ).sort({ score: { $meta: "textScore" } }).limit(20);
 
-    const sanitizedResults = results.map(act => ({
-      _id: act._id,
-      actName: act.actName,
-      shortName: act.shortName,
-      year: act.year,
-      description: act.description,
-      chapters: act.chapters.map(ch => ({
-        chapterNumber: ch.chapterNumber,
-        title: ch.title,
-        sectionsCount: ch.sections.length
-      }))
-    }));
+    // Fetch act metadata to match shortNames to full names/years
+    const acts = await BareAct.find({}, 'actName shortName year description');
+    const actMap = new Map(acts.map(a => [a.shortName, a]));
 
-    const finalResponse = { success: true, count: sanitizedResults.length, data: sanitizedResults };
+    const data = sections.map(sec => {
+      const act = actMap.get(sec.actShortName || '');
+      
+      // Extract a snippet around the query word
+      let snippet = '';
+      const text = sec.content;
+      const queryWords = query.split(/\s+/).filter(w => w.length > 2);
+      let bestIndex = -1;
+      
+      for (const word of queryWords) {
+        const idx = text.toLowerCase().indexOf(word.toLowerCase());
+        if (idx !== -1) {
+          bestIndex = idx;
+          break;
+        }
+      }
+      
+      if (bestIndex !== -1) {
+        const start = Math.max(0, bestIndex - 60);
+        const end = Math.min(text.length, bestIndex + 100);
+        snippet = (start > 0 ? '...' : '') + text.substring(start, end).trim() + (end < text.length ? '...' : '');
+      } else {
+        snippet = text.substring(0, 150).trim() + (text.length > 150 ? '...' : '');
+      }
+
+      // Highlight the query word in the snippet
+      if (queryWords.length > 0) {
+        const wordsPattern = queryWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|');
+        const highlightRegex = new RegExp(`(${wordsPattern})`, 'gi');
+        snippet = snippet.replace(highlightRegex, '<mark class="bg-accent/20 text-accent dark:bg-accent/30 dark:text-accent-light px-0.5 rounded">$1</mark>');
+      }
+
+      return {
+        _id: sec._id,
+        section_number: sec.section_number,
+        title: sec.title,
+        title_hi: sec.title_hi,
+        actName: act ? act.actName : sec.actShortName,
+        shortName: sec.actShortName,
+        year: act ? act.year : null,
+        chapterNumber: sec.chapterNumber,
+        snippet
+      };
+    });
+
+    const finalResponse = { success: true, count: data.length, data };
     await setCache(`legal:search:${cacheKey}`, finalResponse, 3600); // cache search results for 1 hour
 
     res.json(finalResponse);
@@ -191,32 +227,74 @@ router.get('/acts/:shortName', async (req: Request, res: Response) => {
   }
 });
 
-// Get a specific section
-router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res: Response) => {
+// Get outline of act (structural metadata, excluding heavy content fields)
+router.get('/acts/:shortName/outline', async (req: Request, res: Response) => {
   try {
-    const act = await BareAct.findOne({ shortName: req.params.shortName });
+    const shortName = req.params.shortName as string;
+    const cacheKey = `legal:act:outline:${shortName}`;
+    if (req.query.refresh !== 'true') {
+      const cached = await getCache(cacheKey);
+      if (cached) {
+        res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+        return res.json({ success: true, data: cached, fromCache: true });
+      }
+    }
+
+    const act = await BareAct.findOne(
+      { shortName },
+      {
+        actName: 1,
+        shortName: 1,
+        year: 1,
+        description: 1,
+        'chapters.chapterNumber': 1,
+        'chapters.title': 1,
+        'chapters.sections.section_number': 1,
+        'chapters.sections.title': 1,
+        'chapters.sections.title_hi': 1,
+        'chapters.sections.clean_title': 1,
+        'chapters.sections.clean_title_hi': 1
+      }
+    );
+
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    let foundSection = null;
-    for (const chapter of act.chapters) {
-      const section = chapter.sections.find(s => s.section_number === req.params.sectionNumber);
-      if (section) {
-        foundSection = {
-          chapter: chapter.title,
-          section_number: section.section_number,
-          title: section.title,
-          content: section.content,
-          aiSummary: section.aiSummary
-        };
-        break;
-      }
-    }
+    await setCache(cacheKey, act);
+    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    res.json({ success: true, data: act });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
-    if (!foundSection) {
+// Get a specific section
+router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res: Response) => {
+  try {
+    const section = await SectionModel.findOne({
+      actShortName: req.params.shortName,
+      section_number: req.params.sectionNumber
+    });
+    if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
+
+    const foundSection = {
+      chapter: section.chapterNumber,
+      section_number: section.section_number,
+      title: section.title,
+      title_hi: section.title_hi,
+      content: section.content,
+      content_hi: section.content_hi,
+      aiSummary: section.aiSummary,
+      clean_title: section.clean_title,
+      clean_title_hi: section.clean_title_hi,
+      introduction_text: section.introduction_text,
+      introduction_text_hi: section.introduction_text_hi,
+      content_blocks: section.content_blocks,
+      content_blocks_hi: section.content_blocks_hi
+    };
 
     res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     res.json({ success: true, data: foundSection });
@@ -228,45 +306,37 @@ router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res:
 // Generate or get AI Summary
 router.get('/acts/:shortName/sections/:sectionNumber/summary', async (req: Request, res: Response) => {
   try {
-    const act = await BareAct.findOne({ shortName: req.params.shortName });
+    const shortName = req.params.shortName as string;
+    const sectionNumber = req.params.sectionNumber as string;
+
+    const act = await BareAct.findOne({ shortName }, 'actName shortName');
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    let targetSection: any = null;
-    let targetChapterIndex = -1;
-    let targetSectionIndex = -1;
-
-    for (let i = 0; i < act.chapters.length; i++) {
-      for (let j = 0; j < act.chapters[i].sections.length; j++) {
-        if (act.chapters[i].sections[j].section_number === req.params.sectionNumber) {
-          targetSection = act.chapters[i].sections[j];
-          targetChapterIndex = i;
-          targetSectionIndex = j;
-          break;
-        }
-      }
-      if (targetSection) break;
-    }
-
-    if (!targetSection) {
+    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
 
     // If summary already exists, return it from DB
-    if (targetSection.aiSummary) {
+    if (section.aiSummary) {
       res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
-      return res.json({ success: true, data: { summary: targetSection.aiSummary, cached: true } });
+      return res.json({ success: true, data: { summary: section.aiSummary, cached: true } });
     }
 
     // Call AI Service
-    const generatedSummary = await aiService.generateSectionSummary(act.actName, targetSection.title, targetSection.content);
+    const generatedSummary = await aiService.generateSectionSummary(act.actName, section.title, section.content);
 
-    // Save back to DB
-    act.chapters[targetChapterIndex].sections[targetSectionIndex].aiSummary = generatedSummary;
-    // Mark modified for deeply nested arrays
-    act.markModified(`chapters.${targetChapterIndex}.sections.${targetSectionIndex}.aiSummary`);
-    await act.save();
+    // Save back to DB atomically
+    section.aiSummary = generatedSummary;
+    await section.save();
+
+    // Invalidate cache
+    cachedActsByShortName.delete(shortName);
+    if (isRedisConnected && redisClient) {
+      await redisClient.del(`legal:act:${shortName}`);
+    }
 
     res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     res.json({ success: true, data: { summary: generatedSummary, cached: false } });
@@ -292,42 +362,27 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
     const shortName = req.params.shortName as string;
     const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName });
+    const act = await BareAct.findOne({ shortName }, 'actName shortName');
     if (!act) {
       res.write(`event: error\ndata: ${JSON.stringify({ message: 'Act not found.' })}\n\n`);
       return res.end();
     }
 
-    let targetSection: any = null;
-    let targetChapterIndex = -1;
-    let targetSectionIndex = -1;
-
-    for (let i = 0; i < act.chapters.length; i++) {
-      for (let j = 0; j < act.chapters[i].sections.length; j++) {
-        if (act.chapters[i].sections[j].section_number === sectionNumber) {
-          targetSection = act.chapters[i].sections[j];
-          targetChapterIndex = i;
-          targetSectionIndex = j;
-          break;
-        }
-      }
-      if (targetSection) break;
-    }
-
-    if (!targetSection) {
+    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    if (!section) {
       res.write(`event: error\ndata: ${JSON.stringify({ message: 'Section not found.' })}\n\n`);
       return res.end();
     }
 
     // If summary already exists in DB, stream it back directly in one chunk
-    if (targetSection.aiSummary) {
-      res.write(`data: ${JSON.stringify({ chunk: targetSection.aiSummary })}\n\n`);
+    if (section.aiSummary) {
+      res.write(`data: ${JSON.stringify({ chunk: section.aiSummary })}\n\n`);
       res.write(`event: end\ndata: {}\n\n`);
       return res.end();
     }
 
     // Generate summary stream from AI Service
-    const stream = aiService.generateSectionSummaryStream(act.actName, targetSection.title, targetSection.content);
+    const stream = aiService.generateSectionSummaryStream(act.actName, section.title, section.content);
     let fullSummary = '';
 
     for await (const chunk of stream) {
@@ -335,11 +390,10 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
       res.write(`data: ${JSON.stringify({ chunk })}\n\n`);
     }
 
-    // Save generated summary back to DB
+    // Save generated summary back to DB atomically
     if (fullSummary.trim()) {
-      act.chapters[targetChapterIndex].sections[targetSectionIndex].aiSummary = fullSummary;
-      act.markModified(`chapters.${targetChapterIndex}.sections.${targetSectionIndex}.aiSummary`);
-      await act.save();
+      section.aiSummary = fullSummary;
+      await section.save();
 
       // Invalidate acts cache so next load gets the updated summary
       cachedActsByShortName.delete(shortName);
@@ -373,18 +427,7 @@ router.get('/help-near-me', async (req: Request, res: Response) => {
     const categoryStr = category as string;
     const locationStr = location as string;
 
-    // 1. Fetch Legal Resources (Courts, LegalAid, GovOffice, PoliceStation) in this city
-    // Filter matching category or 'General' (since DLSA covers all categories)
-    const resourceFilter = {
-      city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
-      $or: [
-        { categories: categoryStr },
-        { categories: 'General' }
-      ]
-    };
-    const resources = await LegalResource.find(resourceFilter);
-
-    // 2. Fetch lawyers in this city with specialization matching the category
+    // 1. Fetch Legal Resources and Lawyers in this city in parallel
     let specQuery: any = categoryStr;
     if (categoryStr === 'Property Dispute') {
       specQuery = /Property|Real Estate|Civil|Land/i;
@@ -402,11 +445,22 @@ router.get('/help-near-me', async (req: Request, res: Response) => {
       specQuery = /Corporate|Commercial|Contract|Business/i;
     }
 
-    const lawyers = await Lawyer.find({
+    const resourceFilter = {
       city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
-      specializations: { $regex: specQuery },
-      isVerified: true
-    }).sort({ rating: -1 }).limit(10);
+      $or: [
+        { categories: categoryStr },
+        { categories: 'General' }
+      ]
+    };
+
+    const [resources, lawyers] = await Promise.all([
+      LegalResource.find(resourceFilter),
+      Lawyer.find({
+        city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
+        specializations: { $regex: specQuery },
+        isVerified: true
+      }).sort({ rating: -1 }).limit(10)
+    ]);
 
     // 3. Construct category-specific emergency helplines
     const helplines: any[] = [];
@@ -605,15 +659,15 @@ router.get('/mapping', async (req: Request, res: Response) => {
     let isNewToOld = false;
 
     if (['IPC', 'CRPC', 'IEA'].includes(actStr)) {
-      oldActShortName = actStr;
+      oldActShortName = actStr === 'CRPC' ? 'CrPC' : actStr;
       newActShortName = actStr === 'IPC' ? 'BNS' : (actStr === 'CRPC' ? 'BNSS' : 'BSA');
-      const actMap = transitionMap[oldActShortName] || {};
+      const actMap = transitionMap[oldActShortName.toUpperCase()] || {};
       mappedSectionNumber = actMap[sectionStr] || sectionStr;
     } else if (['BNS', 'BNSS', 'BSA'].includes(actStr)) {
       newActShortName = actStr;
-      oldActShortName = actStr === 'BNS' ? 'IPC' : (actStr === 'BNSS' ? 'CRPC' : 'IEA');
+      oldActShortName = actStr === 'BNS' ? 'IPC' : (actStr === 'BNSS' ? 'CrPC' : 'IEA');
       isNewToOld = true;
-      const actMap = transitionMap[oldActShortName] || {};
+      const actMap = transitionMap[oldActShortName.toUpperCase()] || {};
       const foundKey = Object.keys(actMap).find(key => actMap[key] === sectionStr);
       mappedSectionNumber = foundKey || sectionStr;
     } else {
@@ -623,8 +677,10 @@ router.get('/mapping', async (req: Request, res: Response) => {
       });
     }
 
-    const oldActObj = await BareAct.findOne({ shortName: oldActShortName });
-    const newActObj = await BareAct.findOne({ shortName: newActShortName });
+    const [oldActObj, newActObj] = await Promise.all([
+      BareAct.findOne({ shortName: oldActShortName }, 'actName shortName chapters.chapterNumber chapters.title'),
+      BareAct.findOne({ shortName: newActShortName }, 'actName shortName chapters.chapterNumber chapters.title')
+    ]);
 
     if (!oldActObj || !newActObj) {
       return res.status(404).json({
@@ -636,33 +692,32 @@ router.get('/mapping', async (req: Request, res: Response) => {
     const oldSectionNum = isNewToOld ? mappedSectionNumber : sectionStr;
     const newSectionNum = isNewToOld ? sectionStr : mappedSectionNumber;
 
+    const [oldSection, newSection] = await Promise.all([
+      SectionModel.findOne({ actShortName: oldActShortName, section_number: oldSectionNum }),
+      SectionModel.findOne({ actShortName: newActShortName, section_number: newSectionNum })
+    ]);
+
     let oldSectionObj = null;
-    for (const chap of oldActObj.chapters) {
-      const sec = chap.sections.find(s => s.section_number === oldSectionNum);
-      if (sec) {
-        oldSectionObj = {
-          section_number: sec.section_number,
-          title: sec.title,
-          content: sec.content,
-          chapter: chap.title
-        };
-        break;
-      }
+    if (oldSection) {
+      const chap = oldActObj.chapters.find(c => c.chapterNumber === oldSection.chapterNumber);
+      oldSectionObj = {
+        section_number: oldSection.section_number,
+        title: oldSection.title,
+        content: oldSection.content,
+        chapter: chap ? chap.title : `Chapter ${oldSection.chapterNumber}`
+      };
     }
 
     let newSectionObj = null;
-    for (const chap of newActObj.chapters) {
-      const sec = chap.sections.find(s => s.section_number === newSectionNum);
-      if (sec) {
-        newSectionObj = {
-          section_number: sec.section_number,
-          title: sec.title,
-          content: sec.content,
-          content_hi: sec.content_hi,
-          chapter: chap.title
-        };
-        break;
-      }
+    if (newSection) {
+      const chap = newActObj.chapters.find(c => c.chapterNumber === newSection.chapterNumber);
+      newSectionObj = {
+        section_number: newSection.section_number,
+        title: newSection.title,
+        content: newSection.content,
+        content_hi: newSection.content_hi,
+        chapter: chap ? chap.title : `Chapter ${newSection.chapterNumber}`
+      };
     }
 
     if (!newSectionObj) {
@@ -705,23 +760,16 @@ router.get('/mapping', async (req: Request, res: Response) => {
 router.post('/acts/:shortName/sections/:sectionNumber/chat', async (req: Request, res: Response) => {
   try {
     const { question } = req.body;
-    const { shortName, sectionNumber } = req.params;
+    const shortName = req.params.shortName as string;
+    const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName });
+    const act = await BareAct.findOne({ shortName }, 'actName shortName');
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    let targetSection: any = null;
-    for (const chap of act.chapters) {
-      const sec = chap.sections.find(s => s.section_number === sectionNumber);
-      if (sec) {
-        targetSection = sec;
-        break;
-      }
-    }
-
-    if (!targetSection) {
+    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
 
@@ -729,9 +777,9 @@ router.post('/acts/:shortName/sections/:sectionNumber/chat', async (req: Request
     
 Act: ${act.actName} (${act.shortName})
 Section Number: ${sectionNumber}
-Section Title: ${targetSection.title}
+Section Title: ${section.title}
 Section Content:
-${targetSection.content}
+${section.content}
 
 User Question: ${question}
 
@@ -747,42 +795,31 @@ Provide a helpful, direct, and concise answer in plain language (1-2 short parag
 // On-the-fly Hindi translation for a specific section
 router.post('/acts/:shortName/sections/:sectionNumber/translate', async (req: Request, res: Response) => {
   try {
-    const { shortName, sectionNumber } = req.params;
+    const shortName = req.params.shortName as string;
+    const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName });
+    const act = await BareAct.findOne({ shortName }, 'actName shortName year');
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    let targetSection: any = null;
-    let chapterIdx = -1;
-    let sectionIdx = -1;
-
-    for (let ci = 0; ci < act.chapters.length; ci++) {
-      for (let si = 0; si < act.chapters[ci].sections.length; si++) {
-        if (act.chapters[ci].sections[si].section_number === sectionNumber) {
-          targetSection = act.chapters[ci].sections[si];
-          chapterIdx = ci;
-          sectionIdx = si;
-          break;
-        }
-      }
-      if (targetSection) break;
-    }
-
-    if (!targetSection) {
+    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
 
     const { force } = req.body;
 
     // If already translated, return existing translation (unless force is requested)
-    if (!force && targetSection.content_hi && targetSection.content_hi.trim().length > 10) {
+    if (!force && section.content_hi && section.content_hi.trim().length > 10) {
       return res.json({
         success: true,
         data: {
-          content_hi: targetSection.content_hi,
-          title_hi: targetSection.title_hi || targetSection.title,
+          content_hi: section.content_hi,
+          title_hi: section.title_hi || section.title,
+          clean_title_hi: section.clean_title_hi,
+          introduction_text_hi: section.introduction_text_hi,
+          content_blocks_hi: section.content_blocks_hi,
           cached: true
         }
       });
@@ -804,40 +841,43 @@ RULES:
 Context: This is from ${context}.
 
 English text to translate:
-${targetSection.content}`;
+${section.content}`;
 
     const titlePrompt = `Translate this Indian legal section title from English to Hindi (Devanagari script). Output ONLY the Hindi translation, nothing else. Keep proper nouns in English.
 
-Title: ${targetSection.title}`;
+Title: ${section.title}`;
 
-    const contentResult = await aiService.generateRawContent(contentPrompt);
-    const titleResult = await aiService.generateRawContent(titlePrompt);
+    // Run translations in parallel
+    const [contentResult, titleResult] = await Promise.all([
+      aiService.generateRawContent(contentPrompt),
+      aiService.generateRawContent(titlePrompt)
+    ]);
 
     const { cleanTitle: cleanTitleHi, introText: introTextHi } = splitTitle(titleResult);
     const contentBlocksHi = getParsedContent(contentResult, introTextHi);
 
-    // Save to DB
-    act.chapters[chapterIdx].sections[sectionIdx].content_hi = contentResult;
-    act.chapters[chapterIdx].sections[sectionIdx].title_hi = titleResult;
-    act.chapters[chapterIdx].sections[sectionIdx].clean_title_hi = cleanTitleHi;
-    act.chapters[chapterIdx].sections[sectionIdx].introduction_text_hi = introTextHi || undefined;
-    act.chapters[chapterIdx].sections[sectionIdx].content_blocks_hi = contentBlocksHi.map(b => ({ type: b.type, text: b.text }));
-
-    act.markModified(`chapters.${chapterIdx}.sections.${sectionIdx}.content_hi`);
-    act.markModified(`chapters.${chapterIdx}.sections.${sectionIdx}.title_hi`);
-    act.markModified(`chapters.${chapterIdx}.sections.${sectionIdx}.clean_title_hi`);
-    act.markModified(`chapters.${chapterIdx}.sections.${sectionIdx}.introduction_text_hi`);
-    act.markModified(`chapters.${chapterIdx}.sections.${sectionIdx}.content_blocks_hi`);
-    await act.save();
+    // Save to DB atomically
+    section.content_hi = contentResult;
+    section.title_hi = titleResult;
+    section.clean_title_hi = cleanTitleHi;
+    section.introduction_text_hi = introTextHi || undefined;
+    section.content_blocks_hi = contentBlocksHi.map(b => ({ type: b.type, text: b.text }));
+    await section.save();
 
     // Invalidate cache for this act
-    await setCache(`legal:act:${shortName}`, null, 1);
+    cachedActsByShortName.delete(shortName);
+    if (isRedisConnected && redisClient) {
+      await redisClient.del(`legal:act:${shortName}`);
+    }
 
     res.json({
       success: true,
       data: {
         content_hi: contentResult,
         title_hi: titleResult,
+        clean_title_hi: cleanTitleHi,
+        introduction_text_hi: introTextHi || undefined,
+        content_blocks_hi: contentBlocksHi.map(b => ({ type: b.type, text: b.text })),
         cached: false
       }
     });

@@ -3,12 +3,41 @@ import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
-import BareAct, { IBareAct, IChapter, ISection } from '../models/BareAct';
+import BareAct, { SectionModel, IBareAct, IChapter, ISection } from '../models/BareAct';
 import { splitTitle, getParsedContent } from '../utils/textParser';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
 const RAW_DIR = path.resolve(__dirname, '../data/raw');
+
+async function saveNormalizedAct(bareAct: any, rawChapters: any[]) {
+  const sectionsToInsert: any[] = [];
+  for (const chap of rawChapters) {
+    for (const sec of chap.sections) {
+      sectionsToInsert.push({
+        actShortName: bareAct.shortName,
+        chapterNumber: chap.chapterNumber,
+        section_number: sec.section_number,
+        title: sec.title,
+        title_hi: sec.title_hi,
+        content: sec.content,
+        content_hi: sec.content_hi,
+        aiSummary: sec.aiSummary,
+        clean_title: sec.clean_title,
+        clean_title_hi: sec.clean_title_hi,
+        introduction_text: sec.introduction_text,
+        introduction_text_hi: sec.introduction_text_hi,
+        content_blocks: sec.content_blocks,
+        content_blocks_hi: sec.content_blocks_hi
+      });
+    }
+  }
+
+  await bareAct.save();
+  if (sectionsToInsert.length > 0) {
+    await SectionModel.insertMany(sectionsToInsert);
+  }
+}
 
 function cleanText(text: string): string {
   if (!text) return '';
@@ -108,9 +137,15 @@ async function seedData() {
     await mongoose.connect(mongoUri);
     console.log('✅ Connected to MongoDB!');
 
-    console.log('🗑️ Clearing existing BareActs...');
+    console.log('🗑️ Clearing existing BareActs & Sections...');
     await BareAct.deleteMany({});
-    console.log('✅ BareActs cleared.');
+    try {
+      await SectionModel.collection.drop();
+      console.log('✅ Section collection and indexes dropped.');
+    } catch (err) {
+      await SectionModel.deleteMany({});
+    }
+    console.log('✅ BareActs & Sections cleared.');
 
     // --- 1. BNS, BNSS, BSA (New Criminal Acts) ---
     const newActs = [
@@ -249,7 +284,7 @@ async function seedData() {
         chapters
       });
 
-      await bareAct.save();
+      await saveNormalizedAct(bareAct, chapters);
       console.log(`  ✅ Successfully saved BareAct: ${na.actName} (${chapters.length} chapters, ${sections.length} sections)`);
     }
 
@@ -292,7 +327,7 @@ async function seedData() {
         chapters
       });
 
-      await bareAct.save();
+      await saveNormalizedAct(bareAct, chapters);
       console.log(`  ✅ Successfully saved BareAct: Constitution of India (${chapters.length} parts/chapters, ${articles.length} articles)`);
     } else {
       console.error(`  ❌ Constitution file not found at ${constPath}`);
@@ -376,7 +411,7 @@ async function seedData() {
         chapters
       });
 
-      await bareAct.save();
+      await saveNormalizedAct(bareAct, chapters);
       console.log(`  ✅ Successfully saved BareAct: ${oa.actName} (${chapters.length} chapters, ${totalSections} sections)`);
     }
 
@@ -444,7 +479,7 @@ async function seedData() {
         chapters
       });
 
-      await bareAct.save();
+      await saveNormalizedAct(bareAct, chapters);
       console.log(`  ✅ Successfully saved BareAct: ${fa.actName} (1 chapter, ${sections.length} sections)`);
     }
 
@@ -512,7 +547,7 @@ async function seedData() {
         chapters
       });
 
-      await bareAct.save();
+      await saveNormalizedAct(bareAct, chapters);
       console.log(`  ✅ Successfully saved BareAct: Hindu Marriage Act (${chapters.length} chapters, ${hmaSections.length} sections)`);
     } else {
       console.error(`  ❌ HMA file not found at ${hmaPath}`);

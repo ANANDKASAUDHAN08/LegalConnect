@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import BareAct, { IBareAct } from '../models/BareAct';
+import BareAct, { SectionModel } from '../models/BareAct';
 
 dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 
@@ -71,70 +71,63 @@ async function main() {
 
   const query: any = {};
   if (targetAct) {
-    query.shortName = targetAct;
+    query.actShortName = targetAct;
     console.log(`🎯 Targeting act: ${targetAct}`);
   }
 
-  const acts = await BareAct.find(query);
-  console.log(`📚 Found ${acts.length} act(s) to process.\n`);
+  const sections = await SectionModel.find(query);
+  console.log(`📚 Found ${sections.length} section(s) to process.\n`);
 
   let totalTranslated = 0;
   let totalSkipped = 0;
   let totalErrors = 0;
 
-  for (const act of acts) {
-    console.log(`\n📖 Processing: ${act.actName} (${act.shortName})`);
-    const context = `${act.actName} (${act.shortName}), ${act.year}`;
+  // Cache act metadata to avoid redundant lookups
+  const acts = await BareAct.find({}, 'actName shortName year');
+  const actMap = new Map(acts.map(a => [a.shortName, a]));
 
-    for (let ci = 0; ci < act.chapters.length; ci++) {
-      const chapter = act.chapters[ci];
+  for (const section of sections) {
+    const act = actMap.get(section.actShortName || '');
+    const context = act ? `${act.actName} (${act.shortName}), ${act.year}` : (section.actShortName || '');
 
-      for (let si = 0; si < chapter.sections.length; si++) {
-        const section = chapter.sections[si];
+    // Skip if already translated
+    if (section.content_hi && section.content_hi.trim().length > 10) {
+      totalSkipped++;
+      continue;
+    }
 
-        // Skip if already translated
-        if (section.content_hi && section.content_hi.trim().length > 10) {
-          totalSkipped++;
-          continue;
-        }
+    const label = `  §${section.section_number} "${section.title}"`;
 
-        const label = `  §${section.section_number} "${section.title}"`;
+    try {
+      console.log(`${label} — translating...`);
 
-        try {
-          console.log(`${label} — translating...`);
+      // Translate content
+      const translatedContent = await translateText(ai, section.content || '', context);
+      await sleep(BATCH_DELAY_MS);
 
-          // Translate content
-          const translatedContent = await translateText(ai, section.content, context);
-          await sleep(BATCH_DELAY_MS);
+      // Translate title
+      const translatedTitle = await translateTitle(ai, section.title || '');
+      await sleep(BATCH_DELAY_MS / 2);
 
-          // Translate title
-          const translatedTitle = await translateTitle(ai, section.title);
-          await sleep(BATCH_DELAY_MS / 2);
-
-          if (dryRun) {
-            console.log(`  [DRY RUN] Title: ${translatedTitle}`);
-            console.log(`  [DRY RUN] Content (first 200 chars): ${translatedContent.substring(0, 200)}...`);
-            console.log('  ✅ Dry run complete. Exiting.');
-            await mongoose.disconnect();
-            process.exit(0);
-          }
-
-          // Save to DB
-          act.chapters[ci].sections[si].content_hi = translatedContent;
-          act.chapters[ci].sections[si].title_hi = translatedTitle;
-          act.markModified(`chapters.${ci}.sections.${si}.content_hi`);
-          act.markModified(`chapters.${ci}.sections.${si}.title_hi`);
-          await act.save();
-
-          totalTranslated++;
-          console.log(`${label} — ✅ done`);
-        } catch (err: any) {
-          totalErrors++;
-          console.error(`${label} — ❌ Error: ${err.message}`);
-          // Continue to next section on error
-          await sleep(3000); // extra delay on error to avoid rate limit escalation
-        }
+      if (dryRun) {
+        console.log(`  [DRY RUN] Title: ${translatedTitle}`);
+        console.log(`  [DRY RUN] Content (first 200 chars): ${translatedContent.substring(0, 200)}...`);
+        console.log('  ✅ Dry run complete. Exiting.');
+        await mongoose.disconnect();
+        process.exit(0);
       }
+
+      // Save to DB
+      section.content_hi = translatedContent;
+      section.title_hi = translatedTitle;
+      await section.save();
+
+      totalTranslated++;
+      console.log(`${label} — ✅ done`);
+    } catch (err: any) {
+      totalErrors++;
+      console.error(`${label} — ❌ Error: ${err.message}`);
+      await sleep(3000);
     }
   }
 

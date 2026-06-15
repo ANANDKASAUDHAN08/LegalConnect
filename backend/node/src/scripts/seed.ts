@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
-import BareAct from '../models/BareAct';
+import BareAct, { SectionModel } from '../models/BareAct';
 import Lawyer from '../models/Lawyer';
 import { splitTitle, getParsedContent } from '../utils/textParser';
 
@@ -20,10 +20,17 @@ const seedData = async () => {
     const actsRawData = fs.readFileSync(actsSeedFilePath, 'utf-8');
     const acts = JSON.parse(actsRawData);
 
-    console.log('🗑️  Clearing existing BareActs...');
+    console.log('🗑️  Clearing existing BareActs & Sections...');
     await BareAct.deleteMany({});
+    try {
+      await SectionModel.collection.drop();
+      console.log('✅ Section collection and indexes dropped.');
+    } catch (err) {
+      await SectionModel.deleteMany({});
+    }
     console.log('💾 Seeding legal acts...');
     for (const act of acts) {
+      const sectionsToInsert: any[] = [];
       if (act.chapters) {
         for (const chap of act.chapters) {
           if (chap.sections) {
@@ -71,14 +78,45 @@ const seedData = async () => {
                   sec.content_blocks_hi = contentBlocksHi.map(b => ({ type: b.type, text: b.text }));
                 }
               }
-              return sec;
+
+              // Collect full detailed section document
+              sectionsToInsert.push({
+                actShortName: act.shortName,
+                chapterNumber: chap.chapterNumber,
+                section_number: sec.section_number,
+                title: sec.title,
+                title_hi: sec.title_hi,
+                content: sec.content,
+                content_hi: sec.content_hi,
+                aiSummary: sec.aiSummary,
+                clean_title: sec.clean_title,
+                clean_title_hi: sec.clean_title_hi,
+                introduction_text: sec.introduction_text,
+                introduction_text_hi: sec.introduction_text_hi,
+                content_blocks: sec.content_blocks,
+                content_blocks_hi: sec.content_blocks_hi
+              });
+
+              // Return lightweight outline section for BareAct document
+              return {
+                section_number: sec.section_number,
+                title: sec.title,
+                title_hi: sec.title_hi,
+                clean_title: sec.clean_title,
+                clean_title_hi: sec.clean_title_hi,
+                introduction_text: sec.introduction_text,
+                introduction_text_hi: sec.introduction_text_hi
+              };
             });
           }
         }
       }
       const newAct = new BareAct(act);
       await newAct.save();
-      console.log(`  ✅ Inserted: "${act.actName}"`);
+      if (sectionsToInsert.length > 0) {
+        await SectionModel.insertMany(sectionsToInsert);
+      }
+      console.log(`  ✅ Inserted outline & ${sectionsToInsert.length} sections for: "${act.actName}"`);
     }
 
     // --- Seed Lawyers ---
