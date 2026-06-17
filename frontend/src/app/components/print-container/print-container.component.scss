@@ -1,0 +1,49 @@
+// ── Print Container Styles ──
+
+@media print {
+
+  // Hide site-wide header, footer, sidebars, navigation, scroll-to-top, and typical UI control elements
+  nav,
+  header,
+  footer,
+  app-navbar,
+  app-footer,
+  .navbar,
+  .footer,
+  .no-print,
+  button,
+  .btn,
+  .action-bar,
+  .search-panel,
+  .breadcrumbs,
+  .reading-mode-header,
+  .mobile-tabs,
+  .toast,
+  .snackbar,
+  [class*="navbar"],
+  [class*="footer"] {
+    display: none !important;
+  }
+
+  // Reset page settings to ensure natural background print
+  body,
+  html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  // Ensure content matches full printable paper width
+  .print-container-wrapper {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+
+  .print-projected-content {
+    display: block !important;
+    width: 100% !important;
+  }
+}

@@ -4,6 +4,7 @@ import { NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, takeUntil, debounceTime } from 'rxjs';
 import { LegalService, BareAct, Chapter, Section, ContentBlock } from '../../services/legal.service';
+import { FormattingService } from '../../services/formatting.service';
 import { BookmarkService } from '../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { NoteService } from '../../services/note.service';
@@ -18,6 +19,7 @@ import { SpeechService } from '../../services/speech.service';
 import { LawViewerSidebarComponent } from './law-viewer-sidebar/law-viewer-sidebar.component';
 import { LawViewerChatComponent } from './law-viewer-chat/law-viewer-chat.component';
 import { LawViewerCompareComponent } from './law-viewer-compare/law-viewer-compare.component';
+import { LawViewerCompanionComponent } from './law-viewer-companion/law-viewer-companion.component';
 
 // Precompute sorted glossary list, map, and regex once at module load time for maximum rendering performance
 const SORTED_GLOSSARY = [...GLOSSARY_LIST].sort((a, b) => b.term.length - a.term.length);
@@ -42,7 +44,8 @@ const GLOSSARY_REGEX = new RegExp(
     TooltipDirective,
     LawViewerSidebarComponent,
     LawViewerChatComponent,
-    LawViewerCompareComponent
+    LawViewerCompareComponent,
+    LawViewerCompanionComponent
   ],
   templateUrl: './law-viewer.component.html',
   styleUrls: ['./law-viewer.component.scss'],
@@ -99,19 +102,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
   isScrolled = false;
 
-  // Companion Dashboard widgets expanded/collapsed states (Accordion)
-  isReadingProgressExpanded = true;
-  isChapterOutlineExpanded = true;
-  isJargonDetectorExpanded = true;
-  isRecentlyViewedExpanded = true;
-
-  toggleWidget(widget: 'progress' | 'outline' | 'jargon' | 'recent') {
-    if (widget === 'progress') this.isReadingProgressExpanded = !this.isReadingProgressExpanded;
-    else if (widget === 'outline') this.isChapterOutlineExpanded = !this.isChapterOutlineExpanded;
-    else if (widget === 'jargon') this.isJargonDetectorExpanded = !this.isJargonDetectorExpanded;
-    else if (widget === 'recent') this.isRecentlyViewedExpanded = !this.isRecentlyViewedExpanded;
-    this.cdr.markForCheck();
-  }
+  // Companion Dashboard states managed locally in LawViewerCompanionComponent
 
   // Precomputed caches and optimization variables for performance
   hasHindiAct = false;
@@ -172,7 +163,8 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     private db: DatabaseService,
     public speechService: SpeechService,
     private cdr: ChangeDetectorRef,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    public formatter: FormattingService
   ) { }
 
   adjustFontSize(amount: number) {
@@ -315,6 +307,8 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     if (result) {
       this.activeChapter = result.ch;
       this.loadSectionDetails(result.sec);
+      // Scroll to top so the user sees the section from the beginning
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   }
 
@@ -386,12 +380,12 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   onMouseOver(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const glossaryTerm = target.closest('.glossary-term') as HTMLElement;
-    
+
     // Performance Optimization: Only check/reposition if we moved to a different glossary term
     if (glossaryTerm === this.activeHoveredTerm) {
       return;
     }
-    
+
     this.activeHoveredTerm = glossaryTerm;
 
     if (glossaryTerm) {
@@ -1200,73 +1194,10 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     return result;
   }
 
-  parseMarkdown(text: string): string {
-    if (!text) return '';
-
-    // Escaped HTML to prevent injection
-    let html = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    // Bold: **text** -> <strong>text</strong>
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-text-primary dark:text-white">$1</strong>');
-
-    // Italics: *text* -> <em>text</em>
-    html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
-
-    const lines = html.split('\n');
-    const formattedLines = lines.map(line => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('* ')) {
-        const itemContent = trimmed.substring(2);
-        return `<li class="ml-6 list-disc mb-1.5 text-text-secondary dark:text-slate-350">${itemContent}</li>`;
-      }
-      if (/^\d+\.\s/.test(trimmed)) {
-        const match = trimmed.match(/^(\d+)\.\s(.*)$/);
-        if (match) {
-          return `<div class="font-bold text-sm text-accent mt-4 mb-2 flex items-start gap-1.5"><span>${match[1]}.</span> <span>${match[2]}</span></div>`;
-        }
-      }
-      return trimmed ? `<p class="mb-2 leading-relaxed text-text-secondary dark:text-slate-350">${trimmed}</p>` : '';
-    });
-
-    return formattedLines.join('\n');
-  }
-
   registerSectionView(sec: Section) {
     if (!sec) return;
     this.recentSections = this.recentSections.filter(s => s.section_number !== sec.section_number);
     this.recentSections = [sec, ...this.recentSections].slice(0, 4);
   }
 
-  get otherRecents(): Section[] {
-    return this.recentSections.filter(s => s.section_number !== this.activeSection?.section_number);
-  }
-
-  get detectedGlossaryTerms(): { term: string, definition: string }[] {
-    if (!this.activeSection) return [];
-    const content = (this.activeSection.content || '').toLowerCase();
-    const title = (this.activeSection.title || '').toLowerCase();
-    return GLOSSARY_LIST.filter(item => {
-      const termLower = item.term.toLowerCase();
-      return content.includes(termLower) || title.includes(termLower);
-    });
-  }
-
-  get chapterProgress(): { current: number, total: number, percentage: number } {
-    if (!this.activeSection || !this.activeChapter || !this.activeChapter.sections) {
-      return { current: 0, total: 0, percentage: 0 };
-    }
-    const total = this.activeChapter.sections.length;
-    const current = this.activeChapter.sections.findIndex(s => s.section_number === this.activeSection!.section_number) + 1;
-    const percentage = total > 0 ? (current / total) * 100 : 0;
-    return { current, total, percentage };
-  }
-
-  get readingTime(): number {
-    if (!this.activeSection || !this.activeSection.content) return 0;
-    const words = this.activeSection.content.split(/\s+/).length;
-    return Math.max(1, Math.round(words / 225)); // ~225 words per min
-  }
 }

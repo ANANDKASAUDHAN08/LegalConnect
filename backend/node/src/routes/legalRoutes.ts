@@ -10,6 +10,7 @@ const router = Router();
 
 // In-Memory Cache Fallback Stores
 const searchCache = new Map<string, any>();
+const mappingCache = new Map<string, any>();
 let cachedAllActs: any = null;
 const cachedActsByShortName = new Map<string, any>();
 
@@ -54,6 +55,9 @@ async function getCache(key: string): Promise<any> {
   } else if (key.startsWith('legal:search:')) {
     const query = key.replace('legal:search:', '');
     return searchCache.get(query);
+  } else if (key.startsWith('legal:mapping:')) {
+    const mapKey = key.replace('legal:mapping:', '');
+    return mappingCache.get(mapKey);
   }
   return null;
 }
@@ -81,6 +85,13 @@ async function setCache(key: string, value: any, ttlSeconds: number = 86400): Pr
       if (firstKey) searchCache.delete(firstKey);
     }
     searchCache.set(query, value);
+  } else if (key.startsWith('legal:mapping:')) {
+    const mapKey = key.replace('legal:mapping:', '');
+    if (mappingCache.size >= 100) {
+      const firstKey = mappingCache.keys().next().value;
+      if (firstKey) mappingCache.delete(firstKey);
+    }
+    mappingCache.set(mapKey, value);
   }
 }
 
@@ -640,6 +651,56 @@ const transitionMap: Record<string, Record<string, string>> = {
   }
 };
 
+// Typeahead suggestions for mapper search — returns section numbers + titles matching a query
+router.get('/mapping/suggestions', async (req: Request, res: Response) => {
+  try {
+    const q = (req.query.q as string || '').trim();
+    if (!q || q.length < 1) {
+      return res.json({ success: true, data: [] });
+    }
+
+    const cacheKey = `legal:mapping:suggestions:${q.toLowerCase()}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.json({ success: true, data: cached, fromCache: true });
+    }
+
+    // Search across all supported acts for matching section numbers or titles
+    const supportedActs = ['IPC', 'CrPC', 'IEA', 'BNS', 'BNSS', 'BSA'];
+    const isNumeric = /^\d/.test(q);
+
+    let filter: any;
+    if (isNumeric) {
+      filter = {
+        actShortName: { $in: supportedActs },
+        section_number: { $regex: `^${q}`, $options: 'i' }
+      };
+    } else {
+      filter = {
+        actShortName: { $in: supportedActs },
+        $or: [
+          { title: { $regex: q, $options: 'i' } },
+          { section_number: { $regex: `^${q}`, $options: 'i' } }
+        ]
+      };
+    }
+
+    const sections = await SectionModel.find(filter, 'actShortName section_number title').limit(12).lean();
+
+    const data = sections.map(s => ({
+      act: s.actShortName,
+      section: s.section_number,
+      title: s.title
+    }));
+
+    await setCache(cacheKey, data, 3600);
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.json({ success: true, data });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 router.get('/mapping', async (req: Request, res: Response) => {
   try {
     const { act, section } = req.query;
@@ -652,6 +713,14 @@ router.get('/mapping', async (req: Request, res: Response) => {
 
     const actStr = (act as string).toUpperCase();
     const sectionStr = (section as string).trim();
+
+    // Check cache first (mapping + AI comparison is expensive)
+    const mapCacheKey = `legal:mapping:${actStr}:${sectionStr}`;
+    const cachedResult = await getCache(mapCacheKey);
+    if (cachedResult) {
+      res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+      return res.json({ ...cachedResult, fromCache: true });
+    }
 
     let oldActShortName = '';
     let newActShortName = '';
@@ -721,14 +790,17 @@ router.get('/mapping', async (req: Request, res: Response) => {
     }
 
     if (!newSectionObj) {
-      return res.json({
+      const noMapResult = {
         success: true,
         oldAct: { shortName: oldActObj.shortName, actName: oldActObj.actName },
         oldSection: oldSectionObj,
         newAct: { shortName: newActObj.shortName, actName: newActObj.actName },
         newSection: null,
         comparison: 'No direct mapping could be automatically resolved for this section. The sections might have been merged, repealed, or re-organized under a different scheme in the new Act.'
-      });
+      };
+      await setCache(mapCacheKey, noMapResult, 3600);
+      res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+      return res.json(noMapResult);
     }
 
     const oldTitle = oldSectionObj ? oldSectionObj.title : 'Unknown';
@@ -744,14 +816,19 @@ router.get('/mapping', async (req: Request, res: Response) => {
       newSectionObj.content
     );
 
-    res.json({
+    const finalResult = {
       success: true,
       oldAct: { shortName: oldActObj.shortName, actName: oldActObj.actName },
       oldSection: oldSectionObj,
       newAct: { shortName: newActObj.shortName, actName: newActObj.actName },
       newSection: newSectionObj,
       comparison
-    });
+    };
+
+    // Cache the full result (AI comparison is expensive)
+    await setCache(mapCacheKey, finalResult, 3600);
+    res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+    res.json(finalResult);
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }

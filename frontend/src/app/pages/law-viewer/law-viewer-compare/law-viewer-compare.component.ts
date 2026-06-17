@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, OnChanges, SimpleChanges, OnDes
 import { NgIf, NgClass, DOCUMENT } from '@angular/common';
 import { Subject, takeUntil } from 'rxjs';
 import { LegalService, Section } from '../../../services/legal.service';
+import { FormattingService } from '../../../services/formatting.service';
 import { TooltipDirective } from '../../../directives/tooltip.directive';
 import { SnackbarService } from '../../../services/snackbar.service';
 
@@ -30,8 +31,9 @@ export class LawViewerCompareComponent implements OnChanges, OnDestroy {
     private snackbar: SnackbarService,
     private renderer: Renderer2,
     @Inject(DOCUMENT) private document: any,
-    private cdr: ChangeDetectorRef
-  ) {}
+    private cdr: ChangeDetectorRef,
+    public formatter: FormattingService
+  ) { }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['isOpen']) {
@@ -50,6 +52,21 @@ export class LawViewerCompareComponent implements OnChanges, OnDestroy {
     this.destroy$.complete();
   }
 
+  private processSectionData(res: any): any {
+    if (!res) return res;
+    if (res.oldSection) {
+      const healedOld = this.formatter.healTitleAndContent(res.oldSection.title, res.oldSection.content);
+      res.oldSection.title = healedOld.title;
+      res.oldSection.content = this.formatter.cleanSectionContent(healedOld.content);
+    }
+    if (res.newSection) {
+      const healedNew = this.formatter.healTitleAndContent(res.newSection.title, res.newSection.content);
+      res.newSection.title = healedNew.title;
+      res.newSection.content = this.formatter.cleanSectionContent(healedNew.content);
+    }
+    return res;
+  }
+
   loadCrossReference(force: boolean = false) {
     if (!this.activeSection) return;
 
@@ -64,13 +81,13 @@ export class LawViewerCompareComponent implements OnChanges, OnDestroy {
             const ageInMs = Date.now() - cacheObj.timestamp;
             const thirtyDaysInMs = 30 * 24 * 60 * 60 * 1000;
             if (ageInMs < thirtyDaysInMs) {
-              this.crossRefData = cacheObj.data;
+              this.crossRefData = this.processSectionData(cacheObj.data);
               this.crossRefLoading = false;
               this.cdr.markForCheck();
               return;
             }
           } else if (cacheObj && cacheObj.success) {
-            this.crossRefData = cacheObj;
+            this.crossRefData = this.processSectionData(cacheObj);
             this.crossRefLoading = false;
             this.cdr.markForCheck();
             return;
@@ -93,7 +110,7 @@ export class LawViewerCompareComponent implements OnChanges, OnDestroy {
         next: (res) => {
           this.crossRefLoading = false;
           if (res.success) {
-            this.crossRefData = res;
+            this.crossRefData = this.processSectionData(res);
             const cacheObj = {
               data: res,
               timestamp: Date.now()
@@ -120,33 +137,4 @@ export class LawViewerCompareComponent implements OnChanges, OnDestroy {
     this.close.emit();
   }
 
-  parseMarkdown(text: string): string {
-    if (!text) return '';
-
-    let html = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
-
-    html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-text-primary dark:text-white">$1</strong>');
-    html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
-
-    const lines = html.split('\n');
-    const formattedLines = lines.map(line => {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('* ')) {
-        const itemContent = trimmed.substring(2);
-        return `<li class="ml-6 list-disc mb-1.5 text-text-secondary dark:text-slate-350">${itemContent}</li>`;
-      }
-      if (/^\d+\.\s/.test(trimmed)) {
-        const match = trimmed.match(/^(\d+)\.\s(.*)$/);
-        if (match) {
-          return `<div class="font-bold text-sm text-accent mt-4 mb-2 flex items-start gap-1.5"><span>${match[1]}.</span> <span>${match[2]}</span></div>`;
-        }
-      }
-      return trimmed ? `<p class="mb-2 leading-relaxed text-text-secondary dark:text-slate-350">${trimmed}</p>` : '';
-    });
-
-    return formattedLines.join('\n');
-  }
 }

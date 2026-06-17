@@ -779,9 +779,12 @@ select:not(.bg-transparent):not([multiple]) {
   left: var(--tooltip-left, 50%);
   transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, 0px));
   margin-bottom: 8px;
-  width: 16rem; /* w-64 */
-  padding: 12px; /* p-3 */
-  background-color: rgba(15, 23, 42, 0.96); /* slate-900/96 */
+  width: 16rem;
+  /* w-64 */
+  padding: 12px;
+  /* p-3 */
+  background-color: rgba(15, 23, 42, 0.96);
+  /* slate-900/96 */
   color: #ffffff;
   font-size: 11px;
   line-height: 1.625;
@@ -793,12 +796,12 @@ select:not(.bg-transparent):not([multiple]) {
   font-weight: 400;
   text-align: center;
   pointer-events: none;
-  
+
   /* Modern CSS transition */
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease, transform 0.2s ease;
-  
+
   .dark & {
     background-color: rgba(2, 6, 23, 0.96);
   }
@@ -815,21 +818,22 @@ select:not(.bg-transparent):not([multiple]) {
     bottom: 100%;
     left: var(--tooltip-left, 50%);
     transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, 10px));
-    width: 12rem; /* w-48 (192px) */
+    width: 12rem;
+    /* w-48 (192px) */
     margin: 0;
     margin-bottom: 8px;
     font-size: 11px;
     padding: 10px;
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.35);
     border-radius: 10px;
-    
+
     /* Suppress hover effect on mobile to prevent sticky hovers */
     .glossary-term:hover & {
       opacity: 0 !important;
       visibility: hidden !important;
       transform: translate(var(--tooltip-translate-x, -50%), var(--tooltip-translate-y, 10px)) !important;
     }
-    
+
     /* Toggled display on mobile clicks */
     .glossary-term.active &,
     .glossary-term.active:hover & {

@@ -1,175 +1,1578 @@
-<div class="page-wrapper min-h-screen pt-[100px] pb-20 px-4 md:px-8 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-100">
-  <div class="max-w-7xl mx-auto flex flex-col gap-10">
-    
-    <!-- Header -->
-    <div class="text-center md:text-left flex flex-col gap-3">
-      <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent/15 border border-accent/20 self-center md:self-start">
-        <span class="w-2 h-2 rounded-full bg-accent animate-pulse"></span>
-        <span class="text-[0.75rem] font-bold uppercase tracking-wider text-accent-light">BNS Transition Bridge</span>
+<div class="mapper-page min-h-screen pt-[68px]" [ngClass]="{'is-reading-mode': isReadingMode}">
+
+  <!-- Sticky Compact Mobile Header (Scroll activated, mobile only) -->
+  <div *ngIf="showStickyHeader && result"
+    class="fixed top-[56px] left-0 right-0 z-40 bg-white/95 dark:bg-[hsl(222,47%,11%)]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/8 p-3 shadow-md md:hidden animate-fade-in flex items-center justify-between no-print">
+    <div class="flex items-center gap-2">
+      <div
+        class="px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-[10px] font-bold text-slate-700 dark:text-slate-300">
+        {{ result.oldAct.shortName }} § {{ result.oldSection?.section_number || '?' }}
       </div>
-      <h1 class="text-3xl md:text-5xl font-serif font-bold text-white tracking-tight">The Bridge of Laws</h1>
-      <p class="text-slate-400 max-w-2xl text-base leading-relaxed">
-        Seamlessly map section transitions between historical codes and the new Indian Criminal laws. Find corresponding sections and review differences instantly.
+      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M6 12h12" />
+      </svg>
+      <div
+        class="px-2 py-0.5 bg-[hsl(35,92%,47%)]/10 rounded text-[10px] font-bold text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)]">
+        {{ result.newAct.shortName }} § {{ result.newSection?.section_number || '?' }}
+      </div>
+      <span class="text-[10px] font-extrabold text-emerald-600 dark:text-emerald-400">{{ diffSimilarity }}%</span>
+    </div>
+
+    <button (click)="scrollToSearch()"
+      class="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-white bg-gradient-to-r from-[hsl(35,92%,47%)] to-[hsl(35,92%,37%)] px-3 py-1.5 rounded-lg border-none cursor-pointer">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+      </svg>
+      New
+    </button>
+  </div>
+
+  <!-- Sticky Compact Desktop Header (Scroll activated, desktop only) -->
+  <div *ngIf="showStickyHeader && result"
+    class="fixed top-[56px] left-0 right-0 z-40 bg-white/95 dark:bg-[hsl(222,47%,11%)]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/8 p-2.5 shadow-md hidden md:block animate-fade-in no-print">
+    <div class="mx-auto w-[90%] max-w-[1800px] flex items-center justify-between">
+
+      <!-- Left side Info -->
+      <div class="flex items-center gap-3">
+        <!-- Old Act Badge -->
+        <span
+          class="px-2.5 py-1 bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/8 rounded-lg text-xs font-bold text-slate-700 dark:text-slate-200">
+          {{ result.oldAct.shortName }} § {{ result.oldSection?.section_number || '?' }}
+        </span>
+
+        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M6 12h12" />
+        </svg>
+
+        <!-- New Act Badge -->
+        <span
+          class="px-2.5 py-1 bg-[hsl(35,92%,47%)]/10 border border-[hsl(35,92%,47%)]/25 rounded-lg text-xs font-bold text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)]">
+          {{ result.newAct.shortName }} § {{ result.newSection?.section_number || '?' }}
+        </span>
+
+        <!-- Similarity Badge -->
+        <span class="px-2.5 py-1 rounded-full text-xs font-extrabold border" [ngClass]="{
+            'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/30 dark:border-emerald-500/20': diffSimilarity >= 60,
+            'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/30 dark:border-emerald-500/20': diffSimilarity >= 30 && diffSimilarity < 60,
+            'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border-rose-200/30 dark:border-rose-500/20': diffSimilarity < 30
+          }">
+          {{ diffSimilarity }}% Match
+        </span>
+
+        <!-- Separator -->
+        <span class="text-slate-300 dark:text-slate-700 text-xs select-none">|</span>
+
+        <!-- Section Titles -->
+        <span class="text-xs font-bold text-slate-700 dark:text-slate-300 truncate max-w-[200px] lg:max-w-[300px]"
+          [appTooltip]="result.oldSection?.title || ''" tooltipPlacement="bottom">
+          {{ result.oldSection?.title || '—' }}
+        </span>
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="text-xs font-bold text-[hsl(35,92%,47%)] truncate max-w-[200px] lg:max-w-[300px]"
+          [appTooltip]="result.newSection?.title || ''" tooltipPlacement="bottom">
+          {{ result.newSection?.title || '—' }}
+        </span>
+      </div>
+
+      <!-- Right side Toolbar -->
+      <div class="flex items-center gap-2">
+        <!-- Diff Toggle -->
+        <button *ngIf="result.oldSection && result.newSection" (click)="showDiff = !showDiff"
+          [appTooltip]="showDiff ? 'Switch back to clean readable text' : 'Highlight word-level additions and deletions'"
+          tooltipPlacement="bottom"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer border transition-all"
+          [ngClass]="showDiff
+          ? 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-600 dark:border-indigo-500'
+          : 'bg-indigo-50/50 border-indigo-100/80 text-indigo-600 hover:bg-indigo-100/80 dark:bg-indigo-950/20 dark:border-indigo-500/20 dark:text-indigo-400 dark:hover:bg-indigo-950/40'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+          </svg>
+          {{ showDiff ? 'Hide Diff' : 'Show Diff' }}
+        </button>
+
+        <!-- Focus (Reading Mode) -->
+        <button (click)="toggleReadingMode()" [appTooltip]="isReadingMode ? 'Exit focus mode' : 'Enter focus mode'"
+          tooltipPlacement="bottom"
+          class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0"
+          [ngClass]="isReadingMode
+          ? 'bg-amber-600 border-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600 dark:border-amber-500'
+          : 'bg-amber-50/50 border-amber-100/80 text-amber-600 hover:bg-amber-100/80 dark:bg-amber-950/20 dark:border-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-950/40'">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+        </button>
+
+        <!-- Pin current result -->
+        <button (click)="togglePinCurrentResult()" [appTooltip]="isPinned ? 'Unpin comparison' : 'Pin comparison'"
+          tooltipPlacement="bottom"
+          class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0"
+          [ngClass]="isPinned
+          ? 'bg-rose-600 border-rose-600 text-white hover:bg-rose-700 dark:bg-rose-600 dark:border-rose-500'
+          : 'bg-rose-50/50 border-rose-100/80 text-rose-600 hover:bg-rose-100/80 dark:bg-rose-950/20 dark:border-rose-500/20 dark:text-rose-400 dark:hover:bg-rose-950/40'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            stroke-linejoin="round" class="w-3.5 h-3.5">
+            <line x1="12" y1="17" x2="12" y2="22" />
+            <path
+              d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.47A2 2 0 0 1 15 9.3V5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4.3a2 2 0 0 1-.78 1.23L5.44 14a2 2 0 0 0-.44 1.24Z" />
+          </svg>
+        </button>
+
+        <!-- Share Menu -->
+        <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()"
+          [shareUrl]="'http://localhost:4200' + router.url" [subject]="getShareSubject()"
+          [buttonClass]="'w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0 bg-emerald-50/50 border-emerald-100/80 text-emerald-600 hover:bg-emerald-100/80 dark:bg-emerald-950/20 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-950/40'"
+          [tooltipText]="'Share mapping'" [tooltipPlacement]="'bottom'">
+        </app-share-menu>
+
+        <!-- Print -->
+        <button (click)="triggerPrint()" appTooltip="Print or export PDF" tooltipPlacement="bottom"
+          class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0
+               bg-purple-50/50 border-purple-100/80 text-purple-600 hover:bg-purple-100/80 dark:bg-purple-950/20 dark:border-purple-500/20 dark:text-purple-400 dark:hover:bg-purple-950/40">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M17 17h2a2 2 0 0 02-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 02 2h2m2 4h6a2 2 0 0 02-2v-4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4a2 2 0 0 02 2zm8-12V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4h10z" />
+          </svg>
+        </button>
+
+        <!-- Reset/Clear -->
+        <button (click)="clearAll()" appTooltip="Clear results" tooltipPlacement="left"
+          class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0
+               bg-slate-100/50 border-slate-200/50 text-slate-500 hover:bg-slate-200/80 hover:text-slate-700 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       HERO HEADER
+       ════════════════════════════════════════════ -->
+  <div class="mapper-header no-print relative z-20 border-b border-black/10 dark:border-white/8
+              bg-white dark:bg-[hsl(222,47%,11%)]" [ngClass]="{'reading-mode-header': isReadingMode}">
+
+    <!-- Ambient glow (dark only) -->
+    <div class="absolute inset-0 pointer-events-none overflow-hidden rounded-b-2xl dark:block hidden">
+      <div class="absolute top-0 right-0 w-[500px] h-[260px]
+                  bg-gradient-to-bl from-[hsl(35,92%,47%)]/10 to-transparent rounded-full blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 w-[400px] h-[200px]
+                  bg-gradient-to-tr from-indigo-500/8 to-transparent rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="relative mx-auto w-[90%] max-w-[1800px] py-1 md:py-5">
+
+      <!-- Breadcrumb only for Desktop -->
+      <div class="hidden md:flex items-center gap-2 mb-3 md:mb-4">
+        <a routerLink="/laws" appTooltip="Navigate back to Indian Legal Library home" tooltipPlacement="bottom"
+          class="text-sm font-semibold text-slate-400 dark:text-slate-500 hover:dark:text-[hsl(35,92%,47%)] hover:text-[hsl(35,92%,47%)] no-underline transition-colors flex items-center gap-1">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+          Indian Legal Library
+        </a>
+        <span class="text-slate-300 dark:text-slate-700 text-[10px]">/</span>
+        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Transition Bridge</span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-8 items-start">
+
+        <!-- LEFT: Title + Description -->
+        <div class="flex flex-col gap-2 md:gap-3">
+          <div class="flex items-center gap-2">
+            <div class="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-[hsl(35,92%,47%)]/15
+                        border border-[hsl(35,92%,47%)]/30 flex items-center justify-center"
+              appTooltip="Transition Bridge maps older codes (IPC/CrPC/IEA) to 2023 codes (BNS/BNSS/BSA)"
+              tooltipPlacement="right">
+              <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-[hsl(35,92%,47%)]" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+            </div>
+            <span class="text-[10px] md:text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400">
+              BNS Transition <br *ngIf="result" class="md:hidden"> Bridge
+            </span>
+            <button *ngIf="result" type="button" (click)="toggleMobileDrawer()"
+              class="md:hidden flex items-center gap-1 text-[10px] ml-auto font-bold uppercase tracking-wider text-[hsl(35,92%,47%)] hover:text-[hsl(35,92%,37%)] bg-[hsl(35,92%,47%)]/10 dark:bg-[hsl(35,92%,47%)]/15 border border-[hsl(35,92%,47%)]/20 px-2.5 py-1 rounded-lg transition-all cursor-pointer">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              History & Explore
+            </button>
+          </div>
+
+          <h1 class="text-[clamp(1.5rem,3.5vw,2.4rem)] font-bold leading-tight font-serif
+                     text-slate-900 dark:text-white">
+            The Bridge of <span class="text-[hsl(35,92%,47%)]">Laws</span>
+          </h1>
+          <p class="text-[9.5px] md:text-sm text-slate-500 dark:text-slate-400 max-w-lg leading-relaxed">
+            Map section transitions between historical codes (IPC, CrPC, IEA) and the new Indian Criminal Laws (BNS,
+            BNSS, BSA). Compare differences and review AI-powered explanations instantly.
+          </p>
+
+          <!-- Stats pills -->
+          <div class="hidden md:flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                        bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8
+                        text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+              <svg class="w-3 h-3 text-[hsl(35,92%,47%)]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              6 Acts Covered
+            </div>
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                        bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/8
+                        text-[10px] font-semibold text-slate-600 dark:text-slate-300">
+              <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              Bidirectional Mapping
+            </div>
+            <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full
+                        bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/40
+                        text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              AI Powered
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: Search Panel -->
+        <div class="search-panel w-full flex flex-col gap-2 md:gap-3 mt-0 md:mt-2">
+          <form (ngSubmit)="getMapping()" class="flex flex-col gap-2 md:gap-3">
+
+            <!-- Act Selector -->
+            <div class="flex flex-col gap-1 md:gap-1.5 relative select-container">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Select Act
+              </label>
+              <button type="button" (click)="toggleActDropdown()"
+                appTooltip="Choose the law code you want to map sections for" tooltipPlacement="top" class="w-full flex items-center justify-between bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10
+                             rounded-xl px-4 py-1.5 md:py-2.5 text-xs md:text-sm text-slate-800 dark:text-slate-200 text-left
+                             focus:outline-none focus:border-[hsl(35,92%,47%)] focus:ring-2 focus:ring-[hsl(35,92%,47%)]/15
+                             transition-all cursor-pointer">
+                <span>{{ selectedActOption?.label || 'Select Act' }}</span>
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-slate-400 transition-transform duration-200"
+                  [ngClass]="{'rotate-180': showActDropdown}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+
+              <!-- Custom Dropdown Menu -->
+              <div *ngIf="showActDropdown" class="absolute z-50 top-full mt-2 left-0 right-0 bg-white dark:bg-[hsl(215,25%,18%)]
+                          border border-slate-200/90 dark:border-white/10 rounded-xl shadow-xl
+                          dark:shadow-black/50 overflow-hidden animate-scale-up max-h-[200px] md:max-h-[300px] overflow-y-auto
+                          p-1.5 flex flex-col gap-1 no-scrollbar">
+                <div class="px-3 py-0 md:py-1 bg-slate-50/60 dark:bg-white/[0.01] rounded-xl">
+                  <span class="text-[9px] font-bold text-[hsl(35,92%,47%)] tracking-wider uppercase">
+                    Historical Acts (Old)
+                  </span>
+                </div>
+                <button *ngFor="let act of oldActs" type="button" (click)="selectActOption(act.value)"
+                  class="w-full px-3.5 py-1 md:py-2 text-left text-xs font-semibold rounded-xl transition-all border-none cursor-pointer flex items-center justify-between group"
+                  [ngClass]="selectedAct === act.value
+                    ? 'bg-[hsl(35,92%,47%)]/10 text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)]'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full transition-transform group-hover:scale-125"
+                      [ngClass]="act.value === 'IPC' ? 'bg-amber-500' : act.value === 'CrPC' ? 'bg-indigo-500' : 'bg-emerald-500'"></span>
+                    <span>{{ act.label }}</span>
+                  </div>
+                  <svg *ngIf="selectedAct === act.value" class="w-3.5 h-3.5 text-[hsl(35,92%,47%)]" fill="none"
+                    stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+
+                <div class="px-3 py-0 md:py-1 bg-slate-50/60 dark:bg-white/[0.01] rounded-xl mt-1">
+                  <span class="text-[9px] font-bold text-[hsl(35,92%,47%)] tracking-wider uppercase">New Criminal Laws
+                    (2023)</span>
+                </div>
+                <button *ngFor="let act of newActs" type="button" (click)="selectActOption(act.value)"
+                  class="w-full px-3.5 py-1 md:py-2 text-left text-xs font-semibold rounded-xl transition-all border-none cursor-pointer flex items-center justify-between group"
+                  [ngClass]="selectedAct === act.value
+                    ? 'bg-[hsl(35,92%,47%)]/10 text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)]'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-white/5'">
+                  <div class="flex items-center gap-2.5">
+                    <span class="w-1.5 h-1.5 rounded-full transition-transform group-hover:scale-125"
+                      [ngClass]="act.value === 'BNS' ? 'bg-amber-500' : act.value === 'BNSS' ? 'bg-indigo-500' : 'bg-emerald-500'"></span>
+                    <span>{{ act.label }}</span>
+                  </div>
+                  <svg *ngIf="selectedAct === act.value" class="w-3.5 h-3.5 text-[hsl(35,92%,47%)]" fill="none"
+                    stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Section Number Input with Typeahead -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                Section Number or Keyword
+              </label>
+              <div class="relative typeahead-container">
+                <div class="absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none">
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <input #sectionInput type="text" [ngModel]="sectionNumber" (ngModelChange)="onSectionInput($event)"
+                  name="sectionNumber" placeholder="e.g. 302, murder, cheating, 154..."
+                  (keydown)="onInputKeydown($event)" (focus)="showSuggestions = suggestions.length > 0"
+                  autocomplete="off" appTooltip="Type a section number (e.g. 302) or keywords (e.g. cheating) to map"
+                  tooltipPlacement="top" class="w-full pl-10 pr-10 py-1.5 md:py-2.5 text-sm rounded-xl outline-none transition-all
+                              bg-slate-50 dark:bg-white/5 text-slate-900 dark:text-white
+                              placeholder-slate-400 dark:placeholder-slate-500
+                              border border-slate-200 dark:border-white/10
+                              focus:border-[hsl(35,92%,47%)] focus:ring-2 focus:ring-[hsl(35,92%,47%)]/15" />
+
+                <!-- Clear Input Button -->
+                <button *ngIf="sectionNumber" type="button" (click)="clearSearchInput()"
+                  class="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 focus:outline-none transition-colors border-none bg-transparent cursor-pointer p-0 flex items-center justify-center"
+                  appTooltip="Clear input" tooltipPlacement="top">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+
+                <!-- Typeahead Dropdown -->
+                <div *ngIf="showSuggestions && suggestions.length > 0"
+                  class="absolute z-50 top-full mt-2 left-0 right-0 bg-white dark:bg-[hsl(215,25%,18%)]
+                            border border-slate-200/90 dark:border-white/10 rounded-xl md:rounded-2xl shadow-xl
+                            dark:shadow-black/50 overflow-hidden animate-scale-up
+                            p-1 md:p-1.5 flex flex-col gap-0.5 md:gap-1 max-h-[200px] md:max-h-[320px] overflow-y-auto">
+                  <button *ngFor="let s of suggestions; let i = index" type="button" (click)="selectSuggestion(s)"
+                    class="w-full px-2.5 py-1.5 md:px-3.5 md:py-2.5 text-left text-xs md:text-sm flex items-center gap-2 md:gap-3 transition-all
+                           border-none cursor-pointer rounded-lg md:rounded-xl"
+                    [ngClass]="activeSuggestionIndex === i
+                      ? 'bg-slate-50 dark:bg-white/8 font-semibold'
+                      : 'bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-50/60 dark:hover:bg-white/5'">
+                    <span
+                      class="text-[8px] md:text-[9px] font-extrabold px-1.5 md:px-2 py-0.5 rounded-md shrink-0 tracking-wider border text-center min-w-[44px] md:min-w-[52px]"
+                      [ngClass]="{
+                            'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20': getActColor(s.act) === 'amber',
+                            'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20': getActColor(s.act) === 'indigo',
+                            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20': getActColor(s.act) === 'emerald'
+                          }">
+                      {{ s.act }}
+                    </span>
+                    <span class="font-bold shrink-0 text-[11px] md:text-xs transition-colors" [ngClass]="{
+                            'text-amber-600 dark:text-amber-400': getActColor(s.act) === 'amber',
+                            'text-indigo-600 dark:text-indigo-400': getActColor(s.act) === 'indigo',
+                            'text-emerald-600 dark:text-emerald-400': getActColor(s.act) === 'emerald'
+                          }">
+                      § {{ s.section }}
+                    </span>
+                    <span class="text-slate-500 dark:text-slate-400 text-[11px] md:text-xs truncate flex-1">{{ s.title
+                      }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Submit + Swap row -->
+            <div class="flex gap-1 md:gap-2">
+              <button type="submit" [disabled]="loading" appTooltip="Find corresponding sections and differences"
+                tooltipPlacement="top" class="flex-1 !h-[34px] !min-h-0 md:!h-auto py-1.5 md:py-2.5 px-4 rounded-xl text-sm font-bold transition-all cursor-pointer border-none
+                           flex items-center justify-center gap-2 shadow-md
+                           bg-gradient-to-r from-[hsl(35,92%,47%)] to-[hsl(35,92%,37%)]
+                           hover:shadow-lg hover:shadow-[hsl(35,92%,47%)]/20 text-white
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+                <span *ngIf="loading"
+                  class="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-white/20 border-t-white rounded-full animate-spin">
+                </span>
+                <svg *ngIf="!loading" class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                </svg>
+                {{ loading ? 'Finding Correspondence...' : 'Map Section' }}
+              </button>
+
+              <!-- Swap Direction button -->
+              <button *ngIf="canSwap" type="button" (click)="swapDirection()"
+                appTooltip="Swap: search {{result?.newAct?.shortName}} § {{result?.newSection?.section_number}} back"
+                tooltipPlacement="top" class="swap-btn w-11 !h-[30px] !min-h-0 md:!h-[42px] rounded-xl border cursor-pointer transition-all shrink-0
+                       flex items-center justify-center
+                       bg-white dark:bg-white/5 border-slate-200 dark:border-white/10
+                       text-slate-500 dark:text-slate-400
+                       hover:border-[hsl(35,92%,47%)]/50 hover:text-[hsl(35,92%,47%)]
+                       hover:bg-[hsl(35,92%,47%)]/5">
+                <svg class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M7 16V4m0 0L3 8m4-4l4 4M17 8v12m0 0l4-4m-4 4l-4-4" />
+                </svg>
+              </button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       BODY
+       ════════════════════════════════════════════ -->
+  <div class="mx-auto w-[90%] max-w-[1800px] py-3 md:py-4 flex flex-col gap-6"
+    [ngClass]="{'reading-mode-body': isReadingMode}">
+
+    <!-- Recent History + Popular Lookups (hidden in reading mode or mobile results) -->
+    <div class="flex flex-col gap-4 no-print" *ngIf="!loading && !error && !isReadingMode"
+      [ngClass]="{'max-md:hidden': result}">
+
+      <!-- Recent Searches -->
+      <div *ngIf="recentSearches.length > 0" class="flex flex-col gap-2">
+        <div class="flex items-center gap-3">
+          <span
+            class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Recent Searches
+          </span>
+          <span class="text-slate-300 dark:text-slate-700 text-[10px] font-light select-none">•</span>
+          <button (click)="clearHistory()" appTooltip="Remove all saved search history" tooltipPlacement="right"
+            class="text-[10px] font-bold uppercase tracking-wider text-red-500 dark:text-red-400/90 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50/80 dark:hover:bg-red-950/20 px-2 py-0.5 rounded-md transition-all cursor-pointer border-none bg-transparent">
+            Clear All
+          </button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let h of recentSearches" (click)="selectHistory(h)"
+            [appTooltip]="'Click to search for ' + h.label" tooltipPlacement="top" class="group px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all
+                         bg-white dark:bg-white/5 border-slate-200 dark:border-white/10
+                         text-slate-600 dark:text-slate-300
+                         hover:border-[hsl(35,92%,47%)]/40 hover:text-[hsl(35,92%,47%)]
+                         hover:bg-[hsl(35,92%,47%)]/5 flex items-center gap-1.5">
+            <!-- Color-coded dot for act -->
+            <span class="w-2 h-2 rounded-full shrink-0" [ngClass]="getActDotClass(h.act)"></span>
+            {{ h.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Popular Lookups -->
+      <div class="flex flex-col gap-2.5">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <span (click)="result ? popularExpanded = !popularExpanded : null"
+            [appTooltip]="result ? (popularExpanded ? 'Click to collapse popular lookups' : 'Click to expand popular lookups') : ''"
+            tooltipPlacement="top"
+            class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5 select-none"
+            [ngClass]="{'cursor-pointer hover:text-[hsl(35,92%,47%)] transition-colors': result}">
+            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Popular Lookups
+          </span>
+
+          <!-- Act filter chips -->
+          <div class="flex items-center gap-1 flex-wrap">
+            <button *ngFor="let f of popularFilterOptions" type="button" (click)="setPopularFilter(f)"
+              class="px-2.5 py-0.5 rounded-full text-[9px] font-bold border cursor-pointer transition-all"
+              [ngClass]="popularFilter === f
+                ? 'bg-[hsl(35,92%,47%)] border-[hsl(35,92%,37%)] text-white'
+                : 'bg-white dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 hover:border-[hsl(35,92%,47%)]/40 hover:text-[hsl(35,92%,47%)]'">
+              {{ f }}
+            </button>
+          </div>
+
+          <!-- Expand/Collapse toggle (only visible on result) -->
+          <button *ngIf="result" type="button" (click)="popularExpanded = !popularExpanded"
+            class="text-[10px] font-semibold text-slate-400 dark:text-slate-500 hover:text-[hsl(35,92%,47%)] dark:hover:text-[hsl(35,92%,47%)] transition-colors cursor-pointer border-none bg-transparent flex items-center gap-1"
+            [appTooltip]="popularExpanded ? 'Click to collapse popular lookups' : 'Click to expand popular lookups'"
+            tooltipPlacement="top">
+            <span>{{ popularExpanded ? 'Collapse' : 'Expand' }}</span>
+            <svg class="w-3 h-3 transition-transform duration-200" [ngClass]="{'rotate-180': popularExpanded}"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Popular grid -->
+        <div *ngIf="!result || popularExpanded"
+          class="grid gap-2 grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 animate-fade-in">
+          <button *ngFor="let pill of filteredPopularSections" (click)="selectPopular(pill.act, pill.num)"
+            [appTooltip]="'Map ' + pill.act + ' Section ' + pill.num + ': ' + pill.label" tooltipPlacement="top" class="group flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all text-left
+                          bg-white dark:bg-white/[0.03] border-slate-200/80 dark:border-white/8
+                          hover:shadow-sm" [ngClass]="getPopularCardClass(pill.color)">
+            <span class="shrink-0 flex items-center justify-center transition-colors"
+              [ngClass]="getPopularIconClass(pill.color)">
+              <ng-container [ngSwitch]="pill.icon">
+                <svg *ngSwitchCase="'scale'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9m3 0h9m0 0l-3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9M12 3v18M12 21h4m-8 0h4" />
+                </svg>
+                <svg *ngSwitchCase="'search'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <svg *ngSwitchCase="'shield'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <svg *ngSwitchCase="'family'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <svg *ngSwitchCase="'warning'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <svg *ngSwitchCase="'clipboard'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <svg *ngSwitchCase="'money'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngSwitchCase="'expert'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+              </ng-container>
+            </span>
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 transition-colors"
+                [ngClass]="getPopularTextClass(pill.color)">
+                {{ pill.act }} § {{ pill.num }}
+              </span>
+              <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
+                {{ pill.label }}
+              </span>
+            </div>
+          </button>
+
+          <!-- Empty filter state -->
+          <div *ngIf="filteredPopularSections.length === 0"
+            class="col-span-full text-center text-slate-400 dark:text-slate-500 text-xs py-4">
+            No popular lookups for <strong>{{ popularFilter }}</strong> yet.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── LOADING STATE ─── -->
+    <div *ngIf="loading" id="result-section" class="flex flex-col gap-6 animate-pulse">
+      <div
+        class="flex items-center gap-3 p-4 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/8">
+        <div class="h-8 w-24 bg-slate-200 dark:bg-white/10 rounded-lg"></div>
+        <div class="h-5 w-5 bg-slate-200 dark:bg-white/10 rounded-full"></div>
+        <div class="h-8 w-28 bg-slate-200 dark:bg-white/10 rounded-lg"></div>
+        <div class="ml-auto h-4 w-40 bg-slate-200 dark:bg-white/10 rounded hidden md:block"></div>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div *ngFor="let i of [1, 2]"
+          class="p-6 rounded-2xl border border-slate-200/60 dark:border-white/8 bg-white dark:bg-white/[0.03] flex flex-col gap-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-white/5">
+            <div class="h-4 w-32 bg-slate-200 dark:bg-white/10 rounded"></div>
+            <div class="h-5 w-12 bg-slate-200 dark:bg-white/10 rounded-full"></div>
+          </div>
+          <div class="h-5 w-3/4 bg-slate-200 dark:bg-white/10 rounded"></div>
+          <div class="flex flex-col gap-2">
+            <div class="h-3.5 w-full bg-slate-200 dark:bg-white/10 rounded"></div>
+            <div class="h-3.5 w-5/6 bg-slate-200 dark:bg-white/10 rounded"></div>
+            <div class="h-3.5 w-4/6 bg-slate-200 dark:bg-white/10 rounded"></div>
+            <div class="h-3.5 w-3/4 bg-slate-200 dark:bg-white/10 rounded"></div>
+          </div>
+          <div class="h-4 w-36 bg-slate-200 dark:bg-white/10 rounded mt-2"></div>
+        </div>
+      </div>
+      <div
+        class="p-6 rounded-2xl border border-slate-200/60 dark:border-white/8 bg-white dark:bg-white/[0.03] flex flex-col gap-4">
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-white/10"></div>
+          <div class="h-5 w-48 bg-slate-200 dark:bg-white/10 rounded"></div>
+        </div>
+        <div class="pl-11 flex flex-col gap-2">
+          <div class="h-3.5 w-full bg-slate-200 dark:bg-white/10 rounded"></div>
+          <div class="h-3.5 w-5/6 bg-slate-200 dark:bg-white/10 rounded"></div>
+          <div class="h-3.5 w-2/3 bg-slate-200 dark:bg-white/10 rounded"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── ERROR STATE ─── -->
+    <div *ngIf="error && !loading" class="flex flex-col items-center justify-center min-h-[300px] gap-4 rounded-2xl p-8 text-center
+                bg-red-50 dark:bg-red-950/15 border border-red-200 dark:border-red-900/30">
+      <div class="w-14 h-14 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+        <svg class="w-7 h-7 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-red-700 dark:text-red-300">Mapping Not Found</h3>
+      <p class="text-sm text-red-600/80 dark:text-red-400/80 max-w-md">{{ error }}</p>
+      <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm">
+        Try a different section number, or switch to a related act (e.g. IPC → BNS, CrPC → BNSS, IEA → BSA).
+      </p>
+      <div class="flex items-center gap-2 flex-wrap justify-center">
+        <button (click)="retry()" class="mt-2 px-5 py-2 rounded-xl text-xs font-bold border-none cursor-pointer transition-all
+                       bg-red-500 hover:bg-red-600 text-white shadow-md hover:shadow-lg">
+          <span class="flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Retry Search
+          </span>
+        </button>
+        <button
+          (click)="selectActOption(selectedAct === 'IPC' ? 'BNS' : selectedAct === 'CrPC' ? 'BNSS' : selectedAct === 'IEA' ? 'BSA' : 'IPC'); getMapping()"
+          class="mt-2 px-5 py-2 rounded-xl text-xs font-bold border border-slate-200 dark:border-white/10 cursor-pointer transition-all
+                 bg-white dark:bg-white/5 text-slate-600 dark:text-slate-300 hover:border-[hsl(35,92%,47%)]/40 hover:text-[hsl(35,92%,47%)]">
+          Try Related Act
+        </button>
+      </div>
+    </div>
+
+    <!-- ─── EMPTY STATE ─── -->
+    <div *ngIf="!result && !loading && !error && recentSearches.length === 0 && popularSections.length === 0" class="flex flex-col items-center justify-center min-h-[300px] gap-4 rounded-2xl p-10 text-center
+                bg-slate-50 dark:bg-white/[0.02] border border-dashed border-slate-300 dark:border-white/10">
+      <div class="w-16 h-16 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center mb-1">
+        <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 animate-pulse" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="1.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+      <h3 class="text-base font-bold text-slate-600 dark:text-slate-300">No Section Mapped Yet</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+        Enter a section number in the search panel above or click a popular lookup to analyze transitions instantly.
       </p>
     </div>
 
-    <!-- Interface Card -->
-    <div class="grid grid-cols-1 lg:grid-cols-[380px,1fr] gap-8 items-start">
-      
-      <!-- Input Panel -->
-      <div class="card p-6 md:p-8 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col gap-6 backdrop-blur-md">
-        <h3 class="text-lg font-bold text-white">Find Correspondence</h3>
-        
-        <form (ngSubmit)="getMapping()" class="flex flex-col gap-4">
-          <!-- Act Selector -->
-          <div class="flex flex-col gap-2">
-            <label class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-wider">Historical Act</label>
-            <select [(ngModel)]="selectedAct" name="selectedAct" 
-                    class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-accent">
-              <option value="IPC">Indian Penal Code (IPC)</option>
-              <option value="CrPC">Code of Criminal Procedure (CrPC)</option>
-              <option value="IEA">Indian Evidence Act (IEA)</option>
-            </select>
+    <!-- ═══════════════════════════════════════════
+         RESULT DISPLAY
+         ════════════════════════════════════════════ -->
+    <app-print-container *ngIf="result && !loading && !error" [title]="'Section Transition Report'"
+      [subtitle]="getShareSubject()">
+      <div class="result-section flex flex-col gap-5 animate-fade-in" id="result-section">
+
+        <!-- Transition Header Bar -->
+        <div class="transition-summary-bar hidden md:flex flex-wrap items-center gap-3 p-3.5 md:p-4 rounded-xl
+                  bg-slate-50 dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8">
+
+          <!-- OLD act badge -->
+          <div class="px-3 py-1.5 rounded-lg text-sm font-bold
+                    bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10
+                    text-slate-700 dark:text-slate-200 flex items-center gap-2" [appTooltip]="result.oldAct.actName"
+            tooltipPlacement="top">
+            <span class="shrink-0 flex items-center justify-center">
+              <ng-container [ngSwitch]="getActIcon(result.oldAct.shortName)">
+                <svg *ngSwitchCase="'scale'" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9m3 0h9m0 0l-3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9M12 3v18M12 21h4m-8 0h4" />
+                </svg>
+                <svg *ngSwitchCase="'gavel'" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 5h14m-3 0v16M8 5v16" />
+                </svg>
+                <svg *ngSwitchCase="'scroll'" class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg *ngSwitchDefault class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </ng-container>
+            </span>
+            {{ result.oldAct.shortName }}
+            <span class="text-slate-400 dark:text-slate-500">§</span>
+            {{ result.oldSection?.section_number || '?' }}
           </div>
 
-          <!-- Section Number Input -->
-          <div class="flex flex-col gap-2">
-            <label class="text-[0.75rem] font-bold text-slate-400 uppercase tracking-wider">Section Number</label>
-            <input type="text" [(ngModel)]="sectionNumber" name="sectionNumber" placeholder="e.g. 302, 420, 154" 
-                   class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-slate-200 focus:outline-none focus:border-accent" />
+          <!-- Arrow -->
+          <div class="w-8 h-8 rounded-full bg-[hsl(35,92%,47%)]/10 border border-[hsl(35,92%,47%)]/20
+                    flex items-center justify-center shrink-0" appTooltip="Transitions to" tooltipPlacement="top">
+            <svg class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M6 12h12" />
+            </svg>
           </div>
 
-          <!-- Submit Button -->
-          <button type="submit" [disabled]="loading"
-                  class="w-full bg-accent hover:bg-accent-dark text-white font-bold py-3 px-4 rounded-xl text-sm transition-all shadow-lg hover:shadow-accent/20 cursor-pointer border-none flex items-center justify-center gap-2">
-            <span *ngIf="loading" class="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></span>
-            <span>{{ loading ? 'Finding Correlation...' : 'Map Section' }}</span>
-          </button>
-        </form>
+          <!-- NEW act badge -->
+          <div class="px-3 py-1.5 rounded-lg text-sm font-bold
+                    bg-[hsl(35,92%,47%)]/10 border border-[hsl(35,92%,47%)]/25
+                    text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)] flex items-center gap-2"
+            [appTooltip]="result.newAct.actName" tooltipPlacement="top">
+            <span class="shrink-0 flex items-center justify-center">
+              <ng-container [ngSwitch]="getActIcon(result.newAct.shortName)">
+                <svg *ngSwitchCase="'scale'" class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9m3 0h9m0 0l-3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9M12 3v18M12 21h4m-8 0h4" />
+                </svg>
+                <svg *ngSwitchCase="'gavel'" class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M3 21h18M5 5h14m-3 0v16M8 5v16" />
+                </svg>
+                <svg *ngSwitchCase="'scroll'" class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <svg *ngSwitchDefault class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </ng-container>
+            </span>
+            {{ result.newAct.shortName }}
+            <span class="text-[hsl(35,92%,47%)]/50">§</span>
+            {{ result.newSection?.section_number || '?' }}
+          </div>
 
-        <!-- Popular Shortcuts -->
-        <div class="flex flex-col gap-3 pt-4 border-t border-slate-800/60">
-          <span class="text-[0.75rem] font-bold text-slate-500 uppercase tracking-wider">Popular Lookups</span>
-          <div class="flex flex-wrap gap-2">
-            <button *ngFor="let pill of popularSections" (click)="selectPopular(pill.act, pill.num)"
-                    class="text-xs px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-950 hover:bg-slate-900 text-slate-400 hover:text-slate-200 transition-colors cursor-pointer">
-              {{ pill.label }}
+          <!-- ── Similarity Visual Ring ── -->
+          <div *ngIf="result.oldSection && result.newSection" class="flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-semibold
+                 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10"
+            [appTooltip]="diffSimilarity < 30 ? 'Sections differ significantly — major restructuring' : 'Word-level textual match index between old and new section'"
+            tooltipPlacement="top">
+            <!-- SVG Ring -->
+            <svg class="similarity-ring w-7 h-7 -rotate-90" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" class="text-slate-200 dark:text-white/10"
+                stroke-width="3" />
+              <circle cx="16" cy="16" r="14" fill="none" [style.stroke]="similarityRingColor"
+                [style.stroke-dasharray]="similarityRingCircumference"
+                [style.stroke-dashoffset]="similarityRingDashoffset" stroke-width="3" stroke-linecap="round"
+                class="similarity-ring-fill" />
+            </svg>
+            <div class="flex flex-col leading-none">
+              <span
+                [ngClass]="diffSimilarity >= 60 ? 'text-emerald-600 dark:text-emerald-400' : diffSimilarity >= 30 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'"
+                class="text-[11px] font-extrabold">{{ diffSimilarity }}%</span>
+              <span class="text-[9px] text-slate-400 dark:text-slate-500 font-medium">similar</span>
+            </div>
+          </div>
+
+          <!-- Act avg similarity stat -->
+          <div *ngIf="actAvgSimilarity !== null" class="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold no-print
+                 bg-indigo-50/50 border border-indigo-100/80 text-indigo-600
+                 dark:bg-indigo-950/20 dark:border-indigo-500/10 dark:text-indigo-400"
+            [appTooltip]="'Average textual similarity across all ' + result.oldAct.shortName + '→' + result.newAct.shortName + ' section pairs (static analysis)'"
+            tooltipPlacement="top">
+            <svg class="w-3 h-3 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Avg. {{ result.oldAct.shortName }}→{{ result.newAct.shortName }}: <strong
+                class="text-indigo-700 dark:text-indigo-300 font-extrabold">{{ actAvgSimilarity }}%</strong></span>
+          </div>
+
+          <!-- Right Group Actions -->
+          <div class="flex items-center gap-2 ml-auto flex-wrap justify-end no-print">
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 hidden lg:inline font-medium">
+              Correspondence Established
+              <span *ngIf="result.fromCache" class="ml-1 text-emerald-500">· Cached</span>
+            </span>
+
+            <!-- Diff Toggle -->
+            <button *ngIf="result.oldSection && result.newSection" (click)="showDiff = !showDiff"
+              [appTooltip]="showDiff ? 'Switch back to clean readable text' : 'Highlight word-level additions and deletions'"
+              tooltipPlacement="top"
+              class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold cursor-pointer border transition-all"
+              [ngClass]="showDiff
+              ? 'bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700 dark:bg-indigo-600 dark:border-indigo-500'
+              : 'bg-indigo-50/50 border-indigo-100/80 text-indigo-600 hover:bg-indigo-100/80 dark:bg-indigo-950/20 dark:border-indigo-500/20 dark:text-indigo-400 dark:hover:bg-indigo-950/40'">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+              </svg>
+              {{ showDiff ? 'Hide Diff' : 'Show Diff' }}
+            </button>
+
+            <!-- Reading Mode Toggle -->
+            <button (click)="toggleReadingMode()"
+              [appTooltip]="isReadingMode ? 'Exit distraction-free reading mode' : 'Enter distraction-free reading mode'"
+              tooltipPlacement="top"
+              class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0"
+              [ngClass]="isReadingMode
+              ? 'bg-amber-600 border-amber-600 text-white hover:bg-amber-700 dark:bg-amber-600 dark:border-amber-500'
+              : 'bg-amber-50/50 border-amber-100/80 text-amber-600 hover:bg-amber-100/80 dark:bg-amber-950/20 dark:border-amber-500/20 dark:text-amber-400 dark:hover:bg-amber-950/40'">
+              <svg *ngIf="!isReadingMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                <path d="M6 8h4" />
+                <path d="M6 12h4" />
+                <path d="M14 8h4" />
+                <path d="M14 12h4" />
+              </svg>
+              <svg *ngIf="isReadingMode" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                <path d="M6 8h4" />
+                <path d="M6 12h4" />
+                <path d="M14 8h4" />
+                <path d="M14 12h4" />
+              </svg>
+            </button>
+
+            <!-- Share button with Dropdown Component -->
+            <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()"
+              [subject]="getShareSubject()"
+              [buttonClass]="'w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0 bg-emerald-50/50 border-emerald-100/80 text-emerald-600 hover:bg-emerald-100/80 dark:bg-emerald-950/20 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-950/40'"
+              [tooltipText]="'Share this mapping'" [tooltipPlacement]="'top'">
+            </app-share-menu>
+
+            <!-- Print button -->
+            <button (click)="triggerPrint()" appTooltip="Print or export as PDF" tooltipPlacement="top"
+              class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0
+                   bg-purple-50/50 border-purple-100/80 text-purple-600 hover:bg-purple-100/80 dark:bg-purple-950/20 dark:border-purple-500/20 dark:text-purple-400 dark:hover:bg-purple-950/40">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+              </svg>
+            </button>
+
+            <!-- Pin button -->
+            <button (click)="togglePinCurrentResult()"
+              [appTooltip]="isPinned ? 'Unpin from comparison table' : pinnedEntries.length >= MAX_PINS ? 'Pin limit reached (max 4)' : 'Pin to comparison table'"
+              tooltipPlacement="top"
+              class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0"
+              [ngClass]="{
+              'bg-rose-600 border-rose-600 text-white hover:bg-rose-700 dark:bg-rose-600 dark:border-rose-500': isPinned,
+              'bg-slate-100/50 border-slate-200/50 text-slate-300 dark:bg-white/5 dark:border-white/5 dark:text-slate-600 cursor-not-allowed': !isPinned && pinnedEntries.length >= MAX_PINS,
+              'bg-rose-50/50 border-rose-100/80 text-rose-600 hover:bg-rose-100/80 dark:bg-rose-950/20 dark:border-rose-500/20 dark:text-rose-400 dark:hover:bg-rose-950/40': !isPinned && pinnedEntries.length < MAX_PINS
+            }">
+              <!-- Unpin (Thumbtack with Diagonal Cross Line) SVG -->
+              <svg *ngIf="isPinned" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5">
+                <line x1="2" y1="2" x2="22" y2="22" />
+                <line x1="12" y1="17" x2="12" y2="22" />
+                <path d="M9 11v-6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v3.76" />
+                <path d="M15.44 14A2 2 0 0 1 15 15.24V17H5v-1.76a2 2 0 0 1 .44-1.24L7.5 11" />
+              </svg>
+              <!-- Pin (Thumbtack) SVG -->
+              <svg *ngIf="!isPinned" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5">
+                <line x1="12" y1="17" x2="12" y2="22" />
+                <path
+                  d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.47A2 2 0 0 1 15 9.3V5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4.3a2 2 0 0 1-.78 1.23L5.44 14a2 2 0 0 0-.44 1.24Z" />
+              </svg>
+            </button>
+
+            <!-- Quick Clear Button -->
+            <button (click)="clearAll()" appTooltip="Clear results and start a new search" tooltipPlacement="left"
+              class="w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0
+                   bg-slate-100/50 border-slate-200/50 text-slate-500 hover:bg-slate-200/80 hover:text-slate-700 dark:bg-white/5 dark:border-white/10 dark:text-slate-400 dark:hover:bg-white/10">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
           </div>
         </div>
-      </div>
 
-      <!-- Result Panel -->
-      <div class="flex flex-col gap-8 min-h-[400px]">
-        
-        <!-- Loading State -->
-        <div *ngIf="loading" class="flex flex-col items-center justify-center min-h-[350px] gap-4">
-          <div class="w-12 h-12 border-4 border-accent/25 border-t-accent rounded-full animate-spin"></div>
-          <p class="text-slate-400 text-sm">Consulting legal transition matrices...</p>
-        </div>
+        <!-- Mobile Stats Row (Section transition, Similarity, and Avg Stat) -->
+        <div class="flex md:hidden items-center justify-between gap-1 no-print">
 
-        <!-- Error State -->
-        <div *ngIf="error && !loading" class="flex flex-col items-center justify-center min-h-[350px] gap-3 bg-red-950/20 border border-red-900/30 rounded-2xl p-8">
-          <span class="text-3xl">⚠️</span>
-          <p class="text-red-400 text-sm font-semibold text-center">{{ error }}</p>
-        </div>
-
-        <!-- Empty State -->
-        <div *ngIf="!result && !loading && !error" class="flex flex-col items-center justify-center min-h-[350px] gap-4 bg-slate-900/20 border border-slate-800/40 border-dashed rounded-2xl p-10 text-center">
-          <div class="text-4xl text-slate-600 mb-2">🔍</div>
-          <h4 class="text-lg font-bold text-slate-350">No Section Mapped Yet</h4>
-          <p class="text-slate-500 text-sm max-w-sm">
-            Enter a section number on the left panel or click one of the popular lookups to analyze transitions instantly.
-          </p>
-        </div>
-
-        <!-- Result Display -->
-        <div *ngIf="result && !loading && !error" class="flex flex-col gap-8">
-          
-          <!-- Transition Header -->
-          <div class="flex items-center gap-4 bg-slate-900/40 p-4 rounded-xl border border-slate-800/60">
-            <div class="px-3 py-1.5 bg-slate-950 border border-slate-800 rounded-lg text-sm font-bold text-accent">
-              {{ result.oldAct.shortName }} {{ result.oldSection?.section_number }}
+          <!-- Dynamic Act & Section Transition -->
+          <div class="flex flex-col gap-0.5 select-none shrink-0 leading-none">
+            <div
+              class="flex items-center gap-2 text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
+              <span>{{ result.oldAct.shortName }}</span>
+              <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5-5 5M6 12h12" />
+              </svg>
+              <span>{{ result.newAct.shortName }}</span>
             </div>
-            <span class="text-slate-600">➔</span>
-            <div class="px-3 py-1.5 bg-accent/20 border border-accent/30 rounded-lg text-sm font-bold text-accent-light">
-              {{ result.newAct.shortName }} {{ result.newSection?.section_number }}
+            <div class="flex items-center justify-between mt-1 text-[11px] font-extrabold tracking-wide">
+              <span class="text-slate-700 dark:text-slate-300">§{{ result.oldSection?.section_number || '?' }}</span>
+              <span class="text-[hsl(35,92%,47%)]">§{{ result.newSection?.section_number || '?' }}</span>
             </div>
-            <span class="text-xs text-slate-500 ml-auto hidden md:inline">Correspondence Established</span>
           </div>
 
-          <!-- Side by Side Diff -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <!-- Old Section -->
-            <div class="card p-6 bg-slate-900/40 border border-slate-800/60 rounded-2xl flex flex-col gap-4">
-              <div class="flex justify-between items-center pb-3 border-b border-slate-800/60">
-                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">{{ result.oldAct.actName }}</span>
-                <span class="badge badge-outline text-[10px]">{{ result.oldAct.shortName }}</span>
+          <!-- Similarity Visual Ring -->
+          <div *ngIf="result.oldSection && result.newSection"
+            class="flex items-center gap-1.5 px-2 py-1 ml-5 rounded-full text-[10px] font-semibold bg-white dark:bg-white/5 border border-slate-200/60 dark:border-white/10 shadow-sm">
+            <svg class="similarity-ring w-5 h-5 -rotate-90" viewBox="0 0 32 32">
+              <circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" class="text-slate-100 dark:text-white/5"
+                stroke-width="3" />
+              <circle cx="16" cy="16" r="14" fill="none" [style.stroke]="similarityRingColor"
+                [style.stroke-dasharray]="similarityRingCircumference"
+                [style.stroke-dashoffset]="similarityRingDashoffset" stroke-width="3" stroke-linecap="round"
+                class="similarity-ring-fill" />
+            </svg>
+            <div class="flex flex-col leading-none">
+              <span
+                [ngClass]="diffSimilarity >= 60 ? 'text-emerald-600 dark:text-emerald-400' : diffSimilarity >= 30 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'"
+                class="text-[10px] font-extrabold">{{ diffSimilarity }}%</span>
+              <span class="text-[8px] text-slate-400 dark:text-slate-500 font-medium">similar</span>
+            </div>
+          </div>
+
+          <!-- Act Avg Similarity Stat Pill -->
+          <div *ngIf="actAvgSimilarity !== null"
+            class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[9px] font-bold bg-indigo-50/50 border border-indigo-100/50 dark:bg-indigo-950/20 dark:border-indigo-500/15 text-indigo-600 dark:text-indigo-400 shadow-sm">
+            <svg class="w-3.5 h-3.5 text-indigo-500 dark:text-indigo-400" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+            <span>Avg. {{ result.oldAct.shortName }}→{{ result.newAct.shortName }}: <strong>{{ actAvgSimilarity
+                }}%</strong></span>
+          </div>
+
+        </div>
+
+
+        <!-- Mobile Tab Switcher -->
+        <div class="flex md:hidden items-center gap-1 p-1 rounded-xl no-print
+                  bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10">
+          <button (click)="activeResultTab = 'old'"
+            class="flex-1 py-1.5 rounded-xl text-[10px] font-bold text-center transition-all cursor-pointer border-none"
+            [ngClass]="activeResultTab === 'old'
+                  ? 'bg-white dark:bg-white/10 text-slate-900 dark:text-white shadow-sm'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400'">
+            {{ result.oldAct.shortName }}
+          </button>
+          <button (click)="activeResultTab = 'unified'"
+            class="flex-1 py-1.5 rounded-xl text-[10px] font-bold text-center transition-all cursor-pointer border-none"
+            [ngClass]="activeResultTab === 'unified'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400'">
+            Unified
+          </button>
+          <button (click)="activeResultTab = 'new'"
+            class="flex-1 py-1.5 rounded-xl text-[10px] font-bold text-center transition-all cursor-pointer border-none"
+            [ngClass]="activeResultTab === 'new'
+                  ? 'bg-gradient-to-r from-[hsl(35,92%,47%)] to-[hsl(35,92%,37%)] text-white shadow-sm'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400'">
+            {{ result.newAct.shortName }}
+          </button>
+          <button (click)="activeResultTab = 'ai'"
+            class="flex-1 py-1.5 px-1 rounded-xl text-[10px] font-bold text-center transition-all cursor-pointer border-none"
+            [ngClass]="activeResultTab === 'ai'
+                  ? 'bg-indigo-600 text-white shadow-sm'
+                  : 'bg-transparent text-slate-500 dark:text-slate-400'">
+            AI Summary
+          </button>
+        </div>
+
+        <!-- Swipeable container wrapper (Mobile only touch swiping) -->
+        <div (touchstart)="onSwipeTouchStart($event)" (touchend)="onSwipeTouchEnd($event)"
+          (touchcancel)="onSwipeTouchEnd($event)" class="relative flex flex-col gap-5">
+
+          <!-- Side-by-Side Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5 transition-comparison-grid"
+            [ngClass]="{'hidden md:grid': activeResultTab === 'ai'}">
+
+            <!-- OLD Section Card -->
+            <div class="section-card p-5 md:p-6 rounded-2xl flex flex-col gap-4 max-h-[520px]
+                    bg-white dark:bg-white/[0.03] border border-slate-200/80 dark:border-white/8
+                    transition-all group" [ngClass]="{'hidden md:flex': activeResultTab !== 'old'}">
+              <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-white/5">
+                <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                  {{ result.oldAct.actName }}
+                </span>
+                <div class="flex items-center gap-2">
+                  <!-- Copy Button -->
+                  <button *ngIf="result.oldSection"
+                    (click)="copySectionText('Section ' + result.oldSection.section_number + ': ' + result.oldSection.title, result.oldSection.content, result.oldAct.actName)"
+                    appTooltip="Copy section text to clipboard" tooltipPlacement="top" class="copy-btn w-6 h-6 rounded-md flex items-center justify-center cursor-pointer border transition-all
+                       bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10
+                       text-slate-400 hover:text-[hsl(35,92%,47%)] hover:border-[hsl(35,92%,47%)]/30">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                           bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300
+                           border border-slate-200/60 dark:border-white/10">
+                    {{ result.oldAct.shortName }}
+                  </span>
+                </div>
               </div>
-              <div *ngIf="result.oldSection" class="flex flex-col gap-3">
-                <h4 class="text-md font-bold text-white">Section {{ result.oldSection.section_number }}: {{ result.oldSection.title }}</h4>
-                <p class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{{ result.oldSection.content }}</p>
-                <a [routerLink]="['/laws', result.oldAct.shortName]" 
-                   class="text-xs text-accent hover:text-accent-light no-underline font-semibold mt-2 self-start flex items-center gap-1">
-                  View in Reference Reader ➔
+              <div *ngIf="result.oldSection" class="law-card-scroll flex-1 pr-1.5 flex flex-col gap-3">
+                <h4 class="text-[15px] font-bold text-slate-900 dark:text-white leading-snug">
+                  <ng-container *ngIf="showDiff">
+                    <span [innerHTML]="'Section ' + result.oldSection.section_number + ': ' + oldTitleDiffHtml"></span>
+                  </ng-container>
+                  <ng-container *ngIf="!showDiff">
+                    Section {{ result.oldSection.section_number }}: {{ result.oldSection.title }}
+                  </ng-container>
+                </h4>
+                <div *ngIf="result.oldSection.chapter"
+                  class="text-[10px] text-slate-400 dark:text-slate-500 font-semibold uppercase tracking-wider">
+                  {{ result.oldSection.chapter }}
+                </div>
+                <div *ngIf="showDiff" [innerHTML]="formatter.formatSectionHtml(oldSectionDiffHtml)"></div>
+                <div *ngIf="!showDiff" [innerHTML]="formatter.formatSectionHtml(result.oldSection.content)"></div>
+              </div>
+              <!-- Card Actions -->
+              <div *ngIf="result.oldSection"
+                class="pt-3 border-t border-slate-100 dark:border-white/5 flex items-center no-print">
+                <a [routerLink]="['/laws', result.oldAct.shortName]"
+                  [fragment]="'sec-' + result.oldSection.section_number"
+                  [appTooltip]="'Open Section ' + result.oldSection.section_number + ' inside the full ' + result.oldAct.shortName + ' Act'"
+                  tooltipPlacement="top" class="text-xs text-[hsl(35,92%,47%)] hover:text-[hsl(35,92%,37%)] dark:hover:text-[hsl(35,92%,60%)]
+                      no-underline font-semibold flex items-center gap-1 transition-colors">
+                  Open in Reader
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
                 </a>
               </div>
-              <div *ngIf="!result.oldSection" class="text-slate-500 text-sm py-10 text-center">
+              <div *ngIf="!result.oldSection" class="text-slate-400 dark:text-slate-500 text-sm py-10 text-center">
                 Section details not found in database.
               </div>
             </div>
 
-            <!-- New Section -->
-            <div class="card p-6 bg-slate-900/60 border border-slate-800/80 rounded-2xl flex flex-col gap-4">
-              <div class="flex justify-between items-center pb-3 border-b border-slate-800/60">
-                <span class="text-xs font-bold text-accent-light uppercase tracking-wider">{{ result.newAct.actName }}</span>
-                <span class="badge badge-primary text-[10px] bg-accent">{{ result.newAct.shortName }}</span>
-              </div>
-              <div *ngIf="result.newSection" class="flex flex-col gap-3">
-                <h4 class="text-md font-bold text-white">Section {{ result.newSection.section_number }}: {{ result.newSection.title }}</h4>
-                
-                <!-- Translation Tabs -->
-                <div class="flex flex-col gap-4 mt-2">
-                  <div class="english-text">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-1">English text</span>
-                    <p class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap">{{ result.newSection.content }}</p>
-                  </div>
-                  
-                  <div *ngIf="result.newSection.content_hi" class="hindi-text pt-3 border-t border-slate-800/40">
-                    <span class="text-[10px] font-bold uppercase tracking-wider text-accent-light/60 block mb-1">हिन्दी अनुवाद</span>
-                    <p class="text-slate-350 text-sm font-serif leading-loose whitespace-pre-wrap">{{ result.newSection.content_hi }}</p>
+            <!-- NEW Section Card -->
+            <div class="section-card p-5 md:p-6 rounded-2xl flex flex-col gap-4 max-h-[520px]
+                    bg-white dark:bg-white/[0.03] border border-[hsl(35,92%,47%)]/15 dark:border-[hsl(35,92%,47%)]/10
+                    transition-all group" [ngClass]="{'hidden md:flex': activeResultTab !== 'new'}">
+              <div
+                class="flex justify-between items-start pb-3 border-b border-[hsl(35,92%,47%)]/10 dark:border-[hsl(35,92%,47%)]/8">
+                <div class="flex flex-col gap-1">
+                  <span class="text-[10px] font-bold text-[hsl(35,92%,47%)] uppercase tracking-wider">
+                    {{ result.newAct.actName }}
+                  </span>
+                  <!-- Effective Date Badge -->
+                  <div *ngIf="newActEffectiveDate" class="effective-badge flex items-center gap-1 px-2 py-0.5 rounded-full w-fit
+                        bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/60 dark:border-emerald-700/30">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                    <span class="text-[9px] font-bold text-emerald-700 dark:text-emerald-400 whitespace-nowrap">
+                      Effective: {{ newActEffectiveDate }}
+                    </span>
                   </div>
                 </div>
+                <div class="flex items-center gap-2">
+                  <!-- Copy Button -->
+                  <button *ngIf="result.newSection"
+                    (click)="copySectionText('Section ' + result.newSection.section_number + ': ' + result.newSection.title, result.newSection.content, result.newAct.actName)"
+                    appTooltip="Copy section text to clipboard" tooltipPlacement="top" class="copy-btn w-6 h-6 rounded-md flex items-center justify-center cursor-pointer border transition-all
+                       bg-[hsl(35,92%,47%)]/5 border-[hsl(35,92%,47%)]/20
+                       text-[hsl(35,92%,47%)]/60 hover:text-[hsl(35,92%,47%)] hover:border-[hsl(35,92%,47%)]/40">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                    </svg>
+                  </button>
+                  <span class="text-[10px] font-bold px-2 py-0.5 rounded-full
+                           bg-[hsl(35,92%,47%)]/10 text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)]
+                           border border-[hsl(35,92%,47%)]/20">
+                    {{ result.newAct.shortName }}
+                  </span>
+                </div>
+              </div>
 
-                <a [routerLink]="['/laws', result.newAct.shortName]" 
-                   class="text-xs text-accent hover:text-accent-light no-underline font-semibold mt-2 self-start flex items-center gap-1">
-                  Open Bilingual Reader ➔
+              <div *ngIf="result.newSection" class="law-card-scroll flex-1 pr-1.5 flex flex-col gap-3">
+                <h4 class="text-[15px] font-bold text-slate-900 dark:text-white leading-snug">
+                  <ng-container *ngIf="showDiff">
+                    <span [innerHTML]="'Section ' + result.newSection.section_number + ': ' + newTitleDiffHtml"></span>
+                  </ng-container>
+                  <ng-container *ngIf="!showDiff">
+                    Section {{ result.newSection.section_number }}: {{ result.newSection.title }}
+                  </ng-container>
+                </h4>
+                <div *ngIf="result.newSection.chapter"
+                  class="text-[10px] text-[hsl(35,92%,47%)]/60 font-semibold uppercase tracking-wider">
+                  {{ result.newSection.chapter }}
+                </div>
+
+                <!-- English -->
+                <div class="flex flex-col gap-1.5">
+                  <span
+                    class="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">English</span>
+                  <div *ngIf="showDiff" [innerHTML]="formatter.formatSectionHtml(newSectionDiffHtml)"></div>
+                  <div *ngIf="!showDiff" [innerHTML]="formatter.formatSectionHtml(result.newSection.content)"></div>
+                </div>
+
+                <!-- Hindi -->
+                <div *ngIf="result.newSection.content_hi"
+                  class="hindi-block flex flex-col gap-1.5 pt-3 border-t border-slate-100 dark:border-white/5">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-[hsl(35,92%,47%)]/50">हिन्दी
+                    अनुवाद</span>
+                  <p class="text-slate-600 dark:text-slate-300 text-sm leading-loose whitespace-pre-wrap">{{
+                    result.newSection.content_hi }}</p>
+                </div>
+              </div>
+
+              <!-- Card Actions -->
+              <div *ngIf="result.newSection"
+                class="pt-3 border-t border-[hsl(35,92%,47%)]/10 dark:border-white/5 flex items-center no-print">
+                <a [routerLink]="['/laws', result.newAct.shortName]"
+                  [fragment]="'sec-' + result.newSection.section_number"
+                  [appTooltip]="'Open Section ' + result.newSection.section_number + ' inside the full ' + result.newAct.shortName + ' Act'"
+                  tooltipPlacement="top" class="text-xs text-[hsl(35,92%,47%)] hover:text-[hsl(35,92%,37%)] dark:hover:text-[hsl(35,92%,60%)]
+                      no-underline font-semibold flex items-center gap-1 transition-colors">
+                  Open Bilingual Reader
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
                 </a>
               </div>
-              <div *ngIf="!result.newSection" class="text-slate-500 text-sm py-10 text-center">
-                No corresponding section found or it has been repealed under the new framework.
+
+              <div *ngIf="!result.newSection" class="flex flex-col items-center justify-center py-10 gap-3 text-center">
+                <div class="w-12 h-12 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center">
+                  <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <p class="text-slate-500 dark:text-slate-400 text-sm max-w-xs">
+                  No corresponding section found. This section may have been merged, repealed, or reorganized under a
+                  different numbering.
+                </p>
               </div>
             </div>
 
+            <!-- UNIFIED Section Card (Mobile only, inline comparison) -->
+            <div class="section-card p-5 rounded-2xl flex flex-col gap-4 max-h-[520px]
+                    bg-white dark:bg-white/[0.03] border border-indigo-200/50 dark:border-indigo-500/15
+                    transition-all group md:hidden" [ngClass]="{'hidden': activeResultTab !== 'unified'}">
+              <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-white/5">
+                <span class="text-[10px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider">
+                  Unified Comparison
+                </span>
+                <span class="text-[10px] font-bold px-2.5 py-0.5 rounded-full
+                           bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400
+                           border border-indigo-100/50 dark:border-indigo-500/20">
+                  Merged Diff
+                </span>
+              </div>
+
+              <div *ngIf="result.oldSection && result.newSection"
+                class="law-card-scroll flex-1 pr-1.5 flex flex-col gap-3">
+                <h4 class="text-[15px] font-bold text-slate-900 dark:text-white leading-snug"
+                  [innerHTML]="mergedTitleDiffHtml"></h4>
+                <div *ngIf="result.newSection.chapter"
+                  class="text-[10px] text-indigo-500/60 font-semibold uppercase tracking-wider">
+                  {{ result.newSection.chapter }}
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Merged
+                    text changes</span>
+                  <div [innerHTML]="formatter.formatSectionHtml(mergedSectionDiffHtml)"></div>
+                </div>
+              </div>
+
+              <div *ngIf="!result.oldSection || !result.newSection"
+                class="text-slate-400 dark:text-slate-500 text-sm py-10 text-center">
+                Cannot generate merged diff. Section detail missing.
+              </div>
+            </div>
           </div>
 
-          <!-- AI Transition Explanation -->
-          <div class="card p-6 md:p-8 bg-gradient-to-br from-indigo-950/20 to-slate-900/60 border border-indigo-900/35 rounded-2xl flex flex-col gap-4">
+          <!-- AI Transition Summary Card -->
+          <div class="ai-summary-card p-5 md:p-6 rounded-2xl flex flex-col gap-4
+                  bg-gradient-to-br from-indigo-50 dark:from-indigo-950/15 via-white dark:via-transparent to-white dark:to-transparent
+                  border border-indigo-200/50 dark:border-indigo-500/15
+                  transition-all" [ngClass]="{'hidden md:flex': activeResultTab !== 'ai'}">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded-full bg-indigo-900/50 border border-indigo-500/30 flex items-center justify-center text-md">🤖</div>
-              <h4 class="font-bold text-white text-md">AI Transition Summary & Punishment Diff</h4>
+              <div class="w-8 h-8 md:w-9 md:h-9 rounded-full bg-indigo-100 dark:bg-indigo-900/40
+                      border border-indigo-200 dark:border-indigo-500/25
+                      flex items-center justify-center shrink-0">
+                <svg class="w-4 h-4 md:w-5 md:h-5 text-indigo-500 dark:text-indigo-400" fill="none"
+                  stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <div class="flex flex-col">
+                <h4 class="font-bold text-slate-900 dark:text-white text-sm">AI Transition Summary</h4>
+                <span class="text-[9.5px] text-slate-400 dark:text-slate-500 font-medium">Analysis of changes between
+                  old
+                  and new law</span>
+              </div>
             </div>
-            <div class="text-slate-300 text-sm leading-relaxed whitespace-pre-wrap font-sans pl-11">
-              {{ result.comparison }}
+
+            <div class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed pl-0 md:pl-12"
+              [ngClass]="{'line-clamp-6': !showFullComparison}"
+              [innerHTML]="formatter.formatMarkdown(result.comparison)">
             </div>
+
+            <button *ngIf="result.comparison && result.comparison.length > 400"
+              (click)="showFullComparison = !showFullComparison"
+              [appTooltip]="showFullComparison ? 'Collapse comparative analysis details' : 'Read the full comparative analysis details'"
+              tooltipPlacement="top" class="self-start text-xs text-indigo-500 dark:text-indigo-400 font-semibold
+                       cursor-pointer border-none bg-transparent hover:underline pl-0 md:pl-12">
+              {{ showFullComparison ? 'Show less ↑' : 'Read full analysis ↓' }}
+            </button>
           </div>
 
         </div>
 
-      </div>
+        <!-- ── PINNED COMPARISON TABLE ── -->
+        <div *ngIf="pinnedEntries.length > 0" class="pin-table-container animate-fade-in">
+          <div class="flex items-center justify-between mb-3">
+            <span
+              class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" class="w-3.5 h-3.5 text-rose-500">
+                <line x1="12" y1="17" x2="12" y2="22" />
+                <path
+                  d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.47A2 2 0 0 1 15 9.3V5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4.3a2 2 0 0 1-.78 1.23L5.44 14a2 2 0 0 0-.44 1.24Z" />
+              </svg>
+              Pinned Comparisons ({{ pinnedEntries.length }}/{{ MAX_PINS }})
+            </span>
+            <button (click)="clearPins()"
+              class="text-[10px] font-bold uppercase tracking-wider text-red-500 dark:text-red-400/90 hover:text-red-600 dark:hover:text-red-300 hover:bg-red-50/80 dark:hover:bg-red-950/20 px-2 py-0.5 rounded-md transition-all cursor-pointer border-none bg-transparent">
+              Clear Pins
+            </button>
+          </div>
+          <!-- Desktop/Tablet Table view -->
+          <div
+            class="hidden md:block overflow-x-auto rounded-xl border border-slate-200/80 dark:border-white/8 bg-white dark:bg-white/[0.02]">
+            <table class="w-full text-xs">
+              <thead>
+                <tr class="border-b border-slate-100 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02]">
+                  <th
+                    class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Old Act</th>
+                  <th
+                    class="px-2 py-2.5 text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider w-8">
+                    →</th>
+                  <th
+                    class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    New Act</th>
+                  <th
+                    class="px-4 py-2.5 text-left text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Title</th>
+                  <th
+                    class="px-4 py-2.5 text-center text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    Similarity</th>
+                  <th
+                    class="px-4 py-2.5 text-right text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider no-print">
+                    Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let pin of pinnedEntries; let i = index"
+                  class="border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-slate-50/60 dark:hover:bg-white/[0.02] transition-colors">
+                  <td class="px-4 py-3 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                    {{ pin.result.oldAct.shortName }} § {{ pin.result.oldSection?.section_number || '?' }}
+                  </td>
+                  <td class="px-2 py-3 text-center text-slate-400">
+                    <svg class="w-3.5 h-3.5 text-[hsl(35,92%,47%)] inline" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M13 7l5 5-5 5M6 12h12" />
+                    </svg>
+                  </td>
+                  <td class="px-4 py-3 font-bold text-[hsl(35,92%,47%)] whitespace-nowrap">
+                    {{ pin.result.newAct.shortName }} § {{ pin.result.newSection?.section_number || '?' }}
+                  </td>
+                  <td class="px-4 py-3 text-slate-500 dark:text-slate-400 max-w-[200px] truncate">
+                    {{ pin.result.oldSection?.title || '—' }}
+                  </td>
+                  <td class="px-4 py-3 text-center">
+                    <span class="font-extrabold text-[11px]"
+                      [ngClass]="pin.similarity >= 60 ? 'text-emerald-600 dark:text-emerald-400' : pin.similarity >= 30 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-600 dark:text-rose-400'">
+                      {{ pin.similarity }}%
+                    </span>
+                  </td>
+                  <td class="px-4 py-3 text-right no-print">
+                    <div class="flex items-center justify-end gap-1.5">
+                      <button
+                        (click)="selectHistory({ act: pin.result.oldAct.shortName, section: pin.result.oldSection?.section_number || '', label: '', timestamp: 0 })"
+                        class="text-[10px] font-semibold text-[hsl(35,92%,47%)] hover:underline cursor-pointer border-none bg-transparent">
+                        Load
+                      </button>
+                      <button (click)="unpinResult(i)" class="w-5 h-5 rounded flex items-center justify-center cursor-pointer border-none bg-transparent
+                             text-slate-400 hover:text-red-500 transition-colors">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-    </div>
+          <!-- Mobile Cards view -->
+          <div class="grid grid-cols-1 gap-3 md:hidden">
+            <div *ngFor="let pin of pinnedEntries; let i = index"
+              class="rounded-xl border p-3.5 flex flex-col gap-2.5 bg-white dark:bg-white/[0.03] border-slate-200/80 dark:border-white/8 hover:shadow-md transition-all">
+
+              <!-- Card Header -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span
+                    class="px-2 py-0.5 rounded text-[9px] font-bold border
+                               bg-slate-50 dark:bg-white/5 text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-white/10">
+                    {{ pin.result.oldAct.shortName }} § {{ pin.result.oldSection?.section_number || '?' }}
+                  </span>
+                  <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                  <span
+                    class="px-2 py-0.5 rounded text-[9px] font-bold border
+                               bg-[hsl(35,92%,47%)]/10 text-[hsl(35,92%,37%)] dark:text-[hsl(35,92%,60%)] border-[hsl(35,92%,47%)]/20">
+                    {{ pin.result.newAct.shortName }} § {{ pin.result.newSection?.section_number || '?' }}
+                  </span>
+                </div>
+
+                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold border" [ngClass]="{
+                    'bg-emerald-50 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 border-emerald-200/30 dark:border-emerald-500/20': pin.similarity >= 60,
+                    'bg-amber-50 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 border-amber-200/30 dark:border-amber-500/20': pin.similarity >= 30 && pin.similarity < 60,
+                    'bg-rose-50 dark:bg-rose-950/20 text-rose-600 dark:text-rose-400 border-rose-200/30 dark:border-rose-500/20': pin.similarity < 30
+                  }">
+                  {{ pin.similarity }}% Match
+                </span>
+              </div>
+
+              <!-- Card Title -->
+              <div class="text-xs font-semibold text-slate-700 dark:text-slate-200 leading-snug line-clamp-2">
+                {{ pin.result.oldSection?.title || '—' }}
+              </div>
+
+              <!-- Card Actions (Divider + Buttons) -->
+              <div
+                class="pt-2 mt-0.5 border-t border-slate-100 dark:border-white/5 flex items-center justify-end gap-2">
+                <button
+                  (click)="selectHistory({ act: pin.result.oldAct.shortName, section: pin.result.oldSection?.section_number || '', label: '', timestamp: 0 })"
+                  class="flex-1 py-2 rounded-lg text-[10px] font-bold text-center border-none cursor-pointer transition-all flex items-center justify-center gap-1
+                         bg-indigo-50 hover:bg-indigo-100/80 dark:bg-indigo-950/30 dark:hover:bg-indigo-900/40 text-indigo-600 dark:text-indigo-400">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  Load Comparison
+                </button>
+                <button (click)="unpinResult(i)"
+                  class="py-2 px-3 rounded-lg text-[10px] font-bold text-center border-none cursor-pointer transition-all flex items-center justify-center gap-1
+                         bg-red-50 hover:bg-red-100/80 dark:bg-red-950/30 dark:hover:bg-red-900/40 text-red-600 dark:text-red-400">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  Remove
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </app-print-container>
 
   </div>
+
+  <!-- Floating Bottom Action Bar (Mobile only, results loaded) -->
+  <div *ngIf="result && !loading && !error" class="floating-action-bar fixed bottom-0 left-4 right-4 z-40 md:hidden no-print
+              bg-white/80 dark:bg-slate-900/80 backdrop-blur-lg
+              border border-slate-200/60 dark:border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.3)]
+              flex items-center justify-around p-2 max-w-[480px] mx-auto animate-slide-up">
+    <!-- Reading Mode Toggle Button -->
+    <button (click)="toggleReadingMode()" [class.active-focus]="isReadingMode" class="focus-btn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path [attr.fill]="isReadingMode ? 'currentColor' : 'none'" d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+        <path [attr.fill]="isReadingMode ? 'currentColor' : 'none'" d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+        <path [attr.stroke]="isReadingMode ? 'var(--focus-lines-color)' : 'currentColor'" d="M6 8h4" />
+        <path [attr.stroke]="isReadingMode ? 'var(--focus-lines-color)' : 'currentColor'" d="M6 12h4" />
+        <path [attr.stroke]="isReadingMode ? 'var(--focus-lines-color)' : 'currentColor'" d="M14 8h4" />
+        <path [attr.stroke]="isReadingMode ? 'var(--focus-lines-color)' : 'currentColor'" d="M14 12h4" />
+      </svg>
+      <span>Focus</span>
+    </button>
+
+    <!-- Bookmark/Pin Button -->
+    <button (click)="togglePinCurrentResult()" [class.active-pin]="isPinned" class="pin-btn">
+      <!-- Unpin (Thumbtack with Diagonal Cross Line) SVG when active -->
+      <svg *ngIf="isPinned" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="17" x2="12" y2="22"></line>
+        <!-- Filled Pin Segments -->
+        <path d="M9 3h4a2 2 0 0 1 2 2v4.16c0 .43.14.85.4 1.2l1.16 1.39" fill="currentColor"></path>
+        <path d="M18.88 15.34A2 2 0 0 1 19 15.24V17h-3" fill="currentColor"></path>
+        <path d="M11 17H5v-1.76a2 2 0 0 1 .44-1.24l2.12-2.6A2 2 0 0 0 8 10.16V8" fill="currentColor"></path>
+        <!-- Strike-through Line -->
+        <line x1="2" y1="2" x2="22" y2="22"></line>
+      </svg>
+
+      <!-- Pin (Thumbtack) SVG when inactive -->
+      <svg *ngIf="!isPinned" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <line x1="12" y1="17" x2="12" y2="22" />
+        <path
+          d="M5 17h14v-1.76a2 2 0 0 0-.44-1.24l-2.78-3.47A2 2 0 0 1 15 9.3V5a2 2 0 0 0-2-2h-2a2 2 0 0 0-2 2v4.3a2 2 0 0 1-.78 1.23L5.44 14a2 2 0 0 0-.44 1.24Z" />
+      </svg>
+      <span *ngIf="isPinned">Unpin</span>
+      <span *ngIf="!isPinned">Pin</span>
+    </button>
+
+    <!-- Share Button Dropdown inside Float Dock -->
+    <div class="share-btn-wrapper">
+      <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()"
+        [shareUrl]="'http://localhost:4200' + router.url" [subject]="getShareSubject()"
+        [buttonClass]="'border-none cursor-pointer bg-transparent text-inherit p-0 flex items-center justify-center'"
+        [tooltipText]="'Share mapping'" [tooltipPlacement]="'top'">
+      </app-share-menu>
+      <span>Share</span>
+    </div>
+
+    <!-- Print Button -->
+    <button (click)="triggerPrint()" class="print-btn">
+      <svg fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round"
+          d="M17 17h2a2 2 0 0 02-2v-4a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v4a2 2 0 0 02 2h2m2 4h6a2 2 0 0 02-2v-4a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4a2 2 0 0 02 2zm8-12V5a2 2 0 0 0-2-2H9a2 2 0 0 0-2 2v4h10z" />
+      </svg>
+      <span>Print</span>
+    </button>
+
+    <!-- Clear Button -->
+    <button (click)="clearAll()" class="clear-btn">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+      <span>Clear</span>
+    </button>
+  </div>
+
+  <!-- Mobile Bottom Sheet Drawer for Discovery & History (Mobile only) -->
+  <div *ngIf="showMobileDrawer" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm md:hidden no-print"
+    (click)="toggleMobileDrawer()">
+    <div
+      class="fixed bottom-0 left-0 right-0 max-h-[85vh] bg-white dark:bg-[hsl(222,47%,11%)] border-t border-slate-200 dark:border-white/10 rounded-t-3xl p-5 flex flex-col gap-4 overflow-y-auto animate-slide-up no-scrollbar"
+      (click)="$event.stopPropagation()">
+      <!-- Header -->
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-white/10"></div>
+        <div class="w-full flex items-center justify-between mt-1">
+          <h3
+            class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            Explore & History
+          </h3>
+          <button (click)="toggleMobileDrawer()"
+            class="p-1 rounded-full bg-slate-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white border-none cursor-pointer flex items-center justify-center">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Recent History -->
+      <div *ngIf="recentSearches.length > 0" class="flex flex-col gap-2 mt-2">
+        <div class="flex items-center justify-between">
+          <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Recent
+            Searches</span>
+          <button (click)="clearHistory()"
+            class="text-[10px] font-bold uppercase tracking-wider text-red-500 hover:underline border-none bg-transparent cursor-pointer">Clear
+            All</button>
+        </div>
+        <div class="flex flex-wrap gap-2">
+          <button *ngFor="let h of recentSearches" (click)="selectHistory(h); toggleMobileDrawer()"
+            class="px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-[hsl(35,92%,47%)]/40 flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full shrink-0" [ngClass]="getActDotClass(h.act)"></span>
+            {{ h.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Popular Lookups -->
+      <div class="flex flex-col gap-3 mt-2">
+        <div class="flex items-center justify-between flex-wrap gap-2">
+          <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Popular
+            Lookups</span>
+          <div class="flex items-center gap-1 flex-wrap">
+            <button *ngFor="let f of ['All', 'IPC', 'CrPC', 'IEA']" (click)="setPopularFilter(f)"
+              class="px-2 py-0.5 rounded-full text-[9px] font-bold border cursor-pointer"
+              [ngClass]="popularFilter === f ? 'bg-[hsl(35,92%,47%)] border-[hsl(35,92%,37%)] text-white' : 'bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-500'">
+              {{ f }}
+            </button>
+          </div>
+        </div>
+        <div class="grid gap-2 grid-cols-2 sm:grid-cols-2">
+          <button *ngFor="let pill of filteredPopularSections"
+            (click)="selectPopular(pill.act, pill.num); toggleMobileDrawer()"
+            class="flex items-center gap-2 p-2.5 rounded-xl border cursor-pointer text-left bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 hover:border-[hsl(35,92%,47%)]/30 transition-all">
+            <span class="shrink-0 flex items-center justify-center text-slate-500"
+              [ngClass]="getPopularIconClass(pill.color)">
+              <ng-container [ngSwitch]="pill.icon">
+                <svg *ngSwitchCase="'scale'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9m3 0h9m0 0l-3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9M12 3v18M12 21h4m-8 0h4" />
+                </svg>
+                <svg *ngSwitchCase="'search'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <svg *ngSwitchCase="'shield'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                </svg>
+                <svg *ngSwitchCase="'family'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <svg *ngSwitchCase="'warning'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <svg *ngSwitchCase="'clipboard'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                </svg>
+                <svg *ngSwitchCase="'money'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <svg *ngSwitchCase="'expert'" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                </svg>
+              </ng-container>
+            </span>
+            <div class="flex flex-col gap-0.5 min-w-0">
+              <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400"
+                [ngClass]="getPopularTextClass(pill.color)">
+                {{ pill.act }} § {{ pill.num }}
+              </span>
+              <span class="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
+                {{ pill.label }}
+              </span>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
 </div>

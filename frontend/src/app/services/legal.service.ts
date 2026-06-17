@@ -52,6 +52,35 @@ export interface SearchResultItem {
   snippet: string;
 }
 
+export interface MappingSectionDetail {
+  section_number: string;
+  title: string;
+  content: string;
+  content_hi?: string;
+  chapter: string;
+}
+
+export interface MappingActInfo {
+  shortName: string;
+  actName: string;
+}
+
+export interface TransitionMappingResult {
+  success: boolean;
+  oldAct: MappingActInfo;
+  oldSection: MappingSectionDetail | null;
+  newAct: MappingActInfo;
+  newSection: MappingSectionDetail | null;
+  comparison: string;
+  fromCache?: boolean;
+}
+
+export interface MappingSuggestion {
+  act: string;
+  section: string;
+  title: string;
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
@@ -92,8 +121,12 @@ export class LegalService {
     return this.http.get<ApiResponse<SearchResultItem[]>>(`${this.apiUrl}/search?q=${encodeURIComponent(query)}`);
   }
 
-  getTransitionMapping(act: string, section: string): Observable<ApiResponse<any>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/mapping?act=${encodeURIComponent(act)}&section=${encodeURIComponent(section)}`);
+  getTransitionMapping(act: string, section: string): Observable<TransitionMappingResult> {
+    return this.http.get<TransitionMappingResult>(`${this.apiUrl}/mapping?act=${encodeURIComponent(act)}&section=${encodeURIComponent(section)}`);
+  }
+
+  getMappingSuggestions(query: string): Observable<ApiResponse<MappingSuggestion[]>> {
+    return this.http.get<ApiResponse<MappingSuggestion[]>>(`${this.apiUrl}/mapping/suggestions?q=${encodeURIComponent(query)}`);
   }
 
   getSectionSummary(shortName: string, sectionNumber: string): Observable<ApiResponse<{summary: string, cached: boolean}>> {
