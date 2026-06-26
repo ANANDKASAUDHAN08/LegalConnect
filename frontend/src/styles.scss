@@ -457,7 +457,17 @@ h6 {
   }
 }
 
+/* Hide the print-area by default on screen */
+.print-area {
+  display: none;
+}
+
 /* ── Global Print Settings ── */
+@page {
+  margin: 20mm 15mm;
+  /* Removes browser default header/footer (URL, title, date, page number) */
+}
+
 @media print {
 
   /* Hide the navbar, footer, snackbar, and any other non-print layouts on the entire page */
@@ -468,28 +478,46 @@ h6 {
     display: none !important;
   }
 
-  /* Hide the main active dashboard layout container */
-  .page-wrapper {
-    display: none !important;
+  /* Hide standard page elements using visibility so descendants (like .print-area) can override it */
+  body {
+    visibility: hidden !important;
+    background: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
 
   /* Hide any active backdrops, dialogs, drawers or fixed panels */
-  .fixed,
   .drawer-backdrop,
-  .drawer-panel,
-  div[class*="fixed"],
-  div[class*="backdrop"] {
+  .drawer-panel {
     display: none !important;
   }
 
-  /* Force display of the print-area wrapper */
+  /* Ensure Angular component host wrappers are visible so .print-area inside them can render */
+  app-root,
+  app-document-templates,
+  app-law-viewer,
+  app-client-dashboard {
+    visibility: visible !important;
+    position: static !important;
+    display: block !important;
+  }
+
+  /* Force display of the print-area wrapper and all of its nested children */
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
   .print-area {
     display: block !important;
-    visibility: visible !important;
-    position: relative !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
     width: 100% !important;
     margin: 0 !important;
-    padding: 0 !important;
+    padding: 24px !important;
     background: white !important;
     color: black !important;
   }

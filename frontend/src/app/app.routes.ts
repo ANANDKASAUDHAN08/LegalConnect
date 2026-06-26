@@ -49,6 +49,10 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/civil-family-portal/civil-family-portal.component').then(m => m.CivilFamilyPortalComponent)
   },
   {
+    path: 'laws/templates',
+    loadComponent: () => import('./pages/document-templates/document-templates.component').then(m => m.DocumentTemplatesComponent)
+  },
+  {
     path: 'laws/:shortName',
     loadComponent: () => import('./pages/law-viewer/law-viewer.component').then(m => m.LawViewerComponent)
   },
