@@ -1,0 +1,412 @@
+:host {
+  display: block;
+  z-index: 1200;
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+/* Floating Bottom Nav Container */
+.bottom-nav-container {
+  position: fixed;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: calc(100% - 24px);
+  max-width: 410px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+  border-radius: 9999px;
+  box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.08), 0 8px 10px -6px rgba(15, 23, 42, 0.04);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.3s ease, border-color 0.3s ease;
+  z-index: 1200;
+  overflow: visible;
+
+  &.nav-hidden {
+    transform: translateX(-50%) translateY(80px);
+  }
+}
+
+/* Dark theme overrides */
+:host-context(.dark) .bottom-nav-container {
+  background: rgba(15, 23, 42, 0.85);
+  border-color: rgba(51, 65, 85, 0.4);
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Tab Items */
+.bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #64748b; // slate-500
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.2s ease, transform 0.1s ease;
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+
+  svg {
+    color: #94a3b8; // slate-400
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), color 0.2s ease;
+  }
+
+  &.active {
+    svg {
+      transform: scale(1.1) translateY(-1px);
+    }
+  }
+
+  /* Specific colors for active tabs */
+  &:nth-of-type(1).active {
+    color: #3b82f6 !important; // Blue
+
+    svg {
+      color: #3b82f6 !important;
+    }
+  }
+
+  &:nth-of-type(2).active {
+    color: #10b981 !important; // Emerald
+
+    svg {
+      color: #10b981 !important;
+    }
+  }
+
+  &:nth-of-type(3).active {
+    // Lawyers
+    color: #6366f1 !important; // Indigo
+
+    svg {
+      color: #6366f1 !important;
+    }
+  }
+
+  &:nth-of-type(4).active {
+    // Dashboard / Workspace / Profile
+    color: #f59e0b !important; // Amber
+
+    svg {
+      color: #f59e0b !important;
+    }
+  }
+
+  /* Micro-haptic push on active tap */
+  &:active {
+    transform: scale(0.92);
+  }
+}
+
+:host-context(.dark) .bottom-nav-item {
+  color: #94a3b8;
+
+  svg {
+    color: #64748b;
+  }
+
+  &:nth-of-type(1).active {
+    color: #60a5fa !important;
+
+    svg {
+      color: #60a5fa !important;
+    }
+  }
+
+  &:nth-of-type(2).active {
+    color: #34d399 !important;
+
+    svg {
+      color: #34d399 !important;
+    }
+  }
+
+  &:nth-of-type(3).active {
+    color: #818cf8 !important;
+
+    svg {
+      color: #818cf8 !important;
+    }
+  }
+
+  &:nth-of-type(4).active {
+    color: #fbbf24 !important;
+
+    svg {
+      color: #fbbf24 !important;
+    }
+  }
+}
+
+/* Active Sliding Dot Indicator */
+.active-indicator-pill {
+  position: absolute;
+  bottom: 3px;
+  height: 3px;
+  border-radius: 99px;
+  transition: left 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease, width 0.35s ease, background-color 0.2s ease, box-shadow 0.2s ease;
+  width: 10%;
+  opacity: 1;
+  pointer-events: none;
+
+  &[data-active-tab="home"] {
+    left: 5%;
+    background: #3b82f6;
+    box-shadow: 0 1px 6px rgba(59, 130, 246, 0.4);
+  }
+
+  &[data-active-tab="laws"] {
+    left: 25%;
+    background: #10b981;
+    box-shadow: 0 1px 6px rgba(16, 185, 129, 0.4);
+  }
+
+  &[data-active-tab="sos"] {
+    opacity: 0;
+  }
+
+  &[data-active-tab="lawyers"] {
+    left: 65%;
+    background: #6366f1;
+    box-shadow: 0 1px 6px rgba(99, 102, 241, 0.4);
+  }
+
+  &[data-active-tab="dashboard"] {
+    left: 85%;
+    background: #f59e0b;
+    box-shadow: 0 1px 6px rgba(245, 158, 11, 0.4);
+  }
+}
+
+:host-context(.dark) .active-indicator-pill {
+  &[data-active-tab="home"] {
+    background: #60a5fa;
+    box-shadow: 0 1px 6px rgba(96, 165, 250, 0.5);
+  }
+
+  &[data-active-tab="laws"] {
+    background: #34d399;
+    box-shadow: 0 1px 6px rgba(52, 211, 153, 0.5);
+  }
+
+  &[data-active-tab="lawyers"] {
+    background: #818cf8;
+    box-shadow: 0 1px 6px rgba(129, 140, 248, 0.5);
+  }
+
+  &[data-active-tab="dashboard"] {
+    background: #fbbf24;
+    box-shadow: 0 1px 6px rgba(251, 191, 36, 0.5);
+  }
+}
+
+/* Center SOS Beacon */
+.bottom-nav-sos-btn {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  border: 3px solid #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-10px);
+  box-shadow: 0 6px 16px rgba(220, 38, 38, 0.3), inset 0 1.5px 3px rgba(255, 255, 255, 0.25);
+  cursor: pointer;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  z-index: 10;
+
+  svg {
+    filter: drop-shadow(0 1.5px 3px rgba(0, 0, 0, 0.15));
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  &.sos-active {
+    transform: translateY(-10px) scale(0.9) rotate(45deg);
+    box-shadow: 0 3px 8px rgba(220, 38, 38, 0.4);
+  }
+
+  &:active {
+    transform: translateY(-10px) scale(0.92);
+  }
+}
+
+:host-context(.dark) .bottom-nav-sos-btn {
+  border-color: #0f172a;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4);
+}
+
+/* Glowing Pulsing SOS Rings */
+.sos-glow-ring,
+.sos-glow-ring-2 {
+  position: absolute;
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  border-radius: 50%;
+  border: 1.5px solid #ef4444;
+  opacity: 0;
+  pointer-events: none;
+  animation: sos-pulse 3.6s cubic-bezier(0.25, 0, 0, 1) infinite;
+}
+
+.sos-glow-ring-2 {
+  animation-delay: 1.8s;
+}
+
+@keyframes sos-pulse {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.35;
+  }
+
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+
+/* Pulsing Indicator for Active Consultation Session */
+.live-consultation-pulse-ring {
+  position: absolute;
+  top: 6px;
+  right: 14px;
+  width: 7.5px;
+  height: 7.5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 0 0 2px #ffffff, 0 1px 6px rgba(16, 185, 129, 0.4);
+  z-index: 5;
+  animation: pulse-breathe 2s infinite ease-in-out;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -2.5px;
+    border-radius: 50%;
+    border: 1.5px solid #10b981;
+    animation: consultation-glow 2.5s cubic-bezier(0.25, 0, 0, 1) infinite;
+    opacity: 0;
+  }
+}
+
+:host-context(.dark) .live-consultation-pulse-ring {
+  box-shadow: 0 0 0 2px #0f172a, 0 1px 8px rgba(16, 185, 129, 0.6);
+}
+
+@keyframes pulse-breathe {
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.22);
+  }
+}
+
+@keyframes consultation-glow {
+  0% {
+    transform: scale(0.95);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Emergency Sheet Drawer Box styling */
+.sos-backdrop {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.active-sheet {
+  .sos-backdrop {
+    opacity: 1;
+  }
+
+  .sos-sheet-panel {
+    transform: translate(0);
+  }
+}
+
+.sos-sheet-panel {
+  box-shadow: 0 -12px 48px rgba(0, 0, 0, 0.7);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform;
+}
+
+/* SOS Option Buttons */
+.sos-action-btn {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 14px 18px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  text-decoration: none;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  outline: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover,
+  &:focus {
+    background: rgba(255, 255, 255, 0.09);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(0) scale(0.98);
+  }
+}
+
+.emergency-call-btn {
+  border-color: rgba(239, 68, 68, 0.2);
+
+  &:hover,
+  &:focus {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.08);
+    box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+  }
+}
+
+.location-share-btn {
+  border-color: rgba(59, 130, 246, 0.2);
+
+  &:hover,
+  &:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.08);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+  }
+}
+
+.checklist-btn {
+  border-color: rgba(245, 158, 11, 0.2);
+
+  &:hover,
+  &:focus {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.08);
+    box-shadow: 0 4px 20px rgba(245, 158, 11, 0.15);
+  }
+}

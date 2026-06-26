@@ -1,0 +1,172 @@
+<!-- Floating Bottom Navigation Capsule -->
+<div class="bottom-nav-container md:hidden" 
+     [class.nav-hidden]="isKeyboardVisible || !showNav">
+  <div class="bottom-nav-inner grid grid-cols-5 items-center justify-items-center relative w-full h-[52px]">
+
+    <!-- Active Slider Dot/Pill -->
+    <div class="active-indicator-pill" [attr.data-active-tab]="activeTab"></div>
+
+    <!-- Tab 1: Home -->
+    <a routerLink="/" class="bottom-nav-item" [class.active]="activeTab === 'home'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+      <span class="text-[0.6rem] font-bold mt-0.5">Home</span>
+    </a>
+
+    <!-- Tab 2: Laws -->
+    <a routerLink="/laws" class="bottom-nav-item" [class.active]="activeTab === 'laws'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+      </svg>
+      <span class="text-[0.6rem] font-bold mt-0.5">Laws</span>
+    </a>
+
+    <!-- Tab 3: SOS Beacon (Center High-Contrast Action) -->
+    <button (click)="toggleSos($event)" class="bottom-nav-sos-btn" [class.sos-active]="showSosOverlay">
+      <!-- Lifesaver pulsing SVGs -->
+      <span class="sos-glow-ring"></span>
+      <span class="sos-glow-ring-2"></span>
+      <svg viewBox="0 0 24 24" fill="none" class="w-4 h-4 stroke-white mb-0.5" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span class="text-[0.45rem] text-white font-black uppercase tracking-wide leading-none">
+        SOS
+      </span>
+    </button>
+
+    <!-- Tab 4: Lawyers -->
+    <a routerLink="/lawyers" class="bottom-nav-item" [class.active]="activeTab === 'lawyers'">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+        stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      <span class="text-[0.6rem] font-bold mt-0.5">Lawyers</span>
+    </a>
+
+    <!-- Tab 5: Dashboard / Workspace -->
+    <ng-container *ngIf="(auth.currentUser$ | async) as user; else guestTab">
+      <a [routerLink]="getDashboardRoute(user)" class="bottom-nav-item relative"
+        [class.active]="activeTab === 'dashboard'">
+        <!-- Ambient pulsing ring for live video/call consultations -->
+        <span *ngIf="hasUpcomingAppointment" class="live-consultation-pulse-ring"
+          appTooltip="Upcoming consultation active!" tooltipPlacement="top"></span>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+          <rect x="3" y="3" width="7" height="9"></rect>
+          <rect x="14" y="3" width="7" height="5"></rect>
+          <rect x="14" y="12" width="7" height="9"></rect>
+          <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        <span class="text-[0.6rem] font-bold mt-0.5">{{ user.role === 'Lawyer' ? 'Workspace' : 'Portal' }}</span>
+      </a>
+    </ng-container>
+
+    <ng-template #guestTab>
+      <a routerLink="/login" class="bottom-nav-item" [class.active]="activeTab === 'dashboard'">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span class="text-[0.6rem] font-bold mt-0.5">Profile</span>
+      </a>
+    </ng-template>
+
+  </div>
+</div>
+
+<!-- Immersive Emergency SOS Bottom Sheet -->
+<div class="fixed inset-0 z-[1500] pointer-events-none" [class.active-sheet]="showSosOverlay">
+  <!-- Backdrop Blur -->
+  <div
+    class="sos-backdrop absolute inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity duration-300 pointer-events-auto"
+    *ngIf="showSosOverlay" (click)="closeSos()"></div>
+
+  <!-- Bottom Drawer Box -->
+  <div
+    class="sos-sheet-panel absolute bottom-0 left-0 right-0 max-w-[600px] mx-auto bg-gradient-to-b from-slate-900 to-slate-950 border-t border-red-500/30 text-white rounded-t-[2.5rem] p-6 pb-10 shadow-2xl transition-transform duration-300 ease-out translate-y-full pointer-events-auto flex flex-col items-center">
+
+    <!-- Drag handle / accent indicator -->
+    <div class="w-12 h-1 bg-red-500/20 rounded-full mb-6"></div>
+
+    <div
+      class="w-16 h-16 rounded-full bg-red-600/10 border border-red-500/40 flex items-center justify-center text-red-500 shadow-[0_0_24px_rgba(220,38,38,0.25)] animate-pulse mb-3">
+      <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8 stroke-current" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="12" cy="12" r="4" />
+        <path d="M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24" />
+      </svg>
+    </div>
+
+    <h2 class="text-xl font-black text-center tracking-tight text-white mb-1">EMERGENCY ASSISTANCE</h2>
+    <p class="text-xs text-red-400 font-bold uppercase tracking-wider text-center mb-6">SOS Quick Actions Console</p>
+
+    <!-- Emergency Action Grid -->
+    <div class="grid grid-cols-1 gap-3.5 w-full max-w-sm mb-6">
+
+      <!-- Action 1: Call Emergency Helpline (112) -->
+      <a href="tel:112" class="sos-action-btn emergency-call-btn">
+        <span class="p-3 bg-red-600 rounded-xl mr-4 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" class="w-5 h-5">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+            </path>
+          </svg>
+        </span>
+        <div class="flex flex-col text-left">
+          <span class="text-[0.92rem] font-extrabold text-white">Call National Helpline</span>
+          <span class="text-[0.7rem] text-red-300 font-bold">Instantly dial 112</span>
+        </div>
+      </a>
+
+      <!-- Action 2: Share GPS Location with Advocate -->
+      <button class="sos-action-btn location-share-btn">
+        <span class="p-3 bg-blue-600 rounded-xl mr-4 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" class="w-5 h-5">
+            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+          </svg>
+        </span>
+        <div class="flex flex-col text-left">
+          <span class="text-[0.92rem] font-extrabold text-white">Share Live Location</span>
+          <span class="text-[0.7rem] text-blue-300 font-bold">Ping coordinates to main advocate</span>
+        </div>
+      </button>
+
+      <!-- Action 3: Quick Rights Checklist -->
+      <a routerLink="/find-help" (click)="closeSos()" class="sos-action-btn checklist-btn">
+        <span class="p-3 bg-amber-600 rounded-xl mr-4 text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" class="w-5 h-5">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </span>
+        <div class="flex flex-col text-left">
+          <span class="text-[0.92rem] font-extrabold text-white">Know Your Core Rights</span>
+          <span class="text-[0.7rem] text-amber-300 font-bold">Quick arrest & search guides</span>
+        </div>
+      </a>
+
+    </div>
+
+    <!-- Close SOS Panel button -->
+    <button (click)="closeSos()"
+      class="w-full max-w-sm py-3 rounded-2xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-bold transition-all text-sm tracking-wider uppercase active:scale-[0.98]">
+      Dismiss Console
+    </button>
+  </div>
+</div>

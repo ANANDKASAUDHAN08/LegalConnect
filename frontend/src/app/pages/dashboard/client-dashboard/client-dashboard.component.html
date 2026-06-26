@@ -143,39 +143,23 @@
 
       <!-- Statistics Dashboard Summary Bar -->
       <section class="grid grid-cols-2 lg:grid-cols-4 gap-4" aria-label="Dashboard statistics">
-        <app-stat-card
-          type="saved"
-          label="Saved Items"
-          [count]="totalSavedCount"
-          titleAttr="Click to view all saved items"
-          ariaLabelAttr="View all saved bookmarks"
+        <app-stat-card type="saved" label="Saved Items" [count]="totalSavedCount"
+          titleAttr="Click to view all saved items" ariaLabelAttr="View all saved bookmarks"
           (cardClick)="onCardClick('saved')">
         </app-stat-card>
 
-        <app-stat-card
-          type="collections"
-          label="Collections"
-          [count]="customCollections.length"
-          titleAttr="Click to view research folders"
-          ariaLabelAttr="View research folders"
+        <app-stat-card type="collections" label="Collections" [count]="customCollections.length"
+          titleAttr="Click to view research folders" ariaLabelAttr="View research folders"
           (cardClick)="onCardClick('collections')">
         </app-stat-card>
 
-        <app-stat-card
-          type="acts"
-          label="Acts Referenced"
-          [count]="distinctActsCount"
-          titleAttr="Click to browse by referenced Act"
-          ariaLabelAttr="Browse Acts referenced"
+        <app-stat-card type="acts" label="Acts Referenced" [count]="distinctActsCount"
+          titleAttr="Click to browse by referenced Act" ariaLabelAttr="Browse Acts referenced"
           (cardClick)="onCardClick('acts')">
         </app-stat-card>
 
-        <app-stat-card
-          type="inquiries"
-          label="Active Inquiries"
-          [count]="activeInquiriesCount"
-          titleAttr="Click to view active consultations"
-          ariaLabelAttr="View active consultations"
+        <app-stat-card type="inquiries" label="Active Inquiries" [count]="activeInquiriesCount"
+          titleAttr="Click to view active consultations" ariaLabelAttr="View active consultations"
           (cardClick)="onCardClick('inquiries')">
         </app-stat-card>
       </section>
@@ -196,7 +180,7 @@
         </app-folder-sidebar>
 
         <!-- MAIN WINDOW RESULTS AREA -->
-        <main id="content-section" class="flex-1 w-full space-y-3 md:space-y-6">
+        <main id="content-section" class="flex-1 w-full space-y-1">
 
           <!-- Tabs Controls -->
           <div class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6">
@@ -235,11 +219,11 @@
           </app-folder-sidebar>
 
           <!-- TAB 1: BOOKMARKS GRID -->
-          <div *ngIf="activeTab === 'bookmarks'" class="space-y-3 md:space-y-6">
+          <div *ngIf="activeTab === 'bookmarks'" class="space-y-1">
 
             <!-- Collection Title & Actions Row -->
             <div *ngIf="selectedCollection !== 'All'"
-              class="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/20 dark:bg-indigo-950/10 p-3 sm:px-4 sm:py-3 rounded-2xl border border-indigo-100/10 dark:border-indigo-900/10 gap-3 sm:gap-4 mb-0 md:mb-2">
+              class="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/20 dark:bg-indigo-950/10 p-2 sm:px-3 sm:py-2 rounded-2xl border border-indigo-100/10 dark:border-indigo-900/10 gap-3 sm:gap-4 mt-2">
               <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
                 <div class="flex items-center gap-2">
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
@@ -467,13 +451,15 @@
 
 <!-- 1. QUICK-VIEW DETAIL SLIDE OVER DRAWER -->
 @defer (when drawerOpen) {
+@if (drawerOpen) {
 <app-bookmark-detail-drawer [isOpen]="drawerOpen" [bookmark]="selectedBookmark" [customCollections]="customCollections"
   [drawerNoteText]="drawerNoteText" (notesChanged)="onNotesChanged($event)" [aiSummary]="aiSummary"
   [loadingAiSummary]="loadingAiSummary" (closeDrawer)="closeBookmarkDrawer()"
   (copyClicked)="copySectionToClipboard($event)"
-  (folderAssigned)="moveBookmarkToCollection($event.bookmark, $event.folder)"
-  (fetchSummaryClicked)="fetchAiSummary()">
+  (folderAssigned)="moveBookmarkToCollection($event.bookmark, $event.folder)" (fetchSummaryClicked)="fetchAiSummary()"
+  (removeBookmark)="removeBookmark($event.actShortName, $event.section.section_number)">
 </app-bookmark-detail-drawer>
+}
 }
 
 <!-- 2. CREATE NEW COLLECTION FOLDER MODAL -->
@@ -526,7 +512,8 @@
 }
 
 <!-- 4. PRINT TEMPLATE VIEW (PRINT MODE ONLY) -->
-<div class="print-area" style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background: white !important; color: black !important; padding: 0 !important;">
+<div class="print-area"
+  style="font-family: 'Inter', system-ui, -apple-system, sans-serif; background: white !important; color: black !important; padding: 0 !important;">
   <div
     style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #6366f1; padding-bottom: 16px; margin-bottom: 24px;">
     <div style="display: flex; flex-direction: column;">

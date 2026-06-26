@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { LawViewerSidebarComponent } from './law-viewer-sidebar/law-viewer-sideb
 import { LawViewerChatComponent } from './law-viewer-chat/law-viewer-chat.component';
 import { LawViewerCompareComponent } from './law-viewer-compare/law-viewer-compare.component';
 import { LawViewerCompanionComponent } from './law-viewer-companion/law-viewer-companion.component';
+import { ScrollService } from '../../services/scroll.service';
 
 const FULL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*)\s+of\s+the\s+([A-Za-z\s’'\",\-]+Act(?:,\s+\d{4})?))/gi;
 const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/gi;
@@ -52,7 +54,21 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   activeChapter: Chapter | null = null;
   activeSection: Section | null = null;
   activeSectionTab: 'text' | 'ai' | 'actions' = 'text';
-  isMobileDrawerOpen = false;
+
+  private _isMobileDrawerOpen = false;
+
+  get isMobileDrawerOpen(): boolean {
+    return this._isMobileDrawerOpen;
+  }
+  set isMobileDrawerOpen(val: boolean) {
+    this._isMobileDrawerOpen = val;
+    if (val) {
+      document.body.classList.add('mobile-drawer-open');
+    } else {
+      document.body.classList.remove('mobile-drawer-open');
+    }
+  }
+
   isDescExpanded = false;
   isTitleExpanded = false;
   loading = true;
@@ -110,6 +126,11 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   isMobilePrefMenuOpen = false;
 
   isScrolled = false;
+  isBottomNavVisible = true;
+  isKeyboardVisible = false;
+  initialHeight = window.innerHeight;
+  scrollDirection: 'up' | 'down' = 'up';
+  private scrollSub!: Subscription;
 
   // Companion Dashboard states managed locally in LawViewerCompanionComponent
 
@@ -145,6 +166,13 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     if (window.innerWidth < 768 && this.selectedLanguage === 'parallel') {
       this.onLanguageChange('en');
     }
+    this.isKeyboardVisible = window.innerHeight < this.initialHeight - 150;
+    this.updateBottomNavVisibility();
+    this.cdr.markForCheck();
+  }
+
+  updateBottomNavVisibility() {
+    this.isBottomNavVisible = this.scrollDirection === 'up' && !this.isKeyboardVisible;
     this.cdr.markForCheck();
   }
 
@@ -178,7 +206,9 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     public speechService: SpeechService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    public formatter: FormattingService
+    public formatter: FormattingService,
+    private scrollService: ScrollService,
+    private sanitizer: DomSanitizer
   ) { }
 
   adjustFontSize(amount: number) {
@@ -240,6 +270,11 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
+
+    this.scrollSub = this.scrollService.scrollDirection$.subscribe(dir => {
+      this.scrollDirection = dir;
+      this.updateBottomNavVisibility();
     });
 
     this.legalService.getActs().pipe(takeUntil(this.destroy$)).subscribe(res => {
@@ -386,9 +421,14 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     if (this.fragmentSub) {
       this.fragmentSub.unsubscribe();
     }
+    if (this.scrollSub) {
+      this.scrollSub.unsubscribe();
+    }
     this.stopSpeech();
     this.clearGlossaryAutoCloseTimer();
     window.removeEventListener('scroll', this.onScroll);
+
+    document.body.classList.remove('mobile-drawer-open');
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -1357,79 +1397,11 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
   getAmendmentTimeline(): { label: string; details: string; year?: number }[] {
     if (!this.activeSection || !this.activeSection.content) return [];
-
-    const content = this.activeSection.content;
-    const timeline: { label: string; details: string; year?: number }[] = [];
-
-    // 1. Match inline amendments, e.g. 1 [two thousand...] or 1[two thousand...]
-    const inlineRegex = /(\d+)\s*\[([^\]\n]+)\]/g;
-    let match;
-    inlineRegex.lastIndex = 0;
-    while ((match = inlineRegex.exec(content)) !== null) {
-      const num = match[1];
-      const text = match[2];
-
-      const yearMatch = text.match(/\b(19\d{2}|20\d{2})\b/);
-      const hasYear = !!yearMatch;
-      const hasKeywords = /\b(sub|ins|amend|w\.e\.f|omit|repeal|substituted|inserted|with\s+effect\s+from|act)\b/i.test(text);
-      if (!hasYear && !hasKeywords) {
-        continue;
-      }
-
-      let year: number | undefined;
-      if (yearMatch) {
-        year = parseInt(yearMatch[1], 10);
-      }
-
-      timeline.push({
-        label: `Amendment Reference [${num}]`,
-        details: text.trim(),
-        year
-      });
-    }
-
-    // 2. Match footnote block at bottom, e.g. [Footnote: ...]
-    const footnoteBlockRegex = /\[Footnote:\s*([\s\S]+?)\]/gi;
-    let fnMatch;
-    footnoteBlockRegex.lastIndex = 0;
-    while ((fnMatch = footnoteBlockRegex.exec(content)) !== null) {
-      const text = fnMatch[1];
-
-      const yearMatch = text.match(/\b(19\d{2}|20\d{2})\b/);
-      const hasYear = !!yearMatch;
-      const hasKeywords = /\b(sub|ins|amend|w\.e\.f|omit|repeal|substituted|inserted|with\s+effect\s+from|act)\b/i.test(text);
-      if (!hasYear && !hasKeywords) {
-        continue;
-      }
-
-      let year: number | undefined;
-      if (yearMatch) {
-        year = parseInt(yearMatch[1], 10);
-      }
-
-      timeline.push({
-        label: 'Footnote Notification',
-        details: text.trim(),
-        year
-      });
-    }
-
-    if (timeline.length > 0 && this.act) {
-      timeline.unshift({
-        label: 'Original Enactment',
-        details: `Enacted under ${this.act.actName}`,
-        year: this.act.year
-      });
-
-      timeline.sort((a, b) => {
-        if (a.year && b.year) return a.year - b.year;
-        if (a.year) return -1;
-        if (b.year) return 1;
-        return 0;
-      });
-    }
-
-    return timeline;
+    return this.formatter.getAmendmentTimeline(
+      this.activeSection.content,
+      this.act?.actName || '',
+      this.act?.year
+    );
   }
 
   getLimitationWarning(): { title: string; period: string; description: string; urgency: 'info' | 'warning' | 'critical' } | null {
@@ -1739,6 +1711,36 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     if (!sec) return;
     this.recentSections = this.recentSections.filter(s => s.section_number !== sec.section_number);
     this.recentSections = [sec, ...this.recentSections].slice(0, 4);
+  }
+
+  getFormattedContent(section: Section | null): SafeHtml {
+    if (!section || !section.content) return '';
+    const healed = this.formatter.healTitleAndContent(section.title, section.content);
+    const cleaned = this.formatter.cleanSectionContent(healed.content);
+    let html = this.formatter.formatSectionHtml(cleaned);
+
+    const query = (this.sidebarSearchQuery || '').trim();
+    if (query) {
+      const regex = new RegExp(`(?![^<>]*>)(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+      html = html.replace(regex, '<mark class="bg-accent/20 text-accent dark:bg-accent/30 dark:text-accent-light px-0.5 rounded">$1</mark>');
+    }
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  getFormattedContentHi(section: Section | null): SafeHtml {
+    if (!section || !section.content_hi) return '';
+    const healed = this.formatter.healTitleAndContent(section.title_hi || '', section.content_hi);
+    const cleaned = this.formatter.cleanSectionContent(healed.content);
+    let html = this.formatter.formatSectionHtml(cleaned);
+
+    const query = (this.sidebarSearchQuery || '').trim();
+    if (query) {
+      const regex = new RegExp(`(?![^<>]*>)(${query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')})`, 'gi');
+      html = html.replace(regex, '<mark class="bg-accent/20 text-accent dark:bg-accent/30 dark:text-accent-light px-0.5 rounded">$1</mark>');
+    }
+
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
 }

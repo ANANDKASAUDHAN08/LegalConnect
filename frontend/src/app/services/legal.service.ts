@@ -93,6 +93,8 @@ export interface ApiResponse<T> {
 export class LegalService {
   private apiUrl = 'http://localhost:8888/api/legal';
   private actsCache$: Observable<ApiResponse<BareAct[]>> | null = null;
+  private actDetailsCache = new Map<string, Observable<ApiResponse<BareAct>>>();
+  private actOutlineCache = new Map<string, Observable<ApiResponse<BareAct>>>();
 
   constructor(private http: HttpClient) { }
 
@@ -126,33 +128,43 @@ export class LegalService {
   }
 
   getActByShortName(shortName: string, refresh = false): Observable<ApiResponse<BareAct>> {
-    const url = refresh ? `${this.apiUrl}/acts/${shortName}?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts/${shortName}?t=${Date.now()}`;
-    return this.http.get<ApiResponse<BareAct>>(url).pipe(
-      map(res => {
-        if (res && res.data) {
-          res.data.actName = this.cleanActName(res.data.actName);
-          if (res.data.chapters) {
-            res.data.chapters = res.data.chapters.map(ch => this.cleanChapter(ch));
+    if (refresh || !this.actDetailsCache.has(shortName)) {
+      const url = refresh ? `${this.apiUrl}/acts/${shortName}?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts/${shortName}?t=${Date.now()}`;
+      const obs = this.http.get<ApiResponse<BareAct>>(url).pipe(
+        map(res => {
+          if (res && res.data) {
+            res.data.actName = this.cleanActName(res.data.actName);
+            if (res.data.chapters) {
+              res.data.chapters = res.data.chapters.map(ch => this.cleanChapter(ch));
+            }
           }
-        }
-        return res;
-      })
-    );
+          return res;
+        }),
+        shareReplay(1)
+      );
+      this.actDetailsCache.set(shortName, obs);
+    }
+    return this.actDetailsCache.get(shortName)!;
   }
 
   getActOutline(shortName: string, refresh = false): Observable<ApiResponse<BareAct>> {
-    const url = refresh ? `${this.apiUrl}/acts/${shortName}/outline?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts/${shortName}/outline?t=${Date.now()}`;
-    return this.http.get<ApiResponse<BareAct>>(url).pipe(
-      map(res => {
-        if (res && res.data) {
-          res.data.actName = this.cleanActName(res.data.actName);
-          if (res.data.chapters) {
-            res.data.chapters = res.data.chapters.map(ch => this.cleanChapter(ch));
+    if (refresh || !this.actOutlineCache.has(shortName)) {
+      const url = refresh ? `${this.apiUrl}/acts/${shortName}/outline?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts/${shortName}/outline?t=${Date.now()}`;
+      const obs = this.http.get<ApiResponse<BareAct>>(url).pipe(
+        map(res => {
+          if (res && res.data) {
+            res.data.actName = this.cleanActName(res.data.actName);
+            if (res.data.chapters) {
+              res.data.chapters = res.data.chapters.map(ch => this.cleanChapter(ch));
+            }
           }
-        }
-        return res;
-      })
-    );
+          return res;
+        }),
+        shareReplay(1)
+      );
+      this.actOutlineCache.set(shortName, obs);
+    }
+    return this.actOutlineCache.get(shortName)!;
   }
 
   cleanChapter(ch: Chapter): Chapter {

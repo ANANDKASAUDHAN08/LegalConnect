@@ -548,15 +548,15 @@
         <ng-container *ngIf="!loading">
           <!-- Keyword Mode: show filteredActs -->
           <ng-container *ngIf="searchMode === 'keyword'">
-            <app-act-card *ngFor="let act of filteredActsList" [act]="act" [isAiSuggested]="isAiSuggested(act.shortName)"
-              [cardId]="'act-' + act.shortName">
+            <app-act-card *ngFor="let act of filteredActsList" [act]="act"
+              [isAiSuggested]="isAiSuggested(act.shortName)" [cardId]="'act-' + act.shortName">
             </app-act-card>
           </ng-container>
 
           <!-- AI Mode: show aiFilteredActs (suggested first) -->
           <ng-container *ngIf="searchMode === 'ai'">
-            <app-act-card *ngFor="let act of aiFilteredActsList" [act]="act" [isAiSuggested]="isAiSuggested(act.shortName)"
-              [cardId]="'act-ai-' + act.shortName">
+            <app-act-card *ngFor="let act of aiFilteredActsList" [act]="act"
+              [isAiSuggested]="isAiSuggested(act.shortName)" [cardId]="'act-ai-' + act.shortName">
             </app-act-card>
           </ng-container>
 

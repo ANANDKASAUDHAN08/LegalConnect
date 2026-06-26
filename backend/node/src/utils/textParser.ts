@@ -5,7 +5,7 @@ export interface ParsedBlock {
 
 export function splitTitle(title: string): { cleanTitle: string; introText: string } {
   if (!title) return { cleanTitle: '', introText: '' };
-  
+
   // Match delimiters like .—, —, –, .-, . —, ।—, etc.
   const match = title.match(/^(.*?)(?:\.—|—|–|(?:\.-\s*)|(?:\.\s+—)|(?:\.\s+-)|(?:।—)|(?:।\s*—))(.*)$/);
   if (match) {
@@ -50,17 +50,17 @@ export function getParsedContent(text: string, introText: string = ''): ParsedBl
       return;
     }
 
-    const isExplanation = /^(?:explanation|स्पष्टीकरण)\b/i.test(trimmed);
-    const isIllustration = /^(?:illustration|illustrations|दृष्टांत|उदाहरण|उद्देश्य)\b/i.test(trimmed);
+    const isExplanation = /^(?:\d+\[)?\s*(?:explanation|स्पष्टीकरण)\b/i.test(trimmed);
+    const isIllustration = /^(?:\d+\[)?\s*(?:illustration|illustrations|दृष्टांत|उदाहरण|उद्देश्य)\b/i.test(trimmed);
     const isClause = /^(?:\d+\[)?(?:\([a-z0-9\u0900-\u097F]+\)|\d+\.)/i.test(trimmed);
 
     if (isExplanation) {
-      const isRedundant = /^(?:explanation|स्पष्टीकरण)[\.।\s—–-]*$/i.test(trimmed);
+      const isRedundant = /^(?:\d+\[)?\s*(?:explanation|स्पष्टीकरण)[\.।\s—–-]*$/i.test(trimmed);
       currentBlock = { type: 'explanation', text: isRedundant ? '' : trimmed };
       parsed.push(currentBlock);
       hasPendingParagraphBreak = false;
     } else if (isIllustration) {
-      const isRedundant = /^(?:illustration|illustrations|दृष्टांत|उदाहरण|उद्देश्य)[\.।\s—–-]*$/i.test(trimmed);
+      const isRedundant = /^(?:\d+\[)?\s*(?:illustration|illustrations|दृष्टांत|उदाहरण|उद्देश्य)[\.।\s—–-]*$/i.test(trimmed);
       currentBlock = { type: 'illustration', text: isRedundant ? '' : trimmed };
       parsed.push(currentBlock);
       hasPendingParagraphBreak = false;
@@ -68,7 +68,7 @@ export function getParsedContent(text: string, introText: string = ''): ParsedBl
       let actualClause = true;
       if (currentBlock) {
         const prevText = currentBlock.text.trim();
-        const isListContinuation = 
+        const isListContinuation =
           /(?:(?:sub-)?(?:section|clause)s?|धारा|उप-धारा|खंड|उप-खंड)s?\s*\([a-z0-9\u0900-\u097F]+\)\s*(?:and|or|और|या|एवं|अथवा)\s*$/i.test(prevText) &&
           /^\([a-z0-9\u0900-\u097F]+\)/.test(trimmed);
         if (isListContinuation) {

@@ -1,4 +1,4 @@
-import { Component, HostListener, OnInit, OnDestroy, ChangeDetectorRef, NgZone } from '@angular/core';
+import { Component, HostListener, OnInit, OnDestroy, ChangeDetectorRef, NgZone, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AsyncPipe, NgClass, NgIf, NgForOf, UpperCasePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,9 @@ import { UserProfileMenuComponent } from '../user-profile-menu/user-profile-menu
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { LocationMapModalComponent } from '../location-map-modal/location-map-modal.component';
 import { Subscription } from 'rxjs';
+import { ScrollService } from '../../services/scroll.service';
+import { NavigationEnd } from '@angular/router';
+import { filter } from 'rxjs/operators';
 
 declare var google: any;
 
@@ -33,11 +36,15 @@ declare var google: any;
     LocationMapModalComponent
   ],
   templateUrl: './navbar.component.html',
-  styleUrls: ['./navbar.component.scss']
+  styleUrls: ['./navbar.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class NavbarComponent implements OnInit, OnDestroy {
   menuOpen = false;
   isScrolled = false;
+  showNavbar = true;
+  scrollPercentage = 0;
+  showProgressBar = false;
 
   // Location Selection state
   dropdownOpen = false;
@@ -53,6 +60,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
   showMapModal = false;
 
   private locationSub!: Subscription;
+  private scrollSub!: Subscription;
+  private routerSub!: Subscription;
 
   constructor(
     public auth: AuthService,
@@ -62,22 +71,41 @@ export class NavbarComponent implements OnInit, OnDestroy {
     public router: Router,
     private locationService: LocationService,
     private cdr: ChangeDetectorRef,
-    private zone: NgZone
+    private zone: NgZone,
+    private scrollService: ScrollService
   ) { }
 
   ngOnInit() {
     this.locationSub = this.locationService.activeLocation$.subscribe(loc => {
       this.activeLocation = loc;
+      this.cdr.markForCheck();
     });
     this.locationSub.add(
       this.locationService.isEstimated$.subscribe(est => {
         this.isLocationEstimated = est;
+        this.cdr.markForCheck();
       })
     );
 
-    // Register scroll event outside Angular's zone to prevent change detection on every scroll pixel
-    this.zone.runOutsideAngular(() => {
-      window.addEventListener('scroll', this.onScroll, { passive: true });
+    // Subscribe to ScrollService events
+    this.scrollSub = this.scrollService.isScrolled$.subscribe(scrolled => {
+      this.isScrolled = scrolled;
+      this.cdr.markForCheck();
+    });
+
+    this.scrollSub.add(
+      this.scrollService.scrollPercentage$.subscribe(pct => {
+        this.scrollPercentage = pct;
+        this.cdr.markForCheck();
+      })
+    );
+
+    // Track active route changes to show/hide reading progress bar
+    this.updateProgressBarVisibility(this.router.url);
+    this.routerSub = this.router.events.pipe(
+      filter(event => event instanceof NavigationEnd)
+    ).subscribe((event: any) => {
+      this.updateProgressBarVisibility(event.urlAfterRedirects || event.url);
     });
   }
 
@@ -85,18 +113,19 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.locationSub) {
       this.locationSub.unsubscribe();
     }
-    window.removeEventListener('scroll', this.onScroll);
+    if (this.scrollSub) {
+      this.scrollSub.unsubscribe();
+    }
+    if (this.routerSub) {
+      this.routerSub.unsubscribe();
+    }
   }
 
-  private onScroll = () => {
-    const scrolled = window.scrollY > 20;
-    if (scrolled !== this.isScrolled) {
-      this.zone.run(() => {
-        this.isScrolled = scrolled;
-        this.cdr.markForCheck();
-      });
-    }
-  };
+  private updateProgressBarVisibility(url: string) {
+    this.showProgressBar = url.includes('/laws/') || url.includes('/lawyers/');
+    this.cdr.markForCheck();
+  }
+
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
@@ -104,6 +133,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       const target = event.target as HTMLElement;
       if (!target.closest('.location-selector-container')) {
         this.dropdownOpen = false;
+        this.cdr.markForCheck();
       }
     }
   }
@@ -122,6 +152,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
   toggleLocationDropdown(event: Event) {
     event.stopPropagation();
     this.dropdownOpen = !this.dropdownOpen;
+    this.cdr.markForCheck();
     if (this.dropdownOpen) {
       setTimeout(() => {
         this.initNavbarAutocomplete();
@@ -202,6 +233,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.dropdownOpen = false;
     this.isDetecting = true;
     this.detectingText = 'Detecting...';
+    this.cdr.markForCheck();
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
@@ -302,10 +334,12 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (event) event.stopPropagation();
     this.dropdownOpen = false;
     this.showMapModal = true;
+    this.cdr.markForCheck();
   }
 
   closeMapModal() {
     this.showMapModal = false;
+    this.cdr.markForCheck();
   }
 
   onMapLocationConfirmed(address: string) {
@@ -314,6 +348,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const clean = this.locationService.cleanAddress(address);
     const displayAddress = clean.length > 20 ? clean.substring(0, 17) + '...' : clean;
     this.snackbar.show(`Location set to ${displayAddress}`, 'success');
+    this.cdr.markForCheck();
   }
 
   getLocationTooltip(): string {
@@ -332,11 +367,15 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return this.locationService.cleanAddress(loc);
   }
 
-  toggleMenu() { this.menuOpen = !this.menuOpen; }
+  toggleMenu() { 
+    this.menuOpen = !this.menuOpen; 
+    this.cdr.markForCheck();
+  }
 
   logout() {
     this.auth.logout().subscribe();
     this.snackbar.show('Logged out successfully. See you soon!', 'info');
     this.menuOpen = false;
+    this.cdr.markForCheck();
   }
 }

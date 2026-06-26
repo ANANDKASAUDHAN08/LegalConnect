@@ -21,17 +21,20 @@ export class FormattingService {
         cleanedLines.push(currentLine);
       } else {
         const prevLine = cleanedLines[cleanedLines.length - 1];
+        const lastNonEmptyLine = [...cleanedLines].reverse().find(l => l !== '') || '';
+        const endsWithSentencePunctuation = /[.!?।’”\]\)]\s*$/.test(lastNonEmptyLine);
+        const startsWithLowercase = /^[a-z]/.test(currentLine);
 
-        // Decide if we start a new paragraph/line:
-        // 1. If previous line was empty.
-        // 2. If current line starts with (a), (1), etc.
-        // 3. If current line starts with Explanation, Illustrations, etc.
-        // 4. If current line starts with First.—, Secondly.—, etc.
+        const isListIndicator = /^\([a-z0-9]+\)/i.test(currentLine) || /^\d+\./.test(currentLine);
+        const isContinuation = !isListIndicator && (startsWithLowercase || (lastNonEmptyLine && !endsWithSentencePunctuation));
+
         const isNewParagraph =
-          prevLine === '' ||
-          /^\([a-z0-9]\)/i.test(currentLine) ||
-          /^(Explanation|Illustration|Exception|Proviso)/i.test(currentLine) ||
-          /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth)(ly)?\b/i.test(currentLine);
+          !isContinuation && (
+            prevLine === '' ||
+            /^\([a-z0-9]\)/i.test(currentLine) ||
+            /^(?:\d+\[)?\s*(Explanation|Illustration|Exception|Proviso|स्पष्टीकरण|दृष्टांत|उदाहरण|उद्देश्य)/i.test(currentLine) ||
+            /^(First|Second|Third|Fourth|Fifth|Sixth|Seventh|Eighth|Ninth|Tenth)(ly)?\b/i.test(currentLine)
+          );
 
         if (isNewParagraph) {
           if (prevLine === '') {
@@ -40,7 +43,12 @@ export class FormattingService {
             cleanedLines.push(currentLine);
           }
         } else {
-          cleanedLines[cleanedLines.length - 1] = (prevLine + ' ' + currentLine).replace(/\s+/g, ' ');
+          const lastIdx = cleanedLines.lastIndexOf(lastNonEmptyLine);
+          if (lastIdx !== -1) {
+            cleanedLines[lastIdx] = (lastNonEmptyLine + ' ' + currentLine).replace(/\s+/g, ' ');
+          } else {
+            cleanedLines.push(currentLine);
+          }
         }
       }
     }
@@ -71,28 +79,47 @@ export class FormattingService {
       const stripped = p.replace(/<[^>]+>/g, '').trim();
       if (!stripped) return '';
 
-      // 1. Explanation Block
-      if (/^Explanation/i.test(stripped)) {
-        let sepIdx = p.indexOf('.—');
-        if (sepIdx === -1) sepIdx = p.indexOf(':');
-
-        if (sepIdx !== -1) {
-          const header = p.substring(0, sepIdx + 2).trim();
-          const body = p.substring(sepIdx + 2).trim();
-          return `<div class="my-3 pl-3.5 border-l-2 border-amber-500 dark:border-amber-400 bg-amber-500/[0.02] py-1 rounded-r-lg">
-            <span class="block text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider mb-1 select-none">${header}</span>
-            <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${body}</div>
-          </div>`;
-        } else {
-          return `<div class="my-3 pl-3.5 border-l-2 border-amber-500 dark:border-amber-400 bg-amber-500/[0.02] py-1 rounded-r-lg">
-            <div class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${p}</div>
-          </div>`;
+      // 0. Footnote Block
+      if (/^\[Footnote:/i.test(stripped) || /^Footnote:/i.test(stripped)) {
+        let footnoteContent = stripped;
+        const footnoteMatch = stripped.match(/^\[Footnote:\s*([\s\S]+)\]$/i);
+        if (footnoteMatch) {
+          footnoteContent = footnoteMatch[1].trim();
+        } else if (stripped.startsWith('[') && stripped.endsWith(']')) {
+          footnoteContent = stripped.substring(1, stripped.length - 1).trim();
+          if (footnoteContent.toLowerCase().startsWith('footnote:')) {
+            footnoteContent = footnoteContent.substring(9).trim();
+          }
+        } else if (stripped.toLowerCase().startsWith('footnote:')) {
+          footnoteContent = stripped.substring(9).trim();
         }
+
+        return `<div class="my-4 p-3.5 bg-slate-50/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/80 rounded-xl flex items-start gap-2.5 shadow-sm text-left">
+          <svg class="w-4 h-4 text-indigo-500 dark:text-indigo-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div class="flex-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-sans">
+            <span class="font-black text-[10px] text-slate-655 dark:text-slate-350 uppercase tracking-widest block mb-1 select-none">Footnote / Commencement Info</span>
+            <span class="font-medium">${footnoteContent}</span>
+          </div>
+        </div>`;
+      }
+
+      // 1. Explanation Block
+      if (/^(?:\d+\[)?\s*(?:Explanation|स्पष्टीकरण)\b/i.test(stripped)) {
+        return `<div class="my-3 p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-left">
+          <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div class="flex-1 text-[13px] sm:text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+            ${p}
+          </div>
+        </div>`;
       }
 
       // 2. Illustrations Title
       if (/^Illustrations?\.?$/i.test(stripped)) {
-        return `<h6 class="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mt-4 mb-2 flex items-center gap-1.5 select-none">
+        return `<h6 class="text-[11px] font-bold text-indigo-500 dark:text-indigo-400 uppercase tracking-wider mt-4 mb-2 flex items-center gap-1.5 select-none text-left">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
           </svg>
@@ -101,14 +128,14 @@ export class FormattingService {
       }
 
       // 3. Illustration ListItem (a), (b), etc.
-      const illusMatch = p.match(/^(\s*(?:<[^>]+>)*\s*)\(([a-z])\)\s*(.*)$/i);
+      const illusMatch = p.match(/^(\s*(?:<[^>]+>)*\s*)\(([a-z]+)\)\s*(.*)$/i);
       if (illusMatch) {
         const prefixHtml = illusMatch[1];
         const letter = illusMatch[2];
         const body = illusMatch[3];
-        return `<div class="flex items-start gap-2 pl-3.5 my-2 border-l border-slate-200 dark:border-white/5 py-0.5">
+        return `<div class="flex items-start gap-2 pl-3.5 my-2 border-l border-slate-200 dark:border-white/5 py-0.5 text-left">
           <span class="text-xs font-bold text-indigo-500/70 dark:text-indigo-400/60 select-none min-w-[20px] mt-0.5">${prefixHtml}(${letter})</span>
-          <div class="flex-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">${body}</div>
+          <div class="flex-1 text-sm text-slate-655 dark:text-slate-300 leading-relaxed font-medium">${body}</div>
         </div>`;
       }
 
@@ -118,14 +145,14 @@ export class FormattingService {
         const prefixHtml = clauseMatch[1];
         const num = clauseMatch[2];
         const body = clauseMatch[3];
-        return `<div class="flex items-start gap-2 my-2.5">
+        return `<div class="flex items-start gap-2 my-2.5 text-left">
           <span class="text-xs font-extrabold text-[hsl(35,92%,47%)] select-none min-w-[22px] mt-0.5">${prefixHtml}(${num})</span>
-          <div class="flex-1 text-sm text-slate-700 dark:text-slate-200 leading-relaxed">${body}</div>
+          <div class="flex-1 text-[inherit] text-slate-700 dark:text-slate-200 leading-relaxed font-medium">${body}</div>
         </div>`;
       }
 
       // 5. Normal Paragraph
-      return `<p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed my-2">${p}</p>`;
+      return `<p class="text-[inherit] text-slate-600 dark:text-slate-300 leading-relaxed my-2 text-left">${p}</p>`;
     });
 
     return processed.filter(Boolean).join('\n');
@@ -235,6 +262,107 @@ export class FormattingService {
     }
 
     return formattedLines.join('\n');
+  }
+
+  getAmendmentTimeline(content: string, actName: string, actYear?: number): { label: string; details: string; year?: number }[] {
+    if (!content) return [];
+    const timeline: { label: string; details: string; year?: number }[] = [];
+
+    let finalActName = actName;
+    let finalActYear = actYear;
+
+    const actLookup: { [key: string]: { name: string; year: number } } = {
+      'bns': { name: 'Bharatiya Nyaya Sanhita', year: 2023 },
+      'bnss': { name: 'Bharatiya Nagarik Suraksha Sanhita', year: 2023 },
+      'bsa': { name: 'Bharatiya Sakshya Adhiniyam', year: 2023 },
+      'ipc': { name: 'Indian Penal Code', year: 1860 },
+      'crpc': { name: 'Code of Criminal Procedure', year: 1973 },
+      'iea': { name: 'Indian Evidence Act', year: 1872 },
+      'cpc': { name: 'Code of Civil Procedure', year: 1908 },
+      'mva': { name: 'Motor Vehicles Act', year: 1988 },
+      'nia': { name: 'Negotiable Instruments Act', year: 1881 },
+      'hma': { name: 'Hindu Marriage Act', year: 1955 },
+      'ida': { name: 'Industrial Disputes Act', year: 1947 },
+      'constitution': { name: 'Constitution of India', year: 1950 }
+    };
+
+    const cleanKey = actName.trim().toLowerCase();
+    if (actLookup[cleanKey]) {
+      finalActName = actLookup[cleanKey].name;
+      if (finalActYear === undefined) {
+        finalActYear = actLookup[cleanKey].year;
+      }
+    }
+
+    // 1. Match inline amendments, e.g. 1 [two thousand...] or 1[two thousand...]
+    const inlineRegex = /(\d+)\s*\[([^\]\n]+)\]/g;
+    let match;
+    inlineRegex.lastIndex = 0;
+    while ((match = inlineRegex.exec(content)) !== null) {
+      const num = match[1];
+      const text = match[2];
+
+      const yearMatch = text.match(/\b(19\d{2}|20\d{2})\b/);
+      const hasYear = !!yearMatch;
+      const hasKeywords = /\b(sub|ins|amend|w\.e\.f|omit|repeal|substituted|inserted|with\s+effect\s+from|act)\b/i.test(text);
+      if (!hasYear && !hasKeywords) {
+        continue;
+      }
+
+      let year: number | undefined;
+      if (yearMatch) {
+        year = parseInt(yearMatch[1], 10);
+      }
+
+      timeline.push({
+        label: `Amendment Reference [${num}]`,
+        details: text.trim(),
+        year
+      });
+    }
+
+    // 2. Match footnote block at bottom, e.g. [Footnote: ...]
+    const footnoteBlockRegex = /\[Footnote:\s*([\s\S]+?)\]/gi;
+    let fnMatch;
+    footnoteBlockRegex.lastIndex = 0;
+    while ((fnMatch = footnoteBlockRegex.exec(content)) !== null) {
+      const text = fnMatch[1];
+
+      const yearMatch = text.match(/\b(19\d{2}|20\d{2})\b/);
+      const hasYear = !!yearMatch;
+      const hasKeywords = /\b(sub|ins|amend|w\.e\.f|omit|repeal|substituted|inserted|with\s+effect\s+from|act)\b/i.test(text);
+      if (!hasYear && !hasKeywords) {
+        continue;
+      }
+
+      let year: number | undefined;
+      if (yearMatch) {
+        year = parseInt(yearMatch[1], 10);
+      }
+
+      timeline.push({
+        label: 'Footnote Notification',
+        details: text.trim(),
+        year
+      });
+    }
+
+    if (timeline.length > 0 && finalActName) {
+      timeline.unshift({
+        label: 'Original Enactment',
+        details: `Enacted under ${finalActName}`,
+        year: finalActYear
+      });
+
+      timeline.sort((a, b) => {
+        if (a.year && b.year) return a.year - b.year;
+        if (a.year) return -1;
+        if (b.year) return 1;
+        return 0;
+      });
+    }
+
+    return timeline;
   }
 
   escapeHtml(str: string): string {

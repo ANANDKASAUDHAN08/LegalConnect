@@ -144,7 +144,15 @@ export class BookmarkService {
     }
   }
 
-  updateBookmarkMetadata(actShortName: string, sectionNumber: string, notes?: string, collectionName?: string, silent = false) {
+  updateBookmarkMetadata(
+    actShortName: string, 
+    sectionNumber: string, 
+    notes?: string, 
+    collectionName?: string, 
+    silent = false,
+    onSuccess?: () => void,
+    onError?: () => void
+  ) {
     const payload = { notes, collectionName };
     if (this.isLoggedIn) {
       this.http.put<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, payload, { withCredentials: true }).subscribe({
@@ -164,11 +172,13 @@ export class BookmarkService {
           if (!silent) {
             this.snackbar.show('Section notes updated successfully.', 'success');
           }
+          if (onSuccess) onSuccess();
         },
         error: () => {
           if (!silent) {
             this.snackbar.show('Failed to update section notes.', 'error');
           }
+          if (onError) onError();
         }
       });
     } else {
@@ -186,6 +196,7 @@ export class BookmarkService {
       if (!silent) {
         this.snackbar.show('Section notes updated locally.', 'success');
       }
+      if (onSuccess) onSuccess();
     }
   }
 

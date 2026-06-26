@@ -1,44 +1,39 @@
 <!-- Backdrop Overlay -->
-<div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[999] transition-opacity duration-300 md:hidden"
+<div class="fixed inset-0 bg-slate-900/45 z-[1400] transition-opacity duration-300 md:hidden"
   [class.opacity-100]="isOpen" [class.pointer-events-auto]="isOpen" [class.opacity-0]="!isOpen"
   [class.pointer-events-none]="!isOpen" (click)="onClose()"></div>
 
-<!-- Slide-in Navigation Drawer -->
+<!-- Slide-in Navigation Drawer (Curved left-edge & Glassmorphic) -->
 <div
-  class="fixed top-0 right-0 bottom-0 w-[320px] max-w-[85vw] shadow-2xl z-[1000] flex flex-col transition-transform duration-300 ease-out md:hidden border-l border-slate-100 dark:border-slate-800/80 mobile-drawer-panel"
+  class="fixed top-0 right-0 bottom-0 w-[320px] max-w-[85vw] shadow-2xl z-[1600] flex flex-col transition-transform duration-300 ease-out md:hidden border-l border-slate-200/40 dark:border-slate-800/40 mobile-drawer-panel overflow-hidden"
   [class.translate-x-0]="isOpen" [class.translate-x-full]="!isOpen">
 
-  <!-- Drawer Header -->
-  <div class="p-5 flex items-center justify-between border-b border-slate-100 dark:border-slate-800/60">
-    <a routerLink="/" class="flex items-center gap-2.5 no-underline" (click)="onClose()">
-      <!-- Brand SVG Logo (Scale & Network Fusion) -->
-      <svg viewBox="0 0 24 24" fill="none" class="w-8 h-8 flex-shrink-0" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <linearGradient id="mobile-logo-grad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stop-color="#3b82f6" />
-            <stop offset="100%" stop-color="#4f46e5" />
-          </linearGradient>
-        </defs>
-        <path d="M12 5v14M9 19h6" stroke="url(#mobile-logo-grad)" stroke-width="2" stroke-linecap="round" />
-        <path d="M6 8h12" stroke="url(#mobile-logo-grad)" stroke-width="2" stroke-linecap="round" />
-        <path d="M6 8l-2 5M6 8l2 5M3 13c0 2 6 2 6 0" stroke="url(#mobile-logo-grad)" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round" />
-        <path d="M18 8l-2 5M18 8l2 5M15 13c0 2 6 2 6 0" stroke="url(#mobile-logo-grad)" stroke-width="1.5"
-          stroke-linecap="round" stroke-linejoin="round" />
-        <circle cx="12" cy="11" r="2.5" fill="#4f46e5" class="animate-pulse" />
+  <!-- Drawer Header Banner -->
+  <div
+    class="px-5 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-700 text-white flex items-center justify-between rounded-b-lg shadow-md border-0 z-10 flex-shrink-0">
+    <a routerLink="/" class="flex items-center gap-2.5 no-underline text-white" (click)="onClose()">
+      <!-- Brand SVG Logo (Scale & Network Fusion - Styled in White for high contrast) -->
+      <svg viewBox="0 0 24 24" fill="none" class="w-7 h-7 flex-shrink-0 stroke-current text-white"
+        xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 5v14M9 19h6" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M6 8h12" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M6 8l-2 5M6 8l2 5M3 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <path d="M18 8l-2 5M18 8l2 5M15 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+          stroke-linejoin="round" />
+        <circle cx="12" cy="11" r="2.5" fill="#ffffff" class="animate-pulse" />
       </svg>
       <div class="flex flex-col">
-        <span
-          class="text-base font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">LegalConnect</span>
-        <span class="text-[0.62rem] text-slate-400 font-medium">Legal help, simplified.</span>
+        <span class="text-base font-extrabold tracking-tight leading-tight text-white">LegalConnect</span>
+        <span class="text-[0.62rem] text-blue-100 font-medium opacity-85">Legal help, simplified.</span>
       </div>
     </a>
 
-    <!-- Actions Group -->
-    <div class="flex items-center gap-1 flex-shrink-0">
+    <!-- Header Actions Group -->
+    <div class="flex items-center gap-1.5 flex-shrink-0">
       <!-- Theme Quick Toggle inside Drawer -->
       <button
-        class="p-0 rounded-full text-slate-500 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center w-9 h-9 transition-colors"
+        class="w-9 h-9 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition-all border-0 cursor-pointer hover:rotate-45 duration-300"
         (click)="themeService.toggleTheme()" aria-label="Toggle Theme">
         <svg *ngIf="themeService.isDarkMode()" xmlns="http://www.w3.org/2000/svg" width="18" height="18"
           viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
@@ -62,7 +57,7 @@
 
       <!-- Close Button -->
       <button (click)="onClose()"
-        class="p-0 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+        class="w-9 h-9 rounded-full hover:bg-white/20 text-white transition-all border-0 cursor-pointer flex items-center justify-center"
         aria-label="Close menu">
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
@@ -74,218 +69,394 @@
   </div>
 
   <!-- Drawer Body -->
-  <div class="flex-grow overflow-y-auto px-6 py-4 flex flex-col justify-between">
+  <div class="flex-grow overflow-y-auto flex flex-col justify-between scrollbar-none">
 
     <!-- Navigation Sections -->
-    <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col">
 
-      <!-- Mobile Location Picker -->
-      <div class="mb-4 pb-4 border-b border-slate-100 dark:border-slate-800/60">
-        <p class="text-[0.68rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2.5">Your
-          Location</p>
-        <button (click)="openMobileLocation()"
-          class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-55/40 dark:bg-slate-900/60 hover:border-blue-500 dark:hover:border-blue-500/50 transition-all text-left cursor-pointer">
-          <div class="flex items-center gap-2.5 min-w-0">
-            <span
-              class="w-7 h-7 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center flex-shrink-0">
-              <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2.5" class="text-blue-600 dark:text-blue-400">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
-            </span>
-            <div class="flex flex-col min-w-0">
-              <span
-                class="text-[0.62rem] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider leading-none mb-0.5">TO:</span>
-              <span class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-none"
-                [appTooltip]="activeLocation" tooltipPlacement="top">{{ truncateLocation(activeLocation) }}</span>
+      <!-- Logged In User Quick Profile Row (HealthConnect Inspired) -->
+      <a *ngIf="(auth.isLoggedIn$ | async)" routerLink="/profile" (click)="onClose()"
+        class="flex items-center justify-between px-5 py-2 hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition-all duration-200 no-underline active:scale-[0.99] group">
+        <div class="flex items-center gap-3.5">
+          <!-- User Profile Avatar Image / Initials -->
+          <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-sm relative">
+            <img *ngIf="(auth.currentUser$ | async)?.avatarUrl as avatarUrl"
+              [src]="avatarUrl"
+              (error)="handleImageError()"
+              [class.hidden]="avatarImageFailed"
+              alt="Profile Picture"
+              class="w-full h-full object-cover" />
+            <div *ngIf="!(auth.currentUser$ | async)?.avatarUrl || avatarImageFailed"
+              class="w-full h-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold text-sm">
+              {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
             </div>
           </div>
-          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" class="text-slate-400 dark:text-slate-500">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Home -->
-      <a routerLink="/" routerLinkActive="active-mobile" [routerLinkActiveOptions]="{exact: true}"
-        class="mobile-main-link" (click)="onClose()">
-        Home
-      </a>
-
-      <!-- Find Help -->
-      <a routerLink="/find-help" routerLinkActive="active-mobile" class="mobile-main-link mobile-find-help-link"
-        (click)="onClose()">
-        <svg viewBox="0 0 24 24" fill="none" class="w-5 h-5 mr-3 stroke-current flex-shrink-0" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <circle cx="12" cy="12" r="4" />
-          <path d="M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24" />
-        </svg>
-        <span>Find Help</span>
-      </a>
-
-      <!-- Find Lawyers (Only for guest or Client) -->
-      <a *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'" routerLink="/lawyers"
-        routerLinkActive="active-mobile" class="mobile-main-link" (click)="onClose()">
-        Find Lawyers
-      </a>
-
-      <!-- Browse Practice Areas -->
-      <a *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'" routerLink="/specializations"
-        routerLinkActive="active-mobile" class="mobile-main-link" (click)="onClose()">
-        Practice Areas
-      </a>
-
-      <!-- Legal Resources Accordion -->
-      <div class="border-b border-slate-50 dark:border-slate-800/20 py-1">
-        <button (click)="toggleSection('resources')"
-          class="w-full flex items-center justify-between py-3 text-[1rem] font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-transparent border-0 text-left">
-          <span>Legal Resources</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-            class="transition-transform duration-200 text-slate-400" [class.rotate-180]="resourcesExpanded">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <div class="overflow-hidden transition-all duration-300" [style.max-height]="resourcesExpanded ? '200px' : '0'">
-          <div class="pl-4 pb-2 flex flex-col gap-2.5">
-            <a routerLink="/laws" class="mobile-sub-link" (click)="onClose()">Browse Laws</a>
-            <a routerLink="/laws/templates" class="mobile-sub-link" (click)="onClose()">Document Templates</a>
-            <a routerLink="/laws" class="mobile-sub-link" (click)="onClose()">Rights & FAQs</a>
-          </div>
-        </div>
-      </div>
-
-      <!-- For Lawyers Accordion (Only for guest) -->
-      <div *ngIf="!(auth.isLoggedIn$ | async)" class="border-b border-slate-50 dark:border-slate-800/20 py-1">
-        <button (click)="toggleSection('professionals')"
-          class="w-full flex items-center justify-between py-3 text-[1rem] font-bold text-slate-700 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors bg-transparent border-0 text-left">
-          <span>For Lawyers</span>
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-            class="transition-transform duration-200 text-slate-400" [class.rotate-180]="professionalsExpanded">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-        </button>
-        <div class="overflow-hidden transition-all duration-300"
-          [style.max-height]="professionalsExpanded ? '200px' : '0'">
-          <div class="pl-4 pb-2 flex flex-col gap-2.5">
-            <a routerLink="/register" [queryParams]="{role: 'lawyer'}" class="mobile-sub-link" (click)="onClose()">Join
-              as a Lawyer</a>
-            <a routerLink="/" class="mobile-sub-link" (click)="onClose()">Success Stories</a>
-            <a routerLink="/" class="mobile-sub-link" (click)="onClose()">Membership Plans</a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Bottom Actions (Auth) -->
-    <div class="mt-8 flex flex-col gap-4">
-
-      <!-- Auth CTAs -->
-      <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestCtas">
-        <!-- Logged In User Quick Profile Card -->
-        <div
-          class="flex items-center gap-3 p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-100 dark:border-slate-800/30 mb-2">
-          <div
-            class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-sm">
-            {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
-          </div>
           <div class="flex flex-col min-w-0">
-            <span class="text-[0.92rem] font-bold text-slate-800 dark:text-slate-100 truncate">
+            <span class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
               {{ (auth.currentUser$ | async)?.fullName }}
             </span>
-            <span class="text-[0.75rem] text-slate-400 truncate">
-              {{ (auth.currentUser$ | async)?.email }}
+            <span
+              class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1 leading-none">
+              {{ (auth.currentUser$ | async)?.role }}
             </span>
           </div>
         </div>
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5"
+          class="text-slate-300 dark:text-slate-600 flex-shrink-0 transition-transform duration-200 group-hover:translate-x-1">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </a>
+      <div *ngIf="(auth.isLoggedIn$ | async)" class="h-px bg-slate-100 dark:bg-slate-800/40 w-full"></div>
 
-        <!-- Client options -->
-        <ng-container *ngIf="(auth.currentUser$ | async)?.role !== 'Lawyer'">
-          <a routerLink="/client/portal" class="mobile-main-link flex items-center gap-3" (click)="onClose()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7"></rect>
-              <rect x="14" y="3" width="7" height="7"></rect>
-              <rect x="14" y="14" width="7" height="7"></rect>
-              <rect x="3" y="14" width="7" height="7"></rect>
+      <!-- CATEGORY 1: NAVIGATION -->
+      <div class="mb-2">
+        <p
+          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
+          Navigation
+        </p>
+        <div class="flex flex-col">
+          <!-- Home -->
+          <a routerLink="/home" routerLinkActive="active-mobile" [routerLinkActiveOptions]="{exact: true}"
+            class="mobile-main-link group stagger-1" (click)="onClose()">
+            <span class="link-icon-container text-blue-600 dark:text-blue-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+            </span>
+            <span class="font-bold">Home</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-            My Library
           </a>
-        </ng-container>
 
-        <!-- Lawyer options -->
-        <ng-container *ngIf="(auth.currentUser$ | async)?.role === 'Lawyer'">
-          <a routerLink="/lawyer/workstation" class="mobile-main-link flex items-center gap-3" (click)="onClose()">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="9"></rect>
-              <rect x="14" y="3" width="7" height="5"></rect>
-              <rect x="14" y="12" width="7" height="9"></rect>
-              <rect x="3" y="16" width="7" height="5"></rect>
+          <!-- Find Help (SOS) -->
+          <a routerLink="/find-help" routerLinkActive="active-mobile" class="mobile-main-link group stagger-2"
+            (click)="onClose()">
+            <span class="link-icon-container text-red-650 dark:text-red-400">
+              <svg viewBox="0 0 24 24" fill="none"
+                class="w-5 h-5 stroke-current group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <circle cx="12" cy="12" r="4" />
+                <path d="M4.93 4.93l4.24 4.24M14.83 14.83l4.24 4.24M14.83 9.17l4.24-4.24M4.93 19.07l4.24-4.24" />
+              </svg>
+            </span>
+            <span class="font-bold text-red-650 dark:text-red-450">Find Emergency Help</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
-            Advocate Workspace
           </a>
-        </ng-container>
-        <a routerLink="/profile" class="mobile-main-link flex items-center gap-3" (click)="onClose()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          Profile
-        </a>
-        <a routerLink="/settings" class="mobile-main-link flex items-center gap-3" (click)="onClose()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path
-              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
-            </path>
-          </svg>
-          Settings
-        </a>
-        <a routerLink="/notifications" class="mobile-main-link flex items-center gap-3 relative" (click)="onClose()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-          Alerts
-          <span *ngIf="notificationService.followedCount() as count"
-            class="absolute left-6 top-1 w-2.5 h-2.5 bg-blue-600 border-2 border-white dark:border-slate-950 rounded-full"></span>
-        </a>
 
-        <button
-          class="w-full flex items-center justify-center gap-2 py-3 border border-red-200 dark:border-red-950/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/10 hover:bg-red-100/50 dark:hover:bg-red-950/20 font-bold rounded-xl transition-colors cursor-pointer text-[0.95rem] mt-4"
-          (click)="logout()">
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-          Sign Out
-        </button>
-      </ng-container>
-
-      <ng-template #guestCtas>
-        <div class="flex flex-col gap-2">
-          <a routerLink="/login"
-            class="flex items-center justify-center py-3 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-50 dark:hover:bg-slate-900 font-bold rounded-xl transition-all cursor-pointer text-[0.95rem] no-underline"
+          <!-- Find Lawyers (Only for guest or Client) -->
+          <a *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'"
+            routerLink="/lawyers" routerLinkActive="active-mobile" class="mobile-main-link group stagger-3"
             (click)="onClose()">
-            Login
+            <span class="link-icon-container text-indigo-600 dark:text-indigo-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </span>
+            <span class="font-bold">Find Lawyers</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </a>
-          <a routerLink="/register"
-            class="flex items-center justify-center py-3 border border-transparent bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-xl transition-all cursor-pointer text-[0.95rem] no-underline shadow-[0_4px_12px_rgba(79,70,229,0.25)] active:scale-[0.99]"
+
+          <!-- Browse Practice Areas -->
+          <a *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'"
+            routerLink="/specializations" routerLinkActive="active-mobile" class="mobile-main-link group stagger-4"
             (click)="onClose()">
-            Get Started
+            <span class="link-icon-container text-amber-500 dark:text-amber-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </span>
+            <span class="font-bold">Practice Areas</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
           </a>
         </div>
-      </ng-template>
+      </div>
+      <div class="h-px bg-slate-100 dark:bg-slate-800/40 w-full"></div>
+
+      <!-- CATEGORY 2: LEGAL RESOURCES -->
+      <div class="mb-2">
+        <p
+          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
+          Legal Resources
+        </p>
+        <div class="flex flex-col">
+          <!-- Browse Laws & Acts -->
+          <a routerLink="/laws" [class.active-mobile]="isLawsRouteActive()" class="mobile-main-link group stagger-5"
+            (click)="onClose()">
+            <span class="link-icon-container text-emerald-600 dark:text-emerald-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </span>
+            <span class="font-bold"> Browse Laws & Acts </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+
+          <!-- Document Templates -->
+          <a routerLink="/laws/templates" routerLinkActive="active-mobile" class="mobile-main-link group stagger-6"
+            (click)="onClose()">
+            <span class="link-icon-container text-violet-600 dark:text-violet-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+            </span>
+            <span class="font-bold">Document Templates</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+
+          <!-- Rights & FAQs -->
+          <a routerLink="/laws" [queryParams]="{tab: 'faq'}" routerLinkActive="active-mobile"
+            class="mobile-main-link group stagger-7" (click)="onClose()">
+            <span class="link-icon-container text-pink-600 dark:text-pink-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </span>
+            <span class="font-bold">Rights & FAQs</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+        </div>
+      </div>
+      <div class="h-px bg-slate-100 dark:bg-slate-800/40 w-full"></div>
+
+      <!-- CATEGORY 3: FOR LAWYERS (Guest only) -->
+      <div class="mb-2" *ngIf="!(auth.isLoggedIn$ | async)">
+        <p
+          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
+          For Lawyers
+        </p>
+        <div class="flex flex-col">
+          <!-- Join as a Lawyer -->
+          <a routerLink="/register" [queryParams]="{role: 'lawyer'}" routerLinkActive="active-mobile"
+            class="mobile-main-link group stagger-8" (click)="onClose()">
+            <span class="link-icon-container text-teal-600 dark:text-teal-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <polyline points="16 11 18 13 22 9"></polyline>
+              </svg>
+            </span>
+            <span class="font-bold">Join as a Lawyer</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+
+          <!-- Membership Plans -->
+          <a routerLink="/" routerLinkActive="active-mobile" class="mobile-main-link group stagger-9"
+            (click)="onClose()">
+            <span class="link-icon-container text-purple-600 dark:text-purple-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <circle cx="12" cy="8" r="7"></circle>
+                <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+              </svg>
+            </span>
+            <span class="font-bold">Membership Plans</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- CATEGORY 4: MY ACCOUNT (Logged in only) -->
+      <div class="mb-2" *ngIf="(auth.isLoggedIn$ | async)">
+        <p
+          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
+          My Account
+        </p>
+        <div class="flex flex-col">
+          <!-- Library / Workspace -->
+          <ng-container *ngIf="(auth.currentUser$ | async) as user">
+            <a [routerLink]="user.role === 'Lawyer' ? '/lawyer/workstation' : '/client/portal'"
+              routerLinkActive="active-mobile" class="mobile-main-link group" (click)="onClose()">
+              <span class="link-icon-container text-emerald-600 dark:text-emerald-400">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5"
+                  class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                  <rect x="3" y="3" width="7" height="9"></rect>
+                  <rect x="14" y="3" width="7" height="5"></rect>
+                  <rect x="14" y="12" width="7" height="9"></rect>
+                  <rect x="3" y="16" width="7" height="5"></rect>
+                </svg>
+              </span>
+              <span class="font-bold">{{ user.role === 'Lawyer' ? 'My Workspace' : 'My Library' }}</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5"
+                class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+            </a>
+          </ng-container>
+
+          <!-- Profile -->
+          <a routerLink="/profile" routerLinkActive="active-mobile" class="mobile-main-link group" (click)="onClose()">
+            <span class="link-icon-container text-indigo-600 dark:text-indigo-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
+            <span class="font-bold">Profile Settings</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+
+          <!-- Settings -->
+          <a routerLink="/settings" routerLinkActive="active-mobile" class="mobile-main-link group" (click)="onClose()">
+            <span class="link-icon-container text-slate-500 dark:text-slate-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                </path>
+              </svg>
+            </span>
+            <span class="font-bold">Preferences</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+
+          <!-- Alerts / Notifications -->
+          <a routerLink="/notifications" routerLinkActive="active-mobile" class="mobile-main-link group relative"
+            (click)="onClose()">
+            <span class="link-icon-container text-rose-600 dark:text-rose-450">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </span>
+            <span class="font-bold">Alerts & Notifications</span>
+            <span *ngIf="notificationService.followedCount() as count"
+              class="ml-auto bg-rose-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none shadow-sm flex items-center justify-center animate-pulse mr-2">
+              {{ count }}
+            </span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </a>
+        </div>
+      </div>
+
     </div>
+
+    <!-- Bottom Action Buttons and Connection Info -->
+    <div class="mt-2 flex flex-col flex-shrink-0">
+      <div class="border-t border-slate-100 dark:border-slate-800/40 px-5 pt-2 pb-2">
+        <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
+          <button
+            class="w-full flex items-center justify-center gap-2.5 py-3 border border-red-200 dark:border-red-950/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/15 hover:bg-red-100/50 dark:hover:bg-red-950/25 font-extrabold rounded-xl transition-all cursor-pointer text-sm uppercase tracking-wider active:scale-[0.98]"
+            (click)="logout()">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+              class="text-red-650 dark:text-red-400">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Sign Out</span>
+          </button>
+        </ng-container>
+
+        <ng-template #guestActions>
+          <div class="flex flex-col gap-2.5">
+            <a routerLink="/login"
+              class="flex items-center justify-center py-3 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900/60 font-bold rounded-2xl transition-all cursor-pointer text-sm no-underline text-center"
+              (click)="onClose()">
+              Login
+            </a>
+            <a routerLink="/register"
+              class="flex items-center justify-center py-3 border border-transparent bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all cursor-pointer text-sm no-underline text-center shadow-[0_4px_14px_rgba(79,70,229,0.25)] active:scale-[0.98]"
+              (click)="onClose()">
+              Get Started
+            </a>
+          </div>
+        </ng-template>
+      </div>
+
+      <!-- Trust Footer -->
+      <div
+        class="px-5 py-3 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/10 border-t border-slate-100 dark:border-slate-800/20">
+        <span class="font-medium">Secure Server Connection</span>
+        <span class="flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-450">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>SSL Active</span>
+        </span>
+      </div>
+    </div>
+
   </div>
 </div>

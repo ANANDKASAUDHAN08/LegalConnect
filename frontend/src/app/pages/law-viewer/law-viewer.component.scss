@@ -5,6 +5,10 @@
   font-size: 1.05em;
   letter-spacing: 0.01em;
   line-height: 1.75;
+
+  p:first-of-type {
+    margin-top: 0 !important;
+  }
 }
 
 .speech-active {
@@ -205,5 +209,14 @@
   .fixed.bottom-24 {
     box-shadow: 0 12px 40px rgba(0, 0, 0, 0.25);
     border: 1px solid rgba(255, 255, 255, 0.12);
+  }
+
+  /* Mobile Float Navigation Drawer Trigger position transition */
+  .fixed.bottom-6.right-6 {
+    transition: bottom 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s ease;
+
+    &.bottom-nav-visible {
+      bottom: 80px;
+    }
   }
 }

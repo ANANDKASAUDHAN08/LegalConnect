@@ -1,6 +1,7 @@
 <nav
-  class="fixed top-0 left-0 right-0 z-[1000] py-3.5 bg-white/75 dark:bg-slate-950 border-b border-slate-200/40 dark:border-slate-800/40 shadow-sm navbar-fixed transition-[padding,background-color,box-shadow,border-color] duration-200"
-  [class.scrolled]="isScrolled">
+  class="fixed top-0 left-0 right-0 z-[1500] py-3.5 bg-white/75 dark:bg-slate-950 border-b border-slate-200/40 dark:border-slate-800/40 shadow-sm navbar-fixed transition-[padding,background-color,box-shadow,border-color,transform] duration-300 transform"
+  [class.scrolled]="isScrolled"
+  [class.-translate-y-full]="!showNavbar">
   <div class="max-w-[1440px] mx-auto px-6 flex justify-between items-center w-full relative">
 
     <!-- LEFT: Logo Block with Tagline + Location Pill -->
@@ -451,13 +452,19 @@
       </button>
     </div>
   </div>
+  <!-- Reading Progress Bar -->
+  <div *ngIf="showProgressBar" class="absolute bottom-0 left-0 h-[2.5px] bg-gradient-to-r from-blue-500 to-indigo-650 transition-all duration-100 ease-out" [style.width.%]="scrollPercentage"></div>
 </nav>
 
 <!-- Separate Mobile Menu Component (Option B) -->
 <app-mobile-menu [isOpen]="menuOpen" (closeMenu)="menuOpen = false"
   (openLocationSelector)="openMapModal()"></app-mobile-menu>
 
-<!-- Google Map Selector Modal -->
-<app-location-map-modal *ngIf="showMapModal" [initialCity]="activeLocation"
-  (locationConfirmed)="onMapLocationConfirmed($event)" (closed)="closeMapModal()">
-</app-location-map-modal>
+<!-- Google Map Selector Modal (deferred — loaded on demand, not in initial bundle) -->
+@defer (when showMapModal) {
+  @if (showMapModal) {
+    <app-location-map-modal [initialCity]="activeLocation"
+      (locationConfirmed)="onMapLocationConfirmed($event)" (closed)="closeMapModal()">
+    </app-location-map-modal>
+  }
+}

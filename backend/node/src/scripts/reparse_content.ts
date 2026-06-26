@@ -19,6 +19,17 @@ async function run() {
     const { cleanTitle, introText } = splitTitle(sec.title || '');
     const contentBlocks = getParsedContent(sec.content || '', introText);
     
+    // Sanitize required fields to prevent mongoose validation errors
+    if (!sec.chapterNumber || !sec.chapterNumber.trim()) {
+      sec.chapterNumber = '1';
+    }
+    if (!sec.title || !sec.title.trim()) {
+      sec.title = 'Untitled Section';
+    }
+    if (!sec.content || !sec.content.trim()) {
+      sec.content = 'No content available.';
+    }
+
     sec.clean_title = cleanTitle;
     sec.introduction_text = introText || undefined;
     sec.content_blocks = contentBlocks.map(b => ({ type: b.type, text: b.text }));

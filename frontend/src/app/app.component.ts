@@ -3,13 +3,14 @@ import { RouterOutlet } from '@angular/router';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { FooterComponent } from './components/footer/footer.component';
 import { SnackbarComponent } from './components/snackbar/snackbar.component';
+import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, NavbarComponent, FooterComponent, SnackbarComponent],
+  imports: [RouterOutlet, NavbarComponent, FooterComponent, SnackbarComponent, BottomNavComponent],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })

@@ -1,12 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Component, Input, Output, EventEmitter, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { AsyncPipe, NgClass, NgIf, UpperCasePipe } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ThemeService } from '../../services/theme.service';
 import { NotificationService } from '../../services/notification.service';
 import { SnackbarService } from '../../services/snackbar.service';
-import { LocationService } from '../../services/location.service';
-import { Subscription } from 'rxjs';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
@@ -14,37 +12,67 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
   standalone: true,
   imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective],
   templateUrl: './mobile-menu.component.html',
-  styleUrls: ['./mobile-menu.component.scss']
+  styleUrls: ['./mobile-menu.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class MobileMenuComponent implements OnInit, OnDestroy {
-  @Input() isOpen = false;
+export class MobileMenuComponent implements OnDestroy {
+  private _isOpen = false;
+  avatarImageFailed = false;
+
+  @Input()
+  set isOpen(val: boolean) {
+    this._isOpen = val;
+    if (typeof document !== 'undefined') {
+      if (val) {
+        document.body.classList.add('mobile-menu-open');
+        this.avatarImageFailed = false;
+
+        // Reset scroll position to top when drawer is opened
+        setTimeout(() => {
+          const scrollContainer = document.querySelector('.mobile-drawer-panel .overflow-y-auto');
+          if (scrollContainer) {
+            scrollContainer.scrollTop = 0;
+          }
+        }, 100); // 100ms delay matches the drawer opening transition
+      } else {
+        document.body.classList.remove('mobile-menu-open');
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  get isOpen(): boolean {
+    return this._isOpen;
+  }
+
   @Output() closeMenu = new EventEmitter<void>();
-  @Output() openLocationSelector = new EventEmitter<void>();
 
   // Collapsible sub-menus for Mobile accordion view
   resourcesExpanded = false;
   professionalsExpanded = false;
-
-  activeLocation = 'New Delhi';
-  private locationSub!: Subscription;
 
   constructor(
     public auth: AuthService,
     public themeService: ThemeService,
     public notificationService: NotificationService,
     private snackbar: SnackbarService,
-    private locationService: LocationService
+    public router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
-  ngOnInit() {
-    this.locationSub = this.locationService.activeLocation$.subscribe(loc => {
-      this.activeLocation = loc;
-    });
+  isLawsRouteActive(): boolean {
+    const url = this.router.url;
+    return url.startsWith('/laws') && !url.startsWith('/laws/templates') && !url.includes('tab=faq');
+  }
+
+  handleImageError() {
+    this.avatarImageFailed = true;
+    this.cdr.markForCheck();
   }
 
   ngOnDestroy() {
-    if (this.locationSub) {
-      this.locationSub.unsubscribe();
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('mobile-menu-open');
     }
   }
 
@@ -54,25 +82,16 @@ export class MobileMenuComponent implements OnInit, OnDestroy {
     } else if (section === 'professionals') {
       this.professionalsExpanded = !this.professionalsExpanded;
     }
+    this.cdr.markForCheck();
   }
 
   onClose() {
     this.closeMenu.emit();
   }
 
-  openMobileLocation() {
-    this.openLocationSelector.emit();
-    this.onClose();
-  }
-
   logout() {
     this.auth.logout().subscribe();
     this.snackbar.show('Logged out successfully. See you soon!', 'info');
     this.onClose();
-  }
-
-  truncateLocation(loc: string): string {
-    if (!loc) return '';
-    return loc.length > 20 ? loc.substring(0, 17) + '...' : loc;
   }
 }

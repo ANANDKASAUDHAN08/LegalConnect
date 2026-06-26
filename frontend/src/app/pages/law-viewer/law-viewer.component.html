@@ -1,12 +1,11 @@
 <div class="page-wrapper min-h-screen pt-[72px]">
   <!-- Full Page Skeleton Loader -->
-  <!-- Full Page Skeleton Loader -->
   <div *ngIf="loading" class="viewer-layout grid grid-cols-1 transition-all duration-300"
     [ngClass]="isSidebarCollapsed ? 'md:grid-cols-[72px,1fr] grid-cols-1' : 'md:grid-cols-[320px,1fr] grid-cols-1'">
 
     <!-- Left Sidebar Skeleton (Matches Sidebar) -->
     <aside
-      class="sidebar bg-surface-light dark:bg-surface-dark border-r border-border-subtle/40 p-6 flex flex-col gap-5 h-screen overflow-hidden select-none transition-all duration-300"
+      class="sidebar bg-surface-light dark:bg-surface-dark border-r border-border-subtle/40 p-6 hidden md:flex flex-col gap-5 h-screen overflow-hidden select-none transition-all duration-300"
       [ngClass]="isSidebarCollapsed ? 'items-center px-2 py-6' : 'w-full'">
       <!-- Collapsed mini sidebar loader elements -->
       <ng-container *ngIf="isSidebarCollapsed">
@@ -47,10 +46,9 @@
     </aside>
 
     <!-- Main Content Area Skeleton -->
-    <main class="viewer-content p-6 md:p-12 flex flex-col gap-8 w-full">
+    <main class="viewer-content px-4 py-2 md:p-12 flex flex-col gap-8 w-full">
       <!-- Act Header Bar Skeleton -->
-      <div
-        class="pb-6 border-b border-border-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
+      <div class="act-header-bar pb-3 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div class="flex flex-col gap-2 w-full md:w-2/3">
           <div class="h-8 shimmer-element rounded-xl w-1/2"></div>
           <div class="h-4 shimmer-element rounded w-3/4 mt-1"></div>
@@ -58,19 +56,29 @@
         <div class="h-9 shimmer-element rounded-xl w-32 shrink-0 self-start md:self-center"></div>
       </div>
 
+      <!-- Modern Brand-Gradient Line -->
+      <div
+        class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/70 dark:via-white/15 to-transparent mb-0 md:mb-6">
+      </div>
+
       <!-- Main Layout: Content Card + Companion Dashboard -->
       <div class="grid grid-cols-1 xl:grid-cols-[1fr,340px] gap-8 items-start w-full">
         <!-- Main Section Content Card Skeleton -->
-        <div class="card p-6 md:p-8 border border-border-subtle/50 rounded-2xl flex flex-col gap-6 w-full">
+        <div
+          class="card p-2.5 xs:p-4 md:p-8 border-0 md:border border-border-subtle/50 rounded-none md:rounded-2xl flex flex-col gap-1.5 md:gap-2.5 w-full">
           <!-- Section title skeleton -->
-          <div
-            class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-subtle/30">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div class="flex flex-col gap-2 w-full md:w-1/2">
               <div class="h-3 shimmer-element rounded w-1/4"></div>
               <div class="h-6 shimmer-element rounded-lg w-3/4 mt-1"></div>
             </div>
             <!-- TTS button bar skeleton -->
             <div class="h-8 w-28 shimmer-element rounded-xl shrink-0"></div>
+          </div>
+
+          <!-- Modern Brand-Gradient Line -->
+          <div
+            class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/60 dark:via-white/15 to-transparent my-2">
           </div>
 
           <!-- Sub-tabs skeleton -->
@@ -128,8 +136,7 @@
     <!-- Content Area (Focused on Active Section) -->
     <main class="viewer-content px-4 py-2 md:py-6 md:px-12 transition-all duration-300 w-full"
       [ngClass]="selectedLanguage !== 'parallel' || activeSectionTab === 'text' || isSidebarCollapsed ? 'max-w-[1250px]' : 'max-w-[850px]'">
-      <div
-        class="act-header-bar mb-0 md:mb-6 pb-4 md:pb-6 border-b border-border-subtle/50 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
+      <div class="act-header-bar pb-3 flex flex-col md:flex-row md:items-center justify-between gap-4 md:gap-6">
         <div class="flex flex-col gap-2">
           <!-- Act Name -->
           <!-- AFTER (Added wrapper, line-clamp-2, hover tooltip, and expand button) -->
@@ -186,6 +193,11 @@
         </div>
       </div>
 
+      <!-- Modern Brand-Gradient Line -->
+      <div
+        class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/70 dark:via-white/15 to-transparent mb-0 md:mb-6">
+      </div>
+
       <!-- Two Column Layout with Smart Reading Companion Sidebar on Desktop -->
       <div
         [ngClass]="selectedLanguage !== 'parallel' ? 'grid grid-cols-1 xl:grid-cols-[1fr,340px] gap-8 items-start' : 'flex flex-col gap-6'">
@@ -195,13 +207,12 @@
           <!-- Focused Active Section Detail Card -->
           <div *ngIf="activeSection || loadingSection" [attr.data-section-num]="activeSection?.section_number"
             id="section-card-focused"
-            class="section-card-focused card p-2.5 xs:p-4 md:p-8 border-0 md:border border-border-subtle/50 rounded-none md:rounded-2xl flex flex-col gap-2 md:gap-4 relative">
+            class="section-card-focused card p-2.5 xs:p-4 md:p-8 border-0 md:border border-border-subtle/50 rounded-none md:rounded-2xl flex flex-col gap-1.5 md:gap-2.5 relative">
 
             <!-- Premium Shimmering Section Skeleton Loader -->
-            <div *ngIf="loadingSection" class="flex flex-col gap-6">
+            <div *ngIf="loadingSection" class="flex flex-col gap-1.5 md:gap-2.5">
               <!-- Section Title & Number with TTS Audio Bar Skeleton -->
-              <div
-                class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border-subtle/30">
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div class="flex flex-col gap-2 w-full md:w-2/3">
                   <!-- Chapter/Section badge skeleton -->
                   <div class="h-3.5 w-40 shimmer-element rounded"></div>
@@ -210,6 +221,11 @@
                 </div>
                 <!-- TTS Voice Controls skeleton -->
                 <div class="h-9 w-28 shimmer-element rounded-xl shrink-0 self-start md:self-center"></div>
+              </div>
+
+              <!-- Modern Brand-Gradient Line -->
+              <div
+                class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/60 dark:via-white/15 to-transparent my-2">
               </div>
 
               <!-- Section Details Sub-Tabs Skeleton -->
@@ -233,7 +249,7 @@
 
               <!-- Section Title & Number with Actions Row -->
               <div class="flex flex-col">
-                <div class="flex flex-col gap-1 pb-2 border-b border-border-subtle/30">
+                <div class="flex flex-col gap-1">
 
                   <!-- Chapter/Section & Listen Button Row -->
                   <div class="flex items-center justify-between gap-4 w-full">
@@ -364,11 +380,15 @@
                   </div>
 
                   <!-- Title Container -->
-                  <h2
-                    class="sec-title text-base md:text-lg font-bold text-text-primary dark:text-white leading-snug mb-0 mt-1">
+                  <h2 class="sec-title text-base md:text-lg font-bold text-text-primary dark:text-white leading-snug">
                     {{ getSectionTitle(activeSection, selectedLanguage === 'hi') }}
                   </h2>
 
+                </div>
+
+                <!-- Modern Brand-Gradient Line -->
+                <div
+                  class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/60 dark:via-white/15 to-transparent my-2">
                 </div>
 
                 <!-- Expanded Limitation Warning Detail Panel (Collapsible) -->
@@ -550,92 +570,13 @@
                 <!-- Single Column -->
                 <div *ngIf="selectedLanguage !== 'parallel'" class="sec-content">
                   <!-- English Statute Text -->
-                  <div *ngIf="selectedLanguage === 'en'" class="flex flex-col gap-4 serif-reading" appJargonTooltip>
-                    <div *ngFor="let block of activeSection.content_blocks">
-                      <p *ngIf="block.type === 'main'"
-                        class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
-                        [style.font-size.px]="fontSize">
-                        <ng-container *ngIf="block.sentences">
-                          <span *ngFor="let s of block.sentences"
-                            [class.speech-active]="isSentenceActive(s.globalIndex)"
-                            [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
-                        </ng-container>
-                        <ng-container *ngIf="!block.sentences">
-                          <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                        </ng-container>
-                      </p>
-                      <div *ngIf="block.type === 'clause'"
-                        class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
-                        [ngClass]="{
-                    'pl-3 md:pl-8': isSubClause(block.text) === 'none',
-                    'pl-6 md:pl-16': isSubClause(block.text) === 'sub',
-                    'pl-9 md:pl-24': isSubClause(block.text) === 'deep'
-                  }" [style.font-size.px]="fontSize">
-                        <ng-container *ngIf="block.sentences && block.clauseIndicator; else oldClause">
-                          <span class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
-                            block.clauseIndicator }}</span>
-                          <p class="whitespace-pre-wrap m-0 flex-1">
-                            <span *ngFor="let s of block.sentences"
-                              [class.speech-active]="isSentenceActive(s.globalIndex)"
-                              [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
-                          </p>
-                        </ng-container>
-                        <ng-template #oldClause>
-                          <ng-container *ngIf="extractClauseParts(block.text) as parts">
-                            <span *ngIf="parts.indicator"
-                              class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
-                              parts.indicator
-                              }}</span>
-                            <span *ngIf="!parts.indicator"
-                              class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
-                            <p class="whitespace-pre-wrap m-0 flex-1" [innerHTML]="highlightSearchQuery(parts.content)">
-                            </p>
-                          </ng-container>
-                        </ng-template>
-                      </div>
-                      <div *ngIf="block.type === 'explanation'"
-                        class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                        <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <div class="whitespace-pre-wrap flex-1">
-                          <ng-container *ngIf="block.sentences">
-                            <span *ngFor="let s of block.sentences"
-                              [class.speech-active]="isSentenceActive(s.globalIndex)"
-                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
-                          </ng-container>
-                          <ng-container *ngIf="!block.sentences">
-                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                          </ng-container>
-                        </div>
-                      </div>
-                      <div *ngIf="block.type === 'illustration'"
-                        class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                        <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                          viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                        </svg>
-                        <div class="whitespace-pre-wrap flex-1">
-                          <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">Example scenario
-                            (Illustration):</span>
-                          <ng-container *ngIf="block.sentences">
-                            <span *ngFor="let s of block.sentences"
-                              [class.speech-active]="isSentenceActive(s.globalIndex)"
-                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
-                          </ng-container>
-                          <ng-container *ngIf="!block.sentences">
-                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                          </ng-container>
-                        </div>
-                      </div>
-                    </div>
+                  <div *ngIf="selectedLanguage === 'en'"
+                    class="serif-reading text-left text-sm text-text-secondary dark:text-slate-200 leading-relaxed font-sans"
+                    appJargonTooltip [innerHTML]="getFormattedContent(activeSection)" [style.font-size.px]="fontSize">
                   </div>
 
                   <!-- Hindi Statute Text -->
-                  <div *ngIf="selectedLanguage === 'hi'" class="flex flex-col gap-4">
+                  <div *ngIf="selectedLanguage === 'hi'">
                     <!-- Skeleton Loader while translating -->
                     <div *ngIf="translatingSection" class="flex flex-col gap-4 animate-pulse">
                       <div class="flex items-center gap-3 text-accent text-xs mb-2">
@@ -650,88 +591,9 @@
                       <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded-lg w-8/12"></div>
                     </div>
                     <!-- Translated content -->
-                    <div *ngIf="!translatingSection" class="flex flex-col gap-4">
-                      <div *ngFor="let block of activeSection.content_blocks_hi">
-                        <p *ngIf="block.type === 'main'"
-                          class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
-                          [style.font-size.px]="fontSize">
-                          <ng-container *ngIf="block.sentences">
-                            <span *ngFor="let s of block.sentences"
-                              [class.speech-active]="isSentenceActive(s.globalIndex)"
-                              [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
-                          </ng-container>
-                          <ng-container *ngIf="!block.sentences">
-                            <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                          </ng-container>
-                        </p>
-                        <div *ngIf="block.type === 'clause'"
-                          class="flex gap-2.5 items-start text-text-secondary dark:text-slate-200 leading-relaxed text-sm w-full"
-                          [ngClass]="{
-                      'pl-3 md:pl-8': isSubClause(block.text) === 'none',
-                      'pl-6 md:pl-16': isSubClause(block.text) === 'sub',
-                      'pl-9 md:pl-24': isSubClause(block.text) === 'deep'
-                    }" [style.font-size.px]="fontSize">
-                          <ng-container *ngIf="block.sentences && block.clauseIndicator; else oldClauseHi">
-                            <span class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
-                              block.clauseIndicator }}</span>
-                            <p class="whitespace-pre-wrap m-0 flex-1">
-                              <span *ngFor="let s of block.sentences"
-                                [class.speech-active]="isSentenceActive(s.globalIndex)"
-                                [innerHTML]="highlightSearchQuery(s.text) + ' '"></span>
-                            </p>
-                          </ng-container>
-                          <ng-template #oldClauseHi>
-                            <ng-container *ngIf="extractClauseParts(block.text) as parts">
-                              <span *ngIf="parts.indicator"
-                                class="text-accent font-bold shrink-0 min-w-[2.25rem] text-left select-none">{{
-                                parts.indicator
-                                }}</span>
-                              <span *ngIf="!parts.indicator"
-                                class="text-accent font-bold shrink-0 pt-0.5 select-none">•</span>
-                              <p class="whitespace-pre-wrap m-0 flex-1"
-                                [innerHTML]="highlightSearchQuery(parts.content)"></p>
-                            </ng-container>
-                          </ng-template>
-                        </div>
-                        <div *ngIf="block.type === 'explanation'"
-                          class="p-4 bg-blue-50/50 dark:bg-blue-950/10 border-l-4 border-blue-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                          <svg class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          <div class="whitespace-pre-wrap flex-1">
-                            <ng-container *ngIf="block.sentences">
-                              <span *ngFor="let s of block.sentences"
-                                [class.speech-active]="isSentenceActive(s.globalIndex)"
-                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
-                            </ng-container>
-                            <ng-container *ngIf="!block.sentences">
-                              <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                            </ng-container>
-                          </div>
-                        </div>
-                        <div *ngIf="block.type === 'illustration'"
-                          class="p-4 bg-amber-50/40 dark:bg-amber-950/10 border-l-4 border-amber-500 rounded-r-xl flex gap-3 items-start text-text-secondary dark:text-slate-300 text-xs leading-relaxed">
-                          <svg class="w-4 h-4 text-amber-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                              d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                          <div class="whitespace-pre-wrap flex-1">
-                            <span class="font-bold text-amber-600 dark:text-amber-400 block mb-1">उदाहरण
-                              (दृष्टांत):</span>
-                            <ng-container *ngIf="block.sentences">
-                              <span *ngFor="let s of block.sentences"
-                                [class.speech-active]="isSentenceActive(s.globalIndex)"
-                                [innerHTML]="highlightSearchQuery(capitalizeText(s.text)) + ' '"></span>
-                            </ng-container>
-                            <ng-container *ngIf="!block.sentences">
-                              <span [innerHTML]="highlightSearchQuery(capitalizeText(block.text))"></span>
-                            </ng-container>
-                          </div>
-                        </div>
-                      </div>
+                    <div *ngIf="!translatingSection"
+                      class="serif-reading text-left text-sm text-text-secondary dark:text-slate-200 leading-relaxed font-sans"
+                      [innerHTML]="getFormattedContentHi(activeSection)" [style.font-size.px]="fontSize">
                     </div>
                   </div>
                 </div>
@@ -739,12 +601,12 @@
                 <div *ngIf="selectedLanguage === 'parallel'" class="hidden md:grid grid-cols-2 gap-8">
                   <!-- English Column -->
                   <div
-                    class="english-col border-r-0 md:border-r border-border-subtle/40 md:pr-8 flex flex-col gap-4 serif-reading"
+                    class="english-col border-r-0 md:border-r border-border-subtle/40 md:pr-8 flex flex-col gap-2 serif-reading"
                     appJargonTooltip>
                     <span
                       class="text-[9px] font-bold text-accent uppercase tracking-wider block mb-1 opacity-60">English
                       Statute Text</span>
-                    <div *ngFor="let block of activeSection.content_blocks" class="flex flex-col gap-4">
+                    <div *ngFor="let block of activeSection.content_blocks" class="flex flex-col gap-2">
                       <p *ngIf="block.type === 'main'"
                         class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
                         [style.font-size.px]="fontSize">
@@ -828,7 +690,7 @@
                   </div>
 
                   <!-- Hindi Column -->
-                  <div class="hindi-col flex flex-col gap-4">
+                  <div class="hindi-col flex flex-col gap-2">
                     <span class="text-[9px] font-bold text-accent uppercase tracking-wider block mb-1 opacity-60">हिन्दी
                       अनुवाद</span>
                     <!-- Skeleton Loader while translating -->
@@ -845,7 +707,7 @@
                     </div>
                     <!-- Translated content -->
                     <div *ngIf="!translatingSection" class="flex flex-col gap-4">
-                      <div *ngFor="let block of activeSection.content_blocks_hi" class="flex flex-col gap-4">
+                      <div *ngFor="let block of activeSection.content_blocks_hi" class="flex flex-col gap-2">
                         <p *ngIf="block.type === 'main'"
                           class="text-text-secondary dark:text-slate-200 leading-relaxed text-sm whitespace-pre-wrap mb-0"
                           [style.font-size.px]="fontSize">
@@ -946,7 +808,7 @@
                   <!-- Interleaved blocks -->
                   <div *ngIf="!translatingSection" class="flex flex-col gap-6">
                     <div *ngFor="let engBlock of activeSection.content_blocks; let i = index"
-                      class="p-3 md:p-5 bg-slate-50/50 md:bg-slate-50 dark:bg-slate-900/10 md:dark:bg-slate-900/30 border-x-0 border-t-0 border-b md:border border-border-subtle/20 md:border-border-subtle/30 dark:border-slate-800/40 md:dark:border-slate-800 rounded-none md:rounded-2xl flex flex-col gap-3 md:gap-4">
+                      class="p-3 md:p-5 bg-slate-50/50 md:bg-slate-50 dark:bg-slate-900/10 md:dark:bg-slate-900/30 border-x-0 border-t-0 border-b md:border border-border-subtle/20 md:border-border-subtle/30 dark:border-slate-800/40 md:dark:border-slate-800 rounded-none md:rounded-2xl flex flex-col gap-1.5 md:gap-2">
 
                       <!-- English Block -->
                       <div class="english-block flex flex-col gap-2 serif-reading">
@@ -1124,10 +986,17 @@
                 </div>
 
                 <!-- Amendment Timeline (Collapsible) -->
-                <div *ngIf="activeSectionTimeline.length > 0" class="mt-8 border-t border-border-subtle/30 pt-6">
+                <div *ngIf="activeSectionTimeline.length > 0" class="mt-8">
+                  <!-- Option 2: Center Glow Node Divider -->
+                  <div class="flex items-center justify-between gap-4 my-6 select-none">
+                    <div class="h-px flex-1 bg-gradient-to-r from-transparent to-slate-300 dark:to-white/20"></div>
+                    <div class="w-1.5 h-1.5 rounded-full bg-accent shadow-sm shadow-accent/50 animate-pulse shrink-0">
+                    </div>
+                    <div class="h-px flex-1 bg-gradient-to-l from-transparent to-slate-300 dark:to-white/20"></div>
+                  </div>
                   <details class="group select-text">
                     <summary
-                      class="flex items-center justify-between text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest cursor-pointer list-none">
+                      class="flex items-center justify-between text-[10px] md:text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest cursor-pointer list-none">
                       <span class="flex items-center gap-2">
                         <svg class="w-4 h-4 text-[hsl(35,92%,47%)]" fill="none" stroke="currentColor"
                           viewBox="0 0 24 24">
@@ -1546,8 +1415,13 @@
                 </div>
               </div>
 
+              <!-- Modern Brand-Gradient Line -->
+              <div
+                class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/60 dark:via-white/15 to-transparent my-2">
+              </div>
+
               <!-- Next / Prev Section Navigation Footer Bar -->
-              <div class="flex items-center justify-between border-t border-border-subtle/30 pt-5 mt-4">
+              <div class="flex items-center justify-between">
                 <button (click)="goToPrevSection()" [disabled]="!hasPrev"
                   class="px-4 py-2 rounded-xl text-xs font-bold border border-border-subtle/40 bg-transparent text-text-secondary dark:text-slate-350 hover:bg-black/5 dark:hover:bg-white/5 disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center gap-1.5"
                   [appTooltip]="'Navigate to the previous section (ArrowLeft)'" tooltipPlacement="top">
@@ -1588,7 +1462,9 @@
 </div>
 
 <!-- Mobile Float Navigation Drawer Trigger (Hidden on Desktop) -->
-<div *ngIf="act && !loading" class="fixed bottom-6 right-6 z-[90] md:hidden flex items-center justify-center">
+<div *ngIf="act && !loading"
+  class="fixed bottom-6 right-6 z-[90] md:hidden flex items-center justify-center transition-all duration-300 ease-in-out"
+  [class.bottom-nav-visible]="isBottomNavVisible">
   <span class="absolute inset-0 rounded-full bg-accent/30 animate-ping -z-10"></span>
   <button (click)="isMobileDrawerOpen = true"
     class="w-12 h-12 rounded-full bg-accent/90 hover:bg-accent backdrop-blur-md text-white border border-white/20 dark:border-slate-800/80 shadow-[0_8px_32px_rgba(217,119,6,0.25)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] cursor-pointer flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95"

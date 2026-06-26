@@ -788,7 +788,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   openBookmarkDrawer(bm: Bookmark) {
     this.selectedBookmark = bm;
     this.drawerOpen = true;
-    this.drawerNoteText = bm.notes || '';
+    
+    // Check if there is an unsaved local draft first
+    const draftKey = `note_draft_${bm.actShortName}_${bm.section.section_number}`;
+    const draft = localStorage.getItem(draftKey);
+    this.drawerNoteText = draft !== null ? draft : (bm.notes || '');
+
     this.aiSummary = '';
     this.loadingAiSummary = false;
   }
@@ -807,16 +812,35 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   // Save notes to cloud/db
   saveNotes() {
     if (!this.selectedBookmark) return;
+    const bm = this.selectedBookmark;
+    const notesText = this.drawerNoteText;
+    const draftKey = `note_draft_${bm.actShortName}_${bm.section.section_number}`;
+
     this.bookmarkService.updateBookmarkMetadata(
-      this.selectedBookmark.actShortName,
-      this.selectedBookmark.section.section_number,
-      this.drawerNoteText,
-      this.selectedBookmark.collectionName
+      bm.actShortName,
+      bm.section.section_number,
+      notesText,
+      bm.collectionName,
+      false, // silent
+      () => {
+        // onSuccess: Clear draft from localStorage once successfully synced to db
+        localStorage.removeItem(draftKey);
+      },
+      () => {
+        // onError: Keep the draft in localStorage so they don't lose it!
+      }
     );
   }
 
   onNotesChanged(newNotes: string) {
     this.drawerNoteText = newNotes;
+    
+    // Save draft in localStorage immediately
+    if (this.selectedBookmark) {
+      const draftKey = `note_draft_${this.selectedBookmark.actShortName}_${this.selectedBookmark.section.section_number}`;
+      localStorage.setItem(draftKey, newNotes);
+    }
+
     this.notesSubject.next(newNotes);
   }
 

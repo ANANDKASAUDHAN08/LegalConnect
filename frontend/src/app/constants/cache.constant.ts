@@ -1,1 +1,1 @@
-export const EXPECTED_CACHE_VERSION = '2026-06-21-v4';
+export const EXPECTED_CACHE_VERSION = '2026-06-26-v7';
