@@ -11,6 +11,7 @@ const router = Router();
 // In-Memory Cache Fallback Stores
 const searchCache = new Map<string, any>();
 const mappingCache = new Map<string, any>();
+const askCache = new Map<string, any>();
 let cachedAllActs: any = null;
 const cachedActsByShortName = new Map<string, any>();
 
@@ -58,6 +59,9 @@ async function getCache(key: string): Promise<any> {
   } else if (key.startsWith('legal:mapping:')) {
     const mapKey = key.replace('legal:mapping:', '');
     return mappingCache.get(mapKey);
+  } else if (key.startsWith('legal:ask:')) {
+    const askKey = key.replace('legal:ask:', '');
+    return askCache.get(askKey);
   }
   return null;
 }
@@ -92,6 +96,13 @@ async function setCache(key: string, value: any, ttlSeconds: number = 86400): Pr
       if (firstKey) mappingCache.delete(firstKey);
     }
     mappingCache.set(mapKey, value);
+  } else if (key.startsWith('legal:ask:')) {
+    const askKey = key.replace('legal:ask:', '');
+    if (askCache.size >= 200) {
+      const firstKey = askCache.keys().next().value;
+      if (firstKey) askCache.delete(firstKey);
+    }
+    askCache.set(askKey, value);
   }
 }
 
@@ -183,12 +194,41 @@ router.post('/ask', async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'A valid "question" string is required in the request body.' });
     }
 
-    // Get all act shortNames for context
-    const acts = await BareAct.find({}, 'shortName actName');
+    const trimmedQuestion = question.trim();
+
+    // Check cache first
+    const cachedResponse = await getCache(`legal:ask:${trimmedQuestion}`);
+    if (cachedResponse) {
+      return res.json(cachedResponse);
+    }
+
+    // Grounding: Search MongoDB text index for matching sections to build context
+    const matchingSections = await SectionModel.find(
+      { $text: { $search: trimmedQuestion } },
+      { score: { $meta: "textScore" } }
+    ).sort({ score: { $meta: "textScore" } }).limit(5);
+
+    // Get all act metadata for mapping
+    const acts = await BareAct.find({}, 'shortName actName year');
+    const actMap = new Map(acts.map(a => [a.shortName, a]));
     const availableActs = acts.map(a => a.shortName);
 
-    const result = await aiService.askLegalQuestion(question.trim(), availableActs);
-    res.json({ success: true, ...result });
+    let context = '';
+    if (matchingSections.length > 0) {
+      context = matchingSections.map((sec, idx) => {
+        const act = actMap.get(sec.actShortName || '');
+        const actName = act ? act.actName : sec.actShortName;
+        return `Source ${idx + 1}: ${actName} - Section ${sec.section_number} (${sec.title})\nText:\n${sec.content}`;
+      }).join('\n\n---\n\n');
+    }
+
+    const result = await aiService.askLegalQuestion(trimmedQuestion, availableActs, context);
+    const finalResponse = { success: true, ...result };
+
+    // Cache results for 1 day (86400 seconds)
+    await setCache(`legal:ask:${trimmedQuestion}`, finalResponse, 86400);
+
+    res.json(finalResponse);
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -207,7 +247,11 @@ router.get('/acts', async (req: Request, res: Response) => {
 
     const acts = await BareAct.find({}, 'actName shortName year description');
     await setCache('legal:acts', acts);
-    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    if (req.query.refresh === 'true') {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    } else {
+      res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    }
     res.json({ success: true, count: acts.length, data: acts });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -231,7 +275,11 @@ router.get('/acts/:shortName', async (req: Request, res: Response) => {
     }
 
     await setCache(`legal:act:${shortName}`, act);
-    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    if (req.query.refresh === 'true') {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    } else {
+      res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    }
     res.json({ success: true, data: act });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -273,7 +321,11 @@ router.get('/acts/:shortName/outline', async (req: Request, res: Response) => {
     }
 
     await setCache(cacheKey, act);
-    res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    if (req.query.refresh === 'true') {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    } else {
+      res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    }
     res.json({ success: true, data: act });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -961,6 +1013,44 @@ Title: ${section.title}`;
   } catch (error: any) {
     console.error('Translation error:', error);
     res.status(500).json({ success: false, message: 'Translation failed: ' + error.message });
+  }
+});
+
+// AI Jargon Buster: Explains highlighted legal terminology
+router.get('/jargon', async (req: Request, res: Response) => {
+  try {
+    const term = req.query.term as string;
+    if (!term || term.trim().length < 2) {
+      return res.status(400).json({ success: false, message: 'Query parameter "term" is required and must be at least 2 characters.' });
+    }
+
+    const cacheKey = `legal:jargon:${term.trim().toLowerCase()}`;
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      return res.json({ success: true, term: term.trim(), definition: cached, fromCache: true });
+    }
+
+    // Call Gemini to explain the legal term in plain English
+    const prompt = `You are a professional legal glossary explainer. Explain the following legal jargon or term in simple plain English so a non-lawyer can understand.
+Keep the definition concise (1-2 sentences maximum).
+
+Term: "${term.trim()}"
+
+Definition:`;
+
+    const definition = await aiService.generateRawContent(prompt);
+    
+    await setCache(cacheKey, definition, 86400 * 7); // Cache for 7 days
+
+    res.json({
+      success: true,
+      term: term.trim(),
+      definition,
+      fromCache: false
+    });
+  } catch (error: any) {
+    console.error('Jargon explainer error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 

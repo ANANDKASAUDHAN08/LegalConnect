@@ -184,9 +184,8 @@ async function seedData() {
       }
 
       const enData = JSON.parse(fs.readFileSync(enPath, 'utf-8'));
-      // Initialize an empty map for BNS, BNSS, BSA Hindi translations.
-      // High-quality translations will be generated on-the-fly via Gemini AI.
-      const hiMap = new Map<string, string>();
+      // Load pre-existing Hindi translations from the bilingual jsonl file
+      const hiMap = na.hiFile ? await loadBilingualMap(na.hiFile) : new Map<string, string>();
 
       // Group sections by chapter
       const chaptersMap = new Map<string, { title: string; sections: ISection[] }>();
@@ -483,77 +482,88 @@ async function seedData() {
       console.log(`  ✅ Successfully saved BareAct: ${fa.actName} (1 chapter, ${sections.length} sections)`);
     }
 
-    // --- 5. Hindu Marriage Act (CSV-like Anomaly) ---
-    console.log('\n📖 Processing HMA...');
-    const hmaPath = path.join(RAW_DIR, 'hma.json');
-    if (fs.existsSync(hmaPath)) {
-      const hmaRaw = JSON.parse(fs.readFileSync(hmaPath, 'utf-8'));
-      
-      interface HmaSectionTemp {
-        chapterNumber: string;
-        section_number: string;
-        title: string;
-        content: string;
-      }
-      
-      const hmaSections: HmaSectionTemp[] = [];
-
-      for (const obj of hmaRaw) {
-        const line = obj['chapter,section,section_title,section_desc'];
-        if (!line || !line.trim()) continue;
-
-        // Matches new section: e.g. "1,1,Short title and extent,..."
-        const match = line.match(/^(\d+),([^,]+),([^,]+),(.*)/);
-        if (match) {
-          hmaSections.push({
-            chapterNumber: match[1].trim(),
-            section_number: match[2].trim(),
-            title: cleanText(match[3]),
-            content: cleanText(match[4]) || 'No description available.'
-          });
-        } else {
-          // Paragraph continuation of previous section
-          if (hmaSections.length > 0) {
-            hmaSections[hmaSections.length - 1].content += '\n' + cleanText(line);
-          }
-        }
-      }
-
-      // Group HMA sections by chapterNumber
-      const chaptersMap = new Map<string, ISection[]>();
-      for (const hs of hmaSections) {
-        if (!chaptersMap.has(hs.chapterNumber)) {
-          chaptersMap.set(hs.chapterNumber, []);
-        }
-        const sectionObj = parseSection(
-          hs.section_number,
-          hs.title,
-          hs.content
-        );
-        chaptersMap.get(hs.chapterNumber)!.push(sectionObj);
-      }
-
-      const chapters: IChapter[] = Array.from(chaptersMap.entries()).map(([code, sectionsList]) => ({
-        chapterNumber: code,
-        title: `Chapter ${code}`,
-        sections: sectionsList
-      }));
-
-      const bareAct = new BareAct({
-        actName: 'Hindu Marriage Act',
+    // --- 5. Structured JSON Acts (HMA, RTI, DVA, HSA) ---
+    const structuredActs = [
+      {
+        fileName: 'hma.json',
         shortName: 'HMA',
+        actName: 'Hindu Marriage Act',
         year: 1955,
-        description: 'Laws relating to marriage and divorce among Hindus in India.',
-        chapters
-      });
+        description: 'Laws relating to marriage and divorce among Hindus in India.'
+      },
+      {
+        fileName: 'rti.json',
+        shortName: 'RTI',
+        actName: 'Right to Information Act',
+        year: 2005,
+        description: 'An Act to provide for setting out the practical regime of right to information for citizens.'
+      },
+      {
+        fileName: 'dva.json',
+        shortName: 'DVA',
+        actName: 'Domestic Violence Act',
+        year: 2005,
+        description: 'An Act to provide for more effective protection of the rights of women guaranteed under the Constitution who are victims of violence.'
+      },
+      {
+        fileName: 'hsa.json',
+        shortName: 'HSA',
+        actName: 'Hindu Succession Act',
+        year: 1956,
+        description: 'An Act to amend and codify the law relating to intestate succession among Hindus.'
+      }
+    ];
 
-      await saveNormalizedAct(bareAct, chapters);
-      console.log(`  ✅ Successfully saved BareAct: Hindu Marriage Act (${chapters.length} chapters, ${hmaSections.length} sections)`);
-    } else {
-      console.error(`  ❌ HMA file not found at ${hmaPath}`);
+    for (const sa of structuredActs) {
+      console.log(`\n📖 Processing ${sa.shortName}...`);
+      const filePath = path.join(RAW_DIR, sa.fileName);
+      if (fs.existsSync(filePath)) {
+        const rawData = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+        const chaptersMap = new Map<string, { title: string; sections: ISection[] }>();
+
+        for (const item of rawData) {
+          const secNum = item.section?.toString().trim();
+          if (!secNum) continue;
+
+          const chapNum = item.chapter ? item.chapter.toString().trim() : '1';
+          const chapTitle = item.chapter_title?.trim() || `Chapter ${chapNum}`;
+
+          const sectionObj = parseSection(
+            secNum,
+            item.section_title || `Section ${secNum}`,
+            item.section_desc || ''
+          );
+
+          if (!chaptersMap.has(chapNum)) {
+            chaptersMap.set(chapNum, { title: chapTitle, sections: [] });
+          }
+          chaptersMap.get(chapNum)!.sections.push(sectionObj);
+        }
+
+        const chapters: IChapter[] = Array.from(chaptersMap.entries()).map(([code, data]) => ({
+          chapterNumber: code,
+          title: data.title,
+          sections: data.sections
+        }));
+
+        const totalSections = chapters.reduce((sum, c) => sum + c.sections.length, 0);
+
+        const bareAct = new BareAct({
+          actName: sa.actName,
+          shortName: sa.shortName,
+          year: sa.year,
+          description: sa.description,
+          chapters
+        });
+
+        await saveNormalizedAct(bareAct, chapters);
+        console.log(`  ✅ Successfully saved BareAct: ${sa.actName} (${chapters.length} chapters, ${totalSections} sections)`);
+      } else {
+        console.error(`  ❌ File not found at ${filePath}`);
+      }
     }
 
-    console.log('\n🎉 All 12 Bare Acts seeded successfully!');
+    console.log('\n🎉 All 15 Bare Acts seeded successfully!');
     process.exit(0);
   } catch (error: any) {
     console.error('❌ Database seeding failed:', error.message);

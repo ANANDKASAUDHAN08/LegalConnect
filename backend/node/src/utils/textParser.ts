@@ -31,6 +31,7 @@ export function getParsedContent(text: string, introText: string = ''): ParsedBl
   if (!text) return [];
   const lines = text.split('\n');
   const parsed: ParsedBlock[] = [];
+  const footnoteNoiseRegex = /^\s*(?:\[?\d+\]?\s*)?\*[\s\*]*$/;
 
   let currentBlock: ParsedBlock | null = null;
   let hasPendingParagraphBreak = false;
@@ -41,6 +42,11 @@ export function getParsedContent(text: string, introText: string = ''): ParsedBl
       if (currentBlock) {
         hasPendingParagraphBreak = true;
       }
+      return;
+    }
+
+    // Skip footnote noise lines
+    if (footnoteNoiseRegex.test(trimmed)) {
       return;
     }
 

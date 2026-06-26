@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import legalRoutes from './routes/legalRoutes';
 import lawyerRoutes from './routes/lawyerRoutes';
+import templateRoutes from './routes/templateRoutes';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Node.js API is running! 🚀' });
 });
 app.use('/api/legal', legalRoutes);
+app.use('/api/legal', templateRoutes);
 app.use('/api/lawyers', lawyerRoutes);
 
 // Start Server
