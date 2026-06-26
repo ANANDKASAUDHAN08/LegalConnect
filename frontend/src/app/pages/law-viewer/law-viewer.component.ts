@@ -10,10 +10,11 @@ import { AuthService, UserProfile } from '../../services/auth.service';
 import { NoteService } from '../../services/note.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { BookmarkModalComponent } from '../../components/bookmark-modal/bookmark-modal.component';
+import { ShareMenuComponent } from '../../components/share-menu/share-menu.component';
 import { DatabaseService } from '../../services/database.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { JargonTooltipDirective } from '../../directives/jargon-tooltip.directive';
 import { LaymanScenario } from './layman-topics.data';
-import { GLOSSARY_LIST } from './glossary.data';
 import { EXPECTED_CACHE_VERSION } from '../../constants/cache.constant';
 import { SpeechService } from '../../services/speech.service';
 import { LawViewerSidebarComponent } from './law-viewer-sidebar/law-viewer-sidebar.component';
@@ -21,15 +22,8 @@ import { LawViewerChatComponent } from './law-viewer-chat/law-viewer-chat.compon
 import { LawViewerCompareComponent } from './law-viewer-compare/law-viewer-compare.component';
 import { LawViewerCompanionComponent } from './law-viewer-companion/law-viewer-companion.component';
 
-// Precompute sorted glossary list, map, and regex once at module load time for maximum rendering performance
-const SORTED_GLOSSARY = [...GLOSSARY_LIST].sort((a, b) => b.term.length - a.term.length);
-const GLOSSARY_MAP = new Map<string, string>(
-  SORTED_GLOSSARY.map(item => [item.term.toLowerCase(), item.definition])
-);
-const GLOSSARY_REGEX = new RegExp(
-  `\\b(${SORTED_GLOSSARY.map(item => item.term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`,
-  'gi'
-);
+const FULL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*)\s+of\s+the\s+([A-Za-z\s’'\",\-]+Act(?:,\s+\d{4})?))/gi;
+const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/gi;
 
 @Component({
   selector: 'app-law-viewer',
@@ -40,8 +34,10 @@ const GLOSSARY_REGEX = new RegExp(
     NgIf,
     NgClass,
     BookmarkModalComponent,
+    ShareMenuComponent,
     FormsModule,
     TooltipDirective,
+    JargonTooltipDirective,
     LawViewerSidebarComponent,
     LawViewerChatComponent,
     LawViewerCompareComponent,
@@ -57,11 +53,21 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   activeSection: Section | null = null;
   activeSectionTab: 'text' | 'ai' | 'actions' = 'text';
   isMobileDrawerOpen = false;
+  isDescExpanded = false;
+  isTitleExpanded = false;
   loading = true;
   error = '';
   shortName = '';
   isLoggedIn = false;
   currentUser: UserProfile | null = null;
+  todayDate = new Date();
+
+  // Research Binders Dropdown & Creation State
+  showBinderDropdown = false;
+  binderSearchQuery = '';
+  showNewBinderInput = false;
+  newBinderName = '';
+  isLimitationExpanded = false;
 
   // Reusable Bookmark Modal State
   isBookmarkModalOpen = false;
@@ -85,6 +91,9 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   private notesSync$ = new Subject<{ note: string, sectionNum: string }>();
   private glossaryTooltipTimer: any;
   private activeHoveredTerm: HTMLElement | null = null;
+  private fragmentSub: Subscription | null = null;
+  private actsList: { actName: string; shortName: string }[] = [];
+  private normalizedActsList: { normName: string; shortName: string }[] = [];
 
   // Speech (TTS) Getters delegation
   get isSpeaking(): boolean {
@@ -111,6 +120,9 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   hasPrev = false;
   hasNext = false;
   isActiveSectionBookmarked = false;
+  isXlViewport = false;
+  glossaryMap = new Map<string, string>();
+  glossaryRegex: RegExp | null = null;
 
   private flatSections: { sec: Section, ch: Chapter }[] = [];
   private highlightCache = new Map<string, string>();
@@ -129,9 +141,11 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
   @HostListener('window:resize', [])
   onWindowResize() {
+    this.isXlViewport = window.innerWidth >= 1280;
     if (window.innerWidth < 768 && this.selectedLanguage === 'parallel') {
       this.onLanguageChange('en');
     }
+    this.cdr.markForCheck();
   }
 
   toggleSidebar() {
@@ -173,22 +187,43 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit() {
+    this.isXlViewport = window.innerWidth >= 1280;
+    import('./glossary.data').then(m => {
+      const sortedGlossary = [...m.GLOSSARY_LIST].sort((a, b) => b.term.length - a.term.length);
+      this.glossaryMap = new Map<string, string>(
+        sortedGlossary.map(item => [item.term.toLowerCase(), item.definition])
+      );
+      this.glossaryRegex = new RegExp(
+        `(?![^<>]*>)\\b(${sortedGlossary.map(item => item.term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|')})\\b`,
+        'gi'
+      );
+      this.cdr.markForCheck();
+    });
+
     this.authService.isLoggedIn$.pipe(takeUntil(this.destroy$)).subscribe(loggedIn => {
       this.isLoggedIn = loggedIn;
       this.cdr.markForCheck();
     });
     this.authService.currentUser$.pipe(takeUntil(this.destroy$)).subscribe(user => {
       this.currentUser = user;
+      this.loadCustomBinders();
       this.cdr.markForCheck();
     });
     this.bookmarkService.bookmarks$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.updateActiveSectionBookmarkStatus();
+      this.updateSelectedBinderFolder();
+      this.loadCustomBinders();
       this.cdr.markForCheck();
     });
-    this.shortName = this.route.snapshot.paramMap.get('shortName') || '';
-
-    this.checkCacheVersionAndClearIfNeeded().then(() => {
-      this.loadActData();
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      const newShortName = params.get('shortName') || '';
+      if (newShortName) {
+        this.shortName = newShortName;
+        this.resetComponentState();
+        this.checkCacheVersionAndClearIfNeeded().then(() => {
+          this.loadActData();
+        });
+      }
     });
 
     this.notesSync$.pipe(
@@ -205,6 +240,17 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
     this.ngZone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.onScroll, { passive: true });
+    });
+
+    this.legalService.getActs().pipe(takeUntil(this.destroy$)).subscribe(res => {
+      if (res && res.data) {
+        this.actsList = res.data;
+        this.normalizedActsList = res.data.map(a => ({
+          normName: this.normalizeTitle(a.actName),
+          shortName: a.shortName
+        }));
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -287,7 +333,10 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     this.isMappingSupportedAct = this.checkMappingSupported();
     this.equivalentActName = this.checkEquivalentActName();
 
-    this.route.fragment.pipe(takeUntil(this.destroy$)).subscribe(fragment => {
+    if (this.fragmentSub) {
+      this.fragmentSub.unsubscribe();
+    }
+    this.fragmentSub = this.route.fragment.subscribe(fragment => {
       if (fragment && fragment.startsWith('sec-')) {
         const secNum = fragment.replace('sec-', '');
         this.loadSectionByNumber(secNum);
@@ -334,6 +383,9 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
     this.streamSubs.forEach(sub => sub.unsubscribe());
     this.streamSubs.clear();
+    if (this.fragmentSub) {
+      this.fragmentSub.unsubscribe();
+    }
     this.stopSpeech();
     this.clearGlossaryAutoCloseTimer();
     window.removeEventListener('scroll', this.onScroll);
@@ -428,6 +480,19 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
+
+    // Handle citation link clicks
+    const citationLink = target.closest('.legal-citation-link') as HTMLElement;
+    if (citationLink) {
+      event.preventDefault();
+      event.stopPropagation();
+      const url = citationLink.getAttribute('href');
+      if (url) {
+        this.handleCitationClick(url);
+      }
+      return;
+    }
+
     const glossaryTerm = target.closest('.glossary-term') as HTMLElement;
     const isMobile = window.innerWidth <= 768;
 
@@ -460,6 +525,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
         this.closeAllGlossaryTooltips();
       }
     }
+    this.showBinderDropdown = false;
   }
 
   private closeAllGlossaryTooltips() {
@@ -501,11 +567,14 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   }
 
   private async loadSectionDetails(sec: Section): Promise<void> {
+    this.isLimitationExpanded = false;
     if (sec.content) {
       this.activeSection = sec;
+      this.activeSectionTimeline = this.getAmendmentTimeline();
       this.loadSectionNotes();
       this.triggerTranslationIfNeeded();
       this.updateActiveSectionBookmarkStatus();
+      this.updateSelectedBinderFolder();
       this.updateNavigationState();
       this.cdr.markForCheck();
       return;
@@ -528,10 +597,12 @@ export class LawViewerComponent implements OnInit, OnDestroy {
         this.prepareSectionSentences(sec);
 
         this.activeSection = sec;
+        this.activeSectionTimeline = this.getAmendmentTimeline();
         this.loadingSection = false;
         this.loadSectionNotes();
         this.triggerTranslationIfNeeded();
         this.updateActiveSectionBookmarkStatus();
+        this.updateSelectedBinderFolder();
         this.updateNavigationState();
         this.cdr.markForCheck();
 
@@ -564,6 +635,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
           this.prepareSectionSentences(sec);
 
           this.activeSection = sec;
+          this.activeSectionTimeline = this.getAmendmentTimeline();
           this.loadingSection = false;
 
           this.db.saveLocalSection({
@@ -584,6 +656,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
           this.loadSectionNotes();
           this.triggerTranslationIfNeeded();
           this.updateActiveSectionBookmarkStatus();
+          this.updateSelectedBinderFolder();
           this.updateNavigationState();
 
           this.prefetchAdjacentSections(sec);
@@ -1145,20 +1218,93 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
   // --- Glossary Jargon Terms ---
   highlightGlossary(text: string): string {
-    if (!text) return '';
-    let escaped = text
-      .replace(/&/g, '&amp;')
-      .replace(/</g, '&lt;')
-      .replace(/>/g, '&gt;');
+    if (!text || !this.glossaryRegex) return text || '';
 
-    // Performance Optimization: Uses precomputed O(1) static regex and map lookup
-    escaped = escaped.replace(GLOSSARY_REGEX, (match) => {
+    return text.replace(this.glossaryRegex, (match) => {
       const key = match.toLowerCase();
-      const definition = GLOSSARY_MAP.get(key) || '';
+      const definition = this.glossaryMap.get(key) || '';
       return `<span class="glossary-term group relative cursor-help border-b border-dashed border-accent hover:text-accent transition-colors font-medium">${match}<span class="glossary-tooltip">${definition}</span></span>`;
     });
+  }
 
-    return escaped;
+  // --- Wikipedia-Style Citation Parsing ---
+  normalizeTitle(title: string): string {
+    return title.toUpperCase()
+      .replace(/\bTHE\b/g, '')
+      .replace(/\bACT\b/g, '')
+      .replace(/\bAND\b/g, '')
+      .replace(/\bOF\b/g, '')
+      .replace(/[^A-Z]/g, '')
+      .trim();
+  }
+
+  highlightCitations(text: string): string {
+    if (!text) return '';
+
+    let result = text;
+
+    // 1. Match full citations: "Section 4 of the Indian Trusts Act, 1882"
+    result = result.replace(FULL_CITATION_REGEX, (match: string, fullText: string, secNum: string, actTitle: string) => {
+      const normTitle = this.normalizeTitle(actTitle);
+      const matchedAct = this.normalizedActsList.find(a => a.normName === normTitle);
+      if (matchedAct) {
+        return `<a href="/laws/${matchedAct.shortName}#sec-${secNum}" class="legal-citation-link text-accent underline font-bold cursor-pointer" data-url="/laws/${matchedAct.shortName}#sec-${secNum}">${fullText}</a>`;
+      }
+      return match;
+    });
+
+    // 2. Match local citations: "Section 4"
+    if (this.shortName) {
+      result = result.replace(LOCAL_CITATION_REGEX, (match: string, fullText: string, secNum: string) => {
+        return `<a href="/laws/${this.shortName}#sec-${secNum}" class="legal-citation-link text-accent underline font-bold cursor-pointer" data-url="/laws/${this.shortName}#sec-${secNum}">${fullText}</a>`;
+      });
+    }
+
+    return result;
+  }
+
+  handleCitationClick(url: string) {
+    let path = url;
+    let fragment = '';
+
+    const hashIndex = url.indexOf('#');
+    if (hashIndex !== -1) {
+      path = url.substring(0, hashIndex);
+      fragment = url.substring(hashIndex + 1);
+    }
+
+    // Extract act name from path
+    // Remove protocol and host if it is an absolute URL resolved by the browser
+    let cleanPath = path;
+    if (path.includes('://')) {
+      try {
+        const urlObj = new URL(path);
+        cleanPath = urlObj.pathname;
+      } catch (e) {
+        console.warn('Failed to parse absolute URL:', path, e);
+      }
+    } else if (path.startsWith('//')) {
+      try {
+        const urlObj = new URL('http:' + path);
+        cleanPath = urlObj.pathname;
+      } catch (e) {
+        console.warn('Failed to parse protocol-relative URL:', path, e);
+      }
+    }
+
+    const pathSegments = cleanPath.split('/').filter(Boolean);
+    const targetAct = pathSegments.length > 1 ? pathSegments[1] : '';
+
+    if (targetAct && targetAct.toLowerCase() === this.shortName.toLowerCase()) {
+      if (fragment.startsWith('sec-')) {
+        const secNum = fragment.replace('sec-', '');
+        this.loadSectionByNumber(secNum);
+        this.router.navigate([], { fragment, replaceUrl: true });
+      }
+    } else {
+      // For different act, do a full navigation
+      this.router.navigate([cleanPath], { fragment });
+    }
   }
 
   // --- Search query highlighting with Glossary support ---
@@ -1183,7 +1329,18 @@ export class LawViewerComponent implements OnInit, OnDestroy {
       return cached;
     }
 
-    const enriched = this.highlightGlossary(text);
+    // 1. Escape HTML first
+    const escaped = text
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+
+    // 2. Add citation links
+    const withCitations = this.highlightCitations(escaped);
+
+    // 3. Highlight glossary terms (avoiding tag attributes)
+    const enriched = this.highlightGlossary(withCitations);
+
     let result = enriched;
 
     if (this.searchQueryRegex) {
@@ -1192,6 +1349,390 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
     this.highlightCache.set(text, result);
     return result;
+  }
+
+  customBinders: string[] = [];
+  selectedBinderFolder = 'none';
+  activeSectionTimeline: { label: string; details: string; year?: number }[] = [];
+
+  getAmendmentTimeline(): { label: string; details: string; year?: number }[] {
+    if (!this.activeSection || !this.activeSection.content) return [];
+
+    const content = this.activeSection.content;
+    const timeline: { label: string; details: string; year?: number }[] = [];
+
+    // 1. Match inline amendments, e.g. 1 [two thousand...] or 1[two thousand...]
+    const inlineRegex = /(\d+)\s*\[([^\]\n]+)\]/g;
+    let match;
+    inlineRegex.lastIndex = 0;
+    while ((match = inlineRegex.exec(content)) !== null) {
+      const num = match[1];
+      const text = match[2];
+
+      const yearMatch = text.match(/\b(19\d{2}|20\d{2})\b/);
+      const hasYear = !!yearMatch;
+      const hasKeywords = /\b(sub|ins|amend|w\.e\.f|omit|repeal|substituted|inserted|with\s+effect\s+from|act)\b/i.test(text);
+      if (!hasYear && !hasKeywords) {
+        continue;
+      }
+
+      let year: number | undefined;
+      if (yearMatch) {
+        year = parseInt(yearMatch[1], 10);
+      }
+
+      timeline.push({
+        label: `Amendment Reference [${num}]`,
+        details: text.trim(),
+        year
+      });
+    }
+
+    // 2. Match footnote block at bottom, e.g. [Footnote: ...]
+    const footnoteBlockRegex = /\[Footnote:\s*([\s\S]+?)\]/gi;
+    let fnMatch;
+    footnoteBlockRegex.lastIndex = 0;
+    while ((fnMatch = footnoteBlockRegex.exec(content)) !== null) {
+      const text = fnMatch[1];
+
+      const yearMatch = text.match(/\b(19\d{2}|20\d{2})\b/);
+      const hasYear = !!yearMatch;
+      const hasKeywords = /\b(sub|ins|amend|w\.e\.f|omit|repeal|substituted|inserted|with\s+effect\s+from|act)\b/i.test(text);
+      if (!hasYear && !hasKeywords) {
+        continue;
+      }
+
+      let year: number | undefined;
+      if (yearMatch) {
+        year = parseInt(yearMatch[1], 10);
+      }
+
+      timeline.push({
+        label: 'Footnote Notification',
+        details: text.trim(),
+        year
+      });
+    }
+
+    if (timeline.length > 0 && this.act) {
+      timeline.unshift({
+        label: 'Original Enactment',
+        details: `Enacted under ${this.act.actName}`,
+        year: this.act.year
+      });
+
+      timeline.sort((a, b) => {
+        if (a.year && b.year) return a.year - b.year;
+        if (a.year) return -1;
+        if (b.year) return 1;
+        return 0;
+      });
+    }
+
+    return timeline;
+  }
+
+  getLimitationWarning(): { title: string; period: string; description: string; urgency: 'info' | 'warning' | 'critical' } | null {
+    if (!this.activeSection || !this.activeSection.content) return null;
+
+    const content = this.activeSection.content.toLowerCase();
+    const shortNameUpper = this.shortName.toUpperCase();
+
+    // 1. Hardcoded major legal limitation deadlines
+    if (shortNameUpper === 'NIA') {
+      if (this.activeSection.section_number === '138') {
+        return {
+          title: 'Statutory Limitation Notice',
+          period: '30 Days',
+          description: 'A formal notice must be sent to the drawer of the cheque within 30 days of receiving information of its bounce from the bank.',
+          urgency: 'critical'
+        };
+      }
+      if (this.activeSection.section_number === '142') {
+        return {
+          title: 'Limitation to File Complaint',
+          period: '1 Month',
+          description: 'A formal written complaint must be filed in court within 1 month from the date the cause of action arises (i.e. after 15 days of notice period).',
+          urgency: 'critical'
+        };
+      }
+    }
+
+    if (shortNameUpper === 'CPC') {
+      if (this.activeSection.section_number === '96' || this.activeSection.section_number === '100') {
+        return {
+          title: 'Appellate Limitation Period',
+          period: '30 to 90 Days',
+          description: 'Appeals to High Court or District Court must be preferred within 90 days or 30 days respectively from the date of the decree.',
+          urgency: 'warning'
+        };
+      }
+    }
+
+    if (shortNameUpper === 'MVA') {
+      if (this.activeSection.section_number === '166') {
+        return {
+          title: 'Accident Claim Limitation',
+          period: '6 Months',
+          description: 'No application for compensation shall be entertained unless it is made within six months of the occurrence of the accident.',
+          urgency: 'critical'
+        };
+      }
+    }
+
+    // 2. Generic Regex Matcher to scan for text matches
+    const thirtyDaysRegex = /within\s+(thirty\s+days|30\s+days)/i;
+    const sixtyDaysRegex = /within\s+(sixty\s+days|60\s+days)/i;
+    const ninetyDaysRegex = /within\s+(ninety\s+days|90\s+days)/i;
+    const oneYearRegex = /within\s+(one\s+year|1\s+year)/i;
+    const threeYearsRegex = /within\s+(three\s+years|3\s+years)/i;
+
+    if (thirtyDaysRegex.test(content)) {
+      return {
+        title: 'Statutory Action Deadline',
+        period: '30 Days',
+        description: 'This section specifies a response, notice, or filing deadline of 30 days. Action should be taken promptly.',
+        urgency: 'warning'
+      };
+    }
+    if (sixtyDaysRegex.test(content)) {
+      return {
+        title: 'Statutory Action Deadline',
+        period: '60 Days',
+        description: 'This section specifies a timeline of 60 days for compliance or filing an appeal/notice.',
+        urgency: 'warning'
+      };
+    }
+    if (ninetyDaysRegex.test(content)) {
+      return {
+        title: 'Statutory Action Deadline',
+        period: '90 Days',
+        description: 'This section specifies a timeline of 90 days for filing appeals, reports, or legal claims.',
+        urgency: 'warning'
+      };
+    }
+    if (oneYearRegex.test(content)) {
+      return {
+        title: 'Limitation Window',
+        period: '1 Year',
+        description: 'A 1-year limitation or notice window is prescribed under this section for instituting proceedings.',
+        urgency: 'info'
+      };
+    }
+    if (threeYearsRegex.test(content)) {
+      return {
+        title: 'Limitation Window',
+        period: '3 Years',
+        description: 'A standard 3-year limitation window is specified under this section for filing suits or claims.',
+        urgency: 'info'
+      };
+    }
+
+    return null;
+  }
+
+  copyCitation() {
+    if (!this.activeSection || !this.act) return;
+    const citation = `Section ${this.activeSection.section_number}, ${this.act.actName}, ${this.act.year}`;
+    navigator.clipboard.writeText(citation).then(() => {
+      this.snackbar.show('Citation copied: ' + citation, 'success');
+    }).catch(err => {
+      console.error('Failed to copy citation:', err);
+      this.snackbar.show('Failed to copy citation.', 'error');
+    });
+  }
+
+  printPage() {
+    window.print();
+  }
+
+  shareLink() {
+    if (!this.activeSection || !this.act) return;
+    const shareUrl = `${window.location.origin}/laws/${this.shortName}#sec-${this.activeSection.section_number}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      this.snackbar.show('Link copied to clipboard!', 'success');
+    }).catch(err => {
+      console.error('Failed to copy link:', err);
+      this.snackbar.show('Failed to copy link.', 'error');
+    });
+  }
+
+  getShareUrl(): string {
+    if (!this.activeSection || !this.act) return '';
+    return `${window.location.origin}/laws/${this.shortName}#sec-${this.activeSection.section_number}`;
+  }
+
+  getShareText(): string {
+    if (!this.activeSection || !this.act) return '';
+    return `Read Section ${this.activeSection.section_number} of the ${this.act.actName} (${this.act.year}) on LegalConnect:`;
+  }
+
+  getShareSubject(): string {
+    if (!this.activeSection || !this.act) return '';
+    return `LegalConnect - ${this.act.actName} Section ${this.activeSection.section_number}`;
+  }
+
+  loadCustomBinders() {
+    const email = this.currentUser ? this.currentUser.email : 'guest';
+    const key = `legalconnect_custom_folders_${email}`;
+    const saved = localStorage.getItem(key);
+    const localFolders = saved ? JSON.parse(saved) : [];
+
+    const activeFolders = this.bookmarkService.bookmarks()
+      .map(b => b.collectionName)
+      .filter((name): name is string => !!name && name.trim().length > 0);
+
+    this.customBinders = Array.from(new Set([...localFolders, ...activeFolders])).sort();
+    localStorage.setItem(key, JSON.stringify(this.customBinders));
+  }
+
+  updateSelectedBinderFolder() {
+    if (!this.activeSection || !this.act) {
+      this.selectedBinderFolder = 'none';
+      return;
+    }
+    const bookmark = this.bookmarkService.bookmarks().find(
+      b => b.actShortName === this.shortName && b.section.section_number === this.activeSection!.section_number
+    );
+    if (bookmark) {
+      this.selectedBinderFolder = bookmark.collectionName || 'unassigned';
+    } else {
+      this.selectedBinderFolder = 'none';
+    }
+  }
+
+  onBinderChange(folder: string) {
+    if (!this.activeSection || !this.act) return;
+
+    if (!this.isLoggedIn && folder !== 'none') {
+      this.snackbar.show('Please log in to save sections and organize Research Binders. Local guest bookmarks are not backed up.', 'warning');
+    }
+
+    if (folder === 'none') {
+      this.bookmarkService.removeBookmark(this.shortName, this.activeSection.section_number);
+      this.snackbar.show('Section removed from Research Binders.', 'info');
+    } else {
+      const collectionName = folder === 'unassigned' ? undefined : folder;
+      const isBookmarked = this.bookmarkService.isBookmarked(this.shortName, this.activeSection.section_number);
+      if (isBookmarked) {
+        this.bookmarkService.updateBookmarkMetadata(
+          this.shortName,
+          this.activeSection.section_number,
+          this.noteService.getNoteText(this.shortName, this.activeSection.section_number),
+          collectionName
+        );
+        this.snackbar.show(`Section moved to binder: ${folder === 'unassigned' ? 'Unassigned' : folder}`, 'success');
+      } else {
+        this.bookmarkService.addBookmark(
+          this.shortName,
+          this.activeChapter?.chapterNumber || '1',
+          this.activeSection,
+          collectionName
+        );
+        this.snackbar.show(`Section added to binder: ${folder === 'unassigned' ? 'Unassigned' : folder}`, 'success');
+      }
+    }
+    this.updateActiveSectionBookmarkStatus();
+    this.cdr.markForCheck();
+  }
+
+  toggleLibraryAction() {
+    if (!this.activeSection || !this.act) return;
+    if (!this.isLoggedIn && !this.isActiveSectionBookmarked) {
+      this.snackbar.show('Please log in to save sections and organize Research Binders. Local guest bookmarks are not backed up.', 'warning');
+    }
+    if (this.isActiveSectionBookmarked) {
+      this.onBinderChange('none');
+    } else {
+      this.onBinderChange('unassigned');
+    }
+  }
+
+  onBinderFolderChange(folder: string) {
+    this.onBinderChange(folder);
+  }
+
+  toggleBinderDropdown(event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.showBinderDropdown = !this.showBinderDropdown;
+    if (this.showBinderDropdown) {
+      this.binderSearchQuery = '';
+    }
+    this.cdr.markForCheck();
+  }
+
+  getFilteredBinders(): string[] {
+    if (!this.binderSearchQuery || !this.binderSearchQuery.trim()) {
+      return this.customBinders;
+    }
+    const query = this.binderSearchQuery.toLowerCase().trim();
+    return this.customBinders.filter(f => f.toLowerCase().includes(query));
+  }
+
+  createCustomBinder() {
+    const binder = this.newBinderName.trim();
+    if (!binder) return;
+
+    if (!this.isLoggedIn) {
+      this.snackbar.show('Authentication required: Please log in to create custom Research Binders.', 'warning');
+      return;
+    }
+
+    if (this.customBinders.includes(binder)) {
+      this.snackbar.show('Research binder folder already exists.', 'warning');
+      return;
+    }
+
+    this.customBinders.push(binder);
+    this.customBinders.sort();
+
+    const email = this.currentUser ? this.currentUser.email : 'guest';
+    const key = `legalconnect_custom_folders_${email}`;
+    localStorage.setItem(key, JSON.stringify(this.customBinders));
+
+    this.newBinderName = '';
+    this.showNewBinderInput = false;
+    this.snackbar.show(`Research binder "${binder}" created successfully.`, 'success');
+
+    // Auto assign current section to the newly created binder if already bookmarked
+    if (this.isActiveSectionBookmarked) {
+      this.onBinderChange(binder);
+    }
+
+    this.cdr.markForCheck();
+  }
+
+  resetComponentState() {
+    this.act = null;
+    this.activeChapter = null;
+    this.activeSection = null;
+    this.activeSectionTimeline = [];
+    this.summaries = {};
+    this.currentNoteText = '';
+    this.loading = true;
+    this.loadingSection = false;
+    this.error = '';
+    this.activeScenario = null;
+    this.isMobileDrawerOpen = false;
+    this.isCrossRefModalOpen = false;
+    this.selectedBinderFolder = 'none';
+    this.hasHindiAct = false;
+    this.isMappingSupportedAct = false;
+    this.equivalentActName = '';
+    this.hasPrev = false;
+    this.hasNext = false;
+    this.isActiveSectionBookmarked = false;
+    this.showBinderDropdown = false;
+    this.binderSearchQuery = '';
+    this.showNewBinderInput = false;
+    this.newBinderName = '';
+    this.isLimitationExpanded = false;
+    this.recentSections = [];
+    this.highlightCache.clear();
+    this.stopSpeech();
+    this.cdr.markForCheck();
   }
 
   registerSectionView(sec: Section) {

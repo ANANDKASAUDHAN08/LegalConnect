@@ -3,13 +3,12 @@ import { RouterLink } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, takeUntil, debounceTime } from 'rxjs';
-import { BareAct, Chapter, Section } from '../../../services/legal.service';
+import { BareAct, Chapter, Section, LegalService } from '../../../services/legal.service';
 import { TooltipDirective } from '../../../directives/tooltip.directive';
-import { LaymanScenario, LaymanTopic, LAYMAN_TOPIC_MAP } from '../layman-topics.data';
+import { LaymanScenario, LaymanTopic } from '../layman-topics.data';
 import { SpeechService } from '../../../services/speech.service';
 import { BookmarkService } from '../../../services/bookmark.service';
 import { NoteService } from '../../../services/note.service';
-import { GLOSSARY_LIST } from '../glossary.data';
 
 @Component({
   selector: 'app-law-viewer-sidebar',
@@ -41,6 +40,7 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
 
   // Local sidebar-specific state
   sidebarSearchQuery = '';
+  isTitleExpanded = false;
   sidebarTab: 'chapters' | 'topics' | 'companion' = 'chapters';
   selectedTopic: LaymanTopic | null = null;
   laymanTopics: LaymanTopic[] = [];
@@ -57,21 +57,9 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
     return { current, total, percentage };
   }
 
-  get readingTime(): number {
-    if (!this.activeSection || !this.activeSection.content) return 0;
-    const words = this.activeSection.content.split(/\s+/).length;
-    return Math.max(1, Math.round(words / 225));
-  }
-
-  get detectedGlossaryTerms(): { term: string, definition: string }[] {
-    if (!this.activeSection) return [];
-    const content = (this.activeSection.content || '').toLowerCase();
-    const title = (this.activeSection.title || '').toLowerCase();
-    return GLOSSARY_LIST.filter(item => {
-      const termLower = item.term.toLowerCase();
-      return content.includes(termLower) || title.includes(termLower);
-    });
-  }
+  readingTimeValue = 0;
+  detectedGlossaryTermsList: { term: string, definition: string }[] = [];
+  private glossaryList: any[] = [];
 
   get otherRecents(): Section[] {
     return this.recentSections.filter(s => s.section_number !== this.activeSection?.section_number);
@@ -143,10 +131,12 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
     public speechService: SpeechService,
     public bookmarkService: BookmarkService,
     public noteService: NoteService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private legalService: LegalService
   ) { }
 
   ngOnInit() {
+    this.loadGlossaryData();
     // Setup debounced search typing
     this.searchSubject.pipe(
       debounceTime(250),
@@ -194,10 +184,12 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
       this.generateDynamicTopics();
       this.expandChapterForActiveSection();
       this.updateFilteredResults();
+      this.loadGlossaryData();
     }
 
     if (changes['activeSection']) {
       this.expandChapterForActiveSection();
+      this.updateActiveSectionCalculations();
     }
 
     if (changes['isMobileDrawerOpen']) {
@@ -212,6 +204,12 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
   precomputeChapterCleanTitles() {
     if (!this.act || !this.act.chapters) return;
     for (const ch of this.act.chapters) {
+      let chapterNumber = ch.chapterNumber || '';
+      if (chapterNumber.toUpperCase().startsWith('CHAPTER ')) {
+        ch.chapterNumber = chapterNumber.substring(8).trim();
+      } else if (chapterNumber.toUpperCase().startsWith('CHAPTER')) {
+        ch.chapterNumber = chapterNumber.substring(7).trim();
+      }
       ch.cleanTitle = this.getCleanChapterTitle(ch.title);
     }
   }
@@ -248,8 +246,20 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
         this.activeChapter = ch;
         this.expandedChapter = ch;
         this.cdr.markForCheck();
+        setTimeout(() => {
+          this.scrollToActiveSection();
+        }, 150);
         break;
       }
+    }
+  }
+
+  scrollToActiveSection() {
+    const activeBtn = document.querySelector(
+      '.sidebar button.text-accent, .sidebar button.bg-accent, .animate-slide-up button.text-accent'
+    ) as HTMLElement;
+    if (activeBtn) {
+      activeBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
   }
 
@@ -317,26 +327,69 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
     if (!this.act || !this.act.chapters) return;
     const short = this.act.shortName.toUpperCase();
 
-    if (LAYMAN_TOPIC_MAP[short]) {
-      this.laymanTopics = LAYMAN_TOPIC_MAP[short];
-    } else {
-      this.laymanTopics = this.act.chapters.slice(0, 5).map(ch => {
-        const cleanTitle = ch.title.toLowerCase().replace(/\b(of|and|the|against|relating|to)\b/g, '').trim();
-        const keywords = cleanTitle.split(/\s+/).filter(w => w.length > 3);
-        const scenarios = ch.sections.slice(0, 3).map(sec => ({
-          title: `How does "${sec.title}" apply?`,
-          section_number: sec.section_number
-        }));
-        const cleanChTitle = this.getCleanChapterTitle(ch.title);
-        return {
-          label: cleanChTitle.length > 30 ? cleanChTitle.slice(0, 28) + '...' : cleanChTitle,
-          icon: 'book',
-          description: `Sections and provisions under Chapter ${ch.chapterNumber}: ${cleanChTitle}`,
-          keywords: keywords.length > 0 ? keywords : [cleanChTitle.toLowerCase()],
-          scenarios: scenarios
-        };
-      });
+    import('../layman-topics.data').then(m => {
+      if (m.LAYMAN_TOPIC_MAP[short]) {
+        this.laymanTopics = m.LAYMAN_TOPIC_MAP[short];
+      } else {
+        this.generateChaptersFallbackTopics();
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  generateChaptersFallbackTopics() {
+    if (!this.act || !this.act.chapters) return;
+    this.laymanTopics = this.act.chapters.slice(0, 5).map(ch => {
+      const cleanTitle = ch.title.toLowerCase().replace(/\b(of|and|the|against|relating|to)\b/g, '').trim();
+      const keywords = cleanTitle.split(/\s+/).filter(w => w.length > 3);
+      const scenarios = ch.sections.slice(0, 3).map(sec => ({
+        title: `How does "${sec.title}" apply?`,
+        section_number: sec.section_number
+      }));
+      const cleanChTitle = this.getCleanChapterTitle(ch.title);
+      return {
+        label: cleanChTitle.length > 30 ? cleanChTitle.slice(0, 28) + '...' : cleanChTitle,
+        icon: 'book',
+        description: `Sections and provisions under Chapter ${ch.chapterNumber}: ${cleanChTitle}`,
+        keywords: keywords.length > 0 ? keywords : [cleanChTitle.toLowerCase()],
+        scenarios: scenarios
+      };
+    });
+  }
+
+  loadGlossaryData() {
+    if (this.glossaryList.length > 0) {
+      this.updateActiveSectionCalculations();
+      return;
     }
+    import('../glossary.data').then(m => {
+      this.glossaryList = m.GLOSSARY_LIST;
+      this.updateActiveSectionCalculations();
+    });
+  }
+
+  updateActiveSectionCalculations() {
+    if (!this.activeSection) {
+      this.readingTimeValue = 0;
+      this.detectedGlossaryTermsList = [];
+      return;
+    }
+
+    const content = this.activeSection.content || '';
+    const words = content.split(/\s+/).filter(Boolean).length;
+    this.readingTimeValue = Math.max(1, Math.round(words / 225));
+
+    if (this.glossaryList.length > 0) {
+      const contentLower = content.toLowerCase();
+      const titleLower = (this.activeSection.title || '').toLowerCase();
+      this.detectedGlossaryTermsList = this.glossaryList.filter(item => {
+        const termLower = item.term.toLowerCase();
+        return contentLower.includes(termLower) || titleLower.includes(termLower);
+      });
+    } else {
+      this.detectedGlossaryTermsList = [];
+    }
+    this.cdr.markForCheck();
   }
 
   updateFilteredResults() {
@@ -459,7 +512,13 @@ export class LawViewerSidebarComponent implements OnInit, OnDestroy, OnChanges {
     const cached = this.cleanChapterTitleCache.get(title);
     if (cached) return cached;
 
-    let clean = title.trim().toLowerCase();
+    let clean = title.trim();
+    // Strip chapter prefix if present (e.g., "CHAPTER IV ", "Chapter 2: ")
+    clean = clean.replace(/^chapter\s+([ivxldcm]+|\d+)\b[:.]?\s*/i, '').trim();
+    // Fix spacing typos
+    clean = this.legalService.fixTitleSpacing(clean);
+
+    clean = clean.toLowerCase();
     if (clean.startsWith('of the ')) {
       clean = clean.substring(7);
     } else if (clean.startsWith('of ')) {

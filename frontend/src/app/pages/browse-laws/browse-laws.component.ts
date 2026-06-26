@@ -1,11 +1,11 @@
-import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone, HostListener } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { LegalService, BareAct, ApiResponse } from '../../services/legal.service';
 import { NotificationService } from '../../services/notification.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { FormsModule } from '@angular/forms';
-import { Subject, debounceTime, distinctUntilChanged, takeUntil, delay } from 'rxjs';
+import { Subject, debounceTime, distinctUntilChanged, takeUntil, delay, Subscription } from 'rxjs';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { ActCardComponent } from './components/act-card/act-card.component';
 
@@ -22,6 +22,44 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
   loading = true;
   error = '';
   selectedCategory = 'all';
+  activeTab: 'featured' | 'library' = 'featured';
+  Math = Math;
+
+  // Optimized Precomputed Properties
+  filteredActsList: BareAct[] = [];
+  aiFilteredActsList: BareAct[] = [];
+  libraryFilteredActsList: BareAct[] = [];
+  libraryPaginatedActsList: BareAct[] = [];
+
+  // Autocomplete Suggestions
+  autocompleteSuggestions: BareAct[] = [];
+
+  libraryPage = 1;
+  libraryPageSize = 18;
+
+  // Listen to window resizing to update page size dynamically
+  @HostListener('window:resize')
+  onResize() {
+    this.updateLibraryPageSize();
+  }
+
+  private updateLibraryPageSize() {
+    const isMobile = window.innerWidth < 768; // 768px matches Tailwind's md breakpoint
+    const newPageSize = isMobile ? 10 : 18;
+
+    if (this.libraryPageSize !== newPageSize) {
+      this.libraryPageSize = newPageSize;
+      this.libraryPage = 1; // Reset to page 1 to prevent indexing out of bounds
+    }
+  }
+
+  librarySearchQuery = '';
+  libraryEnactmentYear: number | null = null;
+  librarySortBy: 'name-asc' | 'name-desc' | 'year-desc' | 'year-asc' = 'name-asc';
+
+  // Custom Dropdown Open States
+  isYearDropdownOpen = false;
+  isSortDropdownOpen = false;
 
   // Voice Search State
   isListening = false;
@@ -35,6 +73,7 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
   aiAnswer = '';
   aiSuggestedActs: string[] = [];
   aiError = '';
+  private aiSubscription: Subscription | null = null;
 
   // Quick prompt chips for AI mode
   quickPrompts = [
@@ -64,10 +103,39 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit() {
+    this.updateLibraryPageSize(); // Initial check
+
     this.legalService.getActs()
       .pipe(delay(1000))
       .subscribe({
-        next: (res: ApiResponse<BareAct[]>) => { this.acts = res.data; this.loading = false; },
+        next: (res: ApiResponse<BareAct[]>) => {
+          // If the cached list has fewer than 50 acts, detect cache staleness and force refresh
+          if (res.data && res.data.length < 50) {
+            console.warn(`⚠️ Stale acts cache detected (${res.data.length} acts). Force-refreshing from backend...`);
+            this.legalService.getActs(true).subscribe({
+              next: (refreshRes: ApiResponse<BareAct[]>) => {
+                this.acts = refreshRes.data;
+                this.loading = false;
+                this.updateFilteredActs();
+                this.updateAiFilteredActs();
+                this.updateLibraryActs();
+              },
+              error: () => {
+                this.acts = res.data;
+                this.loading = false;
+                this.updateFilteredActs();
+                this.updateAiFilteredActs();
+                this.updateLibraryActs();
+              }
+            });
+          } else {
+            this.acts = res.data;
+            this.loading = false;
+            this.updateFilteredActs();
+            this.updateAiFilteredActs();
+            this.updateLibraryActs();
+          }
+        },
         error: () => { this.error = 'Could not load acts from the server.'; this.loading = false; }
       });
   }
@@ -76,15 +144,24 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
     this.destroy$.next();
     this.destroy$.complete();
     this.stopVoiceSearch();
+    if (this.aiSubscription) {
+      this.aiSubscription.unsubscribe();
+    }
   }
 
   toggleSearchMode() {
     this.searchMode = this.searchMode === 'keyword' ? 'ai' : 'keyword';
+    if (this.aiSubscription) {
+      this.aiSubscription.unsubscribe();
+      this.aiSubscription = null;
+    }
     this.aiAnswer = '';
     this.aiSuggestedActs = [];
     this.aiError = '';
     this.aiQuery = '';
     this.searchQuery = '';
+    this.updateFilteredActs();
+    this.updateAiFilteredActs();
   }
 
   useQuickPrompt(prompt: string) {
@@ -98,18 +175,41 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
     this.aiAnswer = '';
     this.aiSuggestedActs = [];
     this.aiError = '';
+    this.updateAiFilteredActs();
 
-    this.legalService.askLegalQuestion(this.aiQuery.trim()).subscribe({
+    this.aiSubscription = this.legalService.askLegalQuestion(this.aiQuery.trim()).subscribe({
       next: (res) => {
         this.aiLoading = false;
         this.aiAnswer = res.answer;
         this.aiSuggestedActs = res.suggestedActs;
+        this.updateAiFilteredActs();
+        this.aiSubscription = null;
       },
       error: () => {
         this.aiLoading = false;
         this.aiError = 'AI could not process your question. Please try keyword search.';
+        this.updateAiFilteredActs();
+        this.aiSubscription = null;
       }
     });
+  }
+
+  stopAiRequest() {
+    if (this.aiSubscription) {
+      this.aiSubscription.unsubscribe();
+      this.aiSubscription = null;
+    }
+    this.aiLoading = false;
+    this.aiAnswer = 'AI analysis was stopped by the user.';
+    this.aiSuggestedActs = [];
+    this.updateAiFilteredActs();
+  }
+
+  clearAiAnswer() {
+    this.aiAnswer = '';
+    this.aiSuggestedActs = [];
+    this.aiError = '';
+    this.updateAiFilteredActs();
   }
 
   openAiSuggestedAct(shortName: string) {
@@ -122,9 +222,103 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
     }
   }
 
-  get filteredActs() {
-    // If AI mode with suggested acts, show those first then all
-    let list = this.acts;
+  get totalLibraryPages(): number {
+    return Math.ceil(this.libraryFilteredActsList.length / this.libraryPageSize);
+  }
+
+  get libraryYears(): number[] {
+    const years = this.acts.map(a => a.year);
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }
+
+  changeLibraryPage(page: number) {
+    if (page >= 1 && page <= this.totalLibraryPages) {
+      this.libraryPage = page;
+      this.updateLibraryPaginatedActs();
+      const element = document.getElementById('library-section-top');
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }
+
+  toggleYearDropdown() {
+    this.isYearDropdownOpen = !this.isYearDropdownOpen;
+    this.isSortDropdownOpen = false;
+  }
+
+  toggleSortDropdown() {
+    this.isSortDropdownOpen = !this.isSortDropdownOpen;
+    this.isYearDropdownOpen = false;
+  }
+
+  selectYear(year: number | null) {
+    this.libraryEnactmentYear = year;
+    this.libraryPage = 1;
+    this.isYearDropdownOpen = false;
+  }
+
+  selectSort(sortBy: 'name-asc' | 'name-desc' | 'year-desc' | 'year-asc') {
+    this.librarySortBy = sortBy;
+    this.libraryPage = 1;
+    this.isSortDropdownOpen = false;
+  }
+
+  getSortLabel(sortBy: string): string {
+    switch (sortBy) {
+      case 'name-asc': return 'Alphabetical (A-Z)';
+      case 'name-desc': return 'Alphabetical (Z-A)';
+      case 'year-desc': return 'Year (Newest First)';
+      case 'year-asc': return 'Year (Oldest First)';
+      default: return 'Alphabetical (A-Z)';
+    }
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDropdownDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.dropdown-container')) {
+      this.isYearDropdownOpen = false;
+      this.isSortDropdownOpen = false;
+    }
+  }
+
+  onSearchQueryChange(query: string) {
+    if (this.searchMode === 'ai') {
+      this.aiQuery = query;
+      return;
+    }
+    this.searchQuery = query;
+    this.updateFilteredActs();
+    if (query.trim().length >= 2) {
+      const q = query.toLowerCase().trim();
+      this.autocompleteSuggestions = this.acts.filter(a =>
+        a.actName.toLowerCase().includes(q) ||
+        a.shortName.toLowerCase().includes(q) ||
+        a.year.toString().includes(q)
+      ).slice(0, 6);
+    } else {
+      this.autocompleteSuggestions = [];
+    }
+  }
+
+  selectCategory(category: string, clearQuery = false) {
+    this.selectedCategory = category;
+    if (clearQuery) {
+      this.searchQuery = '';
+    }
+    this.updateFilteredActs();
+  }
+
+  onLibrarySearchChange(query: string) {
+    this.librarySearchQuery = query;
+    this.libraryPage = 1;
+    this.updateLibraryActs();
+  }
+
+  updateFilteredActs() {
+    const featuredShorts = ['Constitution', 'BNS', 'BNSS', 'BSA', 'IPC', 'CrPC', 'IEA', 'CPC', 'MVA', 'NIA', 'HMA', 'IDA'];
+    let list = this.acts.filter(a => featuredShorts.includes(a.shortName));
 
     if (this.selectedCategory !== 'all') {
       const cat = this.selectedCategory;
@@ -139,20 +333,70 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
       }
     }
 
-    if (!this.searchQuery.trim()) return list;
-    const q = this.searchQuery.toLowerCase();
-    return list.filter(a =>
+    if (!this.searchQuery.trim()) {
+      this.filteredActsList = list;
+      return;
+    }
+    const q = this.searchQuery.toLowerCase().trim();
+    this.filteredActsList = list.filter(a =>
       a.actName.toLowerCase().includes(q) ||
       a.shortName.toLowerCase().includes(q) ||
       (a.description || '').toLowerCase().includes(q)
     );
   }
 
-  get aiFilteredActs(): BareAct[] {
-    if (!this.aiSuggestedActs.length) return this.acts;
-    const suggested = this.acts.filter(a => this.aiSuggestedActs.includes(a.shortName));
-    const rest = this.acts.filter(a => !this.aiSuggestedActs.includes(a.shortName));
-    return [...suggested, ...rest];
+  updateAiFilteredActs() {
+    const featuredShorts = ['Constitution', 'BNS', 'BNSS', 'BSA', 'IPC', 'CrPC', 'IEA', 'CPC', 'MVA', 'NIA', 'HMA', 'IDA'];
+    let list = this.acts.filter(a => featuredShorts.includes(a.shortName));
+    if (!this.aiSuggestedActs.length) {
+      this.aiFilteredActsList = list;
+      return;
+    }
+    const suggested = list.filter(a => this.aiSuggestedActs.includes(a.shortName));
+    const rest = list.filter(a => !this.aiSuggestedActs.includes(a.shortName));
+    this.aiFilteredActsList = [...suggested, ...rest];
+  }
+
+  updateLibraryActs() {
+    let list = this.acts;
+
+    if (this.librarySearchQuery.trim()) {
+      const q = this.librarySearchQuery.toLowerCase().trim();
+      list = list.filter(a =>
+        a.actName.toLowerCase().includes(q) ||
+        a.shortName.toLowerCase().includes(q) ||
+        a.year.toString().includes(q)
+      );
+    }
+
+    if (this.libraryEnactmentYear) {
+      list = list.filter(a => a.year === this.libraryEnactmentYear);
+    }
+
+    list = [...list];
+    if (this.librarySortBy === 'name-asc') {
+      list.sort((a, b) => a.actName.localeCompare(b.actName));
+    } else if (this.librarySortBy === 'name-desc') {
+      list.sort((a, b) => b.actName.localeCompare(a.actName));
+    } else if (this.librarySortBy === 'year-desc') {
+      list.sort((a, b) => b.year - a.year);
+    } else if (this.librarySortBy === 'year-asc') {
+      list.sort((a, b) => a.year - b.year);
+    }
+
+    this.libraryFilteredActsList = list;
+    this.updateLibraryPaginatedActs();
+  }
+
+  updateLibraryPaginatedActs() {
+    const start = (this.libraryPage - 1) * this.libraryPageSize;
+    this.libraryPaginatedActsList = this.libraryFilteredActsList.slice(start, start + this.libraryPageSize);
+  }
+
+  selectSuggestion(shortName: string) {
+    this.router.navigate(['/laws', shortName]);
+    this.searchQuery = '';
+    this.autocompleteSuggestions = [];
   }
 
   isAiSuggested(shortName: string): boolean {
