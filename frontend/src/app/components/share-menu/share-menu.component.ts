@@ -23,6 +23,8 @@ export class ShareMenuComponent implements OnDestroy {
   @Input() tooltipText = 'Share';
   @Input() tooltipPlacement: 'top' | 'bottom' | 'left' | 'right' = 'top';
   @Input() iconClass = 'w-3.5 h-3.5';
+  @Input() label = '';
+  @Input() description = '';
 
   showShareDropdown = false;
   private mobileSheetElement: HTMLElement | null = null;

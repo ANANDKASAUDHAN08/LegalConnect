@@ -1,0 +1,1051 @@
+<div
+  class="relative page-wrapper min-h-screen pt-[48px] md:pt-[60px] bg-gradient-to-b from-bgBase to-bgElevated text-textPrimary overflow-hidden">
+
+  <!-- Ambient background glow -->
+  <div class="absolute inset-0 pointer-events-none dark:block hidden">
+    <div
+      class="absolute top-0 right-0 w-[500px] h-[260px] bg-gradient-to-bl from-[hsl(150,80%,40%)]/5 to-transparent rounded-full blur-3xl">
+    </div>
+  </div>
+
+  <div class="w-[92%] max-w-[1800px] mx-auto py-6 relative z-10 flex flex-col gap-3 md:gap-6 print-container-adjust">
+
+    <!-- Header Section -->
+    <div class="flex flex-col gap-2 border-b border-black/10 dark:border-white/10 pb-0 md:pb-5 no-print">
+      <!-- Breadcrumb only for Desktop -->
+      <div class="hidden md:flex items-center gap-2">
+        <a routerLink="/laws/civil-family"
+          class="text-sm font-semibold text-slate-400 dark:text-slate-500 hover:text-[hsl(35,92%,47%)] hover:dark:text-[hsl(35,92%,47%)] no-underline transition-colors flex items-center gap-1"
+          [appTooltip]="'Return to Portal Home'" tooltipPlacement="top">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+          </svg>
+          Civil &amp; Family Portal
+        </a>
+        <span class="text-slate-300 dark:text-slate-700 text-sm">/</span>
+        <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Document Templates</span>
+      </div>
+      <div class="flex justify-between items-start flex-wrap gap-2 md:gap-4 mt-1">
+        <div>
+          <h1 class="text-2xl md:text-3xl font-bold font-serif text-slate-900 dark:text-white">
+            Interactive <span class="text-emerald-500">Document Templates</span>
+          </h1>
+          <p class="text-xs text-textSecondary mt-1 max-w-xl">
+            Select a legal template, fill out the particulars in the form builder, and watch the document draft compile
+            in real-time. Print directly to PDF or copy the formatted text.
+          </p>
+        </div>
+        <div class="flex items-center gap-2 w-full md:w-auto justify-end">
+          <!-- Sidebar Toggle Button (Desktop Only) -->
+          <button (click)="toggleSidebar()"
+            class="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-borderSubtle bg-bgSurface/40 hover:bg-bgElevated text-textSecondary hover:text-textPrimary cursor-pointer transition-all text-xs font-bold shadow-sm"
+            [appTooltip]="showSidebar ? 'Hide templates & drafts sidebar' : 'Show templates & drafts sidebar'" tooltipPlacement="top">
+            <svg class="w-4 h-4 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <!-- Grid view / sidebar layout switcher icon -->
+              <path *ngIf="showSidebar" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              <path *ngIf="!showSidebar" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+            </svg>
+            <span>{{ showSidebar ? 'Hide Sidebar' : 'Show Sidebar' }}</span>
+          </button>
+
+          <div
+            class="hidden md:flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-3.5 py-2 rounded-xl text-emerald-600 dark:text-emerald-400 text-xs font-bold shadow-sm">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            Drafts Autosaved to Vault
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sleek Mobile Stepper Indicator -->
+    <div
+      class="flex lg:hidden items-center justify-between bg-bgSurface/40 border border-borderSubtle rounded-2xl p-1.5 no-print select-none">
+      <!-- Step 1: Select -->
+      <button
+        (click)="activeMobileTab = 'select'; mobileLayoutMode === 'stacked' ? scrollToMobileSection('step-select') : null"
+        class="flex items-center gap-2 border-none bg-transparent cursor-pointer outline-none">
+        <span
+          class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold transition-all duration-200"
+          [ngClass]="activeMobileTab === 'select' ? 'bg-indigo-650 text-white shadow-md scale-110' : 'bg-bgElevated text-textSecondary border border-borderSubtle'">
+          1
+        </span>
+        <span class="text-[9px] font-bold uppercase tracking-wider transition-colors"
+          [ngClass]="activeMobileTab === 'select' ? 'text-textPrimary' : 'text-textMuted'">Select</span>
+      </button>
+
+      <!-- Line 1-2 -->
+      <div class="flex-1 h-[1.5px] mx-2 transition-colors duration-300"
+        [ngClass]="(activeMobileTab === 'form' || activeMobileTab === 'preview') ? 'bg-indigo-650' : 'bg-borderSubtle'">
+      </div>
+
+      <!-- Step 2: Edit -->
+      <button
+        (click)="activeMobileTab = 'form'; mobileLayoutMode === 'stacked' ? scrollToMobileSection('step-form') : null"
+        class="flex items-center gap-2 border-none bg-transparent cursor-pointer outline-none">
+        <span
+          class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold transition-all duration-200"
+          [ngClass]="activeMobileTab === 'form' ? 'bg-indigo-650 text-white shadow-md scale-110' : (activeMobileTab === 'preview' ? 'bg-indigo-650/20 text-indigo-500 border border-indigo-500/30' : 'bg-bgElevated text-textSecondary border border-borderSubtle')">
+          2
+        </span>
+        <span class="text-[9px] font-bold uppercase tracking-wider transition-colors"
+          [ngClass]="activeMobileTab === 'form' ? 'text-textPrimary' : 'text-textMuted'">Edit</span>
+      </button>
+
+      <!-- Line 2-3 -->
+      <div class="flex-1 h-[1.5px] mx-2 transition-colors duration-300"
+        [ngClass]="activeMobileTab === 'preview' ? 'bg-indigo-650' : 'bg-borderSubtle'"></div>
+
+      <!-- Step 3: Preview -->
+      <button
+        (click)="activeMobileTab = 'preview'; mobileLayoutMode === 'stacked' ? scrollToMobileSection('step-preview') : null"
+        class="flex items-center gap-2 border-none bg-transparent cursor-pointer outline-none">
+        <span
+          class="w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold transition-all duration-200"
+          [ngClass]="activeMobileTab === 'preview' ? 'bg-indigo-650 text-white shadow-md scale-110' : 'bg-bgElevated text-textSecondary border border-borderSubtle'">
+          3
+        </span>
+        <span class="text-[9px] font-bold uppercase tracking-wider transition-colors"
+          [ngClass]="activeMobileTab === 'preview' ? 'text-textPrimary' : 'text-textMuted'">Preview</span>
+      </button>
+    </div>
+
+    <!-- Main Workspace Container -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- LEFT COLUMN: Sidebar Template Selector (no-print) -->
+      <div id="step-select" class="gap-4 no-print lg:sticky lg:top-[88px] scroll-mt-24"
+        [ngClass]="{
+          'lg:col-span-3': showSidebar,
+          'lg:hidden': !showSidebar,
+          'flex flex-col': mobileLayoutMode === 'stacked' || activeMobileTab === 'select',
+          'hidden lg:flex lg:flex-col': mobileLayoutMode !== 'stacked' && activeMobileTab !== 'select' && showSidebar
+        }">
+
+        <!-- Tabbed Sidebar Card -->
+        <div
+          class="flex flex-col overflow-hidden border-none bg-transparent shadow-none rounded-none lg:card lg:bg-bgSurface/60 lg:border lg:border-borderSubtle lg:rounded-t-lg lg:rounded-b-2xl lg:shadow-lg lg:h-[750px]"
+          [ngClass]="mobileLayoutMode === 'wizard' ? 'h-auto' : 'h-[calc(100vh-100px)] min-h-[600px]'">
+
+          <!-- Tabs Header -->
+          <div class="flex justify-center border-b border-borderSubtle bg-bgElevated/10 p-2 gap-1.5 no-print">
+            <div class="flex bg-bgBase p-1 rounded-lg border border-borderSubtle">
+              <button (click)="activeSidebarTab = 'templates'"
+                class="px-4 py-1 md:py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-none cursor-pointer flex items-center gap-1.5 transition-all"
+                [ngClass]="activeSidebarTab === 'templates' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                [appTooltip]="'Browse document templates'" tooltipPlacement="top">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                <span>Templates</span>
+              </button>
+              <button (click)="activeSidebarTab = 'drafts'"
+                class="px-4 py-1 md:py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider border-none cursor-pointer flex items-center gap-1.5 transition-all"
+                [ngClass]="activeSidebarTab === 'drafts' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                [appTooltip]="'View and load saved drafts'" tooltipPlacement="top">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                </svg>
+                <span>Drafts</span>
+                <span
+                  class="text-[9px] px-1.5 py-0.5 rounded-full bg-black/10 dark:bg-white/10 text-textSecondary font-mono">{{
+                  draftsList.length }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab 1: Templates Content -->
+          <div *ngIf="activeSidebarTab === 'templates'"
+            class="flex flex-col gap-3 py-4 px-0 lg:p-4 overflow-hidden flex-1 min-h-0">
+
+            <!-- Create Custom Template Button -->
+            <button (click)="showCreateTemplateModal = true"
+              class="w-full py-2 rounded-xl font-bold bg-indigo-650 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center justify-center gap-1.5 transition-all text-[11px] shadow-sm select-none">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Create Custom Template</span>
+            </button>
+
+            <!-- Search Templates -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[9px] font-bold text-textSecondary uppercase tracking-wider">Search Templates</label>
+              <div class="relative">
+                <span
+                  class="absolute left-3 top-1/2 -translate-y-1/2 text-textMuted pointer-events-none flex items-center justify-center">
+                  <svg class="w-3.5 h-3.5 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </span>
+                <input type="text" [(ngModel)]="searchQuery" (ngModelChange)="updateFiltersAndPagination()"
+                  placeholder="Search by name, act..."
+                  class="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15"
+                  [appTooltip]="'Search templates by name, act, or description'" tooltipPlacement="top">
+              </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="flex flex-col gap-1 mt-1">
+              <span class="text-[9px] font-bold text-textMuted uppercase tracking-wider mb-0.5">Categories</span>
+              <div class="flex flex-wrap gap-1">
+                <button (click)="selectedCategory = 'all'; updateFiltersAndPagination()"
+                  class="px-2.5 py-1.5 rounded-lg text-[9px] font-bold border-none cursor-pointer transition-colors"
+                  [ngClass]="selectedCategory === 'all' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-bgElevated text-textSecondary hover:bg-borderSubtle'"
+                  [appTooltip]="'Show all categories'" tooltipPlacement="top">
+                  All
+                </button>
+                <button (click)="selectedCategory = 'commercial'; updateFiltersAndPagination()"
+                  class="px-2.5 py-1.5 rounded-lg text-[9px] font-bold border-none cursor-pointer transition-colors"
+                  [ngClass]="selectedCategory === 'commercial' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-bgElevated text-textSecondary hover:bg-borderSubtle'"
+                  [appTooltip]="'Filter by commercial contracts'" tooltipPlacement="top">
+                  Comm.
+                </button>
+                <button (click)="selectedCategory = 'family'; updateFiltersAndPagination()"
+                  class="px-2.5 py-1.5 rounded-lg text-[9px] font-bold border-none cursor-pointer transition-colors"
+                  [ngClass]="selectedCategory === 'family' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-bgElevated text-textSecondary hover:bg-borderSubtle'"
+                  [appTooltip]="'Filter by family law templates'" tooltipPlacement="top">
+                  Family
+                </button>
+                <button (click)="selectedCategory = 'civil'; updateFiltersAndPagination()"
+                  class="px-2.5 py-1.5 rounded-lg text-[9px] font-bold border-none cursor-pointer transition-colors"
+                  [ngClass]="selectedCategory === 'civil' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-bgElevated text-textSecondary hover:bg-borderSubtle'"
+                  [appTooltip]="'Filter by civil law templates'" tooltipPlacement="top">
+                  Civil
+                </button>
+              </div>
+            </div>
+
+            <!-- Scrollable Template List -->
+            <div class="flex flex-col gap-1.5 pr-1 flex-1 mt-1 lg:overflow-y-auto min-h-0"
+              [ngClass]="mobileLayoutMode === 'wizard' ? 'overflow-y-visible' : 'overflow-y-auto'">
+              <button *ngFor="let temp of filteredTemplatesList" (click)="selectTemplate(temp.id)"
+                class="w-full text-left p-3 rounded-xl border border-transparent transition-all cursor-pointer flex flex-col gap-1 bg-bgBase/20 hover:bg-bgElevated/50"
+                [ngClass]="{'border-indigo-500/30 bg-indigo-500/5 hover:bg-indigo-500/10': activeTemplateId === temp.id}"
+                [appTooltip]="'Click to customize: ' + temp.title" tooltipPlacement="top">
+                <div class="flex justify-between items-start gap-2 w-full">
+                  <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                    <span class="text-xs font-bold leading-snug truncate"
+                      [ngClass]="activeTemplateId === temp.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-textPrimary'">
+                      {{ temp.title }}
+                    </span>
+                    <span *ngIf="temp.isCustom"
+                      class="px-1 py-0.2 text-[8px] font-bold rounded bg-emerald-500/10 text-emerald-500 dark:text-emerald-400 uppercase flex-shrink-0">Custom</span>
+                  </div>
+                  <div class="flex items-center gap-1 flex-shrink-0">
+                    <button *ngIf="temp.isCustom" (click)="deleteCustomTemplate(temp.id, $event)"
+                      class="p-1 rounded text-red-500 hover:bg-red-500/10 border-none bg-transparent cursor-pointer flex items-center justify-center transition-colors"
+                      [appTooltip]="'Delete custom template'" tooltipPlacement="top">
+                      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                    <span
+                      class="text-[8px] font-mono text-textMuted uppercase border border-borderSubtle px-1.5 py-0.5 rounded">
+                      {{ temp.actRef.split(' ')[0] }}
+                    </span>
+                  </div>
+                </div>
+                <p class="text-[10px] text-textMuted leading-relaxed m-0 truncate w-full">{{ temp.description }}</p>
+              </button>
+              <div *ngIf="filteredTemplatesList.length === 0" class="text-center py-6 text-textMuted text-xs italic">
+                No matching templates found.
+              </div>
+            </div>
+
+            <!-- Mobile-only Continue Button -->
+            <div *ngIf="mobileLayoutMode === 'wizard'" class="lg:hidden mt-2 pt-2 border-t border-borderSubtle">
+              <button (click)="activeMobileTab = 'form'"
+                class="w-full py-2.5 rounded-xl font-bold bg-indigo-650 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
+                [appTooltip]="'Go to step 2: fill particulars form'" tooltipPlacement="top">
+                <span>Continue to Edit Details</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tab 2: Saved Drafts Content -->
+          <div *ngIf="activeSidebarTab === 'drafts'"
+            class="flex flex-col gap-3 py-4 px-0 lg:p-4 overflow-hidden flex-1 min-h-0">
+            <!-- Progress Bar -->
+            <div class="flex flex-col gap-1.5 px-1">
+              <div class="flex justify-between items-baseline text-[10px]">
+                <span class="font-bold text-textSecondary uppercase tracking-wider">Vault Storage Limit</span>
+                <span class="font-semibold text-textSecondary">{{ draftsList.length }} / {{ MAX_DRAFTS }} Drafts</span>
+              </div>
+              <div class="w-full bg-black/10 dark:bg-white/10 h-1.5 rounded-full overflow-hidden">
+                <div class="h-full bg-indigo-500 transition-all duration-300 animate-none"
+                  [style.width.%]="(draftsList.length / MAX_DRAFTS) * 100"></div>
+              </div>
+            </div>
+
+            <!-- Search input for drafts -->
+            <div *ngIf="draftsList.length > 0" class="relative no-print">
+              <span
+                class="absolute left-2.5 top-1/2 -translate-y-1/2 text-textMuted pointer-events-none flex items-center justify-center">
+                <svg class="w-3 h-3 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </span>
+              <input type="text" [(ngModel)]="draftSearchQuery" placeholder="Search saved drafts..."
+                (ngModelChange)="draftPage = 1; updateFiltersAndPagination()"
+                class="w-full pl-7 pr-3 py-2 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500"
+                [appTooltip]="'Search saved drafts by title'" tooltipPlacement="top">
+            </div>
+
+            <!-- Drafts list -->
+            <div class="flex flex-col gap-1.5 pr-1 flex-1 lg:overflow-y-auto min-h-0"
+              [ngClass]="mobileLayoutMode === 'wizard' ? 'overflow-y-visible' : 'overflow-y-auto'">
+              <div *ngFor="let draft of paginatedDraftsList" (click)="loadDraft(draft.id)"
+                class="w-full text-left p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 bg-bgBase/40 hover:bg-bgElevated"
+                [ngClass]="activeDraftId === draft.id ? 'border-indigo-500/50 bg-indigo-500/5 shadow-sm' : 'border-borderSubtle hover:border-indigo-500/30'"
+                [appTooltip]="'Load draft: ' + draft.title" tooltipPlacement="top">
+                <div class="flex flex-col gap-0.5 truncate flex-1">
+                  <span class="text-xs font-bold text-textSecondary truncate"
+                    [ngClass]="activeDraftId === draft.id ? 'text-indigo-600 dark:text-indigo-400 font-bold' : ''">{{
+                    draft.title }}</span>
+                  <span class="text-[9px] text-textMuted font-mono">Updated: {{ draft.updatedAt | date:'mediumDate' }}
+                    {{ draft.updatedAt | date:'shortTime' }}</span>
+                </div>
+                <button (click)="deleteDraft(draft.id, $event)"
+                  class="p-1.5 rounded-lg bg-transparent border-none text-red-500 hover:bg-red-500/15 cursor-pointer flex items-center justify-center transition-colors"
+                  [appTooltip]="'Delete saved draft'" tooltipPlacement="top">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+
+              <div *ngIf="draftsList.length === 0"
+                class="text-center py-8 text-textMuted text-xs italic flex flex-col items-center gap-2">
+                <svg class="w-8 h-8 text-textMuted/40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8 4H6a2 2 0 00-2 2v12a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-2m-4-1v8m0 0l3-3m-3 3L9 8m-5 5h2.586a1 1 0 01.707.293l2.414 2.414a1 1 0 00.707.293H15" />
+                </svg>
+                <span>No drafts saved yet. Fill details to auto-save!</span>
+              </div>
+
+              <div *ngIf="draftsList.length > 0 && filteredDraftsList.length === 0"
+                class="text-center py-6 text-textMuted text-xs italic">
+                No matching drafts found.
+              </div>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div *ngIf="totalDraftPages > 1"
+              class="flex items-center justify-between pt-2 border-t border-borderSubtle/60 text-[10px] text-textMuted">
+              <button (click)="prevDraftPage()" [disabled]="draftPage === 1"
+                class="px-2.5 py-1 bg-bgBase hover:bg-bgElevated border border-borderSubtle rounded-lg disabled:opacity-40 disabled:hover:bg-bgBase cursor-pointer font-bold transition-colors"
+                [appTooltip]="'Go to previous drafts page'" tooltipPlacement="top">
+                Prev
+              </button>
+              <span class="font-semibold">Page {{ draftPage }} of {{ totalDraftPages }}</span>
+              <button (click)="nextDraftPage()" [disabled]="draftPage === totalDraftPages"
+                class="px-2.5 py-1 bg-bgBase hover:bg-bgElevated border border-borderSubtle rounded-lg disabled:opacity-40 disabled:hover:bg-bgBase cursor-pointer font-bold transition-colors"
+                [appTooltip]="'Go to next drafts page'" tooltipPlacement="top">
+                Next
+              </button>
+            </div>
+
+            <!-- Limit warning -->
+            <div *ngIf="draftsList.length >= MAX_DRAFTS"
+              class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-xs text-red-500 leading-snug">
+              <strong>Limit reached:</strong> Wiping old drafts or deleting unused ones will allow saving new ones.
+            </div>
+
+            <!-- Clear all button -->
+            <button *ngIf="draftsList.length > 0" (click)="clearAllDrafts()"
+              class="w-full py-2 rounded-xl border border-red-500/25 text-red-500 hover:bg-red-500/10 bg-transparent text-[11px] font-bold cursor-pointer transition-colors text-center mt-1"
+              [appTooltip]="'Permanently delete all saved drafts'" tooltipPlacement="top">
+              Wipe All Drafts
+            </button>
+
+            <!-- Mobile-only Continue Button -->
+            <div *ngIf="mobileLayoutMode === 'wizard'" class="lg:hidden mt-2 pt-2 border-t border-borderSubtle">
+              <button (click)="activeMobileTab = 'form'"
+                class="w-full py-2.5 rounded-xl font-bold bg-indigo-650 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
+                [appTooltip]="'Go to step 2: fill particulars form'" tooltipPlacement="top">
+                <span>Continue to Edit Details</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- WORKSPACE PANELS: Dynamic Form Builder & Live Preview -->
+      <div class="gap-4 transition-all duration-300"
+        [ngClass]="{
+          'lg:col-span-9': showSidebar,
+          'lg:col-span-12': !showSidebar,
+          'flex flex-col': mobileLayoutMode === 'stacked' || activeMobileTab !== 'select',
+          'hidden lg:flex lg:flex-col': mobileLayoutMode !== 'stacked' && activeMobileTab !== 'select'
+        }">
+
+        <!-- Step 2 Divider (mobile/tablet Stacked mode only) -->
+        <div *ngIf="mobileLayoutMode === 'stacked'" class="lg:hidden flex items-center gap-4 my-2 no-print">
+          <div class="h-[1px] bg-borderSubtle flex-1"></div>
+          <div
+            class="px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider flex items-center gap-1">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            <span>Step 2: Edit Details</span>
+          </div>
+          <div class="h-[1px] bg-borderSubtle flex-1"></div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-3 md:gap-6 items-start">
+
+          <!-- FORM PANEL: Interactive Input Builder -->
+          <div id="step-form"
+            class="gap-4 no-print lg:h-[750px] scroll-mt-24 py-4 px-0 lg:p-6 border-none bg-transparent shadow-none rounded-none lg:card lg:bg-bgSurface/60 lg:border lg:border-borderSubtle lg:rounded-2xl lg:shadow-lg"
+            [ngClass]="{
+              'flex flex-col': mobileLayoutMode === 'stacked' || activeMobileTab === 'form',
+              'hidden lg:flex lg:flex-col': mobileLayoutMode !== 'stacked' && activeMobileTab !== 'form',
+              'h-auto': mobileLayoutMode === 'wizard',
+              'h-[calc(100vh-100px)] min-h-[600px]': mobileLayoutMode === 'stacked'
+            }">
+
+            <!-- Skeleton Form Loader -->
+            <div *ngIf="templateLoading" class="flex flex-col gap-5 animate-pulse w-full h-full">
+              <div class="border-b border-borderSubtle pb-3">
+                <div class="h-3.5 w-32 bg-slate-200 dark:bg-white/10 rounded mb-1.5"></div>
+                <div class="h-6 w-3/4 bg-slate-200 dark:bg-white/10 rounded mb-2"></div>
+                <div class="h-3 w-40 bg-slate-200 dark:bg-white/10 rounded"></div>
+              </div>
+              <div class="flex flex-col gap-4 overflow-hidden flex-1">
+                <div *ngFor="let s of [1, 2, 3]" class="flex flex-col gap-2">
+                  <div class="h-3 w-28 bg-slate-200 dark:bg-white/10 rounded"></div>
+                  <div class="h-10 w-full bg-slate-200 dark:bg-white/10 rounded-xl"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Actual Interactive Form -->
+            <div *ngIf="!templateLoading" class="flex flex-col gap-4 w-full h-full overflow-hidden flex-1 min-h-0">
+              <div class="border-b border-borderSubtle pb-3">
+                <span
+                  class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest block mb-0.5">Step
+                  1: Fill in Details</span>
+                <h2 class="text-lg font-bold text-slate-900 dark:text-white leading-tight">
+                  {{ activeTemplate.title }}
+                </h2>
+                <span class="text-[10px] text-textMuted font-mono">Reference: {{ activeTemplate.actRef }}</span>
+              </div>
+
+              <!-- Draft Quick Actions -->
+              <div class="flex gap-2 pb-3 border-b border-borderSubtle/60 no-print">
+                <button (click)="saveDraft()"
+                  class="flex-1 py-2 px-3 rounded-xl text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm transition-colors"
+                  [appTooltip]="'Save current inputs as a draft'" tooltipPlacement="top">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                      d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  <span>{{ activeDraftId ? 'Update Draft' : 'Save Draft' }}</span>
+                </button>
+                <button (click)="createNewDraft(activeTemplateId)"
+                  class="py-2 px-3 rounded-xl text-[10px] font-bold bg-bgElevated border border-borderSubtle text-textSecondary hover:bg-borderSubtle cursor-pointer flex items-center justify-center gap-1 transition-colors"
+                  [appTooltip]="'Start fresh with empty inputs'" tooltipPlacement="top">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span>Reset Form</span>
+                </button>
+              </div>
+
+              <!-- Dynamic Input Form -->
+              <div class="flex flex-col gap-4 pr-1 flex-1 lg:overflow-y-auto min-h-0"
+                [ngClass]="mobileLayoutMode === 'wizard' ? 'overflow-y-visible' : 'overflow-y-auto'">
+                <div *ngFor="let field of activeTemplate.fields" class="flex flex-col gap-1.5 w-full">
+                  <div class="flex justify-between items-baseline">
+                    <label class="text-[10px] font-bold text-textSecondary uppercase tracking-wider">{{ field.label
+                      }}</label>
+                    <span *ngIf="field.helpTip" [appTooltip]="field.helpTip" tooltipPlacement="top"
+                      class="text-[9px] text-indigo-500 hover:text-indigo-650 dark:hover:text-indigo-400 cursor-help flex items-center gap-0.5 font-bold transition-colors">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      Help
+                    </span>
+                  </div>
+
+                  <!-- Date input -->
+                  <input *ngIf="field.type === 'date'" type="date" [(ngModel)]="formValues[activeTemplateId][field.key]"
+                    (ngModelChange)="onFieldChange()" id="input-{{field.key}}" (focus)="activeFieldKey = field.key"
+                    (blur)="activeFieldKey = null"
+                    class="w-full px-4 py-2.5 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 outline-none transition-all duration-200"
+                    [appTooltip]="'Select ' + field.label" tooltipPlacement="top">
+
+                  <!-- Text Area (specifically for descriptions/distributions) -->
+                  <textarea *ngIf="field.type === 'textarea'" [(ngModel)]="formValues[activeTemplateId][field.key]"
+                    (ngModelChange)="onFieldChange()" [placeholder]="field.placeholder" rows="3"
+                    id="input-{{field.key}}" (focus)="activeFieldKey = field.key" (blur)="activeFieldKey = null"
+                    class="w-full px-4 py-2.5 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 outline-none transition-all duration-200 resize-y"
+                    [appTooltip]="'Enter ' + field.label" tooltipPlacement="top"></textarea>
+
+                  <!-- Default Text input -->
+                  <input *ngIf="field.type !== 'date' && field.type !== 'textarea'" [type]="field.type"
+                    [(ngModel)]="formValues[activeTemplateId][field.key]" (ngModelChange)="onFieldChange()"
+                    [placeholder]="field.placeholder" id="input-{{field.key}}" (focus)="activeFieldKey = field.key"
+                    (blur)="activeFieldKey = null"
+                    class="w-full px-4 py-2.5 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15 outline-none transition-all duration-200"
+                    [appTooltip]="'Enter ' + field.label" tooltipPlacement="top">
+
+                  <!-- Help Tip Example -->
+                  <span *ngIf="field.helpTip"
+                    class="text-[10px] text-slate-400 dark:text-slate-500 italic leading-snug px-1 flex items-start gap-1">
+                    <svg class="w-3 h-3 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                    <span>{{ field.helpTip }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Mobile-only Footer Navigation -->
+              <div *ngIf="mobileLayoutMode === 'wizard'" class="lg:hidden flex gap-3 pt-3 border-t border-borderSubtle">
+                <button (click)="activeMobileTab = 'select'"
+                  class="flex-1 py-2.5 rounded-xl font-bold bg-bgElevated border border-borderSubtle text-textSecondary hover:bg-borderSubtle cursor-pointer flex items-center justify-center gap-1.5 transition-all text-xs"
+                  [appTooltip]="'Return to template selection'" tooltipPlacement="top">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  <span>Back to Select</span>
+                </button>
+                <button (click)="activeMobileTab = 'preview'"
+                  class="flex-1 py-2.5 rounded-xl font-bold bg-indigo-650 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
+                  [appTooltip]="'Preview document draft'" tooltipPlacement="top">
+                  <span>Preview Document</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3 Divider (mobile/tablet Stacked mode only) -->
+          <div *ngIf="mobileLayoutMode === 'stacked'"
+            class="lg:hidden flex items-center gap-4 my-2 no-print col-span-1">
+            <div class="h-[1px] bg-borderSubtle flex-1"></div>
+            <div
+              class="px-3.5 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider flex items-center gap-1">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+              <span>Step 3: Live Preview</span>
+            </div>
+            <div class="h-[1px] bg-borderSubtle flex-1"></div>
+          </div>
+
+          <div id="step-preview" class="gap-4 lg:h-[750px] scroll-mt-24" [ngClass]="{
+              'flex flex-col': mobileLayoutMode === 'stacked' || activeMobileTab === 'preview',
+              'hidden lg:flex lg:flex-col': mobileLayoutMode !== 'stacked' && activeMobileTab !== 'preview',
+              'h-auto': mobileLayoutMode === 'wizard',
+              'h-[calc(100vh-100px)] min-h-[600px]': mobileLayoutMode === 'stacked'
+            }">
+
+            <!-- Options & Actions toolbar above document (no-print) -->
+            <div
+              class="flex flex-col gap-3 py-3 px-0 border-none bg-transparent rounded-none lg:bg-bgSurface/40 lg:border lg:border-borderSubtle lg:p-3 lg:rounded-2xl no-print">
+              <div class="flex items-center gap-2 flex-wrap justify-between">
+                <div class="flex items-center justify-between w-full">
+                  <span class="text-[10px] font-bold text-textSecondary uppercase tracking-wider px-1">
+                    Step 2: Preview <span class="hidden md:inline">&amp; Compile</span> </span>
+
+                  <!-- Sync / Manual Toggle -->
+                  <div class="flex rounded-lg bg-bgBase p-0.5 border border-borderSubtle text-xs select-none">
+                    <button (click)="toggleManualEditMode(false)"
+                      class="px-2 py-0.5 md:py-1.5 text-[9px] font-bold border-none rounded-md cursor-pointer transition-all flex items-center gap-1"
+                      [ngClass]="!isManualEditMode ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                      [appTooltip]="'Form details automatically sync to document text'" tooltipPlacement="top">
+                      <svg class="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                          d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                      </svg>
+                      <span>Form Sync</span>
+                    </button>
+                    <button (click)="toggleManualEditMode(true)"
+                      class="px-2 py-0.5 md:py-1.5 text-[9px] font-bold border-none rounded-md cursor-pointer transition-all flex items-center gap-1"
+                      [ngClass]="isManualEditMode ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                      [appTooltip]="'Edit compiled text directly on the document sheet'" tooltipPlacement="top">
+                      <svg class="w-3 h-3 md:w-3.5 md:h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                      <span>Direct Edit</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-1.5">
+                  <button (click)="copyToClipboard()"
+                    class="px-3 py-2 rounded-xl text-[11px] font-bold border border-borderSubtle bg-bgBase text-textPrimary hover:bg-bgElevated cursor-pointer transition-colors flex items-center gap-1.5"
+                    [appTooltip]="'Copy filled template text to clipboard'" tooltipPlacement="top">
+                    <svg class="w-3.5 h-3.5 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                    </svg>
+                    <span>{{ copySuccess ? 'Copied!' : 'Copy' }}</span>
+                  </button>
+                  <button (click)="downloadTxtFile()"
+                    class="px-3 py-2 rounded-xl text-[11px] font-bold border border-borderSubtle bg-bgBase text-textPrimary hover:bg-bgElevated cursor-pointer transition-colors flex items-center gap-1.5"
+                    [appTooltip]="'Download as a plain text (.txt) file'" tooltipPlacement="top">
+                    <svg class="w-3.5 h-3.5 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    <span>{{ downloadSuccess ? 'Downloaded!' : 'Download' }}</span>
+                  </button>
+                  <button (click)="triggerPrint()"
+                    class="px-3.5 py-2 rounded-xl text-[11px] font-bold border-none bg-emerald-650 hover:bg-emerald-700 text-white cursor-pointer transition-colors flex items-center gap-1.5 shadow-sm"
+                    [appTooltip]="'Print this document or export to PDF'" tooltipPlacement="top">
+                    <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    <span>Print / PDF</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Compilation options -->
+              <div *ngIf="!isManualEditMode"
+                class="flex items-center justify-between gap-4 flex-wrap pt-2.5 border-t border-borderSubtle/60 text-xs">
+                <div class="flex items-center gap-2">
+                  <span class="text-[10px] font-bold text-textMuted uppercase tracking-wider">Blank Fields:</span>
+                  <div class="flex rounded-lg bg-bgBase p-0.5 border border-borderSubtle">
+                    <button (click)="setEmptyFieldsMode('placeholder')"
+                      class="px-2 py-1 text-[9px] font-bold border-none rounded-md cursor-pointer transition-all"
+                      [ngClass]="emptyFieldsMode === 'placeholder' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                      [appTooltip]="'Show empty fields as [Labels] in document text'" tooltipPlacement="top">
+                      Placeholders
+                    </button>
+                    <button (click)="setEmptyFieldsMode('underline')"
+                      class="px-2 py-1 text-[9px] font-bold border-none rounded-md cursor-pointer transition-all"
+                      [ngClass]="emptyFieldsMode === 'underline' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                      [appTooltip]="'Show empty fields as underlines (___) for physical writing'"
+                      tooltipPlacement="top">
+                      Underlines (___)
+                    </button>
+                    <button (click)="setEmptyFieldsMode('blank')"
+                      class="px-2 py-1 text-[9px] font-bold border-none rounded-md cursor-pointer transition-all"
+                      [ngClass]="emptyFieldsMode === 'blank' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary hover:text-textPrimary'"
+                      [appTooltip]="'Show empty fields as clean blank spaces'" tooltipPlacement="top">
+                      Blanks
+                    </button>
+                  </div>
+                </div>
+
+                <label class="flex items-center gap-1.5 cursor-pointer select-none"
+                  [appTooltip]="'Enable highlighting of empty fields in live preview'" tooltipPlacement="top">
+                  <input type="checkbox" [(ngModel)]="highlightEmptyFields" (ngModelChange)="onHighlightEmptyToggle()"
+                    class="w-3.5 h-3.5 rounded border-borderSubtle text-indigo-600 focus:ring-indigo-500 bg-bgBase">
+                  <span class="text-[9px] font-bold text-textSecondary uppercase tracking-wider">Highlight Empty
+                    Fields</span>
+                </label>
+              </div>
+
+              <!-- Manual overrides notice -->
+              <div *ngIf="isManualEditMode"
+                class="flex items-center justify-between gap-4 flex-wrap pt-2.5 border-t border-indigo-500/20 text-[11px] md:text-xs text-indigo-600 dark:text-indigo-400 font-bold select-none px-1">
+                <div class="flex items-center gap-1.5">
+                  <span class="relative flex h-2 w-2">
+                    <span
+                      class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                  </span>
+                  <span>Direct Editing Active: Make edits directly on the document sheet. Switch to Sync Mode to
+                    recompile.</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Paper document sheet container -->
+            <div
+              class="document-paper-container relative bg-white text-slate-800 p-4 select-text flex-1 scrollbar-none font-mono mx-auto w-full lg:p-12 lg:overflow-y-auto"
+              [ngClass]="mobileLayoutMode === 'wizard' ? 'overflow-y-visible' : 'overflow-y-auto'">
+
+              <!-- Skeleton Document Loader -->
+              <div *ngIf="templateLoading" class="flex flex-col gap-4 animate-pulse w-full relative z-10">
+                <div class="h-5 w-48 bg-slate-200 rounded self-center mb-8"></div>
+                <div class="h-3.5 w-16 bg-slate-200 rounded mb-6"></div>
+                <div class="h-3.5 w-32 bg-slate-200 rounded"></div>
+                <div class="h-3.5 w-24 bg-slate-200 rounded mb-6"></div>
+                <div class="h-3.5 w-full bg-slate-200 rounded"></div>
+                <div class="h-3.5 w-full bg-slate-200 rounded"></div>
+                <div class="h-3.5 w-4/5 bg-slate-200 rounded mb-4"></div>
+                <div class="h-3.5 w-full bg-slate-200 rounded"></div>
+                <div class="h-3.5 w-5/6 bg-slate-200 rounded mb-12"></div>
+                <div class="h-5 w-32 bg-slate-200 rounded self-end"></div>
+              </div>
+
+              <div *ngIf="!templateLoading" class="w-full h-full flex flex-col flex-1">
+                <!-- Realistic legal watermarks/seals -->
+                <div
+                  class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-[0.03] select-none z-0">
+                  <span
+                    class="text-7xl font-bold uppercase tracking-widest border-8 border-slate-900 p-6 rounded-3xl rotate-12">LEGAL
+                    CONNECT</span>
+                </div>
+
+                <!-- Raw text body compiled in real-time -->
+                <pre *ngIf="!isManualEditMode"
+                  class="relative z-10 m-0 text-xs md:text-sm leading-relaxed whitespace-pre-wrap font-sans text-slate-800"
+                  [innerHTML]="compiledTemplateHtml" (dblclick)="onPreviewClick($event)"></pre>
+
+                <!-- Editable body for direct manual override edits -->
+                <textarea *ngIf="isManualEditMode" [(ngModel)]="customBodyText" (ngModelChange)="onCustomBodyChange()"
+                  class="relative z-10 w-full min-h-[480px] lg:min-h-[500px] p-0 border-none bg-transparent outline-none text-xs md:text-sm leading-relaxed text-slate-800 resize-none font-medium whitespace-pre-wrap block overflow-y-visible document-direct-editor"
+                  placeholder="Type your document content here..."></textarea>
+              </div>
+            </div>
+
+            <!-- Section 63 BSA Help Note -->
+            <div *ngIf="activeTemplateId === 'section-63-bsa-certificate'"
+              class="no-print p-3 rounded-xl bg-blue-500/10 border border-blue-500/20 text-[10px] text-blue-600 dark:text-blue-400 leading-relaxed flex items-start gap-2 shadow-sm">
+              <svg class="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>
+                <strong>How to use:</strong> Print this certificate, sign it, and attach it to your printed WhatsApp
+                chat transcripts or email outputs before submitting them as evidence to the Court PIO/Judge.
+              </span>
+            </div>
+
+            <!-- Mobile-only Footer Navigation -->
+            <div *ngIf="mobileLayoutMode === 'wizard'" class="lg:hidden mt-2 pt-2 border-t border-borderSubtle">
+              <button (click)="activeMobileTab = 'form'"
+                class="w-full py-2.5 rounded-xl font-bold bg-indigo-650 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center justify-center gap-1.5 shadow-sm transition-all text-xs"
+                [appTooltip]="'Return to edit particulars'" tooltipPlacement="top">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+                </svg>
+                <span>Back to Edit Details</span>
+              </button>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- CREATE CUSTOM TEMPLATE MODAL -->
+  <div *ngIf="showCreateTemplateModal" (click)="showCreateTemplateModal = false"
+    class="fixed top-0 bottom-0 left-0 right-0 z-[1000] bg-black/65 backdrop-blur-md flex items-center justify-center p-0 md:p-6 transition-all duration-300 animate-fade-in no-print">
+    <div (click)="$event.stopPropagation()"
+      class="bg-bgSurface border-none md:border md:border-borderSubtle rounded-none md:rounded-2xl w-full md:max-w-5xl h-full md:h-[85vh] md:max-h-[800px] flex flex-col shadow-2xl overflow-hidden animate-slide-up">
+
+      <!-- Modal Header -->
+      <div
+        class="flex items-start justify-between px-4 md:px-6 py-4 border-b border-borderSubtle bg-bgElevated/40 gap-2 md:gap-4">
+
+        <!-- Left Side: Icon + Text Group -->
+        <div class="flex items-start gap-3 flex-1">
+          <!-- Icon on the Far Left -->
+          <svg class="w-5 h-5 text-indigo-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+
+          <!-- Stacked Title and Description -->
+          <div class="flex flex-col gap-0.5 flex-1">
+            <h3 class="text-xs md:text-base font-bold text-slate-900 dark:text-white leading-tight">
+              Create Custom Legal Template
+            </h3>
+            <p class="text-[11px] text-textSecondary leading-normal">
+              Design a reusable template. Enter variables using double braces:
+              <code
+                class="bg-black/10 dark:bg-white/10 px-1 py-0.5 rounded font-mono text-indigo-600 dark:text-indigo-400 font-bold">{{ '{{' }}variableName{{ '}}' }}</code>
+            </p>
+          </div>
+        </div>
+
+        <!-- Right Side: Close Button -->
+        <button (click)="showCreateTemplateModal = false"
+          class="p-2 rounded-xl bg-transparent border-none text-textSecondary hover:bg-borderSubtle cursor-pointer flex items-center justify-center transition-colors shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+
+      </div>
+
+      <!-- Modal Body -->
+      <div
+        class="flex-1 overflow-hidden flex flex-col lg:flex-row divide-y lg:divide-y-0 lg:divide-x divide-borderSubtle bg-bgBase/20">
+
+        <!-- Mobile Tab Selector (Visible only on mobile/tablet) -->
+        <div class="lg:hidden flex bg-bgSurface/60 border-b border-borderSubtle p-1 no-print">
+          <button type="button" (click)="activeModalMobileTab = 'editor'"
+            class="flex-1 py-2 text-xs font-bold border-none cursor-pointer rounded-xl transition-all flex items-center justify-center gap-1.5"
+            [ngClass]="activeModalMobileTab === 'editor' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+            </svg>
+            <span>1. Write Template</span>
+          </button>
+          <button type="button" (click)="activeModalMobileTab = 'variables'"
+            class="flex-1 py-2 text-xs font-bold border-none cursor-pointer rounded-xl transition-all flex items-center justify-center gap-1.5"
+            [ngClass]="activeModalMobileTab === 'variables' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-transparent text-textSecondary'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+            </svg>
+            <span>2. Variables ({{ parsedPlaceholders.length }})</span>
+          </button>
+        </div>
+
+        <!-- Left Column: Details & Body Editor -->
+        <div class="flex-1 overflow-y-auto p-6 flex flex-col gap-4"
+          [ngClass]="{'hidden lg:flex': activeModalMobileTab !== 'editor', 'flex': activeModalMobileTab === 'editor'}">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Template Title -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-bold text-textSecondary uppercase tracking-wider">Template Name *</label>
+              <input type="text" [(ngModel)]="newTemplateTitle" placeholder="e.g. Rent Agreement Deed"
+                class="w-full px-3 py-2 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15">
+            </div>
+
+            <!-- Act Reference -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-bold text-textSecondary uppercase tracking-wider">Act / Reference</label>
+              <input type="text" [(ngModel)]="newTemplateAct" placeholder="e.g. Indian Contract Act Sec 10"
+                class="w-full px-3 py-2 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Category Selection -->
+            <div class="flex flex-col gap-1.5 md:col-span-1 relative">
+              <label class="text-[10px] font-bold text-textSecondary uppercase tracking-wider">Category</label>
+              <div class="relative">
+                <button type="button" (click)="toggleCategoryDropdown($event)"
+                  class="w-full px-3.5 py-2.5 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 flex items-center justify-between cursor-pointer transition-all select-none text-left min-h-[36px]">
+                  <span>{{ getCategoryLabel(newTemplateCategory) }}</span>
+                  <svg class="w-3.5 h-3.5 text-textSecondary transition-transform duration-200"
+                    [ngClass]="{'rotate-180': showCategoryDropdown}" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                <!-- Dropdown list -->
+                <div *ngIf="showCategoryDropdown"
+                  class="absolute z-20 mt-1.5 w-full bg-bgSurface border border-borderSubtle rounded-xl shadow-2xl py-1 overflow-hidden animate-slide-up bg-opacity-95 backdrop-blur-sm">
+                  <button type="button" *ngFor="let cat of categories" (click)="selectCategory(cat.value)"
+                    class="w-full text-left px-3.5 py-2 text-xs border-none cursor-pointer bg-transparent transition-all flex items-center justify-between"
+                    [ngClass]="newTemplateCategory === cat.value ? 'bg-indigo-650 text-white font-bold' : 'text-textPrimary hover:bg-bgElevated'">
+                    <span>{{ cat.label }}</span>
+                    <svg *ngIf="newTemplateCategory === cat.value" class="w-3.5 h-3.5 text-white" fill="none"
+                      stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="flex flex-col gap-1.5 md:col-span-2">
+              <label class="text-[10px] font-bold text-textSecondary uppercase tracking-wider">Description /
+                Purpose</label>
+              <input type="text" [(ngModel)]="newTemplateDesc"
+                placeholder="Brief summary of what this template drafts..."
+                class="w-full px-3 py-2 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15">
+            </div>
+          </div>
+
+          <!-- Body Text Area -->
+          <div class="flex-1 flex flex-col gap-1.5 min-h-[220px]">
+            <label class="text-[10px] font-bold text-textSecondary uppercase tracking-wider">Template Text Body
+              *</label>
+            <textarea [(ngModel)]="newTemplateBody" (ngModelChange)="parsePlaceholders()"
+              [placeholder]="'Paste or write your standard legal text here. Make sure to use braces to define variables, for example:\n\nNotice is hereby served to Sh. {{recipientName}} residing at {{recipientAddress}} on behalf of my client {{clientName}}...'"
+              class="w-full flex-1 p-4 text-xs rounded-xl border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/15 font-mono resize-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Right Column: Extracted Placeholders Configuration -->
+        <div class="w-full lg:w-[360px] overflow-y-auto p-6 bg-bgElevated/10 flex flex-col gap-4"
+          [ngClass]="{'hidden lg:flex': activeModalMobileTab !== 'variables', 'flex': activeModalMobileTab === 'variables'}">
+          <h4
+            class="text-[11px] font-bold text-textSecondary uppercase tracking-wider border-b border-borderSubtle pb-2">
+            Variable Fields Configuration ({{ parsedPlaceholders.length }})
+          </h4>
+
+          <div class="flex flex-col gap-4 flex-1">
+            <div *ngFor="let key of parsedPlaceholders"
+              class="p-3.5 rounded-xl border border-borderSubtle/60 bg-bgSurface/50 flex flex-col gap-2.5 shadow-sm">
+              <div class="flex justify-between items-center">
+                <span class="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">{{ '{{' }}{{ key }}{{
+                  '}}' }}</span>
+                <span
+                  class="text-[8px] px-1.5 py-0.5 rounded bg-black/10 dark:bg-white/10 font-bold uppercase text-textMuted">Detected</span>
+              </div>
+
+              <!-- Config Label -->
+              <div class="flex flex-col gap-1">
+                <label class="text-[9px] font-bold text-textSecondary uppercase">Display Label</label>
+                <input type="text" [(ngModel)]="customFieldsConfig[key].label" placeholder="e.g. Recipient Name"
+                  class="w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500">
+              </div>
+
+              <div class="grid grid-cols-2 gap-2">
+                <!-- Config Type -->
+                <div class="flex flex-col gap-1 relative">
+                  <label class="text-[9px] font-bold text-textSecondary uppercase">Field Type</label>
+                  <div class="relative">
+                    <button type="button" (click)="toggleFieldTypeDropdown(key, $event)"
+                      class="w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500 flex items-center justify-between cursor-pointer transition-all select-none text-left min-h-[30px]">
+                      <span>{{ getFieldTypeLabel(key) }}</span>
+                      <svg class="w-3 h-3 text-textSecondary transition-transform duration-200"
+                        [ngClass]="{'rotate-180': openFieldTypeDropdownKey === key}" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    <!-- Dropdown list -->
+                    <div *ngIf="openFieldTypeDropdownKey === key"
+                      class="absolute z-20 mt-1 w-full bg-bgSurface border border-borderSubtle rounded-lg shadow-2xl py-0.5 overflow-hidden animate-slide-up bg-opacity-95 backdrop-blur-sm">
+                      <button type="button" *ngFor="let type of fieldTypes" (click)="selectFieldType(key, type.value)"
+                        class="w-full text-left px-2.5 py-1.5 text-[10px] border-none cursor-pointer bg-transparent transition-all flex items-center justify-between"
+                        [ngClass]="customFieldsConfig[key].type === type.value ? 'bg-indigo-650 text-white font-bold' : 'text-textPrimary hover:bg-bgElevated'">
+                        <span>{{ type.label }}</span>
+                        <svg *ngIf="customFieldsConfig[key].type === type.value" class="w-3 h-3 text-white" fill="none"
+                          stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Config Help Tip -->
+                <div class="flex flex-col gap-1">
+                  <label class="text-[9px] font-bold text-textSecondary uppercase">Help Tip (Optional)</label>
+                  <input type="text" [(ngModel)]="customFieldsConfig[key].helpTip" placeholder="e.g. Full legal name"
+                    class="w-full px-2.5 py-1.5 text-[11px] rounded-lg border border-borderSubtle bg-bgBase text-textPrimary outline-none focus:border-indigo-500">
+                </div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div *ngIf="parsedPlaceholders.length === 0"
+              class="flex-1 flex flex-col items-center justify-center text-center p-6 text-textMuted text-xs italic gap-2 min-h-[150px]">
+              <svg class="w-8 h-8 text-textMuted/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+              </svg>
+              <span>Type standard text with variables in the template box (e.g. {{ '{{' }}name{{ '}}' }}) to define
+                custom fields dynamically.</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex justify-end items-center gap-3 px-6 py-4 border-t border-borderSubtle bg-bgElevated/30">
+        <button (click)="showCreateTemplateModal = false"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-transparent border border-borderSubtle text-textSecondary hover:bg-borderSubtle cursor-pointer transition-colors">
+          Cancel
+        </button>
+        <button (click)="saveCustomTemplate()" [disabled]="!newTemplateTitle.trim() || parsedPlaceholders.length === 0"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-indigo-650 hover:bg-indigo-700 text-white border-none cursor-pointer flex items-center gap-1.5 shadow-sm transition-colors disabled:opacity-40 disabled:cursor-not-allowed">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+          </svg>
+          <span>Save &amp; Select Template</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FLOATING LAYOUT SWITCHER FOR MOBILE -->
+  <div class="fixed bottom-6 right-6 z-[99] lg:hidden no-print" (click)="$event.stopPropagation()">
+    <!-- Floating Options Menu -->
+    <div *ngIf="showLayoutMenu"
+      class="absolute bottom-16 right-0 mb-1 w-48 bg-bgSurface border border-borderSubtle rounded-2xl p-2 flex flex-col gap-1 shadow-2xl animate-slide-up">
+      <div class="px-2.5 py-1.5 text-[9px] font-bold text-textMuted uppercase tracking-wider">Layout Style</div>
+
+      <button (click)="setMobileLayoutMode('wizard'); showLayoutMenu = false"
+        class="w-full text-left px-3 py-2 text-xs rounded-xl border-none cursor-pointer flex items-center gap-2 transition-all"
+        [ngClass]="mobileLayoutMode === 'wizard' ? 'bg-indigo-650 text-white font-bold' : 'bg-transparent text-textPrimary hover:bg-bgElevated'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
+        </svg>
+        <span>Wizard View</span>
+      </button>
+
+      <button (click)="setMobileLayoutMode('stacked'); showLayoutMenu = false"
+        class="w-full text-left px-3 py-2 text-xs rounded-xl border-none cursor-pointer flex items-center gap-2 transition-all"
+        [ngClass]="mobileLayoutMode === 'stacked' ? 'bg-indigo-650 text-white font-bold' : 'bg-transparent text-textPrimary hover:bg-bgElevated'">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <span>All Steps View</span>
+      </button>
+    </div>
+
+    <!-- Floating Action Button (FAB) -->
+    <button (click)="showLayoutMenu = !showLayoutMenu"
+      class="w-12 h-12 rounded-full bg-indigo-650 hover:bg-indigo-700 text-white flex items-center justify-center shadow-2xl border border-white/10 active:scale-95 transition-all duration-200 cursor-pointer"
+      [appTooltip]="'Switch layout mode'" tooltipPlacement="left">
+      <svg class="w-5 h-5 transition-transform duration-300" [ngClass]="{'rotate-[360deg]': showLayoutMenu}" fill="none"
+        stroke="currentColor" viewBox="0 0 24 24">
+        <!-- Dashboard/Layout switcher icon -->
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M4 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v4a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- Global Custom Confirm Dialog -->
+  <app-confirm-dialog [isOpen]="showConfirm" [title]="confirmTitle" [message]="confirmMessage" [type]="confirmType"
+    (confirm)="handleConfirm()" (cancel)="handleCancel()">
+  </app-confirm-dialog>
+</div>
+
+<!-- PRINT TEMPLATE (VISIBLE ONLY DURING PRINTING/PDF EXPORT — No branding/logos) -->
+<div *ngIf="!templateLoading && activeTemplate" class="print-area"
+  style="font-family: 'Inter', system-ui, sans-serif; background: white !important; color: black !important; padding: 0 !important;">
+
+  <!-- Clean document header: Title + Act Reference only -->
+  <div style="border-bottom: 2px solid #1e293b; padding-bottom: 12px; margin-bottom: 24px;">
+    <h1
+      style="font-size: 18px; font-weight: 700; color: #0f172a; margin: 0 0 4px 0; text-transform: uppercase; letter-spacing: 0.02em;">
+      {{ activeTemplate.title }}
+    </h1>
+    <p style="font-size: 11px; color: #64748b; margin: 0; font-family: monospace;">
+      Reference: {{ activeTemplate.actRef }}
+    </p>
+  </div>
+
+  <!-- Document body text -->
+  <pre
+    style="white-space: pre-wrap; word-break: break-word; font-family: 'Inter', system-ui, sans-serif; font-size: 13px; line-height: 1.7; color: #000; background: #fff; margin: 0; padding: 0; font-weight: 400;">{{ compiledTemplatePlain }}</pre>
+</div>

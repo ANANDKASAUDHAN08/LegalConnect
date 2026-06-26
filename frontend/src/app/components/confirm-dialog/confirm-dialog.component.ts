@@ -12,6 +12,7 @@ export class ConfirmDialogComponent {
   @Input() title = '';
   @Input() message = '';
   @Input() type: 'danger' | 'warning' | 'info' = 'warning';
+  @Input() icon?: string;
 
   @Output() confirm = new EventEmitter<void>();
   @Output() cancel = new EventEmitter<void>();
@@ -22,5 +23,19 @@ export class ConfirmDialogComponent {
 
   onConfirm() {
     this.confirm.emit();
+  }
+
+  getIconName(): string {
+    if (this.icon) {
+      return this.icon.toLowerCase();
+    }
+    const msg = (this.message + ' ' + this.title).toLowerCase();
+    if (msg.includes('delete') || msg.includes('remove') || msg.includes('wipe') || msg.includes('clear')) {
+      return 'trash';
+    }
+    if (msg.includes('sync') || msg.includes('switch') || msg.includes('mode')) {
+      return 'sync';
+    }
+    return this.type;
   }
 }

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
+import { Observable, shareReplay, map } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
 
 export interface ContentBlock {
   type: 'main' | 'explanation' | 'illustration' | 'clause';
@@ -92,11 +92,33 @@ export interface ApiResponse<T> {
 })
 export class LegalService {
   private apiUrl = 'http://localhost:8888/api/legal';
+  private actsCache$: Observable<ApiResponse<BareAct[]>> | null = null;
 
   constructor(private http: HttpClient) { }
 
-  getActs(): Observable<ApiResponse<BareAct[]>> {
-    return this.http.get<ApiResponse<BareAct[]>>(`${this.apiUrl}/acts`);
+  getActs(refresh = false): Observable<ApiResponse<BareAct[]>> {
+    if (refresh || !this.actsCache$) {
+      const url = refresh ? `${this.apiUrl}/acts?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts?t=${Date.now()}`;
+      this.actsCache$ = this.http.get<ApiResponse<BareAct[]>>(url).pipe(
+        map(res => {
+          if (res && res.data) {
+            res.data = res.data.map(act => {
+              const cleanedAct = {
+                ...act,
+                actName: this.cleanActName(act.actName)
+              };
+              if (cleanedAct.chapters) {
+                cleanedAct.chapters = cleanedAct.chapters.map(ch => this.cleanChapter(ch));
+              }
+              return cleanedAct;
+            });
+          }
+          return res;
+        }),
+        shareReplay(1)
+      );
+    }
+    return this.actsCache$;
   }
 
   getHelpNearMe(category: string, location: string): Observable<ApiResponse<any>> {
@@ -104,13 +126,77 @@ export class LegalService {
   }
 
   getActByShortName(shortName: string, refresh = false): Observable<ApiResponse<BareAct>> {
-    const url = refresh ? `${this.apiUrl}/acts/${shortName}?refresh=true` : `${this.apiUrl}/acts/${shortName}`;
-    return this.http.get<ApiResponse<BareAct>>(url);
+    const url = refresh ? `${this.apiUrl}/acts/${shortName}?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts/${shortName}?t=${Date.now()}`;
+    return this.http.get<ApiResponse<BareAct>>(url).pipe(
+      map(res => {
+        if (res && res.data) {
+          res.data.actName = this.cleanActName(res.data.actName);
+          if (res.data.chapters) {
+            res.data.chapters = res.data.chapters.map(ch => this.cleanChapter(ch));
+          }
+        }
+        return res;
+      })
+    );
   }
 
   getActOutline(shortName: string, refresh = false): Observable<ApiResponse<BareAct>> {
-    const url = refresh ? `${this.apiUrl}/acts/${shortName}/outline?refresh=true` : `${this.apiUrl}/acts/${shortName}/outline`;
-    return this.http.get<ApiResponse<BareAct>>(url);
+    const url = refresh ? `${this.apiUrl}/acts/${shortName}/outline?refresh=true&t=${Date.now()}` : `${this.apiUrl}/acts/${shortName}/outline?t=${Date.now()}`;
+    return this.http.get<ApiResponse<BareAct>>(url).pipe(
+      map(res => {
+        if (res && res.data) {
+          res.data.actName = this.cleanActName(res.data.actName);
+          if (res.data.chapters) {
+            res.data.chapters = res.data.chapters.map(ch => this.cleanChapter(ch));
+          }
+        }
+        return res;
+      })
+    );
+  }
+
+  cleanChapter(ch: Chapter): Chapter {
+    let chapterNumber = ch.chapterNumber || '';
+    let title = ch.title || '';
+
+    // Remove "CHAPTER " or "Chapter " prefix from chapterNumber
+    if (chapterNumber.toUpperCase().startsWith('CHAPTER ')) {
+      chapterNumber = chapterNumber.substring(8).trim();
+    } else if (chapterNumber.toUpperCase().startsWith('CHAPTER')) {
+      chapterNumber = chapterNumber.substring(7).trim();
+    }
+
+    // Fix spacing typos in title (e.g. "Authorityof" -> "Authority of")
+    const cleanTitle = this.fixTitleSpacing(title);
+
+    return {
+      ...ch,
+      chapterNumber,
+      title: cleanTitle
+    };
+  }
+
+  fixTitleSpacing(title: string): string {
+    if (!title) return '';
+    return title
+      // Fix uppercase joined words
+      .replace(/\b([A-Z]+)OF\b/g, '$1 OF')
+      .replace(/\b([A-Z]+)AND\b/g, '$1 AND')
+      .replace(/\b([A-Z]+)OR\b/g, '$1 OR')
+      .replace(/\b([A-Z]+)IN\b/g, '$1 IN')
+      .replace(/\b([A-Z]+)TO\b/g, '$1 TO')
+      // Fix mixed/lowercase joined words
+      .replace(/\b([A-Za-z]+)of\b/g, '$1 of')
+      .replace(/\b([A-Za-z]+)and\b/g, '$1 and')
+      .replace(/\b([A-Za-z]+)or\b/g, '$1 or')
+      .replace(/\b([A-Za-z]+)in\b/g, '$1 in')
+      .replace(/\b([A-Za-z]+)to\b/g, '$1 to')
+      // Fix specific case-insensitive word pairs
+      .replace(/\b(Authority)of(India)\b/ig, '$1 of $2')
+      .replace(/\b(Protection)of(Information)\b/ig, '$1 of $2')
+      .replace(/\b(Offences)and(Penalties)\b/ig, '$1 and $2')
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
   getSection(shortName: string, sectionNumber: string): Observable<ApiResponse<any>> {
@@ -118,19 +204,37 @@ export class LegalService {
   }
 
   searchLaws(query: string): Observable<ApiResponse<SearchResultItem[]>> {
-    return this.http.get<ApiResponse<SearchResultItem[]>>(`${this.apiUrl}/search?q=${encodeURIComponent(query)}`);
+    return this.http.get<ApiResponse<SearchResultItem[]>>(`${this.apiUrl}/search?q=${encodeURIComponent(query)}`).pipe(
+      map(res => {
+        if (res && res.data) {
+          res.data = res.data.map(item => ({
+            ...item,
+            actName: this.cleanActName(item.actName)
+          }));
+        }
+        return res;
+      })
+    );
   }
 
   getTransitionMapping(act: string, section: string): Observable<TransitionMappingResult> {
-    return this.http.get<TransitionMappingResult>(`${this.apiUrl}/mapping?act=${encodeURIComponent(act)}&section=${encodeURIComponent(section)}`);
+    return this.http.get<TransitionMappingResult>(`${this.apiUrl}/mapping?act=${encodeURIComponent(act)}&section=${encodeURIComponent(section)}`).pipe(
+      map(res => {
+        if (res) {
+          if (res.oldAct) res.oldAct.actName = this.cleanActName(res.oldAct.actName);
+          if (res.newAct) res.newAct.actName = this.cleanActName(res.newAct.actName);
+        }
+        return res;
+      })
+    );
   }
 
   getMappingSuggestions(query: string): Observable<ApiResponse<MappingSuggestion[]>> {
     return this.http.get<ApiResponse<MappingSuggestion[]>>(`${this.apiUrl}/mapping/suggestions?q=${encodeURIComponent(query)}`);
   }
 
-  getSectionSummary(shortName: string, sectionNumber: string): Observable<ApiResponse<{summary: string, cached: boolean}>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}/summary`);
+  getSectionSummary(shortName: string, sectionNumber: string): Observable<ApiResponse<{ summary: string, cached: boolean }>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}/summary?t=${Date.now()}`);
   }
 
   getSectionSummaryStream(shortName: string, sectionNumber: string): Observable<string> {
@@ -186,4 +290,57 @@ export class LegalService {
       { question }
     );
   }
+
+  cleanActName(name: string): string {
+    if (!name) return '';
+    let cleaned = name.trim();
+
+    // 1. Remove leading backticks, stray quotes, or symbols
+    cleaned = cleaned.replace(/^[`'\s",.—-]+/, '');
+    cleaned = cleaned.replace(/[`'\s",.—-]+$/, '');
+
+    // 2. Fix spaced-out letters (e.g. "T H E   L I G H T H O U S E   A C T")
+    const spaceCharMatch = cleaned.match(/\b([A-Z0-9]\s){3,}/g);
+    if (spaceCharMatch) {
+      cleaned = cleaned.replace(/\s{2,}/g, ' _WORD_SEP_ ');
+      cleaned = cleaned.replace(/([A-Z0-9])\s+(?=[A-Z0-9]\b)/g, '$1');
+      cleaned = cleaned.replace(/_WORD_SEP_/g, ' ');
+      cleaned = cleaned.replace(/\s+/g, ' ');
+    }
+
+    // 3. Fix spacing around punctuation (e.g. "ACT , 1927" -> "ACT, 1927")
+    cleaned = cleaned.replace(/\s+([,.:;?!])\s*/g, '$1 ');
+
+    // 4. Convert to Title Case for readability
+    return this.toTitleCase(cleaned);
+  }
+
+  private toTitleCase(str: string): string {
+    const minorWords = ['and', 'or', 'but', 'a', 'an', 'the', 'as', 'at', 'by', 'for', 'in', 'of', 'on', 'per', 'to', 'is', 'with', 'from', 'into'];
+    return str.toLowerCase().split(' ').map((word, index) => {
+      let cleanWord = word;
+      let prefix = '';
+      let suffix = '';
+      if (word.startsWith('(')) {
+        prefix = '(';
+        cleanWord = word.slice(1);
+      }
+      if (word.endsWith(')')) {
+        suffix = ')';
+        cleanWord = cleanWord.slice(0, -1);
+      }
+
+      if (index > 0 && minorWords.includes(cleanWord) && !word.startsWith('(')) {
+        return word;
+      }
+
+      // Keep Roman numerals and legal acronyms uppercase
+      if (/^(ix|iv|v?i{0,3}|bns|bnss|bsa|ipc|crpc|iea|cpc|mva|nia|hma|ida)$/i.test(cleanWord)) {
+        return prefix + cleanWord.toUpperCase() + suffix;
+      }
+
+      return prefix + cleanWord.charAt(0).toUpperCase() + cleanWord.slice(1) + suffix;
+    }).join(' ');
+  }
+
 }

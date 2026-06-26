@@ -1,4 +1,702 @@
-// Civil & Family Portal Styles
-.page-wrapper {
-  // layout styles
+// Custom styling for Civil & Family Portal Page
+
+// Style jargon buster tooltips injected via innerHTML
+:host ::ng-deep {
+  .glossary-term {
+    position: relative;
+    cursor: help;
+    border-bottom: 1.5px dotted currentColor;
+    font-weight: 600;
+    transition: color 0.15s ease;
+
+    &:hover {
+      color: var(--color-primary-light) !important;
+
+      .glossary-tooltip {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translate(-50%, -6px);
+      }
+    }
+  }
+
+  .glossary-tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translate(-50%, 4px);
+    margin-bottom: 8px;
+    width: 16rem;
+    padding: 12px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.5;
+    text-align: center;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.2), 0 6px 12px -4px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+}
+
+// Fade-in animations for accordion expanded sliders
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+// Custom horizontal scrollbar hiding for swiping filter pills
+.scrollbar-none {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+  }
+}
+
+// Calendar Date Picker resets to match theme
+input[type="date"] {
+  color-scheme: light dark;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    filter: invert(0.5);
+    transition: filter 0.15s ease;
+
+    &:hover {
+      filter: invert(0.2);
+    }
+  }
+}
+
+// Ensure smooth height expansion transits
+.card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* 1. Base Subtle Shadow (Only on desktop category cards) */
+  box-shadow: 0 4px 18px -2px rgba(0, 0, 0, 0.03) !important;
+
+  :host-context(.dark) & {
+    box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.25) !important;
+  }
+
+  &.border-indigo-500\/35 {
+    border-color: rgba(99, 102, 241, 0.35) !important;
+    box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.12), 0 6px 12px -4px rgba(99, 102, 241, 0.06) !important;
+
+    :host-context(.dark) & {
+      box-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.28), 0 6px 12px -4px rgba(99, 102, 241, 0.14) !important;
+    }
+
+    &:hover {
+      border-color: rgba(99, 102, 241, 0.45) !important;
+      box-shadow: 0 12px 35px -5px rgba(99, 102, 241, 0.18), 0 8px 16px -4px rgba(99, 102, 241, 0.08) !important;
+
+      :host-context(.dark) & {
+        box-shadow: 0 12px 35px -5px rgba(99, 102, 241, 0.35), 0 8px 16px -4px rgba(99, 102, 241, 0.18) !important;
+      }
+    }
+  }
+
+  // General hover state (applied to non-specialized cards like guides)
+  &:hover {
+    transform: translateY(-4px) !important;
+    box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.15) !important;
+
+    :host-context(.dark) & {
+      box-shadow: 0 10px 25px -5px rgba(217, 119, 6, 0.25) !important;
+    }
+  }
+
+  /* 2. Dynamic hover shadow glow matching the hover border classes */
+  &.hover\:border-pink-500\/40:hover {
+    box-shadow: 0 12px 30px -5px rgba(236, 72, 153, 0.16) !important;
+
+    :host-context(.dark) & {
+      box-shadow: 0 12px 30px -5px rgba(236, 72, 153, 0.08) !important;
+    }
+  }
+
+  &.hover\:border-amber-500\/40:hover {
+    box-shadow: 0 12px 30px -5px rgba(245, 158, 11, 0.16) !important;
+
+    :host-context(.dark) & {
+      box-shadow: 0 12px 30px -5px rgba(245, 158, 11, 0.08) !important;
+    }
+  }
+
+  &.hover\:border-blue-500\/40:hover {
+    box-shadow: 0 12px 30px -5px rgba(59, 130, 246, 0.16) !important;
+
+    :host-context(.dark) & {
+      box-shadow: 0 12px 30px -5px rgba(59, 130, 246, 0.08) !important;
+    }
+  }
+
+  &.hover\:border-emerald-500\/40:hover {
+    box-shadow: 0 12px 30px -5px rgba(16, 185, 129, 0.16) !important;
+
+    :host-context(.dark) & {
+      box-shadow: 0 12px 30px -5px rgba(16, 185, 129, 0.08) !important;
+    }
+  }
+}
+
+// Stepper Timeline Styling
+.stepper-timeline {
+  position: relative;
+
+  .stepper-step-container {
+    position: relative;
+  }
+
+  .stepper-step {
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    // Slight opacity for collapsed/completed steps to focus on the active one
+    &.opacity-75 {
+      opacity: 0.75;
+
+      &:hover {
+        opacity: 0.95;
+      }
+    }
+
+    &:hover {
+      border-color: rgba(99, 102, 241, 0.35); // matches indigo accent border
+      box-shadow: 0 8px 20px -4px rgba(0, 0, 0, 0.06);
+    }
+  }
+}
+
+// Active step bubble subtle pulse and glow
+@keyframes pulseSubtle {
+
+  0%,
+  100% {
+    transform: translate(-50%, 0) scale(1);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+
+  50% {
+    transform: translate(-50%, 0) scale(1.05);
+    box-shadow: 0 0 14px 4px rgba(99, 102, 241, 0.25);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 2s infinite ease-in-out;
+}
+
+// Accent Cards with Dynamic Hover Border-Morphing
+.accent-card-indigo {
+  border: 1px solid rgba(79, 70, 229, 0.15) !important;
+  border-left: 4px solid #4f46e5 !important;
+  background: rgba(79, 70, 229, 0.04) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  :host-context(.dark) & {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(99, 102, 241, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: rgba(99, 102, 241, 0.45) !important;
+    border-left-width: 6px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.2) !important;
+    background: rgba(79, 70, 229, 0.07) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.7) !important;
+    }
+  }
+}
+
+.accent-card-amber {
+  border: 1px solid rgba(217, 119, 6, 0.15) !important;
+  border-left: 4px solid #d97706 !important;
+  background: rgba(217, 119, 6, 0.04) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  :host-context(.dark) & {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(245, 158, 11, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: rgba(245, 158, 11, 0.45) !important;
+    border-left-width: 6px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 20px -5px rgba(217, 119, 6, 0.2) !important;
+    background: rgba(217, 119, 6, 0.07) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.7) !important;
+    }
+  }
+}
+
+.accent-card-blue {
+  border: 1px solid rgba(37, 99, 235, 0.15) !important;
+  border-left: 4px solid #2563eb !important;
+  background: rgba(37, 99, 235, 0.04) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  :host-context(.dark) & {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(59, 130, 246, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: rgba(59, 130, 246, 0.45) !important;
+    border-left-width: 6px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.2) !important;
+    background: rgba(37, 99, 235, 0.07) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.7) !important;
+    }
+  }
+}
+
+.accent-card-emerald {
+  border: 1px solid rgba(5, 150, 105, 0.15) !important;
+  border-left: 4px solid #059669 !important;
+  background: rgba(5, 150, 105, 0.04) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+
+  :host-context(.dark) & {
+    background: rgba(15, 23, 42, 0.5) !important;
+    border-color: rgba(16, 185, 129, 0.25) !important;
+  }
+
+  &:hover {
+    border-color: rgba(16, 185, 129, 0.45) !important;
+    border-left-width: 6px !important;
+    border-radius: 14px !important;
+    box-shadow: 0 10px 20px -5px rgba(5, 150, 105, 0.2) !important;
+    background: rgba(5, 150, 105, 0.07) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.7) !important;
+    }
+  }
+}
+
+// Custom inner-item-card styles to ensure checkboxes pop clearly in dark mode
+.inner-item-card {
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  transition: all 0.22s ease-in-out !important;
+
+  :host-context(.dark) & {
+    background-color: rgba(30, 41, 59, 0.45) !important; // elevated dark slate
+    border-color: rgba(255, 255, 255, 0.12) !important; // clear visible border
+  }
+
+  &:hover {
+    background-color: var(--bg-elevated) !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+
+    :host-context(.dark) & {
+      background-color: rgba(30, 41, 59, 0.7) !important;
+      border-color: rgba(255, 255, 255, 0.22) !important;
+    }
+  }
+}
+
+.act-card:hover {
+  border-color: var(--act-color);
+  box-shadow: 0 6px 20px -4px var(--act-color);
+}
+
+// Sleek, modern custom scrollbar for acts lists inside category cards
+.acts-scroll-container {
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: var(--border-subtle);
+    border-radius: 10px;
+    transition: background 0.2s ease;
+
+    &:hover {
+      background: var(--text-muted);
+    }
+  }
+
+  // Firefox support
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-subtle) transparent;
+}
+
+// ═══════════════════════════════════════════════════
+// MOBILE-SPECIFIC STYLES (< 768px)
+// ═══════════════════════════════════════════════════
+
+// Mobile Stepper Dots - Compact Horizontal Progress Tracker
+.mobile-stepper-dots {
+  position: relative;
+  overflow-x: auto;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  scrollbar-width: none;
+}
+
+// Mobile Step Card - Smooth slide-up animation
+.mobile-step-card {
+  @media (max-width: 767px) {
+    animation: slideUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// Mobile Filter Pills - Horizontal Scroll Strip
+.mobile-filter-pill {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: all 0.2s ease;
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Mobile-specific timeline milestone compactness and visual alignment
+@media (max-width: 767px) {
+
+  // Flatten specialization and guide cards on mobile
+  .card {
+    border: 1px solid var(--border-subtle) !important;
+    background: var(--bg-surface) !important;
+    box-shadow: none !important;
+    border-radius: 14px !important;
+
+    :host-context(.dark) & {
+      border: 1px solid rgba(255, 255, 255, 0.16) !important;
+      background: rgba(30, 41, 59, 0.4) !important;
+    }
+
+    &:hover {
+      transform: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .card.bg-bgSurface\/40 {
+    border: 1px solid var(--border-subtle) !important;
+    background: var(--bg-surface) !important;
+    box-shadow: none !important;
+
+    :host-context(.dark) & {
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      background: rgba(30, 41, 59, 0.3) !important;
+    }
+
+    &.border-indigo-500\/35 {
+      border: 1px solid rgba(99, 102, 241, 0.35) !important;
+      box-shadow: 0 4px 20px -2px rgba(99, 102, 241, 0.06) !important;
+
+      :host-context(.dark) & {
+        border: 1px solid rgba(99, 102, 241, 0.45) !important;
+      }
+    }
+  }
+
+  // De-clutter active step card container and step details
+  .stepper-step {
+    border: none !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+
+    &:hover {
+      border: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .stepper-step-details {
+    border: none !important;
+    background: transparent !important;
+    padding: 8px 0 0 0 !important;
+  }
+
+  // Turn accent panels into simple border-left callouts
+  .accent-card-indigo,
+  .accent-card-amber,
+  .accent-card-blue,
+  .accent-card-emerald {
+    border: none !important;
+    box-shadow: none !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+    gap: 6px !important;
+    margin-bottom: 8px !important;
+
+    &:hover {
+      border: none !important;
+      box-shadow: none !important;
+    }
+  }
+
+  .accent-card-indigo {
+    border-left: 3px solid #6366f1 !important;
+    background: rgba(99, 102, 241, 0.04) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    &:hover {
+      background: rgba(99, 102, 241, 0.06) !important;
+
+      :host-context(.dark) & {
+        background: rgba(15, 23, 42, 0.5) !important;
+      }
+    }
+  }
+
+  .accent-card-amber {
+    border-left: 3px solid #d97706 !important;
+    background: rgba(217, 119, 6, 0.04) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    &:hover {
+      background: rgba(217, 119, 6, 0.06) !important;
+
+      :host-context(.dark) & {
+        background: rgba(15, 23, 42, 0.5) !important;
+      }
+    }
+  }
+
+  .accent-card-blue {
+    border-left: 3px solid #2563eb !important;
+    background: rgba(37, 99, 235, 0.04) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    &:hover {
+      background: rgba(37, 99, 235, 0.06) !important;
+
+      :host-context(.dark) & {
+        background: rgba(15, 23, 42, 0.5) !important;
+      }
+    }
+  }
+
+  .accent-card-emerald {
+    border-left: 3px solid #059669 !important;
+    background: rgba(5, 150, 105, 0.04) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.4) !important;
+    }
+
+    &:hover {
+      background: rgba(5, 150, 105, 0.06) !important;
+
+      :host-context(.dark) & {
+        background: rgba(15, 23, 42, 0.5) !important;
+      }
+    }
+  }
+
+  // Flatten document checklist cards, lawyer rows, and checklist boxes
+  .inner-item-card {
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    background-color: rgba(0, 0, 0, 0.02) !important;
+    border-radius: 6px !important;
+    box-shadow: none !important;
+    padding: 8px 10px !important;
+    gap: 6px !important;
+
+    :host-context(.dark) & {
+      border: none !important;
+      background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.03) !important;
+
+      :host-context(.dark) & {
+        background-color: rgba(255, 255, 255, 0.03) !important;
+      }
+    }
+  }
+
+  // Flatten sub-cards like Lok Adalat, warnings, etc.
+  .border-indigo-500\/20.bg-indigo-500\/5,
+  .bg-amber-500\/10.border-amber-500\/25,
+  .bg-indigo-500\/5.border-indigo-500\/20 {
+    border: none !important;
+    border-left: 3px solid #6366f1 !important;
+    background: rgba(99, 102, 241, 0.04) !important;
+    border-radius: 8px !important;
+    padding: 10px !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.4) !important;
+    }
+  }
+
+  .bg-amber-500\/10.border-amber-500\/25 {
+    border-left-color: #d97706 !important;
+    background: rgba(217, 119, 6, 0.04) !important;
+
+    :host-context(.dark) & {
+      background: rgba(15, 23, 42, 0.4) !important;
+    }
+  }
+
+  // Flatten calculator computed results box
+  .accent-card-indigo .p-2\.5 {
+    border: none !important;
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+
+    :host-context(.dark) & {
+      background: rgba(255, 255, 255, 0.02) !important;
+    }
+  }
+
+  // Flatten horizontal calculator timeline items
+  .accent-card-indigo .border.bg-bgBase\/40 {
+    border: none !important;
+    background: rgba(0, 0, 0, 0.02) !important;
+    border-radius: 6px !important;
+    padding: 6px !important;
+
+    :host-context(.dark) & {
+      background: rgba(255, 255, 255, 0.02) !important;
+    }
+  }
+
+  // Flatten category act card links
+  .act-card {
+    border: 1px solid rgba(0, 0, 0, 0.04) !important;
+    background-color: rgba(0, 0, 0, 0.02) !important;
+    border-radius: 8px !important;
+    padding: 8px 10px !important;
+
+    :host-context(.dark) & {
+      border: none !important;
+      background-color: rgba(255, 255, 255, 0.02) !important;
+    }
+
+    &:hover {
+      border: 1px solid var(--act-color) !important;
+      box-shadow: none !important;
+
+      :host-context(.dark) & {
+        border: none !important;
+      }
+    }
+  }
+
+  // Prevent squishing in template preview headers
+  .accent-card-amber>.flex.justify-between.items-center {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+    width: 100% !important;
+
+    h5 {
+      width: 100% !important;
+    }
+
+    .flex.items-center.gap-2 {
+      width: 100% !important;
+      justify-content: flex-start !important;
+      gap: 6px !important;
+
+      button,
+      a {
+        flex: 1 !important;
+        text-align: center !important;
+        justify-content: center !important;
+        font-size: 10px !important;
+        padding: 6px 8px !important;
+      }
+    }
+  }
+
+  // Flatten pre container of templates
+  .accent-card-amber .relative.rounded-lg.border.border-borderSubtle.bg-slate-950 {
+    border: none !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    padding: 10px !important;
+  }
+
+  // Hide scrollbar but keep horizontal scrolling smooth
+  .overflow-x-auto {
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  // Smaller buttons text and layout
+  button {
+    font-size: 11px !important;
+  }
+
+  input,
+  select,
+  textarea {
+    padding-top: 8px !important;
+    padding-bottom: 8px !important;
+    border-radius: 10px !important;
+  }
+
+  // Tighter pre/code blocks on mobile
+  pre {
+    max-height: 120px !important;
+    font-size: 9px !important;
+  }
 }

@@ -1,10 +1,26 @@
-<div class="relative inline-block share-container">
+<div class="relative block share-container w-full">
   <button (click)="toggleShareDropdown($event)" [appTooltip]="tooltipText" [tooltipPlacement]="tooltipPlacement"
     [class]="buttonClass" [ngClass]="{'active': showShareDropdown}">
-    <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-        d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
-    </svg>
+    <ng-container *ngIf="label; else simpleIcon">
+      <div class="flex items-center gap-3.5 text-left w-full">
+        <div class="w-9 h-9 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 shrink-0 flex items-center justify-center">
+          <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+          </svg>
+        </div>
+        <div class="flex flex-col gap-0.5">
+          <span class="text-xs font-bold text-text-primary dark:text-white">{{ label }}</span>
+          <span *ngIf="description" class="text-[10px] text-text-secondary dark:text-slate-400 font-normal leading-normal whitespace-normal">{{ description }}</span>
+        </div>
+      </div>
+    </ng-container>
+    <ng-template #simpleIcon>
+      <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+          d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+      </svg>
+    </ng-template>
   </button>
 
   <!-- ═══ DESKTOP: Premium Dropdown (hidden on mobile) ═══ -->
