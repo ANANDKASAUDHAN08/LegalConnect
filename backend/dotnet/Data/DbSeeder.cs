@@ -218,6 +218,33 @@ namespace CoreApi.Data
                 context.Reviews.AddRange(seededReviews);
                 context.SaveChanges();
             }
+
+            // Seed Helplines if none exist
+            if (!context.Helplines.Any())
+            {
+                var helplines = new[]
+                {
+                    new Helpline { Name = "National Emergency (All-in-One)", Number = "112", Description = "Single emergency number for police, fire and ambulance across India.", Categories = "Criminal Matter,Other / Not Sure", IsActive = true },
+                    new Helpline { Name = "Domestic Violence & Women's Helpline", Number = "1091", Description = "24x7 helpline for women in distress, domestic violence, and sexual harassment.", Categories = "Family Law,Criminal Matter", IsActive = true },
+                    new Helpline { Name = "Cyber Crime Helpline", Number = "1930", Description = "Report online financial fraud and cybercrime. Freeze fraudulent transactions within the golden hour.", Categories = "Cyber Crime", IsActive = true },
+                    new Helpline { Name = "National Women Helpline", Number = "181", Description = "Government helpline for women in crisis, trafficking, and gender-based violence.", Categories = "Family Law,Criminal Matter", IsActive = true },
+                    new Helpline { Name = "National Legal Aid Helpline", Number = "15100", Description = "Free legal aid and advice for citizens unable to afford legal services (NALSA).", Categories = "Other / Not Sure,Criminal Matter,Family Law", IsActive = true },
+                    new Helpline { Name = "Consumer Helpline", Number = "1800-11-4000", Description = "National consumer grievance redressal helpline for product defects, billing disputes and fraud.", Categories = "Consumer Complaint", IsActive = true },
+                    new Helpline { Name = "Labour Helpline", Number = "1800-180-5412", Description = "Report wage theft, workplace harassment, and labour law violations.", Categories = "Labour Issue", IsActive = true },
+                    new Helpline { Name = "MSME Grievance Helpline", Number = "1800-111-822", Description = "Helpline for micro, small and medium enterprises facing payment delays or contract disputes.", Categories = "Business Dispute", IsActive = true },
+                    new Helpline { Name = "Child Helpline (Childline)", Number = "1098", Description = "Emergency outreach for children in distress, abuse, trafficking, or legal trouble.", Categories = "Family Law,Criminal Matter", IsActive = true },
+                    new Helpline { Name = "Senior Citizen Helpline", Number = "14567", Description = "Government helpline for senior citizens facing abuse, neglect, or legal issues.", Categories = "Criminal Matter,Family Law", IsActive = true },
+                    new Helpline { Name = "Anti-Corruption Helpline (CVC)", Number = "1800-11-0180", Description = "Report government corruption and bribery to the Central Vigilance Commission.", Categories = "Criminal Matter,Business Dispute", IsActive = true },
+                    new Helpline { Name = "Income Tax Helpline", Number = "1800-180-1961", Description = "Tax filing assistance, ITR queries, and TDS refund disputes.", Categories = "Business Dispute", IsActive = true },
+                    new Helpline { Name = "Road Accident Emergency (NHAI)", Number = "1033", Description = "Report highway accidents and get emergency response on national highways.", Categories = "Criminal Matter,Other / Not Sure", IsActive = true },
+                    new Helpline { Name = "RERA Grievance Helpline", Number = "1800-120-3507", Description = "File complaints against builders for delayed possession or project fraud under RERA.", Categories = "Property Dispute", IsActive = true },
+                    new Helpline { Name = "Disability Rights Helpline", Number = "1800-11-4515", Description = "Helpline for persons with disabilities facing discrimination or access to entitlements.", Categories = "Labour Issue,Other / Not Sure", IsActive = true }
+                };
+
+                context.Helplines.AddRange(helplines);
+                context.SaveChanges();
+                Console.WriteLine("Helplines table seeded with 15 national helplines.");
+            }
         }
     }
 }

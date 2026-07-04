@@ -4,6 +4,7 @@ using CoreApi.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoreApi.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704062045_AddHelplineAndFavouriteTables")]
+    partial class AddHelplineAndFavouriteTables
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -169,18 +172,15 @@ namespace CoreApi.Migrations
                     b.Property<int>("ClientId")
                         .HasColumnType("int");
 
-                    b.Property<string>("HelplineId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("HelplineName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
+                    b.Property<int>("HelplineId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("SavedAt")
                         .HasColumnType("datetime(6)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("HelplineId");
 
                     b.HasIndex("ClientId", "HelplineId")
                         .IsUnique();
@@ -216,36 +216,6 @@ namespace CoreApi.Migrations
                         .IsUnique();
 
                     b.ToTable("FavouriteLawyers");
-                });
-
-            modelBuilder.Entity("CoreApi.Models.FavouriteResource", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ClientId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("ResourceId")
-                        .IsRequired()
-                        .HasColumnType("varchar(255)");
-
-                    b.Property<string>("ResourceName")
-                        .IsRequired()
-                        .HasColumnType("longtext");
-
-                    b.Property<DateTime>("SavedAt")
-                        .HasColumnType("datetime(6)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ClientId", "ResourceId")
-                        .IsUnique();
-
-                    b.ToTable("FavouriteResources");
                 });
 
             modelBuilder.Entity("CoreApi.Models.Helpline", b =>
@@ -698,21 +668,18 @@ namespace CoreApi.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Client");
-                });
-
-            modelBuilder.Entity("CoreApi.Models.FavouriteLawyer", b =>
-                {
-                    b.HasOne("CoreApi.Models.User", "Client")
+                    b.HasOne("CoreApi.Models.Helpline", "Helpline")
                         .WithMany()
-                        .HasForeignKey("ClientId")
+                        .HasForeignKey("HelplineId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Client");
+
+                    b.Navigation("Helpline");
                 });
 
-            modelBuilder.Entity("CoreApi.Models.FavouriteResource", b =>
+            modelBuilder.Entity("CoreApi.Models.FavouriteLawyer", b =>
                 {
                     b.HasOne("CoreApi.Models.User", "Client")
                         .WithMany()

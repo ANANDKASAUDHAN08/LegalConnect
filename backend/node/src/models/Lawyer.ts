@@ -20,6 +20,7 @@ export interface ILawyer extends Document {
   isAvailable: boolean;
   avatarUrl?: string;
   bannerUrl?: string;
+  gender?: string;
 
   // Premium additions
   activeCourts: string[];
@@ -52,6 +53,7 @@ const LawyerSchema = new Schema<ILawyer>({
   isAvailable: { type: Boolean, default: true },
   avatarUrl: { type: String },
   bannerUrl: { type: String },
+  gender: { type: String, default: 'Male' },
 
   // Premium schema properties
   activeCourts: [{ type: String }],

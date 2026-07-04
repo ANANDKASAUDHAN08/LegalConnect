@@ -17,6 +17,10 @@ namespace CoreApi.Data
         public DbSet<ActiveSession> ActiveSessions { get; set; }
         public DbSet<LoginHistory> LoginHistories { get; set; }
         public DbSet<ResearchNote> ResearchNotes { get; set; }
+        public DbSet<Helpline> Helplines { get; set; }
+        public DbSet<FavouriteLawyer> FavouriteLawyers { get; set; }
+        public DbSet<FavouriteHelpline> FavouriteHelplines { get; set; }
+        public DbSet<FavouriteResource> FavouriteResources { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -71,6 +75,39 @@ namespace CoreApi.Data
 
             modelBuilder.Entity<ResearchNote>()
                 .HasIndex(n => new { n.ClientId, n.ActShortName, n.SectionNumber })
+                .IsUnique();
+
+            // Configure FavouriteLawyer relationship
+            modelBuilder.Entity<FavouriteLawyer>()
+                .HasOne(f => f.Client)
+                .WithMany()
+                .HasForeignKey(f => f.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FavouriteLawyer>()
+                .HasIndex(f => new { f.ClientId, f.LawyerId })
+                .IsUnique();
+
+            // Configure FavouriteResource relationship
+            modelBuilder.Entity<FavouriteResource>()
+                .HasOne(f => f.Client)
+                .WithMany()
+                .HasForeignKey(f => f.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FavouriteResource>()
+                .HasIndex(f => new { f.ClientId, f.ResourceId })
+                .IsUnique();
+
+            // Configure FavouriteHelpline relationships
+            modelBuilder.Entity<FavouriteHelpline>()
+                .HasOne(f => f.Client)
+                .WithMany()
+                .HasForeignKey(f => f.ClientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<FavouriteHelpline>()
+                .HasIndex(f => new { f.ClientId, f.HelplineId })
                 .IsUnique();
         }
     }

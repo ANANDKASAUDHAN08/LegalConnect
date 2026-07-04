@@ -4,7 +4,12 @@ import BareAct, { SectionModel } from '../models/BareAct';
 import aiService from '../services/AiService';
 import LegalResource from '../models/LegalResource';
 import Lawyer from '../models/Lawyer';
+import HelpCategory from '../models/HelpCategory';
+import HelpRoadmap from '../models/HelpRoadmap';
+import HelpHelpline from '../models/HelpHelpline';
+import SavedCasePack from '../models/SavedCasePack';
 import { splitTitle, getParsedContent } from '../utils/textParser';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -62,6 +67,8 @@ async function getCache(key: string): Promise<any> {
   } else if (key.startsWith('legal:ask:')) {
     const askKey = key.replace('legal:ask:', '');
     return askCache.get(askKey);
+  } else if (key === 'legal:help:stats') {
+    return mappingCache.get('help:stats');
   }
   return null;
 }
@@ -103,6 +110,8 @@ async function setCache(key: string, value: any, ttlSeconds: number = 86400): Pr
       if (firstKey) askCache.delete(firstKey);
     }
     askCache.set(askKey, value);
+  } else if (key === 'legal:help:stats') {
+    mappingCache.set('help:stats', value);
   }
 }
 
@@ -134,13 +143,13 @@ router.get('/search', async (req: Request, res: Response) => {
 
     const data = sections.map(sec => {
       const act = actMap.get(sec.actShortName || '');
-      
+
       // Extract a snippet around the query word
       let snippet = '';
       const text = sec.content;
       const queryWords = query.split(/\s+/).filter(w => w.length > 2);
       let bestIndex = -1;
-      
+
       for (const word of queryWords) {
         const idx = text.toLowerCase().indexOf(word.toLowerCase());
         if (idx !== -1) {
@@ -148,7 +157,7 @@ router.get('/search', async (req: Request, res: Response) => {
           break;
         }
       }
-      
+
       if (bestIndex !== -1) {
         const start = Math.max(0, bestIndex - 60);
         const end = Math.min(text.length, bestIndex + 100);
@@ -475,20 +484,225 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
   }
 });
 
+// GET /api/legal/help/categories - Fetch all legal help categories with dynamic counts
+router.get('/help/categories', async (req: Request, res: Response) => {
+  try {
+    const locationStr = (req.query.location as string || 'New Delhi').trim();
+    const cacheKey = `legal:help:categories:${locationStr.toLowerCase()}`;
+
+    const cachedData = await getCache(cacheKey);
+    if (cachedData) {
+      res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+      return res.json({ success: true, data: cachedData, fromCache: true });
+    }
+
+    // Fetch all HelpCategory records
+    const dbCategories = await HelpCategory.find({}).lean();
+    if (!dbCategories || dbCategories.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+
+    // Handle city aliases dynamically (e.g., Delhi vs New Delhi, Bengaluru vs Bangalore)
+    let cityPattern = `^${locationStr}$`;
+    const cleanedLoc = locationStr.trim().toLowerCase();
+    if (cleanedLoc === 'delhi' || cleanedLoc === 'new delhi') {
+      cityPattern = '^(delhi|new delhi)$';
+    } else if (cleanedLoc === 'bengaluru' || cleanedLoc === 'bangalore') {
+      cityPattern = '^(bengaluru|bangalore)$';
+    } else if (cleanedLoc === 'gurgaon' || cleanedLoc === 'gurugram') {
+      cityPattern = '^(gurgaon|gurugram)$';
+    }
+
+    // Compute active counts for the given location in parallel
+    const categoriesWithCounts = await Promise.all(dbCategories.map(async (cat) => {
+      let specQuery: any = cat.id;
+      if (cat.id === 'Property Dispute') {
+        specQuery = /Property|Real Estate|Civil|Land/i;
+      } else if (cat.id === 'Family Law' || cat.id === 'Domestic Violence') {
+        specQuery = /Family|Divorce|Domestic|Women|Criminal/i;
+      } else if (cat.id === 'Consumer Complaint') {
+        specQuery = /Consumer|Civil|Insurance/i;
+      } else if (cat.id === 'Cyber Crime') {
+        specQuery = /Cyber|Criminal|IT Law|Information Technology/i;
+      } else if (cat.id === 'Labour Issue') {
+        specQuery = /Labour|Employment|Service Law/i;
+      } else if (cat.id === 'Criminal Matter') {
+        specQuery = /Criminal|Bail/i;
+      } else if (cat.id === 'Business Dispute') {
+        specQuery = /Corporate|Commercial|Contract|Business/i;
+      }
+
+      const resourcesFilter = {
+        city: { $regex: new RegExp(cityPattern, 'i') },
+        status: 'approved' as const,
+        $or: [
+          { categories: cat.name },
+          { categories: 'General' }
+        ]
+      };
+
+      const [legalAid, courts, govOffices, lawyers, helplines] = await Promise.all([
+        LegalResource.countDocuments({ ...resourcesFilter, type: 'LegalAid' }),
+        LegalResource.countDocuments({ ...resourcesFilter, type: 'Court' }),
+        LegalResource.countDocuments({ ...resourcesFilter, type: { $in: ['GovernmentOffice', 'PoliceStation'] } }),
+        Lawyer.countDocuments({
+          city: { $regex: new RegExp(cityPattern, 'i') },
+          specializations: { $regex: specQuery },
+          isVerified: true
+        }),
+        HelpHelpline.countDocuments({
+          $or: [
+            { category: cat.id },
+            { category: 'General' }
+          ]
+        })
+      ]);
+
+      const totalCount = legalAid + courts + govOffices + lawyers + helplines;
+
+      return {
+        id: cat.id,
+        name: cat.name,
+        icon: cat.icon,
+        description: cat.description,
+        subcategories: cat.subcategories,
+        resourceCount: totalCount,
+        breakdown: {
+          legalAid,
+          courts,
+          govOffices,
+          helplines,
+          lawyers
+        }
+      };
+    }));
+
+    await setCache(cacheKey, categoriesWithCounts, 300);
+
+    res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+    res.json({ success: true, data: categoriesWithCounts });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/legal/all-authorities - Returns all SLSA (state) and NALSA (national) authority records
+router.get('/all-authorities', async (req: Request, res: Response) => {
+  try {
+    const cacheKey = 'legal:all-authorities';
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+      return res.json({ success: true, data: cached, fromCache: true });
+    }
+
+    const authorities = await LegalResource.find({
+      $or: [{ isStateAuthority: true }, { isNationalAuthority: true }],
+      status: 'approved'
+    }).lean();
+
+    await setCache(cacheKey, authorities, 3600);
+    res.set('Cache-Control', 'public, max-age=3600, must-revalidate');
+    res.json({ success: true, data: authorities });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/legal/help-near-me - Find resources, lawyers, helplines & customized roadmap
 router.get('/help-near-me', async (req: Request, res: Response) => {
   try {
-    const { category, location } = req.query;
+    const { category, location, state } = req.query;
 
     if (!category || !location) {
-      return res.status(400).json({ 
-        success: false, 
-        message: 'Parameters "category" and "location" are required.' 
+      return res.status(400).json({
+        success: false,
+        message: 'Parameters "category" and "location" are required.'
       });
     }
 
     const categoryStr = category as string;
     const locationStr = location as string;
+    const stateParam = state as string;
+
+    const cacheKey = `legal:help-near-me:${categoryStr.toLowerCase()}:${locationStr.toLowerCase()}:${(stateParam || '').toLowerCase()}`;
+    const cachedResult = await getCache(cacheKey);
+    if (cachedResult) {
+      res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+      return res.json({ ...cachedResult, fromCache: true });
+    }
+
+    // Resolve state for small villages or towns fallback
+    let resolvedState = stateParam;
+
+    const cityToStateMap: Record<string, string> = {
+      'ayodhya': 'Uttar Pradesh',
+      'lucknow': 'Uttar Pradesh',
+      'kanpur': 'Uttar Pradesh',
+      'noida': 'Uttar Pradesh',
+      'ghaziabad': 'Uttar Pradesh',
+      'mumbai': 'Maharashtra',
+      'pune': 'Maharashtra',
+      'nagpur': 'Maharashtra',
+      'bengaluru': 'Karnataka',
+      'bangalore': 'Karnataka',
+      'mysore': 'Karnataka',
+      'chennai': 'Tamil Nadu',
+      'coimbatore': 'Tamil Nadu',
+      'kolkata': 'West Bengal',
+      'darjeeling': 'West Bengal',
+      'hyderabad': 'Telangana',
+      'ahmedabad': 'Gujarat',
+      'surat': 'Gujarat',
+      'jaipur': 'Rajasthan',
+      'jodhpur': 'Rajasthan',
+      'patna': 'Bihar',
+      'gaya': 'Bihar',
+      'bhopal': 'Madhya Pradesh',
+      'indore': 'Madhya Pradesh',
+      'ernakulam': 'Kerala',
+      'kochi': 'Kerala',
+      'trivandrum': 'Kerala',
+      'panchkula': 'Haryana',
+      'gurugram': 'Haryana',
+      'amritsar': 'Punjab',
+      'ludhiana': 'Punjab',
+      'shimla': 'Himachal Pradesh',
+      'dehradun': 'Uttarakhand',
+      'nainital': 'Uttarakhand',
+      'ranchi': 'Jharkhand',
+      'jamshedpur': 'Jharkhand',
+      'raipur': 'Chhattisgarh',
+      'bilaspur': 'Chhattisgarh',
+      'panaji': 'Goa',
+      'port blair': 'Andaman & Nicobar',
+      'leh': 'Ladakh',
+      'kavaratti': 'Lakshadweep',
+      'silvassa': 'Dadra & Nagar Haveli',
+      'daman': 'Daman & Diu',
+      'new delhi': 'Delhi'
+    };
+
+    const cleanLoc = locationStr.toLowerCase().trim();
+    if (!resolvedState) {
+      for (const [city, st] of Object.entries(cityToStateMap)) {
+        if (cleanLoc.includes(city)) {
+          resolvedState = st;
+          break;
+        }
+      }
+    }
+
+    if (!resolvedState) {
+      // Look up any resource in this city in database to extract state
+      const sample = await LegalResource.findOne({
+        city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
+        state: { $exists: true }
+      }).lean();
+      if (sample && sample.state) {
+        resolvedState = sample.state;
+      }
+    }
 
     // 1. Fetch Legal Resources and Lawyers in this city in parallel
     let specQuery: any = categoryStr;
@@ -508,174 +722,92 @@ router.get('/help-near-me', async (req: Request, res: Response) => {
       specQuery = /Corporate|Commercial|Contract|Business/i;
     }
 
+    // Handle city aliases dynamically (e.g., Delhi vs New Delhi, Bengaluru vs Bangalore)
+    let cityPattern = `^${locationStr}$`;
+    const cleanedLoc = locationStr.trim().toLowerCase();
+    if (cleanedLoc === 'delhi' || cleanedLoc === 'new delhi') {
+      cityPattern = '^(delhi|new delhi)$';
+    } else if (cleanedLoc === 'bengaluru' || cleanedLoc === 'bangalore') {
+      cityPattern = '^(bengaluru|bangalore)$';
+    } else if (cleanedLoc === 'gurgaon' || cleanedLoc === 'gurugram') {
+      cityPattern = '^(gurgaon|gurugram)$';
+    }
+
     const resourceFilter = {
-      city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
+      city: { $regex: new RegExp(cityPattern, 'i') },
+      status: 'approved' as const,
       $or: [
         { categories: categoryStr },
         { categories: 'General' }
       ]
     };
 
-    const [resources, lawyers] = await Promise.all([
+    const [resources, lawyers, dbRoadmap, dbHelplines, slsaResource, nalsaHq] = await Promise.all([
       LegalResource.find(resourceFilter),
       Lawyer.find({
-        city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
+        city: { $regex: new RegExp(cityPattern, 'i') },
         specializations: { $regex: specQuery },
         isVerified: true
-      }).sort({ rating: -1 }).limit(10)
+      }).sort({ rating: -1 }).limit(10),
+      HelpRoadmap.findOne({ category: categoryStr }).lean(),
+      HelpHelpline.find({
+        $or: [
+          { category: categoryStr },
+          { category: 'General' }
+        ]
+      }).lean(),
+      resolvedState ? LegalResource.findOne({
+        isStateAuthority: true,
+        state: { $regex: new RegExp(`^${resolvedState}$`, 'i') }
+      }).exec() : Promise.resolve(null),
+      LegalResource.findOne({
+        isNationalAuthority: true
+      }).exec()
     ]);
 
-    // 3. Construct category-specific emergency helplines
-    const helplines: any[] = [];
-    
-    // Add general NALSA legal aid helpline to everything
-    helplines.push({
-      name: 'National Legal Aid Helpline (NALSA)',
-      number: '15100',
-      description: 'Free legal aid services and counseling available 24/7 across India.'
-    });
-
-    if (categoryStr === 'Cyber Crime') {
-      helplines.push({
-        name: 'National Cyber Crime Helpline',
-        number: '1930',
-        description: 'Toll-free emergency number to report financial cyber fraud immediately.'
-      });
-      helplines.push({
-        name: 'Emergency Police Support',
-        number: '112',
-        description: 'National emergency service provider.'
-      });
-    } else if (categoryStr === 'Domestic Violence' || categoryStr === 'Family Law') {
-      helplines.push({
-        name: 'National Women Helpline',
-        number: '1091',
-        description: 'Dedicated helpline for women facing harassment or domestic distress.'
-      });
-      helplines.push({
-        name: 'Women & Child Helpline',
-        number: '181',
-        description: 'Single contact number for women in distress, functioning 24/7.'
-      });
-    } else if (categoryStr === 'Consumer Complaint') {
-      helplines.push({
-        name: 'National Consumer Helpline',
-        number: '1915',
-        description: 'Government toll-free helpline for consumer grievance registration.'
-      });
-    } else if (categoryStr === 'Labour Issue') {
-      helplines.push({
-        name: 'Labour Grievance Cell',
-        number: '155214',
-        description: 'Shram Suvidha helpline for workers and industrial dispute guidance.'
-      });
+    const combinedResources: any[] = [...resources];
+    if (slsaResource && !combinedResources.some(r => r._id.toString() === slsaResource._id.toString())) {
+      combinedResources.unshift(slsaResource);
+    }
+    if (nalsaHq && !combinedResources.some(r => r._id.toString() === nalsaHq._id.toString())) {
+      combinedResources.unshift(nalsaHq);
     }
 
-    // 4. Generate Personalized Legal Roadmap & Lok Adalat guidance
-    let roadmap: any = {
-      steps: [],
-      documents: [],
-      onlineLinks: [],
-      lokAdalatGuidance: ''
+    const roadmap = dbRoadmap || {
+      steps: [
+        { title: 'Seek Legal Advice', detail: 'Consult a legal aid center or hire a verified attorney to evaluate your rights.' },
+        { title: 'Draft a Written Narrative', detail: 'Write a chronological summary of what happened, detailing names, dates, and witnesses.' },
+        { title: 'Gather Supporting Documents', detail: 'Collect all contracts, identity documents, bills, and communications.' }
+      ],
+      documents: ['Government Issued Photo ID', 'Relevant Contracts/Agreements', 'Correspondence history (emails/letters)'],
+      onlineLinks: [
+        { name: 'e-Courts Services Portal', url: 'https://ecourts.gov.in' }
+      ],
+      lokAdalatGuidance: 'Civil suits and minor compoundable offenses can be settled in Lok Adalats to save costs, stress, and time.'
     };
 
-    if (categoryStr === 'Property Dispute') {
-      roadmap = {
-        steps: [
-          { title: 'Verify Title Deeds', detail: 'Verify land ownership records, mutations, and khata entries online or at the local Sub-Registrar Office.' },
-          { title: 'Check RERA Status', detail: 'Ensure the property/builder is registered on the state RERA portal. Check for outstanding complaints.' },
-          { title: 'Send Legal Notice', detail: 'Issue a formal legal notice to the builder, tenant, or opponent giving them 15 days to respond (use LegalConnect templates).' },
-          { title: 'File Conciliation/Suit', detail: 'File a conciliation request in RERA, a civil suit, or file with the Land Revenue Tribunal.' }
-        ],
-        documents: ['Registered Sale Deed', 'Khata / Mutation Certificate', 'Property Tax Receipts', 'Contract / Builder-Buyer Agreement', 'Notice & Proof of Service'],
-        onlineLinks: [
-          { name: 'Delhi Land Records (DLRC)', url: 'https://dlrc.delhigovt.nic.in' },
-          { name: 'Kaveri Online Services (Karnataka)', url: 'https://kaverionline.karnataka.gov.in' }
-        ],
-        lokAdalatGuidance: 'Property disputes, partitioning, and tenancy issues are highly suited for Lok Adalat. You can request the court to refer your case to the next Lok Adalat session to resolve it without court fees.'
-      };
-    } else if (categoryStr === 'Consumer Complaint') {
-      roadmap = {
-        steps: [
-          { title: 'Lodge Grievance at NCH', detail: 'Register a complaint on the National Consumer Helpline portal (1915) to seek corporate resolution.' },
-          { title: 'Send Demand Notice', detail: 'Draft and mail a formal notice to the service provider demanding refund/replacement within 15 days.' },
-          { title: 'File on e-Daakhil', detail: 'If resolving fails, log in to e-Daakhil and file a formal consumer complaint to the District Consumer Commission.' }
-        ],
-        documents: ['Purchase Invoice / Receipt', 'Warranty Card / Guarantee Card', 'Written communication / Support emails', 'Photographs of defective product / proof of service deficiency'],
-        onlineLinks: [
-          { name: 'National Consumer Helpline (NCH)', url: 'https://consumerhelpline.gov.in' },
-          { name: 'e-Daakhil Filing Portal', url: 'https://edaakhil.nic.in' }
-        ],
-        lokAdalatGuidance: 'Consumer cases (especially insurance claims, bank service disputes, and electricity billing issues) are frequently resolved in Lok Adalats with full stamp duty refunds and mutual settlements.'
-      };
-    } else if (categoryStr === 'Domestic Violence') {
-      roadmap = {
-        steps: [
-          { title: 'Report to Protection Officer', detail: 'Contact a Protection Officer appointed under the DV Act or visit the local Sakhi One Stop Center for immediate support.' },
-          { title: 'Seek Medical Aid & Logs', detail: 'If there is physical injury, visit a government hospital for a medical examination and obtain a medico-legal report.' },
-          { title: 'File a DIR (Domestic Incident Report)', detail: 'Lodge a complaint under Section 12 of the DV Act in Family Court or file an FIR in the local police cell.' }
-        ],
-        documents: ['Incident timeline with dates', 'Medical/physical injury reports', 'Chat history, audio clips, or videos of incidents', 'Proof of residence/joint assets'],
-        onlineLinks: [
-          { name: 'National Commission for Women (NCW)', url: 'http://ncw.nic.in' },
-          { name: 'Sakhi One Stop Center WCD Directory', url: 'https://wcd.nic.in' }
-        ],
-        lokAdalatGuidance: 'Matrimonial disputes and family maintenance issues can be referred to court-annexed mediation centers. Only compoundable offenses can be referred to Lok Adalats.'
-      };
-    } else if (categoryStr === 'Cyber Crime') {
-      roadmap = {
-        steps: [
-          { title: 'Freeze Accounts immediately', detail: 'In case of financial fraud, notify your bank immediately (within 2 hours) to freeze cards and reverse transactions.' },
-          { title: 'Preserve Digital Evidence', detail: 'Take screenshots of chat history, website URLs, phone numbers, fake profiles, and bank SMS transaction alerts.' },
-          { title: 'File Online Cyber Complaint', detail: 'Register your complaint at cybercrime.gov.in or report to the nearest dedicated Cyber Crime Police Cell.' }
-        ],
-        documents: ['Screenshots of communication / phishing links', 'Bank transaction statement / debit SMS alerts', 'Email headers of suspicious emails', 'ID Proof of the victim'],
-        onlineLinks: [
-          { name: 'National Cyber Crime Reporting Portal', url: 'https://cybercrime.gov.in' },
-          { name: 'RBI Ombudsman Portal', url: 'https://cms.rbi.org.in' }
-        ],
-        lokAdalatGuidance: 'While core cyber crimes are non-compoundable, secondary financial recoveries against banks or merchants for unauthorized transactions can be settled in Lok Adalats.'
-      };
-    } else if (categoryStr === 'Labour Issue') {
-      roadmap = {
-        steps: [
-          { title: 'Submit Grievance online', detail: 'File a grievance on the Ministry of Labour Shram Suvidha portal or EPFO Portal.' },
-          { title: 'Initiate Conciliation', detail: 'Submit a petition to the Assistant Labour Commissioner (ALC) to initiate conciliation proceedings with your employer.' },
-          { title: 'Approach Labour Court', detail: 'If conciliation fails, request a referral from the ALC to present your case before the Labour Court.' }
-        ],
-        documents: ['Offer Letter / Employment Contract', 'Salary Slips (last 6 months) & Bank statement', 'Termination notice / Show Cause Letter', 'Appraisal records / Performance emails'],
-        onlineLinks: [
-          { name: 'Shram Suvidha Portal', url: 'https://shramsuvidha.gov.in' },
-          { name: 'EPFO Grievances Portal', url: 'https://epfigms.gov.in' }
-        ],
-        lokAdalatGuidance: 'Labour disputes involving unpaid wages, gratuity, retrenchment compensation, or reinstatement benefits are routinely referred to Lok Adalats for quick cash settlements.'
-      };
-    } else {
-      // General Fallback
-      roadmap = {
-        steps: [
-          { title: 'Seek Legal Advice', detail: 'Consult a legal aid center or hire a verified attorney to evaluate your rights.' },
-          { title: 'Draft a Written Narrative', detail: 'Write a chronological summary of what happened, detailing names, dates, and witnesses.' },
-          { title: 'Gather Supporting Documents', detail: 'Collect all contracts, identity documents, bills, and communications.' }
-        ],
-        documents: ['Government Issued Photo ID', 'Relevant Contracts/Agreements', 'Correspondence history (emails/letters)'],
-        onlineLinks: [
-          { name: 'e-Courts Services Portal', url: 'https://ecourts.gov.in' }
-        ],
-        lokAdalatGuidance: 'Civil suits and minor compoundable offenses can be settled in Lok Adalats to save costs, stress, and time.'
-      };
-    }
+    const helplines = dbHelplines && dbHelplines.length > 0 ? dbHelplines : [
+      {
+        name: 'National Legal Aid Helpline (NALSA)',
+        number: '15100',
+        description: 'Free legal aid services and counseling available 24/7 across India.'
+      }
+    ];
 
-    res.json({
+    const result = {
       success: true,
       category: categoryStr,
       location: locationStr,
       roadmap,
       helplines,
-      resources,
+      resources: combinedResources,
       lawyers
-    });
+    };
 
+    await setCache(cacheKey, result, 300);
+
+    res.set('Cache-Control', 'public, max-age=300, must-revalidate');
+    res.json(result);
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -1039,7 +1171,7 @@ Term: "${term.trim()}"
 Definition:`;
 
     const definition = await aiService.generateRawContent(prompt);
-    
+
     await setCache(cacheKey, definition, 86400 * 7); // Cache for 7 days
 
     res.json({
@@ -1050,6 +1182,291 @@ Definition:`;
     });
   } catch (error: any) {
     console.error('Jargon explainer error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// User Suggestion Endpoint (Public)
+router.post('/suggest-resource', async (req: Request, res: Response) => {
+  try {
+    const { name, type, categories, subcategories, city, state, address, contactNumber, website, languages, coordinates } = req.body;
+    if (!name || !type || !city || !address || !coordinates || !coordinates.lat || !coordinates.lng) {
+      return res.status(400).json({ success: false, message: 'Required fields: name, type, city, address, coordinates.' });
+    }
+
+    const newResource = new LegalResource({
+      name,
+      type,
+      categories: categories || ['General'],
+      subcategories: subcategories || [],
+      city,
+      state,
+      address,
+      contactNumber,
+      website,
+      languages: languages || ['English', 'Hindi'],
+      coordinates,
+      isVerified: false,
+      status: 'pending',
+      source: 'user_suggestion'
+    });
+
+    await newResource.save();
+    res.status(201).json({ success: true, message: 'Resource suggestion submitted successfully for moderation.', data: newResource });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/legal/resources/:id - Get a single legal resource by ID (Public)
+router.get('/resources/:id', async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const resource = await LegalResource.findById(id);
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found.' });
+    }
+    res.json({ success: true, data: resource });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/legal/helplinesAll - Fetch all emergency helplines (Public)
+router.get('/helplinesAll', async (req: Request, res: Response) => {
+  try {
+    const helplines = await HelpHelpline.find({});
+    res.json({ success: true, data: helplines });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/legal/resourcesAll - Fetch all legal aid resources/courts (Public)
+router.get('/resourcesAll', async (req: Request, res: Response) => {
+  try {
+    const resources = await LegalResource.find({ status: 'approved' });
+    res.json({ success: true, data: resources });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin Resource List (Protected)
+router.get('/admin/resources', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { status, city, type, search, page = '1', limit = '10' } = req.query;
+    const filter: any = {};
+
+    if (status) filter.status = status;
+    if (city) filter.city = { $regex: new RegExp(city as string, 'i') };
+    if (type) filter.type = type;
+    if (search) {
+      filter.$or = [
+        { name: { $regex: new RegExp(search as string, 'i') } },
+        { address: { $regex: new RegExp(search as string, 'i') } }
+      ];
+    }
+
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+    const skip = (pageNum - 1) * limitNum;
+
+    const [resources, total] = await Promise.all([
+      LegalResource.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum),
+      LegalResource.countDocuments(filter)
+    ]);
+
+    res.json({
+      success: true,
+      data: resources,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum)
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin Resource Create (Protected)
+router.post('/admin/resources', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { name, type, categories, subcategories, city, state, address, contactNumber, website, languages, coordinates, status } = req.body;
+    if (!name || !type || !city || !address || !coordinates || !coordinates.lat || !coordinates.lng) {
+      return res.status(400).json({ success: false, message: 'Required fields: name, type, city, address, coordinates.' });
+    }
+
+    const newResource = new LegalResource({
+      name,
+      type,
+      categories: categories || ['General'],
+      subcategories: subcategories || [],
+      city,
+      state,
+      address,
+      contactNumber,
+      website,
+      languages: languages || ['English', 'Hindi'],
+      coordinates,
+      isVerified: true,
+      status: status || 'approved',
+      source: 'admin_dashboard'
+    });
+
+    await newResource.save();
+    res.status(201).json({ success: true, message: 'Resource created successfully.', data: newResource });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin Resource Update / Approve (Protected)
+router.put('/admin/resources/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    const resource = await LegalResource.findById(id);
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found.' });
+    }
+
+    if (updates.status === 'approved') {
+      updates.isVerified = true;
+    }
+
+    const updatedResource = await LegalResource.findByIdAndUpdate(id, updates, { new: true });
+    res.json({ success: true, message: 'Resource updated successfully.', data: updatedResource });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Admin Resource Delete (Protected)
+router.delete('/admin/resources/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const resource = await LegalResource.findByIdAndDelete(id);
+    if (!resource) {
+      return res.status(404).json({ success: false, message: 'Resource not found.' });
+    }
+    res.json({ success: true, message: 'Resource deleted successfully.' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── AI Scenario Solver ─────────────────────────────────────────────────────
+// POST /api/legal/help/ai-solve — Uses Gemini to parse a natural language situation
+router.post('/help/ai-solve', async (req: Request, res: Response) => {
+  try {
+    const { description } = req.body;
+    if (!description || description.trim().length < 5) {
+      return res.status(400).json({ success: false, message: 'Field "description" is required (min 5 characters).' });
+    }
+
+    const result = await aiService.solveAiScenario(description.trim());
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    console.error('AI solve error:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ─── Offline Case Pack Sync (Auth Required) ──────────────────────────────────
+// GET /api/legal/case-packs — Get all synced Case Packs for logged-in user
+router.get('/case-packs', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const packs = await SavedCasePack.find({ userId: user._id }).sort({ savedAt: -1 }).lean();
+    res.json({ success: true, data: packs });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/legal/case-packs/sync — Upsert an array of offline Case Packs for user
+router.post('/case-packs/sync', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    const { packs } = req.body;
+    if (!Array.isArray(packs) || packs.length === 0) {
+      return res.status(400).json({ success: false, message: '"packs" must be a non-empty array.' });
+    }
+
+    let synced = 0;
+    for (const pack of packs) {
+      if (!pack.category || !pack.location) continue;
+      await SavedCasePack.findOneAndUpdate(
+        { userId: user._id, category: pack.category, location: pack.location },
+        {
+          userId: user._id,
+          category: pack.category,
+          location: pack.location,
+          roadmap: pack.roadmap || {},
+          helplines: pack.helplines || [],
+          resources: pack.resources || [],
+          savedAt: pack.savedAt ? new Date(pack.savedAt) : new Date()
+        },
+        { upsert: true, new: true }
+      );
+      synced++;
+    }
+
+    res.json({ success: true, synced, message: `${synced} Case Pack(s) synced to your account.` });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// DELETE /api/legal/case-packs/:id — Remove a specific synced Case Pack
+router.delete('/case-packs/:id', requireAuth, async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+
+    await SavedCasePack.findOneAndDelete({ _id: req.params.id, userId: user._id });
+    res.json({ success: true, message: 'Case Pack removed from account.' });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// GET /api/legal/help/stats — Fetch real counts of legal resources from database
+router.get('/help/stats', async (req: Request, res: Response) => {
+  try {
+    const cacheKey = 'legal:help:stats';
+    const cached = await getCache(cacheKey);
+    if (cached) {
+      res.set('Cache-Control', 'public, max-age=600, must-revalidate');
+      return res.json({ success: true, data: cached, fromCache: true });
+    }
+
+    const [legalClinics, distCourts, verifiedLawyers] = await Promise.all([
+      LegalResource.countDocuments({ type: 'LegalAid', status: 'approved' }),
+      LegalResource.countDocuments({ type: 'Court', status: 'approved' }),
+      Lawyer.countDocuments({ isVerified: true })
+    ]);
+
+    const stats = {
+      legalClinics,
+      distCourts,
+      verifiedLawyers
+    };
+
+    await setCache(cacheKey, stats, 600); // cache for 10 minutes
+
+    res.set('Cache-Control', 'public, max-age=600, must-revalidate');
+    res.json({ success: true, data: stats });
+  } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
 });

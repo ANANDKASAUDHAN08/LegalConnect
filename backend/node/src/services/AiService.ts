@@ -182,6 +182,84 @@ Please provide a concise comparison (2-3 bullet points or short paragraphs) high
     };
   }
 
+  async solveAiScenario(description: string): Promise<{
+    category: string;
+    subcategories: string[];
+    caseSummary: string;
+    roadmapSteps: { title: string; detail: string }[];
+  }> {
+    const validCategories = [
+      'Property Dispute', 'Family Law', 'Consumer Complaint', 'Labour Issue',
+      'Criminal Matter', 'Cyber Crime', 'Business Dispute', 'Domestic Violence',
+      'Banking & Finance', 'RTI / Government Grievance'
+    ];
+
+    if (!this.isConfigured || !this.ai) {
+      // Keyword-based fallback
+      const q = description.toLowerCase();
+      let category = 'Property Dispute';
+      if (q.includes('divorce') || q.includes('custody') || q.includes('maintenance') || q.includes('wife') || q.includes('husband')) category = 'Family Law';
+      else if (q.includes('salary') || q.includes('fired') || q.includes('job') || q.includes('unpaid') || q.includes('wage') || q.includes('employer')) category = 'Labour Issue';
+      else if (q.includes('scam') || q.includes('refund') || q.includes('defect') || q.includes('product') || q.includes('consumer')) category = 'Consumer Complaint';
+      else if (q.includes('hack') || q.includes('phish') || q.includes('online fraud') || q.includes('cyber') || q.includes('whatsapp')) category = 'Cyber Crime';
+      else if (q.includes('police') || q.includes('fir') || q.includes('bail') || q.includes('arrest')) category = 'Criminal Matter';
+      else if (q.includes('domestic') || q.includes('abuse') || q.includes('violence')) category = 'Domestic Violence';
+      return {
+        category,
+        subcategories: [],
+        caseSummary: `Your situation appears to relate to ${category}. Please consult a legal professional for tailored advice.`,
+        roadmapSteps: [
+          { title: 'Document Your Situation', detail: 'Write down a chronological account of events with dates, names, and any witnesses.' },
+          { title: 'Gather Evidence', detail: 'Collect all relevant documents, messages, photos, or receipts.' },
+          { title: 'Seek Legal Counsel', detail: 'Contact a nearby legal aid centre or consult a verified lawyer.' }
+        ]
+      };
+    }
+
+    try {
+      const prompt = `You are an expert Indian legal AI assistant. A person has described their legal problem in their own words. Analyze the situation and respond with a structured JSON object.
+
+User's Situation:
+"${description}"
+
+Valid Legal Categories (choose exactly ONE from this list):
+${validCategories.map(c => `- ${c}`).join('\n')}
+
+Respond ONLY with a valid JSON object in this exact format (no markdown, no code blocks, no extra text):
+{
+  "category": "one category from the list above",
+  "subcategories": ["up to 3 specific sub-issues, e.g. Builder Fraud, Tenancy Dispute"],
+  "caseSummary": "2-3 sentence plain-English summary of the user's legal problem and their rights",
+  "roadmapSteps": [
+    { "title": "First action to take", "detail": "Specific guidance for this step" },
+    { "title": "Second action", "detail": "Specific guidance" },
+    { "title": "Third action", "detail": "Specific guidance" }
+  ]
+}`;
+
+      const model = this.ai.getGenerativeModel({ model: 'gemini-2.5-flash' });
+      const result = await model.generateContent(prompt);
+      const text = result.response.text().trim();
+      const cleaned = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
+      const parsed = JSON.parse(cleaned);
+
+      return {
+        category: validCategories.includes(parsed.category) ? parsed.category : validCategories[0],
+        subcategories: Array.isArray(parsed.subcategories) ? parsed.subcategories.slice(0, 3) : [],
+        caseSummary: parsed.caseSummary || '',
+        roadmapSteps: Array.isArray(parsed.roadmapSteps) ? parsed.roadmapSteps.slice(0, 5) : []
+      };
+    } catch (error: any) {
+      console.error('Error in solveAiScenario:', error);
+      return {
+        category: 'Property Dispute',
+        subcategories: [],
+        caseSummary: 'Unable to analyze your situation at this time. Please try again or select a category manually.',
+        roadmapSteps: []
+      };
+    }
+  }
+
   async askLegalQuestion(question: string, availableActs: string[], context?: string): Promise<{ answer: string; suggestedActs: string[] }> {
     if (!this.isConfigured || !this.ai) {
       return this.getFallbackAnswer(question, availableActs, context);
