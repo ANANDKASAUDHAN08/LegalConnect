@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,7 @@ import { BookmarkService, Bookmark } from '../../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../../services/auth.service';
 import { LawyerService, Consultation } from '../../../services/lawyer.service';
 import { LegalService } from '../../../services/legal.service';
+import { SavedItemsService } from '../../../services/saved-items.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
 
@@ -19,6 +20,10 @@ import { ActsFilterModalComponent } from './components/acts-filter-modal/acts-fi
 import { ShareCitationModalComponent } from './components/share-citation-modal/share-citation-modal.component';
 import { StatCardComponent } from '../../../components/stat-card/stat-card.component';
 import { TooltipDirective } from '../../../directives/tooltip.directive';
+import { LawyerCardComponent } from '../../../components/lawyer-card/lawyer-card.component';
+import { HelplineCardComponent } from '../../find-help/components/helpline-card/helpline-card.component';
+import { ResourceCardComponent } from '../../find-help/components/resource-card/resource-card.component';
+import { DirectoryDetailDrawerComponent } from './components/directory-detail-drawer/directory-detail-drawer.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -36,7 +41,11 @@ import { TooltipDirective } from '../../../directives/tooltip.directive';
     ActsFilterModalComponent,
     ShareCitationModalComponent,
     StatCardComponent,
-    TooltipDirective
+    TooltipDirective,
+    LawyerCardComponent,
+    HelplineCardComponent,
+    ResourceCardComponent,
+    DirectoryDetailDrawerComponent
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss']
@@ -135,6 +144,16 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   aiSummary = '';
   loadingAiSummary = false;
 
+  // Saved directory details lists
+  savedLawyersDetails: any[] = [];
+  savedHelplinesDetails: any[] = [];
+  savedResourcesDetails: any[] = [];
+
+  // Directory Detail Drawer state
+  directoryDrawerOpen = false;
+  directoryDrawerType: 'lawyer' | 'resource' | 'helpline' | null = null;
+  directoryDrawerData: any = null;
+
   // Sharing
   bookmarkToShare: Bookmark | null = null;
 
@@ -166,6 +185,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       const lock = this._showNewCollectionModal ||
         this._showShareModal ||
         this._drawerOpen ||
+        this.directoryDrawerOpen ||
         this._customConfirmOpen ||
         this._customPromptOpen ||
         this.showActsFilterModal;
@@ -246,9 +266,14 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private lawyerService: LawyerService,
     private legalService: LegalService,
     private snackbarService: SnackbarService,
+    public savedItemsService: SavedItemsService,
     private route: ActivatedRoute,
     private eRef: ElementRef
-  ) { }
+  ) {
+    effect(() => {
+      this.loadSavedDirectoryDetails();
+    });
+  }
 
   ngOnInit() {
     this.bookmarks$ = this.bookmarkService.bookmarks$;
@@ -480,7 +505,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       }
     });
     this.collectionsList = Array.from(list).sort();
-    
+
     this.unassignedCount = this.allBookmarks.filter(b => !b.collectionName || !b.collectionName.trim()).length;
   }
 
@@ -788,7 +813,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   openBookmarkDrawer(bm: Bookmark) {
     this.selectedBookmark = bm;
     this.drawerOpen = true;
-    
+
     // Check if there is an unsaved local draft first
     const draftKey = `note_draft_${bm.actShortName}_${bm.section.section_number}`;
     const draft = localStorage.getItem(draftKey);
@@ -834,7 +859,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   onNotesChanged(newNotes: string) {
     this.drawerNoteText = newNotes;
-    
+
     // Save draft in localStorage immediately
     if (this.selectedBookmark) {
       const draftKey = `note_draft_${this.selectedBookmark.actShortName}_${this.selectedBookmark.section.section_number}`;
@@ -862,7 +887,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     if (!this.selectedBookmark) return;
     this.loadingAiSummary = true;
     this.aiSummary = '';
-    
+
     if (this.summarySub) {
       this.summarySub.unsubscribe();
     }
@@ -930,4 +955,98 @@ ${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.sect
   trackByInquiry(index: number, item: Consultation): number {
     return item.id;
   }
+
+  loadSavedDirectoryDetails() {
+    const savedLawyersList = this.savedItemsService.savedLawyers();
+    if (savedLawyersList.length > 0) {
+      this.lawyerService.getLawyers().subscribe({
+        next: (res) => {
+          if (res.success && res.data) {
+            const savedIds = new Set(savedLawyersList.map(l => l.lawyerId));
+            this.savedLawyersDetails = res.data.filter(l => savedIds.has(l._id));
+
+            // Sync drawer list if open in View All mode
+            if (this.directoryDrawerOpen && this.directoryDrawerType === 'lawyer' && Array.isArray(this.directoryDrawerData)) {
+              this.directoryDrawerData = this.savedLawyersDetails;
+            }
+          }
+        },
+        error: () => this.savedLawyersDetails = []
+      });
+    } else {
+      this.savedLawyersDetails = [];
+      if (this.directoryDrawerOpen && this.directoryDrawerType === 'lawyer' && Array.isArray(this.directoryDrawerData)) {
+        this.directoryDrawerData = [];
+      }
+    }
+
+    const savedHelplinesList = this.savedItemsService.savedHelplines();
+    if (savedHelplinesList.length > 0) {
+      this.legalService.getAllHelplines().subscribe({
+        next: (res) => {
+          if (res && res.success && res.data) {
+            const savedIds = new Set(savedHelplinesList.map(h => h.helplineId));
+            this.savedHelplinesDetails = res.data.filter(h => savedIds.has(h._id));
+
+            // Sync drawer list if open in View All mode
+            if (this.directoryDrawerOpen && this.directoryDrawerType === 'helpline' && Array.isArray(this.directoryDrawerData)) {
+              this.directoryDrawerData = this.savedHelplinesDetails;
+            }
+          }
+        },
+        error: () => this.savedHelplinesDetails = []
+      });
+    } else {
+      this.savedHelplinesDetails = [];
+      if (this.directoryDrawerOpen && this.directoryDrawerType === 'helpline' && Array.isArray(this.directoryDrawerData)) {
+        this.directoryDrawerData = [];
+      }
+    }
+
+    const savedResourcesList = this.savedItemsService.savedResources();
+    if (savedResourcesList.length > 0) {
+      this.legalService.getAllResources().subscribe({
+        next: (res) => {
+          if (res && res.success && res.data) {
+            const savedIds = new Set(savedResourcesList.map(r => r.resourceId));
+            this.savedResourcesDetails = res.data.filter(r => savedIds.has(r._id));
+
+            // Sync drawer list if open in View All mode
+            if (this.directoryDrawerOpen && this.directoryDrawerType === 'resource' && Array.isArray(this.directoryDrawerData)) {
+              this.directoryDrawerData = this.savedResourcesDetails;
+            }
+          }
+        },
+        error: () => this.savedResourcesDetails = []
+      });
+    } else {
+      this.savedResourcesDetails = [];
+      if (this.directoryDrawerOpen && this.directoryDrawerType === 'resource' && Array.isArray(this.directoryDrawerData)) {
+        this.directoryDrawerData = [];
+      }
+    }
+  }
+
+  openDirectoryDrawer(type: 'lawyer' | 'resource' | 'helpline', data: any) {
+    this.directoryDrawerType = type;
+    this.directoryDrawerData = data;
+    this.directoryDrawerOpen = true;
+    this.updateScrollLock();
+  }
+
+  closeDirectoryDrawer() {
+    this.directoryDrawerOpen = false;
+    this.directoryDrawerType = null;
+    this.directoryDrawerData = null;
+    this.updateScrollLock();
+  }
+
+  copySummaryToClipboard(text: string) {
+    navigator.clipboard.writeText(text).then(() => {
+      this.snackbarService.show('Directory summary copied to clipboard!', 'success');
+    }).catch(() => {
+      this.snackbarService.show('Failed to copy summary to clipboard.', 'error');
+    });
+  }
+
 }

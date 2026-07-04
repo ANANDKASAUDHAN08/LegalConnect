@@ -183,7 +183,8 @@
         <main id="content-section" class="flex-1 w-full space-y-1">
 
           <!-- Tabs Controls -->
-          <div class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6">
+          <div
+            class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6 overflow-x-auto scrollbar-none w-full">
             <button (click)="activeTab = 'bookmarks'"
               [class]="activeTab === 'bookmarks' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
               class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
@@ -204,6 +205,20 @@
                 <polyline points="22,6 12,13 2,6"></polyline>
               </svg>
               Consult Requests ({{ inquiries.length }})
+            </button>
+            <button (click)="activeTab = 'saved-directory'"
+              [class]="activeTab === 'saved-directory' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              appTooltip="View saved lawyers, helplines, and legal aid centers">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+              Saved Directory ({{ savedItemsService.savedLawyers().length + savedItemsService.savedHelplines().length +
+              savedItemsService.savedResources().length }})
             </button>
           </div>
 
@@ -440,8 +455,247 @@
           <app-inquiries-timeline *ngIf="activeTab === 'inquiries'" [inquiries]="inquiries"
             [loadingInquiries]="loadingInquiries">
           </app-inquiries-timeline>
-          }
+          } <!-- TAB 3: SAVED DIRECTORY -->
+          <div *ngIf="activeTab === 'saved-directory'" class="space-y-8 animate-[fadeIn_0.2s_ease-out] pt-4">
 
+            <!-- SAVED LAWYERS SECTION -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+                <div
+                  class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="w-4 h-4 text-indigo-650 dark:text-indigo-400">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="12" cy="7" r="4"></circle>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    Saved Advocates & Lawyers
+                    <span
+                      class="text-[10px] sm:text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded-full font-extrabold border border-indigo-500/10">
+                      {{ savedLawyersDetails.length }}
+                    </span>
+                  </h2>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Quickly consult with saved legal professionals</p>
+                </div>
+
+                <!-- View All Button -->
+                <button *ngIf="savedLawyersDetails.length > 0"
+                  (click)="openDirectoryDrawer('lawyer', savedLawyersDetails)"
+                  class="px-2.5 py-1 text-[10px] font-extrabold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 rounded-lg border-0 transition-all cursor-pointer">
+                  View All
+                </button>
+              </div>
+
+              <div *ngIf="savedLawyersDetails.length === 0"
+                class="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/10">
+                <p class="text-xs text-slate-500">No lawyers saved yet. <a routerLink="/lawyers"
+                    class="text-indigo-650 dark:text-indigo-400 hover:underline font-bold">Browse lawyers &rarr;</a></p>
+              </div>
+
+              <div *ngIf="savedLawyersDetails.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div *ngFor="let lawyer of savedLawyersDetails"
+                  class="flex p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 items-center justify-between gap-4 shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+                  (click)="openDirectoryDrawer('lawyer', lawyer)">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="relative flex-shrink-0">
+                      <img *ngIf="lawyer.avatarUrl" [src]="lawyer.avatarUrl"
+                        class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+                      <div *ngIf="!lawyer.avatarUrl"
+                        class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center border border-indigo-100/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+                        {{ lawyer.name?.charAt(0) }}
+                      </div>
+                      <span *ngIf="lawyer.isAvailable"
+                        class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border border-white dark:border-slate-900"
+                        appTooltip="Available Now"></span>
+                    </div>
+                    <div class="min-w-0">
+                      <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {{ lawyer.name }}
+                      </h3>
+                      <p class="text-[10px] text-slate-450 dark:text-slate-550 truncate">
+                        {{ lawyer.specializations?.slice(0, 2)?.join(', ') || 'General Practice' }}
+                      </p>
+                      <p class="text-[9px] text-indigo-650 dark:text-indigo-400 font-bold mt-0.5">
+                        {{ lawyer.experience }} yrs exp &bull; {{ lawyer.rating }} &starf;
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+                    <button (click)="openDirectoryDrawer('lawyer', lawyer)"
+                      class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-[10px] font-bold transition-all shadow-sm active:scale-95 border-0 cursor-pointer">
+                      Details
+                    </button>
+                    <button (click)="savedItemsService.toggleLawyer(lawyer._id, lawyer.name)"
+                      class="px-2.5 py-1.5 border border-red-200/60 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-650 dark:text-red-400 rounded-lg text-[10px] font-bold transition-all bg-transparent cursor-pointer">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SAVED RESOURCES/CENTERS SECTION -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+                <div
+                  class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="w-4 h-4 text-amber-650 dark:text-amber-400">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+                    <line x1="9" y1="9" x2="15" y2="9" />
+                    <line x1="9" y1="13" x2="15" y2="13" />
+                    <line x1="9" y1="17" x2="13" y2="17" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    Saved Legal Aid & Courts
+                    <span
+                      class="text-[10px] sm:text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 px-2 py-0.5 rounded-full font-extrabold border border-amber-500/10">
+                      {{ savedResourcesDetails.length }}
+                    </span>
+                  </h2>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Court complexes and Free Legal Aid centers</p>
+                </div>
+
+                <!-- View All Button -->
+                <button *ngIf="savedResourcesDetails.length > 0"
+                  (click)="openDirectoryDrawer('resource', savedResourcesDetails)"
+                  class="px-2.5 py-1 text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 rounded-lg border-0 transition-all cursor-pointer">
+                  View All
+                </button>
+              </div>
+
+              <div *ngIf="savedResourcesDetails.length === 0"
+                class="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/10">
+                <p class="text-xs text-slate-500">No aid centers saved yet. <a routerLink="/find-help"
+                    class="text-indigo-650 dark:text-indigo-400 hover:underline font-bold">Find help centers &rarr;</a>
+                </p>
+              </div>
+
+              <div *ngIf="savedResourcesDetails.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div *ngFor="let resource of savedResourcesDetails"
+                  class="flex p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 items-center justify-between gap-4 shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+                  (click)="openDirectoryDrawer('resource', resource)">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 border"
+                      [class]="resource.type === 'Court' ? 'bg-indigo-50 border-indigo-100/20 text-indigo-650 dark:bg-indigo-950/30 dark:text-indigo-400' : 'bg-emerald-50 border-emerald-100/20 text-emerald-650 dark:bg-emerald-950/30 dark:text-emerald-400'">
+                      <svg *ngIf="resource.type === 'Court'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2.2" class="w-5 h-5">
+                        <path d="M12 22v-4M8 18h8M3 14h18M12 2v12M5 6v6M19 6v6M9 6v6M15 6v6"></path>
+                      </svg>
+                      <svg *ngIf="resource.type !== 'Court'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2.2" class="w-5 h-5">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                    </div>
+                    <div class="min-w-0">
+                      <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {{ resource.name }}
+                      </h3>
+                      <div class="flex items-center gap-1.5 mt-0.5">
+                        <span class="text-[9px] uppercase font-black px-1.5 py-0.5 rounded"
+                          [class]="resource.type === 'Court' ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'">
+                          {{ resource.type === 'Court' ? 'District Court' : 'Legal Aid Center' }}
+                        </span>
+                        <span class="text-[9px] font-bold"
+                          [class]="resource.isVerified ? 'text-emerald-500' : 'text-slate-400'">
+                          &bull; {{ resource.isVerified ? 'Verified' : 'General' }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+                    <button (click)="openDirectoryDrawer('resource', resource)"
+                      class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white rounded-lg text-[10px] font-bold transition-all shadow-sm active:scale-95 border-0 cursor-pointer">
+                      Details
+                    </button>
+                    <button (click)="savedItemsService.toggleResource(resource._id, resource.name)"
+                      class="px-2.5 py-1.5 border border-red-200/60 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-655 dark:text-red-400 rounded-lg text-[10px] font-bold transition-all bg-transparent cursor-pointer">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- SAVED HELPLINES SECTION -->
+            <div class="space-y-4">
+              <div class="flex items-center gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+                <div
+                  class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100/10 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" class="w-4 h-4 text-emerald-655 dark:text-emerald-400">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                    </path>
+                  </svg>
+                </div>
+                <div>
+                  <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    Saved Emergency Helplines
+                    <span
+                      class="text-[10px] sm:text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full font-extrabold border border-emerald-500/10">
+                      {{ savedHelplinesDetails.length }}
+                    </span>
+                  </h2>
+                  <p class="text-[10px] text-slate-500 mt-0.5">Emergency legal support hotlines</p>
+                </div>
+
+                <!-- View All Button -->
+                <button *ngIf="savedHelplinesDetails.length > 0"
+                  (click)="openDirectoryDrawer('helpline', savedHelplinesDetails)"
+                  class="px-2.5 py-1 text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/20 rounded-lg border-0 transition-all cursor-pointer">
+                  View All
+                </button>
+              </div>
+
+              <div *ngIf="savedHelplinesDetails.length === 0"
+                class="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/10">
+                <p class="text-xs text-slate-500">No emergency helplines saved yet. <a routerLink="/find-help"
+                    class="text-indigo-650 dark:text-indigo-400 hover:underline font-bold">Find helplines &rarr;</a></p>
+              </div>
+
+              <div *ngIf="savedHelplinesDetails.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div *ngFor="let helpline of savedHelplinesDetails"
+                  class="flex p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 items-center justify-between gap-4 shadow-sm hover:shadow transition-all duration-200 cursor-pointer"
+                  (click)="openDirectoryDrawer('helpline', helpline)">
+                  <div class="flex items-center gap-3 min-w-0">
+                    <div
+                      class="w-10 h-10 rounded-full bg-emerald-50 dark:bg-emerald-950/40 flex items-center justify-center flex-shrink-0 border border-emerald-100/10">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.2" class="w-5 h-5 text-emerald-600 dark:text-emerald-400">
+                        <path
+                          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                        </path>
+                      </svg>
+                    </div>
+                    <div class="min-w-0">
+                      <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                        {{ helpline.name }}
+                      </h3>
+                      <p class="text-[10px] text-emerald-650 dark:text-emerald-400 font-extrabold mt-0.5">
+                        Hotline: {{ helpline.number }}
+                      </p>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+                    <a [href]="'tel:' + helpline.number"
+                      class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition-all shadow-sm active:scale-95 no-underline flex items-center gap-1">
+                      Call
+                    </a>
+                    <button (click)="savedItemsService.toggleHelpline(helpline._id, helpline.name)"
+                      class="px-2.5 py-1.5 border border-red-200/60 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-655 dark:text-red-400 rounded-lg text-[10px] font-bold transition-all bg-transparent cursor-pointer">
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
         </main>
       </div>
 
@@ -459,6 +713,14 @@
   (folderAssigned)="moveBookmarkToCollection($event.bookmark, $event.folder)" (fetchSummaryClicked)="fetchAiSummary()"
   (removeBookmark)="removeBookmark($event.actShortName, $event.section.section_number)">
 </app-bookmark-detail-drawer>
+}
+}
+
+@defer (when directoryDrawerOpen) {
+@if (directoryDrawerOpen) {
+<app-directory-detail-drawer [isOpen]="directoryDrawerOpen" [type]="directoryDrawerType" [data]="directoryDrawerData"
+  (copySummary)="copySummaryToClipboard($event)" (closeDrawer)="closeDirectoryDrawer()">
+</app-directory-detail-drawer>
 }
 }
 

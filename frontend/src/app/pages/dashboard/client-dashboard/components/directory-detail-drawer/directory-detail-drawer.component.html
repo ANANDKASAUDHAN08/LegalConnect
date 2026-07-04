@@ -1,0 +1,105 @@
+<div class="drawer-backdrop" [class.open]="isOpen" (click)="onClose()"></div>
+
+<div class="drawer-panel" [class.open]="isOpen">
+  <!-- 1. DYNAMIC HEADER -->
+  <div
+    class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
+    <div class="flex flex-col min-w-0">
+      <!-- Category Badge -->
+      <span class="text-[10px] uppercase tracking-wider font-extrabold text-indigo-600 dark:text-indigo-400">
+        <span *ngIf="type === 'lawyer'">Advocate Counsel</span>
+        <span *ngIf="type === 'resource'">{{ data?.type === 'Court' ? 'Court Complex' : 'Legal Aid Center' }}</span>
+        <span *ngIf="type === 'helpline'">Emergency Hotline</span>
+      </span>
+      <!-- Dynamic Title based on clicked item -->
+      <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate mt-0.5">
+        <span *ngIf="isArray(data)">
+          <span *ngIf="type === 'lawyer'">All Saved Advocates</span>
+          <span *ngIf="type === 'resource'">All Help Centers</span>
+          <span *ngIf="type === 'helpline'">All Emergency Lines</span>
+        </span>
+        <span *ngIf="!isArray(data)">{{ data?.name }}</span>
+      </h3>
+    </div>
+
+    <!-- Close icon button -->
+    <button (click)="onClose()"
+      class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-450 hover:text-slate-700 dark:hover:text-white hover:bg-slate-150/60 dark:hover:bg-slate-800/60 transition-colors border-0 bg-transparent cursor-pointer p-0 flex-shrink-0">
+      <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  </div>
+
+  <!-- 2. SCROLLABLE BODY -->
+  <div class="flex-1 overflow-y-auto p-5 bg-slate-50/30 dark:bg-[#07090f]/30">
+    <div *ngIf="data" class="space-y-6 animate-[fadeIn_0.3s_ease-out]">
+      <!-- Lawyer Card(s) -->
+      <ng-container *ngIf="type === 'lawyer'">
+        <ng-container *ngIf="isArray(data); else singleLawyer">
+          <div class="space-y-4">
+            <app-lawyer-card *ngFor="let item of data" [lawyer]="item"></app-lawyer-card>
+          </div>
+        </ng-container>
+        <ng-template #singleLawyer>
+          <app-lawyer-card [lawyer]="data"></app-lawyer-card>
+        </ng-template>
+      </ng-container>
+
+      <!-- Resource Card(s) -->
+      <ng-container *ngIf="type === 'resource'">
+        <ng-container *ngIf="isArray(data); else singleResource">
+          <div class="space-y-4">
+            <app-resource-card *ngFor="let item of data" [resource]="item"></app-resource-card>
+          </div>
+        </ng-container>
+        <ng-template #singleResource>
+          <app-resource-card [resource]="data"></app-resource-card>
+        </ng-template>
+      </ng-container>
+
+      <!-- Helpline Card(s) -->
+      <ng-container *ngIf="type === 'helpline'">
+        <ng-container *ngIf="isArray(data); else singleHelpline">
+          <div class="space-y-4">
+            <app-helpline-card *ngFor="let item of data" [helpline]="item"></app-helpline-card>
+          </div>
+        </ng-container>
+        <ng-template #singleHelpline>
+          <app-helpline-card [helpline]="data"></app-helpline-card>
+        </ng-template>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- 3. ACTIONS FOOTER -->
+  <div
+    class="px-5 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-between gap-3">
+
+    <!-- Left side status message -->
+    <div class="hidden sm:block text-[10px] text-slate-450 dark:text-slate-500 font-medium">
+      {{ isArray(data) ? data.length + ' profiles loaded' : 'Single profile loaded' }}
+    </div>
+
+    <div class="flex items-center gap-3 ml-auto">
+      <!-- Close Button -->
+      <button (click)="onClose()"
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-650 dark:text-slate-450 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+        Close Panel
+      </button>
+
+      <!-- Useful Copy Summary Action -->
+      <button (click)="copySummaryToClipboard()"
+        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer flex items-center gap-1.5">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor"
+          class="w-3.5 h-3.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8.25 7.5V6.108c0-1.135.845-2.098 1.976-2.192.373-.03.748-.057 1.123-.08M15.75 18H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08M15.75 18.75v-1.875a3.375 3.375 0 00-3.375-3.375h-1.5a1.125 1.125 0 01-1.125-1.125v-1.5A3.375 3.375 0 006.375 7.5H5.25m11.9-3.664A2.251 2.251 0 0015 2.25h-1.5a2.251 2.251 0 00-2.15 1.586m5.8 0c.065.21.1.433.1.664v.75h-6V4.5c0-.231.035-.454.1-.664M6.75 7.5H4.875c-.621 0-1.125.504-1.125 1.125v12c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V16.5a9 9 0 00-9-9z" />
+        </svg>
+        Copy Summary List
+      </button>
+    </div>
+
+  </div>
+
+</div>
