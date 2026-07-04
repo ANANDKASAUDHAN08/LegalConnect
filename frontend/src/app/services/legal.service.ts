@@ -81,10 +81,32 @@ export interface MappingSuggestion {
   title: string;
 }
 
+export interface Category {
+  id: string;
+  name: string;
+  icon: string;
+  resourceCount: number;
+  description: string;
+  subcategories: string[];
+  breakdown: {
+    legalAid: number;
+    courts: number;
+    govOffices: number;
+    helplines: number;
+    lawyers: number;
+  };
+}
+
 export interface ApiResponse<T> {
   success: boolean;
   data: T;
   count?: number;
+  pagination?: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
 }
 
 @Injectable({
@@ -123,8 +145,34 @@ export class LegalService {
     return this.actsCache$;
   }
 
-  getHelpNearMe(category: string, location: string): Observable<ApiResponse<any>> {
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/help-near-me?category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}`);
+  getHelpCategories(location: string): Observable<ApiResponse<Category[]>> {
+    return this.http.get<ApiResponse<Category[]>>(`${this.apiUrl}/help/categories?location=${encodeURIComponent(location)}`);
+  }
+
+  getHelpStats(): Observable<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number }>> {
+    return this.http.get<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number }>>(`${this.apiUrl}/help/stats`);
+  }
+
+  getHelpNearMe(category: string, location: string, state?: string): Observable<ApiResponse<any>> {
+    let url = `${this.apiUrl}/help-near-me?category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}`;
+    if (state) {
+      url += `&state=${encodeURIComponent(state)}`;
+    }
+    return this.http.get<ApiResponse<any>>(url);
+  }
+
+  /** Fetch all SLSA + NALSA authorities (for the Legal Authorities Hub state picker) */
+  private allAuthoritiesCache$: Observable<any[]> | null = null;
+  getAllAuthorities(): Observable<any[]> {
+    if (!this.allAuthoritiesCache$) {
+      this.allAuthoritiesCache$ = this.http.get<ApiResponse<any[]>>(
+        `${this.apiUrl}/all-authorities`
+      ).pipe(
+        map(res => res?.data || []),
+        shareReplay(1)
+      );
+    }
+    return this.allAuthoritiesCache$;
   }
 
   getActByShortName(shortName: string, refresh = false): Observable<ApiResponse<BareAct>> {
@@ -355,4 +403,64 @@ export class LegalService {
     }).join(' ');
   }
 
+  suggestResource(resource: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/suggest-resource`, resource);
+  }
+
+  getAdminResources(filters: any): Observable<ApiResponse<any>> {
+    let params = `?page=${filters.page || 1}&limit=${filters.limit || 10}`;
+    if (filters.status) params += `&status=${encodeURIComponent(filters.status)}`;
+    if (filters.city) params += `&city=${encodeURIComponent(filters.city)}`;
+    if (filters.type) params += `&type=${encodeURIComponent(filters.type)}`;
+    if (filters.search) params += `&search=${encodeURIComponent(filters.search)}`;
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/admin/resources${params}`);
+  }
+
+  createAdminResource(resource: any): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/admin/resources`, resource);
+  }
+
+  updateAdminResource(id: string, resource: any): Observable<ApiResponse<any>> {
+    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/admin/resources/${id}`, resource);
+  }
+
+  deleteAdminResource(id: string): Observable<ApiResponse<any>> {
+    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/admin/resources/${id}`);
+  }
+
+  // AI Scenario Solver — calls Gemini to parse natural-language legal situations
+  solveAiScenario(description: string): Observable<{
+    success: boolean;
+    category: string;
+    subcategories: string[];
+    caseSummary: string;
+    roadmapSteps: { title: string; detail: string }[];
+  }> {
+    return this.http.post<any>(`${this.apiUrl}/help/ai-solve`, { description });
+  }
+
+  // Offline Case Pack Sync — sends all localStorage case packs to the server (requires auth)
+  syncCasePacks(packs: any[]): Observable<{ success: boolean; synced: number; message: string }> {
+    return this.http.post<any>(`${this.apiUrl}/case-packs/sync`, { packs }, { withCredentials: true });
+  }
+
+  // Fetch user's server-synced case packs
+  getSyncedCasePacks(): Observable<{ success: boolean; data: any[] }> {
+    return this.http.get<any>(`${this.apiUrl}/case-packs`, { withCredentials: true });
+  }
+
+  // Fetch details for a single resource by its MongoDB ID
+  getResourceById(id: string): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/resources/${id}`);
+  }
+
+  // Fetch all emergency helplines
+  getAllHelplines(): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/helplinesAll`);
+  }
+
+  // Fetch all approved legal aid/courts resources
+  getAllResources(): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/resourcesAll`);
+  }
 }
