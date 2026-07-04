@@ -1,0 +1,130 @@
+<div
+  class="flex flex-col md:flex-row justify-between items-stretch md:items-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border border-slate-250/30 dark:border-white/5 rounded-xl p-3 md:py-3.5 md:px-5 mb-2 gap-3 md:gap-0 no-print sticky top-[68px] md:top-[72px] z-[900] shadow-sm">
+  <div class="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-0">
+    <button (click)="back.emit()"
+      [appTooltip]="'Return to category selection'" tooltipPlacement="bottom"
+      class="hidden md:inline-flex items-center bg-transparent border-none text-slate-500 hover:text-blue-600 dark:hover:text-amber-455 font-bold text-xs cursor-pointer transition-all uppercase tracking-wider">
+      <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      </svg>
+      <span>Back</span>
+    </button>
+
+    <span class="hidden md:block h-5 w-px bg-slate-200 dark:bg-slate-800 mx-4"></span>
+
+    <div class="flex flex-col md:flex-row md:items-center text-xs gap-y-1.5 md:gap-y-0 min-w-0 w-full md:w-auto">
+      <!-- Category Segment -->
+      <div class="flex justify-between items-center w-full md:w-auto">
+        <div class="flex items-center">
+          <svg class="w-4 h-4 text-amber-500 mr-1.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+          <span
+            class="font-bold text-slate-800 dark:text-white uppercase truncate max-w-[180px] sm:max-w-none">{{activeCategory}}</span>
+        </div>
+
+        <!-- Mobile Action Buttons Container (Right-aligned) -->
+        <div class="flex items-center gap-2 shrink-0 md:hidden">
+          <!-- Mobile Free Aid Checker Button -->
+          <button (click)="openFreeAid.emit()"
+            [appTooltip]="'Free Legal Aid Checker'" tooltipPlacement="bottom"
+            [ngClass]="freeAidEligible === true ? 'bg-purple-600 border-purple-600 text-white dark:bg-purple-600 px-2.5 w-auto' : 'bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-850 border-slate-250/60 dark:border-slate-800/60 text-purple-600 dark:text-purple-400 px-2.5 w-auto'"
+            class="flex items-center justify-center border h-8 rounded-xl active:scale-95 transition-all cursor-pointer whitespace-nowrap">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span class="text-[10px] font-black ml-1 uppercase tracking-wider">
+              {{ freeAidEligible === true ? 'Eligible' : 'Free Aid' }}
+            </span>
+          </button>
+
+          <!-- Mobile Filter Button (Only visible on Mobile) -->
+          <button (click)="toggleFilters.emit()"
+            [appTooltip]="'Filters'" tooltipPlacement="bottom"
+            class="flex items-center justify-center bg-slate-50 hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-850 border border-slate-200/60 dark:border-slate-800/60 p-1.5 rounded-xl active:scale-95 transition-all cursor-pointer w-8 h-8">
+            <span class="relative flex items-center justify-center w-4 h-4">
+              <svg class="w-4 h-4 text-blue-600 dark:text-amber-455" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              <span *ngIf="activeFiltersCount > 0"
+                class="absolute -top-1.5 -right-1.5 bg-blue-600 text-white dark:bg-amber-455 dark:text-slate-950 rounded-full flex items-center justify-center text-[8px] font-black border border-white dark:border-slate-900 shadow-sm leading-none shrink-0"
+                style="width: 13px; height: 13px;">
+                {{activeFiltersCount}}
+              </span>
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Desktop Divider Dot (Hidden on Mobile) -->
+      <span class="hidden md:block mx-2 text-slate-300 dark:text-slate-800 shrink-0">&bull;</span>
+
+      <!-- Location Segment -->
+      <div class="flex items-center flex-wrap gap-y-1">
+        <svg class="w-3.5 h-3.5 text-slate-500 mr-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+        </svg>
+        <span
+          class="text-slate-655 dark:text-slate-350 truncate max-w-[140px] sm:max-w-[220px]">{{locationQuery}}</span>
+        <span class="text-slate-655 dark:text-slate-350 ml-1 shrink-0">({{radius}} km)</span>
+        <button (click)="changeLocation.emit()"
+          [appTooltip]="'Modify search location or radius'" tooltipPlacement="bottom"
+          class="text-[10px] font-bold text-blue-600 dark:text-amber-455 hover:underline ml-1.5 cursor-pointer uppercase shrink-0">Change</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- View Mode & Free Aid Segment (Desktop) -->
+  <div class="flex items-center gap-3 w-full md:w-auto justify-end">
+    <!-- Free Legal Aid Checker Button (Desktop) -->
+    <button (click)="openFreeAid.emit()"
+      [appTooltip]="'Calculate eligibility for free legal aid under NALSA guidelines'" tooltipPlacement="bottom"
+      [ngClass]="freeAidEligible === true ? 'bg-purple-600 text-white border-purple-600 shadow-sm shadow-purple-600/20' : 'bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/20 dark:hover:bg-purple-950/40 text-purple-600 dark:text-purple-400 border-purple-200/60 dark:border-purple-800/60'"
+      class="hidden md:inline-flex items-center gap-1.5 px-3 py-1.5 border rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-sm whitespace-nowrap shrink-0">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="whitespace-nowrap">{{ freeAidEligible === true ? 'Free Aid: Eligible' : 'Free Aid Checker' }}</span>
+    </button>
+
+    <div
+      class="flex bg-slate-50 dark:bg-slate-900 p-1 rounded-xl border border-slate-200 dark:border-slate-800 w-full md:w-auto">
+      <button (click)="viewModeChange.emit('list')"
+        [appTooltip]="'Show results as a list layout'" tooltipPlacement="bottom"
+        [ngClass]="activeViewMode === 'list' ? 'bg-white dark:bg-slate-950 text-blue-600 dark:text-amber-455 shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent'"
+        class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all w-full md:w-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+        <span>List</span>
+      </button>
+      <button (click)="viewModeChange.emit('split')"
+        [appTooltip]="'Show results as side-by-side list and map layout'" tooltipPlacement="bottom"
+        [ngClass]="activeViewMode === 'split' ? 'bg-white dark:bg-slate-950 text-blue-600 dark:text-amber-455 shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent'"
+        class="hidden md:inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all w-full md:w-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2" />
+        </svg>
+        <span>Split</span>
+      </button>
+      <button (click)="viewModeChange.emit('map')"
+        [appTooltip]="'Show results as a full screen map layout'" tooltipPlacement="bottom"
+        [ngClass]="activeViewMode === 'map' ? 'bg-white dark:bg-slate-950 text-blue-600 dark:text-amber-455 shadow-xs' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent'"
+        class="inline-flex items-center justify-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold cursor-pointer transition-all w-full md:w-auto">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+        </svg>
+        <span>Map</span>
+      </button>
+    </div>
+  </div>
+</div>

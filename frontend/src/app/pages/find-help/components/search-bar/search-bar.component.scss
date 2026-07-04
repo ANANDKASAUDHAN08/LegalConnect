@@ -1,0 +1,97 @@
+/* Styles for search-bar component */
+:host {
+  display: block;
+  width: 100%;
+}
+
+// AI Voice Search Pulse Recording State
+.voice-search-btn.recording {
+  background: hsl(0, 84%, 60%) !important;
+  animation: pulse-red 1.2s infinite;
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
+  }
+
+  70% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
+  }
+}
+
+// Pulsing animation when voice recording starts
+.recording-mic-btn {
+  animation: mic-glow 1.5s infinite alternate;
+}
+
+@keyframes mic-glow {
+  0% {
+    box-shadow: 0 0 4px rgba(220, 38, 38, 0.4);
+  }
+
+  100% {
+    box-shadow: 0 0 12px rgba(220, 38, 38, 0.8);
+  }
+}
+
+// CAPSULE SEARCH DASHBOARD ACTIVE SWITCH STYLING
+.active-ask-ai-tab {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  color: white !important;
+  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3) !important;
+}
+
+:host-context(.dark) .active-ask-ai-tab {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+  box-shadow: 0 4px 14px rgba(217, 119, 6, 0.4) !important;
+}
+
+// BOUNCING AUDIO WAVEFORM EQUALIZER
+@keyframes wave-bounce {
+  0% { transform: scaleY(0.3); }
+  50% { transform: scaleY(1.0); }
+  100% { transform: scaleY(0.3); }
+}
+
+.animate-wave-bar-1 {
+  display: inline-block;
+  animation: wave-bounce 0.8s ease-in-out infinite;
+  transform-origin: bottom;
+}
+.animate-wave-bar-2 {
+  display: inline-block;
+  animation: wave-bounce 0.8s ease-in-out infinite 0.25s;
+  transform-origin: bottom;
+}
+.animate-wave-bar-3 {
+  display: inline-block;
+  animation: wave-bounce 0.8s ease-in-out infinite 0.5s;
+  transform-origin: bottom;
+}
+
+// Recent search pills hover transition
+.recent-search-pill {
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-1.5px);
+    border-color: rgba(37, 99, 235, 0.35) !important;
+    background-color: rgba(37, 99, 235, 0.03) !important;
+  }
+}
+
+:host-context(.dark) .recent-search-pill {
+  &:hover {
+    transform: translateY(-1.5px);
+    border-color: rgba(245, 158, 11, 0.3) !important;
+    background-color: rgba(245, 158, 11, 0.05) !important;
+  }
+}

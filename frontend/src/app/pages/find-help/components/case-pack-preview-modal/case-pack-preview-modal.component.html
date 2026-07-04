@@ -1,0 +1,178 @@
+<div class="fixed inset-0 z-[2000] flex justify-end items-stretch no-print animate-fade-in">
+  <!-- Backdrop overlay -->
+  <div (click)="closed.emit()" class="fixed inset-0 bg-slate-900/65 backdrop-blur-xs transition-opacity"></div>
+
+  <!-- Modal Card Container -->
+  <div
+    class="bg-white dark:bg-slate-950 w-full h-full md:h-screen md:max-w-xl flex flex-col relative z-10 overflow-hidden rounded-none animate-drawer-desktop">
+
+    <!-- Modal Header -->
+    <div
+      class="flex justify-between items-center px-4 py-2.5 md:p-5 border-b border-slate-100 dark:border-slate-800/60 shrink-0">
+      <div class="flex items-center gap-2">
+        <svg class="w-4 h-4 md:w-5 md:h-5 text-blue-600 dark:text-amber-450 shrink-0" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <h3 class="text-xs md:text-sm font-black text-slate-855 dark:text-slate-100 m-0 uppercase tracking-wide">
+          Case Pack Dossier Preview
+        </h3>
+      </div>
+      <button (click)="closed.emit()"
+        class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-600 dark:hover:text-slate-200 transition-all cursor-pointer border-none bg-transparent flex items-center justify-center">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Scrollable Preview Sheet Content -->
+    <div
+      class="flex-1 overflow-y-auto p-5 md:p-8 bg-white dark:bg-slate-950 space-y-6 font-sans text-left scrollbar-none">
+      <div
+        class="space-y-6 w-full">
+
+        <!-- Logo & Header -->
+        <div class="border-b-2 border-blue-600 dark:border-amber-400 pb-4 text-center">
+          <h1 class="text-xl font-extrabold text-slate-800 dark:text-slate-100 tracking-tight m-0 uppercase">
+            LegalConnect Case Pack</h1>
+          <p class="text-[10px] text-slate-400 dark:text-slate-500 uppercase font-bold tracking-widest mt-1.5 m-0">
+            Official Support dossier & roadmap checklist</p>
+        </div>
+
+        <!-- Meta Specs Table -->
+        <div
+          class="grid grid-cols-2 gap-4 text-xs bg-slate-50 dark:bg-slate-900/50 p-4 rounded-xl border-none">
+          <div>
+            <span class="block text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Legal
+              Category</span>
+            <strong class="text-slate-800 dark:text-slate-200 font-bold">{{ activeCategory }}</strong>
+          </div>
+          <div>
+            <span class="block text-[9px] font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider">Search
+              District</span>
+            <strong class="text-slate-800 dark:text-slate-200 font-bold truncate block">{{ locationQuery }}</strong>
+          </div>
+          <div>
+            <span
+              class="block text-[9px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider">Generated
+              Date</span>
+            <span class="text-slate-600 dark:text-slate-400 font-semibold">{{ todayDateString }}</span>
+          </div>
+          <div>
+            <span
+              class="block text-[9px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-wider">Status</span>
+            <span class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Offline Cached
+            </span>
+          </div>
+        </div>
+
+        <!-- Section 1: Roadmap Steps -->
+        <div *ngIf="(roadmap?.steps || []).length > 0" class="space-y-3.5">
+          <h4
+            class="text-xs font-black text-slate-405 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/60 pb-1.5 m-0 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-blue-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            </svg>
+            <span>Case Action Steps</span>
+          </h4>
+          <div class="space-y-3">
+            <div *ngFor="let s of roadmap.steps; let idx = index; trackBy: trackByIndex" class="text-xs">
+              <b class="text-blue-600 dark:text-amber-400 font-bold block mb-0.5">Step {{ idx + 1 }}: {{ s.title }}</b>
+              <p class="text-slate-600 dark:text-slate-400 leading-relaxed m-0">{{ s.detail }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Checklist Documents -->
+        <div *ngIf="(roadmap?.documents || []).length > 0" class="space-y-3.5">
+          <h4
+            class="text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/60 pb-1.5 m-0 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-blue-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+            <span>Required Evidence Documents</span>
+          </h4>
+          <ul class="list-none p-0 m-0 space-y-2 text-xs text-slate-600 dark:text-slate-400">
+            <li *ngFor="let doc of roadmap.documents; trackBy: trackByIndex" class="flex items-start gap-2.5">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+              </svg>
+              <span class="font-semibold">{{ doc }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Section 3: Nearby Support Contacts -->
+        <div *ngIf="(filteredResources || []).length > 0" class="space-y-3.5">
+          <h4
+            class="text-xs font-black text-slate-450 dark:text-slate-500 uppercase tracking-wider border-b border-slate-100 dark:border-slate-800/60 pb-1.5 m-0 flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-blue-600 dark:text-amber-400 shrink-0" fill="none" stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+            </svg>
+            <span>Nearby Support Centres</span>
+          </h4>
+          <div class="space-y-3.5">
+            <div *ngFor="let res of filteredResources.slice(0, 4); trackBy: trackByIndex"
+              class="text-xs border-b border-slate-100 dark:border-slate-800/60 last:border-0 pb-3 last:pb-0">
+              <b class="text-slate-800 dark:text-slate-200 font-bold block">{{ res.name }}</b>
+              <span
+                class="inline-flex items-center px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-505 dark:text-slate-400 mt-1 mb-1.5">
+                {{ res.type }}
+              </span>
+              <p class="text-slate-500 dark:text-slate-400 leading-normal m-0">{{ res.address }}</p>
+              <p class="text-[10px] text-slate-400 mt-1.5 m-0">Contact: {{ res.contactNumber || 'N/A' }} | Hours:
+                {{ res.operatingHours }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 4: ADR Suggestion -->
+        <div *ngIf="roadmap?.lokAdalatGuidance"
+          class="bg-amber-500/[0.03] border border-amber-500/10 p-4 rounded-xl space-y-1">
+          <b class="text-xs text-amber-700 dark:text-amber-400 font-bold flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 01-2 2h0a2 2 0 01-2-2v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+            </svg>
+            <span>Lok Adalat Advisory Note</span>
+          </b>
+          <p class="text-[11px] text-slate-650 dark:text-slate-350 leading-relaxed m-0">{{ roadmap.lokAdalatGuidance }}
+          </p>
+        </div>
+
+        <!-- Footer Disclaimer -->
+        <div
+          class="border-t border-slate-100 dark:border-slate-800/60 pt-4 text-[9.5px] text-slate-400 dark:text-slate-500 text-center leading-relaxed">
+          LegalConnect &copy; 2026. This case pack is for information purposes. Please seek professional counsel.
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Buttons Sticky Footer -->
+    <div
+      class="px-4 py-3 md:p-4 border-t border-slate-100 dark:border-slate-800/60 flex gap-3 shrink-0 bg-slate-50 dark:bg-slate-950">
+      <button (click)="closed.emit()"
+        class="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 text-slate-750 dark:text-slate-300 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer">
+        Close Preview
+      </button>
+      <button (click)="print.emit()"
+        class="flex-1 bg-blue-600 hover:bg-blue-700 dark:bg-amber-450 dark:hover:bg-amber-500 text-white dark:text-slate-950 py-2.5 rounded-xl text-[11px] md:text-xs font-bold transition-all cursor-pointer inline-flex items-center justify-center gap-0.5 md:gap-1.5">
+        <svg class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+        </svg>
+        <span>Print / Save PDF</span>
+      </button>
+    </div>
+  </div>
+</div>

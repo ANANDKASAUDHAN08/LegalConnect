@@ -1,5 +1,5 @@
 <div
-  class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-500/30 flex cursor-pointer hover:-translate-y-1.5 hover:shadow-lg dark:hover:shadow-indigo-500/5 transition-all duration-300 p-4 md:p-6"
+  class="h-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-sm hover:shadow-md hover:border-amber-500/30 flex cursor-pointer hover:-translate-y-1.5 hover:shadow-lg dark:hover:shadow-indigo-500/5 transition-all duration-300 p-4 md:p-6"
   [class.flex-col]="viewMode === 'grid' || viewMode === 'list'" [class.md:flex-row]="viewMode === 'list'"
   [class.md:p-5]="viewMode === 'list'">
 
@@ -53,7 +53,7 @@
                   d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {{ lawyer.city }}
+              {{ lawyer.city }}<span *ngIf="lawyer.distanceKm !== null && lawyer.distanceKm !== undefined" class="font-extrabold text-blue-600 dark:text-amber-500">• {{ lawyer.distanceKm | number:'1.1-1' }} km</span>
             </p>
             <span class="text-slate-350 dark:text-slate-700 md:hidden">•</span>
             <span class="md:hidden text-xs font-extrabold text-amber-600 dark:text-amber-500 whitespace-nowrap">
@@ -99,7 +99,7 @@
                 d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
               <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            {{ lawyer.city }}
+            {{ lawyer.city }}<span *ngIf="lawyer.distanceKm !== null && lawyer.distanceKm !== undefined" class="font-extrabold text-blue-600 dark:text-amber-500">• {{ lawyer.distanceKm | number:'1.1-1' }} km</span>
           </p>
         </div>
 
@@ -130,7 +130,7 @@
 
       <!-- Tags list -->
       <div class="flex flex-wrap gap-1.5 mb-3.5">
-        <span *ngFor="let spec of lawyer.specializations" (click)="onSpecializationClick(spec, $event)"
+        <span *ngFor="let spec of lawyer.specializations" (click)="onSpecializationClick(spec, $event)" [appTooltip]="'Filter by ' + spec + ' specialization'" tooltipPlacement="top"
           class="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/20 text-indigo-700 dark:text-indigo-400 border border-indigo-100/50 dark:border-indigo-900/30 px-2 py-0.5 rounded-md hover:bg-indigo-100/70 dark:hover:bg-indigo-900/60 transition-colors cursor-pointer select-none">
           {{ spec }}
         </span>
@@ -141,22 +141,30 @@
         {{ lawyer.bio }}
       </p>
 
-      <!-- Actions Row (Optional) -->
-      <div *ngIf="showActions"
-        class="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-3">
+      <!-- Actions Row (Always Visible) -->
+      <div class="flex justify-between items-center border-t border-slate-100 dark:border-slate-800/80 pt-3 mt-3">
+        <!-- Bookmark / Save Button -->
         <button (click)="onBookmarkClick($event)"
-          class="bg-transparent border-none text-slate-400 hover:text-amber-500 cursor-pointer p-1.5 transition-all hover:scale-110"
-          title="Bookmark lawyer">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          class="bg-transparent border-none cursor-pointer p-1.5 transition-all hover:scale-110 focus:outline-none"
+          [ngClass]="isSaved() ? 'text-amber-500' : 'text-slate-400 hover:text-amber-500'"
+          [appTooltip]="isSaved() ? 'Remove ' + lawyer.name + ' from saved' : 'Save ' + lawyer.name + ' to favourites'"
+          tooltipPlacement="top">
+          <!-- Filled bookmark (saved) -->
+          <svg *ngIf="isSaved()" class="w-4 h-4 transition-all duration-200 scale-110" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
+          </svg>
+          <!-- Outline bookmark (not saved) -->
+          <svg *ngIf="!isSaved()" class="w-4 h-4 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
         </button>
         <div class="flex gap-2">
-          <button (click)="onMessageClick($event)" class="btn btn-outline btn-sm">Message</button>
-          <button (click)="onBookClick($event)" class="btn btn-accent btn-sm">Book Now</button>
+          <button (click)="onMessageClick($event)" [appTooltip]="'Send an instant chat message to ' + lawyer.name" tooltipPlacement="top" class="btn btn-outline btn-sm">Message</button>
+          <button (click)="onBookClick($event)" [appTooltip]="'Schedule a consult session with ' + lawyer.name" tooltipPlacement="top" class="btn btn-accent btn-sm">Book Now</button>
         </div>
       </div>
+
     </div>
 
   </div>

@@ -1,0 +1,136 @@
+// Host styles to display child contents
+:host {
+  display: contents;
+}
+
+// Custom modern switch control toggles
+.switch-control {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 20px;
+
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #cbd5e1; // slate-300
+    border-radius: 99px;
+    transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(15, 23, 42, 0.15);
+      transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+  }
+
+  input:checked + .slider {
+    background-color: #2563eb; // blue-600
+  }
+
+  input:checked + .slider:before {
+    transform: translateX(20px);
+  }
+}
+
+// Dark mode styles for switch control toggles
+:host-context(.dark) {
+  .switch-control {
+    .slider {
+      background-color: #334155; // slate-700
+      
+      &:before {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+      }
+    }
+
+    input:checked + .slider {
+      background-color: #e5a93b; // amber-455 (approximated fallback or custom config color)
+    }
+  }
+}
+
+// Custom Range Slider Styling (cross-browser styling for a premium look)
+input[type="range"] {
+  outline: none;
+  border-radius: 99px;
+  transition: box-shadow 0.2s ease;
+
+  &:focus {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+  }
+
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #2563eb;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1.5px 3px rgba(15, 23, 42, 0.2);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+    
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+
+  &::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #2563eb;
+    border: 2px solid #ffffff;
+    box-shadow: 0 1.5px 3px rgba(15, 23, 42, 0.2);
+    cursor: pointer;
+    transition: transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    &:hover {
+      transform: scale(1.2);
+    }
+  }
+}
+
+:host-context(.dark) {
+  input[type="range"] {
+    &:focus {
+      box-shadow: 0 0 0 3px rgba(229, 169, 59, 0.2);
+    }
+
+    &::-webkit-slider-thumb {
+      background: #e5a93b;
+      border-color: #0f172a;
+    }
+
+    &::-moz-range-thumb {
+      background: #e5a93b;
+      border-color: #0f172a;
+    }
+  }
+}
+
+// Subcategory focus area customization for scrolling
+.overflow-y-auto {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

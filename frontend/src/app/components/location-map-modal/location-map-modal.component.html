@@ -1,25 +1,28 @@
-<div class="modal-backdrop fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+<div
+  class="modal-backdrop fixed inset-0 z-[2000] flex items-center justify-center p-0 md:p-4 bg-slate-950/60 backdrop-blur-md"
   (click)="onBackdropClick($event)">
 
   <div
-    class="modal-card w-full max-w-[660px] bg-white dark:bg-slate-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col"
-    style="max-height: 90vh;">
+    class="modal-card w-full h-full md:h-[600px] md:max-h-[90vh] md:max-w-[900px] bg-white dark:bg-slate-900 md:rounded-3xl rounded-none shadow-2xl md:border md:border-slate-200/50 md:dark:border-slate-800/50 overflow-hidden flex flex-col transition-all duration-300">
 
     <!-- Header -->
     <div
-      class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800 flex-shrink-0">
-      <div class="flex items-center gap-2.5">
-        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-          class="text-blue-600 dark:text-blue-400">
-          <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-          <line x1="8" y1="2" x2="8" y2="18"></line>
-          <line x1="16" y1="6" x2="16" y2="22"></line>
-        </svg>
-        <h2 class="text-[1rem] font-bold text-slate-800 dark:text-white">Select Your Location</h2>
+      class="flex items-center justify-between px-5 py-1.5 md:py-2 border-b border-slate-100 dark:border-slate-800/60 flex-shrink-0 bg-slate-50/50 dark:bg-slate-950/20 backdrop-blur-md">
+      <div class="flex items-center gap-3">
+        <div class="w-6 h-6 md:w-8 md:h-8 rounded-xl bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+            class="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-blue-600 dark:text-blue-400">
+            <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+            <line x1="8" y1="2" x2="8" y2="18"></line>
+            <line x1="16" y1="6" x2="16" y2="22"></line>
+          </svg>
+        </div>
+        <h2 class="text-[0.95rem] md:text-[1.05rem] font-bold text-slate-900 dark:text-white tracking-tight">Select Your
+          Location</h2>
       </div>
-      <button (click)="close()"
-        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors cursor-pointer">
+      <button (click)="close()" appTooltip="Close location picker" tooltipPlacement="bottom"
+        class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-500/10 text-slate-400 hover:text-red-500 transition-all duration-200 cursor-pointer border-0 bg-transparent">
         <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -29,20 +32,23 @@
     </div>
 
     <!-- Search + GPS -->
-    <div class="px-5 py-3 flex gap-3 flex-shrink-0">
-      <div class="flex-1 relative">
-        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor"
-          viewBox="0 0 24 24">
+    <div class="px-1 md:px-5 py-1.5 md:py-2 flex gap-2 md:gap-3 flex-shrink-0 bg-white dark:bg-slate-900">
+      <div class="flex-1 relative group">
+        <svg (click)="searchGeocode()" appTooltip="Search entered address" tooltipPlacement="top"
+          class="hidden md:block absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 cursor-pointer group-focus-within:text-blue-600 dark:group-focus-within:text-blue-400 transition-colors"
+          fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <circle cx="11" cy="11" r="8"></circle>
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-        <input id="modal-location-search" type="text" [(ngModel)]="searchQuery" placeholder="Search..."
-          class="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl py-2.5 pl-10 pr-3 text-sm text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 transition-all placeholder-slate-400" />
+        <input id="modal-location-search" type="text" [(ngModel)]="searchQuery" (keydown.enter)="searchGeocode()"
+          placeholder="Search location, sector, city..."
+          class="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/60 rounded-2xl py-1.5 md:py-2 pl-4 md:pl-10 pr-3 text-sm text-slate-800 dark:text-white outline-none focus:border-blue-500 focus:bg-white dark:focus:bg-slate-850 focus:ring-4 focus:ring-blue-500/10 transition-all placeholder-slate-400 dark:placeholder-slate-500" />
       </div>
       <button (click)="useMyLocation()" [disabled]="isDetectingGps"
-        class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold transition-all cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0 shadow-md shadow-blue-200 dark:shadow-blue-900/30">
-        <svg *ngIf="!isDetectingGps" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24"
-          fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        [appTooltip]="isDetectingGps ? 'Detecting coordinates...' : 'Find my current location'" tooltipPlacement="top"
+        class="flex items-center justify-center gap-2 px-4 py-1.5 md:py-2 rounded-2xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[11px] md:text-sm font-bold transition-all duration-200 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed flex-shrink-0 shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/25 border-0 active:scale-[0.98]">
+        <svg *ngIf="!isDetectingGps" class="w-3 h-3 md:w-4 md:h-4" xmlns="http://www.w3.org/2000/svg" fill="none"
+          viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
           <path
             d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83">
@@ -54,79 +60,96 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
         </svg>
-        <span>{{ isDetectingGps ? 'Detecting...' : 'Use My Location' }}</span>
+        <span class="hidden sm:inline">{{ isDetectingGps ? 'Detecting...' : 'Use My Location' }}</span>
+        <span class="sm:hidden">{{ isDetectingGps ? '...' : 'GPS' }}</span>
       </button>
     </div>
 
     <!-- Map/Satellite tabs + Map -->
     <div class="relative flex-1 min-h-0">
-      <!-- Tab switcher -->
+      <!-- Tab switcher (Premium Glass Capsule) -->
       <div
-        class="absolute top-3 left-3 z-10 flex bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 shadow-md overflow-hidden">
-        <button (click)="setMapMode('map')" class="px-4 py-1.5 text-sm font-bold transition-colors cursor-pointer"
-          [class.bg-white]="mapMode === 'map'" [class.dark:bg-slate-900]="mapMode === 'map'"
-          [class.text-slate-900]="mapMode === 'map'" [class.dark:text-white]="mapMode === 'map'"
-          [class.text-slate-500]="mapMode !== 'map'" [class.dark:text-slate-400]="mapMode !== 'map'">Map</button>
-        <button (click)="setMapMode('satellite')"
-          class="px-4 py-1.5 text-sm font-bold transition-colors cursor-pointer border-l border-slate-200 dark:border-slate-700"
-          [class.bg-white]="mapMode === 'satellite'" [class.dark:bg-slate-900]="mapMode === 'satellite'"
-          [class.text-slate-900]="mapMode === 'satellite'" [class.dark:text-white]="mapMode === 'satellite'"
-          [class.text-slate-500]="mapMode !== 'satellite'"
-          [class.dark:text-slate-400]="mapMode !== 'satellite'">Satellite</button>
+        class="absolute top-4 left-4 z-10 flex bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-full border border-slate-200/50 dark:border-slate-800/50 shadow-lg p-0.5">
+        <button (click)="setMapMode('map')" appTooltip="Switch to Roadmap view" tooltipPlacement="bottom"
+          class="px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold transition-all duration-200 cursor-pointer border-0"
+          [ngClass]="mapMode === 'map' ? 'bg-blue-600 text-white shadow-sm' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">Map</button>
+        <button (click)="setMapMode('satellite')" appTooltip="Switch to Satellite view" tooltipPlacement="bottom"
+          class="px-3 md:px-4 py-1 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold transition-all duration-200 cursor-pointer border-0"
+          [ngClass]="mapMode === 'satellite' ? 'bg-blue-600 text-white shadow-sm' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">Satellite</button>
       </div>
 
+      <!-- Recenter Button (Floating Target icon on top right) -->
+      <button (click)="recenterMap()" appTooltip="Recenter camera on pin" tooltipPlacement="left"
+        class="absolute top-4 right-4 z-10 w-8 h-8 md:w-9 md:h-9 rounded-full bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-center shadow-lg hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition-all duration-200 cursor-pointer border-0 active:scale-95">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round" class="w-3.5 h-3.5 md:w-4.5 md:h-4.5" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="3"></circle>
+          <line x1="12" y1="1" x2="12" y2="3"></line>
+          <line x1="12" y1="21" x2="12" y2="23"></line>
+          <line x1="1" y1="12" x2="3" y2="12"></line>
+          <line x1="21" y1="12" x2="23" y2="12"></line>
+        </svg>
+      </button>
+
       <!-- Google Map container -->
-      <div id="location-modal-map" class="w-full h-full min-h-[320px] bg-slate-100 dark:bg-slate-800"></div>
+      <div id="location-modal-map" class="w-full h-full min-h-[220px] bg-slate-100 dark:bg-slate-800"></div>
 
       <!-- Center crosshair hint -->
-      <div class="absolute bottom-3 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+      <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-none w-[90%] flex justify-center">
         <span
-          class="text-[0.72rem] font-semibold text-slate-600 dark:text-slate-300 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700 shadow">
-          Click on map or drag the pin to select
+          class="text-[0.66rem] md:text-[0.72rem] font-bold text-slate-700 dark:text-slate-250 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md px-4 md:py-2 py-1 rounded-full border border-slate-200/60 dark:border-slate-800/60 shadow-lg text-center max-w-[280px] sm:max-w-none block tracking-wide">
+          📍 Click on map or drag the pin to select
         </span>
       </div>
     </div>
 
     <!-- Detected address bar -->
     <div
-      class="px-5 py-3 flex items-center gap-2.5 border-t border-slate-100 dark:border-slate-800 flex-shrink-0 bg-slate-50 dark:bg-slate-900/80">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-        class="text-blue-600 dark:text-blue-400 flex-shrink-0">
-        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-        <circle cx="12" cy="10" r="3"></circle>
-      </svg>
+      class="px-1.5 md:px-5 py-1.5 flex items-center md:gap-3.5 gap-2 border-t border-slate-100 dark:border-slate-800/60 flex-shrink-0 bg-slate-50/50 dark:bg-slate-950/30">
+      <div
+        class="w-6 h-6 md:w-7 md:h-7 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round"
+          class="w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-blue-650 dark:text-blue-400 flex-shrink-0">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+      </div>
       <div class="flex-1 min-w-0">
         <span *ngIf="isLoadingAddress || isDetectingGps"
-          class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
-          <svg class="animate-spin w-3.5 h-3.5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24">
+          class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <svg class="animate-spin w-3.5 h-3.5 md:w-4.5 md:h-4.5 text-blue-500" xmlns="http://www.w3.org/2000/svg"
+            fill="none" viewBox="0 0 24 24">
             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
           </svg>
-          <span>Getting address...</span>
+          <span>Retrieving precise address...</span>
         </span>
         <span *ngIf="!isLoadingAddress && !isDetectingGps && detectedAddress"
-          class="text-sm font-semibold text-slate-800 dark:text-white truncate block">{{ detectedAddress }}</span>
+          class="text-xs font-semibold text-slate-800 dark:text-slate-100 truncate block leading-relaxed">{{
+          detectedAddress }}</span>
         <span *ngIf="!isLoadingAddress && !isDetectingGps && !detectedAddress"
-          class="text-sm text-slate-400 dark:text-slate-500 italic">Drag the pin to select a location</span>
+          class="text-xs text-slate-455 dark:text-slate-500 italic font-medium">
+          Drag the red pin or tap to select coordinates
+        </span>
       </div>
     </div>
 
     <!-- Footer buttons -->
     <div
-      class="flex items-center justify-end gap-3 px-5 py-4 border-t border-slate-100 dark:border-slate-800 flex-shrink-0">
+      class="flex items-center justify-end gap-2 md:gap-3 px-5 py-2 border-t border-slate-100 dark:border-slate-800/60 flex-shrink-0 w-full bg-slate-50/30 dark:bg-slate-950/10">
       <button (click)="close()"
-        class="px-5 py-2.5 rounded-xl text-sm font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all cursor-pointer">
+        class="flex-1 md:flex-none text-center px-5 py-1.5 md:py-2.5 rounded-2xl text-sm font-bold text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-950 bg-slate-100/20 transition-all duration-200 cursor-pointer border-0 bg-transparent active:scale-95">
         Cancel
       </button>
       <button (click)="confirm()" [disabled]="!detectedAddress || isLoadingAddress"
-        class="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-200 dark:shadow-blue-900/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        class="flex-1 md:flex-none justify-center flex items-center gap-2 px-6 py-1.5 md:py-2.5 rounded-2xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold shadow-md shadow-blue-500/15 hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed border-0 active:scale-[0.98]">
         <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
-        <span>Confirm Location</span>
+        <span>Confirm <span class="hidden md:inline"> Location</span></span>
       </button>
     </div>
   </div>

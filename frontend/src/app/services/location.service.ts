@@ -11,7 +11,7 @@ export class LocationService {
   private isEstimatedSubject = new BehaviorSubject<boolean>(this.getStoredEstimatedState());
   isEstimated$ = this.isEstimatedSubject.asObservable();
 
-  constructor() {}
+  constructor() { }
 
   getCurrentLocation(): string {
     return this.activeLocationSubject.value;
@@ -29,7 +29,7 @@ export class LocationService {
     }
 
     const parts = trimmed.split(',').map(p => p.trim()).filter(Boolean);
-    
+
     // Remove "India" if it is the last element
     if (parts.length > 1 && parts[parts.length - 1].toLowerCase() === 'india') {
       parts.pop();
@@ -40,8 +40,8 @@ export class LocationService {
     }
 
     const states = [
-      'maharashtra', 'delhi', 'karnataka', 'tamil nadu', 'west bengal', 
-      'telangana', 'uttar pradesh', 'rajasthan', 'gujarat', 'punjab', 
+      'maharashtra', 'delhi', 'karnataka', 'tamil nadu', 'west bengal',
+      'telangana', 'uttar pradesh', 'rajasthan', 'gujarat', 'punjab',
       'haryana', 'bihar', 'madhya pradesh', 'andhra pradesh', 'kerala'
     ];
 
@@ -83,5 +83,31 @@ export class LocationService {
       return stored !== 'false';
     }
     return true;
+  }
+
+  // List of Union Territories in India (including merged/variant names for DB matching)
+  readonly unionTerritories = [
+    'Andaman & Nicobar Islands',
+    'Andaman & Nicobar',
+    'Chandigarh',
+    'Dadra & Nagar Haveli',
+    'Daman & Diu',
+    'Dadra & Nagar Haveli and Daman & Diu',
+    'Delhi',
+    'Jammu & Kashmir',
+    'Ladakh',
+    'Lakshadweep',
+    'Puducherry'
+  ];
+
+  isUnionTerritory(utName: string): boolean {
+    if (!utName) return false;
+    const name = utName.trim().toLowerCase();
+    return this.unionTerritories.some(ut => ut.toLowerCase() === name);
+  }
+
+  isState(stateName: string): boolean {
+    if (!stateName) return false;
+    return !this.isUnionTerritory(stateName);
   }
 }

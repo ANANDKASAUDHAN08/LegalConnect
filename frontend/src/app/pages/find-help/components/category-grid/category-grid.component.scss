@@ -1,0 +1,172 @@
+/* Styles for category-grid component */
+:host {
+  display: block;
+  width: 100%;
+}
+
+// ----------------------------------------------------
+// MOBILE BENTO CARDS & PREMIUM GRADIENT BORDERS
+// ----------------------------------------------------
+@media (max-width: 767px) {
+
+  // Mobile Bento Layout overrides
+  .grid-cols-2 {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px !important;
+  }
+
+  // Bento Card Style
+  .bento-card-mobile {
+    position: relative;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1) !important;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+
+    // Light Mode Support
+    :host-context(.light) & {
+      background: rgba(255, 255, 255, 0.8);
+      border: 1px solid rgba(15, 23, 42, 0.08) !important;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+    }
+
+    // Active Category Neon Glow Boundary
+    &.active-card-glow-property {
+      border-color: rgba(245, 158, 11, 0.4) !important;
+      box-shadow: 0 0 14px rgba(245, 158, 11, 0.2), inset 0 0 8px rgba(245, 158, 11, 0.05);
+      background: rgba(245, 158, 11, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(245, 158, 11, 0.04);
+        border-color: rgba(245, 158, 11, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-family {
+      border-color: rgba(236, 72, 153, 0.4) !important;
+      box-shadow: 0 0 14px rgba(236, 72, 153, 0.2), inset 0 0 8px rgba(236, 72, 153, 0.05);
+      background: rgba(236, 72, 153, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(236, 72, 153, 0.04);
+        border-color: rgba(236, 72, 153, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-consumer {
+      border-color: rgba(16, 185, 129, 0.4) !important;
+      box-shadow: 0 0 14px rgba(16, 185, 129, 0.2), inset 0 0 8px rgba(16, 185, 129, 0.05);
+      background: rgba(16, 185, 129, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(16, 185, 129, 0.04);
+        border-color: rgba(16, 185, 129, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-labour {
+      border-color: rgba(99, 102, 241, 0.4) !important;
+      box-shadow: 0 0 14px rgba(99, 102, 241, 0.2), inset 0 0 8px rgba(99, 102, 241, 0.05);
+      background: rgba(99, 102, 241, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(99, 102, 241, 0.04);
+        border-color: rgba(99, 102, 241, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-criminal {
+      border-color: rgba(239, 68, 68, 0.4) !important;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.2), inset 0 0 8px rgba(239, 68, 68, 0.05);
+      background: rgba(239, 68, 68, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(239, 68, 68, 0.04);
+        border-color: rgba(239, 68, 68, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-business {
+      border-color: rgba(59, 130, 246, 0.4) !important;
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05);
+      background: rgba(59, 130, 246, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(59, 130, 246, 0.04);
+        border-color: rgba(59, 130, 246, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-cyber {
+      border-color: rgba(6, 182, 212, 0.4) !important;
+      box-shadow: 0 0 14px rgba(6, 182, 212, 0.2), inset 0 0 8px rgba(6, 182, 212, 0.05);
+      background: rgba(6, 182, 212, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(6, 182, 212, 0.04);
+        border-color: rgba(6, 182, 212, 0.6) !important;
+      }
+    }
+
+    &.active-card-glow-other {
+      border-color: rgba(59, 130, 246, 0.4) !important;
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.2), inset 0 0 8px rgba(59, 130, 246, 0.05);
+      background: rgba(59, 130, 246, 0.03);
+
+      :host-context(.light) & {
+        background: rgba(59, 130, 246, 0.04);
+        border-color: rgba(59, 130, 246, 0.6) !important;
+      }
+    }
+  }
+
+  // Breathing Spotlight Animation for "Other / Not Sure" AI Solver Card
+  .spotlight-pulse {
+    animation: border-pulse-cyan 2s infinite alternate;
+  }
+}
+
+@keyframes border-pulse-cyan {
+  0% {
+    border-color: rgba(59, 130, 246, 0.2) !important;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  100% {
+    border-color: rgba(59, 130, 246, 0.6) !important;
+    box-shadow: 0 0 12px rgba(59, 130, 246, 0.25), inset 0 0 4px rgba(59, 130, 246, 0.1);
+  }
+}
+
+// ----------------------------------------------------
+// ACCORDION SLIDE TRANSITION (MOBILE FAQ)
+// ----------------------------------------------------
+.faq-accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+  opacity: 0;
+
+  &.expanded {
+    max-height: 250px; // Safely fit answers
+    opacity: 1;
+  }
+
+  // Force always visible on desktop viewports (bypasses Angular style encapsulation specificity)
+  @media (min-width: 768px) {
+    max-height: none !important;
+    opacity: 1 !important;
+    margin-top: 6px;
+  }
+}
+
+.faq-chevron {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.rotated {
+    transform: rotate(180deg);
+  }
+}

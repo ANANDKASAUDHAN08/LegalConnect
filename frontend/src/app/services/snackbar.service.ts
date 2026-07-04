@@ -6,6 +6,8 @@ export interface SnackbarState {
   message: string;
   type: SnackbarType;
   show: boolean;
+  actionLabel?: string;
+  actionCallback?: () => void;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -18,10 +20,16 @@ export class SnackbarService {
 
   private timeoutRef: any;
 
-  show(message: string, type: SnackbarType = 'info', duration: number = 4000) {
+  show(
+    message: string,
+    type: SnackbarType = 'info',
+    duration: number = 4000,
+    actionLabel?: string,
+    actionCallback?: () => void
+  ) {
     if (this.timeoutRef) clearTimeout(this.timeoutRef);
-    
-    this.snackbar.set({ message, type, show: true });
+
+    this.snackbar.set({ message, type, show: true, actionLabel, actionCallback });
 
     // Auto-hide after duration
     this.timeoutRef = setTimeout(() => {
@@ -31,5 +39,11 @@ export class SnackbarService {
 
   hide() {
     this.snackbar.update(state => ({ ...state, show: false }));
+  }
+
+  runAction() {
+    const cb = this.snackbar().actionCallback;
+    if (cb) cb();
+    this.hide();
   }
 }

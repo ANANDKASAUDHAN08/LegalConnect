@@ -1,0 +1,128 @@
+.drawer-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.25); /* Reduced opacity and removed blur to make underlying page content crisp and fully visible */
+  z-index: 1600;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+
+  &.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+.drawer-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: 580px;
+  background: #ffffff;
+  box-shadow: -10px 0 40px rgba(15, 23, 42, 0.08);
+  z-index: 1700;
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+
+  &.open {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 767px) {
+  .drawer-panel {
+    max-width: 100% !important;
+    height: 100% !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    transform: translateY(100%);
+    border-radius: 0;
+
+    &.open {
+      transform: translateY(0);
+    }
+  }
+}
+
+// Use ::ng-deep + .dark (on <html>) since drawer is teleported to body —
+// :host-context(.dark) can be unreliable after teleportation
+:host ::ng-deep, ::ng-deep {
+  .dark .drawer-panel {
+    background: #0d0f1a !important;
+    box-shadow: -10px 0 50px rgba(0, 0, 0, 0.6);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .dark .drawer-backdrop {
+    background: rgba(8, 12, 28, 0.55);
+  }
+}
+
+// Custom Dropdown Scrollbar & Animation Styles
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.3);
+    border-radius: 20px;
+    
+    &:hover {
+      background-color: rgba(148, 163, 184, 0.5);
+    }
+  }
+}
+
+:host-context(.dark) .scrollbar-thin {
+  scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.2);
+    }
+  }
+}
+
+// Staggered slide up animation for drawer elements when opened
+.drawer-panel.open {
+  .state-filter-dropdown,
+  .hub-resource-card {
+    animation: drawerItemSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  
+  .state-filter-dropdown {
+    animation-delay: 0.12s;
+  }
+  
+  .hub-resource-card {
+    &:nth-of-type(1) { animation-delay: 0.18s; }
+    &:nth-of-type(2) { animation-delay: 0.24s; }
+    &:nth-of-type(3) { animation-delay: 0.30s; }
+    &:nth-of-type(4) { animation-delay: 0.36s; }
+  }
+}
+
+@keyframes drawerItemSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -1,0 +1,36 @@
+/* Styles for emergency-ticker component */
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Seamless infinite loop marquee for mobile helplines
+@media (max-width: 768px) {
+  .marquee-scroll {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    white-space: nowrap !important;
+    width: max-content !important;
+    overflow: visible !important;
+    animation: panhelplines 28s linear infinite; /* Continuous linear scroll */
+  }
+}
+
+@keyframes panhelplines {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0); /* Seamless loop exactly at half width */
+  }
+}
+
+// Disable animation on desktop viewports
+@media (min-width: 769px) {
+  .marquee-scroll {
+    animation: none !important;
+    transform: none !important;
+    width: 100% !important;
+    justify-content: center !important; /* Centers the helplines on desktop view */
+  }
+}

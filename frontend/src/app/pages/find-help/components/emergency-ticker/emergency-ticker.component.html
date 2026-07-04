@@ -1,0 +1,33 @@
+<div [ngClass]="isScrolled ? 'top-[55px] md:top-[58px]' : 'top-[68px] md:top-[72px]'"
+  class="fixed left-0 right-0 bg-[#fff8f8] dark:bg-[#170c0c] border-b border-dashed border-red-600/30 py-1.5 overflow-hidden z-[990] flex justify-start md:justify-center transition-all duration-300 no-print">
+
+  <div class="flex items-center marquee-scroll">
+    <!-- Helpline Set (rendered from data, duplicated once for seamless mobile loop) -->
+    <ng-container *ngFor="let set of [0, 1]; trackBy: trackByIndex">
+      <div
+        [class]="set === 1 ? 'flex md:hidden items-center gap-6 shrink-0 pr-6 text-[11px] md:text-sm text-textPrimary dark:text-slate-200' : 'flex items-center gap-6 shrink-0 pr-6 text-[11px] md:text-sm text-textPrimary dark:text-slate-200'">
+
+        <!-- Pulsing "Need help?" label -->
+        <span
+          class="inline-flex items-center gap-1.5 font-bold text-red-600 uppercase tracking-wider animate-pulse shrink-0">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
+          </span>
+          <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          Need <span class="hidden sm:inline">immediate</span> help?
+        </span>
+
+        <!-- Dynamic helpline items -->
+        <span *ngFor="let h of helplines; trackBy: trackByNumber" class="inline-flex items-center gap-1.5 shrink-0">
+          {{ h.label }}: <strong class="text-red-600 font-bold">{{ h.number }}</strong>
+          <a [href]="'tel:' + h.number"
+            class="bg-red-600 hover:bg-red-700 text-white px-1.5 py-0.5 rounded text-[9.5px] font-bold transition-all hover:scale-105">CALL</a>
+        </span>
+      </div>
+    </ng-container>
+  </div>
+</div>

@@ -1,28 +1,37 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+import { TooltipDirective } from '../../directives/tooltip.directive';
+import { SavedItemsService } from '../../services/saved-items.service';
 
 @Component({
   selector: 'app-lawyer-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipDirective],
   templateUrl: './lawyer-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
-    'class': 'block'
+    'class': 'block',
+    'style': 'height: 100%'
   }
 })
 export class LawyerCardComponent implements OnInit {
   @Input() lawyer: any;
   @Input() viewMode: 'grid' | 'list' = 'grid';
-  @Input() showActions = false;
+  @Input() showActions = true; // default true — always show actions bar
 
   @Output() avatarClick = new EventEmitter<string>();
   @Output() specializationClick = new EventEmitter<string>();
-  @Output() bookmarkClick = new EventEmitter<string>();
+  @Output() bookmarkClick = new EventEmitter<string>(); // kept for backwards compat
   @Output() messageClick = new EventEmitter<string>();
   @Output() bookClick = new EventEmitter<string>();
 
   isMobile = false;
+
+  // Reactive saved state — auto-updates across the page
+  isSaved = computed(() => this.savedItems.isSavedLawyer(this.lawyer?._id));
+
+  constructor(private savedItems: SavedItemsService) {}
 
   ngOnInit() {
     this.checkMobile();
@@ -55,7 +64,8 @@ export class LawyerCardComponent implements OnInit {
 
   onBookmarkClick(event: Event) {
     event.stopPropagation();
-    this.bookmarkClick.emit(this.lawyer._id);
+    this.savedItems.toggleLawyer(this.lawyer._id, this.lawyer.name);
+    this.bookmarkClick.emit(this.lawyer._id); // backwards compat
   }
 
   onMessageClick(event: Event) {

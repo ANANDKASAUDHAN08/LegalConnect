@@ -405,7 +405,8 @@ h6 {
     justify-content: center;
   }
 
-  .btn.btn-inline {
+  .btn.btn-inline,
+  .btn.btn-sm {
     width: auto;
   }
 }
@@ -757,6 +758,23 @@ select:not(.bg-transparent):not([multiple]) {
   animation: slideUp 0.28s cubic-bezier(0.32, 0.94, 0.6, 1) forwards;
 }
 
+/* ── Slide in from right (Legal Authorities Hub Drawer) ── */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.32s cubic-bezier(0.32, 0.94, 0.6, 1) forwards;
+}
+
 /* --- Premium Timeline Flowchart Styles --- */
 .flowchart-container {
   box-shadow: 0 8px 32px 0 rgba(217, 119, 6, 0.03);
@@ -926,4 +944,88 @@ body.mobile-menu-open {
 
 body.mobile-drawer-open app-bottom-nav {
   display: none !important;
+}
+
+/* Google Maps Places Autocomplete Dropdown Styling */
+.pac-container {
+  z-index: 99999 !important;
+  border-radius: 12px !important;
+  border: 1px solid rgba(226, 232, 240, 0.8) !important;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
+  font-family: 'Inter', system-ui, sans-serif !important;
+  margin-top: 4px !important;
+  background-color: #ffffff !important;
+  padding: 4px 0 !important;
+
+  .pac-item {
+    padding: 8px 14px !important;
+    font-size: 13px !important;
+    color: #334155 !important;
+    border-top: 1px solid #f1f5f9 !important;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+
+    &:first-child {
+      border-top: none !important;
+    }
+
+    &:hover,
+    &.pac-item-selected {
+      background-color: #f8fafc !important;
+    }
+
+    .pac-item-query {
+      font-size: 13px !important;
+      color: #0f172a !important;
+      font-weight: 600 !important;
+    }
+
+    .pac-icon {
+      margin-top: 2px !important;
+      margin-right: 8px !important;
+    }
+  }
+}
+
+/* Dark Mode Google Maps Places Autocomplete */
+.dark .pac-container {
+  background-color: #0f172a !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5) !important;
+
+  .pac-item {
+    color: #94a3b8 !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+
+    &:hover,
+    &.pac-item-selected {
+      background-color: rgba(255, 255, 255, 0.04) !important;
+    }
+
+    .pac-item-query {
+      color: #f8fafc !important;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .pac-container {
+    left: 8px !important;
+    width: calc(100% - 16px) !important;
+    border-radius: 16px !important;
+  }
+}
+
+/* --- Resource Card Left Border Theme Variables --- */
+:root {
+  --color-legalaid-border: #9333ea;
+  --color-court-border: #2563eb;
+  --color-gov-border: #ea580c;
+}
+
+.dark {
+  --color-legalaid-border: #a855f7;
+  --color-court-border: #3b82f6;
+  --color-gov-border: #f97316;
 }

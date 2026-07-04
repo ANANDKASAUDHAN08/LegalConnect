@@ -1,0 +1,569 @@
+<div class="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-3 md:gap-6 items-start mt-0 md:mt-4">
+
+  <!-- Mobile Categories Grid -->
+  <div class="md:hidden flex flex-col gap-1.5 mb-4 w-full">
+    <div class="border-l-2 border-blue-600 dark:border-amber-500 pl-2.5 mx-1 mb-1">
+      <span
+        class="text-[9px] font-extrabold text-blue-600 dark:text-amber-400 uppercase tracking-widest leading-none block">
+        Browse Topics
+      </span>
+      <h3 class="text-[12px] font-black text-slate-800 dark:text-slate-100 tracking-wider mt-0.5 uppercase">
+        Legal Issue Categories
+      </h3>
+      <p class="text-[9.5px] text-slate-500 dark:text-slate-400 leading-snug mt-1">
+        Select your legal topic below to search nearby support centers, checklists, and legal resources.
+      </p>
+    </div>
+    <div class="grid grid-cols-2 gap-1.5 px-1 w-full">
+      <button *ngFor="let cat of categories; trackBy: trackByCategory" (click)="selectCategoryLocal(cat.id)" [ngClass]="[
+          cat.id | categoryClasses:'card':(activeCategory === cat.id),
+          'bento-card-mobile',
+          activeCategory === cat.id ? 'active-card-glow-' + (cat.id === 'Property Dispute' ? 'property' : cat.id === 'Family Law' ? 'family' : cat.id === 'Consumer Complaint' ? 'consumer' : cat.id === 'Labour Issue' ? 'labour' : cat.id === 'Criminal Matter' ? 'criminal' : cat.id === 'Business Dispute' ? 'business' : cat.id === 'Cyber Crime' ? 'cyber' : 'other') : '',
+          cat.id === 'Other / Not Sure' && !activeCategory ? 'spotlight-pulse' : ''
+        ]"
+        class="flex items-center gap-2.5 border rounded-xl p-2.5 cursor-pointer text-left transition-all duration-200 w-full min-w-0"
+        [appTooltip]="'Explore resources, checklists, and guidelines for ' + cat.name" tooltipPlacement="top">
+        <div [ngClass]="cat.id | categoryClasses:'icon':(activeCategory === cat.id)"
+          class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm">
+          <app-category-icon [icon]="cat.icon" size="sm"></app-category-icon>
+        </div>
+        <div class="flex flex-col min-w-0 pl-0.5 w-full">
+          <span [ngClass]="cat.id | categoryClasses:'title':(activeCategory === cat.id)"
+            class="text-[10.5px] leading-tight break-words">{{cat.name}}</span>
+          <span [ngClass]="cat.id | categoryClasses:'descriptionText':(activeCategory === cat.id)"
+            class="text-[8px] mt-0.5 truncate max-w-full block">{{ cat.id | categoryDescription:true }}</span>
+          <span class="text-[9px] text-slate-500 dark:text-slate-455 mt-0.5"
+            *ngIf="cat.id !== 'Other / Not Sure'">{{cat.resourceCount}} resources</span>
+          <span class="text-[9px] text-blue-655 dark:text-blue-400 font-bold mt-0.5 flex items-center gap-1"
+            *ngIf="cat.id === 'Other / Not Sure'"
+            appTooltip="Resolve complex queries immediately using our conversational AI guidance system."
+            tooltipPlacement="top">
+            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-amber-400 animate-pulse shrink-0" fill="currentColor"
+              viewBox="0 0 24 24">
+              <path d="M12 2L9 9l-7 3 7 3 3 7 3-7 7-3-7-3-3-7z" />
+            </svg>
+            AI Help
+          </span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile Divider (only shows if category is active) -->
+  <div *ngIf="activeCategory" class="md:hidden w-full flex items-center animate-fade-in select-none">
+    <!-- Left Line -->
+    <div class="h-[1px] flex-1 bg-gradient-to-r from-transparent to-slate-200/60 dark:to-white/10"></div>
+
+    <!-- Center Label -->
+    <span
+      class="mx-3 text-[9px] font-black text-slate-600 dark:text-slate-300 uppercase tracking-widest bg-slate-50 dark:bg-slate-950 px-3 py-1 rounded-full border border-slate-200/60 dark:border-white/5 shadow-xs flex items-center gap-1.5 shrink-0">
+      <svg class="w-3 h-3 text-slate-600 dark:text-slate-300 animate-bounce shrink-0" fill="none" stroke="currentColor"
+        viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 13l-7 7-7-7m14-6l-7 7-7-7" />
+      </svg>
+      Topic Guidance & Help
+    </span>
+
+    <!-- Right Line -->
+    <div class="h-[1px] flex-1 bg-gradient-to-l from-transparent to-slate-200/60 dark:to-white/10"></div>
+  </div>
+
+  <!-- Desktop Sidebar Categories -->
+  <div class="hidden md:flex flex-col">
+    <div class="border-l-3 border-blue-600 dark:border-amber-500 pl-3 mb-4">
+      <span
+        class="text-[10px] font-black text-blue-600 dark:text-amber-400 uppercase tracking-widest leading-none block">Browse
+        Topics</span>
+      <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 tracking-wider mt-1 uppercase">Legal Issue
+        Categories</h3>
+      <p class="text-[11px] text-slate-500 dark:text-slate-455 leading-relaxed mt-1">
+        Select your legal topic below to search nearby support centers, checklists, and legal resources.
+      </p>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button *ngFor="let cat of categories; trackBy: trackByCategory" (click)="selectCategoryLocal(cat.id)"
+        [ngClass]="cat.id | categoryClasses:'card':(activeCategory === cat.id)"
+        class="grid grid-cols-[40px_1fr_auto] items-center border rounded-xl p-3 cursor-pointer text-left transition-all group w-full"
+        [appTooltip]="'Explore resources, checklists, and guidelines for ' + cat.name" tooltipPlacement="right">
+        <div [ngClass]="cat.id | categoryClasses:'icon':(activeCategory === cat.id)"
+          class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all shadow-sm">
+          <app-category-icon [icon]="cat.icon" size="md"></app-category-icon>
+        </div>
+        <div class="flex flex-col min-w-0 pl-1">
+          <span [ngClass]="cat.id | categoryClasses:'title':(activeCategory === cat.id)"
+            class="text-xs font-bold leading-snug truncate">{{cat.name}}</span>
+          <span [ngClass]="cat.id | categoryClasses:'descriptionText':(activeCategory === cat.id)"
+            class="text-[9.5px] mt-0.5 truncate max-w-[200px] block">{{ cat.id | categoryDescription:false }}</span>
+          <span class="text-[9.5px] text-slate-500 dark:text-slate-455 mt-0.5"
+            *ngIf="cat.id !== 'Other / Not Sure'">{{cat.resourceCount}} resources</span>
+          <span class="text-[10px] text-blue-655 dark:text-blue-400 font-bold mt-0.5 flex items-center gap-1"
+            *ngIf="cat.id === 'Other / Not Sure'"
+            appTooltip="Resolve complex queries immediately using our conversational AI guidance system."
+            tooltipPlacement="top">
+            <svg class="w-3.5 h-3.5 text-blue-600 dark:text-amber-400 animate-pulse shrink-0" fill="currentColor"
+              viewBox="0 0 24 24">
+              <path d="M12 2L9 9l-7 3 7 3 3 7 3-7 7-3-7-3-3-7z" />
+            </svg>
+            AI Help
+          </span>
+        </div>
+        <svg
+          [ngClass]="activeCategory === cat.id ? 'rotate-90 text-blue-600 dark:text-amber-400' : 'text-slate-400 group-hover:text-blue-500'"
+          class="w-3.5 h-3.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Right Detail Card -->
+  <div id="category-details-card" class="w-full">
+    <!-- Empty State (Shown when no category is selected, fully responsive) -->
+    <div *ngIf="!activeCategory"
+      class="flex flex-col items-center justify-center min-h-[350px] md:min-h-[450px] bg-slate-50/60 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-2xl p-6 md:p-12 text-center animate-scale-up md:bg-white md:dark:bg-slate-950 md:border md:border-slate-200/60 dark:md:border-white/5 md:shadow-sm">
+
+      <!-- Interactive Glowing Icon Container -->
+      <div class="relative w-16 h-16 md:w-20 md:h-20 flex items-center justify-center mb-6">
+        <!-- Pulse Glow Rings -->
+        <span
+          class="absolute inline-flex h-full w-full rounded-full bg-blue-400/20 dark:bg-amber-400/10 animate-ping opacity-75"></span>
+        <span
+          class="absolute inline-flex h-[80%] w-[80%] rounded-full bg-blue-500/10 dark:bg-amber-500/5 animate-pulse"></span>
+
+        <div
+          class="relative w-14 h-14 md:w-16 md:h-16 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 dark:from-amber-455 dark:to-orange-500 flex items-center justify-center text-white dark:text-slate-950 shadow-md">
+          <svg class="w-6 h-6 md:w-8 h-8" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 2L9 9l-7 3 7 3 3 7 3-7 7-3-7-3-3-7z" />
+          </svg>
+        </div>
+      </div>
+
+      <h3
+        class="text-base md:text-lg font-black text-slate-800 dark:text-slate-100 uppercase tracking-widest leading-none block">
+        Need Direct Help?
+      </h3>
+      <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 max-w-sm mt-3.5 leading-relaxed">
+        Not sure which category fits your situation? Describe your issue in your own words, and let our AI solver guide
+        you immediately.
+      </p>
+
+      <!-- Features Grid (Visual explanation of what the user can get) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 max-w-lg mt-6 w-full text-left">
+        <!-- Feature 1 -->
+        <div
+          class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200/30 dark:border-white/5">
+          <div
+            class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-amber-500/10 flex items-center justify-center text-blue-600 dark:text-amber-400 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Nearby Support</h4>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5">Locate verified legal aid
+              clinics, offices, and courts near you.</p>
+          </div>
+        </div>
+
+        <!-- Feature 2 -->
+        <div
+          class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200/30 dark:border-white/5">
+          <div
+            class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-amber-500/10 flex items-center justify-center text-blue-600 dark:text-amber-400 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Action Checklists
+            </h4>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5">Review step-by-step
+              procedural guides and official FAQs.</p>
+          </div>
+        </div>
+
+        <!-- Feature 3 -->
+        <div
+          class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200/30 dark:border-white/5">
+          <div
+            class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-amber-500/10 flex items-center justify-center text-blue-600 dark:text-amber-400 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Gemini AI Solver
+            </h4>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5">Ask questions dynamically to
+              receive custom guidance roadmaps.</p>
+          </div>
+        </div>
+
+        <!-- Feature 4 -->
+        <div
+          class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-100/50 dark:bg-slate-900/30 border border-slate-200/30 dark:border-white/5">
+          <div
+            class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-amber-500/10 flex items-center justify-center text-blue-600 dark:text-amber-400 shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+            </svg>
+          </div>
+          <div>
+            <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wide">Emergency Hotlines
+            </h4>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal mt-0.5">Quick access to National and
+              State helpline phone channels.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Primary Action Button -->
+      <button (click)="selectCategoryLocal('Other / Not Sure')"
+        class="mt-6 w-full max-w-xs bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 dark:from-amber-455 dark:to-orange-500 dark:hover:from-amber-500 dark:hover:to-orange-600 text-white dark:text-slate-950 font-bold py-3 px-6 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer border-0 text-xs md:text-sm group"
+        appTooltip="Instantly consult our AI assistant for custom, step-by-step guidance." tooltipPlacement="top">
+        <span>Consult AI Solver</span>
+        <svg class="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 5l7 7m0 0l-7 7m7-7H3" />
+        </svg>
+      </button>
+
+      <!-- Secondary Info Text -->
+      <p class="text-[10px] md:text-xs text-slate-400 dark:text-slate-550 mt-4">
+        Or select a specific topic from the list to view local support directories.
+      </p>
+    </div>
+
+    <ng-container *ngFor="let cat of categories; trackBy: trackByCategory">
+      <div *ngIf="activeCategory === cat.id"
+        class="bg-slate-50/60 dark:bg-slate-900/40 backdrop-blur-md border border-slate-200/50 dark:border-white/5 rounded-xl md:rounded-2xl p-2 md:p-8 md:bg-white md:dark:bg-slate-950 md:border md:border-slate-200/60 dark:md:border-white/5 md:rounded-2xl animate-scale-up md:shadow-sm">
+
+        <!-- Skeleton Loader (shown when loading) -->
+        <div *ngIf="isDetailsLoading" class="animate-pulse flex flex-col gap-6 w-full">
+          <div class="flex items-center gap-4 text-left">
+            <div class="w-12 h-12 md:w-16 md:h-16 rounded-xl bg-slate-200 dark:bg-slate-800/80 skeleton-bar shrink-0">
+            </div>
+            <div class="flex-1 space-y-2">
+              <div class="h-5 w-32 md:w-48 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+              <div class="h-3 w-full max-w-[280px] bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+            </div>
+          </div>
+
+          <!-- Mobile Skeletons Tab Selector -->
+          <div class="md:hidden flex bg-slate-100 dark:bg-slate-900/40 p-1 rounded-xl w-full">
+            <div *ngFor="let _ of [1,2,3]" class="flex-1 py-3.5 bg-white/20 dark:bg-slate-800/40 rounded-lg m-0.5">
+            </div>
+          </div>
+
+          <!-- Search Tab Skeleton (only visible if activeMobileTab === 'search' on mobile) -->
+          <div [ngClass]="{'hidden md:block': activeMobileTab !== 'search'}" class="space-y-6 w-full">
+            <div class="flex flex-wrap gap-2">
+              <div *ngFor="let _ of [1,2,3,4,5]"
+                class="h-6 w-20 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded-full"></div>
+            </div>
+            <div class="h-12 w-full bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded-xl"></div>
+            <div class="space-y-3">
+              <div class="h-px w-full bg-slate-100 dark:bg-slate-850"></div>
+              <div class="h-3.5 w-36 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+              <div class="flex flex-wrap gap-2">
+                <div *ngFor="let _ of [1,2,3,4]"
+                  class="h-7 w-20 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded-full"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid Skeletons (always visible on desktop, tab-triggered on mobile) -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 w-full md:pt-6 md:border-t md:border-slate-200/30 dark:md:border-white/5 md:!grid"
+            [class.hidden]="activeMobileTab === 'search'">
+            <!-- FAQ Skeleton -->
+            <div [class.hidden]="activeMobileTab !== 'faqs'"
+              class="bg-transparent border-0 flex flex-col w-full gap-4 animate-pulse md:!flex">
+              <div class="h-4 w-40 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+              <div class="h-px w-full bg-slate-100 dark:bg-slate-850"></div>
+              <div class="space-y-4">
+                <div *ngFor="let _ of [1,2,3]" class="space-y-2">
+                  <div class="h-3.5 w-3/4 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+                  <div class="h-3 w-5/6 bg-slate-100 dark:bg-slate-850 skeleton-bar rounded"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Solver Skeleton -->
+            <div [class.hidden]="activeMobileTab !== 'ai'"
+              class="bg-transparent border-0 flex flex-col justify-between gap-4 w-full animate-pulse md:!flex">
+              <div class="space-y-4 w-full">
+                <div class="h-4 w-32 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+                <div class="h-px w-full bg-slate-100 dark:bg-slate-850"></div>
+                <div class="h-3 w-5/6 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded"></div>
+                <div class="space-y-2">
+                  <div *ngFor="let _ of [1,2,3]"
+                    class="h-10 w-full bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded-xl"></div>
+                </div>
+              </div>
+              <div class="mt-auto space-y-2">
+                <div class="h-px w-full bg-slate-100 dark:bg-slate-850"></div>
+                <div class="grid grid-cols-3 gap-2">
+                  <div *ngFor="let _ of [1,2,3]" class="h-10 bg-slate-200 dark:bg-slate-800/80 skeleton-bar rounded-xl">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real Content (shown when NOT loading) -->
+        <ng-container *ngIf="!isDetailsLoading">
+          <!-- Header row -->
+          <div class="flex items-center gap-3.5 text-left mb-4 md:mb-6">
+            <div
+              [ngClass]="cat.id === 'Other / Not Sure' ? 'bg-blue-600/10 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-100 dark:border-blue-900/60' : 'bg-blue-600/10 text-blue-600 dark:bg-amber-500/10 dark:text-amber-400 border border-blue-100 dark:border-amber-500/10'"
+              class="w-12 h-12 md:w-16 md:h-16 rounded-xl flex items-center justify-center shrink-0 shadow-sm transition-all">
+              <app-category-icon [icon]="cat.icon" size="lg"></app-category-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <h2
+                class="text-lg md:text-2xl font-black text-slate-800 dark:text-slate-100 tracking-tight leading-tight mb-1">
+                {{cat.name}}</h2>
+              <p class="text-slate-500 dark:text-slate-400 text-[10.5px] md:text-sm leading-relaxed m-0">
+                {{cat.description}}</p>
+            </div>
+          </div>
+
+          <!-- Segmented Mobile Navigation Tabs -->
+          <div
+            class="md:hidden flex bg-slate-100 dark:bg-slate-900/60 p-1 rounded-xl mb-5 w-full select-none border border-slate-200/30 dark:border-white/5 shadow-xs">
+            <button (click)="setMobileTab('search')"
+              [ngClass]="activeMobileTab === 'search' ? 'bg-white dark:bg-slate-800 text-slate-850 dark:text-slate-100 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+              class="flex-1 py-2 text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1.5 font-bold">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              Search
+            </button>
+            <button (click)="setMobileTab('faqs')"
+              [ngClass]="activeMobileTab === 'faqs' ? 'bg-white dark:bg-slate-800 text-slate-855 dark:text-slate-100 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+              class="flex-1 py-2 text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1.5 font-bold">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.754 18 18.168 17.5 16.5 17.5c-1.75 0-3.332.477-4.5 1.253" />
+              </svg>
+              Guidance
+            </button>
+            <button (click)="setMobileTab('ai')"
+              [ngClass]="activeMobileTab === 'ai' ? 'bg-white dark:bg-slate-800 text-slate-855 dark:text-slate-100 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'"
+              class="flex-1 py-2 text-[10px] uppercase tracking-wider rounded-xl transition-all cursor-pointer border-0 bg-transparent flex items-center justify-center gap-1.5 font-bold">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+                  d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+              AI Solver
+            </button>
+          </div>
+
+          <!-- Tab Section: Search Content (always visible on desktop, tab-triggered on mobile) -->
+          <div [ngClass]="{'hidden md:block': activeMobileTab !== 'search'}" class="space-y-4 animate-fade-in">
+            <!-- Resource counters -->
+            <div *ngIf="cat.id !== 'Other / Not Sure'" class="flex flex-wrap gap-2 mb-4.5 md:mb-6 justify-start">
+              <span appTooltip="Free legal advice and aid services for qualifying citizens." tooltipPlacement="top"
+                class="inline-flex items-center px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 cursor-help">
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-600 mr-1.5"></span>{{cat.breakdown.legalAid}} Legal
+                Aid
+              </span>
+              <span appTooltip="District and taluk court complexes, tribunals, and mediation centers."
+                tooltipPlacement="top"
+                class="inline-flex items-center px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 cursor-help">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-1.5"></span>{{cat.breakdown.courts}} Courts
+              </span>
+              <span appTooltip="Municipal offices, state regulatory agencies, and registrar desks."
+                tooltipPlacement="top"
+                class="inline-flex items-center px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20 cursor-help">
+                <span class="w-1.5 h-1.5 rounded-full bg-orange-500 mr-1.5"></span>{{cat.breakdown.govOffices}} Gov
+                Offices
+              </span>
+              <span appTooltip="24/7 tele-consultation desks, police hotlines, and counseling support."
+                tooltipPlacement="top"
+                class="inline-flex items-center px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 cursor-help">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500 mr-1.5"></span>{{cat.breakdown.helplines}}
+                Helplines
+              </span>
+              <span appTooltip="Independently verified, nearby active legal practitioners and advocates."
+                tooltipPlacement="top"
+                class="inline-flex items-center px-2 py-1 md:px-3 md:py-1.5 rounded-full text-[10px] md:text-xs font-bold bg-amber-500/10 text-amber-700 dark:text-amber-455 border border-amber-500/20 cursor-help">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>{{cat.breakdown.lawyers}}
+                Lawyers
+              </span>
+            </div>
+
+            <!-- Search Button -->
+            <button (click)="cat.id === 'Other / Not Sure' ? searchModeToggled.emit() : searchTriggered.emit()"
+              class="w-full bg-blue-600 hover:bg-blue-700 dark:bg-amber-455 dark:hover:bg-amber-500 text-white dark:text-slate-950 font-bold py-3 md:py-3.5 px-5 rounded-xl shadow-sm hover:shadow transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer text-xs md:text-sm mb-5 md:mb-6 border-0"
+              [appTooltip]="cat.id === 'Other / Not Sure' ? 'Solve complex custom queries using our AI Assistant' : 'Search verified legal clinics, courts, hotlines, and advocates near ' + locationQuery"
+              tooltipPlacement="top">
+              <ng-container *ngIf="cat.id !== 'Other / Not Sure'">
+                <svg class="w-4 h-4 md:w-5 md:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+                <span>Search Support Near {{locationQuery}}</span>
+              </ng-container>
+              <ng-container *ngIf="cat.id === 'Other / Not Sure'">
+                <svg class="w-4 h-4 md:w-5 md:h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                    d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+                <span>Use AI Scenario Solver</span>
+              </ng-container>
+              <svg class="w-4 h-4 ml-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+
+            <!-- Subcategories -->
+            <div *ngIf="cat.id !== 'Other / Not Sure'" class="flex flex-col items-start w-full">
+              <div
+                class="h-[1px] w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-2">
+              </div>
+              <h4
+                class="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-wider mb-3 uppercase cursor-help inline-flex items-center gap-1.5"
+                appTooltip="Filter results by specific subcategories (e.g. Divorce, Custody) to pinpoint relevant help."
+                tooltipPlacement="top">
+                REFINE BY SUBCATEGORIES
+                <svg class="w-3 h-3 text-slate-400 dark:text-slate-500 shrink-0" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </h4>
+              <div
+                class="flex gap-1 md:gap-2 pb-1.5 overflow-x-auto md:overflow-visible md:flex-wrap scrollbar-none snap-x w-full justify-start">
+                <button *ngFor="let sub of cat.subcategories; trackBy: trackBySubcategory"
+                  (click)="subcategoryToggled.emit(sub)"
+                  [ngClass]="selectedSubcategories.includes(sub) 
+                    ? 'border-blue-600 bg-blue-600 text-white dark:border-amber-400 dark:bg-amber-400 dark:text-slate-950 shadow-sm' 
+                    : 'border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:text-blue-600'"
+                  class="snap-start inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold cursor-pointer transition-all shrink-0"
+                  [appTooltip]="'Click to ' + (selectedSubcategories.includes(sub) ? 'remove' : 'add') + ' ' + sub + ' filter'"
+                  tooltipPlacement="top">
+                  <span>{{sub}}</span>
+                  <svg *ngIf="selectedSubcategories.includes(sub)" class="w-3.5 h-3.5 text-white dark:text-slate-950"
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Grid: FAQs & AI Solver (always visible on desktop, tab-triggered on mobile) -->
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mt-5 md:mt-6 animate-fade-in md:pt-6 md:border-t md:border-slate-200/30 dark:md:border-white/5 md:!grid"
+            [class.hidden]="activeMobileTab === 'search'">
+
+            <!-- Quick FAQs -->
+            <div [class.hidden]="activeMobileTab !== 'faqs'" class="flex flex-col w-full md:!flex">
+              <div class="flex items-center gap-2 mb-3">
+                <svg class="w-4 h-4 text-blue-600 dark:text-amber-455 shrink-0" fill="none" stroke="currentColor"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">
+                  Common Guidance & FAQs
+                </h3>
+              </div>
+              <div
+                class="h-[1px] w-full bg-gradient-to-r from-transparent via-blue-500/20 dark:via-amber-500/25 to-transparent mb-4">
+              </div>
+              <div class="flex flex-col gap-3.5 flex-1 mb-3 md:mb-0">
+                <div
+                  *ngFor="let faq of (activeCategory | categoryInsights).faqs; let idx = index; trackBy: trackByIndex"
+                  class="flex flex-col border-b border-slate-100/40 dark:border-white/5 pb-3 last:border-0 last:pb-0">
+                  <!-- Mobile FAQ Toggle Button, Desktop static text -->
+                  <button (click)="toggleFaq(idx)"
+                    class="w-full text-left bg-transparent border-0 p-0 flex items-start justify-between gap-2 cursor-pointer md:cursor-default md:pointer-events-none focus:outline-none select-none">
+                    <span
+                      class="text-[11px] font-bold text-slate-855 dark:text-slate-200 flex items-start gap-1.5 leading-snug">
+                      <span class="text-blue-600 dark:text-amber-455 shrink-0">Q.</span>{{faq.q}}
+                    </span>
+                    <!-- Chevron Indicator (mobile only) -->
+                    <svg [ngClass]="{'rotated': activeFaqIndex === idx}"
+                      class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 shrink-0 md:hidden faq-chevron" fill="none"
+                      stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  <!-- Answer: Accordion slide transition on mobile, always visible on desktop -->
+                  <div [ngClass]="{'expanded': activeFaqIndex === idx}"
+                    class="faq-accordion-body md:max-h-none md:opacity-100 md:mt-1.5">
+                    <span
+                      class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 pl-3.5 block">{{faq.a}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Prompts & Metrics -->
+            <div [class.hidden]="activeMobileTab !== 'ai'" class="flex flex-col justify-between gap-4 w-full md:!flex">
+              <div>
+                <div class="flex items-center gap-2 mb-3">
+                  <svg class="w-4 h-4 text-blue-600 dark:text-amber-455 shrink-0" fill="none" stroke="currentColor"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                  <h3 class="text-xs font-bold text-slate-800 dark:text-slate-100 uppercase tracking-wide">Consult AI
+                    Solver
+                  </h3>
+                </div>
+                <div
+                  class="h-[1px] w-full bg-gradient-to-r from-transparent via-blue-500/20 dark:via-amber-500/25 to-transparent mb-4">
+                </div>
+                <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 mb-3.5">
+                  Select a suggested situation below to launch our conversational AI guidance system:
+                </p>
+                <div class="flex flex-col gap-2">
+                  <button *ngFor="let prompt of (activeCategory | categoryInsights).prompts; trackBy: trackByIndex"
+                    (click)="aiSuggestionTried.emit(prompt)"
+                    class="text-left text-[11px] text-blue-655 dark:text-amber-400 bg-blue-50/20 dark:bg-slate-900/40 hover:bg-blue-50/40 dark:hover:bg-slate-900/80 border border-blue-100/30 dark:border-white/5 px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-between group w-full font-medium">
+                    <span class="truncate font-semibold">"{{prompt}}"</span>
+                    <svg
+                      class="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all transform translate-x-[-2px] group-hover:translate-x-0 text-blue-600 dark:text-amber-400 shrink-0"
+                      fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div class="mt-auto">
+                <div
+                  class="h-[1px] w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-white/10 to-transparent mb-4 mt-2">
+                </div>
+                <div class="grid grid-cols-3 gap-2 text-center"
+                  appTooltip="Case statistics computed from state SLSA dashboards and e-court databases."
+                  tooltipPlacement="top">
+                  <div *ngFor="let metric of (activeCategory | categoryInsights).stats; trackBy: trackByIndex"
+                    class="flex flex-col items-center justify-center p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 border border-slate-100/55 dark:border-white/5 cursor-help">
+                    <span
+                      class="text-[11px] font-bold text-slate-800 dark:text-slate-200 tracking-tight leading-snug">{{metric.split(':')[0]}}</span>
+                    <span
+                      class="text-[8px] text-slate-400 dark:text-slate-500 uppercase font-black tracking-wider mt-0.5">{{metric.split(':')[1]}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </ng-container>
+
+      </div>
+    </ng-container>
+  </div>
+</div>

@@ -4,13 +4,15 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ThemeService } from '../../services/theme.service';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 declare var google: any;
 
 @Component({
   selector: 'app-location-map-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TooltipDirective],
   templateUrl: './location-map-modal.component.html',
   styleUrls: ['./location-map-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -33,6 +35,7 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
   private searchBox: any = null;
   private currentLat = 28.6139;
   private currentLng = 77.2090;
+  private mapThemeUnregister: (() => void) | null = null;
 
   // City center fallbacks
   private cityCenters: Record<string, [number, number]> = {
@@ -50,7 +53,11 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
     'lucknow': [26.8467, 80.9462]
   };
 
-  constructor(private cdr: ChangeDetectorRef, private zone: NgZone) { }
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone,
+    private themeService: ThemeService
+  ) { }
 
   ngOnInit() {
     // Center on initial city
@@ -76,6 +83,9 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
 
   ngOnDestroy() {
     document.body.style.overflow = '';
+    if (this.mapThemeUnregister) {
+      this.mapThemeUnregister();
+    }
   }
 
   private loadGoogleMaps(): Promise<void> {
@@ -103,12 +113,6 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
     const mapEl = document.getElementById('location-modal-map');
     if (!mapEl || !window.hasOwnProperty('google')) return;
 
-    const isDark = document.documentElement.classList.contains('dark');
-    const lightStyle = [
-      { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-      { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-    ];
-
     this.map = new google.maps.Map(mapEl, {
       center: { lat: this.currentLat, lng: this.currentLng },
       zoom: 14,
@@ -116,9 +120,13 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
       zoomControl: true,
       fullscreenControl: false,
       streetViewControl: false,
-      mapTypeControl: false,
-      styles: isDark ? [] : lightStyle
+      mapTypeControl: false
     });
+
+    if (this.mapThemeUnregister) {
+      this.mapThemeUnregister();
+    }
+    this.mapThemeUnregister = this.themeService.registerMap(this.map, () => this.mapMode === 'satellite');
 
     this.geocoder = new google.maps.Geocoder();
 
@@ -213,6 +221,38 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
     });
   }
 
+  searchGeocode() {
+    const query = this.searchQuery?.trim();
+    if (!query || !this.geocoder) return;
+
+    this.isLoadingAddress = true;
+    this.cdr.markForCheck();
+
+    this.geocoder.geocode({ address: query, componentRestrictions: { country: 'IN' } }, (results: any[], status: string) => {
+      this.zone.run(() => {
+        this.isLoadingAddress = false;
+        if (status === 'OK' && results[0] && results[0].geometry?.location) {
+          const loc = results[0].geometry.location;
+          this.currentLat = loc.lat();
+          this.currentLng = loc.lng();
+          if (this.map) {
+            this.map.setCenter(loc);
+            this.map.setZoom(14);
+          }
+          if (this.marker) {
+            this.marker.setPosition(loc);
+          }
+          this.detectedAddress = results[0].formatted_address;
+          this.searchQuery = this.detectedAddress;
+        } else {
+          console.warn('Geocoding failed for search query:', status);
+          this.detectedAddress = 'Location not found. Try dragging the pin.';
+        }
+        this.cdr.markForCheck();
+      });
+    });
+  }
+
   useMyLocation() {
     if (!navigator.geolocation) {
       this.detectedAddress = 'Geolocation not supported';
@@ -253,12 +293,22 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
 
   setMapMode(mode: 'map' | 'satellite') {
     this.mapMode = mode;
-    if (this.map && window.hasOwnProperty('google')) {
-      this.map.setMapTypeId(
-        mode === 'satellite' ? google.maps.MapTypeId.SATELLITE : google.maps.MapTypeId.ROADMAP
-      );
-    }
+    this.themeService.applyMapTheme(this.map, mode === 'satellite');
     this.cdr.markForCheck();
+  }
+
+  recenterMap() {
+    if (this.map && window.hasOwnProperty('google')) {
+      const target = { lat: this.currentLat, lng: this.currentLng };
+      this.map.panTo(target);
+      this.map.setZoom(14);
+      if (this.marker) {
+        this.marker.setAnimation(google.maps.Animation.BOUNCE);
+        setTimeout(() => {
+          this.marker.setAnimation(null);
+        }, 800);
+      }
+    }
   }
 
   // Extract city name from full address for LocationService

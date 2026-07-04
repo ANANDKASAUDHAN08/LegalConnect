@@ -1,0 +1,278 @@
+<div *ngIf="isOpen" (click)="onClose()"
+  class="modal-backdrop fixed inset-0 z-[2000] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-0 md:p-4 transition-all duration-300">
+  <div
+    class="modal-container bg-white dark:bg-[#0b0f19] border-0 md:border border-slate-200/80 dark:border-white/10 rounded-none md:rounded-2xl w-full h-full md:h-auto md:max-w-3xl max-h-full md:max-h-[90vh] shadow-[0_25px_50px_-12px_rgba(0,0,0,0.25)] dark:shadow-[0_25px_50px_-12px_rgba(0,0,0,0.7)] flex flex-col overflow-hidden transition-all duration-300 transform scale-100"
+    (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div
+      class="p-2 md:p-4 border-b border-blue-100/10 dark:border-white/10 flex justify-between items-center bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-800 dark:from-[#0f172a] dark:via-[#1e1b4b] dark:to-[#0f172a] text-white shrink-0 relative overflow-hidden">
+      <!-- Ambient background glow for header -->
+      <div class="absolute inset-0 bg-grid-white/[0.05] pointer-events-none"></div>
+      <div class="absolute -right-10 -top-10 w-24 h-24 rounded-full bg-white/10 filter blur-xl pointer-events-none">
+      </div>
+
+      <!-- Left Side: Title & Description -->
+      <div class="relative z-10 flex items-center gap-2 md:gap-3 flex-1 min-w-0 mr-3">
+        <div
+          class="p-1.5 md:p-2 rounded-xl bg-white/10 text-white flex items-center justify-center shrink-0 shadow-inner">
+          <svg class="w-4 h-4 md:w-5 md:h-5 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+              d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+        </div>
+        <div class="min-w-0 flex-1">
+          <h3 class="text-[12px] md:text-base font-black tracking-wide uppercase flex items-center gap-1.5">
+            <span>Suggest a Legal Resource</span>
+            <!-- Desktop Badge (inline with text) -->
+            <span
+              class="hidden md:inline-block text-[8px] md:text-[9px] bg-amber-400 text-slate-950 font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-normal">Community</span>
+          </h3>
+          <p class="text-[9px] md:text-xs text-blue-100/80 dark:text-slate-300/80 mt-0.5 font-medium leading-normal">
+            Help others find verified legal aid by sharing coordinates of local support desks.
+          </p>
+        </div>
+      </div>
+
+      <!-- Right Side: Mobile Stacked Badge + Close Button -->
+      <div class="flex flex-col items-end gap-1 shrink-0 relative z-10 justify-center">
+        <!-- Mobile Badge (visible only on mobile, placed above the button) -->
+        <span
+          class="inline-block md:hidden text-[8px] bg-amber-400 text-slate-950 font-extrabold px-1.5 py-0.5 rounded-full uppercase tracking-normal">Community</span>
+        <!-- Close Button -->
+        <button type="button" (click)="onClose()" appTooltip="Close dialog" tooltipPlacement="bottom"
+          class="text-white/70 hover:text-white cursor-pointer p-1.5 hover:bg-white/10 dark:hover:bg-white/5 rounded-full transition-all">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Body -->
+    <form (ngSubmit)="submitSuggestion()" #suggestForm="ngForm" class="flex flex-col flex-1 min-h-0 overflow-hidden">
+      <!-- Scrollable Form Content -->
+      <div class="p-4 md:p-6 space-y-4 md:space-y-5 flex-1 overflow-y-auto modal-form-body"
+        [ngClass]="{'flex flex-col items-center justify-center text-center h-full': successMessage}">
+        <!-- Status Messages -->
+        <div *ngIf="successMessage"
+          class="p-4 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/50 text-emerald-700 dark:text-emerald-400 rounded-xl text-xs font-semibold flex items-center gap-2">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>{{ successMessage }}</span>
+        </div>
+
+        <div *ngIf="errorMessage"
+          class="p-4 bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-rose-700 dark:text-rose-400 rounded-xl text-xs font-semibold flex items-center gap-2 w-full">
+          <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>{{ errorMessage }}</span>
+        </div>
+
+        <div *ngIf="!successMessage" class="space-y-4 w-full">
+          <!-- Resource Name & Type -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black text-slate-550 dark:text-slate-400 tracking-wider uppercase">Resource
+                Name *</label>
+              <input type="text" [(ngModel)]="formData.name" name="name" required
+                placeholder="e.g., Civil Court, Milkipur"
+                appTooltip="Enter the official name of the legal clinic, court, police station or office"
+                tooltipPlacement="top"
+                class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+            </div>
+
+            <div class="flex flex-col gap-1.5 relative dropdown-container-el">
+              <label class="text-[10px] font-black text-slate-550 dark:text-slate-400 tracking-wider uppercase">Resource
+                Type *</label>
+
+              <!-- Custom Dropdown Button -->
+              <button type="button" (click)="toggleTypeDropdown()"
+                appTooltip="Select the category that best matches this resource" tooltipPlacement="top"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium text-left focus:border-blue-600 dark:focus:border-amber-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition flex items-center justify-between cursor-pointer">
+                <span class="flex items-center gap-2">
+                  <span [ngSwitch]="formData.type" class="text-slate-500 dark:text-amber-400 shrink-0">
+                    <svg *ngSwitchCase="'LegalAid'" class="w-4 h-4" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                    </svg>
+                    <svg *ngSwitchCase="'Court'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <svg *ngSwitchCase="'PoliceStation'" class="w-4 h-4" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <svg *ngSwitchCase="'GovernmentOffice'" class="w-4 h-4" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <span>{{ getSelectedTypeLabel() }}</span>
+                </span>
+                <svg class="w-4 h-4 text-slate-400 transition-transform duration-200"
+                  [ngClass]="{'rotate-180': isTypeDropdownOpen}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+                </svg>
+              </button>
+
+              <!-- Custom Dropdown List -->
+              <div *ngIf="isTypeDropdownOpen"
+                class="absolute left-0 right-0 top-[calc(100%+6px)] bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-white/10 rounded-lg shadow-lg dark:shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-[100] overflow-hidden py-1 transition-all animate-fade-in">
+                <button type="button" *ngFor="let opt of typeOptions" (click)="selectType(opt.value)"
+                  [ngClass]="formData.type === opt.value ? 'bg-blue-50 dark:bg-amber-400/10 text-blue-600 dark:text-amber-400 font-semibold' : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/50'"
+                  class="w-full px-4 py-2 text-xs text-left flex items-center gap-2.5 transition cursor-pointer border-0 bg-transparent">
+                  <span [ngSwitch]="opt.value" class="text-slate-400 dark:text-slate-500 shrink-0"
+                    [ngClass]="{'!text-blue-600 dark:!text-amber-400': formData.type === opt.value}">
+                    <svg *ngSwitchCase="'LegalAid'" class="w-4 h-4" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
+                    </svg>
+                    <svg *ngSwitchCase="'Court'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    <svg *ngSwitchCase="'PoliceStation'" class="w-4 h-4" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <svg *ngSwitchCase="'GovernmentOffice'" class="w-4 h-4" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                    </svg>
+                  </span>
+                  <span>{{ opt.label }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- City & State -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">City /
+                Tehsil *</label>
+              <input type="text" [(ngModel)]="formData.city" name="city" required placeholder="e.g., Milkipur"
+                appTooltip="Enter the city, tehsil or block name" tooltipPlacement="top"
+                class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">State
+                *</label>
+              <input type="text" [(ngModel)]="formData.state" name="state" required placeholder="e.g., Uttar Pradesh"
+                appTooltip="Enter the state where the resource is located" tooltipPlacement="top"
+                class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+            </div>
+          </div>
+
+          <!-- Complete Address -->
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Official
+              Address *</label>
+            <textarea [(ngModel)]="formData.address" name="address" required rows="3"
+              placeholder="Full street address and landmark"
+              appTooltip="Enter the complete address with street number, locality and landmark" tooltipPlacement="top"
+              class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition resize-none"></textarea>
+          </div>
+
+          <!-- Contact Phone & Website -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Contact
+                Phone / Landline</label>
+              <input type="text" [(ngModel)]="formData.contactNumber" name="contactNumber"
+                placeholder="e.g., 05278-224424" appTooltip="Enter landline or mobile contact numbers with area codes"
+                tooltipPlacement="top"
+                class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Official
+                Website URL</label>
+              <input type="text" [(ngModel)]="formData.website" name="website" placeholder="e.g., https://igrsup.gov.in"
+                appTooltip="Enter the official website address (e.g. https://...)" tooltipPlacement="top"
+                class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+            </div>
+          </div>
+
+          <!-- Subcategories tags comma-separated -->
+          <div class="flex flex-col gap-1.5">
+            <label
+              class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Subcategories /
+              Services offered</label>
+            <input type="text" [(ngModel)]="formData.subcategories" name="subcategories"
+              placeholder="e.g., Land Records, Property Registration, Stamp Duty (comma-separated)"
+              appTooltip="Enter comma-separated services (e.g. Land Disputes, Bail, Legal Advice)"
+              tooltipPlacement="top"
+              class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+          </div>
+
+          <!-- Languages & Map Coordinates -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Coordinates -->
+            <div class="grid grid-cols-2 gap-2">
+              <div class="flex flex-col gap-1.5">
+                <label
+                  class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Latitude</label>
+                <input type="number" step="0.000001" [(ngModel)]="formData.coordinates.lat" name="lat"
+                  appTooltip="Latitude coordinate for map location (e.g. 28.6139)" tooltipPlacement="top"
+                  class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+              </div>
+              <div class="flex flex-col gap-1.5">
+                <label
+                  class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Longitude</label>
+                <input type="number" step="0.000001" [(ngModel)]="formData.coordinates.lng" name="lng"
+                  appTooltip="Longitude coordinate for map location (e.g. 77.2090)" tooltipPlacement="top"
+                  class="px-3.5 py-2.5 rounded-xl border border-slate-200/80 dark:border-white/10 bg-slate-50/50 dark:bg-slate-900/40 text-slate-800 dark:text-slate-100 text-xs font-medium focus:border-blue-600 focus:bg-white focus:outline-none dark:focus:border-amber-400 dark:focus:bg-slate-900 focus:ring-4 focus:ring-blue-500/10 dark:focus:ring-amber-400/10 transition" />
+              </div>
+            </div>
+
+            <!-- Languages check buttons -->
+            <div class="flex flex-col gap-1.5">
+              <label
+                class="text-[10px] font-black text-slate-555 dark:text-slate-400 tracking-wider uppercase">Supported
+                Languages</label>
+              <div
+                class="flex flex-wrap gap-1.5 max-h-[80px] overflow-y-auto border border-slate-200/80 dark:border-white/10 p-2 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 modal-form-body"
+                appTooltip="Select all languages spoken by staff at this helpdesk" tooltipPlacement="top">
+                <button type="button" *ngFor="let lang of availableLanguages" (click)="toggleLanguage(lang)"
+                  [class]="selectedLanguages[lang] ? 'bg-blue-600 dark:bg-amber-400 text-white dark:text-slate-950 border-blue-600 dark:border-amber-400' : 'bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200/70 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  class="px-2 py-1 border rounded-lg text-[9px] font-bold cursor-pointer transition">
+                  {{ lang }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div *ngIf="!successMessage"
+        class="p-2 md:p-3 border-t border-slate-100 dark:border-white/10 flex gap-3 justify-end bg-slate-50/50 dark:bg-slate-900/20 shrink-0 md:rounded-b-2xl">
+        <button type="button" (click)="onClose()" [disabled]="isSubmitting" appTooltip="Discard changes and close"
+          tooltipPlacement="top"
+          class="px-4 py-2 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-semibold cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-900 transition-all disabled:opacity-50">
+          Cancel
+        </button>
+        <button type="submit" [disabled]="isSubmitting || !suggestForm.valid"
+          appTooltip="Submit suggestion to moderation queue" tooltipPlacement="top"
+          class="px-5 py-2.5 bg-blue-600 dark:bg-amber-400 hover:bg-blue-700 dark:hover:bg-amber-500 text-white dark:text-slate-950 rounded-xl text-xs font-semibold cursor-pointer shadow-lg shadow-blue-500/10 dark:shadow-amber-400/5 transition-all disabled:opacity-50 flex items-center gap-1.5">
+          <span *ngIf="isSubmitting"
+            class="w-3.5 h-3.5 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+          {{ isSubmitting ? 'Submitting...' : 'Submit Suggestion' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

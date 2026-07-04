@@ -1,35 +1,55 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, ChangeDetectionStrategy, ChangeDetectorRef, NgZone } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  HostListener,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  NgZone
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
-import { LegalService } from '../../services/legal.service';
-import { BookmarkService } from '../../services/bookmark.service';
+import { Subscription, Subject } from 'rxjs';
+import { debounceTime, takeUntil } from 'rxjs/operators';
+
+// Injected Services
+import { LegalService, Category } from '../../services/legal.service';
 import { LocationService } from '../../services/location.service';
-import { Subscription } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
+
+// Dialog / Helper Components
 import { SosDrawerComponent } from './components/sos-drawer/sos-drawer.component';
-import { HelplineCardComponent } from './components/helpline-card/helpline-card.component';
-import { ResourceCardComponent } from './components/resource-card/resource-card.component';
-import { LawyerCardComponent } from '../../components/lawyer-card/lawyer-card.component';
-import { FreeAidCheckerComponent } from './components/free-aid-checker/free-aid-checker.component';
-import { LegalRoadmapComponent } from './components/legal-roadmap/legal-roadmap.component';
 import { LocationMapModalComponent } from '../../components/location-map-modal/location-map-modal.component';
+import { SuggestResourceModalComponent } from './components/suggest-resource-modal/suggest-resource-modal.component';
+
+// Directives
+import { JargonTooltipDirective } from '../../directives/jargon-tooltip.directive';
+import { TooltipDirective } from '../../directives/tooltip.directive';
+
+// Sub-components
+import { EmergencyTickerComponent } from './components/emergency-ticker/emergency-ticker.component';
+import { SearchBarComponent } from './components/search-bar/search-bar.component';
+import { HeroHeaderComponent } from './components/hero-header/hero-header.component';
+import { CategoryGridComponent } from './components/category-grid/category-grid.component';
+import { ResultsViewComponent } from './components/results-view/results-view.component';
+
+// Pipes
+import { CategoryClassesPipe } from './pipes/category-classes.pipe';
+import { CategoryDescriptionPipe } from './pipes/category-description.pipe';
+
+// Config
+import { CITY_COORDINATES, INDIAN_STATES, AI_KEYWORD_CATEGORY_MAP } from './config/category-data.config';
 
 declare var google: any;
 
-interface Category {
-  id: string;
-  name: string;
-  icon: string;
-  resourceCount: number;
-  description: string;
-  subcategories: string[];
-  breakdown: {
-    legalAid: number;
-    courts: number;
-    govOffices: number;
-    helplines: number;
-    lawyers: number;
-  };
+export interface RecentSearch {
+  query: string;
+  category: string;
+  location: string;
+  isAi: boolean;
+  timestamp: number;
 }
 
 @Component({
@@ -40,23 +60,69 @@ interface Category {
     FormsModule,
     RouterLink,
     SosDrawerComponent,
-    HelplineCardComponent,
-    ResourceCardComponent,
-    LawyerCardComponent,
-    FreeAidCheckerComponent,
-    LegalRoadmapComponent,
-    LocationMapModalComponent
+    LocationMapModalComponent,
+    JargonTooltipDirective,
+    SuggestResourceModalComponent,
+    TooltipDirective,
+    EmergencyTickerComponent,
+    SearchBarComponent,
+    HeroHeaderComponent,
+    CategoryGridComponent,
+    ResultsViewComponent,
+    CategoryClassesPipe,
+    CategoryDescriptionPipe
   ],
   templateUrl: './find-help.component.html',
   styleUrls: ['./find-help.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
-  // Scroll Listener for Dynamic Navbar
   isScrolled = false;
-  isLoading = false;
   isMobile = false;
-  showMobileFilters = false;
+  isSuggestModalOpen = false;
+
+  // Screen States
+  isResultsMode = false;
+  transitionComplete = false;
+  activeCategory = '';
+  selectedSubcategories: string[] = [];
+
+  // Search Inputs
+  locationQuery = 'New Delhi';
+  isLocationEstimated = true;
+  isAiMode = false;
+  showMapModal = false;
+  normalSearchQuery = '';
+  filteredSuggestions: Array<{ category: string, subcategory?: string, displayName: string, isHeader?: boolean }> = [];
+  situationQuery = '';
+  isRecording = false;
+  recognition: any = null;
+  voiceLanguage: 'en-IN' | 'hi-IN' = 'en-IN';
+  recentSearches: RecentSearch[] = [];
+
+  // Auto-complete Debouncers
+  isSearchingSuggestions = false;
+  private searchInput$ = new Subject<void>();
+  private destroy$ = new Subject<void>();
+  private isDestroyed = false;
+
+  // AI Solver State
+  isAiSolving = false;
+  aiSummary = '';
+  aiRoadmapSteps: { title: string; detail: string }[] = [];
+
+  // Trust Statistics & Categories lists
+  categories: Category[] = [];
+  stats = { legalClinics: 25000, distCourts: 1200, verifiedLawyers: 8500 };
+  isStatsLoading = false;
+  animatedStats = { legalClinics: 0, distCourts: 0, verifiedLawyers: 0 };
+
+  // Emergency Toggles
+  showSosDrawer = false;
+
+  // Subscriptions
+  private locationSub!: Subscription;
+  private routeSub!: Subscription;
 
   private onScroll = () => {
     const scrolled = window.scrollY > 20;
@@ -68,9 +134,41 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   };
 
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private cdr: ChangeDetectorRef,
+    private zone: NgZone,
+    private legalService: LegalService,
+    private locationService: LocationService,
+    private authService: AuthService
+  ) {
+    // Set debouncer for quick category suggestions autocomplete
+    this.searchInput$.pipe(
+      debounceTime(200),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this._executeSearchInput();
+    });
+  }
+
   @HostListener('window:resize', [])
   onResize() {
     this.checkMobile();
+  }
+
+  @HostListener('window:keydown.escape', ['$event'])
+  onEscapeKey(event: KeyboardEvent) {
+    this.quickExit();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (!target.closest('.search-container-wrapper')) {
+      this.filteredSuggestions = [];
+      this.cdr.markForCheck();
+    }
   }
 
   private checkMobile() {
@@ -81,183 +179,42 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  toggleMobileFilters() {
-    this.showMobileFilters = !this.showMobileFilters;
-    if (this.showMobileFilters) {
-      document.body.classList.add('overflow-hidden');
-    } else {
-      document.body.classList.remove('overflow-hidden');
-    }
+  openSuggestionModal() {
+    this.isSuggestModalOpen = true;
     this.cdr.markForCheck();
   }
 
-  // Navigation & Screen states
-  isResultsMode = false;
-  activeCategory = 'Property Dispute';
-  selectedSubcategories: string[] = [];
-  activeViewMode: 'split' | 'list' | 'map' = 'split';
-  activeTab = 'All';
+  closeSuggestionModal() {
+    this.isSuggestModalOpen = false;
+    this.cdr.markForCheck();
+  }
 
-  // Search Inputs
-  locationQuery = 'New Delhi';
-  isLocationEstimated = true;
-  isAiMode = false;
-  showMapModal = false;
-  normalSearchQuery = '';
-  filteredSuggestions: Array<{ category: string, subcategory?: string, displayName: string }> = [];
-  situationQuery = '';
-  isRecording = false;
-  recognition: any = null;
-
-  // Emergency SOS Drawer State
-  showSosDrawer = false;
-
-  // API Data
-  roadmap: any = null;
-  helplines: any[] = [];
-  resources: any[] = [];
-  lawyers: any[] = [];
-  filteredResources: any[] = [];
-  filteredLawyers: any[] = [];
-  allResultsCount = 0;
-
-  // Leaflet Map Properties
-  private map: any = null;
-  private markers: any[] = [];
-  private mapCenter: [number, number] = [28.6139, 77.2090]; // Delhi Default
-  private userMarker: any = null;
-  isSatelliteView = false;
-  private tileLayer: any = null;
-
-  // Filters State
-  filters = {
-    radius: 5,
-    resourceTypes: {
-      LegalAid: true,
-      Court: true,
-      GovernmentOffice: true,
-      Helpline: true,
-      Lawyer: true
-    },
-    openNow: true,
-    languages: {
-      English: true,
-      Hindi: false,
-      Punjabi: false,
-      Bengali: false
-    },
-    verifiedOnly: false
-  };
-
-  // Eligibility Check Form State
-  eligibilityStep = 0; // 0: Not checked, 1: Checking, 2: Result
-  eligibilityAnswers = {
-    gender: '',
-    income: '',
-    category: ''
-  };
-  isFreeAidEligible = false;
-
-  // Category Configuration
-  categories: Category[] = [
-    {
-      id: 'Property Dispute',
-      name: 'Property Dispute',
-      icon: 'home',
-      resourceCount: 24,
-      description: 'Legal issues related to land ownership, tenancy, builder disputes, RERA complaints, and property registration.',
-      subcategories: ['Land Ownership', 'Tenancy Dispute', 'Builder Fraud', 'RERA Complaint', 'Property Registration', 'Ancestral Property', 'Encroachment'],
-      breakdown: { legalAid: 4, courts: 6, govOffices: 8, helplines: 3, lawyers: 12 }
-    },
-    {
-      id: 'Family Law',
-      name: 'Family Law',
-      icon: 'users',
-      resourceCount: 18,
-      description: 'Matters regarding marriage, divorce, child custody, alimony, and inheritance.',
-      subcategories: ['Divorce', 'Mutual Divorce', 'Child Custody', 'Alimony / Maintenance', 'Inheritance', 'Wills & Estates'],
-      breakdown: { legalAid: 3, courts: 4, govOffices: 2, helplines: 4, lawyers: 10 }
-    },
-    {
-      id: 'Consumer Complaint',
-      name: 'Consumer Complaint',
-      icon: 'shopping-cart',
-      resourceCount: 31,
-      description: 'Redressal against defective goods, deficient services, overcharging, and unfair trade practices.',
-      subcategories: ['Product Defect', 'Service Deficiency', 'Online Scam', 'Insurance Claim', 'Banking Dispute', 'Medical Negligence'],
-      breakdown: { legalAid: 5, courts: 8, govOffices: 6, helplines: 3, lawyers: 15 }
-    },
-    {
-      id: 'Labour Issue',
-      name: 'Labour Issue',
-      icon: 'briefcase',
-      resourceCount: 14,
-      description: 'Employee-employer disputes, wage claims, wrongful termination, and workplace harassment.',
-      subcategories: ['Unpaid Wages', 'Wrongful Termination', 'PF / Gratuity Dispute', 'Workplace Harassment', 'Contract Breach'],
-      breakdown: { legalAid: 2, courts: 3, govOffices: 4, helplines: 2, lawyers: 8 }
-    },
-    {
-      id: 'Criminal Matter',
-      name: 'Criminal Matter',
-      icon: 'scale',
-      resourceCount: 22,
-      description: 'Defense representation, bail applications, police harassment, and filing FIRs.',
-      subcategories: ['FIR Filing', 'Bail Application', 'Anticipatory Bail', 'Police Harassment', 'Cheque Bounce'],
-      breakdown: { legalAid: 4, courts: 5, govOffices: 5, helplines: 3, lawyers: 10 }
-    },
-    {
-      id: 'Business Dispute',
-      name: 'Business Dispute',
-      icon: 'building',
-      resourceCount: 19,
-      description: 'Company formation, partnership disputes, commercial contracts, and intellectual property rights.',
-      subcategories: ['Contract Violation', 'Partnership Dispute', 'IPR Infringement', 'Taxation Issue', 'Debt Recovery'],
-      breakdown: { legalAid: 3, courts: 4, govOffices: 5, helplines: 2, lawyers: 12 }
-    },
-    {
-      id: 'Cyber Crime',
-      name: 'Cyber Crime',
-      icon: 'shield',
-      resourceCount: 12,
-      description: 'Reporting phishing scams, online identity theft, hacking, cyberbullying, and financial frauds.',
-      subcategories: ['Phishing / Online Scam', 'Hacking', 'Identity Theft', 'Cyber Bullying', 'Financial Fraud'],
-      breakdown: { legalAid: 2, courts: 3, govOffices: 3, helplines: 2, lawyers: 6 }
-    },
-    {
-      id: 'Other / Not Sure',
-      name: 'Other / Not Sure',
-      icon: 'question',
-      resourceCount: 0,
-      description: 'Describe your situation to our AI Assistant to find relevant resources and categories.',
-      subcategories: ['General Consultation', 'Unsure of Category'],
-      breakdown: { legalAid: 0, courts: 0, govOffices: 0, helplines: 0, lawyers: 0 }
-    }
-  ];
-
-  private routeSub!: Subscription;
-  private locationSub!: Subscription;
-
-  constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private legalService: LegalService,
-    private bookmarkService: BookmarkService,
-    private locationService: LocationService,
-    private cdr: ChangeDetectorRef,
-    private zone: NgZone
-  ) { }
+  onSuggestionSubmitted(resource: any) {
+    console.log('User suggested new resource:', resource);
+  }
 
   ngOnInit() {
     this.checkMobile();
+    this.loadRecentSearches();
     this.initVoiceSearch();
+    this.loadTrustStats();
 
-    // Sync locationQuery with global LocationService
+    // Restore search keywords on page refreshes
+    const savedNormal = sessionStorage.getItem('lc_search_normal');
+    const savedSituation = sessionStorage.getItem('lc_search_situation');
+    const savedAiMode = sessionStorage.getItem('lc_search_aimode');
+    if (savedNormal) this.normalSearchQuery = savedNormal;
+    if (savedSituation) this.situationQuery = savedSituation;
+    if (savedAiMode) this.isAiMode = savedAiMode === 'true';
+
+    // Watch global location selections
     this.locationSub = this.locationService.activeLocation$.subscribe(loc => {
       if (loc && loc !== this.locationQuery) {
         this.locationQuery = loc;
-        // If already viewing results, re-trigger a search automatically
         if (this.isResultsMode) {
           this.triggerSearch();
+        } else {
+          this.loadCategories();
         }
         this.cdr.markForCheck();
       }
@@ -269,7 +226,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       })
     );
 
-    // Watch route parameters for category and location
+    // Watch route inputs
     this.routeSub = this.route.queryParams.subscribe(params => {
       const cat = params['category'];
       const loc = params['location'];
@@ -278,209 +235,119 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
         this.activeCategory = cat;
         this.locationQuery = loc;
         this.isResultsMode = true;
-        this.fetchData();
+        this.loadCategories();
+        window.scrollTo({ top: 0, behavior: 'instant' });
+
+        setTimeout(() => {
+          this.transitionComplete = true;
+          this.cdr.markForCheck();
+        }, 600);
       } else {
         this.isResultsMode = false;
-        this.clearData();
-        setTimeout(() => {
-          this.initMainLocationAutocomplete();
-        }, 100);
+        this.transitionComplete = false;
+        this.loadCategories();
       }
       this.cdr.markForCheck();
     });
 
-    // Register scroll event outside Angular's zone to prevent change detection on every scroll pixel
     this.zone.runOutsideAngular(() => {
       window.addEventListener('scroll', this.onScroll, { passive: true });
     });
   }
 
   ngAfterViewInit() {
-    if (this.isResultsMode) {
-      this.initMap();
-    } else {
+    if (!this.isResultsMode) {
       this.initMainLocationAutocomplete();
     }
   }
 
   ngOnDestroy() {
+    this.isDestroyed = true;
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.routeSub) this.routeSub.unsubscribe();
     if (this.locationSub) this.locationSub.unsubscribe();
     if (this.recognition) {
-      try {
-        this.recognition.stop();
-      } catch (e) { }
-    }
-    if (this.map) {
-      try {
-        this.clearMapMarkers();
-      } catch (e) { }
-      this.map = null;
+      try { this.recognition.stop(); } catch (e) { }
     }
     window.removeEventListener('scroll', this.onScroll);
   }
 
-  // Clear data states
-  clearData() {
-    this.resources = [];
-    this.lawyers = [];
-    this.filteredResources = [];
-    this.filteredLawyers = [];
-    this.helplines = [];
-    this.roadmap = null;
-    this.allResultsCount = 0;
-    if (this.map) {
-      this.clearMapMarkers();
-      this.map = null;
-    }
-  }
-
-  // API Call to get help resources
-  fetchData() {
-    this.clearMapMarkers();
-    this.isLoading = true;
-    this.cdr.markForCheck();
-    this.legalService.getHelpNearMe(this.activeCategory, this.locationService.cleanAddress(this.locationQuery)).subscribe({
-      next: (res: any) => {
-        // 1.2 second artificial delay to showcase the shimmer skeleton loader interface
-        setTimeout(() => {
-          try {
-            this.isLoading = false;
-            if (res && res.success) {
-              this.roadmap = res.roadmap;
-              this.helplines = res.helplines || [];
-              this.resources = res.resources || [];
-              this.lawyers = res.lawyers || [];
-
-              // Configure location center based on results or fallback
-              if (res.resources && res.resources.length > 0 && res.resources[0].coordinates) {
-                const firstCoord = res.resources[0].coordinates;
-                this.mapCenter = [firstCoord.lat, firstCoord.lng];
-              } else {
-                // City center mappings
-                const city = this.locationService.cleanAddress(this.locationQuery).toLowerCase();
-                if (city.includes('mumbai')) this.mapCenter = [19.0760, 72.8777];
-                else if (city.includes('bengaluru') || city.includes('bangalore')) this.mapCenter = [12.9716, 77.5946];
-                else this.mapCenter = [28.6139, 77.2090]; // Delhi
-              }
-
-              this.applyFilters();
-              setTimeout(() => {
-                this.initMap();
-                this.cdr.markForCheck();
-              }, 100);
-            }
-          } catch (err) {
-            console.error('Error during data processing in next callback:', err);
-            this.isLoading = false;
-          } finally {
-            this.cdr.markForCheck();
-          }
-        }, 1200);
+  loadCategories() {
+    this.legalService.getHelpCategories(this.locationService.cleanAddress(this.locationQuery)).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.categories = res.data || [];
+          this.cdr.markForCheck();
+        }
       },
       error: (err) => {
-        setTimeout(() => {
-          this.isLoading = false;
-          console.error('Failed to retrieve nearby help resources', err);
-          this.cdr.markForCheck();
-        }, 500);
+        console.error('Failed to load help categories dynamically', err);
       }
     });
   }
 
-  // Apply filters on clientside to feed results
-  applyFilters() {
-    try {
-      // 1. Filter Resources
-      this.filteredResources = (this.resources || []).filter(item => {
-        if (!item) return false;
-        // Type Filter
-        const matchedType =
-          (item.type === 'LegalAid' && this.filters.resourceTypes.LegalAid) ||
-          (item.type === 'Court' && this.filters.resourceTypes.Court) ||
-          (item.type === 'GovernmentOffice' && this.filters.resourceTypes.GovernmentOffice) ||
-          (item.type === 'PoliceStation' && this.filters.resourceTypes.GovernmentOffice); // Group police under gov in filters list
+  animateCountUp(targetKey: 'legalClinics' | 'distCourts' | 'verifiedLawyers', targetValue: number) {
+    const duration = 1200;
+    const startTime = performance.now();
+    const startValue = 0;
 
-        if (!matchedType) return false;
-
-        // Subcategories match if any selected
-        if (this.selectedSubcategories.length > 0) {
-          const hasSub = (item.subcategories || []).some((s: string) =>
-            this.selectedSubcategories.some(sel => sel.toLowerCase().includes(s.toLowerCase()) || s.toLowerCase().includes(sel.toLowerCase()))
-          );
-          if (!hasSub) return false;
-        }
-
-        // Open status
-        if (this.filters.openNow && !item.isOpenNow) return false;
-
-        // Verification
-        if (this.filters.verifiedOnly && !item.isVerified) return false;
-
-        return true;
-      });
-
-      // 2. Filter Lawyers
-      this.filteredLawyers = (this.lawyers || []).filter(lawyer => {
-        if (!lawyer) return false;
-        if (!this.filters.resourceTypes.Lawyer) return false;
-
-        // Language check (if any checked)
-        const activeLangs = Object.keys(this.filters.languages).filter(k => (this.filters.languages as any)[k]);
-        if (activeLangs.length > 0) {
-          const speaks = (lawyer.languagesSpoken || []).some((l: string) =>
-            activeLangs.some(al => l.toLowerCase().includes(al.toLowerCase()))
-          );
-          if (!speaks) return false;
-        }
-
-        // Verified Only
-        if (this.filters.verifiedOnly && !lawyer.isVerified) return false;
-
-        return true;
-      });
-
-      // 3. Count
-      this.allResultsCount = this.filteredResources.length + this.filteredLawyers.length + (this.filters.resourceTypes.Helpline ? this.helplines.length : 0);
-
-      // Refresh markers on Map
-      this.updateMapMarkers();
-    } catch (err) {
-      console.error('Error executing applyFilters():', err);
-    }
-  }
-
-  // Selection actions
-  selectCategory(catId: string) {
-    this.activeCategory = catId;
-    this.selectedSubcategories = [];
-    if (catId === 'Other / Not Sure') {
-      this.isAiMode = true;
-    }
-
-    // Smoothly scroll the details card into view
-    setTimeout(() => {
-      const cardEl = document.getElementById('category-details-card');
-      if (cardEl) {
-        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const step = (currentTime: number) => {
+      if (this.isDestroyed) return;
+      const elapsedTime = currentTime - startTime;
+      if (elapsedTime >= duration) {
+        this.animatedStats = {
+          ...this.animatedStats,
+          [targetKey]: targetValue
+        };
+        this.cdr.markForCheck();
+      } else {
+        const progress = elapsedTime / duration;
+        const easeProgress = progress * (2 - progress); // easeOutQuad
+        this.animatedStats = {
+          ...this.animatedStats,
+          [targetKey]: Math.floor(startValue + easeProgress * (targetValue - startValue))
+        };
+        this.cdr.markForCheck();
+        requestAnimationFrame(step);
       }
-    }, 50);
+    };
+
+    requestAnimationFrame(step);
   }
 
-  toggleSubcategory(sub: string) {
-    const idx = this.selectedSubcategories.indexOf(sub);
-    if (idx > -1) {
-      this.selectedSubcategories.splice(idx, 1);
-    } else {
-      this.selectedSubcategories.push(sub);
-    }
-
-    if (this.isResultsMode) {
-      this.applyFilters();
-    }
+  loadTrustStats() {
+    this.isStatsLoading = true;
+    this.legalService.getHelpStats().subscribe({
+      next: (res) => {
+        if (res && res.success && res.data) {
+          this.stats = res.data;
+          this.animateCountUp('legalClinics', this.stats.legalClinics);
+          this.animateCountUp('distCourts', this.stats.distCourts);
+          this.animateCountUp('verifiedLawyers', this.stats.verifiedLawyers);
+        } else {
+          this.animateCountUp('legalClinics', 25000);
+          this.animateCountUp('distCourts', 1200);
+          this.animateCountUp('verifiedLawyers', 8500);
+        }
+        this.isStatsLoading = false;
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('Failed to load trust statistics dynamically', err);
+        this.animateCountUp('legalClinics', 25000);
+        this.animateCountUp('distCourts', 1200);
+        this.animateCountUp('verifiedLawyers', 8500);
+        this.isStatsLoading = false;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
-  // Trigger search and update query params
+  initMainLocationAutocomplete() {
+    // Deprecated in favor of the clean modular search bar locations confirmation, no-op
+  }
+
   triggerSearch() {
     const query = this.locationQuery.trim();
     if (!query) {
@@ -489,15 +356,12 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       return;
     }
 
-    // Bypass geocoding if the query is already resolved (contains a comma)
     if (query.includes(',')) {
       this.executeSearch();
       return;
     }
 
     if ((window as any).google?.maps?.Geocoder) {
-      this.isLoading = true;
-      this.cdr.markForCheck();
       const geocoder = new google.maps.Geocoder();
       geocoder.geocode({ address: query, componentRestrictions: { country: 'IN' } }, (results: any[], status: string) => {
         this.zone.run(() => {
@@ -516,7 +380,11 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private executeSearch() {
     this.isResultsMode = true;
-    this.isLoading = true;
+
+    // Save search inputs
+    const queryVal = this.isAiMode ? this.situationQuery : this.normalSearchQuery;
+    this.addRecentSearch(queryVal, this.activeCategory, this.locationQuery, this.isAiMode);
+
     this.cdr.markForCheck();
     this.router.navigate([], {
       relativeTo: this.route,
@@ -528,16 +396,36 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  initMainLocationAutocomplete() {
-    // Deprecated since we removed the input field from the landing state, keeping as no-op to prevent calls breaking
+  clickTrySuggestion(query: string) {
+    this.isAiMode = true;
+    this.situationQuery = query;
+    this.normalSearchQuery = '';
+    this.handleAiSearchInput();
+    this.cdr.markForCheck();
+
+    setTimeout(() => {
+      const searchEl = document.querySelector('.search-container-wrapper');
+      if (searchEl) {
+        searchEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }, 80);
   }
 
   goBackToCategories() {
+    this.clearSearchQuery();
+    this.saveSearchState();
+    this.isResultsMode = false;
+    this.transitionComplete = false;
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams: {
         category: null,
-        location: null
+        location: null,
+        radius: null,
+        types: null,
+        openNow: null,
+        langs: null,
+        verified: null
       }
     });
   }
@@ -549,8 +437,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
           this.zone.run(() => {
             const lat = pos.coords.latitude;
             const lng = pos.coords.longitude;
-            this.mapCenter = [lat, lng];
-            
+
             if ((window as any).google?.maps?.Geocoder) {
               const geocoder = new google.maps.Geocoder();
               geocoder.geocode({ location: { lat, lng } }, (results: any[], status: string) => {
@@ -574,10 +461,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
           });
         },
         (err) => {
-          this.zone.run(() => {
-            console.warn('Geolocation failed, falling back to manual entry', err);
-            this.cdr.markForCheck();
-          });
+          console.warn('Geolocation failed, falling back to manual entry', err);
         }
       );
     } else {
@@ -585,7 +469,6 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  // Map Modal Interactions
   openMapModal() {
     this.showMapModal = true;
     this.cdr.markForCheck();
@@ -602,71 +485,116 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  // Mode Toggle
   toggleSearchMode() {
     this.isAiMode = !this.isAiMode;
     this.cdr.markForCheck();
   }
 
-  // Normal Mode Quick Search Suggestions logic
   handleNormalSearchInput() {
+    this.isSearchingSuggestions = true;
+    this.searchInput$.next();
+  }
+
+  private _executeSearchInput() {
     const query = this.normalSearchQuery.trim().toLowerCase();
     if (!query) {
       this.filteredSuggestions = [];
+      this.isSearchingSuggestions = false;
       this.cdr.markForCheck();
       return;
     }
 
-    const matches: Array<{ category: string, subcategory?: string, displayName: string }> = [];
+    const groupedMatches: { [category: string]: string[] } = {};
 
     this.categories.forEach(cat => {
-      // Check if category name matches
-      if (cat.name.toLowerCase().includes(query)) {
-        matches.push({
-          category: cat.name,
-          displayName: cat.name
-        });
-      }
-      
-      // Check if subcategories match
+      const catNameLower = cat.name.toLowerCase();
+      const isStrongCatMatch = catNameLower.startsWith(query) && query.length >= 3;
+
+      const matchedSubs: string[] = [];
       cat.subcategories.forEach(sub => {
-        if (sub.toLowerCase().includes(query)) {
-          matches.push({
-            category: cat.name,
-            subcategory: sub,
-            displayName: `${sub} (${cat.name})`
-          });
+        const subLower = sub.toLowerCase();
+        if (subLower.includes(query) || isStrongCatMatch) {
+          matchedSubs.push(sub);
         }
+      });
+
+      if (matchedSubs.length > 0) {
+        groupedMatches[cat.name] = matchedSubs;
+      }
+    });
+
+    const suggestions: Array<{ category: string, subcategory?: string, displayName: string, isHeader?: boolean }> = [];
+    const catNames = Object.keys(groupedMatches).slice(0, 3);
+
+    catNames.forEach(catName => {
+      suggestions.push({
+        category: catName,
+        isHeader: true,
+        displayName: catName
+      });
+
+      const subs = groupedMatches[catName].slice(0, 3);
+      subs.forEach(sub => {
+        suggestions.push({
+          category: catName,
+          subcategory: sub,
+          displayName: sub
+        });
       });
     });
 
-    this.filteredSuggestions = matches.slice(0, 5); // Limit to 5 suggestions
+    this.filteredSuggestions = suggestions;
+    this.isSearchingSuggestions = false;
     this.cdr.markForCheck();
   }
 
-  selectSuggestion(suggestion: { category: string, subcategory?: string, displayName: string }) {
+  selectSuggestion(suggestion: { category: string, subcategory?: string, displayName: string, isHeader?: boolean }) {
+    if (suggestion.isHeader) return;
+
     this.activeCategory = suggestion.category;
     if (suggestion.subcategory) {
       this.selectedSubcategories = [suggestion.subcategory];
+      this.normalSearchQuery = `${suggestion.subcategory} in ${suggestion.category}`;
     } else {
       this.selectedSubcategories = [];
+      this.normalSearchQuery = suggestion.category;
     }
-    this.normalSearchQuery = suggestion.displayName;
     this.filteredSuggestions = [];
-    
-    // Automatically trigger search
+
     this.triggerSearch();
     this.cdr.markForCheck();
+  }
+
+  toggleAiMode(isAi: boolean) {
+    this.isAiMode = isAi;
+    if (isAi) {
+      this.normalSearchQuery = '';
+    } else {
+      this.situationQuery = '';
+    }
+    this.saveSearchState();
+    this.cdr.markForCheck();
+  }
+
+  clearSearchQuery() {
+    this.normalSearchQuery = '';
+    this.situationQuery = '';
+    this.filteredSuggestions = [];
+    this.cdr.markForCheck();
+  }
+
+  saveSearchState() {
+    sessionStorage.setItem('lc_search_normal', this.normalSearchQuery);
+    sessionStorage.setItem('lc_search_situation', this.situationQuery);
+    sessionStorage.setItem('lc_search_aimode', String(this.isAiMode));
   }
 
   triggerNormalSearch() {
     const query = this.normalSearchQuery.trim().toLowerCase();
     if (!query) return;
 
-    // Try to find the best matching category or subcategory
     let bestMatch: { category: string, subcategory?: string } | null = null;
-    
-    // First pass: exact or close matches
+
     for (const cat of this.categories) {
       if (cat.name.toLowerCase() === query) {
         bestMatch = { category: cat.name };
@@ -681,7 +609,6 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       if (bestMatch) break;
     }
 
-    // Second pass: partial matches
     if (!bestMatch) {
       for (const cat of this.categories) {
         if (cat.name.toLowerCase().includes(query)) {
@@ -708,44 +635,73 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       this.filteredSuggestions = [];
       this.triggerSearch();
     } else {
-      // Fallback: search with active category
       this.triggerSearch();
     }
     this.cdr.markForCheck();
   }
 
-  // AI Description match
-  handleAiSearchInput() {
-    if (!this.situationQuery.trim()) return;
-
-    const query = this.situationQuery.toLowerCase();
-
-    // Simple matching rules
-    if (query.includes('rent') || query.includes('land') || query.includes('tenant') || query.includes('builder') || query.includes('rera') || query.includes('flat') || query.includes('property')) {
-      this.activeCategory = 'Property Dispute';
-      if (query.includes('tenant') || query.includes('rent')) this.selectedSubcategories = ['Tenancy Dispute'];
-      else if (query.includes('builder') || query.includes('fraud')) this.selectedSubcategories = ['Builder Fraud'];
-    } else if (query.includes('divorce') || query.includes('wife') || query.includes('husband') || query.includes('custody') || query.includes('maintenance')) {
-      this.activeCategory = 'Family Law';
-    } else if (query.includes('scam') || query.includes('product') || query.includes('refund') || query.includes('amazon') || query.includes('defect') || query.includes('charge')) {
-      this.activeCategory = 'Consumer Complaint';
-    } else if (query.includes('salary') || query.includes('fired') || query.includes('job') || query.includes('boss') || query.includes('unpaid') || query.includes('wage')) {
-      this.activeCategory = 'Labour Issue';
-    } else if (query.includes('police') || query.includes('fir') || query.includes('bail') || query.includes('arrest') || query.includes('threat')) {
-      this.activeCategory = 'Criminal Matter';
-    } else if (query.includes('hack') || query.includes('phish') || query.includes('facebook') || query.includes('whatsapp') || query.includes('stole') || query.includes('online')) {
-      this.activeCategory = 'Cyber Crime';
-    }
+  selectCategory(catName: string) {
+    this.activeCategory = catName;
+    this.selectedSubcategories = [];
   }
 
-  // Voice Speech API
+  toggleSubcategory(subName: string) {
+    const idx = this.selectedSubcategories.indexOf(subName);
+    if (idx > -1) {
+      this.selectedSubcategories.splice(idx, 1);
+    } else {
+      this.selectedSubcategories.push(subName);
+    }
+    this.triggerSearch();
+  }
+
+  handleAiSearchInput() {
+    if (!this.situationQuery.trim() || this.isAiSolving) return;
+
+    this.isAiSolving = true;
+    this.aiSummary = '';
+    this.aiRoadmapSteps = [];
+    this.cdr.markForCheck();
+
+    this.legalService.solveAiScenario(this.situationQuery.trim()).subscribe({
+      next: (res) => {
+        this.zone.run(() => {
+          this.isAiSolving = false;
+          if (res && res.success) {
+            this.activeCategory = res.category || this.activeCategory;
+            this.selectedSubcategories = res.subcategories || [];
+            this.aiSummary = res.caseSummary || '';
+            this.aiRoadmapSteps = res.roadmapSteps || [];
+            this.triggerSearch();
+          }
+          this.cdr.markForCheck();
+        });
+      },
+      error: (err) => {
+        this.zone.run(() => {
+          console.error('AI solve failed, falling back to keyword match:', err);
+          this.isAiSolving = false;
+          const query = this.situationQuery.toLowerCase();
+          for (const mapping of AI_KEYWORD_CATEGORY_MAP) {
+            if (mapping.keywords.some(kw => query.includes(kw))) {
+              this.activeCategory = mapping.category;
+              break;
+            }
+          }
+          this.triggerSearch();
+          this.cdr.markForCheck();
+        });
+      }
+    });
+  }
+
   initVoiceSearch() {
     const windowObj = window as any;
     const SpeechRecognition = windowObj.SpeechRecognition || windowObj.webkitSpeechRecognition;
     if (SpeechRecognition) {
       this.recognition = new SpeechRecognition();
       this.recognition.continuous = false;
-      this.recognition.lang = 'en-IN';
+      this.recognition.lang = this.voiceLanguage;
       this.recognition.interimResults = false;
 
       this.recognition.onstart = () => {
@@ -761,8 +717,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
           this.situationQuery = text;
           this.handleAiSearchInput();
           this.isRecording = false;
-          
-          // Automatically trigger search when category/subcategories are parsed from voice search
+
           if (this.activeCategory) {
             this.triggerSearch();
           }
@@ -796,460 +751,97 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.isRecording) {
       this.recognition.stop();
     } else {
+      this.recognition.lang = this.voiceLanguage;
       this.recognition.start();
     }
   }
 
-  // Legal Aid Eligibility logic
-  startEligibilityCheck() {
-    this.eligibilityStep = 1;
-    this.eligibilityAnswers = { gender: '', income: '', category: '' };
-  }
-
-  submitEligibilityStep() {
-    const ans = this.eligibilityAnswers;
-
-    // Free legal aid criteria under Section 12 of LSA Act 1987 in India:
-    // - Women and Children (always eligible)
-    // - SC / ST categories (always eligible)
-    // - Industrial workmen (always eligible)
-    // - Income less than 3L per annum (or 1.25L in some states like Delhi, but general ceiling is 3L)
-    const isWomanOrChild = ans.gender === 'female' || ans.gender === 'other';
-    const isScStOrWorkman = ans.category === 'sc' || ans.category === 'st' || ans.category === 'labour';
-    const isLowIncome = ans.income === 'under125' || ans.income === 'under300';
-
-    if (isWomanOrChild || isScStOrWorkman || isLowIncome) {
-      this.isFreeAidEligible = true;
-    } else {
-      this.isFreeAidEligible = false;
-    }
-
-    this.eligibilityStep = 2;
-
-    // Trigger visual highlight: If eligible, check the Legal Aid box and filter only legal aid centers first
-    if (this.isFreeAidEligible) {
-      this.filters.resourceTypes.Court = false;
-      this.filters.resourceTypes.GovernmentOffice = false;
-      this.filters.resourceTypes.Lawyer = false;
-      this.filters.resourceTypes.LegalAid = true;
-      this.activeTab = 'LegalAid';
-      this.applyFilters();
-    }
-  }
-
-  resetEligibilityCheck() {
-    this.eligibilityStep = 0;
-    this.filters.resourceTypes.Court = true;
-    this.filters.resourceTypes.GovernmentOffice = true;
-    this.filters.resourceTypes.Lawyer = true;
-    this.filters.resourceTypes.LegalAid = true;
-    this.activeTab = 'All';
-    this.applyFilters();
-  }
-
-  // Dynamic Google Maps Map setup
-  private loadGoogleMaps(): Promise<void> {
-    if (window.hasOwnProperty('google') && (window as any).google.maps) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      const apiKey = (window as any).GOOGLE_MAPS_API_KEY || '';
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Google Maps'));
-      document.body.appendChild(script);
-    });
-  }
-
-  initMap() {
-    const mapEl = document.getElementById('google-map-container');
-    if (!mapEl) return;
-
-    this.loadGoogleMaps().then(() => {
-      const latLng = { lat: this.mapCenter[0], lng: this.mapCenter[1] };
-      
-      if (this.map) {
-        try {
-          if (document.getElementById('google-map-container')) {
-            this.map.setCenter(latLng);
-            this.map.setZoom(this.getZoomLevel());
-            this.updateMapMarkers();
-            this.cdr.markForCheck();
-            return;
-          } else {
-            this.map = null;
+  setVoiceLanguage(lang: 'en-IN' | 'hi-IN') {
+    this.voiceLanguage = lang;
+    if (this.recognition) {
+      const wasRecording = this.isRecording;
+      if (wasRecording) {
+        this.recognition.stop();
+      }
+      this.recognition.lang = lang;
+      if (wasRecording) {
+        setTimeout(() => {
+          try {
+            this.recognition.start();
+          } catch (e) {
+            console.error('Error restarting speech recognition with new language:', e);
           }
-        } catch (e) {
-          this.map = null;
-        }
+        }, 300);
       }
+    }
+    this.cdr.markForCheck();
+  }
 
-      this.map = new google.maps.Map(mapEl, {
-        center: latLng,
-        zoom: this.getZoomLevel(),
-        disableDefaultUI: this.isMobile,
-        zoomControl: !this.isMobile,
-        mapTypeControl: false,
-        scaleControl: true,
-        streetViewControl: false,
-        rotateControl: false,
-        fullscreenControl: false
-      });
+  loadRecentSearches() {
+    const data = localStorage.getItem('lc_recent_searches');
+    if (data) {
+      try {
+        this.recentSearches = JSON.parse(data);
+      } catch (e) {
+        this.recentSearches = [];
+      }
+    }
+  }
 
-      this.setMapLayer();
-      this.updateMapMarkers();
-      this.cdr.markForCheck();
-    }).catch(err => {
-      console.error('Google Maps script load failed', err);
+  addRecentSearch(query: string, category: string, location: string, isAi: boolean) {
+    const trimmed = (query || '').trim();
+    const displayName = trimmed || category;
+
+    let list = this.recentSearches.filter(
+      s => !(s.query.toLowerCase() === displayName.toLowerCase() && s.category === category)
+    );
+
+    list.unshift({
+      query: displayName,
+      category,
+      location,
+      isAi,
+      timestamp: Date.now()
     });
+
+    this.recentSearches = list.slice(0, 5);
+    localStorage.setItem('lc_recent_searches', JSON.stringify(this.recentSearches));
+    this.cdr.markForCheck();
   }
 
-  setMapLayer() {
-    if (this.map && window.hasOwnProperty('google')) {
-      if (this.isSatelliteView) {
-        this.map.setMapTypeId(google.maps.MapTypeId.SATELLITE);
-      } else {
-        this.map.setMapTypeId(google.maps.MapTypeId.ROADMAP);
-        
-        const isDark = document.documentElement.classList.contains('dark');
-        
-        const lightStyle = [
-          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#e2e8f0' }] },
-          { featureType: 'landscape', elementType: 'geometry', stylers: [{ color: '#f8fafc' }] },
-          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#ffffff' }] },
-          { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#e2e8f0' }] },
-          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-          { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-        ];
-
-        const darkStyle = [
-          { elementType: 'geometry', stylers: [{ color: '#0f172a' }] },
-          { elementType: 'labels.text.stroke', stylers: [{ color: '#0f172a' }] },
-          { elementType: 'labels.text.fill', stylers: [{ color: '#94a3b8' }] },
-          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#1e293b' }] },
-          { featureType: 'road', elementType: 'geometry.stroke', stylers: [{ color: '#334155' }] },
-          { featureType: 'road', elementType: 'labels.text.fill', stylers: [{ color: '#64748b' }] },
-          { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-          { featureType: 'transit', stylers: [{ visibility: 'off' }] }
-        ];
-
-        this.map.setOptions({ styles: isDark ? darkStyle : lightStyle });
-      }
-    }
-  }
-
-  toggleSatelliteView() {
-    this.isSatelliteView = !this.isSatelliteView;
-    this.setMapLayer();
-  }
-
-  getZoomLevel(): number {
-    const r = this.filters.radius;
-    if (r <= 2) return 14;
-    if (r <= 5) return 13;
-    if (r <= 10) return 12;
-    return 11;
-  }
-
-  clearMapMarkers() {
-    this.markers.forEach(m => m.setMap(null));
-    this.markers = [];
-    if (this.userMarker) {
-      this.userMarker.setMap(null);
-      this.userMarker = null;
-    }
-  }
-
-  updateMapMarkers() {
-    if (!this.map || !window.hasOwnProperty('google')) return;
-
-    try {
-      this.clearMapMarkers();
-
-      // 1. User Position pin
-      this.userMarker = new google.maps.Marker({
-        position: { lat: this.mapCenter[0], lng: this.mapCenter[1] },
-        map: this.map,
-        title: 'Your Location',
-        icon: {
-          path: google.maps.SymbolPath.CIRCLE,
-          scale: 8,
-          fillColor: '#2563eb',
-          fillOpacity: 1,
-          strokeColor: '#ffffff',
-          strokeWeight: 2
-        }
-      });
-
-      const userPopup = new google.maps.InfoWindow({
-        content: '<div class="p-1 font-sans text-slate-800"><b>Your Location</b></div>'
-      });
-      this.userMarker.addListener('click', () => {
-        userPopup.open(this.map, this.userMarker);
-      });
-
-      // 2. Add resource pins
-      (this.filteredResources || []).forEach(res => {
-        if (!res) return;
-        let color = '#9333ea'; // Purple
-        if (res.type === 'Court') color = '#2563eb'; // Blue
-        else if (res.type === 'GovernmentOffice') color = '#ea580c'; // Orange
-        else if (res.type === 'PoliceStation') color = '#dc2626'; // Red
-
-        if (res.coordinates && typeof res.coordinates.lat === 'number' && typeof res.coordinates.lng === 'number') {
-          const marker = new google.maps.Marker({
-            position: { lat: res.coordinates.lat, lng: res.coordinates.lng },
-            map: this.map,
-            title: res.name || 'Resource',
-            icon: {
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 6,
-              fillColor: color,
-              fillOpacity: 1,
-              strokeColor: '#ffffff',
-              strokeWeight: 1.5
-            }
-          });
-
-          const popupContent = `
-            <div class="p-1 text-slate-800" style="font-family: sans-serif;">
-              <b style="font-size: 14px;">${res.name || 'Resource'}</b><br/>
-              <span style="font-size: 11px; color:#64748b;">${res.type || ''} &bull; ${res.operatingHours || ''}</span><br/>
-              <span style="font-size: 12px; display:inline-block; margin-top:4px;">${res.address || ''}</span>
-            </div>
-          `;
-          const infoWindow = new google.maps.InfoWindow({ content: popupContent });
-          marker.addListener('click', () => {
-            infoWindow.open(this.map, marker);
-          });
-
-          this.markers.push(marker);
-        }
-      });
-
-      // 3. Add lawyer pins (gold markers offset slightly from center)
-      (this.filteredLawyers || []).forEach((lawyer, i) => {
-        if (!lawyer) return;
-        const offsetLat = (Math.sin(i) * 0.015) + 0.005;
-        const offsetLng = (Math.cos(i) * 0.015) - 0.005;
-        
-        const marker = new google.maps.Marker({
-          position: { lat: this.mapCenter[0] + offsetLat, lng: this.mapCenter[1] + offsetLng },
-          map: this.map,
-          title: lawyer.name || 'Lawyer',
-          icon: {
-            path: google.maps.SymbolPath.CIRCLE,
-            scale: 6,
-            fillColor: '#d97706',
-            fillOpacity: 1,
-            strokeColor: '#ffffff',
-            strokeWeight: 1.5
-          }
-        });
-
-        const popupContent = `
-          <div class="p-1 text-slate-800" style="font-family: sans-serif;">
-            <b style="font-size: 14px;">${lawyer.name || 'Lawyer'}</b><br/>
-            <span style="font-size: 11px; color:#d97706;">Recommended Lawyer &bull; ⭐ ${lawyer.rating || ''}</span><br/>
-            <span style="font-size: 12px; display:inline-block; margin-top:4px;">${(lawyer.specializations && lawyer.specializations[0]) || ''} &bull; Fee: ₹${lawyer.consultationFee || 0}</span>
-          </div>
-        `;
-        const infoWindow = new google.maps.InfoWindow({ content: popupContent });
-        marker.addListener('click', () => {
-          infoWindow.open(this.map, marker);
-        });
-
-        this.markers.push(marker);
-      });
-    } catch (err) {
-      console.error('Error executing updateMapMarkers():', err);
-    }
-  }
-
-  // tab selections
-  selectTab(tab: string) {
-    this.activeTab = tab;
-    // Update active filter resource check
-    if (tab === 'All') {
-      this.filters.resourceTypes.LegalAid = true;
-      this.filters.resourceTypes.Court = true;
-      this.filters.resourceTypes.GovernmentOffice = true;
-      this.filters.resourceTypes.Helpline = true;
-      this.filters.resourceTypes.Lawyer = true;
+  selectRecentSearch(search: RecentSearch) {
+    this.locationQuery = search.location;
+    this.activeCategory = search.category;
+    this.isAiMode = search.isAi;
+    if (search.isAi) {
+      this.situationQuery = search.query;
+      this.normalSearchQuery = '';
     } else {
-      // Set all false except selected
-      Object.keys(this.filters.resourceTypes).forEach(k => {
-        (this.filters.resourceTypes as any)[k] = (k === tab);
-      });
+      this.normalSearchQuery = search.query;
+      this.situationQuery = '';
     }
-    this.applyFilters();
+    this.triggerSearch();
   }
 
-  // Toggle layout views
-  setViewMode(mode: 'split' | 'list' | 'map') {
-    this.activeViewMode = mode;
-    setTimeout(() => {
-      if (this.map && window.hasOwnProperty('google')) {
-        google.maps.event.trigger(this.map, 'resize');
-        this.map.setCenter({ lat: this.mapCenter[0], lng: this.mapCenter[1] });
-      }
-    }, 100);
+  removeRecentSearch(index: number, event: MouseEvent) {
+    event.stopPropagation();
+    this.recentSearches.splice(index, 1);
+    localStorage.setItem('lc_recent_searches', JSON.stringify(this.recentSearches));
+    this.cdr.markForCheck();
   }
 
-  // Helper properties
-  get showMap() {
-    if (this.isMobile) {
-      return this.activeViewMode === 'map';
-    }
-    return this.activeViewMode === 'split' || this.activeViewMode === 'map';
+  clearRecentSearches() {
+    this.recentSearches = [];
+    localStorage.removeItem('lc_recent_searches');
+    this.cdr.markForCheck();
   }
 
-  get showList() {
-    if (this.isMobile) {
-      return this.activeViewMode === 'list' || this.activeViewMode === 'split';
-    }
-    return this.activeViewMode === 'split' || this.activeViewMode === 'list';
+  quickExit() {
+    window.location.href = 'https://www.google.com';
   }
 
-  // Direct Directions Call wrapper
-  openDirections(lat: number, lng: number) {
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
-    window.open(url, '_blank');
-  }
-
-  // Case Pack Offline Downloader
-  downloadCasePack() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const documentChecklistHtml = this.roadmap.documents.map((d: string) => `<li>[ ] ${d}</li>`).join('');
-    const actionStepsHtml = this.roadmap.steps.map((s: any, i: number) => `
-      <div style="margin-bottom: 15px;">
-        <b style="color: #1e3a8a;">Step ${i + 1}: ${s.title}</b>
-        <p style="margin: 4px 0 0 0; color: #475569; font-size: 13px;">${s.detail}</p>
-      </div>
-    `).join('');
-
-    const resourceCardsHtml = this.filteredResources.slice(0, 5).map(res => `
-      <div style="border-bottom: 1px solid #e2e8f0; padding: 10px 0;">
-        <b style="font-size: 14px;">${res.name} (${res.type})</b>
-        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">${res.address}</p>
-        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Phone: ${res.contactNumber || 'N/A'} | Hours: ${res.operatingHours}</p>
-      </div>
-    `).join('');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>LegalConnect Case Pack - ${this.activeCategory}</title>
-          <style>
-            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
-            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 20px; }
-            h1 { margin: 0; color: #1e3a8a; font-size: 24px; }
-            h2 { color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; font-size: 16px; margin-top: 30px; }
-            .meta { color: #64748b; font-size: 12px; margin-top: 5px; }
-            ul { padding-left: 20px; font-size: 13px; }
-            li { margin-bottom: 6px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>LegalConnect Offline Case Pack</h1>
-            <div class="meta">Category: ${this.activeCategory} | Location: ${this.locationQuery} | Generated: ${new Date().toLocaleDateString()}</div>
-          </div>
-          
-          <h2>📋 PERSONALIZED LEGAL ROADMAP</h2>
-          ${actionStepsHtml}
-
-          <h2>📁 REQUIRED DOCUMENTS CHECKLIST</h2>
-          <ul>${documentChecklistHtml}</ul>
-
-          <h2>🏢 NEARBY SUPPORT CONTACTS</h2>
-          ${resourceCardsHtml}
-
-          <h2>💡 LOK ADALAT / ADR ADVISORY</h2>
-          <p style="font-size: 13px; color: #475569;">${this.roadmap.lokAdalatGuidance}</p>
-
-          <footer style="margin-top: 50px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center;">
-            LegalConnect &copy; 2026. This is an informational case pack. Always consult a legal professional before filing suits.
-          </footer>
-          <script>
-            window.onload = () => {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
-  }
-
-  // Handle Bookmarks
-  toggleBookmark(resourceId: string) {
-    // Mock bookmark trigger
-    alert('Resource bookmarked successfully for easy tracking in your profile library!');
-  }
-
-  goToLawyerDetail(lawyerId: string) {
-    this.router.navigate(['/lawyers', lawyerId]);
-  }
-
-  toggleLanguage(lang: string) {
-    const langs = this.filters.languages as any;
-    if (langs.hasOwnProperty(lang)) {
-      langs[lang] = !langs[lang];
-      this.applyFilters();
-    }
-  }
-
-  isLanguageActive(lang: string): boolean {
-    return !!(this.filters.languages as any)[lang];
-  }
-
-  resetFilters() {
-    this.filters = {
-      radius: 5,
-      resourceTypes: {
-        LegalAid: true,
-        Court: true,
-        GovernmentOffice: true,
-        Helpline: true,
-        Lawyer: true
-      },
-      openNow: true,
-      languages: {
-        English: true,
-        Hindi: false,
-        Punjabi: false,
-        Bengali: false
-      },
-      verifiedOnly: false
-    };
-    this.activeTab = 'All';
-    this.applyFilters();
-  }
-
-  get activeFiltersCount(): number {
-    let count = 0;
-    if (this.filters.radius !== 5) count++;
-    if (this.filters.openNow) count++;
-    if (this.filters.verifiedOnly) count++;
-
-    // Resource types filter count (count how many are disabled, indicating user filtering)
-    const resourceTypes = Object.values(this.filters.resourceTypes);
-    const disabledCount = resourceTypes.filter(val => !val).length;
-    if (disabledCount > 0) count++;
-
-    // Languages filter count (English is checked by default, others are false)
-    const langKeys = Object.keys(this.filters.languages) as Array<keyof typeof this.filters.languages>;
-    const customLangs = langKeys.filter(k => k !== 'English' && this.filters.languages[k]);
-    if (customLangs.length > 0 || !this.filters.languages.English) count++;
-
-    return count;
-  }
+  trackByIndex(index: number): number { return index; }
+  trackByCategory(_: number, cat: Category): string { return cat.id; }
+  trackBySubcategory(_: number, sub: string): string { return sub; }
+  trackByRecentSearch(_: number, s: RecentSearch): number { return s.timestamp; }
 }

@@ -1,47 +1,83 @@
 <!-- Transparent Backdrop to close drawer on clicking outside -->
-<div *ngIf="showSosDrawer" (click)="toggleSosDrawer.emit(false)" class="fixed inset-0 z-[980] bg-transparent no-print"></div>
+<div *ngIf="showSosDrawer" (click)="toggleSosDrawer.emit(false)" class="fixed inset-0 z-[980] bg-black/30 backdrop-blur-xs no-print transition-all"></div>
 
 <div class="fixed bottom-[92px] md:bottom-6 right-6 z-[990] no-print">
+  <!-- Emergency Floating FAB -->
   <button (click)="toggleSosDrawer.emit(!showSosDrawer)"
-    class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-gradient-to-br from-red-500 to-red-600 border-none text-white font-extrabold text-[10px] md:text-[11px] shadow-lg hover:shadow-xl flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-105 animate-pulse">
-    <svg class="w-5 h-5 md:w-6 md:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+    class="w-14 h-14 rounded-full bg-gradient-to-br from-red-500 to-red-650 border-none text-white font-extrabold shadow-lg flex flex-col items-center justify-center cursor-pointer transition-all hover:scale-110 active:scale-95 voice-search-btn recording">
+    <svg class="w-6 h-6 text-white animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
         d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
     </svg>
-    <span>SOS</span>
+    <span class="text-[9px] uppercase tracking-wider font-bold">SOS</span>
   </button>
 
+  <!-- SOS Bottom Sheet / Drawer -->
   <div *ngIf="showSosDrawer"
-    class="absolute bottom-[58px] md:bottom-[66px] right-0 w-80 max-w-[calc(100vw-48px)] p-4 bg-bgSurface border border-red-500/20 shadow-2xl rounded-2xl animate-scale-up card">
-    <div class="flex justify-between items-center mb-3 border-b border-borderSubtle pb-1.5">
-      <h4 class="m-0 text-xs md:text-sm font-bold text-red-600">🚨 EMERGENCY SERVICES</h4>
+    class="absolute bottom-[66px] right-0 w-85 max-w-[calc(100vw-48px)] bg-white dark:bg-slate-950 border border-red-500/20 shadow-2xl rounded-2xl animate-scale-up p-5">
+    <div class="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
+      <div class="flex items-center gap-2">
+        <span class="w-2.5 h-2.5 rounded-full bg-red-600 animate-ping"></span>
+        <h4 class="m-0 text-sm font-black text-red-600 tracking-wide">🚨 EMERGENCY ACTION HUB</h4>
+      </div>
       <button (click)="toggleSosDrawer.emit(false)"
-        class="bg-transparent border-none text-lg cursor-pointer text-textMuted hover:text-textPrimary">&times;</button>
+        class="bg-transparent border-none text-xl cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-all">&times;</button>
     </div>
-    <div class="flex flex-col gap-2">
-      <div class="flex justify-between items-center bg-bgElevated p-1.5 px-3 rounded-lg">
+
+    <!-- Scrollable content inside drawer -->
+    <div class="flex flex-col gap-3.5 max-h-[350px] overflow-y-auto pr-1 scrollbar-none">
+      <!-- Universal Police/Emergency -->
+      <div class="flex justify-between items-center bg-red-500/[0.03] border border-red-500/10 p-3 rounded-xl">
         <div>
-          <b class="text-[11px] md:text-xs text-textPrimary">National Emergency</b>
-          <p class="text-[9px] md:text-[10px] text-textMuted mt-0.5 m-0">Police / Fire / Ambulance</p>
+          <b class="text-xs text-slate-800 dark:text-slate-200">National Emergency (All-in-One)</b>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 m-0">Police, Fire, Ambulance services</p>
         </div>
         <a href="tel:112"
-          class="bg-red-500 hover:bg-red-600 text-white py-1 px-2.5 rounded text-xs font-bold text-decoration-none transition-all">112</a>
+          class="bg-red-500 hover:bg-red-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold transition-all hover:scale-105">CALL 112</a>
       </div>
-      <div class="flex justify-between items-center bg-bgElevated p-1.5 px-3 rounded-lg">
+
+      <!-- Women Helpline -->
+      <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl">
         <div>
-          <b class="text-[11px] md:text-xs text-textPrimary">Women Helpline</b>
-          <p class="text-[9px] md:text-[10px] text-textMuted mt-0.5 m-0">Domestic violence / abuse rescue</p>
+          <b class="text-xs text-slate-800 dark:text-slate-200">Women & Abuse Helpline</b>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 m-0">Domestic violence protection & shelter</p>
         </div>
         <a href="tel:1091"
-          class="bg-red-500 hover:bg-red-600 text-white py-1 px-2.5 rounded text-xs font-bold text-decoration-none transition-all">1091</a>
+          class="bg-red-500 hover:bg-red-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold transition-all hover:scale-105">CALL 1091</a>
       </div>
-      <div class="flex justify-between items-center bg-bgElevated p-1.5 px-3 rounded-lg">
+
+      <!-- Cyber Crime -->
+      <div class="flex justify-between items-center bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-3 rounded-xl">
         <div>
-          <b class="text-[11px] md:text-xs text-textPrimary">Cyber Crime Reporting</b>
-          <p class="text-[9px] md:text-[10px] text-textMuted mt-0.5 m-0">Financial/identity fraud reports</p>
+          <b class="text-xs text-slate-800 dark:text-slate-200">Cyber Crime Portal</b>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 m-0">Report bank/netbanking fraud</p>
         </div>
         <a href="tel:1930"
-          class="bg-red-500 hover:bg-red-600 text-white py-1 px-2.5 rounded text-xs font-bold text-decoration-none transition-all">1930</a>
+          class="bg-red-500 hover:bg-red-600 text-white py-1.5 px-3 rounded-lg text-xs font-bold transition-all hover:scale-105">CALL 1930</a>
+      </div>
+
+      <!-- Cyber Crime Banking Quick Action Cards -->
+      <div class="mt-1 border-t border-slate-100 dark:border-slate-800 pt-3">
+        <h5 class="text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider uppercase m-0 mb-2">⚡ INSTANT BANK LOCK HOTLINES</h5>
+        <div class="grid grid-cols-2 gap-2 text-[10px] font-semibold text-slate-700 dark:text-slate-350">
+          <a href="tel:1800112211" class="flex justify-between items-center border border-slate-100 dark:border-slate-800 p-2 rounded-lg bg-white dark:bg-slate-900 hover:border-red-500/20 transition-all">
+            <span>SBI Block</span>
+            <span class="text-red-500">→</span>
+          </a>
+          <a href="tel:18001600" class="flex justify-between items-center border border-slate-100 dark:border-slate-800 p-2 rounded-lg bg-white dark:bg-slate-900 hover:border-red-500/20 transition-all">
+            <span>HDFC Block</span>
+            <span class="text-red-500">→</span>
+          </a>
+          <a href="tel:18001080" class="flex justify-between items-center border border-slate-100 dark:border-slate-800 p-2 rounded-lg bg-white dark:bg-slate-900 hover:border-red-500/20 transition-all">
+            <span>ICICI Block</span>
+            <span class="text-red-500">→</span>
+          </a>
+          <a href="tel:18002095577" class="flex justify-between items-center border border-slate-100 dark:border-slate-800 p-2 rounded-lg bg-white dark:bg-slate-900 hover:border-red-500/20 transition-all">
+            <span>Axis Block</span>
+            <span class="text-red-500">→</span>
+          </a>
+        </div>
+        <p class="text-[9px] text-slate-400 mt-2 m-0 text-center italic">Report cyber fraud within 2 hours to freeze fund transfers.</p>
       </div>
     </div>
   </div>

@@ -3,28 +3,29 @@
 }
 
 .modal-backdrop {
-  animation: backdrop-in 0.2s ease both;
+  animation: backdrop-in 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
 
   @keyframes backdrop-in {
     from {
       opacity: 0;
+      backdrop-filter: blur(0px);
     }
-
     to {
       opacity: 1;
+      backdrop-filter: blur(12px);
     }
   }
 }
 
 .modal-card {
-  animation: modal-slide-up 0.22s cubic-bezier(0.4, 0, 0.2, 1) both;
+  animation: modal-slide-in 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
 
-  @keyframes modal-slide-up {
+  @keyframes modal-slide-in {
     from {
       opacity: 0;
-      transform: translateY(20px) scale(0.97);
+      transform: translateY(24px) scale(0.96);
     }
-
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
@@ -33,11 +34,28 @@
 }
 
 #location-modal-map {
-  height: 340px;
+  height: 100%;
+  width: 100%;
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
   #location-modal-map {
-    height: 260px;
+    height: 100%;
+    min-height: 200px;
+    flex: 1;
+  }
+
+  .modal-card {
+    animation: mobile-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+    box-shadow: 0 -10px 25px -5px rgba(15, 23, 42, 0.15);
+  }
+
+  @keyframes mobile-slide-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
 }

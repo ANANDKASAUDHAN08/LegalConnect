@@ -102,6 +102,12 @@ export const routes: Routes = [
     data: { expectedRoles: ['Client'] }
   },
   {
+    path: 'admin/resources',
+    loadComponent: () => import('./pages/admin-resources/admin-resources.component').then(m => m.AdminResourcesComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { expectedRoles: ['Admin', 'Lawyer', 'Client'] }
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard]

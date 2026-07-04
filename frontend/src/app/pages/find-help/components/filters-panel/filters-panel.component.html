@@ -1,0 +1,241 @@
+<!-- Title (desktop only) -->
+<div *ngIf="variant === 'desktop'" class="flex justify-between items-center mb-1">
+  <h3 class="text-[10px] font-black text-slate-400 dark:text-slate-500 tracking-widest uppercase m-0">
+    SEARCH FILTERS
+  </h3>
+  <button (click)="resetFilters.emit()"
+    class="text-[10px] text-red-500 hover:text-red-650 hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
+    Reset All
+  </button>
+</div>
+
+<div class="flex flex-col gap-3">
+  <!-- Radius Selector -->
+  <div class="flex flex-col gap-2.5">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-450 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+      </svg>
+      <label class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Search Radius
+      </label>
+    </div>
+    <div class="grid grid-cols-4 gap-1 md:gap-2">
+      <button *ngFor="let r of radiusOptions; trackBy: trackByIndex" (click)="filters.radius = r; onFilterChange()"
+        [ngClass]="filters.radius === r 
+          ? 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white dark:border-amber-455 dark:from-amber-455 dark:to-orange-500 dark:text-slate-950 shadow-sm shadow-blue-500/20 dark:shadow-amber-400/10' 
+          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:bg-slate-100/50 dark:hover:bg-slate-850/50'"
+        class="py-2 px-1 rounded-xl border text-[10px] font-bold cursor-pointer transition-all active:scale-95 text-center">
+        {{r}} km
+      </button>
+    </div>
+  </div>
+
+  <!-- Resource Type Toggles -->
+  <div class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex flex-col gap-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+      <label class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Resource Categories
+      </label>
+    </div>
+
+    <!-- Checkbox -->
+    <div class="flex flex-col gap-1 md:gap-1.5 text-xs text-slate-700 dark:text-slate-355">
+      <!-- All Resources Select All/Deselect All -->
+      <label class="inline-flex items-center gap-3 cursor-pointer group py-1 w-full"
+        [class.opacity-50]="isFreeAidEligible"
+        [class.pointer-events-none]="isFreeAidEligible">
+        <div class="relative flex items-center">
+          <input type="checkbox" [checked]="allResourcesSelected" (change)="toggleAllResources($event)"
+            [disabled]="isFreeAidEligible" class="sr-only" />
+          <div class="w-4 h-4 rounded-md border transition-all duration-200 flex items-center justify-center shrink-0"
+            [ngClass]="allResourcesSelected 
+              ? 'bg-blue-600 border-blue-600 dark:bg-amber-455 dark:border-amber-455 text-white dark:text-slate-950 scale-100 shadow-xs shadow-blue-500/20 dark:shadow-amber-400/10' 
+              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:border-blue-500 dark:group-hover:border-amber-455'">
+            <svg *ngIf="allResourcesSelected" class="w-2.5 h-2.5 stroke-current stroke-[3px]" fill="none"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <span
+          class="text-xs text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors duration-150 font-bold flex items-center gap-1.5 w-full justify-between">
+          <span>All Resources ({{ totalResourcesCount }})</span>
+        </span>
+      </label>
+
+      <!-- Soft Separator -->
+      <div class="h-[1px] bg-slate-100 dark:bg-slate-800/60 my-1"></div>
+
+      <label *ngFor="let cat of categoryConfigs; trackBy: trackByKey"
+        class="inline-flex items-center gap-3 cursor-pointer group py-1 w-full"
+        [class.opacity-50]="isFreeAidEligible && cat.key !== 'LegalAid'"
+        [class.pointer-events-none]="isFreeAidEligible && cat.key !== 'LegalAid'">
+        <div class="relative flex items-center">
+          <input type="checkbox" [(ngModel)]="filters.resourceTypes[cat.key]" (change)="onFilterChange()"
+            [disabled]="isFreeAidEligible && cat.key !== 'LegalAid'" class="sr-only" />
+          <div class="w-4 h-4 rounded-md border transition-all duration-200 flex items-center justify-center shrink-0"
+            [ngClass]="filters.resourceTypes[cat.key] 
+              ? 'bg-blue-600 border-blue-600 dark:bg-amber-455 dark:border-amber-455 text-white dark:text-slate-950 scale-100 shadow-xs shadow-blue-500/20 dark:shadow-amber-400/10' 
+              : 'border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 group-hover:border-blue-500 dark:group-hover:border-amber-455'">
+            <svg *ngIf="filters.resourceTypes[cat.key]" class="w-2.5 h-2.5 stroke-current stroke-[3px]" fill="none"
+              viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+        </div>
+        <span
+          class="text-xs text-slate-700 dark:text-slate-300 group-hover:text-slate-900 dark:group-hover:text-white transition-colors duration-150 font-medium flex items-center gap-1.5 w-full justify-between">
+          <span>{{ cat.label }} ({{ cat.count }})</span>
+          <span *ngIf="isFreeAidEligible && cat.key !== 'LegalAid'"
+            class="text-[9px] font-bold text-purple-600 dark:text-purple-400 bg-purple-500/10 px-1.5 py-0.5 rounded-md flex items-center gap-0.5 shrink-0">
+            <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            NALSA Mode
+          </span>
+        </span>
+      </label>
+    </div>
+  </div>
+
+  <!-- Subcategories Filter Section -->
+  <div *ngIf="allSubcategories && allSubcategories.length > 0"
+    class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex flex-col gap-2.5">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M7 7h.01M6 20h.01M21 8h-6M21 12h-6M21 16h-6M3 12h.01M3 16h.01M3 8h.01M17 21h-10a2 2 0 01-2-2V5a2 2 0 012-2h10a2 2 0 012 2v14a2 2 0 01-2 2z" />
+      </svg>
+      <label class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Filter by Focus
+      </label>
+    </div>
+    <div class="flex flex-wrap gap-1 md:gap-1.5 max-h-[120px] overflow-y-auto scrollbar-none pr-1">
+      <button *ngFor="let sub of allSubcategories; trackBy: trackByIndex" (click)="toggleSubcategory(sub)"
+        [ngClass]="isSubcategoryActive(sub) 
+          ? 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white dark:border-amber-455 dark:from-amber-455 dark:to-orange-500 dark:text-slate-950 shadow-sm shadow-blue-500/20 dark:shadow-amber-400/10' 
+          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 hover:border-blue-500 hover:bg-slate-100/50 dark:hover:bg-slate-850/50'"
+        class="px-2 py-1 rounded-lg border text-[10px] font-semibold cursor-pointer transition-all active:scale-95 text-left">
+        {{ sub }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Open Now Toggle -->
+  <div class="flex flex-row justify-between items-center gap-4 border-t border-slate-200 dark:border-slate-800/80 pt-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      <span class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Open Now Only
+      </span>
+    </div>
+    <label class="switch-control shrink-0">
+      <input type="checkbox" [(ngModel)]="filters.openNow" (change)="onFilterChange()" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- Language Pill Checklist -->
+  <div class="flex flex-col gap-2.5 border-t border-slate-200 dark:border-slate-800/80 pt-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 0c-.818 3.033-2.58 5.743-4.877 7.5M19 11a4 4 0 11-8 0 4 4 0 018 0z" />
+      </svg>
+      <label class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Languages (Lawyers)
+      </label>
+    </div>
+    <div class="flex flex-wrap gap-1 md:gap-2">
+      <button *ngFor="let lang of languageOptions; trackBy: trackByIndex" (click)="toggleLanguage(lang)"
+        [ngClass]="isLanguageActive(lang) 
+          ? 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white dark:border-amber-455 dark:from-amber-455 dark:to-orange-500 dark:text-slate-950 shadow-sm shadow-blue-500/20 dark:shadow-amber-400/10' 
+          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400 hover:border-blue-500 hover:bg-slate-100/50 dark:hover:bg-slate-850/50'"
+        class="px-2.5 py-1.5 rounded-full border text-xs font-semibold cursor-pointer transition-all active:scale-95">
+        {{lang}}
+      </button>
+    </div>
+  </div>
+
+  <!-- Verified Toggle -->
+  <div class="flex flex-row justify-between items-center gap-4 border-t border-slate-200 dark:border-slate-800/80 pt-3">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+      </svg>
+      <span class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Verified Only
+      </span>
+    </div>
+    <label class="switch-control shrink-0">
+      <input type="checkbox" [(ngModel)]="filters.verifiedOnly" (change)="onFilterChange()" />
+      <span class="slider"></span>
+    </label>
+  </div>
+
+  <!-- Lawyer Max Fee Slider / Brackets -->
+  <div *ngIf="filters.resourceTypes.Lawyer && lawyers.length > 0"
+    class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex flex-col gap-2.5">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2">
+        <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M12 16v1M10 21h4a2 2 0 002-2V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v14a2 2 0 002 2z" />
+        </svg>
+        <label class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+          Max Fee (Consultation)
+        </label>
+      </div>
+      <span class="text-[10px] font-bold text-blue-600 dark:text-amber-400">
+        ₹{{ filters.maxConsultationFee }}
+      </span>
+    </div>
+    <div class="flex flex-col gap-1.5 px-0.5">
+      <input type="range" min="500" max="5000" step="500" [(ngModel)]="filters.maxConsultationFee"
+        (change)="onFilterChange()"
+        class="w-full accent-blue-600 dark:accent-amber-455 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-lg appearance-none cursor-pointer" />
+      <div
+        class="flex justify-between text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider">
+        <span>Min: ₹500</span>
+        <span>Max: ₹5000</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lawyer Gender Selector -->
+  <div *ngIf="filters.resourceTypes.Lawyer && lawyers.length > 0"
+    class="border-t border-slate-200 dark:border-slate-800/80 pt-3 flex flex-col gap-2.5">
+    <div class="flex items-center gap-2">
+      <svg class="w-3.5 h-3.5 text-slate-455 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
+          d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      <label class="text-[10px] font-black text-slate-455 dark:text-slate-500 uppercase tracking-widest">
+        Advocate Gender
+      </label>
+    </div>
+    <div class="grid grid-cols-3 gap-1">
+      <button *ngFor="let g of genderOptions; trackBy: trackByIndex"
+        (click)="filters.lawyerGender = g; onFilterChange()"
+        [ngClass]="filters.lawyerGender === g 
+          ? 'border-blue-600 bg-gradient-to-r from-blue-600 to-indigo-600 text-white dark:border-amber-455 dark:from-amber-455 dark:to-orange-500 dark:text-slate-950 shadow-sm shadow-blue-500/20 dark:shadow-amber-400/10' 
+          : 'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 hover:border-blue-500 hover:bg-slate-100/50 dark:hover:bg-slate-850/50'"
+        class="py-1.5 rounded-xl border text-[10px] font-bold cursor-pointer transition-all active:scale-95 text-center">
+        {{ g }}
+      </button>
+    </div>
+  </div>
+
+</div>

@@ -54,29 +54,6 @@
 // DYNAMIC ANIMATIONS & KEYFRAMES
 // ----------------------------------------------------
 
-// AI Voice Search Pulse Recording State
-.voice-search-btn.recording {
-  background: hsl(0, 84%, 60%) !important;
-  animation: pulse-red 1.2s infinite;
-}
-
-@keyframes pulse-red {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.7);
-  }
-
-  70% {
-    transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
-  }
-
-  100% {
-    transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0);
-  }
-}
-
 // Free Legal Aid Checker Highlight
 .badge-green-highlight {
   background: #9333ea !important;
@@ -155,7 +132,7 @@
     padding: 6px !important;
     font-family: var(--font-sans) !important;
   }
-  
+
   .gm-style-iw-d {
     overflow: auto !important;
     max-height: none !important;
@@ -172,6 +149,7 @@
     border-radius: 50% !important;
     margin: 8px !important;
     opacity: 0.7 !important;
+
     &:hover {
       opacity: 1 !important;
     }
@@ -183,6 +161,7 @@
   0% {
     background-position: -200% 0;
   }
+
   100% {
     background-position: 200% 0;
   }
@@ -224,6 +203,7 @@
 .scrollbar-none {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
+
   &::-webkit-scrollbar {
     display: none !important;
   }
@@ -233,6 +213,21 @@
 // MOBILE-FIRST PREMIUM STYLE OVERRIDES
 // ----------------------------------------------------
 @media (max-width: 768px) {
+  // Tighten spacing in hero headers
+  h1 {
+    margin-bottom: 0.25rem !important; // Reduce title bottom margin
+    font-size: 1.55rem !important; // Slightly more compact on mobile
+  }
+
+  p.text-slate-655 {
+    margin-bottom: 0.5rem !important; // Reduce description bottom margin
+    line-height: 1.35 !important;
+  }
+
+  .grid-cols-1 {
+    gap: 1rem !important; // Reduce main dashboard layout gap
+  }
+
   // Smooth slide-up transition for the bottom sheet drawer
   .fixed.bottom-0 {
     animation: slide-up-sheet 0.35s cubic-bezier(0.32, 0.94, 0.6, 1) forwards;
@@ -243,6 +238,7 @@
   from {
     transform: translateY(100%);
   }
+
   to {
     transform: translateY(0);
   }
@@ -252,4 +248,105 @@
 .backdrop-blur-sm {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
+}
+
+// ----------------------------------------------------
+// GOOGLE MAPS INFOWINDOW — COMPACT STYLING OVERRIDES
+// Removes the separate floating × button and double-border effect
+// ----------------------------------------------------
+::ng-deep {
+
+  // Remove padding from the InfoWindow wrapper so our content div fills it flush
+  .gm-style-iw.gm-style-iw-c {
+    padding: 0 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    border: none !important;
+  }
+
+  // The scroll container inside — remove overflow and padding
+  .gm-style-iw-d {
+    overflow: hidden !important;
+    padding: 0 !important;
+  }
+
+  // Hide the separate floating close button rendered by Google Maps
+  // (we embed close behaviour via compact title row instead)
+  .gm-style-iw-chr {
+    display: none !important;
+  }
+
+  // Dark mode: recolor the InfoWindow background via the wrapper
+  :host-context(.dark) .gm-style-iw.gm-style-iw-c {
+    background: #1e293b !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45) !important;
+    border: none !important;
+  }
+
+  :host-context(.dark) .gm-style-iw-d {
+    background: #1e293b !important;
+  }
+}
+
+// ----------------------------------------------------
+// STATE 2: SPLIT SCREEN LOCK SCROLLING
+// ----------------------------------------------------
+@media (min-width: 768px) {
+  .results-split-layout {
+    height: calc(100vh - 170px) !important;
+    max-height: calc(100vh - 170px) !important;
+    overflow: hidden !important;
+    align-items: stretch !important;
+    padding-bottom: 10px;
+
+    .filters-sidebar {
+      height: 100% !important;
+      max-height: 100% !important;
+      overflow-y: auto !important;
+      position: sticky;
+      top: 0;
+      scrollbar-width: none;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .list-scroll-panel {
+      height: 100% !important;
+      max-height: 100% !important;
+      overflow-y: auto !important;
+      scrollbar-width: none;
+      padding-right: 4px;
+      &::-webkit-scrollbar {
+        display: none;
+      }
+    }
+
+    .map-sticky-panel {
+      height: 100% !important;
+      max-height: 100% !important;
+      position: sticky;
+      top: 0;
+      & > div {
+        height: 100% !important;
+      }
+    }
+  }
+}
+
+// ----------------------------------------------------
+// DYNAMIC HIGHLIGHT FOR SELECTED CARDS
+// ----------------------------------------------------
+.highlighted-card {
+  border-color: #f59e0b !important; // Gold/Amber highlight border
+  box-shadow: 0 0 15px rgba(245, 158, 11, 0.25) !important;
+  transform: scale(1.01) translateY(-2px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background-color: rgba(245, 158, 11, 0.02) !important;
+}
+
+:host-context(.dark) .highlighted-card {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.35) !important;
+  background-color: rgba(245, 158, 11, 0.04) !important;
 }
