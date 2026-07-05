@@ -20,6 +20,7 @@ export class LawyerCardComponent implements OnInit {
   @Input() viewMode: 'grid' | 'list' = 'grid';
   @Input() showActions = true; // default true — always show actions bar
 
+  @Output() cardClick = new EventEmitter<string>();
   @Output() avatarClick = new EventEmitter<string>();
   @Output() specializationClick = new EventEmitter<string>();
   @Output() bookmarkClick = new EventEmitter<string>(); // kept for backwards compat
@@ -76,5 +77,10 @@ export class LawyerCardComponent implements OnInit {
   onBookClick(event: Event) {
     event.stopPropagation();
     this.bookClick.emit(this.lawyer._id);
+  }
+
+  onCardClick(event: Event) {
+    // Navigate to details only if click was not on a button, tag, or avatar which already handle their clicks and stopPropagation
+    this.cardClick.emit(this.lawyer._id);
   }
 }

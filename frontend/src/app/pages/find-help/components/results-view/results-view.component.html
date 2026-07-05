@@ -367,9 +367,9 @@
               'grid-cols-1 md:grid-cols-2 lg:grid-cols-3': activeViewMode === 'list' || activeViewMode === 'map'
             }">
             <app-lawyer-card *ngFor="let lawyer of paginatedLawyers; trackBy: trackByLawyerId" [lawyer]="lawyer"
-              [viewMode]="'list'" [showActions]="true" (click)="goToLawyerDetail(lawyer._id)"
-              (messageClick)="goToLawyerDetail($event)" (bookClick)="goToLawyerDetail($event)"
-              [id]="'resource-card-' + lawyer._id" [class.highlighted-card]="highlightedResourceId === lawyer._id"
+              [showActions]="true" (cardClick)="goToLawyerDetail($event)" (messageClick)="goToLawyerDetail($event)"
+              (bookClick)="goToLawyerDetail($event)" [id]="'resource-card-' + lawyer._id"
+              [class.highlighted-card]="highlightedResourceId === lawyer._id"
               (mouseenter)="highlightResource(lawyer._id)" (mouseleave)="clearHighlightResource(lawyer._id)">
             </app-lawyer-card>
           </div>
