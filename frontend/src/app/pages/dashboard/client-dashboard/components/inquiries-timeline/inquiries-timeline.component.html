@@ -30,15 +30,8 @@
   <!-- Timeline cards -->
   <div *ngIf="!loadingInquiries && inquiries.length > 0" class="grid grid-cols-1 gap-6">
     <div *ngFor="let inq of inquiries; trackBy: trackByInquiry"
-      class="card-glass p-5 rounded-2xl flex flex-col gap-4 relative overflow-hidden">
-
-      <!-- Side Status Indicator Line -->
-      <div class="absolute left-0 top-0 bottom-0 w-1.5" [ngClass]="{
-             'bg-amber-500': inq.status === 'Pending',
-             'bg-blue-500': inq.status === 'Contacted',
-             'bg-emerald-500': inq.status === 'Closed'
-           }">
-      </div>
+      class="card-glass p-3 md:p-5 rounded-2xl flex flex-col gap-3 md:gap-4 relative overflow-hidden"
+      [style.border-left]="'4px solid ' + (inq.status === 'Pending' ? '#f59e0b' : inq.status === 'Contacted' ? '#3b82f6' : '#10b981')">
 
       <!-- Lawyer details & Status header -->
       <div

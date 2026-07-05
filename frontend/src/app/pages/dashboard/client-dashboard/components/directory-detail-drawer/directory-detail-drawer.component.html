@@ -3,22 +3,31 @@
 <div class="drawer-panel" [class.open]="isOpen">
   <!-- 1. DYNAMIC HEADER -->
   <div
-    class="flex items-center justify-between px-5 py-4 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
+    class="flex items-center justify-between px-4 md:py-3 py-2 border-b border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10">
     <div class="flex flex-col min-w-0">
       <!-- Category Badge -->
       <span class="text-[10px] uppercase tracking-wider font-extrabold text-indigo-600 dark:text-indigo-400">
-        <span *ngIf="type === 'lawyer'">Advocate Counsel</span>
-        <span *ngIf="type === 'resource'">{{ data?.type === 'Court' ? 'Court Complex' : 'Legal Aid Center' }}</span>
-        <span *ngIf="type === 'helpline'">Emergency Hotline</span>
+        @if (type === 'lawyer') {
+        <span>Advocate Counsel</span>
+        } @else if (type === 'resource') {
+        <span>{{ data?.type === 'Court' ? 'Court Complex' : 'Legal Aid Center' }}</span>
+        } @else if (type === 'helpline') {
+        <span>Emergency Hotline</span>
+        }
       </span>
       <!-- Dynamic Title based on clicked item -->
       <h3 class="text-sm font-bold text-slate-900 dark:text-white truncate mt-0.5">
-        <span *ngIf="isArray(data)">
-          <span *ngIf="type === 'lawyer'">All Saved Advocates</span>
-          <span *ngIf="type === 'resource'">All Help Centers</span>
-          <span *ngIf="type === 'helpline'">All Emergency Lines</span>
-        </span>
-        <span *ngIf="!isArray(data)">{{ data?.name }}</span>
+        @if (isArray(data)) {
+        @if (type === 'lawyer') {
+        <span>All Saved Advocates</span>
+        } @else if (type === 'resource') {
+        <span>All Help Centers</span>
+        } @else if (type === 'helpline') {
+        <span>All Emergency Lines</span>
+        }
+        } @else {
+        <span>{{ data?.name }}</span>
+        }
       </h3>
     </div>
 
@@ -32,54 +41,65 @@
   </div>
 
   <!-- 2. SCROLLABLE BODY -->
-  <div class="flex-1 overflow-y-auto p-5 bg-slate-50/30 dark:bg-[#07090f]/30">
-    <div *ngIf="data" class="space-y-6 animate-[fadeIn_0.3s_ease-out]">
+  <div class="flex-1 overflow-y-auto p-3 bg-slate-50/30 dark:bg-[#07090f]/30">
+    @if (data) {
+    <div class="space-y-6 animate-[fadeIn_0.3s_ease-out]">
       <!-- Lawyer Card(s) -->
-      <ng-container *ngIf="type === 'lawyer'">
-        <ng-container *ngIf="isArray(data); else singleLawyer">
-          <div class="space-y-4">
-            <app-lawyer-card *ngFor="let item of data" [lawyer]="item"></app-lawyer-card>
-          </div>
-        </ng-container>
-        <ng-template #singleLawyer>
-          <app-lawyer-card [lawyer]="data"></app-lawyer-card>
-        </ng-template>
-      </ng-container>
+      @if (type === 'lawyer') {
+      @if (isArray(data)) {
+      <div class="space-y-4">
+        @for (item of data; track item._id || $index) {
+        <app-lawyer-card [lawyer]="item"></app-lawyer-card>
+        }
+      </div>
+      } @else {
+      <app-lawyer-card [lawyer]="data"></app-lawyer-card>
+      }
+      }
 
       <!-- Resource Card(s) -->
-      <ng-container *ngIf="type === 'resource'">
-        <ng-container *ngIf="isArray(data); else singleResource">
-          <div class="space-y-4">
-            <app-resource-card *ngFor="let item of data" [resource]="item"></app-resource-card>
-          </div>
-        </ng-container>
-        <ng-template #singleResource>
-          <app-resource-card [resource]="data"></app-resource-card>
-        </ng-template>
-      </ng-container>
+      @if (type === 'resource') {
+      @if (isArray(data)) {
+      <div class="space-y-4">
+        @for (item of data; track item._id || $index) {
+        <app-resource-card [resource]="item"></app-resource-card>
+        }
+      </div>
+      } @else {
+      <app-resource-card [resource]="data"></app-resource-card>
+      }
+      }
 
       <!-- Helpline Card(s) -->
-      <ng-container *ngIf="type === 'helpline'">
-        <ng-container *ngIf="isArray(data); else singleHelpline">
-          <div class="space-y-4">
-            <app-helpline-card *ngFor="let item of data" [helpline]="item"></app-helpline-card>
-          </div>
-        </ng-container>
-        <ng-template #singleHelpline>
-          <app-helpline-card [helpline]="data"></app-helpline-card>
-        </ng-template>
-      </ng-container>
+      @if (type === 'helpline') {
+      @if (isArray(data)) {
+      <div class="space-y-4">
+        @for (item of data; track item._id || item.number || $index) {
+        <app-helpline-card [helpline]="item"></app-helpline-card>
+        }
+      </div>
+      } @else {
+      <app-helpline-card [helpline]="data"></app-helpline-card>
+      }
+      }
     </div>
+    }
   </div>
 
   <!-- 3. ACTIONS FOOTER -->
   <div
-    class="px-5 py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-between gap-3">
+    class="px-5 md:py-3 py-2 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-900/10 flex items-center justify-between gap-3">
 
     <!-- Left side status message -->
-    <div class="hidden sm:block text-[10px] text-slate-450 dark:text-slate-500 font-medium">
-      {{ isArray(data) ? data.length + ' profiles loaded' : 'Single profile loaded' }}
+    @if (isArray(data)) {
+    <div class="hidden sm:block text-[10px] text-slate-450 dark:text-slate-550 font-medium">
+      {{ data.length }} profiles loaded
     </div>
+    } @else {
+    <div class="hidden sm:block text-[10px] text-slate-450 dark:text-slate-550 font-medium">
+      Single profile loaded
+    </div>
+    }
 
     <div class="flex items-center gap-3 ml-auto">
       <!-- Close Button -->

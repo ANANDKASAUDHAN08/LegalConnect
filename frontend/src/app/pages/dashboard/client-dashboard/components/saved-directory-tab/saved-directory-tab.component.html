@@ -1,0 +1,298 @@
+<div class="space-y-8 animate-[fadeIn_0.2s_ease-out] pt-4">
+
+  <!-- SAVED LAWYERS SECTION -->
+  <div class="space-y-2 md:space-y-4">
+    <div
+      class="flex items-center justify-between gap-1 md:gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+      <!-- Left side: Icon + Text Column -->
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <!-- Icon -->
+        <div
+          class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100/10 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="w-4 h-4 text-indigo-655 dark:text-indigo-400">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <!-- Title and Paragraph -->
+        <div class="min-w-0">
+          <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="hidden md:inline">Saved </span>Advocates & Lawyers
+            <span
+              class="text-[10px] sm:text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 w-6 h-6 rounded-full font-extrabold border border-indigo-500/10 flex items-center justify-center shrink-0">
+              {{ savedLawyersDetails.length }}
+            </span>
+          </h2>
+
+          <!-- Mobile: Short version -->
+          <p class="sm:hidden text-[10px] text-slate-500 truncate">Consult saved professionals</p>
+          <!-- Desktop: Full version -->
+          <p class="hidden sm:block text-[10px] text-slate-500 truncate">Quickly consult with saved
+            legal professionals
+          </p>
+        </div>
+      </div>
+
+      <!-- Right side: Circle Counter + View All -->
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <button *ngIf="savedLawyersDetails.length > 0"
+          (click)="openDrawer.emit({type: 'lawyer', data: savedLawyersDetails})"
+          class="px-2.5 py-1 text-[10px] font-extrabold bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-500/20 rounded-lg border-0 transition-all cursor-pointer"
+          appTooltip="View all saved advocates in drawer">
+          View All
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="savedLawyersDetails.length === 0"
+      class="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/10">
+      <p class="text-xs text-slate-500">No lawyers saved yet. <a routerLink="/lawyers"
+          class="text-indigo-650 dark:text-indigo-400 hover:underline font-bold">Browse lawyers &rarr;</a></p>
+    </div>
+
+    <!-- Cards -->
+    <div *ngIf="savedLawyersDetails.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+      <div *ngFor="let lawyer of savedLawyersDetails.slice(0, 4); trackBy: trackById"
+        class="flex p-2 md:p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 items-center justify-between gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-indigo-300 dark:hover:border-indigo-900/40 hover:bg-indigo-50/5 dark:hover:bg-indigo-900/5 transition-all duration-300 cursor-pointer"
+        (click)="openDrawer.emit({type: 'lawyer', data: lawyer})" appTooltip="Click to open advocate profile drawer">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="relative flex-shrink-0">
+            <img *ngIf="lawyer.avatarUrl" [src]="lawyer.avatarUrl" loading="lazy"
+              class="w-10 h-10 rounded-full object-cover border border-slate-200 dark:border-slate-700" />
+            <div *ngIf="!lawyer.avatarUrl"
+              class="w-10 h-10 rounded-full bg-indigo-50 dark:bg-indigo-950/40 flex items-center justify-center border border-indigo-100/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs">
+              {{ lawyer.name?.charAt(0) }}
+            </div>
+            <span *ngIf="lawyer.isAvailable"
+              class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-emerald-500 border border-white dark:border-slate-900"
+              appTooltip="Available Now"></span>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+              {{ lawyer.name }}
+            </h3>
+            <p class="text-[10px] text-slate-450 dark:text-slate-550 truncate">
+              {{ lawyer.specializations?.slice(0, 2)?.join(', ') || 'General Practice' }}
+            </p>
+            <p class="text-[9px] text-indigo-650 dark:text-indigo-400 font-bold mt-0.5">
+              {{ lawyer.experience }} yrs exp &bull; {{ lawyer.rating }} &starf;
+            </p>
+          </div>
+        </div>
+        <!-- Button Wrapper: text buttons on desktop, icon button on mobile -->
+        <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+          <button (click)="savedItemsService.toggleLawyer(lawyer._id, lawyer.name)"
+            class="hidden min-[480px]:inline-flex px-2.5 py-1.5 border border-red-200/60 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-655 dark:text-red-400 rounded-lg text-[10px] font-bold transition-all bg-transparent cursor-pointer"
+            appTooltip="Remove lawyer from saved directory">
+            Remove
+          </button>
+          <!-- Mobile Remove Icon Button (Visible below 480px) -->
+          <button (click)="savedItemsService.toggleLawyer(lawyer._id, lawyer.name)"
+            class="min-[480px]:hidden w-8 h-8 rounded-lg flex items-center justify-center text-red-655 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer p-0"
+            appTooltip="Remove lawyer from saved directory">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2"
+              stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED RESOURCES/CENTERS SECTION -->
+  <div class="space-y-2 md:space-y-4">
+    <div
+      class="flex items-start sm:items-center justify-between gap-2.5 sm:gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+      <div
+        class="w-8 h-8 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-100/10 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="w-4 h-4 text-amber-650 dark:text-amber-400">
+          <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+          <line x1="9" y1="9" x2="15" y2="9" />
+          <line x1="9" y1="13" x2="15" y2="13" />
+          <line x1="9" y1="17" x2="13" y2="17" />
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+          <span class="hidden md:inline">Saved </span>Legal Aid & Courts
+          <span
+            class="text-[10px] sm:text-xs bg-amber-500/10 text-amber-600 dark:text-amber-400 w-6 h-6 rounded-full font-extrabold border border-amber-500/10 flex items-center justify-center shrink-0">
+            {{ savedResourcesDetails.length }}
+          </span>
+        </h2>
+        <!-- Mobile: Short version -->
+        <p class="sm:hidden text-[10px] text-slate-500 truncate">Courts & Aid centers</p>
+        <!-- Desktop: Full version -->
+        <p class="hidden sm:block text-[10px] text-slate-500 truncate">Court complexes and Free Legal Aid
+          centers
+        </p>
+      </div>
+
+      <!-- View All Button -->
+      <button *ngIf="savedResourcesDetails.length > 0"
+        (click)="openDrawer.emit({type: 'resource', data: savedResourcesDetails})"
+        class="px-2.5 py-1 text-[10px] font-extrabold bg-amber-500/10 text-amber-600 dark:text-amber-400 hover:bg-amber-500/20 rounded-lg border-0 transition-all cursor-pointer shrink-0 mt-0.5 sm:mt-0"
+        appTooltip="View all saved courts and aid centers in drawer">
+        View All
+      </button>
+    </div>
+
+    <div *ngIf="savedResourcesDetails.length === 0"
+      class="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/10">
+      <p class="text-xs text-slate-500">No legal aids or courts saved yet. <a routerLink="/find-help"
+          class="text-indigo-650 dark:text-indigo-400 hover:underline font-bold">Find local aids &rarr;</a></p>
+    </div>
+
+    <!-- Cards -->
+    <div *ngIf="savedResourcesDetails.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+      <div *ngFor="let resource of savedResourcesDetails.slice(0, 4); trackBy: trackById"
+        class="flex p-2 md:p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 items-center justify-between gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-amber-300 dark:hover:border-amber-900/40 hover:bg-amber-50/5 dark:hover:bg-amber-900/5 transition-all duration-300 cursor-pointer"
+        (click)="openDrawer.emit({type: 'resource', data: resource})"
+        appTooltip="Click to open court or aid center drawer">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-8 h-8 md:w-10 md:h-10 rounded-full flex items-center justify-center flex-shrink-0 border"
+            [class]="resource.type === 'Court' ? 'bg-indigo-50 border-indigo-100/20 text-indigo-655 dark:bg-indigo-950/30 dark:text-indigo-400' : 'bg-emerald-50 border-emerald-100/20 text-emerald-655 dark:bg-emerald-950/30 dark:text-emerald-400'">
+            <svg *ngIf="resource.type === 'Court'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" class="md:w-5 md:h-5 w-4 h-4">
+              <path d="M12 22v-4M8 18h8M3 14h18M12 2v12M5 6v6M19 6v6M9 6v6M15 6v6"></path>
+            </svg>
+            <svg *ngIf="resource.type !== 'Court'" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.2" class="md:w-5 md:h-5 w-4 h-4">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+              {{ resource.name }}
+            </h3>
+            <div class="flex items-center gap-1.5 mt-0.5">
+              <span class="text-[9px] uppercase font-black px-1.5 py-0.5 rounded"
+                [class]="resource.type === 'Court' ? 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'">
+                {{ resource.type === 'Court' ? 'District Court' : 'Legal Aid Center' }}
+              </span>
+              <span class="text-[9px] font-bold text-slate-400">
+                &bull; {{ resource.location || resource.city }}
+              </span>
+            </div>
+          </div>
+        </div>
+        <!-- Button Wrapper: text buttons on desktop, icon button on mobile -->
+        <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+          <button (click)="savedItemsService.toggleResource(resource._id, resource.name)"
+            class="hidden min-[480px]:inline-flex px-2.5 py-1.5 border border-red-200/60 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-655 dark:text-red-400 rounded-lg text-[10px] font-bold transition-all bg-transparent cursor-pointer"
+            appTooltip="Remove resource from saved directory">
+            Remove
+          </button>
+          <!-- Mobile Remove Icon Button (Visible below 480px) -->
+          <button (click)="savedItemsService.toggleResource(resource._id, resource.name)"
+            class="min-[480px]:hidden w-8 h-8 rounded-lg flex items-center justify-center text-red-655 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all cursor-pointer p-0"
+            appTooltip="Remove resource from saved directory">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2"
+              stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SAVED EMERGENCY HELPLINES SECTION -->
+  <div class="space-y-2 md:space-y-4">
+    <div
+      class="flex items-center justify-between gap-1 md:gap-3 pb-2 border-b border-slate-100 dark:border-slate-800/60">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div
+          class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100/10 flex items-center justify-center shrink-0">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="w-4 h-4 text-emerald-600 dark:text-emerald-400">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+            </path>
+          </svg>
+        </div>
+        <div class="min-w-0">
+          <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <span class="hidden md:inline">Saved </span>Emergency Helplines
+            <span
+              class="text-[10px] sm:text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 w-6 h-6 rounded-full font-extrabold border border-emerald-500/10 flex items-center justify-center shrink-0">
+              {{ savedHelplinesDetails.length }}
+            </span>
+          </h2>
+          <!-- Mobile: Short version -->
+          <p class="sm:hidden text-[10px] text-slate-500 truncate">Immediate hotline helpline numbers</p>
+          <!-- Desktop: Full version -->
+          <p class="hidden sm:block text-[10px] text-slate-500 truncate">Immediate contact and helpline
+            numbers</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+        <button *ngIf="savedHelplinesDetails.length > 0"
+          (click)="openDrawer.emit({type: 'helpline', data: savedHelplinesDetails})"
+          class="px-2.5 py-1 text-[10px] font-extrabold bg-emerald-500/10 text-emerald-655 dark:text-emerald-455 hover:bg-emerald-500/20 rounded-lg border-0 transition-all cursor-pointer"
+          appTooltip="View all saved emergency helplines in drawer">
+          View All
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="savedHelplinesDetails.length === 0"
+      class="p-6 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl bg-white/40 dark:bg-slate-900/10">
+      <p class="text-xs text-slate-500">No emergency helplines saved yet. <a routerLink="/find-help"
+          class="text-indigo-650 dark:text-indigo-400 hover:underline font-bold">Find helplines &rarr;</a></p>
+    </div>
+
+    <!-- Cards -->
+    <div *ngIf="savedHelplinesDetails.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+      <div *ngFor="let helpline of savedHelplinesDetails.slice(0, 4); trackBy: trackById"
+        class="flex p-2 md:p-4 rounded-xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 items-center justify-between gap-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 hover:border-emerald-300 dark:hover:border-emerald-900/40 hover:bg-emerald-50/5 dark:hover:bg-emerald-900/5 transition-all duration-300 cursor-pointer"
+        (click)="openDrawer.emit({type: 'helpline', data: helpline})" appTooltip="Click to open helpline detail drawer">
+        <div class="flex items-center gap-3 min-w-0">
+          <div
+            class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-emerald-50 dark:bg-emerald-900/40 flex items-center justify-center flex-shrink-0 border border-emerald-100/10">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+              stroke-width="2.2" class="w-4 h-4 md:w-5 md:h-5 text-emerald-600 dark:text-emerald-400">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+              </path>
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <h3 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+              {{ helpline.name }}
+            </h3>
+            <p class="text-[10px] text-emerald-650 dark:text-emerald-450 font-extrabold mt-0.5">
+              Hotline: {{ helpline.number }}
+            </p>
+          </div>
+        </div>
+        <!-- Button Wrapper: text buttons on desktop, icon buttons on mobile -->
+        <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+          <button (click)="savedItemsService.toggleHelpline(helpline._id, helpline.name)"
+            class="hidden min-[480px]:inline-flex px-2.5 py-1.5 border border-red-200/60 dark:border-red-900/40 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-655 dark:text-red-400 rounded-lg text-[10px] font-bold transition-all bg-transparent cursor-pointer"
+            appTooltip="Remove helpline from saved directory">
+            Remove
+          </button>
+
+          <!-- Mobile Remove Icon Button (below 480px) -->
+          <button (click)="savedItemsService.toggleHelpline(helpline._id, helpline.name)"
+            class="min-[480px]:hidden w-8 h-8 rounded-lg flex items-center justify-center text-red-655 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-955/20 transition-all cursor-pointer p-0"
+            appTooltip="Remove helpline from saved directory">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2"
+              stroke="currentColor" class="w-4 h-4">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

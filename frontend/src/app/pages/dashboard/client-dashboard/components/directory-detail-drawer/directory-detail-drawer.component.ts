@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, HostListener } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 
@@ -17,7 +17,8 @@ import { HelplineCardComponent } from '../../../../find-help/components/helpline
     HelplineCardComponent
   ],
   templateUrl: './directory-detail-drawer.component.html',
-  styleUrls: ['./directory-detail-drawer.component.scss']
+  styleUrls: ['./directory-detail-drawer.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DirectoryDetailDrawerComponent {
   private _isOpen = false;

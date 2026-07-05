@@ -1,4 +1,5 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, effect, untracked, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -24,6 +25,8 @@ import { LawyerCardComponent } from '../../../components/lawyer-card/lawyer-card
 import { HelplineCardComponent } from '../../find-help/components/helpline-card/helpline-card.component';
 import { ResourceCardComponent } from '../../find-help/components/resource-card/resource-card.component';
 import { DirectoryDetailDrawerComponent } from './components/directory-detail-drawer/directory-detail-drawer.component';
+import { SavedDirectoryTabComponent } from './components/saved-directory-tab/saved-directory-tab.component';
+import { PrintDossierComponent } from './components/print-dossier/print-dossier.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -45,150 +48,212 @@ import { DirectoryDetailDrawerComponent } from './components/directory-detail-dr
     LawyerCardComponent,
     HelplineCardComponent,
     ResourceCardComponent,
-    DirectoryDetailDrawerComponent
+    DirectoryDetailDrawerComponent,
+    SavedDirectoryTabComponent,
+    PrintDossierComponent
   ],
   templateUrl: './client-dashboard.component.html',
-  styleUrls: ['./client-dashboard.component.scss']
+  styleUrls: ['./client-dashboard.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClientDashboardComponent implements OnInit, OnDestroy {
   bookmarks$!: Observable<Bookmark[]>;
-  currentUser: UserProfile | null = null;
-  inquiries: Consultation[] = [];
-  loadingInquiries = false;
-  activeTab = 'bookmarks';
+  bookmarks = toSignal(this.bookmarkService.bookmarks$, { initialValue: [] });
+  currentUser = toSignal(this.authService.currentUser$, { initialValue: null });
+  inquiries = signal<Consultation[]>([]);
+  loadingInquiries = signal(false);
+  activeTab = signal('bookmarks');
 
-  // Revamp fields
-  allBookmarks: Bookmark[] = [];
+  // Search input local value for instant binding
+  searchVal = '';
 
-  private _searchQuery = '';
-  get searchQuery(): string {
-    return this._searchQuery;
-  }
-  set searchQuery(val: string) {
-    this._searchQuery = val;
-    this.searchSubject.next(val);
-  }
+  // Writable Signals for queries
+  searchQuery = signal('');
+  actFilter = signal('');
+  sortBy = signal('newest');
+  currentPage = signal(1);
+  itemsPerPage = signal(8);
+  selectedCollection = signal('All');
 
-  private _actFilter = '';
-  get actFilter(): string {
-    return this._actFilter;
-  }
-  set actFilter(val: string) {
-    this._actFilter = val;
-    this._currentPage = 1;
-    this.refreshWorkspace();
-  }
+  allBookmarks = computed(() => this.bookmarks());
 
-  private _sortBy = 'newest';
-  get sortBy(): string {
-    return this._sortBy;
-  }
-  set sortBy(val: string) {
-    this._sortBy = val;
-    this._currentPage = 1;
-    this.refreshWorkspace();
-  }
+  filteredBookmarks = signal<Bookmark[]>([]);
+  totalFilteredItems = signal(0);
+  totalPages = signal(0);
 
-  private _currentPage = 1;
-  get currentPage(): number {
-    return this._currentPage;
-  }
-  set currentPage(val: number) {
-    this._currentPage = val;
-    this.refreshWorkspace();
-  }
+  paginatedBookmarks = computed(() => this.filteredBookmarks());
 
-  private _itemsPerPage = 8;
-  get itemsPerPage(): number {
-    return this._itemsPerPage;
-  }
-  set itemsPerPage(val: number) {
-    this._itemsPerPage = val;
-    this._currentPage = 1;
-    this.refreshWorkspace();
-  }
+  showingStart = computed(() => {
+    if (this.totalFilteredItems() === 0) return 0;
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const page = current > total && total > 0 ? 1 : current;
+    return (page - 1) * this.itemsPerPage() + 1;
+  });
 
-  // Cached Properties (Computed in memory to optimize template rendering performance)
-  filteredBookmarks: Bookmark[] = [];
-  paginatedBookmarks: Bookmark[] = [];
-  unassignedCount = 0;
-  totalPages = 0;
-  visiblePageNumbers: (number | string)[] = [];
-  showingStart = 0;
-  showingEnd = 0;
-  totalSavedCount = 0;
-  distinctActsCount = 0;
-  activeInquiriesCount = 0;
-  collectionsList: string[] = [];
-  actsBreakdown: { name: string; count: number }[] = [];
+  showingEnd = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const page = current > total && total > 0 ? 1 : current;
+    const end = page * this.itemsPerPage();
+    const count = this.totalFilteredItems();
+    return end > count ? count : end;
+  });
 
-  private _selectedCollection = 'All';
-  get selectedCollection(): string {
-    return this._selectedCollection;
-  }
-  set selectedCollection(val: string) {
-    this._selectedCollection = val;
-    this._currentPage = 1;
-    this.refreshWorkspace();
-  }
-  newCollectionName = '';
-  customCollections: string[] = [];
-  sidebarFolderSearchQuery = '';
+  visiblePageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const page = current > total && total > 0 ? 1 : current;
+    if (total <= 5) {
+      const pages = [];
+      for (let i = 1; i <= total; i++) pages.push(i);
+      return pages;
+    } else {
+      const pages: (number | string)[] = [];
+      pages.push(1);
+      const start = Math.max(2, page - 1);
+      const end = Math.min(total - 1, page + 1);
+
+      if (start > 2) pages.push('...');
+      for (let i = start; i <= end; i++) pages.push(i);
+      if (end < total - 1) pages.push('...');
+      pages.push(total);
+      return pages;
+    }
+  });
+
+  // Statistics signals (computed declarations)
+  totalSavedCount = computed(() => this.allBookmarks().length);
+  unassignedCount = computed(() => this.allBookmarks().filter(b => !b.collectionName || !b.collectionName.trim()).length);
+
+  distinctActsCount = computed(() => {
+    const uniqueActs = new Set<string>();
+    this.allBookmarks().forEach(b => uniqueActs.add(b.actShortName));
+    return uniqueActs.size;
+  });
+
+  actsBreakdown = computed(() => {
+    const map = new Map<string, number>();
+    this.allBookmarks().forEach(b => {
+      map.set(b.actShortName, (map.get(b.actShortName) || 0) + 1);
+    });
+    return Array.from(map.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  });
+
+  activeInquiriesCount = computed(() => {
+    return this.inquiries().filter(i => i.status === 'Pending' || i.status === 'Contacted').length;
+  });
+
+  newCollectionName = signal('');
+  customCollections = signal<string[]>([]);
+  sidebarFolderSearchQuery = signal('');
 
   // Dropdowns
-  showSortDropdown = false;
+  showSortDropdown = signal(false);
 
-  // Drawer
-  selectedBookmark: Bookmark | null = null;
-  drawerNoteText = '';
-  aiSummary = '';
-  loadingAiSummary = false;
+  // Drawer states
+  selectedBookmark = signal<Bookmark | null>(null);
+  drawerNoteText = signal('');
+  aiSummary = signal('');
+  loadingAiSummary = signal(false);
 
   // Saved directory details lists
-  savedLawyersDetails: any[] = [];
-  savedHelplinesDetails: any[] = [];
-  savedResourcesDetails: any[] = [];
+  savedLawyersDetails = signal<any[]>([]);
+  savedHelplinesDetails = signal<any[]>([]);
+  savedResourcesDetails = signal<any[]>([]);
+
+  // Cached directory lists
+  private cachedLawyers: any[] | null = null;
+  private cachedHelplines: any[] | null = null;
+  private cachedResources: any[] | null = null;
+
+  private loadingLawyersList = false;
+  private loadingHelplinesList = false;
+  private loadingResourcesList = false;
 
   // Directory Detail Drawer state
-  directoryDrawerOpen = false;
-  directoryDrawerType: 'lawyer' | 'resource' | 'helpline' | null = null;
-  directoryDrawerData: any = null;
+  directoryDrawerOpen = signal(false);
+  directoryDrawerType = signal<'lawyer' | 'resource' | 'helpline' | null>(null);
+  directoryDrawerData = signal<any>(null);
 
   // Sharing
-  bookmarkToShare: Bookmark | null = null;
+  bookmarkToShare = signal<Bookmark | null>(null);
 
-  // Custom dialogs (replacing native alert/confirm/prompt)
-  customConfirmTitle = '';
-  customConfirmMessage = '';
-  customConfirmType: 'danger' | 'warning' | 'info' = 'warning';
+  // Custom dialogs states
+  customConfirmTitle = signal('');
+  customConfirmMessage = signal('');
+  customConfirmType = signal<'danger' | 'warning' | 'info'>('warning');
   customConfirmAction: (() => void) | null = null;
 
-  customPromptTitle = '';
-  customPromptLabel = '';
-  customPromptValue = '';
+  customPromptTitle = signal('');
+  customPromptLabel = signal('');
+  customPromptValue = signal('');
   customPromptAction: ((val: string) => void) | null = null;
 
-  // ── Page Skeleton Loader
-  isPageLoading = true;
+  // Page Load state
+  isPageLoading = signal(true);
+  isTabLoading = signal(false);
 
-  // ── Acts Breakdown Modal
-  showActsFilterModal = false;
+  showActsFilterModal = signal(false);
+  showMobileFolderSearch = signal(false);
 
-  // Mobile Folder Search toggle
-  showMobileFolderSearch = false;
+  // Modal getters and setters wrapped around internally-stored signals (prevents breaking old code)
+  private _showNewCollectionModal = signal(false);
+  get showNewCollectionModal(): boolean {
+    return this._showNewCollectionModal();
+  }
+  set showNewCollectionModal(val: boolean) {
+    this._showNewCollectionModal.set(val);
+    this.updateScrollLock();
+  }
 
+  private _showShareModal = signal(false);
+  get showShareModal(): boolean {
+    return this._showShareModal();
+  }
+  set showShareModal(val: boolean) {
+    this._showShareModal.set(val);
+    this.updateScrollLock();
+  }
 
+  private _drawerOpen = signal(false);
+  get drawerOpen(): boolean {
+    return this._drawerOpen();
+  }
+  set drawerOpen(val: boolean) {
+    this._drawerOpen.set(val);
+    this.updateScrollLock();
+  }
 
-  // Scroll lock helper
+  private _customConfirmOpen = signal(false);
+  get customConfirmOpen(): boolean {
+    return this._customConfirmOpen();
+  }
+  set customConfirmOpen(val: boolean) {
+    this._customConfirmOpen.set(val);
+    this.updateScrollLock();
+  }
+
+  private _customPromptOpen = signal(false);
+  get customPromptOpen(): boolean {
+    return this._customPromptOpen();
+  }
+  set customPromptOpen(val: boolean) {
+    this._customPromptOpen.set(val);
+    this.updateScrollLock();
+  }
+
   private updateScrollLock() {
     if (typeof document !== 'undefined') {
-      const lock = this._showNewCollectionModal ||
-        this._showShareModal ||
-        this._drawerOpen ||
-        this.directoryDrawerOpen ||
-        this._customConfirmOpen ||
-        this._customPromptOpen ||
-        this.showActsFilterModal;
+      const lock = this.showNewCollectionModal ||
+        this.showShareModal ||
+        this.drawerOpen ||
+        this.directoryDrawerOpen() ||
+        this.customConfirmOpen ||
+        this.customPromptOpen ||
+        this.showActsFilterModal();
       if (lock) {
         document.body.classList.add('overflow-hidden');
       } else {
@@ -197,57 +262,19 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-  private _showNewCollectionModal = false;
-  get showNewCollectionModal(): boolean {
-    return this._showNewCollectionModal;
-  }
-  set showNewCollectionModal(val: boolean) {
-    this._showNewCollectionModal = val;
-    this.updateScrollLock();
-  }
-
-  private _showShareModal = false;
-  get showShareModal(): boolean {
-    return this._showShareModal;
-  }
-  set showShareModal(val: boolean) {
-    this._showShareModal = val;
-    this.updateScrollLock();
-  }
-
-  private _drawerOpen = false;
-  get drawerOpen(): boolean {
-    return this._drawerOpen;
-  }
-  set drawerOpen(val: boolean) {
-    this._drawerOpen = val;
-    this.updateScrollLock();
-  }
-
-  private _customConfirmOpen = false;
-  get customConfirmOpen(): boolean {
-    return this._customConfirmOpen;
-  }
-  set customConfirmOpen(val: boolean) {
-    this._customConfirmOpen = val;
-    this.updateScrollLock();
-  }
-
-  private _customPromptOpen = false;
-  get customPromptOpen(): boolean {
-    return this._customPromptOpen;
-  }
-  set customPromptOpen(val: boolean) {
-    this._customPromptOpen = val;
-    this.updateScrollLock();
-  }
-
   printCollectionName = 'All';
   printDate = new Date();
 
   get printItemsCount(): number {
-    if (this.printCollectionName === 'All') return this.allBookmarks.length;
-    return this.allBookmarks.filter(b => b.collectionName === this.printCollectionName).length;
+    if (this.printCollectionName === 'All') return this.allBookmarks().length;
+    return this.allBookmarks().filter(b => b.collectionName === this.printCollectionName).length;
+  }
+
+  get printedBookmarks(): Bookmark[] {
+    if (this.printCollectionName === 'All') {
+      return this.allBookmarks();
+    }
+    return this.allBookmarks().filter(bm => bm.collectionName === this.printCollectionName);
   }
 
   private sub = new Subscription();
@@ -257,7 +284,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click')
   clickout() {
-    this.showSortDropdown = false;
+    this.showSortDropdown.set(false);
   }
 
   constructor(
@@ -268,10 +295,54 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private snackbarService: SnackbarService,
     public savedItemsService: SavedItemsService,
     private route: ActivatedRoute,
-    private eRef: ElementRef
+    private eRef: ElementRef,
+    private cdr: ChangeDetectorRef
   ) {
+    // Effect 1: React to saved-items list changes; use untracked() for detail cache reads
+    // to avoid re-triggering when the cache itself is updated.
     effect(() => {
-      this.loadSavedDirectoryDetails();
+      // Track only the saved IDs lists as reactive dependencies
+      const savedLawyers = this.savedItemsService.savedLawyers();
+      const savedHelplines = this.savedItemsService.savedHelplines();
+      const savedResources = this.savedItemsService.savedResources();
+
+      // All reads of detail caches + writes happen in untracked to prevent loop
+      untracked(() => this.loadSavedDirectoryDetails());
+    });
+
+    // Effect 2: Sync drawer's bookmark reference when bookmarks array changes.
+    // Use untracked() on selectedBookmark read to avoid loop when we write to it.
+    effect(() => {
+      const bms = this.bookmarks();
+      const selected = untracked(() => this.selectedBookmark());
+      if (selected) {
+        const match = bms.find(b => b.actShortName === selected.actShortName && b.section.section_number === selected.section.section_number);
+        if (match) {
+          untracked(() => this.selectedBookmark.set(match));
+        }
+      }
+    });
+
+    // Effect 3: Reload custom folder list when bookmarks or user changes.
+    effect(() => {
+      this.bookmarks();
+      this.currentUser();
+      untracked(() => this.loadCustomCollections());
+    });
+
+    // Effect 4: Reload paginated bookmark page whenever any filter/sort/page changes.
+    effect(() => {
+      // Explicitly track all dependencies
+      this.bookmarks();
+      this.selectedCollection();
+      this.actFilter();
+      this.searchQuery();
+      this.sortBy();
+      this.currentPage();
+      this.itemsPerPage();
+
+      // Run in untracked so internal signal writes don't re-trigger this effect
+      untracked(() => this.loadPaginatedBookmarks());
     });
   }
 
@@ -293,53 +364,34 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       this.searchSubject.pipe(
         debounceTime(300),
         distinctUntilChanged()
-      ).subscribe(() => {
-        this._currentPage = 1;
-        this.refreshWorkspace();
+      ).subscribe((val) => {
+        this.currentPage.set(1);
+        this.actFilter.set('');
+        this.searchQuery.set(val);
       })
     );
 
-    // ── Skeleton: enforce minimum 1200ms display ─────────────────────────────
-    // BehaviorSubject emits synchronously, so without a minimum timer the
-    // skeleton would be hidden before the first rendered frame.
-    this.isPageLoading = true;
+    // ── Skeleton Loader gating
+    this.isPageLoading.set(true);
     let authResolved = false;
     let minTimeElapsed = false;
 
     const tryHideSkeleton = () => {
       if (authResolved && minTimeElapsed) {
-        this.isPageLoading = false;
+        this.isPageLoading.set(false);
       }
     };
 
-    // Gate 1: minimum display time
     setTimeout(() => {
       minTimeElapsed = true;
       tryHideSkeleton();
     }, 500);
 
-    // Subscribe to bookmarks$ to keep allBookmarks up-to-date locally for filter/stats logic
-    this.sub.add(
-      this.bookmarkService.bookmarks$.subscribe(bms => {
-        this.allBookmarks = bms;
-        this.loadCustomCollections();
-        this.refreshStats();
-        this.refreshWorkspace();
-        // If drawer is open, keep its selectedBookmark details synchronized
-        if (this.selectedBookmark) {
-          const match = bms.find(b => b.actShortName === this.selectedBookmark!.actShortName && b.section.section_number === this.selectedBookmark!.section.section_number);
-          if (match) {
-            this.selectedBookmark = match;
-          }
-        }
-      })
-    );
-
     // Support switching tab if query param matches
     this.sub.add(
       this.route.queryParams.subscribe(params => {
         if (params['tab'] === 'inquiries' || params['tab'] === 'bookmarks') {
-          this.activeTab = params['tab'];
+          this.activeTab.set(params['tab']);
         }
       })
     );
@@ -347,13 +399,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     // Gate 2: auth resolved
     this.sub.add(
       this.authService.currentUser$.subscribe(user => {
-        this.currentUser = user;
         if (user) {
           this.loadInquiries();
         }
-        this.loadCustomCollections();
-        this.refreshStats();
-        this.refreshWorkspace();
         authResolved = true;
         tryHideSkeleton();
       })
@@ -371,7 +419,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     }
   }
 
-
   ngOnDestroy() {
     this.sub.unsubscribe();
     if (this.summarySub) {
@@ -383,8 +430,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   // ── Mobile scroll-to-content helper ─────────────────────────────────────────
-  // On desktop (lg+) the content is always visible beside the sidebar, no scroll needed.
-  // On mobile the stat cards sit above the content, so we scroll down to show results.
   private scrollToContent(delayMs = 120) {
     if (typeof window === 'undefined') return;
     const isMobile = window.innerWidth < 1024;
@@ -397,17 +442,33 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     }, delayMs);
   }
 
+  setPage(page: number | string) {
+    if (typeof page === 'string') return;
+    const total = this.totalPages();
+    if (page >= 1 && page <= total) {
+      this.currentPage.set(page);
+      if (typeof window !== 'undefined') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    }
+  }
+
+  onSearchChanged(val: string) {
+    this.searchVal = val;
+    this.searchSubject.next(val);
+  }
+
   // ── Stats Card Click Handlers ────────────────────────────────────────────────
   onCardClick(card: 'saved' | 'collections' | 'acts' | 'inquiries') {
     if (card === 'saved') {
-      this.activeTab = 'bookmarks';
-      this.selectedCollection = 'All';
-      this.searchQuery = '';
-      this.actFilter = '';
+      this.activeTab.set('bookmarks');
+      this.selectedCollection.set('All');
+      this.searchVal = '';
+      this.searchQuery.set('');
+      this.actFilter.set('');
       this.scrollToContent();
     } else if (card === 'collections') {
-      this.activeTab = 'bookmarks';
-      // Desktop: scroll to sidebar; Mobile: scroll to content (folders pills are there)
+      this.activeTab.set('bookmarks');
       setTimeout(() => {
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
         const targetId = isMobile ? 'content-section' : 'folders-section';
@@ -418,50 +479,49 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         }
       }, 100);
     } else if (card === 'acts') {
-      if (this.actsBreakdown.length === 0) {
+      if (this.actsBreakdown().length === 0) {
         this.snackbarService.show('No acts referenced yet. Save some legal sections to get started.', 'info');
         return;
       }
-      this.showActsFilterModal = true;
+      this.showActsFilterModal.set(true);
       this.updateScrollLock();
     } else if (card === 'inquiries') {
-      this.activeTab = 'inquiries';
+      this.activeTab.set('inquiries');
       this.scrollToContent();
     }
   }
 
   filterByAct(actName: string) {
-    this.showActsFilterModal = false;
+    this.showActsFilterModal.set(false);
     this.updateScrollLock();
-    this.activeTab = 'bookmarks';
-    this.selectedCollection = 'All';
-    this.searchQuery = '';       // clear free-text search
-    this.actFilter = actName;    // exact match — avoids substring false positives
-    this.currentPage = 1;
-    this.scrollToContent(180);   // slightly longer delay to let modal close animate first
+    this.activeTab.set('bookmarks');
+    this.selectedCollection.set('All');
+    this.searchVal = '';
+    this.searchQuery.set('');
+    this.actFilter.set(actName);
+    this.currentPage.set(1);
+    this.scrollToContent(180);
   }
 
   clearActFilter() {
-    this.actFilter = '';
-    this.currentPage = 1;
+    this.actFilter.set('');
+    this.currentPage.set(1);
   }
 
   closeActsModal() {
-    this.showActsFilterModal = false;
+    this.showActsFilterModal.set(false);
     this.updateScrollLock();
   }
 
-
   loadInquiries() {
-    this.loadingInquiries = true;
+    this.loadingInquiries.set(true);
     this.lawyerService.getSentInquiries().subscribe({
       next: (res) => {
-        this.inquiries = res;
-        this.loadingInquiries = false;
-        this.refreshStats();
+        this.inquiries.set(res || []);
+        this.loadingInquiries.set(false);
       },
       error: () => {
-        this.loadingInquiries = false;
+        this.loadingInquiries.set(false);
       }
     });
   }
@@ -473,187 +533,48 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       'danger',
       () => {
         this.bookmarkService.removeBookmark(actId, secNum);
-        if (this.selectedBookmark && this.selectedBookmark.actShortName === actId && this.selectedBookmark.section.section_number === secNum) {
+        const selected = this.selectedBookmark();
+        if (selected && selected.actShortName === actId && selected.section.section_number === secNum) {
           this.closeBookmarkDrawer();
         }
       }
     );
   }
 
-  // --- REVAMPED WORKSPACE LOGIC ---
-
-  refreshStats() {
-    this.totalSavedCount = this.allBookmarks.length;
-
-    const uniqueActs = new Set<string>();
-    const map = new Map<string, number>();
-    this.allBookmarks.forEach(b => {
-      uniqueActs.add(b.actShortName);
-      map.set(b.actShortName, (map.get(b.actShortName) || 0) + 1);
-    });
-    this.distinctActsCount = uniqueActs.size;
-    this.actsBreakdown = Array.from(map.entries())
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count);
-
-    this.activeInquiriesCount = this.inquiries.filter(i => i.status === 'Pending' || i.status === 'Contacted').length;
-
-    const list = new Set<string>();
-    this.allBookmarks.forEach(b => {
-      if (b.collectionName && b.collectionName.trim()) {
-        list.add(b.collectionName.trim());
-      }
-    });
-    this.collectionsList = Array.from(list).sort();
-
-    this.unassignedCount = this.allBookmarks.filter(b => !b.collectionName || !b.collectionName.trim()).length;
-  }
-
-  refreshWorkspace() {
-    let list = [...this.allBookmarks];
-
-    // Filter by Collection Folder
-    if (this.selectedCollection === 'Unassigned') {
-      list = list.filter(b => !b.collectionName || !b.collectionName.trim());
-    } else if (this.selectedCollection !== 'All') {
-      list = list.filter(b => b.collectionName === this.selectedCollection);
-    }
-
-    // Filter by exact Act name (set from Acts modal — strict equality, not substring)
-    if (this.actFilter) {
-      list = list.filter(b => b.actShortName === this.actFilter);
-    }
-
-    // Filter by Search Query (Keyword search on free-text fields)
-    if (this.searchQuery && this.searchQuery.trim()) {
-      const q = this.searchQuery.toLowerCase().trim();
-      list = list.filter(b =>
-        b.actShortName.toLowerCase().includes(q) ||
-        b.section.section_number.toLowerCase().includes(q) ||
-        b.section.title.toLowerCase().includes(q) ||
-        b.section.content.toLowerCase().includes(q) ||
-        (b.notes && b.notes.toLowerCase().includes(q))
-      );
-    }
-
-    // Sort
-    if (this.sortBy === 'newest') {
-      list.sort((a, b) => b.savedAt - a.savedAt);
-    } else if (this.sortBy === 'oldest') {
-      list.sort((a, b) => a.savedAt - b.savedAt);
-    } else if (this.sortBy === 'sectionAsc') {
-      list.sort((a, b) => {
-        const numA = parseFloat(a.section.section_number);
-        const numB = parseFloat(b.section.section_number);
-        if (!isNaN(numA) && !isNaN(numB)) return numA - numB;
-        return a.section.section_number.localeCompare(b.section.section_number);
-      });
-    } else if (this.sortBy === 'sectionDesc') {
-      list.sort((a, b) => {
-        const numA = parseFloat(a.section.section_number);
-        const numB = parseFloat(b.section.section_number);
-        if (!isNaN(numA) && !isNaN(numB)) return numB - numA;
-        return b.section.section_number.localeCompare(a.section.section_number);
-      });
-    }
-
-    this.filteredBookmarks = list;
-
-    // Calculate total pages
-    this.totalPages = Math.ceil(this.filteredBookmarks.length / this.itemsPerPage);
-
-    // Adjust current page if out of bounds
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this._currentPage = 1;
-    }
-
-    // Paginated Bookmarks
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    this.paginatedBookmarks = this.filteredBookmarks.slice(startIndex, startIndex + this.itemsPerPage);
-
-    // Showing Start & End
-    if (this.filteredBookmarks.length === 0) {
-      this.showingStart = 0;
-      this.showingEnd = 0;
-    } else {
-      this.showingStart = startIndex + 1;
-      const end = this.currentPage * this.itemsPerPage;
-      this.showingEnd = end > this.filteredBookmarks.length ? this.filteredBookmarks.length : end;
-    }
-
-    // Calculate visible page numbers
-    const total = this.totalPages;
-    const current = this.currentPage;
-    if (total <= 5) {
-      const pages = [];
-      for (let i = 1; i <= total; i++) pages.push(i);
-      this.visiblePageNumbers = pages;
-    } else {
-      const pages: (number | string)[] = [];
-      pages.push(1);
-      const start = Math.max(2, current - 1);
-      const end = Math.min(total - 1, current + 1);
-
-      if (start > 2) {
-        pages.push('...');
-      }
-
-      for (let i = start; i <= end; i++) {
-        pages.push(i);
-      }
-
-      if (end < total - 1) {
-        pages.push('...');
-      }
-
-      pages.push(total);
-      this.visiblePageNumbers = pages;
-    }
-  }
-
-  setPage(page: number | string) {
-    if (typeof page === 'string') return;
-    if (page >= 1 && page <= this.totalPages) {
-      this.currentPage = page;
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }
-
   loadCustomCollections() {
-    const key = this.currentUser ? `legalconnect_custom_folders_${this.currentUser.email}` : `legalconnect_custom_folders_guest`;
+    const user = this.currentUser();
+    const key = user ? `legalconnect_custom_folders_${user.email}` : `legalconnect_custom_folders_guest`;
     const saved = localStorage.getItem(key);
     const localFolders: string[] = saved ? JSON.parse(saved) : [];
 
-    const activeFolders = this.allBookmarks
+    const activeFolders = this.allBookmarks()
       .map(b => b.collectionName)
       .filter((name): name is string => !!name && name.trim().length > 0);
 
-    this.customCollections = Array.from(new Set([...localFolders, ...activeFolders])).sort();
+    this.customCollections.set(Array.from(new Set([...localFolders, ...activeFolders])).sort());
     this.saveCustomCollections();
   }
 
   saveCustomCollections() {
-    const key = this.currentUser ? `legalconnect_custom_folders_${this.currentUser.email}` : `legalconnect_custom_folders_guest`;
-    localStorage.setItem(key, JSON.stringify(this.customCollections));
+    const user = this.currentUser();
+    const key = user ? `legalconnect_custom_folders_${user.email}` : `legalconnect_custom_folders_guest`;
+    localStorage.setItem(key, JSON.stringify(this.customCollections()));
   }
 
-  // Create custom Folder Collection
   createCollection() {
-    const folder = this.newCollectionName.trim();
+    const folder = this.newCollectionName().trim();
     if (!folder) return;
 
-    if (this.customCollections.includes(folder)) {
+    if (this.customCollections().includes(folder)) {
       this.snackbarService.show('Research folder already exists.', 'warning');
       return;
     }
 
-    this.customCollections.push(folder);
-    this.customCollections.sort();
+    this.customCollections.update(cols => [...cols, folder].sort());
     this.saveCustomCollections();
-    this.refreshStats();
 
-    this.selectedCollection = folder;
-    this.newCollectionName = '';
+    this.selectedCollection.set(folder);
+    this.newCollectionName.set('');
     this.showNewCollectionModal = false;
     this.snackbarService.show(`Research folder "${folder}" created successfully.`, 'success');
   }
@@ -670,25 +591,22 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         if (!newName || !newName.trim() || newName.trim() === oldName) return;
 
         const cleanNewName = newName.trim();
-        if (this.customCollections.includes(cleanNewName)) {
+        if (this.customCollections().includes(cleanNewName)) {
           this.snackbarService.show('A folder with this name already exists.', 'warning');
           return;
         }
 
-        // Update list
-        this.customCollections = this.customCollections.map(c => c === oldName ? cleanNewName : c).sort();
+        this.customCollections.update(cols => cols.map(c => c === oldName ? cleanNewName : c).sort());
         this.saveCustomCollections();
-        this.refreshStats();
 
-        // Update bookmarks (silently to prevent toast spam)
-        this.allBookmarks.forEach(bm => {
+        this.allBookmarks().forEach(bm => {
           if (bm.collectionName === oldName) {
             this.bookmarkService.updateBookmarkMetadata(bm.actShortName, bm.section.section_number, bm.notes, cleanNewName, true);
           }
         });
 
-        if (this.selectedCollection === oldName) {
-          this.selectedCollection = cleanNewName;
+        if (this.selectedCollection() === oldName) {
+          this.selectedCollection.set(cleanNewName);
         }
         this.snackbarService.show(`Research folder "${oldName}" successfully renamed to "${cleanNewName}".`, 'success');
       }
@@ -704,19 +622,17 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       `Are you sure you want to delete the folder "${folderName}"? All saved sections in it will be moved to General Reference.`,
       'danger',
       () => {
-        this.customCollections = this.customCollections.filter(c => c !== folderName);
+        this.customCollections.update(cols => cols.filter(c => c !== folderName));
         this.saveCustomCollections();
-        this.refreshStats();
 
-        // Update bookmarks (silently to prevent toast spam)
-        this.allBookmarks.forEach(bm => {
+        this.allBookmarks().forEach(bm => {
           if (bm.collectionName === folderName) {
             this.bookmarkService.updateBookmarkMetadata(bm.actShortName, bm.section.section_number, bm.notes, undefined, true);
           }
         });
 
-        if (this.selectedCollection === folderName) {
-          this.selectedCollection = 'All';
+        if (this.selectedCollection() === folderName) {
+          this.selectedCollection.set('All');
         }
         this.snackbarService.show(`Research folder "${folderName}" deleted successfully. Saved items moved to General Reference.`, 'success');
       }
@@ -725,9 +641,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // --- CUSTOM POPUP DIALOG UTILITIES ---
   openCustomConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', onConfirm: () => void) {
-    this.customConfirmTitle = title;
-    this.customConfirmMessage = message;
-    this.customConfirmType = type;
+    this.customConfirmTitle.set(title);
+    this.customConfirmMessage.set(message);
+    this.customConfirmType.set(type);
     this.customConfirmAction = onConfirm;
     this.customConfirmOpen = true;
   }
@@ -745,28 +661,28 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   openCustomPrompt(title: string, label: string, initialValue: string, onConfirm: (val: string) => void) {
-    this.customPromptTitle = title;
-    this.customPromptLabel = label;
-    this.customPromptValue = initialValue;
+    this.customPromptTitle.set(title);
+    this.customPromptLabel.set(label);
+    this.customPromptValue.set(initialValue);
     this.customPromptAction = onConfirm;
     this.customPromptOpen = true;
   }
 
   closeCustomPrompt() {
     this.customPromptOpen = false;
-    this.customPromptValue = '';
+    this.customPromptValue.set('');
     this.customPromptAction = null;
   }
 
   triggerCustomPrompt() {
     if (this.customPromptAction) {
-      this.customPromptAction(this.customPromptValue);
+      this.customPromptAction(this.customPromptValue());
     }
     this.closeCustomPrompt();
   }
 
   shareCollection(folderName: string) {
-    const list = this.allBookmarks.filter(b => b.collectionName === folderName);
+    const list = this.allBookmarks().filter(b => b.collectionName === folderName);
     if (list.length === 0) {
       this.snackbarService.show('No items in this collection to share.', 'warning');
       return;
@@ -795,9 +711,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   selectSort(val: string) {
-    this.sortBy = val;
-    this.showSortDropdown = false;
-    this.currentPage = 1;
+    this.sortBy.set(val);
+    this.showSortDropdown.set(false);
+    this.currentPage.set(1);
   }
 
   // Move / Organize bookmark folder
@@ -811,34 +727,40 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // Quick View Drawer open/close
   openBookmarkDrawer(bm: Bookmark) {
-    this.selectedBookmark = bm;
+    this.selectedBookmark.set(bm);
     this.drawerOpen = true;
 
     // Check if there is an unsaved local draft first
     const draftKey = `note_draft_${bm.actShortName}_${bm.section.section_number}`;
     const draft = localStorage.getItem(draftKey);
-    this.drawerNoteText = draft !== null ? draft : (bm.notes || '');
+    this.drawerNoteText.set(draft !== null ? draft : (bm.notes || ''));
 
-    this.aiSummary = '';
-    this.loadingAiSummary = false;
+    this.aiSummary.set('');
+    this.loadingAiSummary.set(false);
   }
 
   closeBookmarkDrawer() {
-    this.selectedBookmark = null;
     this.drawerOpen = false;
-    this.drawerNoteText = '';
-    this.aiSummary = '';
     if (this.summarySub) {
       this.summarySub.unsubscribe();
       this.summarySub = null;
     }
+
+    // Delay clearing the data so the slide-out animation runs smoothly with content visible
+    setTimeout(() => {
+      if (!this.drawerOpen) { // Make sure the user didn't open a new one in the meantime
+        this.selectedBookmark.set(null);
+        this.drawerNoteText.set('');
+        this.aiSummary.set('');
+      }
+    }, 400);
   }
 
   // Save notes to cloud/db
   saveNotes() {
-    if (!this.selectedBookmark) return;
-    const bm = this.selectedBookmark;
-    const notesText = this.drawerNoteText;
+    const bm = this.selectedBookmark();
+    if (!bm) return;
+    const notesText = this.drawerNoteText();
     const draftKey = `note_draft_${bm.actShortName}_${bm.section.section_number}`;
 
     this.bookmarkService.updateBookmarkMetadata(
@@ -858,11 +780,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   onNotesChanged(newNotes: string) {
-    this.drawerNoteText = newNotes;
+    this.drawerNoteText.set(newNotes);
 
     // Save draft in localStorage immediately
-    if (this.selectedBookmark) {
-      const draftKey = `note_draft_${this.selectedBookmark.actShortName}_${this.selectedBookmark.section.section_number}`;
+    const bm = this.selectedBookmark();
+    if (bm) {
+      const draftKey = `note_draft_${bm.actShortName}_${bm.section.section_number}`;
       localStorage.setItem(draftKey, newNotes);
     }
 
@@ -884,31 +807,32 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // Gemini AI summary fetch
   fetchAiSummary() {
-    if (!this.selectedBookmark) return;
-    this.loadingAiSummary = true;
-    this.aiSummary = '';
+    const bm = this.selectedBookmark();
+    if (!bm) return;
+    this.loadingAiSummary.set(true);
+    this.aiSummary.set('');
 
     if (this.summarySub) {
       this.summarySub.unsubscribe();
     }
 
     this.summarySub = this.legalService.getSectionSummaryStream(
-      this.selectedBookmark.actShortName,
-      this.selectedBookmark.section.section_number
+      bm.actShortName,
+      bm.section.section_number
     ).subscribe({
       next: (chunk) => {
-        this.loadingAiSummary = false;
-        this.aiSummary += chunk;
+        this.loadingAiSummary.set(false);
+        this.aiSummary.update(val => val + chunk);
       },
       error: (err) => {
         console.error('Streaming summary error:', err);
-        if (!this.aiSummary) {
-          this.aiSummary = 'AI Summary feature is currently unavailable. Please ensure the backend is connected and configured.';
+        if (!this.aiSummary()) {
+          this.aiSummary.set('AI Summary feature is currently unavailable. Please ensure the backend is connected and configured.');
         }
-        this.loadingAiSummary = false;
+        this.loadingAiSummary.set(false);
       },
       complete: () => {
-        this.loadingAiSummary = false;
+        this.loadingAiSummary.set(false);
       }
     });
   }
@@ -918,17 +842,18 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     if (event) {
       event.stopPropagation();
     }
-    this.bookmarkToShare = bm;
+    this.bookmarkToShare.set(bm);
     this.showShareModal = true;
   }
 
   shareWithSelectedLawyer(lawyer: Consultation) {
-    if (!this.bookmarkToShare) return;
-    const noteText = this.bookmarkToShare.notes ? `\n\nClient Notes: "${this.bookmarkToShare.notes}"` : '';
+    const bm = this.bookmarkToShare();
+    if (!bm) return;
+    const noteText = bm.notes ? `\n\nClient Notes: "${bm.notes}"` : '';
     const shareText = `Hello Advocate, here is a legal section from my saved library reference:
-${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.section_number}: ${this.bookmarkToShare.section.title}
+${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}
 
-"${this.bookmarkToShare.section.content}"${noteText}`;
+"${bm.section.content}"${noteText}`;
 
     navigator.clipboard.writeText(shareText).then(() => {
       this.snackbarService.show(`Copied reference citation for ${lawyer.lawyerName || 'Advocate'} to clipboard.`, 'success');
@@ -936,11 +861,19 @@ ${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.sect
       this.snackbarService.show('Failed to copy sharing text.', 'error');
     });
     this.showShareModal = false;
-    this.bookmarkToShare = null;
+    this.bookmarkToShare.set(null);
   }
 
   triggerPrint(collectionName: string) {
     this.printCollectionName = collectionName;
+    this.printDate = new Date();
+    // Brief timeout to let the print template render before dialog opens
+    setTimeout(() => {
+      window.print();
+    }, 150);
+  }
+
+  triggerPrintDirectory() {
     this.printDate = new Date();
     // Brief timeout to let the print template render before dialog opens
     setTimeout(() => {
@@ -956,89 +889,230 @@ ${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.sect
     return item.id;
   }
 
+  trackById(index: number, item: any): string {
+    return item._id || index.toString();
+  }
+
+  trackByPage(index: number, item: any): string {
+    return item.toString();
+  }
+
+  setActiveTab(tab: string) {
+    if (this.activeTab() === tab) return;
+    this.isTabLoading.set(true);
+    this.activeTab.set(tab);
+
+    // If actual backend reloading is needed, trigger it here:
+    if (tab === 'inquiries') {
+      this.loadInquiries();
+    }
+
+    // Brief timeout to allow the skeleton loader to smoothly fade in/out
+    setTimeout(() => {
+      this.isTabLoading.set(false);
+    }, 1000);
+  }
+
   loadSavedDirectoryDetails() {
     const savedLawyersList = this.savedItemsService.savedLawyers();
-    if (savedLawyersList.length > 0) {
-      this.lawyerService.getLawyers().subscribe({
+    const savedLawyerIds = savedLawyersList.map(l => l.lawyerId);
+
+    // Check if we need to fetch or filter
+    const hasNewLawyer = savedLawyerIds.some(id => !this.savedLawyersDetails().some(l => l._id === id));
+    const isLawyerListSmaller = savedLawyerIds.length < this.savedLawyersDetails().length;
+
+    if (isLawyerListSmaller) {
+      const set = new Set(savedLawyerIds);
+      this.savedLawyersDetails.update(list => list.filter(l => set.has(l._id)));
+      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'lawyer' && Array.isArray(this.directoryDrawerData())) {
+        this.directoryDrawerData.set(this.savedLawyersDetails());
+      }
+    } else if (hasNewLawyer && savedLawyerIds.length > 0) {
+      this.lawyerService.getLawyersByIds(savedLawyerIds).subscribe({
         next: (res) => {
           if (res.success && res.data) {
-            const savedIds = new Set(savedLawyersList.map(l => l.lawyerId));
-            this.savedLawyersDetails = res.data.filter(l => savedIds.has(l._id));
-
-            // Sync drawer list if open in View All mode
-            if (this.directoryDrawerOpen && this.directoryDrawerType === 'lawyer' && Array.isArray(this.directoryDrawerData)) {
-              this.directoryDrawerData = this.savedLawyersDetails;
+            this.savedLawyersDetails.set(res.data);
+            if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'lawyer' && Array.isArray(this.directoryDrawerData())) {
+              this.directoryDrawerData.set(this.savedLawyersDetails());
             }
           }
-        },
-        error: () => this.savedLawyersDetails = []
+        }
       });
-    } else {
-      this.savedLawyersDetails = [];
-      if (this.directoryDrawerOpen && this.directoryDrawerType === 'lawyer' && Array.isArray(this.directoryDrawerData)) {
-        this.directoryDrawerData = [];
+    } else if (savedLawyerIds.length === 0) {
+      this.savedLawyersDetails.set([]);
+      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'lawyer' && Array.isArray(this.directoryDrawerData())) {
+        this.directoryDrawerData.set([]);
       }
     }
 
     const savedHelplinesList = this.savedItemsService.savedHelplines();
-    if (savedHelplinesList.length > 0) {
-      this.legalService.getAllHelplines().subscribe({
+    const savedHelplineIds = savedHelplinesList.map(h => h.helplineId);
+
+    const hasNewHelpline = savedHelplineIds.some(id => !this.savedHelplinesDetails().some(h => h._id === id));
+    const isHelplineListSmaller = savedHelplineIds.length < this.savedHelplinesDetails().length;
+
+    if (isHelplineListSmaller) {
+      const set = new Set(savedHelplineIds);
+      this.savedHelplinesDetails.update(list => list.filter(h => set.has(h._id)));
+      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'helpline' && Array.isArray(this.directoryDrawerData())) {
+        this.directoryDrawerData.set(this.savedHelplinesDetails());
+      }
+    } else if (hasNewHelpline && savedHelplineIds.length > 0) {
+      this.legalService.getHelplinesByIds(savedHelplineIds).subscribe({
         next: (res) => {
           if (res && res.success && res.data) {
-            const savedIds = new Set(savedHelplinesList.map(h => h.helplineId));
-            this.savedHelplinesDetails = res.data.filter(h => savedIds.has(h._id));
-
-            // Sync drawer list if open in View All mode
-            if (this.directoryDrawerOpen && this.directoryDrawerType === 'helpline' && Array.isArray(this.directoryDrawerData)) {
-              this.directoryDrawerData = this.savedHelplinesDetails;
+            this.savedHelplinesDetails.set(res.data);
+            if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'helpline' && Array.isArray(this.directoryDrawerData())) {
+              this.directoryDrawerData.set(this.savedHelplinesDetails());
             }
           }
-        },
-        error: () => this.savedHelplinesDetails = []
+        }
       });
-    } else {
-      this.savedHelplinesDetails = [];
-      if (this.directoryDrawerOpen && this.directoryDrawerType === 'helpline' && Array.isArray(this.directoryDrawerData)) {
-        this.directoryDrawerData = [];
+    } else if (savedHelplineIds.length === 0) {
+      this.savedHelplinesDetails.set([]);
+      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'helpline' && Array.isArray(this.directoryDrawerData())) {
+        this.directoryDrawerData.set([]);
       }
     }
 
     const savedResourcesList = this.savedItemsService.savedResources();
-    if (savedResourcesList.length > 0) {
-      this.legalService.getAllResources().subscribe({
+    const savedResourceIds = savedResourcesList.map(r => r.resourceId);
+
+    const hasNewResource = savedResourceIds.some(id => !this.savedResourcesDetails().some(r => r._id === id));
+    const isResourceListSmaller = savedResourceIds.length < this.savedResourcesDetails().length;
+
+    if (isResourceListSmaller) {
+      const set = new Set(savedResourceIds);
+      this.savedResourcesDetails.update(list => list.filter(r => set.has(r._id)));
+      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'resource' && Array.isArray(this.directoryDrawerData())) {
+        this.directoryDrawerData.set(this.savedResourcesDetails());
+      }
+    } else if (hasNewResource && savedResourceIds.length > 0) {
+      this.legalService.getResourcesByIds(savedResourceIds).subscribe({
         next: (res) => {
           if (res && res.success && res.data) {
-            const savedIds = new Set(savedResourcesList.map(r => r.resourceId));
-            this.savedResourcesDetails = res.data.filter(r => savedIds.has(r._id));
-
-            // Sync drawer list if open in View All mode
-            if (this.directoryDrawerOpen && this.directoryDrawerType === 'resource' && Array.isArray(this.directoryDrawerData)) {
-              this.directoryDrawerData = this.savedResourcesDetails;
+            this.savedResourcesDetails.set(res.data);
+            if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'resource' && Array.isArray(this.directoryDrawerData())) {
+              this.directoryDrawerData.set(this.savedResourcesDetails());
             }
           }
-        },
-        error: () => this.savedResourcesDetails = []
+        }
       });
-    } else {
-      this.savedResourcesDetails = [];
-      if (this.directoryDrawerOpen && this.directoryDrawerType === 'resource' && Array.isArray(this.directoryDrawerData)) {
-        this.directoryDrawerData = [];
+    } else if (savedResourceIds.length === 0) {
+      this.savedResourcesDetails.set([]);
+      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'resource' && Array.isArray(this.directoryDrawerData())) {
+        this.directoryDrawerData.set([]);
       }
     }
   }
 
+  loadPaginatedBookmarks() {
+    const runClientSidePagination = () => {
+      let list = [...this.bookmarks()];
+
+      // 1. Collection Name filter
+      const folder = this.selectedCollection();
+      if (folder && folder !== 'All') {
+        if (folder === 'Unassigned') {
+          list = list.filter(b => !b.collectionName || !b.collectionName.trim());
+        } else {
+          list = list.filter(b => b.collectionName === folder);
+        }
+      }
+
+      // 2. Act filter
+      const act = this.actFilter();
+      if (act) {
+        list = list.filter(b => b.actShortName === act);
+      }
+
+      // 3. Search query filter
+      const search = this.searchQuery()?.toLowerCase();
+      if (search) {
+        list = list.filter(b =>
+          b.actShortName.toLowerCase().includes(search) ||
+          b.section.section_number.toLowerCase().includes(search) ||
+          b.section.title.toLowerCase().includes(search) ||
+          b.section.content.toLowerCase().includes(search) ||
+          (b.notes && b.notes.toLowerCase().includes(search))
+        );
+      }
+
+      // 4. Sort order
+      const sort = this.sortBy();
+      if (sort === 'oldest') {
+        list.sort((a, b) => a.savedAt - b.savedAt);
+      } else if (sort === 'sectionAsc') {
+        list.sort((a, b) => a.section.section_number.localeCompare(b.section.section_number, undefined, { numeric: true, sensitivity: 'base' }));
+      } else if (sort === 'sectionDesc') {
+        list.sort((a, b) => b.section.section_number.localeCompare(a.section.section_number, undefined, { numeric: true, sensitivity: 'base' }));
+      } else {
+        // newest
+        list.sort((a, b) => b.savedAt - a.savedAt);
+      }
+
+      const total = list.length;
+      const size = this.itemsPerPage();
+      const pages = Math.ceil(total / size);
+      const page = this.currentPage();
+      const skip = (page - 1) * size;
+      const paginated = list.slice(skip, skip + size);
+
+      this.filteredBookmarks.set(paginated);
+      this.totalFilteredItems.set(total);
+      this.totalPages.set(pages);
+      this.isTabLoading.set(false);
+    };
+
+    const user = this.currentUser();
+    if (!user) {
+      runClientSidePagination();
+      return;
+    }
+
+    this.isTabLoading.set(true);
+    this.bookmarkService.getPaginatedBookmarks({
+      collectionName: this.selectedCollection(),
+      actFilter: this.actFilter(),
+      searchQuery: this.searchQuery(),
+      sortBy: this.sortBy(),
+      page: this.currentPage(),
+      pageSize: this.itemsPerPage()
+    }).subscribe({
+      next: (res) => {
+        this.isTabLoading.set(false);
+        if (res.success && res.data) {
+          this.filteredBookmarks.set(res.data);
+          this.totalFilteredItems.set(res.pagination.totalItems);
+          this.totalPages.set(res.pagination.totalPages);
+        } else {
+          runClientSidePagination();
+        }
+      },
+      error: () => {
+        runClientSidePagination();
+      }
+    });
+  }
+
   openDirectoryDrawer(type: 'lawyer' | 'resource' | 'helpline', data: any) {
-    this.directoryDrawerType = type;
-    this.directoryDrawerData = data;
-    this.directoryDrawerOpen = true;
+    this.directoryDrawerType.set(type);
+    this.directoryDrawerData.set(data);
+    this.directoryDrawerOpen.set(true);
     this.updateScrollLock();
   }
 
   closeDirectoryDrawer() {
-    this.directoryDrawerOpen = false;
-    this.directoryDrawerType = null;
-    this.directoryDrawerData = null;
+    this.directoryDrawerOpen.set(false);
     this.updateScrollLock();
+
+    // Delay clearing data for a smooth slide-out transition
+    setTimeout(() => {
+      if (!this.directoryDrawerOpen()) {
+        this.directoryDrawerType.set(null);
+        this.directoryDrawerData.set(null);
+      }
+    }, 400);
   }
 
   copySummaryToClipboard(text: string) {
@@ -1048,5 +1122,4 @@ ${this.bookmarkToShare.actShortName} Section ${this.bookmarkToShare.section.sect
       this.snackbarService.show('Failed to copy summary to clipboard.', 'error');
     });
   }
-
 }
