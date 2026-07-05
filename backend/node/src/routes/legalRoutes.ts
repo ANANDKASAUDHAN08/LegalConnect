@@ -1252,6 +1252,34 @@ router.get('/resourcesAll', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/legal/helplines/batch - Fetch helplines details for an array of IDs
+router.post('/helplines/batch', async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids)) {
+      return res.status(400).json({ success: false, message: 'ids must be an array.' });
+    }
+    const helplines = await HelpHelpline.find({ _id: { $in: ids } });
+    res.json({ success: true, data: helplines });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// POST /api/legal/resources/batch - Fetch resources details for an array of IDs
+router.post('/resources/batch', async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids)) {
+      return res.status(400).json({ success: false, message: 'ids must be an array.' });
+    }
+    const resources = await LegalResource.find({ _id: { $in: ids } });
+    res.json({ success: true, data: resources });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Admin Resource List (Protected)
 router.get('/admin/resources', requireAuth, async (req: Request, res: Response) => {
   try {

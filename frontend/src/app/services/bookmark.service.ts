@@ -1,6 +1,6 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { Section } from './legal.service';
 import { SnackbarService } from './snackbar.service';
 import { AuthService } from './auth.service';
@@ -145,10 +145,10 @@ export class BookmarkService {
   }
 
   updateBookmarkMetadata(
-    actShortName: string, 
-    sectionNumber: string, 
-    notes?: string, 
-    collectionName?: string, 
+    actShortName: string,
+    sectionNumber: string,
+    notes?: string,
+    collectionName?: string,
     silent = false,
     onSuccess?: () => void,
     onError?: () => void
@@ -198,6 +198,32 @@ export class BookmarkService {
       }
       if (onSuccess) onSuccess();
     }
+  }
+
+  getPaginatedBookmarks(params: {
+    collectionName?: string;
+    actFilter?: string;
+    searchQuery?: string;
+    sortBy?: string;
+    page: number;
+    pageSize: number;
+  }): Observable<{
+    success: boolean;
+    data: Bookmark[];
+    pagination: {
+      totalItems: number;
+      page: number;
+      pageSize: number;
+      totalPages: number;
+    };
+  }> {
+    let url = `${this.apiUrl}/paginated?page=${params.page}&pageSize=${params.pageSize}`;
+    if (params.collectionName) url += `&collectionName=${encodeURIComponent(params.collectionName)}`;
+    if (params.actFilter) url += `&actFilter=${encodeURIComponent(params.actFilter)}`;
+    if (params.searchQuery) url += `&searchQuery=${encodeURIComponent(params.searchQuery)}`;
+    if (params.sortBy) url += `&sortBy=${encodeURIComponent(params.sortBy)}`;
+
+    return this.http.get<any>(url, { withCredentials: true });
   }
 
   isBookmarked(actShortName: string, sectionNumber: string): boolean {

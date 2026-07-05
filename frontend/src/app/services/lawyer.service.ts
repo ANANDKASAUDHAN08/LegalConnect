@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 export interface Lawyer {
@@ -134,6 +134,27 @@ export class LawyerService {
           if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
             lawyer.bannerUrl = `http://localhost:8888${lawyer.bannerUrl}`;
           }
+        }
+        return res;
+      })
+    );
+  }
+
+  getLawyersByIds(ids: string[]): Observable<LawyerApiResponse<Lawyer[]>> {
+    if (!ids || ids.length === 0) {
+      return of({ success: true, count: 0, data: [] });
+    }
+    return this.http.post<LawyerApiResponse<Lawyer[]>>(`${this.apiUrl}/batch`, { ids }).pipe(
+      map(res => {
+        if (res.success && res.data) {
+          res.data.forEach(lawyer => {
+            if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
+              lawyer.avatarUrl = `http://localhost:8888${lawyer.avatarUrl}`;
+            }
+            if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
+              lawyer.bannerUrl = `http://localhost:8888${lawyer.bannerUrl}`;
+            }
+          });
         }
         return res;
       })

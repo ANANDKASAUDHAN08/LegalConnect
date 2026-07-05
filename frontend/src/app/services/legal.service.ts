@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Observable, shareReplay, map } from 'rxjs';
+import { Observable, shareReplay, map, of } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 export interface ContentBlock {
@@ -462,5 +462,21 @@ export class LegalService {
   // Fetch all approved legal aid/courts resources
   getAllResources(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(`${this.apiUrl}/resourcesAll`);
+  }
+
+  // Fetch helplines details for specific IDs
+  getHelplinesByIds(ids: string[]): Observable<ApiResponse<any[]>> {
+    if (!ids || ids.length === 0) {
+      return of({ success: true, data: [] });
+    }
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/helplines/batch`, { ids });
+  }
+
+  // Fetch resources details for specific IDs
+  getResourcesByIds(ids: string[]): Observable<ApiResponse<any[]>> {
+    if (!ids || ids.length === 0) {
+      return of({ success: true, data: [] });
+    }
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/resources/batch`, { ids });
   }
 }

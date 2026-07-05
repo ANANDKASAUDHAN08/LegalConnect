@@ -22,6 +22,106 @@ namespace CoreApi.Controllers
             _context = context;
         }
 
+        [HttpGet("paginated")]
+        public async Task<IActionResult> GetBookmarksPaginated(
+            [FromQuery] string? collectionName = null,
+            [FromQuery] string? actFilter = null,
+            [FromQuery] string? searchQuery = null,
+            [FromQuery] string? sortBy = "newest",
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 8)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            
+            var query = _context.Bookmarks.Where(b => b.ClientId == userId);
+
+            // 1. Collection Name filter
+            if (!string.IsNullOrEmpty(collectionName) && collectionName != "All")
+            {
+                if (collectionName == "Unassigned")
+                {
+                    query = query.Where(b => string.IsNullOrEmpty(b.CollectionName));
+                }
+                else
+                {
+                    query = query.Where(b => b.CollectionName == collectionName);
+                }
+            }
+
+            // 2. Act filter
+            if (!string.IsNullOrEmpty(actFilter))
+            {
+                query = query.Where(b => b.ActShortName == actFilter);
+            }
+
+            // 3. Search query filter
+            if (!string.IsNullOrEmpty(searchQuery))
+            {
+                var q = searchQuery.ToLower();
+                query = query.Where(b => 
+                    b.ActShortName.ToLower().Contains(q) ||
+                    b.SectionNumber.ToLower().Contains(q) ||
+                    b.SectionTitle.ToLower().Contains(q) ||
+                    b.SectionContent.ToLower().Contains(q) ||
+                    (b.Notes != null && b.Notes.ToLower().Contains(q)));
+            }
+
+            // 4. Sort order
+            if (sortBy == "oldest")
+            {
+                query = query.OrderBy(b => b.SavedAt);
+            }
+            else if (sortBy == "sectionAsc")
+            {
+                query = query.OrderBy(b => b.SectionNumber);
+            }
+            else if (sortBy == "sectionDesc")
+            {
+                query = query.OrderByDescending(b => b.SectionNumber);
+            }
+            else // newest
+            {
+                query = query.OrderByDescending(b => b.SavedAt);
+            }
+
+            // 5. Paginate
+            var totalCount = await query.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            
+            var skip = (page - 1) * pageSize;
+            var bookmarks = await query
+                .Skip(skip)
+                .Take(pageSize)
+                .Select(b => new
+                {
+                    actShortName = b.ActShortName,
+                    chapterNumber = b.ChapterNumber,
+                    section = new
+                    {
+                        section_number = b.SectionNumber,
+                        title = b.SectionTitle,
+                        content = b.SectionContent
+                    },
+                    notes = b.Notes,
+                    collectionName = b.CollectionName,
+                    savedAt = ((DateTimeOffset)b.SavedAt).ToUnixTimeMilliseconds()
+                })
+                .ToListAsync();
+
+            return Ok(new
+            {
+                success = true,
+                data = bookmarks,
+                pagination = new
+                {
+                    totalItems = totalCount,
+                    page,
+                    pageSize,
+                    totalPages
+                }
+            });
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetBookmarks()
         {

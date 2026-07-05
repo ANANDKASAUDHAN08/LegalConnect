@@ -43,6 +43,20 @@ router.get('/meta', async (req: Request, res: Response) => {
   }
 });
 
+// POST /api/lawyers/batch - Fetch metadata for a list of lawyer IDs
+router.post('/batch', async (req: Request, res: Response) => {
+  try {
+    const { ids } = req.body;
+    if (!Array.isArray(ids)) {
+      return res.status(400).json({ success: false, message: 'ids must be an array.' });
+    }
+    const lawyers = await Lawyer.find({ _id: { $in: ids } });
+    res.json({ success: true, count: lawyers.length, data: lawyers });
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // GET /api/lawyers/:id - Get a single lawyer by ID
 router.get('/:id', async (req: Request, res: Response) => {
   try {

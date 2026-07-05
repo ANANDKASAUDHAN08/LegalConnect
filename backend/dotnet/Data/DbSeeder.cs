@@ -25,17 +25,17 @@ namespace CoreApi.Data
             public int successRate { get; set; }
             public string[] activeCourts { get; set; } = Array.Empty<string>();
             public string responseTime { get; set; } = "";
-            public object workingHours { get; set; }
-            public object socialLinks { get; set; }
-            public object faqs { get; set; }
-            public object accolades { get; set; }
-            public object casesList { get; set; }
-            public object availableTimeSlots { get; set; }
+            public object? workingHours { get; set; }
+            public object? socialLinks { get; set; }
+            public object? faqs { get; set; }
+            public object? accolades { get; set; }
+            public object? casesList { get; set; }
+            public object? availableTimeSlots { get; set; }
         }
 
         public static void Seed(AppDbContext context)
         {
-            string jsonContent = null;
+            string? jsonContent = null;
             try
             {
                 var paths = new[]
