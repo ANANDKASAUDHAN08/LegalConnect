@@ -40,17 +40,23 @@ export class LocationService {
     }
 
     const states = [
-      'maharashtra', 'delhi', 'karnataka', 'tamil nadu', 'west bengal',
-      'telangana', 'uttar pradesh', 'rajasthan', 'gujarat', 'punjab',
-      'haryana', 'bihar', 'madhya pradesh', 'andhra pradesh', 'kerala'
+      'andhra pradesh', 'arunachal pradesh', 'assam', 'bihar', 'chhattisgarh',
+      'goa', 'gujarat', 'haryana', 'himachal pradesh', 'jharkhand', 'karnataka',
+      'kerala', 'madhya pradesh', 'maharashtra', 'manipur', 'meghalaya', 'mizoram',
+      'nagaland', 'odisha', 'punjab', 'rajasthan', 'sikkim', 'tamil nadu',
+      'telangana', 'tripura', 'uttar pradesh', 'uttarakhand', 'west bengal',
+      'delhi', 'jammu and kashmir', 'ladakh', 'puducherry', 'chandigarh', 
+      'dadra and nagar haveli', 'daman and diu', 'lakshadweep', 'andaman and nicobar'
     ];
 
     let lastPart = parts[parts.length - 1].toLowerCase();
     lastPart = lastPart.replace(/\b\d{5,}\b/g, '').trim();
 
-    // If the last part is a known state, the city is the one before it
+    // If the last part is a known state, return "City, State"
     if (states.some(state => lastPart.includes(state)) && parts.length > 1) {
-      return parts[parts.length - 2].replace(/\b\d{5,}\b/g, '').trim();
+      const city = parts[parts.length - 2].replace(/\b\d{5,}\b/g, '').trim();
+      const stateName = parts[parts.length - 1].replace(/\b\d{5,}\b/g, '').trim();
+      return `${city}, ${stateName}`;
     }
 
     return parts[parts.length - 1].replace(/\b\d{5,}\b/g, '').trim();

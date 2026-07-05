@@ -6,13 +6,15 @@ import { LawyerService, Lawyer } from '../../services/lawyer.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { LawyerCardComponent } from '../../components/lawyer-card/lawyer-card.component';
+import { LocationService } from '../../services/location.service';
+import { LocationMapModalComponent } from '../../components/location-map-modal/location-map-modal.component';
 
 declare var google: any;
 
 @Component({
   selector: 'app-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent, LocationMapModalComponent],
   templateUrl: './lawyers.component.html',
   styleUrls: ['./lawyers.component.scss']
 })
@@ -32,6 +34,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   // Filter variables
   searchQuery = '';
   selectedLocation = '';
+  applyLocationFilter = false;
   selectedPracticeAreas: { [key: string]: boolean } = {};
   selectedAvailability = 'any'; // 'any' | 'today' | 'week'
   minFee = 0;
@@ -67,8 +70,12 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   isScrolled = false;
   isMobile = false;
 
+  // Location modal state
+  showLocationModal = false;
+
   currentUser: UserProfile | null = null;
   private querySub: any;
+  private locationSub: any;
 
   constructor(
     private lawyerService: LawyerService,
@@ -77,12 +84,20 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private zone: NgZone
+    private zone: NgZone,
+    private locationService: LocationService
   ) { }
 
   ngOnInit() {
     this.checkMobile();
     this.auth.currentUser$.subscribe(user => this.currentUser = user);
+
+    // Subscribe to active location changes from global LocationService
+    this.locationSub = this.locationService.activeLocation$.subscribe(loc => {
+      this.selectedLocation = loc;
+      this.applyFilters();
+      this.cdr.markForCheck();
+    });
 
     // Load metadata from backend
     this.lawyerService.getMeta().subscribe({
@@ -212,6 +227,9 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.querySub) {
       this.querySub.unsubscribe();
     }
+    if (this.locationSub) {
+      this.locationSub.unsubscribe();
+    }
     if (this.loadingTimeout) {
       clearTimeout(this.loadingTimeout);
     }
@@ -221,7 +239,12 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   readQueryParamsAndLoad() {
     this.querySub = this.route.queryParams.subscribe(params => {
       this.searchQuery = params['q'] || '';
-      this.selectedLocation = params['city'] || '';
+      
+      const cityParam = params['city'] || '';
+      if (cityParam) {
+        this.locationService.setLocation(cityParam, false);
+        this.applyLocationFilter = true;
+      }
 
       const specParam = params['specialization'] || '';
       if (specParam) {
@@ -276,7 +299,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     // 2. Location Filter
-    if (this.selectedLocation.trim()) {
+    if (this.applyLocationFilter && this.selectedLocation.trim()) {
       const cleanLoc = this.extractCityFromAddress(this.selectedLocation).toLowerCase().trim();
       result = result.filter(lawyer =>
         lawyer.city.toLowerCase().includes(cleanLoc)
@@ -361,8 +384,8 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   // Chip helpers
   getActiveChips(): string[] {
     const chips: string[] = [];
-    if (this.selectedLocation) {
-      chips.push(`Location: ${this.selectedLocation}`);
+    if (this.applyLocationFilter && this.selectedLocation) {
+      chips.push(`Location: ${this.cleanLocation(this.selectedLocation)}`);
     }
     if (this.selectedAvailability !== 'any') {
       chips.push(this.selectedAvailability === 'today' ? 'Available Today' : 'Available This Week');
@@ -386,7 +409,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   removeChip(chip: string) {
     if (chip.startsWith('Location: ')) {
-      this.selectedLocation = '';
+      this.applyLocationFilter = false;
     } else if (chip === 'Available Today' || chip === 'Available This Week') {
       this.selectedAvailability = 'any';
     } else if (chip.startsWith('Fee: ')) {
@@ -406,7 +429,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   clearAllFilters() {
     this.searchQuery = '';
-    this.selectedLocation = '';
+    this.applyLocationFilter = false;
     this.selectedAvailability = 'any';
     this.minFee = 0;
     this.maxFee = 5000;
@@ -416,29 +439,70 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.applyFilters();
   }
 
-  getInitials(name: string): string {
-    return name.replace('Adv. ', '').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  // TrackBy for *ngFor performance — avoids full DOM re-renders on filter/sort
+  trackByLawyerId(_index: number, lawyer: Lawyer): string {
+    return lawyer._id;
   }
 
   useMyLocation() {
-    if (navigator.geolocation) {
-      this.snackbar.show('Locating your position...', 'info');
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Simulate detecting closest city in seed data (defaults to Delhi)
-          this.selectedLocation = 'Delhi';
-          this.applyFilters();
-          this.snackbar.show('Location set to Delhi (detected nearest center)', 'success');
-        },
-        () => {
-          this.selectedLocation = 'Delhi';
-          this.applyFilters();
-          this.snackbar.show('Could not access location. Defaulted to Delhi.', 'info');
-        }
-      );
-    } else {
-      this.snackbar.show('Geolocation not supported by this browser.', 'warning');
+    if (!navigator.geolocation) {
+      this.snackbar.show('Geolocation not supported by your browser.', 'warning');
+      return;
     }
+    this.snackbar.show('Locating your position...', 'info');
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        if ((window as any).google?.maps?.Geocoder) {
+          const geocoder = new google.maps.Geocoder();
+          geocoder.geocode({ location: { lat, lng } }, (results: any[], status: string) => {
+            this.zone.run(() => {
+              if (status === 'OK' && results[0]) {
+                const address = results[0].formatted_address;
+                this.locationService.setLocation(address, false);
+                this.applyLocationFilter = true;
+                const clean = this.locationService.cleanAddress(address);
+                this.snackbar.show(`Location set to ${clean}`, 'success');
+              } else {
+                this.locationService.setLocation('New Delhi', false);
+                this.applyLocationFilter = true;
+                this.snackbar.show('Could not detect address. Defaulted to New Delhi.', 'info');
+              }
+            });
+          });
+        } else {
+          this.locationService.setLocation('New Delhi', false);
+          this.applyLocationFilter = true;
+          this.snackbar.show('Location set to New Delhi.', 'success');
+        }
+      },
+      () => {
+        this.locationService.setLocation('New Delhi', false);
+        this.applyLocationFilter = true;
+        this.snackbar.show('Could not access location. Defaulted to New Delhi.', 'info');
+      }
+    );
+  }
+
+  openLocationModal() {
+    this.showLocationModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeLocationModal() {
+    this.showLocationModal = false;
+    this.cdr.markForCheck();
+  }
+
+  onMapLocationConfirmed(address: string) {
+    this.locationService.setLocation(address, false);
+    this.applyLocationFilter = true;
+    this.closeLocationModal();
+  }
+
+  cleanLocation(loc: string): string {
+    return this.locationService.cleanAddress(loc);
   }
 
   getSelectedPracticeAreasCount(): number {
@@ -480,6 +544,16 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   // Card interaction handlers
   goToDetail(id: string) {
     this.router.navigate(['/lawyers', id]);
+  }
+
+  // Triggered by (bookClick) output from app-lawyer-card
+  onCardBookClick(id: string) {
+    this.router.navigate(['/lawyers', id], { queryParams: { action: 'book' } });
+  }
+
+  // Triggered by (messageClick) output from app-lawyer-card
+  onCardMessageClick(id: string) {
+    this.router.navigate(['/lawyers', id], { queryParams: { action: 'message' } });
   }
 
   openImagePreview(url: string, event?: Event) {
