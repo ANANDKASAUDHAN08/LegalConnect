@@ -1,5 +1,6 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
+import { Router } from '@angular/router';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { Section } from './legal.service';
 import { SnackbarService } from './snackbar.service';
@@ -18,7 +19,6 @@ export interface Bookmark {
   providedIn: 'root'
 })
 export class BookmarkService {
-  private bookmarksKey = 'legalconnect_bookmarks';
   private apiUrl = 'http://localhost:8888/api/bookmark';
 
   // RxJS backing fields for backwards compatibility
@@ -28,61 +28,57 @@ export class BookmarkService {
   // Modern Signals State Store
   private bookmarksSignal = signal<Bookmark[]>([]);
   bookmarks = this.bookmarksSignal.asReadonly();
+  initialLoadComplete = signal(false);
 
   private isLoggedIn = false;
 
   constructor(
     private http: HttpClient,
     private snackbar: SnackbarService,
-    private auth: AuthService
+    private auth: AuthService,
+    private router: Router
   ) {
     this.auth.isLoggedIn$.subscribe(loggedIn => {
       this.isLoggedIn = loggedIn;
       this.loadBookmarks();
     });
-
-    if (typeof window !== 'undefined') {
-      // Storage event for guest mode localStorage sync across tabs
-      window.addEventListener('storage', (event) => {
-        if (event.key === this.bookmarksKey) {
-          this.loadBookmarks();
-        }
-      });
-    }
   }
 
   private loadBookmarks() {
     if (this.isLoggedIn) {
+      this.initialLoadComplete.set(false);
       this.http.get<Bookmark[]>(this.apiUrl, { withCredentials: true }).subscribe({
         next: (bookmarks) => {
-          this.bookmarksSignal.set(bookmarks);
-          this.bookmarksSubject.next(bookmarks);
+          const sorted = (bookmarks || []).sort((a, b) => b.savedAt - a.savedAt);
+          this.bookmarksSignal.set(sorted);
+          this.bookmarksSubject.next(sorted);
+          this.initialLoadComplete.set(true);
         },
         error: () => {
-          const local = this.loadLocalBookmarks();
-          this.bookmarksSignal.set(local);
-          this.bookmarksSubject.next(local);
+          this.bookmarksSignal.set([]);
+          this.bookmarksSubject.next([]);
+          this.initialLoadComplete.set(true);
         }
       });
     } else {
-      const local = this.loadLocalBookmarks();
-      this.bookmarksSignal.set(local);
-      this.bookmarksSubject.next(local);
+      this.bookmarksSignal.set([]);
+      this.bookmarksSubject.next([]);
+      this.initialLoadComplete.set(true);
     }
   }
 
-  private loadLocalBookmarks(): Bookmark[] {
-    const data = localStorage.getItem(this.bookmarksKey);
-    return data ? JSON.parse(data) : [];
-  }
-
-  private saveLocalBookmarks(bookmarks: Bookmark[]) {
-    localStorage.setItem(this.bookmarksKey, JSON.stringify(bookmarks));
-    this.bookmarksSignal.set(bookmarks);
-    this.bookmarksSubject.next(bookmarks);
-  }
-
   addBookmark(actShortName: string, chapterNumber: string, section: Section, collectionName?: string) {
+    if (!this.isLoggedIn) {
+      this.snackbar.show(
+        'Login to save laws to your case pack dossier',
+        'warning',
+        5000,
+        'Login →',
+        () => this.router.navigate(['/login'])
+      );
+      return;
+    }
+
     const current = this.bookmarksSignal();
     if (current.some(b => b.actShortName === actShortName && b.section.section_number === section.section_number)) {
       return;
@@ -96,52 +92,45 @@ export class BookmarkService {
       savedAt: Date.now()
     };
 
-    if (this.isLoggedIn) {
-      const payload = {
-        actShortName,
-        chapterNumber,
-        sectionNumber: section.section_number,
-        sectionTitle: section.title,
-        sectionContent: section.content,
-        collectionName
-      };
-      this.http.post<any>(this.apiUrl, payload, { withCredentials: true }).subscribe({
-        next: () => {
-          const updated = [...current, newBookmark];
-          this.bookmarksSignal.set(updated);
-          this.bookmarksSubject.next(updated);
-          this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" successfully.` : 'Section saved to General Reference successfully.', 'success');
-        },
-        error: (err) => {
-          this.snackbar.show(err.error?.message || err.error || 'Failed to save section.', 'error');
-        }
-      });
-    } else {
-      const updated = [...current, newBookmark];
-      this.saveLocalBookmarks(updated);
-      this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" locally.` : 'Section saved to General Reference locally.', 'success');
-    }
+    const payload = {
+      actShortName,
+      chapterNumber,
+      sectionNumber: section.section_number,
+      sectionTitle: section.title,
+      sectionContent: section.content,
+      collectionName
+    };
+
+    this.http.post<any>(this.apiUrl, payload, { withCredentials: true }).subscribe({
+      next: () => {
+        const updated = [...current, newBookmark];
+        this.bookmarksSignal.set(updated);
+        this.bookmarksSubject.next(updated);
+        this.snackbar.show(collectionName ? `Section saved to folder "${collectionName}" successfully.` : 'Section saved to General Reference successfully.', 'success');
+      },
+      error: (err) => {
+        this.snackbar.show(err.error?.message || err.error || 'Failed to save section.', 'error');
+      }
+    });
   }
 
   removeBookmark(actShortName: string, sectionNumber: string) {
-    const current = this.bookmarksSignal();
-    if (this.isLoggedIn) {
-      this.http.delete<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, { withCredentials: true }).subscribe({
-        next: () => {
-          const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
-          this.bookmarksSignal.set(updated);
-          this.bookmarksSubject.next(updated);
-          this.snackbar.show('Section removed from library successfully.', 'info');
-        },
-        error: () => {
-          this.snackbar.show('Failed to remove section.', 'error');
-        }
-      });
-    } else {
-      const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
-      this.saveLocalBookmarks(updated);
-      this.snackbar.show('Section removed from library.', 'info');
+    if (!this.isLoggedIn) {
+      return;
     }
+
+    const current = this.bookmarksSignal();
+    this.http.delete<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, { withCredentials: true }).subscribe({
+      next: () => {
+        const updated = current.filter(b => !(b.actShortName === actShortName && b.section.section_number === sectionNumber));
+        this.bookmarksSignal.set(updated);
+        this.bookmarksSubject.next(updated);
+        this.snackbar.show('Section removed from library successfully.', 'info');
+      },
+      error: () => {
+        this.snackbar.show('Failed to remove section.', 'error');
+      }
+    });
   }
 
   updateBookmarkMetadata(
@@ -153,51 +142,38 @@ export class BookmarkService {
     onSuccess?: () => void,
     onError?: () => void
   ) {
-    const payload = { notes, collectionName };
-    if (this.isLoggedIn) {
-      this.http.put<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, payload, { withCredentials: true }).subscribe({
-        next: () => {
-          const current = this.bookmarksSignal();
-          const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
-          if (idx !== -1) {
-            const updated = [...current];
-            updated[idx] = {
-              ...updated[idx],
-              notes: notes,
-              collectionName: collectionName
-            };
-            this.bookmarksSignal.set(updated);
-            this.bookmarksSubject.next(updated);
-          }
-          if (!silent) {
-            this.snackbar.show('Section notes updated successfully.', 'success');
-          }
-          if (onSuccess) onSuccess();
-        },
-        error: () => {
-          if (!silent) {
-            this.snackbar.show('Failed to update section notes.', 'error');
-          }
-          if (onError) onError();
-        }
-      });
-    } else {
-      const current = this.bookmarksSignal();
-      const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
-      if (idx !== -1) {
-        const updated = [...current];
-        updated[idx] = {
-          ...updated[idx],
-          notes: notes,
-          collectionName: collectionName
-        };
-        this.saveLocalBookmarks(updated);
-      }
-      if (!silent) {
-        this.snackbar.show('Section notes updated locally.', 'success');
-      }
-      if (onSuccess) onSuccess();
+    if (!this.isLoggedIn) {
+      if (onError) onError();
+      return;
     }
+
+    const payload = { notes, collectionName };
+    this.http.put<any>(`${this.apiUrl}/${actShortName}/${sectionNumber}`, payload, { withCredentials: true }).subscribe({
+      next: () => {
+        const current = this.bookmarksSignal();
+        const idx = current.findIndex(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
+        if (idx !== -1) {
+          const updated = [...current];
+          updated[idx] = {
+            ...updated[idx],
+            notes: notes,
+            collectionName: collectionName
+          };
+          this.bookmarksSignal.set(updated);
+          this.bookmarksSubject.next(updated);
+        }
+        if (!silent) {
+          this.snackbar.show('Section notes updated successfully.', 'success');
+        }
+        if (onSuccess) onSuccess();
+      },
+      error: () => {
+        if (!silent) {
+          this.snackbar.show('Failed to update section notes.', 'error');
+        }
+        if (onError) onError();
+      }
+    });
   }
 
   getPaginatedBookmarks(params: {
@@ -227,6 +203,9 @@ export class BookmarkService {
   }
 
   isBookmarked(actShortName: string, sectionNumber: string): boolean {
+    if (!this.isLoggedIn) {
+      return false;
+    }
     return this.bookmarksSignal().some(b => b.actShortName === actShortName && b.section.section_number === sectionNumber);
   }
 }
