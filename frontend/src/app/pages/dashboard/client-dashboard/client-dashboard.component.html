@@ -1,12 +1,13 @@
 <div
-  class="page-wrapper min-h-screen pt-[80px] md:pt-[100px] pb-4 bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100/80 dark:from-[#090b14] dark:via-[#0f1224] dark:to-[#05060b] text-slate-900 dark:text-white transition-colors duration-300">
-  <div class="w-full max-w-[1380px] mx-auto px-4 md:px-6">
+  class="page-wrapper min-h-screen relative overflow-x-clip pt-[80px] md:pt-[100px] pb-4 bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100/80 dark:from-[#090b14] dark:via-[#0f1224] dark:to-[#05060b] text-slate-900 dark:text-white transition-colors duration-300">
+  <div class="w-full max-w-[1380px] mx-auto px-4 md:px-0">
 
     <!-- SKELETON LOADER — shown while isPageLoading is true -->
-    <div *ngIf="isPageLoading()" class="space-y-6 sm:space-y-8 animate-pulse">
+    <div *ngIf="isPageLoading()" class="space-y-4 md:space-y-6 animate-pulse">
 
       <!-- Skeleton: Header -->
-      <div class="flex items-start justify-between gap-4 pb-6 border-b border-slate-200/60 dark:border-slate-800/60">
+      <div
+        class="flex items-start justify-between gap-2 md:gap-4 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
         <div class="space-y-2.5 flex-1 min-w-0">
           <div class="skeleton-bar h-7 sm:h-9 w-32 sm:w-56 rounded-xl"></div>
           <div class="skeleton-bar h-4 max-w-xs sm:max-w-sm w-full rounded-lg"></div>
@@ -15,7 +16,7 @@
       </div>
 
       <!-- Skeleton: Stats Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 !mt-2 md:!mt-3">
         <div *ngFor="let i of [1,2,3,4]"
           class="skeleton-card p-2.5 sm:p-4 rounded-2xl flex items-center gap-2 sm:gap-4">
           <div class="skeleton-bar w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl shrink-0"></div>
@@ -27,7 +28,7 @@
       </div>
 
       <!-- Skeleton: Main layout (sidebar + content) -->
-      <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+      <div class="flex flex-col lg:flex-row gap-8 items-start !mt-3 md:!mt-4">
         <!-- Skeleton: Sidebar -->
         <div class="hidden lg:flex flex-col w-72 shrink-0 skeleton-card rounded-2xl p-5 gap-3">
           <div class="skeleton-bar h-4 w-28 rounded-md"></div>
@@ -110,18 +111,17 @@
     </div>
     <!-- END SKELETON -->
 
-
     <div *ngIf="currentUser() && !isPageLoading()" class="space-y-4 md:space-y-6">
 
       <!-- Premium Workspace Header -->
       <header
-        class="flex flex-row items-start justify-between gap-2 md:gap-4 pb-3 md:pb-6 border-b border-slate-200/60 dark:border-slate-800/60">
+        class="flex flex-row items-start justify-between gap-2 md:gap-4 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
         <div class="flex-1 min-w-0">
           <h1
             class="font-serif text-2xl sm:text-3xl md:text-4xl font-light text-slate-950 dark:text-white flex items-center gap-3">
             My Workspace
           </h1>
-          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
+          <p class="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
             Manage your legal research, custom collections, and client consult inquiries.
           </p>
         </div>
@@ -156,7 +156,7 @@
       </header>
 
       <!-- Statistics Dashboard Summary Bar -->
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4" aria-label="Dashboard statistics">
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 !mt-2 md:!mt-3" aria-label="Dashboard statistics">
         <app-stat-card type="saved" label="Saved Items" [count]="totalSavedCount()"
           titleAttr="Click to view all saved items" ariaLabelAttr="View all saved bookmarks"
           (cardClick)="onCardClick('saved')">
@@ -179,12 +179,14 @@
       </section>
 
       <!-- Main Layout Stack: Sidebar (Folders) + Main panel -->
-      <div class="flex flex-col lg:flex-row gap-8 items-start">
+      <div class="flex flex-col lg:flex-row gap-8 items-start !mt-3 md:!mt-4">
 
         <!-- SIDEBAR: Collections & Folders Manager (Desktop Only) -->
         <app-folder-sidebar layout="desktop" [activeTab]="activeTab()" [selectedCollection]="selectedCollection()"
-          (selectedCollectionChange)="selectedCollection.set($event)" [customCollections]="customCollections()"
-          [allBookmarks]="allBookmarks()" [unassignedCount]="unassignedCount()"
+          (selectedCollectionChange)="selectCollectionFromSidebar($event)" [customCollections]="customCollections()"
+          [allBookmarks]="generalBookmarks()" [unassignedCount]="unassignedCount()"
+          [casePacksCount]="totalCasePacksCount()" (selectCasePacks)="setActiveTab('case-packs')"
+          [savedContactsCount]="totalSavedContactsCount()" (selectSavedContacts)="setActiveTab('saved-directory')"
           [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
           (sidebarFolderSearchQueryChange)="sidebarFolderSearchQuery.set($event)"
           [showMobileFolderSearch]="showMobileFolderSearch()"
@@ -197,8 +199,9 @@
         <main id="content-section" class="flex-1 w-full space-y-1">
 
           <!-- Tabs Controls -->
-          <div
-            class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6 overflow-x-auto scrollbar-none w-full">
+          <div id="dashboard-tabs"
+            class="flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6 overflow-x-auto scrollbar-none w-full scroll-mt-16 md:scroll-mt-20">
+            <!-- Research Library Tab -->
             <button (click)="setActiveTab('bookmarks')"
               [class]="activeTab() === 'bookmarks' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
               class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
@@ -207,19 +210,22 @@
                 stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
               </svg>
-              Research Library
+              Research Library ({{ bookmarks().length }})
             </button>
-            <button (click)="setActiveTab('inquiries')"
-              [class]="activeTab() === 'inquiries' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+
+            <!-- Case Pack Tab -->
+            <button (click)="setActiveTab('case-packs')"
+              [class]="activeTab() === 'case-packs' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
               class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
-              appTooltip="View sent legal consultation inquiries">
+              appTooltip="View and manage saved case packs and roadmap dossiers">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                 stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2 2z"></path>
               </svg>
-              Consult Requests ({{ inquiries().length }})
+              Case Pack Dossiers ({{ savedCasePacks().length }})
             </button>
+
+            <!-- Saved (Lawyers + Helplines + Resources) Tab -->
             <button (click)="setActiveTab('saved-directory')"
               [class]="activeTab() === 'saved-directory' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
               class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
@@ -231,16 +237,31 @@
                 <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
               </svg>
-              Professional Directory ({{ savedItemsService.savedLawyers().length +
-              savedItemsService.savedHelplines().length +
-              savedItemsService.savedResources().length }})
+              Professional Directory ({{ savedLawyersDetails().length +
+              savedHelplinesDetails().length +
+              savedResourcesDetails().length }})
+            </button>
+
+            <!-- Inquiries Tab -->
+            <button (click)="setActiveTab('inquiries')"
+              [class]="activeTab() === 'inquiries' ? 'border-b-2 border-amber-600 dark:border-amber-500 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              appTooltip="View sent legal consultation inquiries">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" class="w-3.5 h-3.5 sm:w-[15px] sm:h-[15px] shrink-0">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                <polyline points="22,6 12,13 2,6"></polyline>
+              </svg>
+              Consult Requests ({{ inquiries().length }})
             </button>
           </div>
 
           <!-- MOBILE FOLDER PILLS (Mobile Only) -->
           <app-folder-sidebar layout="mobile" [activeTab]="activeTab()" [selectedCollection]="selectedCollection()"
-            (selectedCollectionChange)="selectedCollection.set($event)" [customCollections]="customCollections()"
-            [allBookmarks]="allBookmarks()" [unassignedCount]="unassignedCount()"
+            (selectedCollectionChange)="selectCollectionFromSidebar($event)" [customCollections]="customCollections()"
+            [allBookmarks]="generalBookmarks()" [unassignedCount]="unassignedCount()"
+            [casePacksCount]="totalCasePacksCount()" (selectCasePacks)="setActiveTab('case-packs')"
+            [savedContactsCount]="totalSavedContactsCount()" (selectSavedContacts)="setActiveTab('saved-directory')"
             [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
             (sidebarFolderSearchQueryChange)="sidebarFolderSearchQuery.set($event)"
             [showMobileFolderSearch]="showMobileFolderSearch()"
@@ -251,34 +272,67 @@
           <!-- TAB SKELETON LOADERS (shown when isTabLoading is true) -->
           <div *ngIf="isTabLoading()" class="animate-pulse space-y-6">
 
-            <!-- 1. Research Library Tab Skeleton -->
+            <!-- 1. Research Library Tab Skeleton (Matches current card layout) -->
             <div *ngIf="activeTab() === 'bookmarks'" class="space-y-4">
+              <!-- Search and filter header skeleton -->
               <div
                 class="w-[calc(100%+1rem)] -mx-2 sm:w-full sm:mx-0 flex flex-row justify-between items-center gap-2 bg-white/30 dark:bg-slate-900/10 p-2.5 sm:p-3 rounded-2xl">
                 <div class="skeleton-bar h-9 flex-1 rounded-xl"></div>
                 <div class="skeleton-bar h-9 w-28 rounded-xl shrink-0"></div>
               </div>
+
+              <!-- Grid matching your card structure -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                <div *ngFor="let i of [1,2,3,4]" class="skeleton-card p-4 rounded-2xl space-y-4">
+                <div *ngFor="let i of [1,2,3,4]"
+                  class="skeleton-card p-4 md:p-5 rounded-2xl space-y-4 border-l-[5px] border-l-slate-200 dark:border-l-slate-800 flex flex-col justify-between">
+
+                  <!-- 1. Top Badges & Trash Icon -->
                   <div class="flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <div class="skeleton-bar h-5 w-14 rounded-md"></div>
-                      <div class="skeleton-bar h-4 w-20 rounded-md"></div>
+                    <div class="flex flex-wrap gap-1.5 items-center">
+                      <div class="skeleton-bar h-5 w-10 rounded"></div>
+                      <div class="skeleton-bar h-5 w-12 rounded"></div>
+                      <div class="skeleton-bar h-5 w-24 rounded"></div>
+                      <div class="skeleton-bar h-5 w-8 rounded"></div>
                     </div>
-                    <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+                    <div class="skeleton-bar h-8 w-8 rounded-full shrink-0"></div>
                   </div>
-                  <div class="space-y-2">
-                    <div class="skeleton-bar h-4 w-full rounded-md"></div>
-                    <div class="skeleton-bar h-4 w-3/4 rounded-md"></div>
+
+                  <!-- 2. Title Row (Octagon shield + Title bar) -->
+                  <div class="flex items-center gap-2 mt-1.5">
+                    <div class="skeleton-bar h-4.5 w-4.5 rounded-full shrink-0"></div>
+                    <div class="skeleton-bar h-5 w-5/6 rounded-md"></div>
                   </div>
-                  <div class="skeleton-bar h-14 w-full rounded-xl"></div>
-                  <div class="flex items-center justify-between">
+
+                  <!-- 3. Excerpt Text (3 lines) -->
+                  <div class="space-y-1.5 flex-1">
+                    <div class="skeleton-bar h-3.5 w-full rounded-md"></div>
+                    <div class="skeleton-bar h-3.5 w-full rounded-md"></div>
+                    <div class="skeleton-bar h-3.5 w-2/3 rounded-md"></div>
+                  </div>
+
+                  <!-- 4. Severity Gauge & Compounding Pill -->
+                  <div class="flex flex-wrap items-center gap-3">
+                    <div class="skeleton-bar h-4 w-28 rounded-md"></div>
+                    <div class="skeleton-bar h-4 w-36 rounded-md"></div>
+                  </div>
+
+                  <!-- 5. Bailable & Cognizable Badges -->
+                  <div class="flex gap-2">
+                    <div class="skeleton-bar h-5 w-16 rounded-full"></div>
+                    <div class="skeleton-bar h-5 w-24 rounded-full"></div>
+                  </div>
+
+                  <!-- 6. Footer (Saved date + action icons/Read Full link) -->
+                  <div
+                    class="pt-3 border-t border-slate-100 dark:border-slate-850 flex justify-between items-center mt-2 shrink-0">
                     <div class="skeleton-bar h-3.5 w-24 rounded-md"></div>
-                    <div class="flex gap-2">
-                      <div class="skeleton-bar h-7 w-7 rounded-full"></div>
-                      <div class="skeleton-bar h-7 w-7 rounded-full"></div>
+                    <div class="flex items-center gap-3.5">
+                      <div class="skeleton-bar h-5 w-5 rounded-md"></div>
+                      <div class="skeleton-bar h-5 w-5 rounded-md"></div>
+                      <div class="skeleton-bar h-4.5 w-16 rounded-md"></div>
                     </div>
                   </div>
+
                 </div>
               </div>
             </div>
@@ -339,225 +393,58 @@
               </div>
             </div>
 
-          </div>
-
-          <!-- TAB 1: BOOKMARKS GRID -->
-          <div *ngIf="!isTabLoading() && activeTab() === 'bookmarks'" class="space-y-1">
-
-            <!-- Collection Title & Actions Row -->
-            <div *ngIf="selectedCollection() !== 'All'"
-              class="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/20 dark:bg-indigo-950/10 p-2 sm:px-3 sm:py-2 rounded-2xl border border-indigo-100/10 dark:border-indigo-900/10 gap-3 sm:gap-4 mt-2">
-              <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
-                <div class="flex items-center gap-2">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" class="text-indigo-500 shrink-0">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                  </svg>
-                  <span
-                    class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px] sm:max-w-none">
-                    Folder: {{ selectedCollection() === 'Unassigned' ? 'General Reference' : selectedCollection() }}
-                  </span>
-                </div>
-                <span
-                  class="text-[10px] bg-slate-200/50 dark:bg-slate-800 dark:text-white px-1.5 py-0.5 rounded text-slate-800 font-bold shrink-0">
-                  {{ filteredBookmarks().length }} items
-                </span>
+            <!-- 4. Case Pack Dossiers Tab Skeleton -->
+            <div *ngIf="activeTab() === 'case-packs'" class="space-y-4 pt-4">
+              <!-- Title / Counts row skeleton -->
+              <div class="flex items-center gap-2 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+                <div class="skeleton-bar h-5 w-44 rounded-md"></div>
+                <div class="skeleton-bar h-4 w-12 rounded-md"></div>
               </div>
 
-              <div class="flex items-center gap-2 justify-start sm:justify-end w-full sm:w-auto"
-                *ngIf="selectedCollection() !== 'Unassigned'">
-                <!-- Share Collection -->
-                <button (click)="shareCollection(selectedCollection())"
-                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-indigo-650 dark:text-indigo-400 bg-indigo-50/50 hover:bg-indigo-100/80 dark:bg-indigo-950/30 dark:hover:bg-indigo-950/60 border border-indigo-100/10 dark:border-indigo-900/10 whitespace-nowrap"
-                  appTooltip="Copy folder contents as citations to clipboard">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2.5" class="shrink-0">
-                    <circle cx="18" cy="5" r="3"></circle>
-                    <circle cx="6" cy="12" r="3"></circle>
-                    <circle cx="18" cy="19" r="3"></circle>
-                    <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                    <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                  </svg>
-                  Share Folder
-                </button>
-
-                <!-- Rename -->
-                <button (click)="renameCollection(selectedCollection())"
-                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-slate-600 dark:text-slate-200 bg-slate-100/50 hover:bg-slate-200/80 dark:bg-slate-800/50 dark:hover:bg-slate-700/80 border border-slate-200/10 dark:border-white/10 whitespace-nowrap"
-                  appTooltip="Rename research folder">
-                  Rename
-                </button>
-
-                <!-- Delete -->
-                <button (click)="deleteCollection(selectedCollection())"
-                  class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-red-655 dark:text-red-400 bg-red-50/40 hover:bg-red-100/80 dark:bg-red-950/20 dark:hover:bg-red-950/50 border border-red-100/10 dark:border-red-900/10 whitespace-nowrap"
-                  appTooltip="Delete folder and move saved items to General Reference">
-                  Delete
-                </button>
-              </div>
-            </div>
-
-            <!-- Filters & Search bar (Visible if bookmarks exist) -->
-            <div *ngIf="allBookmarks().length > 0"
-              class="w-[calc(100%+1rem)] -mx-2 sm:w-full sm:mx-0 flex flex-row justify-between items-center gap-2 bg-white/30 dark:bg-slate-900/10 p-2.5 sm:p-3 rounded-2xl rounded-none">
-
-              <!-- Search box with inline Act filter chip -->
-              <div class="flex items-center gap-1.5 flex-1 min-w-0">
-                <!-- Act filter chip (shown inline before/inside search bar when active) -->
-                <span *ngIf="actFilter()"
-                  class="inline-flex items-center gap-1 pl-1.5 pr-0.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 shrink-0"
-                  appTooltip="Act filter active — click × to clear">
-                  <span class="text-[10px] font-extrabold uppercase tracking-wide">{{ actFilter() }}</span>
-                  <button type="button" (click)="clearActFilter()"
-                    class="w-3.5 h-3.5 rounded-full flex items-center justify-center bg-amber-200/60 dark:bg-amber-900/40 hover:bg-amber-300 dark:hover:bg-amber-800/60 text-amber-700 dark:text-amber-300 transition-colors border-0 cursor-pointer p-0">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24" fill="none"
-                      stroke="currentColor" stroke-width="3">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
-                  </button>
-                </span>
-
-                <!-- Search input -->
-                <div class="relative flex-1 min-w-0">
-                  <input type="text" [ngModel]="searchVal" (ngModelChange)="onSearchChanged($event)"
-                    placeholder="Search act, title, section..."
-                    class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs outline-none text-slate-900 dark:text-white" />
-                  <svg xmlns="http://www.w3.org/2000/svg"
-                    class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <circle cx="11" cy="11" r="8"></circle>
-                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                  </svg>
-                </div>
-              </div>
-
-              <!-- Sorting options custom dropdown -->
-              <div class="flex items-center gap-1.5 shrink-0 relative">
-                <span
-                  class="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider select-none hidden sm:inline">Sort:</span>
-
-                <div class="relative">
-                  <button (click)="showSortDropdown.set(!showSortDropdown()); $event.stopPropagation()"
-                    class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl px-2.5 py-2 sm:px-3.5 flex items-center gap-1.5 shadow-xs hover:border-slate-350 dark:hover:border-slate-700 transition-all select-none active:scale-95 bg-transparent cursor-pointer"
-                    appTooltip="Sort bookmarked sections">
-                    <!-- Sort Icon (Mobile only) -->
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="2.2" class="w-4 h-4 sm:hidden shrink-0">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18M3 9.5h12M3 14.5h18M3 19.5h6" />
-                    </svg>
-                    <!-- Text Label (sm+) -->
-                    <span class="hidden sm:inline max-w-[85px] sm:max-w-none truncate">{{ getSortLabel(sortBy())
-                      }}</span>
-                    <!-- Chevron Arrow -->
-                    <svg class="w-3 h-3 text-slate-455 dark:text-slate-500 transition-transform duration-200 shrink-0"
-                      [class.rotate-180]="showSortDropdown()" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                      stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-
-                  <div *ngIf="showSortDropdown()" (click)="$event.stopPropagation()"
-                    class="absolute right-0 mt-1.5 w-36 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-30 py-1.5 overflow-hidden animate-[fadeIn_0.15s_ease-out]">
-                    <button (click)="selectSort('newest')"
-                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">
-                      Recently Saved
-                    </button>
-                    <button (click)="selectSort('oldest')"
-                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">
-                      Oldest Saved
-                    </button>
-                    <button (click)="selectSort('sectionAsc')"
-                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">
-                      Section No (Asc)
-                    </button>
-                    <button (click)="selectSort('sectionDesc')"
-                      class="w-full text-left px-3.5 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/60 hover:text-indigo-650 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer">
-                      Section No (Desc)
-                    </button>
+              <!-- Roadmaps grid skeleton -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
+                <div *ngFor="let i of [1,2]" class="skeleton-card p-4 md:p-5 rounded-2xl space-y-5">
+                  <div class="flex justify-between items-center">
+                    <div class="skeleton-bar h-5 w-20 rounded-md"></div>
+                    <div class="skeleton-bar h-8 w-8 rounded-full"></div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="space-y-2">
+                      <div class="skeleton-bar h-5 w-32 rounded-md"></div>
+                      <div class="skeleton-bar h-4 w-40 rounded-md"></div>
+                    </div>
+                    <div class="space-y-2 md:border-l md:border-slate-100/50 md:pl-4">
+                      <div class="skeleton-bar h-3.5 w-24 rounded-md"></div>
+                      <div class="space-y-1.5 mt-1">
+                        <div class="skeleton-bar h-3.5 w-full rounded-md"></div>
+                        <div class="skeleton-bar h-3.5 w-5/6 rounded-md"></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center">
+                    <div class="skeleton-bar h-3.5 w-28 rounded-md"></div>
+                    <div class="flex gap-4">
+                      <div class="skeleton-bar h-4 w-16 rounded-md"></div>
+                      <div class="skeleton-bar h-7 w-24 rounded-lg"></div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Empty Library view -->
-            <div *ngIf="totalFilteredItems() === 0"
-              class="card p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4 bg-white/40 dark:bg-slate-900/10">
-              <div
-                class="w-16 h-16 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-655 dark:text-indigo-400 flex items-center justify-center">
-                <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none"
-                  stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                  <polyline points="10 9 9 9 8 9"></polyline>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-base font-bold text-slate-900 dark:text-white">No sections matches</h3>
-                <p class="text-xs text-slate-550 mt-1 max-w-sm">No saved sections found matching the current collection
-                  folder or search criteria. Browse the Reference Library to bookmark acts.</p>
-              </div>
-              <a routerLink="/laws"
-                class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 no-underline mt-2">
-                Browse Indian Laws
-              </a>
-            </div>
-
-            <!-- Bookmarks Grid -->
-            <div *ngIf="totalFilteredItems() > 0" class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-              <app-bookmark-card *ngFor="let bm of paginatedBookmarks(); trackBy: trackByBookmark" [bookmark]="bm"
-                [inquiries]="inquiries()" (cardClicked)="openBookmarkDrawer($event)"
-                (removeClicked)="removeBookmark($event.actShortName, $event.sectionNumber)"
-                (copyClicked)="copySectionToClipboard($event)" (shareClicked)="openShareModal($event)">
-              </app-bookmark-card>
-            </div>
-
-            <!-- Pagination Controls (Stylish) -->
-            <div *ngIf="totalPages() > 1"
-              class="flex flex-col sm:flex-row justify-between items-center gap-3.5 sm:gap-4 bg-white/40 dark:bg-slate-900/10 p-3.5 sm:p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 mt-4 sm:mt-6 shrink-0 select-none">
-              <div class="text-xs font-semibold text-slate-555 dark:text-slate-400 text-center sm:text-left">
-                Showing <span class="text-slate-900 dark:text-white font-extrabold">{{ showingStart() }}</span> to
-                <span class="text-slate-900 dark:text-white font-extrabold">{{ showingEnd() }}</span> of
-                <span class="text-slate-900 dark:text-white font-extrabold">{{ totalFilteredItems() }}</span> saved
-                items
-              </div>
-
-              <div class="flex items-center justify-center gap-1 sm:gap-1.5">
-                <button (click)="currentPage.set(currentPage() - 1)" [disabled]="currentPage() === 1"
-                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
-                  appTooltip="Previous Page">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
-                </button>
-
-                <ng-container *ngFor="let page of visiblePageNumbers(); trackBy: trackByPage">
-                  <button *ngIf="page !== '...'" (click)="setPage(page)"
-                    [class]="currentPage() === page ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/20 font-bold border-indigo-600' : 'bg-transparent border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 font-semibold'"
-                    class="w-8 h-8 sm:w-9 sm:h-9 p-0 border rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
-                    appTooltip="Go to Page {{ page }}">
-                    {{ page }}
-                  </button>
-                  <span *ngIf="page === '...'"
-                    class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs font-bold text-slate-450 dark:text-slate-600 select-none">
-                    ...
-                  </span>
-                </ng-container>
-
-                <button (click)="currentPage.set(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
-                  class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-indigo-650 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
-                  appTooltip="Next Page">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
           </div>
+
+          <!-- TAB 1: BOOKMARKS GRID -->
+          @defer (when activeTab() === 'bookmarks') {
+          <app-bookmarks-tab *ngIf="!isTabLoading() && activeTab() === 'bookmarks'" [bookmarks]="bookmarks()"
+            [selectedCollection]="selectedCollection()" [customCollections]="customCollections()"
+            [actFilter]="actFilter()" [searchQuery]="searchQuery()" (actFilterChange)="actFilter.set($event)"
+            (searchQueryChange)="searchQuery.set($event)" (openReader)="openReaderMode($event)"
+            (removeBookmark)="removeBookmark($event.actShortName, $event.sectionNumber)"
+            (copyBookmark)="copySectionToClipboard($event)" (shareFolder)="shareCollection($event)"
+            (renameFolder)="renameCollection($event)" (deleteFolder)="deleteCollection($event)">
+          </app-bookmarks-tab>
+          }
 
           <!-- TAB 2: CONSULT TIMELINE -->
           @defer (when !isTabLoading() && activeTab() === 'inquiries') {
@@ -574,6 +461,14 @@
             (openDrawer)="openDirectoryDrawer($event.type, $event.data)">
           </app-saved-directory-tab>
           }
+
+          <!-- TAB 4: CASE PACK DOSSIERS -->
+          @defer (when activeTab() === 'case-packs') {
+          <app-case-packs-tab *ngIf="!isTabLoading() && activeTab() === 'case-packs'"
+            [savedCasePacks]="savedCasePacks()" (deletePack)="deleteCasePack($event)"
+            (viewPack)="openRoadmapPreview($event)">
+          </app-case-packs-tab>
+          }
         </main>
       </div>
 
@@ -581,20 +476,12 @@
   </div>
 </div>
 
-<!-- 1. QUICK-VIEW DETAIL SLIDE OVER DRAWER -->
-@defer (when drawerOpen) {
-<app-bookmark-detail-drawer [isOpen]="drawerOpen" [bookmark]="selectedBookmark()"
-  [customCollections]="customCollections()" [drawerNoteText]="drawerNoteText()" (notesChanged)="onNotesChanged($event)"
-  [aiSummary]="aiSummary()" [loadingAiSummary]="loadingAiSummary()" (closeDrawer)="closeBookmarkDrawer()"
-  (copyClicked)="copySectionToClipboard($event)"
-  (folderAssigned)="moveBookmarkToCollection($event.bookmark, $event.folder)" (fetchSummaryClicked)="fetchAiSummary()"
-  (removeBookmark)="removeBookmark($event.actShortName, $event.section.section_number)">
-</app-bookmark-detail-drawer>
-}
 
 @defer (when directoryDrawerOpen()) {
 <app-directory-detail-drawer [isOpen]="directoryDrawerOpen()" [type]="directoryDrawerType()"
-  [data]="directoryDrawerData()" (copySummary)="copySummaryToClipboard($event)" (closeDrawer)="closeDirectoryDrawer()">
+  [data]="directoryDrawerData()" (copySummary)="copySummaryToClipboard($event)" 
+  (showQr)="openQrModal($event)"
+  (closeDrawer)="closeDirectoryDrawer()">
 </app-directory-detail-drawer>
 }
 
@@ -604,34 +491,27 @@
   <div
     class="relative w-full max-w-md bg-white dark:bg-slate-900 rounded-2xl p-5 sm:p-6 shadow-2xl z-10 space-y-5 animate-[scaleUp_0.2s_ease-out]">
     <div>
-      <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Create Research Folder</h3>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white">Create Research Folder</h3>
       <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Group your saved laws by case or client research topic.
       </p>
     </div>
     <div>
       <input type="text" [ngModel]="newCollectionName()" (ngModelChange)="newCollectionName.set($event)"
         placeholder="e.g. Landlord Dispute, Tax Audit 2026..."
-        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500" />
+        class="w-full px-4 py-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-amber-500" />
     </div>
     <div class="flex justify-end gap-3 pt-2">
       <button (click)="showNewCollectionModal = false; newCollectionName.set('')"
-        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+        class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-500 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
         Cancel
       </button>
       <button (click)="createCollection()"
-        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer">
+        class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 border-0 cursor-pointer">
         Create Folder
       </button>
     </div>
   </div>
 </div>
-
-<!-- 3. SHARE TO CONTACTED LAWYER MODAL -->
-@defer (when showShareModal) {
-<app-share-citation-modal [isOpen]="showShareModal" [bookmark]="bookmarkToShare()" [inquiries]="inquiries()"
-  (closeModal)="showShareModal = false; bookmarkToShare.set(null)" (lawyerSelected)="shareWithSelectedLawyer($event)">
-</app-share-citation-modal>
-}
 
 <!-- CUSTOM CONFIRM DIALOG MODAL -->
 @defer (when customConfirmOpen) {
@@ -663,3 +543,23 @@
   (closeModal)="closeActsModal()" (actSelected)="filterByAct($event)">
 </app-acts-filter-modal>
 }
+
+<!-- 5. CASE PACK ROADMAP PREVIEW MODAL -->
+@defer (when showRoadmapPreviewModal()) {
+<app-case-pack-preview-modal *ngIf="showRoadmapPreviewModal()" [activeCategory]="selectedCasePack()?.category"
+  [locationQuery]="selectedCasePack()?.location" [roadmap]="selectedCasePack()?.roadmap"
+  [filteredResources]="selectedCasePack()?.resources" [interactive]="true" (closed)="closeRoadmapPreview()"
+  (print)="triggerPrintDownload()">
+</app-case-pack-preview-modal>
+}
+
+<!-- 6. IMMERSIVE READER MODAL -->
+@defer (when showReaderModal) {
+<app-reader-modal *ngIf="showReaderModal" [readerSection]="readerSection" [lastQuery]="lastQuery"
+  [bookmark]="selectedBookmark()" [customCollections]="customCollections()"
+  (notesChanged)="onNotesChangedInReader($event)" (folderAssigned)="onFolderAssignedInReader($event)"
+  (close)="closeReaderMode()">
+</app-reader-modal>
+}
+
+<app-qr-modal [isOpen]="showQrModal()" [qrData]="qrModalItem()" (closed)="closeQrModal()"></app-qr-modal>

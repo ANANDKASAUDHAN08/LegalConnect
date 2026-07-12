@@ -18,9 +18,11 @@ export class FolderSidebarComponent {
   @Input() customCollections: string[] = [];
   @Input() allBookmarks: Bookmark[] = [];
   @Input() unassignedCount = 0;
+  @Input() casePacksCount = 0;
+  @Input() savedContactsCount = 0;
   @Input() sidebarFolderSearchQuery = '';
   @Input() showMobileFolderSearch = false;
-  @Input() activeTab = 'bookmarks';
+  @Input() activeTab: any = 'bookmarks';
 
   @Output() selectedCollectionChange = new EventEmitter<string>();
   @Output() sidebarFolderSearchQueryChange = new EventEmitter<string>();
@@ -30,6 +32,16 @@ export class FolderSidebarComponent {
   @Output() renameFolder = new EventEmitter<string>();
   @Output() deleteFolder = new EventEmitter<string>();
   @Output() shareFolder = new EventEmitter<string>();
+  @Output() selectCasePacks = new EventEmitter<void>();
+  @Output() selectSavedContacts = new EventEmitter<void>();
+
+  selectCasePacksSystemDirectory() {
+    this.selectCasePacks.emit();
+  }
+
+  selectSavedContactsSystemDirectory() {
+    this.selectSavedContacts.emit();
+  }
 
   get filteredSidebarFolders(): string[] {
     if (!this.sidebarFolderSearchQuery || !this.sidebarFolderSearchQuery.trim()) {

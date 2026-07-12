@@ -270,7 +270,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
           if (status === 'OK' && results[0]) {
             const address = results[0].formatted_address;
-            this.locationService.setLocation(address, false);
+            this.locationService.setLocation(address, false, { lat, lng });
             const clean = this.locationService.cleanAddress(address);
             const displayAddress = clean.length > 20 ? clean.substring(0, 17) + '...' : clean;
             this.snackbar.show(`Location set to ${displayAddress}`, 'success');
@@ -326,7 +326,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
       }
     }
 
-    this.locationService.setLocation(detectedCity, false);
+    this.locationService.setLocation(detectedCity, false, { lat, lng });
     this.snackbar.show(`Location set to ${detectedCity}`, 'success');
   }
 
@@ -342,10 +342,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  onMapLocationConfirmed(address: string) {
+  onMapLocationConfirmed(event: { address: string; lat: number; lng: number }) {
     this.showMapModal = false;
-    this.locationService.setLocation(address, false);
-    const clean = this.locationService.cleanAddress(address);
+    this.locationService.setLocation(event.address, false, { lat: event.lat, lng: event.lng });
+    const clean = this.locationService.cleanAddress(event.address);
     const displayAddress = clean.length > 20 ? clean.substring(0, 17) + '...' : clean;
     this.snackbar.show(`Location set to ${displayAddress}`, 'success');
     this.cdr.markForCheck();

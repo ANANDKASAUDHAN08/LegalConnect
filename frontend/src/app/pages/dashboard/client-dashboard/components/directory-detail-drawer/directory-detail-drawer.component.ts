@@ -24,6 +24,7 @@ export class DirectoryDetailDrawerComponent {
   private _isOpen = false;
 
   @Output() copySummary = new EventEmitter<string>();
+  @Output() showQr = new EventEmitter<any>();
 
   @Input()
   set isOpen(val: boolean) {

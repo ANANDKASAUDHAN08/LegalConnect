@@ -1,7 +1,7 @@
 <div class="mt-4 space-y-3 md:space-y-6">
 
   <div *ngIf="loadingInquiries" class="flex items-center justify-center py-12 gap-3 text-slate-400">
-    <div class="w-6 h-6 border-[2.5px] border-indigo-100 border-t-indigo-650 rounded-full animate-spin"></div>
+    <div class="w-6 h-6 border-[2.5px] border-indigo-100 border-t-indigo-600 rounded-full animate-spin"></div>
     <span>Fetching consultations...</span>
   </div>
 
@@ -61,7 +61,7 @@
 
       <!-- Inquiry Message block -->
       <div class="pl-2 flex-1">
-        <p class="text-xs text-slate-600 dark:text-slate-350 leading-relaxed">{{ inq.message }}</p>
+        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">{{ inq.message }}</p>
       </div>
 
       <!-- Inquiry Timeline status notifications -->
@@ -71,7 +71,7 @@
 
         <!-- Responsive Status texts -->
         <span *ngIf="inq.status === 'Pending'"
-          class="text-amber-600 dark:text-amber-550 font-bold flex items-center gap-1">
+          class="text-amber-600 dark:text-amber-500 font-bold flex items-center gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5" class="animate-pulse">
             <circle cx="12" cy="12" r="10"></circle>
@@ -88,7 +88,7 @@
           Advocate initiated contact
         </span>
         <span *ngIf="inq.status === 'Closed'"
-          class="text-emerald-600 dark:text-emerald-455 font-bold flex items-center gap-1">
+          class="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
           <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12"></polyline>

@@ -1,0 +1,203 @@
+<div class="space-y-1">
+
+  <!-- Collection Title & Actions Row -->
+  <div *ngIf="selectedCollection !== 'All'"
+    class="flex flex-col sm:flex-row sm:items-center justify-between bg-indigo-50/20 dark:bg-indigo-950/10 p-2 sm:px-3 sm:py-2 rounded-2xl border border-indigo-100/10 dark:border-indigo-900/10 gap-3 sm:gap-4 mt-2">
+    <div class="flex items-center justify-between sm:justify-start gap-2 w-full sm:w-auto">
+      <div class="flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" class="text-indigo-500 shrink-0">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-[180px] sm:max-w-none">
+          Folder: {{ selectedCollection === 'Unassigned' ? 'General Reference' : selectedCollection }}
+        </span>
+      </div>
+      <span
+        class="text-[10px] bg-slate-200/50 dark:bg-slate-800 dark:text-white px-1.5 py-0.5 rounded text-slate-800 font-bold shrink-0">
+        {{ totalFilteredItems() }} items
+      </span>
+    </div>
+
+    <div class="flex items-center gap-2 justify-start sm:justify-end w-full sm:w-auto"
+      *ngIf="selectedCollection !== 'Unassigned'">
+      <!-- Share Collection -->
+      <button (click)="shareFolder.emit(selectedCollection)"
+        class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg flex items-center gap-1.5 transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-amber-700 dark:text-amber-400 bg-amber-50/50 hover:bg-amber-100/80 dark:bg-amber-950/30 dark:hover:bg-amber-950/60 border border-amber-100/10 dark:border-amber-900/10 whitespace-nowrap"
+        appTooltip="Copy folder contents as citations to clipboard">
+        <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" class="shrink-0">
+          <circle cx="18" cy="5" r="3"></circle>
+          <circle cx="6" cy="12" r="3"></circle>
+          <circle cx="18" cy="19" r="3"></circle>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+          <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+        </svg>
+        Share Folder
+      </button>
+
+      <!-- Rename -->
+      <button (click)="renameFolder.emit(selectedCollection)"
+        class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-slate-600 dark:text-slate-200 bg-slate-100/50 hover:bg-slate-200/80 dark:bg-slate-800/50 dark:hover:bg-slate-700/80 border border-slate-200/10 dark:border-white/10 whitespace-nowrap"
+        appTooltip="Rename research folder">
+        Rename
+      </button>
+
+      <!-- Delete -->
+      <button (click)="deleteFolder.emit(selectedCollection)"
+        class="text-[10px] font-bold px-2.5 py-1.5 sm:py-1 rounded-lg transition-all duration-200 transform hover:-translate-y-0.5 active:translate-y-0 text-red-600 dark:text-red-400 bg-red-50/40 hover:bg-red-100/80 dark:bg-red-950/20 dark:hover:bg-red-950/50 border border-red-100/10 dark:border-red-900/10 whitespace-nowrap"
+        appTooltip="Delete folder and move saved items to General Reference">
+        Delete
+      </button>
+    </div>
+  </div>
+
+  <!-- Filters & Search bar (Visible if bookmarks exist) -->
+  <div *ngIf="bookmarks.length > 0"
+    class="w-[calc(100%+1rem)] -mx-2 sm:w-full sm:mx-0 flex flex-row justify-between items-center gap-2 bg-white/30 dark:bg-slate-900/10 p-1 sm:p-3 rounded-2xl rounded-none">
+
+    <!-- Search box with inline Act filter chip -->
+    <div class="flex items-center gap-1.5 flex-1 min-w-0">
+      <!-- Act filter chip (shown inline before/inside search bar when active) -->
+      <span *ngIf="actFilter"
+        class="inline-flex items-center gap-1 pl-1.5 pr-0.5 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200/50 dark:border-amber-800/40 text-amber-700 dark:text-amber-400 shrink-0"
+        appTooltip="Act filter active — click × to clear">
+        <span class="text-[10px] font-extrabold uppercase tracking-wide">{{ actFilter }}</span>
+        <button type="button" (click)="actFilterChange.emit('')"
+          class="w-3.5 h-3.5 rounded-full flex items-center justify-center bg-amber-200/60 dark:bg-amber-900/40 hover:bg-amber-300 dark:hover:bg-amber-800/60 text-amber-700 dark:text-amber-300 transition-colors border-0 cursor-pointer p-0">
+          <svg xmlns="http://www.w3.org/2000/svg" width="6" height="6" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="3">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </span>
+
+      <!-- Search input -->
+      <div class="relative flex-1 min-w-0">
+        <input type="text" [ngModel]="searchVal" (ngModelChange)="onSearchChanged($event)"
+          placeholder="Search act, title, section..."
+          class="w-full pl-8 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 rounded-xl text-xs outline-none text-slate-900 dark:text-white" />
+        <svg xmlns="http://www.w3.org/2000/svg"
+          class="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2.5">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Sorting options custom dropdown -->
+    <div class="flex items-center gap-1.5 shrink-0 relative">
+      <span
+        class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none hidden sm:inline">Sort:</span>
+
+      <div class="relative">
+        <button (click)="showSortDropdown.set(!showSortDropdown()); $event.stopPropagation()"
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl px-2.5 py-2 sm:px-3.5 flex items-center gap-1.5 shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all select-none active:scale-95 bg-transparent cursor-pointer"
+          appTooltip="Sort bookmarked sections">
+          <!-- Sort Icon (Mobile only) -->
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2.2" class="w-4 h-4 sm:hidden shrink-0">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3 4.5h18M3 9.5h12M3 14.5h18M3 19.5h6" />
+          </svg>
+          <!-- Text Label (sm+) -->
+          <span class="hidden sm:inline max-w-[85px] sm:max-w-none truncate">{{ getSortLabel(sortBy()) }}</span>
+          <!-- Chevron Arrow -->
+          <svg class="w-3 h-3 text-slate-400 dark:text-slate-500 transition-transform duration-200 shrink-0"
+            [class.rotate-180]="showSortDropdown()" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        <div *ngIf="showSortDropdown()" (click)="$event.stopPropagation()"
+          class="absolute right-0 mt-1.5 w-36 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg z-30 py-1.5 overflow-hidden animate-[fadeIn_0.15s_ease-out]">
+          <button *ngFor="let opt of sortOptions; trackBy: trackByOption" (click)="selectSort(opt.value)"
+            [class]="sortBy() === opt.value ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400 font-bold' : 'text-slate-700 dark:text-slate-300 font-semibold'"
+            class="w-full text-left px-3.5 py-2 text-xs hover:bg-indigo-50/60 hover:text-indigo-600 dark:hover:bg-indigo-950/40 dark:hover:text-indigo-400 transition-colors bg-transparent border-0 cursor-pointer">
+            {{ opt.label }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty Library view -->
+  <div *ngIf="totalFilteredItems() === 0"
+    class="card p-12 text-center border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl flex flex-col items-center gap-4 bg-white/40 dark:bg-slate-900/10">
+    <div
+      class="w-16 h-16 rounded-2xl bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="w-8 h-8" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
+    </div>
+    <div>
+      <h3 class="text-base font-bold text-slate-900 dark:text-white">No sections matches</h3>
+      <p class="text-xs text-slate-500 mt-1 max-w-sm">No saved sections found matching the current collection
+        folder or search criteria. Browse the Reference Library to bookmark acts.</p>
+    </div>
+    <a routerLink="/laws"
+      class="px-5 py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95 no-underline mt-2">
+      Browse Indian Laws
+    </a>
+  </div>
+
+  <!-- Bookmarks Grid -->
+  <div *ngIf="totalFilteredItems() > 0" class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
+    <app-bookmark-card *ngFor="let bm of paginatedBookmarks(); trackBy: trackByBookmark" [bookmark]="bm"
+      [searchQuery]="searchQuerySignal()"
+      (cardClicked)="openReader.emit($event)" (removeClicked)="removeBookmark.emit($event)"
+      (copyClicked)="copyBookmark.emit($event)">
+    </app-bookmark-card>
+  </div>
+
+  <!-- Pagination Controls (Stylish) -->
+  <div *ngIf="totalPages() > 1"
+    class="flex flex-col sm:flex-row justify-between items-center gap-3.5 sm:gap-4 bg-white/40 dark:bg-slate-900/10 p-3.5 sm:p-4 rounded-2xl border border-slate-200/50 dark:border-white/5 mt-4 sm:mt-6 shrink-0 select-none">
+    <div class="text-xs font-semibold text-slate-500 dark:text-slate-400 text-center sm:text-left">
+      Showing <span class="text-slate-900 dark:text-white font-extrabold">{{ showingStart() }}</span> to
+      <span class="text-slate-900 dark:text-white font-extrabold">{{ showingEnd() }}</span> of
+      <span class="text-slate-900 dark:text-white font-extrabold">{{ totalFilteredItems() }}</span> saved
+      items
+    </div>
+
+    <div class="flex items-center justify-center gap-1 sm:gap-1.5">
+      <button (click)="currentPage.set(currentPage() - 1)" [disabled]="currentPage() === 1"
+        class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+        appTooltip="Previous Page">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+
+      <ng-container *ngFor="let page of visiblePageNumbers(); trackBy: trackByPage">
+        <button *ngIf="page !== '...'" (click)="setPage(page)"
+          [class]="currentPage() === page ? 'bg-amber-600 text-white shadow-md shadow-amber-500/20 font-bold border-amber-600' : 'bg-transparent border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 font-semibold'"
+          class="w-8 h-8 sm:w-9 sm:h-9 p-0 border rounded-xl text-xs transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+          appTooltip="Go to Page {{ page }}">
+          {{ page }}
+        </button>
+        <span *ngIf="page === '...'"
+          class="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center text-xs font-bold text-slate-400 dark:text-slate-600 select-none">
+          ...
+        </span>
+      </ng-container>
+
+      <button (click)="currentPage.set(currentPage() + 1)" [disabled]="currentPage() === totalPages()"
+        class="w-8 h-8 sm:w-9 sm:h-9 p-0 border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-50 dark:hover:bg-slate-950/20 rounded-xl bg-transparent disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer flex items-center justify-center select-none active:scale-95"
+        appTooltip="Next Page">
+        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" viewBox="0 0 24 24"
+          stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>

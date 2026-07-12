@@ -3,20 +3,25 @@
     [class]="buttonClass" [ngClass]="{'active': showShareDropdown}">
     <ng-container *ngIf="label; else simpleIcon">
       <div class="flex items-center gap-3.5 text-left w-full">
-        <div class="w-9 h-9 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 shrink-0 flex items-center justify-center">
-          <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+        <div
+          class="w-9 h-9 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 shrink-0 flex items-center justify-center">
+          <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor"
+            viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
           </svg>
         </div>
         <div class="flex flex-col gap-0.5">
           <span class="text-xs font-bold text-text-primary dark:text-white">{{ label }}</span>
-          <span *ngIf="description" class="text-[10px] text-text-secondary dark:text-slate-400 font-normal leading-normal whitespace-normal">{{ description }}</span>
+          <span *ngIf="description"
+            class="text-[10px] text-text-secondary dark:text-slate-400 font-normal leading-normal whitespace-normal">{{
+            description }}</span>
         </div>
       </div>
     </ng-container>
     <ng-template #simpleIcon>
-      <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor" viewBox="0 0 24 24">
+      <svg [class]="iconClass" [attr.fill]="showShareDropdown ? 'currentColor' : 'none'" stroke="currentColor"
+        viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
           d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
       </svg>
@@ -24,95 +29,56 @@
   </button>
 
   <!-- ═══ DESKTOP: Premium Dropdown (hidden on mobile) ═══ -->
-  <div *ngIf="showShareDropdown"
-    class="share-desktop-dropdown absolute top-full right-0 mt-2 w-[220px] bg-white dark:bg-[hsl(215,25%,18%)] border border-black/[0.08] dark:border-white/[0.08] rounded-2xl shadow-xl dark:shadow-black/50 p-2 flex-col gap-1 z-50 animate-scale-up hidden md:flex">
-    <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2 py-1">Share Link
+  <div #desktopDropdown *ngIf="showShareDropdown" [class.open-upwards]="openUpwards" [ngStyle]="dropdownStyles"
+    class="share-desktop-dropdown bg-white/80 dark:bg-slate-900/85 backdrop-blur-xl border border-slate-200/50 dark:border-slate-800/50 rounded-2xl shadow-2xl p-2.5 flex-col gap-1 animate-scale-up hidden md:flex">
+    <div class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 px-2.5 py-1">Share
+      Options
     </div>
+
+    <!-- Custom Action (Primary) -->
+    <ng-container *ngIf="customActionLabel">
+      <button (click)="onCustomAction($event)"
+        class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-amber-400 hover:bg-indigo-50/50 dark:hover:bg-amber-500/10 transition-all duration-200 border-none bg-transparent cursor-pointer text-left">
+        <svg class="w-4 h-4 text-indigo-500 dark:text-amber-400 transition-transform group-hover:scale-110" fill="none"
+          stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+        <span>{{ customActionLabel }}</span>
+      </button>
+      <div class="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 mx-2"></div>
+    </ng-container>
 
     <!-- Copy Link -->
     <button (click)="shareTo('copy')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-amber-500 transition-transform group-hover:scale-110" fill="none" stroke="currentColor"
+      class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
+      <svg class="w-4 h-4 text-emerald-500 transition-transform group-hover:scale-110" fill="none" stroke="currentColor"
         viewBox="0 0 24 24" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round"
           d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
       </svg>
-      <span>Copy Link</span>
+      <span>{{ copyLinkLabel }}</span>
     </button>
 
-    <div class="h-px bg-slate-100 dark:bg-white/5 my-1 mx-2"></div>
+    <div class="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 mx-2"></div>
 
-    <!-- Share to WhatsApp -->
-    <button (click)="shareTo('whatsapp')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-emerald-500 transition-transform group-hover:scale-110" fill="currentColor"
+    <!-- Social Platforms -->
+    <button *ngFor="let platform of platforms; trackBy: trackByPlatform" (click)="shareTo(platform.id)"
+      class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
+      <svg class="w-4 h-4 transition-transform group-hover:scale-110" [ngClass]="platform.desktopIconClass"
+        [attr.fill]="platform.isStroke ? 'none' : 'currentColor'"
+        [attr.stroke]="platform.isStroke ? 'currentColor' : 'none'" [attr.stroke-width]="platform.isStroke ? '2' : null"
         viewBox="0 0 24 24">
-        <path
-          d="M12.012 2c-5.506 0-9.988 4.482-9.988 9.988 0 1.76.46 3.473 1.334 4.98L2 22l5.176-1.36a9.923 9.923 0 004.836 1.254h.004c5.506 0 9.988-4.482 9.988-9.988C22 6.482 17.518 2 12.012 2zm6.07 14.225c-.252.708-1.46 1.3-2.014 1.386-.48.074-1.1.137-3.26-.725-2.766-1.102-4.553-3.92-4.69-4.103-.137-.184-1.12-1.488-1.12-2.836 0-1.348.704-2.011.956-2.278.252-.266.55-.333.732-.333.184 0 .367.002.53.01.173.007.408-.067.637.49.23.558.78 1.905.848 2.04.068.136.113.292.022.476-.09.183-.136.299-.272.455-.136.156-.285.35-.408.47-.136.13-.278.272-.12.544.156.27.694 1.146 1.486 1.854.78.7 1.432 1.146 1.704 1.282.272.136.43.116.59-.068.156-.184.68-.79.864-1.062.184-.272.367-.224.62-.13.252.095 1.6.756 1.875.892.274.137.458.204.526.32.068.116.068.674-.184 1.382z" />
+        <path [attr.d]="platform.svgPath" stroke-linecap="round" stroke-linejoin="round" />
       </svg>
-      <span>WhatsApp</span>
-    </button>
-
-    <!-- Share to Facebook -->
-    <button (click)="shareTo('facebook')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-blue-600 transition-transform group-hover:scale-110" fill="currentColor"
-        viewBox="0 0 24 24">
-        <path
-          d="M9.101 23.656v-10.74H6.559V9.835h2.542V7.581c0-2.52 1.584-3.893 3.848-3.893 1.086 0 2.018.081 2.29.117v2.652l-1.571.001c-1.222 0-1.459.581-1.459 1.434v1.943h2.951l-.388 3.081h-2.563v10.74h-2.73z" />
-      </svg>
-      <span>Facebook</span>
-    </button>
-
-    <!-- Share to Twitter / X -->
-    <button (click)="shareTo('twitter')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-slate-800 dark:text-white transition-transform group-hover:scale-110" fill="currentColor"
-        viewBox="0 0 24 24">
-        <path
-          d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-      </svg>
-      <span>Twitter / X</span>
-    </button>
-
-    <!-- Share to LinkedIn -->
-    <button (click)="shareTo('linkedin')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-blue-700 transition-transform group-hover:scale-110" fill="currentColor"
-        viewBox="0 0 24 24">
-        <path
-          d="M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z" />
-      </svg>
-      <span>LinkedIn</span>
-    </button>
-
-    <!-- Share to Telegram -->
-    <button (click)="shareTo('telegram')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-sky-500 transition-transform group-hover:scale-110" fill="currentColor"
-        viewBox="0 0 24 24">
-        <path
-          d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.47-.52-.17l-9.49 5.96-4.11-1.28c-.9-.28-.91-.9.19-1.33L19.38 3c.75-.28 1.4.17 1.15 1.25l-2.65 12.5c-.2 1-.79 1.25-1.63.78l-4.11-3.03-1.98 1.91c-.22.22-.4.41-.82.41z" />
-      </svg>
-      <span>Telegram</span>
-    </button>
-
-    <!-- Share to Email -->
-    <button (click)="shareTo('email')"
-      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
-      <svg class="w-4 h-4 text-rose-500 transition-transform group-hover:scale-110" fill="none" stroke="currentColor"
-        viewBox="0 0 24 24" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round"
-          d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-      </svg>
-      <span>Email</span>
+      <span>{{ platform.name }}</span>
     </button>
 
     <!-- Native Share (Mobile) -->
     <ng-container *ngIf="hasNativeShare">
-      <div class="h-px bg-slate-100 dark:bg-white/5 my-1 mx-2"></div>
+      <div class="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 mx-2"></div>
       <button (click)="shareTo('native')"
-        class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
+        class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
         <svg class="w-4 h-4 text-slate-500 transition-transform group-hover:scale-110" fill="none" stroke="currentColor"
           viewBox="0 0 24 24" stroke-width="2">
           <path stroke-linecap="round" stroke-linejoin="round"
@@ -126,11 +92,11 @@
   <!-- ═══ MOBILE: Full-Screen Bottom Sheet (hidden on desktop) ═══ -->
   <div #mobileSheet *ngIf="showShareDropdown" class="share-mobile-sheet md:hidden">
     <!-- Backdrop -->
-    <div class="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm" (click)="closeShareDropdown()"></div>
+    <div class="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm" (click)="closeShareDropdown()"></div>
 
     <!-- Sheet -->
     <div
-      class="fixed bottom-0 left-0 right-0 z-[101] bg-white dark:bg-[hsl(222,47%,11%)] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-share-sheet-up"
+      class="fixed bottom-0 left-0 right-0 z-[9999] bg-white dark:bg-[hsl(222,47%,11%)] rounded-t-3xl shadow-[0_-10px_40px_rgba(0,0,0,0.15)] dark:shadow-[0_-10px_40px_rgba(0,0,0,0.5)] animate-share-sheet-up"
       (click)="$event.stopPropagation()">
 
       <!-- Drag Handle -->
@@ -162,26 +128,6 @@
         </button>
       </div>
 
-      <!-- Copy Link Banner -->
-      <!-- <div class="mx-4 mb-2">
-        <button (click)="shareTo('copy')" class="w-full flex items-center gap-3 px-3.5 py-1.5 rounded-2xl border-none cursor-pointer text-left transition-all active:scale-[0.98]
-                 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/20 dark:to-orange-950/20
-                 border border-amber-200/60 dark:border-amber-500/15">
-          <div
-            class="w-7 h-7 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shrink-0 shadow-sm">
-            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
-            </svg>
-          </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-xs font-bold text-amber-800 dark:text-amber-300">Copy Link</span>
-            <span class="text-[9px] text-amber-600/70 dark:text-amber-400/60 truncate font-medium">Tap to copy sharing
-              link</span>
-          </div>
-        </button>
-      </div> -->
-
       <!-- Social Grid (All platform options in a single grid) -->
       <div class="px-4 pb-2.5">
         <span
@@ -189,80 +135,34 @@
           via</span>
         <div class="grid grid-cols-4 gap-y-2 gap-x-1">
 
-          <!-- WhatsApp -->
-          <button (click)="shareTo('whatsapp')"
-            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-emerald-50 dark:hover:bg-emerald-950/20">
+          <!-- Custom Action (Mobile) - First Position -->
+          <button *ngIf="customActionLabel" (click)="onCustomAction($event)"
+            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-indigo-50 dark:hover:bg-indigo-950/20">
             <div
-              class="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm shadow-emerald-500/25">
-              <svg class="w-4.5 h-4.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M12.012 2c-5.506 0-9.988 4.482-9.988 9.988 0 1.76.46 3.473 1.334 4.98L2 22l5.176-1.36a9.923 9.923 0 004.836 1.254h.004c5.506 0 9.988-4.482 9.988-9.988C22 6.482 17.518 2 12.012 2zm6.07 14.225c-.252.708-1.46 1.3-2.014 1.386-.48.074-1.1.137-3.26-.725-2.766-1.102-4.553-3.92-4.69-4.103-.137-.184-1.12-1.488-1.12-2.836 0-1.348.704-2.011.956-2.278.252-.266.55-.333.732-.333.184 0 .367.002.53.01.173.007.408-.067.637.49.23.558.78 1.905.848 2.04.068.136.113.292.022.476-.09.183-.136.299-.272.455-.136.156-.285.35-.408.47-.136.13-.278.272-.12.544.156.27.694 1.146 1.486 1.854.78.7 1.432 1.146 1.704 1.282.272.136.43.116.59-.068.156-.184.68-.79.864-1.062.184-.272.367-.224.62-.13.252.095 1.6.756 1.875.892.274.137.458.204.526.32.068.116.068.674-.184 1.382z" />
-              </svg>
-            </div>
-            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">WhatsApp</span>
-          </button>
-
-          <!-- Facebook -->
-          <button (click)="shareTo('facebook')"
-            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-blue-50 dark:hover:bg-blue-950/20">
-            <div
-              class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center shadow-sm shadow-blue-600/25">
-              <svg class="w-4.5 h-4.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M9.101 23.656v-10.74H6.559V9.835h2.542V7.581c0-2.52 1.584-3.893 3.848-3.893 1.086 0 2.018.081 2.29.117v2.652l-1.571.001c-1.222 0-1.459.581-1.459 1.434v1.943h2.951l-.388 3.081h-2.563v10.74h-2.73z" />
-              </svg>
-            </div>
-            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">Facebook</span>
-          </button>
-
-          <!-- Twitter / X -->
-          <button (click)="shareTo('twitter')"
-            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-slate-100 dark:hover:bg-white/5">
-            <div class="w-10 h-10 rounded-full bg-slate-900 dark:bg-white flex items-center justify-center shadow-sm">
-              <svg class="w-3.5 h-3.5 text-white dark:text-slate-900" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </div>
-            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">X</span>
-          </button>
-
-          <!-- Telegram -->
-          <button (click)="shareTo('telegram')"
-            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-sky-50 dark:hover:bg-sky-950/20">
-            <div class="w-10 h-10 rounded-full bg-sky-500 flex items-center justify-center shadow-sm shadow-sky-500/25">
-              <svg class="w-4.5 h-4.5 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M9.78 18.65l.28-4.23 7.68-6.92c.34-.31-.07-.47-.52-.17l-9.49 5.96-4.11-1.28c-.9-.28-.91-.9.19-1.33L19.38 3c.75-.28 1.4.17 1.15 1.25l-2.65 12.5c-.2 1-.79 1.25-1.63.78l-4.11-3.03-1.98 1.91c-.22.22-.4.41-.82.41z" />
-              </svg>
-            </div>
-            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">Telegram</span>
-          </button>
-
-          <!-- LinkedIn -->
-          <button (click)="shareTo('linkedin')"
-            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-blue-50 dark:hover:bg-blue-950/20">
-            <div
-              class="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center shadow-sm shadow-blue-700/25">
-              <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 24 24">
-                <path
-                  d="M4.98 3.5c0 1.381-1.11 2.5-2.48 2.5s-2.48-1.119-2.48-2.5c0-1.38 1.11-2.5 2.48-2.5s2.48 1.12 2.48 2.5zm.02 4.5h-5v16h5v-16zm7.982 0h-4.968v16h4.969v-8.399c0-4.67 6.029-5.052 6.029 0v8.399h4.988v-10.131c0-7.88-8.922-7.593-11.018-3.714v-2.155z" />
-              </svg>
-            </div>
-            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">LinkedIn</span>
-          </button>
-
-          <!-- Email -->
-          <button (click)="shareTo('email')"
-            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-rose-50 dark:hover:bg-rose-950/20">
-            <div
-              class="w-10 h-10 rounded-full bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center shadow-sm shadow-rose-500/25">
+              class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-sm shadow-indigo-500/25">
               <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">Email</span>
+            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300 truncate w-full text-center">{{
+              customActionLabel }}</span>
+          </button>
+
+          <!-- Social Platforms -->
+          <button *ngFor="let platform of platforms; trackBy: trackByPlatform" (click)="shareTo(platform.id)"
+            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95"
+            [ngClass]="platform.mobileHoverClass">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center shadow-sm"
+              [ngClass]="platform.mobileBgClass">
+              <svg class="w-5 h-5" [ngClass]="platform.mobileIconClass"
+                [attr.fill]="platform.isStroke ? 'none' : 'currentColor'"
+                [attr.stroke]="platform.isStroke ? 'currentColor' : 'none'"
+                [attr.stroke-width]="platform.isStroke ? '2' : null" viewBox="0 0 24 24">
+                <path [attr.d]="platform.svgPath" stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+            </div>
+            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">{{ platform.name }}</span>
           </button>
 
           <!-- Native Share (More) -->
@@ -277,7 +177,6 @@
             </div>
             <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">More</span>
           </button>
-
         </div>
       </div>
 
@@ -287,7 +186,7 @@
         <div class="min-w-0 flex-1">
           <p class="text-[8.5px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">
             Direct Link</p>
-          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{{ getShareData().url }}</p>
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{{ getDisplayUrl() }}</p>
         </div>
         <button (click)="shareTo('copy')"
           class="shrink-0 px-2.5 py-1 bg-white dark:bg-white/5 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-lg shadow-sm border border-amber-200/40 dark:border-amber-500/15 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-all active:scale-95 cursor-pointer">

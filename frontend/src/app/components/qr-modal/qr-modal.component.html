@@ -1,0 +1,32 @@
+<div *ngIf="isOpen"
+  class="fixed inset-0 z-[2000] flex items-center justify-center p-4 no-print animate-[fadeIn_0.2s_ease-out]">
+  <div (click)="onClose()" class="fixed inset-0 bg-slate-900/65 backdrop-blur-xs transition-opacity"></div>
+  <div
+    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative z-10 text-center animate-scale-up">
+    <h3 class="text-sm font-black text-slate-800 dark:text-slate-100 mb-2 tracking-wide uppercase">Scan to Mobile Phone
+    </h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
+      Scan this QR code with your phone camera to instantly load directions, call contacts, or carry this resource
+      on-the-go.
+    </p>
+    <div
+      class="w-48 h-48 mx-auto bg-white border border-slate-150 rounded-lg flex items-center justify-center overflow-hidden mb-4.5 p-0.5 shadow-sm relative">
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoadingImage" class="absolute inset-0 flex flex-col gap-2 items-center justify-center bg-slate-50 dark:bg-slate-900/10 z-10 animate-pulse">
+        <svg class="animate-spin h-6 w-6 text-indigo-600 dark:text-amber-500" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+        <span class="text-[9px] font-black uppercase text-slate-400 dark:text-slate-500 tracking-wider">Generating QR...</span>
+      </div>
+      <img [src]="qrCodeUrl" (load)="onImageLoad()" alt="QR Code" class="w-full h-full object-contain transition-opacity duration-300" [class.opacity-0]="isLoadingImage" />
+    </div>
+    <div class="text-xs font-bold text-blue-600 dark:text-amber-400 mb-5 mt-2 truncate px-2">{{ title }}</div>
+    <button (click)="onClose()"
+      class="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-slate-950 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-lg">
+      Close Window
+    </button>
+  </div>
+</div>

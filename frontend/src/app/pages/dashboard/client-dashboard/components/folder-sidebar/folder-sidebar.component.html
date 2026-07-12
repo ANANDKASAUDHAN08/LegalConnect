@@ -1,8 +1,8 @@
 <!-- DESKTOP SIDEBAR: Collections & Folders Manager (Desktop Only) -->
 <aside id="folders-section" *ngIf="layout === 'desktop'"
-  class="flex flex-col w-full bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-5 shadow-xs h-[550px] overflow-hidden">
+  class="flex flex-col w-full bg-white/70 dark:bg-slate-900/40 border border-slate-200/50 dark:border-white/5 rounded-2xl p-4 shadow-xs h-[600px] overflow-hidden">
   <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/60 mb-3 shrink-0">
-    <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Research Folders</h2>
+    <h2 class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Saved Folders</h2>
   </div>
 
   <!-- Collection items list container -->
@@ -54,17 +54,10 @@
 
     <div class="h-px bg-slate-100 dark:bg-slate-800/80 my-2 mx-1 shrink-0"></div>
 
-    <!-- Folder Management (New Folder Button & Search Bar) (Fixed top) -->
-    <div class="space-y-2 mt-1 mb-3 shrink-0">
-      <!-- Create Folder trigger (below divider) -->
-      <button (click)="onCreateNewFolder()"
-        class="w-full py-2 border border-dashed border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/10 transition-colors rounded-xl text-xs font-bold bg-transparent cursor-pointer active:scale-95 select-none"
-        appTooltip="Create research folder">
-        + New Folder
-      </button>
-
-      <!-- Desktop Sidebar Folder Search (now positioned below divider) -->
-      <div class="relative w-full shrink-0">
+    <!-- Folder Management (New Folder Button & Search Bar in one line) (Fixed top) -->
+    <div class="flex items-center gap-2 mt-1 mb-3 shrink-0">
+      <!-- Desktop Sidebar Folder Search (flex-1) -->
+      <div class="relative flex-1">
         <input type="text" [ngModel]="sidebarFolderSearchQuery" (ngModelChange)="onSearchQueryChange($event)"
           placeholder="Search folders..."
           class="w-full pl-8 pr-3 py-1.5 bg-slate-50 dark:bg-slate-950/45 border border-slate-200 dark:border-slate-800 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 rounded-xl text-xs outline-none text-slate-900 dark:text-white" />
@@ -75,6 +68,13 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
       </div>
+
+      <!-- Create Folder button (compact, shrink-0) -->
+      <button (click)="onCreateNewFolder()"
+        class="px-3 py-1.5 border border-dashed border-slate-200 dark:border-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/40 dark:hover:bg-indigo-950/10 transition-colors rounded-xl text-xs font-bold bg-transparent cursor-pointer active:scale-95 select-none shrink-0"
+        appTooltip="Create research folder">
+        + New
+      </button>
     </div>
 
     <!-- Scrollable Custom Folders list (Scrolls independently!) -->
@@ -108,7 +108,7 @@
           </span>
           <!-- Rename -->
           <button (click)="onRenameFolder(folder, $event)"
-            class="text-slate-700 hover:text-indigo-650 dark:text-slate-200 dark:hover:text-indigo-400 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg bg-transparent border-0 cursor-pointer flex items-center justify-center transition-all"
+            class="text-slate-700 hover:text-indigo-600 dark:text-slate-200 dark:hover:text-indigo-400 p-1.5 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-lg bg-transparent border-0 cursor-pointer flex items-center justify-center transition-all"
             appTooltip="Rename Folder">
             <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
               stroke="currentColor" stroke-width="2.5">
@@ -128,6 +128,53 @@
           </button>
         </div>
       </div>
+    </div>
+
+    <!-- -- SYSTEM DIRECTORIES (Fixed bottom, outside of scrollable list!) -- -->
+    <div class="pt-2 mt-2 border-t border-slate-100 dark:border-slate-800/50 shrink-0">
+      <div
+        class="px-3 py-1 text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider select-none mb-1">
+        System Directories
+      </div>
+      <button (click)="selectCasePacksSystemDirectory()"
+        [class]="activeTab === 'case-packs' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+        class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 cursor-pointer"
+        appTooltip="Go to Case Pack Dossiers">
+        <span class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" class="text-indigo-500 shrink-0">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Case Packs
+        </span>
+        <span
+          class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-200">
+          {{ casePacksCount }}
+        </span>
+      </button>
+      <button (click)="selectSavedContactsSystemDirectory()"
+        [class]="activeTab === 'saved-directory' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+        class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 cursor-pointer mt-1"
+        appTooltip="Go to Saved Directory (Lawyers, Aid, Gov. Offices)">
+        <span class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" class="text-indigo-500 shrink-0">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          Saved Directory
+        </span>
+        <span
+          class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold text-slate-800 dark:text-slate-200">
+          {{ savedContactsCount }}
+        </span>
+      </button>
     </div>
   </div>
 </aside>
@@ -162,7 +209,7 @@
 
     <!-- Folder Search Toggle Trigger -->
     <button *ngIf="!showMobileFolderSearch" (click)="toggleMobileFolderSearch(true)"
-      class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-650 dark:text-slate-350 flex items-center justify-center shrink-0 border-0 cursor-pointer active:scale-95 transition-all"
+      class="w-7 h-7 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 flex items-center justify-center shrink-0 border-0 cursor-pointer active:scale-95 transition-all"
       appTooltip="Search folders">
       <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
         stroke-width="2.5">
@@ -188,6 +235,26 @@
       [class]="selectedCollection === 'Unassigned' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
       class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0">
       General ({{ unassignedCount }})
+    </button>
+    <button (click)="selectCasePacksSystemDirectory()"
+      [class]="activeTab === 'case-packs' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300'"
+      class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0 flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" class="text-indigo-400 shrink-0">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      Case Packs ({{ casePacksCount }})
+    </button>
+    <button (click)="selectSavedContactsSystemDirectory()"
+      [class]="activeTab === 'saved-directory' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300'"
+      class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0 flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" class="text-indigo-400 shrink-0">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+      </svg>
+      Saved Directory ({{ savedContactsCount }})
     </button>
     <button *ngFor="let folder of filteredSidebarFolders; trackBy: trackByFolder" (click)="selectCollection(folder)"
       [class]="selectedCollection === folder ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"

@@ -1,5 +1,5 @@
-import { Component, OnInit, OnDestroy, HostListener, ElementRef, effect, untracked, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { Component, OnInit, OnDestroy, HostListener, ElementRef, effect, untracked, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, Injector, Signal } from '@angular/core';
+import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -7,18 +7,18 @@ import { BookmarkService, Bookmark } from '../../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../../services/auth.service';
 import { LawyerService, Consultation } from '../../../services/lawyer.service';
 import { LegalService } from '../../../services/legal.service';
+import { LocationService } from '../../../services/location.service';
 import { SavedItemsService } from '../../../services/saved-items.service';
 import { SnackbarService } from '../../../services/snackbar.service';
-import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged } from 'rxjs';
+import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged, map, switchMap, catchError, of } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
 import { PromptDialogComponent } from '../../../components/prompt-dialog/prompt-dialog.component';
 import { FolderSidebarComponent } from './components/folder-sidebar/folder-sidebar.component';
-import { BookmarkCardComponent } from './components/bookmark-card/bookmark-card.component';
-import { BookmarkDetailDrawerComponent } from './components/bookmark-detail-drawer/bookmark-detail-drawer.component';
+import { BookmarksTabComponent } from './components/bookmarks-tab/bookmarks-tab.component';
+import { CasePacksTabComponent } from './components/case-packs-tab/case-packs-tab.component';
 import { InquiriesTimelineComponent } from './components/inquiries-timeline/inquiries-timeline.component';
 import { ActsFilterModalComponent } from './components/acts-filter-modal/acts-filter-modal.component';
-import { ShareCitationModalComponent } from './components/share-citation-modal/share-citation-modal.component';
 import { StatCardComponent } from '../../../components/stat-card/stat-card.component';
 import { TooltipDirective } from '../../../directives/tooltip.directive';
 import { LawyerCardComponent } from '../../../components/lawyer-card/lawyer-card.component';
@@ -27,6 +27,9 @@ import { ResourceCardComponent } from '../../find-help/components/resource-card/
 import { DirectoryDetailDrawerComponent } from './components/directory-detail-drawer/directory-detail-drawer.component';
 import { SavedDirectoryTabComponent } from './components/saved-directory-tab/saved-directory-tab.component';
 import { PrintDossierComponent } from './components/print-dossier/print-dossier.component';
+import { CasePackPreviewModalComponent } from '../../find-help/components/case-pack-preview-modal/case-pack-preview-modal.component';
+import { ReaderModeModalComponent } from '../../search/components/reader-modal/reader-modal.component';
+import { QrModalComponent } from '../../../components/qr-modal/qr-modal.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -38,11 +41,11 @@ import { PrintDossierComponent } from './components/print-dossier/print-dossier.
     ConfirmDialogComponent,
     PromptDialogComponent,
     FolderSidebarComponent,
-    BookmarkCardComponent,
-    BookmarkDetailDrawerComponent,
+    BookmarksTabComponent,
+    CasePacksTabComponent,
+    ReaderModeModalComponent,
     InquiriesTimelineComponent,
     ActsFilterModalComponent,
-    ShareCitationModalComponent,
     StatCardComponent,
     TooltipDirective,
     LawyerCardComponent,
@@ -50,91 +53,56 @@ import { PrintDossierComponent } from './components/print-dossier/print-dossier.
     ResourceCardComponent,
     DirectoryDetailDrawerComponent,
     SavedDirectoryTabComponent,
-    PrintDossierComponent
+    PrintDossierComponent,
+    CasePackPreviewModalComponent,
+    QrModalComponent
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ClientDashboardComponent implements OnInit, OnDestroy {
+
   bookmarks$!: Observable<Bookmark[]>;
   bookmarks = toSignal(this.bookmarkService.bookmarks$, { initialValue: [] });
   currentUser = toSignal(this.authService.currentUser$, { initialValue: null });
   inquiries = signal<Consultation[]>([]);
   loadingInquiries = signal(false);
-  activeTab = signal('bookmarks');
+  activeTab = signal<string>('bookmarks');
 
-  // Search input local value for instant binding
-  searchVal = '';
+  // Case Pack Dossiers tab signals
+  savedCasePacks = signal<any[]>([]);
+  loadingCasePacks = signal(false);
+  selectedCasePack = signal<any | null>(null);
+  showRoadmapPreviewModal = signal(false);
+
+  // QR Modal signals
+  showQrModal = signal<boolean>(false);
+  qrModalItem = signal<any>(null);
 
   // Writable Signals for queries
   searchQuery = signal('');
   actFilter = signal('');
-  sortBy = signal('newest');
-  currentPage = signal(1);
-  itemsPerPage = signal(8);
   selectedCollection = signal('All');
 
   allBookmarks = computed(() => this.bookmarks());
-
-  filteredBookmarks = signal<Bookmark[]>([]);
-  totalFilteredItems = signal(0);
-  totalPages = signal(0);
-
-  paginatedBookmarks = computed(() => this.filteredBookmarks());
-
-  showingStart = computed(() => {
-    if (this.totalFilteredItems() === 0) return 0;
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const page = current > total && total > 0 ? 1 : current;
-    return (page - 1) * this.itemsPerPage() + 1;
-  });
-
-  showingEnd = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const page = current > total && total > 0 ? 1 : current;
-    const end = page * this.itemsPerPage();
-    const count = this.totalFilteredItems();
-    return end > count ? count : end;
-  });
-
-  visiblePageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const page = current > total && total > 0 ? 1 : current;
-    if (total <= 5) {
-      const pages = [];
-      for (let i = 1; i <= total; i++) pages.push(i);
-      return pages;
-    } else {
-      const pages: (number | string)[] = [];
-      pages.push(1);
-      const start = Math.max(2, page - 1);
-      const end = Math.min(total - 1, page + 1);
-
-      if (start > 2) pages.push('...');
-      for (let i = start; i <= end; i++) pages.push(i);
-      if (end < total - 1) pages.push('...');
-      pages.push(total);
-      return pages;
-    }
-  });
+  generalBookmarks = computed(() => this.bookmarks());
+  totalCasePacksCount = computed(() => this.savedCasePacks().length);
+  totalSavedContactsCount = computed(() => this.savedLawyersDetails().length + this.savedHelplinesDetails().length + this.savedResourcesDetails().length);
 
   // Statistics signals (computed declarations)
-  totalSavedCount = computed(() => this.allBookmarks().length);
-  unassignedCount = computed(() => this.allBookmarks().filter(b => !b.collectionName || !b.collectionName.trim()).length);
+  totalSavedCount = computed(() => this.allBookmarks().length + this.totalSavedContactsCount());
+  unassignedCount = computed(() => this.generalBookmarks().filter(b => !b.collectionName || !b.collectionName.trim()).length);
 
   distinctActsCount = computed(() => {
     const uniqueActs = new Set<string>();
-    this.allBookmarks().forEach(b => uniqueActs.add(b.actShortName));
+    this.generalBookmarks().forEach(b => uniqueActs.add(b.actShortName));
     return uniqueActs.size;
   });
 
   actsBreakdown = computed(() => {
     const map = new Map<string, number>();
-    this.allBookmarks().forEach(b => {
+    this.generalBookmarks().forEach(b => {
       map.set(b.actShortName, (map.get(b.actShortName) || 0) + 1);
     });
     return Array.from(map.entries())
@@ -150,19 +118,25 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   customCollections = signal<string[]>([]);
   sidebarFolderSearchQuery = signal('');
 
-  // Dropdowns
-  showSortDropdown = signal(false);
-
   // Drawer states
   selectedBookmark = signal<Bookmark | null>(null);
   drawerNoteText = signal('');
   aiSummary = signal('');
   loadingAiSummary = signal(false);
 
+  // Reader Mode Modal
+  showReaderModal = false;
+  readerSection: any = null;
+  lastQuery = '';
+
   // Saved directory details lists
-  savedLawyersDetails = signal<any[]>([]);
-  savedHelplinesDetails = signal<any[]>([]);
-  savedResourcesDetails = signal<any[]>([]);
+  savedLawyersDetails!: Signal<any[]>;
+  savedHelplinesDetails!: Signal<any[]>;
+  savedResourcesDetails!: Signal<any[]>;
+
+  private lawyersCache: any[] = [];
+  private helplinesCache: any[] = [];
+  private resourcesCache: any[] = [];
 
   // Cached directory lists
   private cachedLawyers: any[] | null = null;
@@ -193,7 +167,13 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   customPromptAction: ((val: string) => void) | null = null;
 
   // Page Load state
-  isPageLoading = signal(true);
+  minTimeElapsed = signal(false);
+  isPageLoading = computed(() => {
+    const bookmarksLoaded = this.bookmarkService.initialLoadComplete();
+    const savedItemsLoaded = this.savedItemsService.initialLoadComplete();
+    const timeElapsed = this.minTimeElapsed();
+    return !(bookmarksLoaded && savedItemsLoaded && timeElapsed);
+  });
   isTabLoading = signal(false);
 
   showActsFilterModal = signal(false);
@@ -206,15 +186,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
   set showNewCollectionModal(val: boolean) {
     this._showNewCollectionModal.set(val);
-    this.updateScrollLock();
-  }
-
-  private _showShareModal = signal(false);
-  get showShareModal(): boolean {
-    return this._showShareModal();
-  }
-  set showShareModal(val: boolean) {
-    this._showShareModal.set(val);
     this.updateScrollLock();
   }
 
@@ -248,7 +219,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   private updateScrollLock() {
     if (typeof document !== 'undefined') {
       const lock = this.showNewCollectionModal ||
-        this.showShareModal ||
         this.drawerOpen ||
         this.directoryDrawerOpen() ||
         this.customConfirmOpen ||
@@ -280,12 +250,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   private sub = new Subscription();
   private summarySub: Subscription | null = null;
   private notesSubject = new Subject<string>();
-  private searchSubject = new Subject<string>();
-
-  @HostListener('document:click')
-  clickout() {
-    this.showSortDropdown.set(false);
-  }
 
   constructor(
     public bookmarkService: BookmarkService,
@@ -294,20 +258,126 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private legalService: LegalService,
     private snackbarService: SnackbarService,
     public savedItemsService: SavedItemsService,
+    private locationService: LocationService,
     private route: ActivatedRoute,
     private eRef: ElementRef,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private injector: Injector
   ) {
-    // Effect 1: React to saved-items list changes; use untracked() for detail cache reads
-    // to avoid re-triggering when the cache itself is updated.
-    effect(() => {
-      // Track only the saved IDs lists as reactive dependencies
-      const savedLawyers = this.savedItemsService.savedLawyers();
-      const savedHelplines = this.savedItemsService.savedHelplines();
-      const savedResources = this.savedItemsService.savedResources();
+    this.savedLawyersDetails = toSignal(
+      toObservable(this.savedItemsService.savedLawyers).pipe(
+        map(list => list.map(l => l.lawyerId)),
+        distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+        switchMap(ids => {
+          if (ids.length === 0) {
+            this.lawyersCache = [];
+            return of([]);
+          }
+          const hasNewLawyer = ids.some(id => !this.lawyersCache.some(l => l._id === id));
+          const isListSmaller = ids.length < this.lawyersCache.length;
 
-      // All reads of detail caches + writes happen in untracked to prevent loop
-      untracked(() => this.loadSavedDirectoryDetails());
+          if (isListSmaller) {
+            const set = new Set(ids);
+            this.lawyersCache = this.lawyersCache.filter(l => set.has(l._id));
+            return of(this.lawyersCache);
+          } else if (hasNewLawyer) {
+            return this.lawyerService.getLawyersByIds(ids).pipe(
+              map(res => {
+                if (res.success && res.data) {
+                  this.lawyersCache = res.data;
+                }
+                return this.lawyersCache;
+              }),
+              catchError(() => of(this.lawyersCache))
+            );
+          } else {
+            return of(this.lawyersCache);
+          }
+        })
+      ),
+      { initialValue: [] }
+    );
+
+    this.savedHelplinesDetails = toSignal(
+      toObservable(this.savedItemsService.savedHelplines).pipe(
+        map(list => list.map(h => h.helplineId)),
+        distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+        switchMap(ids => {
+          if (ids.length === 0) {
+            this.helplinesCache = [];
+            return of([]);
+          }
+          const hasNewHelpline = ids.some(id => !this.helplinesCache.some(h => h._id === id));
+          const isListSmaller = ids.length < this.helplinesCache.length;
+
+          if (isListSmaller) {
+            const set = new Set(ids);
+            this.helplinesCache = this.helplinesCache.filter(h => set.has(h._id));
+            return of(this.helplinesCache);
+          } else if (hasNewHelpline) {
+            return this.legalService.getHelplinesByIds(ids).pipe(
+              map(res => {
+                if (res && res.success && res.data) {
+                  this.helplinesCache = res.data;
+                }
+                return this.helplinesCache;
+              }),
+              catchError(() => of(this.helplinesCache))
+            );
+          } else {
+            return of(this.helplinesCache);
+          }
+        })
+      ),
+      { initialValue: [] }
+    );
+
+    this.savedResourcesDetails = toSignal(
+      toObservable(this.savedItemsService.savedResources).pipe(
+        map(list => list.map(r => r.resourceId)),
+        distinctUntilChanged((a, b) => JSON.stringify(a) === JSON.stringify(b)),
+        switchMap(ids => {
+          if (ids.length === 0) {
+            this.resourcesCache = [];
+            return of([]);
+          }
+          const hasNewResource = ids.some(id => !this.resourcesCache.some(r => r._id === id));
+          const isListSmaller = ids.length < this.resourcesCache.length;
+
+          if (isListSmaller) {
+            const set = new Set(ids);
+            this.resourcesCache = this.resourcesCache.filter(r => set.has(r._id));
+            return of(this.resourcesCache);
+          } else if (hasNewResource) {
+            return this.legalService.getResourcesByIds(ids).pipe(
+              map(res => {
+                if (res && res.success && res.data) {
+                  this.resourcesCache = res.data;
+                }
+                return this.resourcesCache;
+              }),
+              catchError(() => of(this.resourcesCache))
+            );
+          } else {
+            return of(this.resourcesCache);
+          }
+        })
+      ),
+      { initialValue: [] }
+    );
+
+    // Effect 1: Synchronize the directory detail drawer with the latest loaded directory collections
+    effect(() => {
+      if (this.directoryDrawerOpen() && Array.isArray(this.directoryDrawerData())) {
+        const type = this.directoryDrawerType();
+        if (type === 'lawyer') {
+          this.directoryDrawerData.set(this.savedLawyersDetails());
+        } else if (type === 'helpline') {
+          this.directoryDrawerData.set(this.savedHelplinesDetails());
+        } else if (type === 'resource') {
+          this.directoryDrawerData.set(this.savedResourcesDetails());
+        }
+      }
     });
 
     // Effect 2: Sync drawer's bookmark reference when bookmarks array changes.
@@ -329,25 +399,11 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       this.currentUser();
       untracked(() => this.loadCustomCollections());
     });
-
-    // Effect 4: Reload paginated bookmark page whenever any filter/sort/page changes.
-    effect(() => {
-      // Explicitly track all dependencies
-      this.bookmarks();
-      this.selectedCollection();
-      this.actFilter();
-      this.searchQuery();
-      this.sortBy();
-      this.currentPage();
-      this.itemsPerPage();
-
-      // Run in untracked so internal signal writes don't re-trigger this effect
-      untracked(() => this.loadPaginatedBookmarks());
-    });
   }
 
   ngOnInit() {
     this.bookmarks$ = this.bookmarkService.bookmarks$;
+
 
     // Debounce note saving to optimize database/network writes
     this.sub.add(
@@ -359,33 +415,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Debounce search query to optimize UI rendering performance on fast typing
-    this.sub.add(
-      this.searchSubject.pipe(
-        debounceTime(300),
-        distinctUntilChanged()
-      ).subscribe((val) => {
-        this.currentPage.set(1);
-        this.actFilter.set('');
-        this.searchQuery.set(val);
-      })
-    );
-
-    // ── Skeleton Loader gating
-    this.isPageLoading.set(true);
-    let authResolved = false;
-    let minTimeElapsed = false;
-
-    const tryHideSkeleton = () => {
-      if (authResolved && minTimeElapsed) {
-        this.isPageLoading.set(false);
-      }
-    };
-
+    // ── Skeleton Loader gating (minimum timer)
     setTimeout(() => {
-      minTimeElapsed = true;
-      tryHideSkeleton();
-    }, 500);
+      this.minTimeElapsed.set(true);
+    }, 600);
 
     // Support switching tab if query param matches
     this.sub.add(
@@ -396,14 +429,13 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       })
     );
 
-    // Gate 2: auth resolved
+    // Load inquiries and synced case packs once user resolves
     this.sub.add(
       this.authService.currentUser$.subscribe(user => {
         if (user) {
           this.loadInquiries();
+          this.loadSyncedCasePacks();
         }
-        authResolved = true;
-        tryHideSkeleton();
       })
     );
 
@@ -442,28 +474,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     }, delayMs);
   }
 
-  setPage(page: number | string) {
-    if (typeof page === 'string') return;
-    const total = this.totalPages();
-    if (page >= 1 && page <= total) {
-      this.currentPage.set(page);
-      if (typeof window !== 'undefined') {
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      }
-    }
-  }
-
-  onSearchChanged(val: string) {
-    this.searchVal = val;
-    this.searchSubject.next(val);
-  }
 
   // ── Stats Card Click Handlers ────────────────────────────────────────────────
   onCardClick(card: 'saved' | 'collections' | 'acts' | 'inquiries') {
     if (card === 'saved') {
       this.activeTab.set('bookmarks');
       this.selectedCollection.set('All');
-      this.searchVal = '';
       this.searchQuery.set('');
       this.actFilter.set('');
       this.scrollToContent();
@@ -496,16 +512,13 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.updateScrollLock();
     this.activeTab.set('bookmarks');
     this.selectedCollection.set('All');
-    this.searchVal = '';
     this.searchQuery.set('');
     this.actFilter.set(actName);
-    this.currentPage.set(1);
     this.scrollToContent(180);
   }
 
   clearActFilter() {
     this.actFilter.set('');
-    this.currentPage.set(1);
   }
 
   closeActsModal() {
@@ -524,6 +537,202 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         this.loadingInquiries.set(false);
       }
     });
+  }
+
+  loadSyncedCasePacks() {
+    this.loadingCasePacks.set(true);
+
+    const localPacks: any[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('offline_casepack_')) {
+            const val = localStorage.getItem(key);
+            if (val) {
+              localPacks.push(JSON.parse(val));
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Error reading offline case packs:', e);
+      }
+    }
+
+    if (localPacks.length > 0 && typeof navigator !== 'undefined' && navigator.onLine) {
+      this.legalService.syncCasePacks(localPacks).subscribe({
+        next: () => {
+          // Do not delete local items so they remain available offline.
+          // Just fetch the latest server-synced list.
+          this.fetchSyncedCasePacksFromServer(localPacks);
+        },
+        error: () => {
+          this.fetchSyncedCasePacksFromServer(localPacks);
+        }
+      });
+    } else {
+      this.fetchSyncedCasePacksFromServer(localPacks);
+    }
+  }
+
+  fetchSyncedCasePacksFromServer(localFallback: any[] = []) {
+    if (typeof navigator !== 'undefined' && !navigator.onLine) {
+      // Offline mode: directly use local storage case packs
+      this.savedCasePacks.set(localFallback);
+      this.loadingCasePacks.set(false);
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.legalService.getSyncedCasePacks().subscribe({
+      next: (res) => {
+        if (res && res.success && res.data) {
+          const serverPacks = res.data || [];
+          const merged = [...serverPacks];
+          localFallback.forEach(local => {
+            const exists = serverPacks.some((s: any) =>
+              s.category === local.category && s.location === local.location
+            );
+            if (!exists) {
+              merged.push(local);
+            }
+          });
+          this.savedCasePacks.set(merged);
+        } else {
+          this.savedCasePacks.set(localFallback);
+        }
+        this.loadingCasePacks.set(false);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.savedCasePacks.set(localFallback);
+        this.loadingCasePacks.set(false);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  deleteCasePack(pack: any) {
+    this.openCustomConfirm(
+      'Delete Case Pack',
+      'Are you sure you want to permanently delete this Case Pack roadmap?',
+      'danger',
+      () => {
+        // Always clean up from local storage if present
+        if (typeof window !== 'undefined') {
+          try {
+            const key = `offline_casepack_${pack.category.toLowerCase()}_${this.locationService.cleanAddress(pack.location).toLowerCase()}`;
+            localStorage.removeItem(key);
+          } catch (e) { }
+        }
+
+        if (pack._id) {
+          this.legalService.deleteCasePack(pack._id).subscribe({
+            next: (res) => {
+              if (res && res.success) {
+                this.savedCasePacks.update(packs => packs.filter(p => p._id !== pack._id));
+                this.snackbarService.show('Case Pack successfully deleted.', 'success');
+              } else {
+                this.snackbarService.show('Failed to delete Case Pack.', 'error');
+              }
+            },
+            error: () => {
+              this.snackbarService.show('Failed to delete Case Pack. Backend server error.', 'error');
+            }
+          });
+        } else {
+          this.savedCasePacks.update(packs => packs.filter(p =>
+            !(p.category === pack.category && p.location === pack.location)
+          ));
+          this.snackbarService.show('Offline Case Pack successfully deleted.', 'success');
+        }
+      }
+    );
+  }
+
+  openRoadmapPreview(pack: any) {
+    this.selectedCasePack.set(pack);
+    this.showRoadmapPreviewModal.set(true);
+  }
+
+  closeRoadmapPreview() {
+    this.showRoadmapPreviewModal.set(false);
+    this.selectedCasePack.set(null);
+  }
+
+  triggerPrintDownload() {
+    const pack = this.selectedCasePack();
+    if (!pack) return;
+    this.showRoadmapPreviewModal.set(false);
+
+    setTimeout(() => {
+      this.executePrintProcess(pack);
+    }, 300);
+  }
+
+  executePrintProcess(pack: any) {
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.snackbarService.show('Please allow popups to download report.', 'error');
+      return;
+    }
+
+    const documentChecklistHtml = (pack.roadmap?.documents || []).map((d: string) => `<li>[ ] ${d}</li>`).join('');
+    const actionStepsHtml = (pack.roadmap?.steps || []).map((s: any, i: number) => `
+      <div style="margin-bottom: 15px;">
+        <b style="color: #1e3a8a;">Step ${i + 1}: ${s.title}</b>
+        <p style="margin: 4px 0 0 0; color: #475569; font-size: 13px;">${s.detail}</p>
+      </div>
+    `).join('');
+
+    const resourceCardsHtml = (pack.resources || []).slice(0, 5).map((res: any) => `
+      <div style="border-bottom: 1px solid #e2e8f0; padding: 10px 0;">
+        <b style="font-size: 14px;">${res.name} (${res.type})</b>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">${res.address}</p>
+        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Phone: ${res.contactNumber || 'N/A'} | Hours: ${res.operatingHours}</p>
+      </div>
+    `).join('');
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>LegalConnect Case Pack - ${pack.category}</title>
+          <style>
+            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 20px; }
+            h1 { color: #1e3a8a; margin: 0; font-size: 24px; }
+            h2 { color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-top: 30px; font-size: 18px; }
+            ul { padding-left: 20px; }
+            li { margin-bottom: 8px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>LegalConnect Case Pack Dossier</h1>
+            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">
+              Category: <b>${pack.category}</b> | Location: <b>${pack.location}</b> | Exported: ${new Date().toLocaleDateString()}
+            </p>
+          </div>
+          
+          <h2>📋 Mandatory Document Checklist</h2>
+          <ul>${documentChecklistHtml || '<li>No specific documents registered.</li>'}</ul>
+
+          <h2>⚖️ Procedural Action Steps</h2>
+          ${actionStepsHtml || '<p>No procedural roadmap steps registered.</p>'}
+
+          <h2>📍 Local Legal Authorities & Help Centers</h2>
+          ${resourceCardsHtml || '<p>No local authorities registered.</p>'}
+
+          <script>
+            window.onload = function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
   }
 
   removeBookmark(actId: string, secNum: string) {
@@ -545,13 +754,24 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     const user = this.currentUser();
     const key = user ? `legalconnect_custom_folders_${user.email}` : `legalconnect_custom_folders_guest`;
     const saved = localStorage.getItem(key);
-    const localFolders: string[] = saved ? JSON.parse(saved) : [];
+    let localFolders: string[] = saved ? JSON.parse(saved) : [];
+
+    // Filter out "Case Packs" and "Saved Directory" to avoid confusion with System Directories
+    const reservedNames = ['Case Packs', 'Saved Directory'];
+    localFolders = localFolders.filter(f => !reservedNames.some(res => res.toLowerCase() === f.toLowerCase()));
 
     const activeFolders = this.allBookmarks()
       .map(b => b.collectionName)
-      .filter((name): name is string => !!name && name.trim().length > 0);
+      .filter((name): name is string =>
+        !!name &&
+        name.trim().length > 0 &&
+        !reservedNames.some(res => res.toLowerCase() === name.toLowerCase())
+      );
 
-    this.customCollections.set(Array.from(new Set([...localFolders, ...activeFolders])).sort());
+    this.customCollections.set(
+      Array.from(new Set([...localFolders, ...activeFolders]))
+        .sort()
+    );
     this.saveCustomCollections();
   }
 
@@ -564,6 +784,13 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   createCollection() {
     const folder = this.newCollectionName().trim();
     if (!folder) return;
+
+    // Block system-reserved folder names
+    const reservedNames = ['Case Packs', 'Saved Directory', 'All', 'General Reference', 'Unassigned'];
+    if (reservedNames.some(name => name.toLowerCase() === folder.toLowerCase())) {
+      this.snackbarService.show(`"${folder}" is a system-reserved directory name.`, 'warning');
+      return;
+    }
 
     if (this.customCollections().includes(folder)) {
       this.snackbarService.show('Research folder already exists.', 'warning');
@@ -591,6 +818,14 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         if (!newName || !newName.trim() || newName.trim() === oldName) return;
 
         const cleanNewName = newName.trim();
+
+        // Block system-reserved folder names
+        const reservedNames = ['Case Packs', 'Saved Directory', 'All', 'General Reference', 'Unassigned'];
+        if (reservedNames.some(name => name.toLowerCase() === cleanNewName.toLowerCase())) {
+          this.snackbarService.show(`"${cleanNewName}" is a system-reserved directory name.`, 'warning');
+          return;
+        }
+
         if (this.customCollections().includes(cleanNewName)) {
           this.snackbarService.show('A folder with this name already exists.', 'warning');
           return;
@@ -702,19 +937,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  getSortLabel(val: string): string {
-    if (val === 'newest') return 'Recently Saved';
-    if (val === 'oldest') return 'Oldest Saved';
-    if (val === 'sectionAsc') return 'Section No (Asc)';
-    if (val === 'sectionDesc') return 'Section No (Desc)';
-    return 'Recently Saved';
-  }
 
-  selectSort(val: string) {
-    this.sortBy.set(val);
-    this.showSortDropdown.set(false);
-    this.currentPage.set(1);
-  }
 
   // Move / Organize bookmark folder
   moveBookmarkToCollection(bm: Bookmark, collectionName: string, event?: Event) {
@@ -754,6 +977,35 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         this.aiSummary.set('');
       }
     }, 400);
+  }
+
+  openReaderMode(bookmark: Bookmark) {
+    this.selectedBookmark.set(bookmark);
+    this.readerSection = {
+      shortName: bookmark.actShortName,
+      chapterNumber: bookmark.chapterNumber,
+      section_number: bookmark.section.section_number,
+      title: bookmark.section.title,
+      title_hi: bookmark.section.title_hi,
+      content: bookmark.section.content,
+      content_hi: bookmark.section.content_hi,
+      aiSummary: bookmark.section.aiSummary
+    };
+    this.showReaderModal = true;
+  }
+
+  closeReaderMode() {
+    this.showReaderModal = false;
+    this.selectedBookmark.set(null);
+  }
+
+  onNotesChangedInReader(event: { bookmark: Bookmark, notes: string }) {
+    this.bookmarkService.updateBookmarkMetadata(event.bookmark.actShortName, event.bookmark.section.section_number, event.notes, event.bookmark.collectionName);
+  }
+
+  onFolderAssignedInReader(event: { bookmark: Bookmark, folder: string }) {
+    const target = event.folder === 'Unassigned' || !event.folder ? undefined : event.folder;
+    this.bookmarkService.updateBookmarkMetadata(event.bookmark.actShortName, event.bookmark.section.section_number, event.bookmark.notes, target);
   }
 
   // Save notes to cloud/db
@@ -837,33 +1089,6 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  // Share with Lawyer Modal
-  openShareModal(bm: Bookmark, event?: Event) {
-    if (event) {
-      event.stopPropagation();
-    }
-    this.bookmarkToShare.set(bm);
-    this.showShareModal = true;
-  }
-
-  shareWithSelectedLawyer(lawyer: Consultation) {
-    const bm = this.bookmarkToShare();
-    if (!bm) return;
-    const noteText = bm.notes ? `\n\nClient Notes: "${bm.notes}"` : '';
-    const shareText = `Hello Advocate, here is a legal section from my saved library reference:
-${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}
-
-"${bm.section.content}"${noteText}`;
-
-    navigator.clipboard.writeText(shareText).then(() => {
-      this.snackbarService.show(`Copied reference citation for ${lawyer.lawyerName || 'Advocate'} to clipboard.`, 'success');
-    }).catch(() => {
-      this.snackbarService.show('Failed to copy sharing text.', 'error');
-    });
-    this.showShareModal = false;
-    this.bookmarkToShare.set(null);
-  }
-
   triggerPrint(collectionName: string) {
     this.printCollectionName = collectionName;
     this.printDate = new Date();
@@ -881,10 +1106,6 @@ ${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}
     }, 150);
   }
 
-  trackByBookmark(index: number, item: Bookmark): string {
-    return `${item.actShortName}_${item.section.section_number}`;
-  }
-
   trackByInquiry(index: number, item: Consultation): number {
     return item.id;
   }
@@ -893,14 +1114,11 @@ ${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}
     return item._id || index.toString();
   }
 
-  trackByPage(index: number, item: any): string {
-    return item.toString();
-  }
-
   setActiveTab(tab: string) {
     if (this.activeTab() === tab) return;
     this.isTabLoading.set(true);
     this.activeTab.set(tab);
+    this.scrollToTabs();
 
     // If actual backend reloading is needed, trigger it here:
     if (tab === 'inquiries') {
@@ -913,186 +1131,19 @@ ${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}
     }, 1000);
   }
 
-  loadSavedDirectoryDetails() {
-    const savedLawyersList = this.savedItemsService.savedLawyers();
-    const savedLawyerIds = savedLawyersList.map(l => l.lawyerId);
-
-    // Check if we need to fetch or filter
-    const hasNewLawyer = savedLawyerIds.some(id => !this.savedLawyersDetails().some(l => l._id === id));
-    const isLawyerListSmaller = savedLawyerIds.length < this.savedLawyersDetails().length;
-
-    if (isLawyerListSmaller) {
-      const set = new Set(savedLawyerIds);
-      this.savedLawyersDetails.update(list => list.filter(l => set.has(l._id)));
-      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'lawyer' && Array.isArray(this.directoryDrawerData())) {
-        this.directoryDrawerData.set(this.savedLawyersDetails());
-      }
-    } else if (hasNewLawyer && savedLawyerIds.length > 0) {
-      this.lawyerService.getLawyersByIds(savedLawyerIds).subscribe({
-        next: (res) => {
-          if (res.success && res.data) {
-            this.savedLawyersDetails.set(res.data);
-            if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'lawyer' && Array.isArray(this.directoryDrawerData())) {
-              this.directoryDrawerData.set(this.savedLawyersDetails());
-            }
-          }
-        }
-      });
-    } else if (savedLawyerIds.length === 0) {
-      this.savedLawyersDetails.set([]);
-      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'lawyer' && Array.isArray(this.directoryDrawerData())) {
-        this.directoryDrawerData.set([]);
-      }
-    }
-
-    const savedHelplinesList = this.savedItemsService.savedHelplines();
-    const savedHelplineIds = savedHelplinesList.map(h => h.helplineId);
-
-    const hasNewHelpline = savedHelplineIds.some(id => !this.savedHelplinesDetails().some(h => h._id === id));
-    const isHelplineListSmaller = savedHelplineIds.length < this.savedHelplinesDetails().length;
-
-    if (isHelplineListSmaller) {
-      const set = new Set(savedHelplineIds);
-      this.savedHelplinesDetails.update(list => list.filter(h => set.has(h._id)));
-      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'helpline' && Array.isArray(this.directoryDrawerData())) {
-        this.directoryDrawerData.set(this.savedHelplinesDetails());
-      }
-    } else if (hasNewHelpline && savedHelplineIds.length > 0) {
-      this.legalService.getHelplinesByIds(savedHelplineIds).subscribe({
-        next: (res) => {
-          if (res && res.success && res.data) {
-            this.savedHelplinesDetails.set(res.data);
-            if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'helpline' && Array.isArray(this.directoryDrawerData())) {
-              this.directoryDrawerData.set(this.savedHelplinesDetails());
-            }
-          }
-        }
-      });
-    } else if (savedHelplineIds.length === 0) {
-      this.savedHelplinesDetails.set([]);
-      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'helpline' && Array.isArray(this.directoryDrawerData())) {
-        this.directoryDrawerData.set([]);
-      }
-    }
-
-    const savedResourcesList = this.savedItemsService.savedResources();
-    const savedResourceIds = savedResourcesList.map(r => r.resourceId);
-
-    const hasNewResource = savedResourceIds.some(id => !this.savedResourcesDetails().some(r => r._id === id));
-    const isResourceListSmaller = savedResourceIds.length < this.savedResourcesDetails().length;
-
-    if (isResourceListSmaller) {
-      const set = new Set(savedResourceIds);
-      this.savedResourcesDetails.update(list => list.filter(r => set.has(r._id)));
-      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'resource' && Array.isArray(this.directoryDrawerData())) {
-        this.directoryDrawerData.set(this.savedResourcesDetails());
-      }
-    } else if (hasNewResource && savedResourceIds.length > 0) {
-      this.legalService.getResourcesByIds(savedResourceIds).subscribe({
-        next: (res) => {
-          if (res && res.success && res.data) {
-            this.savedResourcesDetails.set(res.data);
-            if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'resource' && Array.isArray(this.directoryDrawerData())) {
-              this.directoryDrawerData.set(this.savedResourcesDetails());
-            }
-          }
-        }
-      });
-    } else if (savedResourceIds.length === 0) {
-      this.savedResourcesDetails.set([]);
-      if (this.directoryDrawerOpen() && this.directoryDrawerType() === 'resource' && Array.isArray(this.directoryDrawerData())) {
-        this.directoryDrawerData.set([]);
-      }
-    }
+  selectCollectionFromSidebar(collection: string) {
+    this.selectedCollection.set(collection);
+    this.setActiveTab('bookmarks');
+    this.scrollToTabs();
   }
 
-  loadPaginatedBookmarks() {
-    const runClientSidePagination = () => {
-      let list = [...this.bookmarks()];
-
-      // 1. Collection Name filter
-      const folder = this.selectedCollection();
-      if (folder && folder !== 'All') {
-        if (folder === 'Unassigned') {
-          list = list.filter(b => !b.collectionName || !b.collectionName.trim());
-        } else {
-          list = list.filter(b => b.collectionName === folder);
-        }
+  private scrollToTabs() {
+    setTimeout(() => {
+      const tabsEl = document.getElementById('dashboard-tabs');
+      if (tabsEl) {
+        tabsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-
-      // 2. Act filter
-      const act = this.actFilter();
-      if (act) {
-        list = list.filter(b => b.actShortName === act);
-      }
-
-      // 3. Search query filter
-      const search = this.searchQuery()?.toLowerCase();
-      if (search) {
-        list = list.filter(b =>
-          b.actShortName.toLowerCase().includes(search) ||
-          b.section.section_number.toLowerCase().includes(search) ||
-          b.section.title.toLowerCase().includes(search) ||
-          b.section.content.toLowerCase().includes(search) ||
-          (b.notes && b.notes.toLowerCase().includes(search))
-        );
-      }
-
-      // 4. Sort order
-      const sort = this.sortBy();
-      if (sort === 'oldest') {
-        list.sort((a, b) => a.savedAt - b.savedAt);
-      } else if (sort === 'sectionAsc') {
-        list.sort((a, b) => a.section.section_number.localeCompare(b.section.section_number, undefined, { numeric: true, sensitivity: 'base' }));
-      } else if (sort === 'sectionDesc') {
-        list.sort((a, b) => b.section.section_number.localeCompare(a.section.section_number, undefined, { numeric: true, sensitivity: 'base' }));
-      } else {
-        // newest
-        list.sort((a, b) => b.savedAt - a.savedAt);
-      }
-
-      const total = list.length;
-      const size = this.itemsPerPage();
-      const pages = Math.ceil(total / size);
-      const page = this.currentPage();
-      const skip = (page - 1) * size;
-      const paginated = list.slice(skip, skip + size);
-
-      this.filteredBookmarks.set(paginated);
-      this.totalFilteredItems.set(total);
-      this.totalPages.set(pages);
-      this.isTabLoading.set(false);
-    };
-
-    const user = this.currentUser();
-    if (!user) {
-      runClientSidePagination();
-      return;
-    }
-
-    this.isTabLoading.set(true);
-    this.bookmarkService.getPaginatedBookmarks({
-      collectionName: this.selectedCollection(),
-      actFilter: this.actFilter(),
-      searchQuery: this.searchQuery(),
-      sortBy: this.sortBy(),
-      page: this.currentPage(),
-      pageSize: this.itemsPerPage()
-    }).subscribe({
-      next: (res) => {
-        this.isTabLoading.set(false);
-        if (res.success && res.data) {
-          this.filteredBookmarks.set(res.data);
-          this.totalFilteredItems.set(res.pagination.totalItems);
-          this.totalPages.set(res.pagination.totalPages);
-        } else {
-          runClientSidePagination();
-        }
-      },
-      error: () => {
-        runClientSidePagination();
-      }
-    });
+    }, 100);
   }
 
   openDirectoryDrawer(type: 'lawyer' | 'resource' | 'helpline', data: any) {
@@ -1100,6 +1151,16 @@ ${bm.actShortName} Section ${bm.section.section_number}: ${bm.section.title}
     this.directoryDrawerData.set(data);
     this.directoryDrawerOpen.set(true);
     this.updateScrollLock();
+  }
+
+  openQrModal(item: any) {
+    this.qrModalItem.set(item);
+    this.showQrModal.set(true);
+  }
+
+  closeQrModal() {
+    this.showQrModal.set(false);
+    this.qrModalItem.set(null);
   }
 
   closeDirectoryDrawer() {
