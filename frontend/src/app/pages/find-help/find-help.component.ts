@@ -18,6 +18,7 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 import { LegalService, Category } from '../../services/legal.service';
 import { LocationService } from '../../services/location.service';
 import { AuthService } from '../../services/auth.service';
+import { SnackbarService } from '../../services/snackbar.service';
 
 // Dialog / Helper Components
 import { SosDrawerComponent } from './components/sos-drawer/sos-drawer.component';
@@ -141,7 +142,8 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     private zone: NgZone,
     private legalService: LegalService,
     private locationService: LocationService,
-    private authService: AuthService
+    private authService: AuthService,
+    private snackbarService: SnackbarService
   ) {
     // Set debouncer for quick category suggestions autocomplete
     this.searchInput$.pipe(
@@ -274,7 +276,12 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   loadCategories() {
-    this.legalService.getHelpCategories(this.locationService.cleanAddress(this.locationQuery)).subscribe({
+    const coords = this.locationService.getCoordinates();
+    this.legalService.getHelpCategories(
+      this.locationService.cleanAddress(this.locationQuery),
+      coords?.lat,
+      coords?.lng
+    ).subscribe({
       next: (res) => {
         if (res && res.success) {
           this.categories = res.data || [];
@@ -348,16 +355,16 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     // Deprecated in favor of the clean modular search bar locations confirmation, no-op
   }
 
-  triggerSearch() {
+  triggerSearch(lat?: number, lng?: number) {
     const query = this.locationQuery.trim();
     if (!query) {
       this.locationQuery = 'New Delhi';
-      this.executeSearch();
+      this.executeSearch(lat, lng);
       return;
     }
 
     if (query.includes(',')) {
-      this.executeSearch();
+      this.executeSearch(lat, lng);
       return;
     }
 
@@ -367,18 +374,18 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
         this.zone.run(() => {
           if (status === 'OK' && results[0]) {
             this.locationQuery = results[0].formatted_address;
-            this.locationService.setLocation(this.locationQuery, false);
+            this.locationService.setLocation(this.locationQuery, false, lat && lng ? { lat, lng } : null);
           }
-          this.executeSearch();
+          this.executeSearch(lat, lng);
         });
       });
     } else {
-      this.locationService.setLocation(this.locationQuery, false);
-      this.executeSearch();
+      this.locationService.setLocation(this.locationQuery, false, lat && lng ? { lat, lng } : null);
+      this.executeSearch(lat, lng);
     }
   }
 
-  private executeSearch() {
+  private executeSearch(lat?: number, lng?: number) {
     this.isResultsMode = true;
 
     // Save search inputs
@@ -390,7 +397,9 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
       relativeTo: this.route,
       queryParams: {
         category: this.activeCategory,
-        location: this.locationQuery
+        location: this.locationQuery,
+        lat: lat || null,
+        lng: lng || null
       },
       queryParamsHandling: 'merge'
     });
@@ -447,15 +456,15 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
                   } else {
                     this.locationQuery = 'New Delhi';
                   }
-                  this.locationService.setLocation(this.locationQuery, false);
-                  this.triggerSearch();
+                  this.locationService.setLocation(this.locationQuery, false, { lat, lng });
+                  this.triggerSearch(lat, lng);
                   this.cdr.markForCheck();
                 });
               });
             } else {
               this.locationQuery = 'New Delhi';
-              this.locationService.setLocation(this.locationQuery, false);
-              this.triggerSearch();
+              this.locationService.setLocation(this.locationQuery, false, { lat, lng });
+              this.triggerSearch(lat, lng);
               this.cdr.markForCheck();
             }
           });
@@ -465,7 +474,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
         }
       );
     } else {
-      alert('Geolocation is not supported by your browser.');
+      this.snackbarService.show('Geolocation is not supported by your browser.', 'error');
     }
   }
 
@@ -479,9 +488,9 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  onMapLocationConfirmed(address: string) {
+  onMapLocationConfirmed(event: { address: string; lat: number; lng: number }) {
     this.showMapModal = false;
-    this.locationService.setLocation(address, false);
+    this.locationService.setLocation(event.address, false, { lat: event.lat, lng: event.lng });
     this.cdr.markForCheck();
   }
 
@@ -744,7 +753,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleVoiceRecording() {
     if (!this.recognition) {
-      alert('Voice speech recognition is not supported in this browser. Try Chrome or Safari.');
+      this.snackbarService.show('Voice speech recognition is not supported in this browser. Try Chrome or Safari.', 'info');
       return;
     }
 

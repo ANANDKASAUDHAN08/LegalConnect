@@ -32,6 +32,7 @@ import { LawyerCardComponent } from '../../../../components/lawyer-card/lawyer-c
 import { FreeAidCheckerComponent } from '../free-aid-checker/free-aid-checker.component';
 import { LegalRoadmapComponent } from '../legal-roadmap/legal-roadmap.component';
 import { LegalAuthoritiesHubComponent } from '../legal-authorities-hub/legal-authorities-hub.component';
+import { QrModalComponent } from '../../../../components/qr-modal/qr-modal.component';
 
 // Directives & Pipes
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
@@ -58,7 +59,8 @@ declare var google: any;
     LegalRoadmapComponent,
     LegalAuthoritiesHubComponent,
     TooltipDirective,
-    CategoryInsightsPipe
+    CategoryInsightsPipe,
+    QrModalComponent
   ],
   templateUrl: './results-view.component.html',
   styleUrls: ['./results-view.component.scss'],
@@ -152,8 +154,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
 
   // QR Modal
   showQrModal = false;
-  qrCodeUrl = '';
-  qrModalTitle = '';
+  qrModalItem: any = null;
 
   // Free Aid Modal
   showFreeAidModal = false;
@@ -295,6 +296,17 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   ngOnInit() {
     this.checkMobile();
     this.syncFiltersFromUrl();
+
+    // Initialize user GPS coordinates and map center from URL or LocationService
+    const queryParams = this.route.snapshot.queryParams;
+    const serviceCoords = this.locationService.getCoordinates();
+    const lat = queryParams['lat'] ? Number(queryParams['lat']) : (serviceCoords ? serviceCoords.lat : null);
+    const lng = queryParams['lng'] ? Number(queryParams['lng']) : (serviceCoords ? serviceCoords.lng : null);
+    if (lat && lng) {
+      this.userGpsLat = lat;
+      this.userGpsLng = lng;
+      this.mapCenter = [lat, lng];
+    }
 
     // Sync allSLSA authorities once for the cross-picker
     this.legalService.getAllAuthorities().subscribe((res: any) => {
@@ -446,7 +458,20 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     }
 
     const state = this.extractState(this.locationQuery);
-    this.legalService.getHelpNearMe(this.activeCategory, this.locationService.cleanAddress(this.locationQuery), state).subscribe({
+    const params = this.route.snapshot.queryParams;
+    const serviceCoords = this.locationService.getCoordinates();
+    const latParam = params['lat'];
+    const lngParam = params['lng'];
+    const lat = (latParam && latParam !== 'null' && latParam !== 'undefined') ? Number(latParam) : (serviceCoords ? serviceCoords.lat : undefined);
+    const lng = (lngParam && lngParam !== 'null' && lngParam !== 'undefined') ? Number(lngParam) : (serviceCoords ? serviceCoords.lng : undefined);
+
+    this.legalService.getHelpNearMe(
+      this.activeCategory,
+      this.locationService.cleanAddress(this.locationQuery),
+      state,
+      lat,
+      lng
+    ).subscribe({
       next: (res: any) => {
         // Premium 800ms artificial delay to allow smooth, polished skeleton loading animations
         setTimeout(() => {
@@ -480,9 +505,14 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
               if (localResource) {
                 this.mapCenter = [localResource.coordinates.lat, localResource.coordinates.lng];
               } else {
-                const city = this.locationService.cleanAddress(this.locationQuery).toLowerCase();
-                const matched = Object.keys(CITY_COORDINATES).find(k => city.includes(k));
-                this.mapCenter = matched ? CITY_COORDINATES[matched] : [28.6139, 77.2090];
+                const serviceCoords = this.locationService.getCoordinates();
+                if (serviceCoords) {
+                  this.mapCenter = [serviceCoords.lat, serviceCoords.lng];
+                } else {
+                  const city = this.locationService.cleanAddress(this.locationQuery).toLowerCase();
+                  const matched = Object.keys(CITY_COORDINATES).find(k => city.includes(k));
+                  this.mapCenter = matched ? CITY_COORDINATES[matched] : [28.6139, 77.2090];
+                }
               }
 
               this.applyFilters();
@@ -916,7 +946,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     localStorage.setItem(key, JSON.stringify(payload));
     this.isCasePackSaved = true;
     this.cdr.markForCheck();
-    alert('📋 Case Pack saved successfully to your offline library! You can access it anytime from this browser.');
+    this.snackbar.show('Case Pack saved successfully to your offline library! You can access it anytime from this browser.', 'success');
   }
 
   removeOfflineCasePack() {
@@ -925,7 +955,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     localStorage.removeItem(key);
     this.isCasePackSaved = false;
     this.cdr.markForCheck();
-    alert('🗑️ Case Pack removed from your offline library.');
+    this.snackbar.show('Case Pack removed from your offline library.', 'info');
   }
 
   downloadCasePack() {
@@ -1011,7 +1041,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   // Speech synthesis narrator
   speakText(textKey: string, textToSpeak: string, langCode: 'en' | 'hi') {
     if (!('speechSynthesis' in window)) {
-      alert('Your browser does not support voice narration.');
+      this.snackbar.show('Your browser does not support voice narration.', 'error');
       return;
     }
 
@@ -1066,18 +1096,15 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   // QR Code Modal
-  openQrModal(name: string, item: any) {
-    this.qrModalTitle = name;
-    this.qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
-      `Name: ${name}\nAddress: ${item.address || 'N/A'}\nPhone: ${item.contactNumber || item.number || 'N/A'}`
-    )}`;
+  openQrModal(item: any) {
+    this.qrModalItem = item;
     this.showQrModal = true;
     this.cdr.markForCheck();
   }
 
   closeQrModal() {
     this.showQrModal = false;
-    this.qrCodeUrl = '';
+    this.qrModalItem = null;
     this.cdr.markForCheck();
   }
 

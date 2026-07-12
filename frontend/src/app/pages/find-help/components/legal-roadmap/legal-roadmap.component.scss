@@ -1,0 +1,66 @@
+.roadmap-container {
+  container-type: inline-size;
+  container-name: roadmap;
+}
+
+/* Container query for responsive width of the component itself */
+@container roadmap (max-width: 650px) {
+
+  /* ── DESKTOP & TABLET SPLIT VIEWS (Viewport is wide, card is narrow) ── */
+  @media (min-width: 640px) {
+    .header-row {
+      flex-direction: row !important;
+      justify-content: space-between !important;
+      align-items: center !important;
+      gap: 16px !important;
+    }
+
+    /* Prevent address text from pushing the buttons */
+    .header-row>div:first-child {
+      flex: 1 !important;
+      min-width: 0 !important;
+    }
+
+    /* Stack buttons vertically on the right side of heading */
+    .actions-row {
+      flex-direction: column !important;
+      align-items: flex-end !important;
+      justify-content: center !important;
+      gap: 6px !important;
+      width: auto !important;
+
+      button,
+      .offline-badge {
+        width: auto !important;
+        max-width: none !important;
+        display: inline-flex !important;
+        white-space: nowrap !important;
+      }
+    }
+  }
+
+  /* ── MOBILE VIEWS (Viewport is narrow, everything stacks vertically) ── */
+  @media (max-width: 639px) {
+    .header-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 12px !important;
+    }
+
+    .actions-row {
+      width: 100% !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      gap: 6px !important;
+
+      button,
+      .offline-badge {
+        flex: 1 1 0% !important;
+        width: auto !important;
+        max-width: none !important;
+        justify-content: center !important;
+        display: inline-flex !important;
+      }
+    }
+  }
+}

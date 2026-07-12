@@ -19,7 +19,7 @@ declare var google: any;
 })
 export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewInit {
   @Input() initialCity = 'New Delhi';
-  @Output() locationConfirmed = new EventEmitter<string>();
+  @Output() locationConfirmed = new EventEmitter<{ address: string; lat: number; lng: number }>();
   @Output() closed = new EventEmitter<void>();
 
   mapMode: 'map' | 'satellite' = 'map';
@@ -326,7 +326,11 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
 
   confirm() {
     if (!this.detectedAddress) return;
-    this.locationConfirmed.emit(this.detectedAddress);
+    this.locationConfirmed.emit({
+      address: this.detectedAddress,
+      lat: this.currentLat,
+      lng: this.currentLng
+    });
   }
 
   close() {

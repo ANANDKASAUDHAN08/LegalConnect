@@ -2,11 +2,13 @@
   'bg-purple-500/[0.03] dark:bg-purple-500/[0.05] shadow-md': resource.type === 'LegalAid' && isFreeAidEligible
 }"
   [style.border-left-color]="resource.type === 'LegalAid' ? 'var(--color-legalaid-border)' : resource.type === 'Court' ? 'var(--color-court-border)' : (resource.type === 'GovernmentOffice' || resource.type === 'PoliceStation') ? 'var(--color-gov-border)' : ''"
-  class="h-full flex flex-col bg-white dark:bg-slate-900 border-solid md:border-y md:border-r md:border-y-slate-200 md:border-r-slate-200 md:dark:border-y-slate-800 md:dark:border-r-slate-800 border-l-4 rounded-2xl p-5 shadow-none md:shadow-sm md:hover:shadow-md transition-all duration-300 animate-scale-up group relative overflow-hidden">
+  class="h-full flex flex-col bg-white dark:bg-slate-900 border-solid md:border-y md:border-r md:border-y-slate-200 md:border-r-slate-200 md:dark:border-y-slate-800 md:dark:border-r-slate-800 border-l-4 rounded-2xl p-5 shadow-none md:shadow-sm md:hover:shadow-md transition-all duration-300 animate-scale-up group relative overflow-visible">
 
-  <!-- Glow effect for eligible free aid -->
-  <div *ngIf="resource.type === 'LegalAid' && isFreeAidEligible"
-    class="absolute -right-16 -top-16 w-32 h-32 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+  <!-- Glow effect wrapper to crop the glow bubble while letting dropdowns overflow -->
+  <div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
+    <div *ngIf="resource.type === 'LegalAid' && isFreeAidEligible"
+      class="absolute -right-16 -top-16 w-32 h-32 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+  </div>
 
   <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-start gap-4 flex-1">
     <div class="flex-1 ml-1">
@@ -66,7 +68,8 @@
       <div *ngIf="resource.website" class="text-[11px] mt-1 flex items-center gap-1.5">
         <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Official
           Portal:</span>
-        <a [href]="resource.website" target="_blank" [appTooltip]="'Visit official portal: ' + resource.website" tooltipPlacement="top"
+        <a [href]="resource.website" target="_blank" [appTooltip]="'Visit official portal: ' + resource.website"
+          tooltipPlacement="top"
           class="text-blue-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1 font-bold no-underline">
           <span>Verify details directly</span>
           <svg class="w-3.5 h-3.5 stroke-blue-600 dark:stroke-amber-400" fill="none" stroke="currentColor"
@@ -82,7 +85,7 @@
         class="text-[11px] text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1">
         <span class="text-[9px] font-black uppercase tracking-wider shrink-0">Languages:</span>
         <span
-          class="font-bold text-slate-650 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded-md">{{
+          class="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded-md">{{
           resource.languages.join(', ') }}</span>
       </div>
 
@@ -104,11 +107,12 @@
     </div>
 
     <div
-      class="flex flex-col sm:flex-col items-stretch sm:items-end justify-between gap-3 pt-3.5 sm:pt-0 border-t border-slate-150 dark:border-slate-800 sm:border-none w-full sm:w-auto">
+      class="flex flex-col sm:flex-col items-stretch sm:items-end justify-between gap-3 pt-3.5 sm:pt-0 border-t border-slate-200 dark:border-slate-800 sm:border-none w-full sm:w-auto">
 
       <!-- Direct Contacts (Primary CTAs) -->
       <div class="flex items-center gap-1.5 w-full sm:w-auto order-2 sm:order-1">
-        <a *ngIf="resource.contactNumber" href="tel:{{resource.contactNumber}}" [appTooltip]="'Call ' + resource.name + ' directly at ' + resource.contactNumber" tooltipPlacement="top"
+        <a *ngIf="resource.contactNumber" href="tel:{{resource.contactNumber}}"
+          [appTooltip]="'Call ' + resource.name + ' directly at ' + resource.contactNumber" tooltipPlacement="top"
           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all no-underline">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
@@ -117,7 +121,8 @@
           <span>Call</span>
         </a>
 
-        <button (click)="directions.emit(resource.coordinates)" [appTooltip]="'Get directions to ' + resource.name + ' in Google Maps'" tooltipPlacement="top"
+        <button (click)="onDirectionsClick($event)"
+          [appTooltip]="'Get directions to ' + resource.name + ' in Google Maps'" tooltipPlacement="top"
           class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all cursor-pointer">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
@@ -131,25 +136,27 @@
       <div class="flex items-center gap-1.5 order-1 sm:order-2">
         <!-- Bookmark -->
         <button (click)="onBookmarkClick($event)"
-          class="bg-transparent border-none cursor-pointer p-1.5 rounded-lg border transition-all duration-200 flex items-center justify-center"
+          class="border cursor-pointer p-1.5 rounded-lg border transition-all duration-200 flex items-center justify-center"
           [ngClass]="isSaved()
-            ? 'border-amber-400/60 dark:border-amber-500/40 text-amber-500 bg-amber-50/70 dark:bg-amber-400/10 hover:bg-amber-100/50'
-            : 'border-slate-200 dark:border-slate-800 text-slate-400 hover:text-blue-600 dark:hover:text-amber-400 hover:scale-105'"
+            ? 'border-amber-400/60 dark:border-amber-500/40 text-amber-500 bg-amber-50/70 dark:bg-amber-400/10'
+          : 'border-amber-200/60 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-400/5 hover:bg-amber-100/50 dark:hover:bg-amber-400/15 hover:border-amber-300 dark:hover:border-amber-400/30'"
           [appTooltip]="isSaved() ? 'Remove from saved bookmarks' : 'Save this legal resource to bookmarks'"
           tooltipPlacement="top">
           <!-- Filled bookmark (saved) -->
-          <svg *ngIf="isSaved()" class="w-4 h-4 transition-all duration-200 scale-110" fill="currentColor" viewBox="0 0 24 24">
+          <svg *ngIf="isSaved()" class="w-3.5 h-3.5 transition-all duration-200 scale-110" fill="currentColor"
+            viewBox="0 0 24 24">
             <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
           <!-- Outline bookmark (not saved) -->
-          <svg *ngIf="!isSaved()" class="w-4 h-4 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg *ngIf="!isSaved()" class="w-3.5 h-3.5 transition-all duration-200" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
           </svg>
         </button>
 
         <!-- QR Code Display -->
-        <button (click)="showQr.emit(resource)"
+        <button (click)="onQrClick($event)"
           class="p-1.5 rounded-lg border border-amber-200/60 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-400/5 hover:bg-amber-100/50 dark:hover:bg-amber-400/15 hover:border-amber-300 dark:hover:border-amber-400/30 cursor-pointer transition-all duration-200"
           [appTooltip]="'Generate QR code to scan and open on mobile'" tooltipPlacement="top">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,15 +168,14 @@
           </svg>
         </button>
 
-        <!-- WhatsApp share -->
-        <button (click)="share.emit(resource)"
-          class="p-1.5 rounded-lg border border-emerald-250/60 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/5 hover:bg-emerald-100/50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 cursor-pointer transition-all duration-200 flex items-center justify-center"
-          [appTooltip]="'Share center contact details via WhatsApp'" tooltipPlacement="top">
-          <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
-            <path
-              d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.455 5.703 1.455h.008c6.559 0 11.894-5.336 11.897-11.893a11.821 11.821 0 00-3.48-8.413z" />
-          </svg>
-        </button>
+        <!-- Custom Share Menu component -->
+        <app-share-menu [title]="getShareSubject()" [text]="getShareText()" [shareUrl]="getShareUrl()"
+          [subject]="getShareSubject()"
+          [buttonClass]="'p-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/5 hover:bg-emerald-100/50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 cursor-pointer transition-all duration-200 flex items-center justify-center'"
+          [iconClass]="'w-3.5 h-3.5'" [tooltipText]="'Share center contact details'" tooltipPlacement="top"
+          [customActionLabel]="'Copy Contact Info'" [copyLinkLabel]="'Copy Location Link'"
+          (customActionClicked)="copyCardDetails()">
+        </app-share-menu>
       </div>
 
     </div>

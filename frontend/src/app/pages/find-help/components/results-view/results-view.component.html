@@ -312,10 +312,10 @@
                 'grid-cols-1 md:grid-cols-2': activeViewMode === 'list' || activeViewMode === 'map'
               }">
               <app-resource-card *ngFor="let res of paginatedResources; trackBy: trackByResourceId" [resource]="res"
-                [isFreeAidEligible]="isFreeAidEligible" (share)="shareViaWhatsApp($event)"
-                (showQr)="openQrModal($event.name, $event)" (directions)="openDirections($event.lat, $event.lng)"
-                [id]="'resource-card-' + res._id" [class.highlighted-card]="highlightedResourceId === res._id"
-                (mouseenter)="highlightResource(res._id)" (mouseleave)="clearHighlightResource(res._id)">
+                [isFreeAidEligible]="isFreeAidEligible" (showQr)="openQrModal($event)"
+                (directions)="openDirections($event.lat, $event.lng)" [id]="'resource-card-' + res._id"
+                [class.highlighted-card]="highlightedResourceId === res._id" (mouseenter)="highlightResource(res._id)"
+                (mouseleave)="clearHighlightResource(res._id)">
               </app-resource-card>
             </div>
           </ng-container>
@@ -328,7 +328,7 @@
                 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3': activeViewMode === 'list' || activeViewMode === 'map'
               }">
               <app-helpline-card *ngFor="let phone of helplines; trackBy: trackByHelplineId" [helpline]="phone"
-                (share)="shareViaWhatsApp($event)" (showQr)="openQrModal($event.name, $event)">
+                (showQr)="openQrModal($event)">
               </app-helpline-card>
             </div>
           </ng-container>
@@ -608,27 +608,7 @@
 </div>
 
 <!-- QR Code Modal -->
-<div *ngIf="showQrModal" class="fixed inset-0 z-[2000] flex items-center justify-center p-4 no-print">
-  <div (click)="closeQrModal()" class="fixed inset-0 bg-slate-900/65 backdrop-blur-xs transition-opacity"></div>
-  <div
-    class="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-855 rounded-2xl p-6 max-w-sm w-full shadow-2xl relative z-10 text-center animate-scale-up">
-    <h3 class="text-sm font-black text-slate-855 dark:text-slate-100 mb-2 tracking-wide uppercase">Scan to Mobile Phone
-    </h3>
-    <p class="text-xs text-slate-550 dark:text-slate-405 mb-4 leading-relaxed">
-      Scan this QR code with your phone camera to instantly load directions, call contacts, or carry this resource
-      on-the-go.
-    </p>
-    <div
-      class="w-48 h-48 mx-auto bg-white border border-slate-150 rounded-lg flex items-center justify-center overflow-hidden mb-4.5 p-0.5 shadow-sm">
-      <img [src]="qrCodeUrl" alt="QR Code" class="w-full h-full object-contain" />
-    </div>
-    <div class="text-xs font-bold text-blue-600 dark:text-amber-400 mb-5 mt-2 truncate px-2">{{ qrModalTitle }}</div>
-    <button (click)="closeQrModal()"
-      class="w-full bg-blue-600 hover:bg-blue-700 text-white dark:bg-amber-400 dark:hover:bg-amber-500 dark:text-slate-950 text-xs font-bold py-2.5 px-4 rounded-xl transition-all cursor-pointer shadow-lg shadow-blue-500/10 dark:shadow-amber-400/5">
-      Close Window
-    </button>
-  </div>
-</div>
+<app-qr-modal [isOpen]="showQrModal" [qrData]="qrModalItem" (closed)="closeQrModal()"></app-qr-modal>
 
 <!-- Case Pack Preview Modal (deferred) -->
 <ng-container *ngIf="showCasePackPreviewModal">

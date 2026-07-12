@@ -7,6 +7,7 @@ import { TooltipDirective } from '../../../../directives/tooltip.directive';
   standalone: true,
   imports: [CommonModule, TooltipDirective],
   templateUrl: './legal-roadmap.component.html',
+  styleUrls: ['./legal-roadmap.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LegalRoadmapComponent implements OnChanges {
@@ -21,10 +22,14 @@ export class LegalRoadmapComponent implements OnChanges {
   @Output() speak = new EventEmitter<{ textKey: string, text: string, lang: 'en' | 'hi' }>();
   @Output() saveOffline = new EventEmitter<void>();
   @Output() removeOffline = new EventEmitter<void>();
+  @Output() progressChanged = new EventEmitter<{ completed: number, total: number }>();
 
   // Pillar 3: Interactive checklist state
   checkedSteps = new Set<number>();
   checkedDocs = new Set<number>();
+
+  // Accordion state (expand first step by default using a Set)
+  expandedSteps = new Set<number>([0]);
 
   private get storageKey(): string {
     const cat = (this.activeCategory || 'general').toLowerCase().replace(/\s+/g, '_');
@@ -33,6 +38,30 @@ export class LegalRoadmapComponent implements OnChanges {
   }
 
   constructor(private cdr: ChangeDetectorRef) {}
+
+  toggleStepExpansion(idx: number) {
+    if (this.expandedSteps.has(idx)) {
+      this.expandedSteps.delete(idx);
+    } else {
+      this.expandedSteps.add(idx);
+    }
+    this.cdr.markForCheck();
+  }
+
+  get allStepsExpanded(): boolean {
+    const total = (this.roadmap?.steps || []).length;
+    return this.expandedSteps.size === total;
+  }
+
+  toggleExpandAll() {
+    const steps = this.roadmap?.steps || [];
+    if (this.allStepsExpanded) {
+      this.expandedSteps.clear();
+    } else {
+      steps.forEach((_: any, idx: number) => this.expandedSteps.add(idx));
+    }
+    this.cdr.markForCheck();
+  }
 
   ngOnChanges(changes: SimpleChanges) {
     // Reload checklist when category or location changes
@@ -53,10 +82,12 @@ export class LegalRoadmapComponent implements OnChanges {
         this.checkedSteps = new Set<number>();
         this.checkedDocs = new Set<number>();
       }
+      this.emitProgress();
       this.cdr.markForCheck();
     } catch (e) {
       this.checkedSteps = new Set<number>();
       this.checkedDocs = new Set<number>();
+      this.emitProgress();
     }
   }
 
@@ -70,6 +101,13 @@ export class LegalRoadmapComponent implements OnChanges {
     } catch (e) { /* storage full — ignore */ }
   }
 
+  private emitProgress() {
+    this.progressChanged.emit({
+      completed: this.completedItems,
+      total: this.totalItems
+    });
+  }
+
   toggleStep(idx: number) {
     if (this.checkedSteps.has(idx)) {
       this.checkedSteps.delete(idx);
@@ -79,6 +117,7 @@ export class LegalRoadmapComponent implements OnChanges {
     // Reassign to trigger change detection (Sets are reference-equal)
     this.checkedSteps = new Set(this.checkedSteps);
     this.saveChecklistToStorage();
+    this.emitProgress();
     this.cdr.markForCheck();
   }
 
@@ -90,6 +129,7 @@ export class LegalRoadmapComponent implements OnChanges {
     }
     this.checkedDocs = new Set(this.checkedDocs);
     this.saveChecklistToStorage();
+    this.emitProgress();
     this.cdr.markForCheck();
   }
 

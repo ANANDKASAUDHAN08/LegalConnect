@@ -495,8 +495,8 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  onMapLocationConfirmed(address: string) {
-    this.locationService.setLocation(address, false);
+  onMapLocationConfirmed(event: { address: string; lat: number; lng: number }) {
+    this.locationService.setLocation(event.address, false, { lat: event.lat, lng: event.lng });
     this.applyLocationFilter = true;
     this.closeLocationModal();
   }
