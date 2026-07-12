@@ -1,0 +1,191 @@
+app-reader-modal {
+
+  /* Container Wrapper */
+  .reader-drawer-container {
+    position: fixed;
+    inset: 0;
+    z-index: 2000;
+    pointer-events: none;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  /* Backdrop Overlay */
+  .reader-drawer-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    // backdrop-filter: blur(4px);
+    // -webkit-backdrop-filter: blur(4px);
+    z-index: 1999;
+    pointer-events: auto;
+    animation: fadeIn 0.25s ease-out forwards;
+  }
+
+  /* Drawer Slide-in Panel */
+  .reader-drawer-panel {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -10px 0 40px rgba(15, 23, 42, 0.08);
+    z-index: 2000;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    animation: drawerSlideIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    overflow: hidden;
+
+    @media (min-width: 768px) {
+      width: 80vw;
+      max-width: 850px;
+      border-left: 1px solid rgba(0, 0, 0, 0.08);
+    }
+  }
+
+  @keyframes drawerSlideIn {
+    from {
+      transform: translateX(100%);
+    }
+
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  /* High Contrast styles */
+  .contrast-high {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #ffffff !important;
+  }
+
+  .contrast-high .modal-header,
+  .contrast-high .modal-toolbar,
+  .contrast-high .modal-body,
+  .contrast-high .modal-footer,
+  .contrast-high .modal-header *,
+  .contrast-high .modal-body *,
+  .contrast-high .modal-footer * {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #333333 !important;
+  }
+
+  .contrast-high .jargon-word {
+    color: #ffff00 !important;
+    text-decoration-color: #ffff00 !important;
+  }
+
+  .contrast-high button,
+  .contrast-high a {
+    background-color: #222222 !important;
+    color: #ffffff !important;
+    border: 1px solid #ffffff !important;
+  }
+
+  .contrast-high button.bg-accent,
+  .contrast-high button.active-btn,
+  .contrast-high .btn-primary {
+    background-color: #ffff00 !important;
+    color: #000000 !important;
+    border-color: #ffff00 !important;
+  }
+
+  /* Dyslexic Font styles */
+  .font-dyslexic,
+  .font-dyslexic * {
+    font-family: 'OpenDyslexic', 'Comic Sans MS', sans-serif !important;
+  }
+
+  /* Custom Animations for floating popovers only */
+  @keyframes popoverScaleUp {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+
+    to {
+      transform: translateY(0);
+    }
+  }
+
+  .popover-scale-up {
+    animation: popoverScaleUp 0.18s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .animate-fade-in {
+    animation: fadeIn 0.2s ease-out forwards;
+  }
+
+  /* Floating Popover styling overrides */
+  .fixed.z-\[3000\] {
+    box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.15), 0 5px 15px -3px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(8px);
+    transition: opacity 0.15s ease, transform 0.15s ease;
+  }
+
+  /* Chat Pane styling details */
+  .max-h-\[220px\]::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  .max-h-\[220px\]::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .max-h-\[220px\]::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 99px;
+  }
+
+  @media (max-width: 767px) {
+    .modal-toolbar {
+      mask-image: linear-gradient(to right, black 85%, transparent 100%);
+      -webkit-mask-image: linear-gradient(to right, black 85%, transparent 100%);
+    }
+  }
+}
+
+.dark app-reader-modal {
+  .reader-drawer-panel {
+    background: #0d0f1a;
+    box-shadow: -10px 0 50px rgba(0, 0, 0, 0.6);
+    border-left: 1px solid rgba(255, 255, 255, 0.06);
+  }
+
+  .max-h-\[220px\]::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}

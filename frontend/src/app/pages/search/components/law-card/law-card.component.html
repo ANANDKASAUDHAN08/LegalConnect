@@ -1,0 +1,623 @@
+<div
+  class="card p-4 md:p-6 flex flex-col gap-3 hover:-translate-y-0.5 hover:shadow-lg transition-all duration-300 border-l-[5px] bg-white dark:bg-[#0b0e1a]/80 backdrop-blur-md relative overflow-hidden"
+  [ngClass]="result.criminalDetails ? (result.criminalDetails.severity === 'high' ? 'border-l-red-500' : (result.criminalDetails.severity === 'medium' ? 'border-l-amber-500' : 'border-l-green-500')) : 'border-l-blue-500'">
+
+  <!-- Decorative subtle background glow of the severity color on the left edge -->
+  <div class="absolute top-0 left-0 bottom-0 w-24 opacity-5 pointer-events-none"
+    [ngClass]="result.criminalDetails ? (result.criminalDetails.severity === 'high' ? 'bg-gradient-to-r from-red-500 to-transparent' : (result.criminalDetails.severity === 'medium' ? 'bg-gradient-to-r from-amber-500 to-transparent' : (result.criminalDetails.severity === 'low' ? 'bg-gradient-to-r from-green-500 to-transparent' : 'bg-gradient-to-r from-blue-500 to-transparent'))) : 'bg-gradient-to-r from-blue-500 to-transparent'">
+  </div>
+
+  <!-- Card Header -->
+  <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-3 relative z-10">
+    <div class="flex flex-col gap-1.5 flex-1 min-w-0">
+      <div class="flex flex-wrap items-center gap-2">
+        <span *ngIf="result.year"
+          class="px-2 py-0.5 text-[10px] font-black rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200/40 dark:border-slate-700/30">{{
+          result.year }}</span>
+        <span
+          class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider truncate max-w-[200px] md:max-w-xs"
+          [appTooltip]="result.actName" tooltipPlacement="top">{{ result.actName }}</span>
+
+        <!-- Reading Time Estimate -->
+        <span
+          class="px-2 py-0.5 text-[10px] font-semibold rounded-md bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-200/30 dark:border-slate-800/40 flex items-center gap-1"
+          appTooltip="Estimated reading time based on text length" tooltipPlacement="top">
+          <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          {{ readingTimeMins }} min read
+        </span>
+
+        <!-- Complexity Level Indicator -->
+        <span class="px-2 py-0.5 text-[10px] font-black rounded-md border flex items-center gap-1" [ngClass]="{
+            'bg-red-500/10 text-red-500 border-red-500/20': complexityRating === 'High',
+            'bg-amber-500/10 text-amber-500 border-amber-500/20': complexityRating === 'Medium',
+            'bg-green-500/10 text-green-500 border-green-500/20': complexityRating === 'Low'
+          }" appTooltip="Calculated language density and sentence structure complexity" tooltipPlacement="top">
+          Complexity: {{ complexityRating }}
+        </span>
+
+        <!-- Old-to-New Code Reform Cross-link Pill -->
+        <button *ngIf="reformLink" (click)="toggleInlineCompare()"
+          class="px-2 py-0.5 text-[10px] font-black rounded-md bg-indigo-500/10 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 hover:bg-indigo-500/20 flex items-center gap-1 cursor-pointer transition-colors">
+          ⇄ {{ reformLink.label | titlecase }}: {{ reformLink.shortName }} Sec {{ reformLink.section }}
+        </button>
+
+        <!-- Old-to-New law transition modal mapping -->
+        <button
+          *ngIf="!reformLink && ['IPC', 'CRPC', 'IEA', 'BNS', 'BNSS', 'BSA'].includes(result.shortName.toUpperCase())"
+          (click)="onCompare()"
+          class="badge badge-accent text-[10px] font-black flex items-center gap-1 cursor-pointer bg-amber-500/10 hover:bg-amber-500/20 text-accent transition-colors border-0 px-2 py-0.5 rounded-md"
+          appTooltip="Compare historical laws with newly enacted criminal codes side-by-side" tooltipPlacement="top">
+          <svg class="w-2.5 h-2.5 text-accent" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 1121.21 7.89M9 11l3-3 3 3m-3-3v12" />
+          </svg>
+          Reform Map
+        </button>
+      </div>
+
+      <!-- Section Title & Audio Reader and Severity Shield -->
+      <div class="flex items-center gap-2 mt-1">
+        <!-- Severity Shield Icon -->
+        <span *ngIf="result.criminalDetails" class="inline-flex items-center justify-center shrink-0 align-middle"
+          [appTooltip]="'Offense classification: ' + result.criminalDetails.severity + ' severity'"
+          tooltipPlacement="top">
+          <svg class="w-5 h-5" [ngClass]="{
+            'text-red-500': result.criminalDetails.severity === 'high',
+            'text-amber-500': result.criminalDetails.severity === 'medium',
+            'text-green-500': result.criminalDetails.severity === 'low'
+          }" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd"
+              d="M2.166 4.9L10 .954 17.834 4.9A1 1 0 0118.5 5.8v6.002a7.002 7.002 0 01-5.111 6.74l-3.111 1.037a1 1 0 01-.556 0l-3.111-1.037A7.002 7.002 0 011.5 11.802V5.8a1 1 0 01.666-.9zM10 3.046L3.5 6.296v5.506a5.002 5.002 0 003.651 4.815L10 17.585l2.849-.968A5.002 5.002 0 0016.5 11.802V6.296L10 3.046z"
+              clip-rule="evenodd" />
+          </svg>
+        </span>
+
+        <button (click)="onOpenReader()"
+          class="text-left font-sans text-lg md:text-xl font-bold tracking-tight text-slate-900 dark:text-white hover:text-accent dark:hover:text-accent no-underline bg-transparent border-0 p-0 block cursor-pointer line-clamp-2 leading-snug flex-1"
+          [appTooltip]="'Section ' + result.section_number + ': ' + result.title" tooltipPlacement="top">
+          Section {{ result.section_number }}: {{ result.title }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Right Container: Badges & Audio button -->
+    <div class="flex flex-col items-end gap-2 shrink-0 self-start md:self-auto">
+      <!-- Bailable/Cognizable offense badges -->
+      <div *ngIf="result.criminalDetails" class="flex flex-wrap gap-1.5 justify-end">
+        <span
+          class="text-[10px] font-black border px-2 py-0.5 rounded-full uppercase tracking-wider transition-all duration-300"
+          [ngClass]="result.criminalDetails.isBailable ? 'border-green-500/20 text-green-600 dark:text-green-400 bg-green-500/10 dark:bg-green-500/5' : 'border-red-500/20 text-red-600 dark:text-red-400 bg-red-500/10 dark:bg-red-500/5'"
+          appTooltip="Bailable: Release from custody is a matter of right. Non-bailable requires a court's bail hearing."
+          tooltipPlacement="top">
+          {{ result.criminalDetails.isBailable ? 'Bailable' : 'Non-Bailable' }}
+        </span>
+        <span
+          class="text-[10px] font-black border px-2 py-0.5 rounded-full uppercase tracking-wider transition-all duration-300"
+          [ngClass]="result.criminalDetails.isCognizable ? 'border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/5' : 'border-slate-200/50 dark:border-slate-800/80 text-slate-500 dark:text-slate-400 bg-slate-500/5'"
+          appTooltip="Cognizable offense: Police officers may arrest suspects without an arrest warrant."
+          tooltipPlacement="top">
+          {{ result.criminalDetails.isCognizable ? 'Cognizable' : 'Non-Cognizable' }}
+        </span>
+      </div>
+
+      <!-- Audio Narration Reader Button -->
+      <button (click)="isSpeaking ? stopSpeaking() : speakSectionText()"
+        class="inline-flex items-center justify-center p-1.5 rounded-lg border bg-slate-50/80 dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-500 hover:text-accent dark:hover:text-accent cursor-pointer transition-all shrink-0 ml-auto"
+        [appTooltip]="isSpeaking ? 'Stop speaking description' : 'Speak snippet aloud'" tooltipPlacement="top">
+        <svg *ngIf="!isSpeaking" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z" />
+        </svg>
+        <div *ngIf="isSpeaking" class="flex gap-0.5 items-center justify-center w-4 h-4 text-accent">
+          <span class="w-2 h-2.5 bg-current rounded-full animate-bounce"></span>
+          <span class="w-2 h-3.5 bg-current rounded-full animate-bounce [animation-delay:0.15s]"></span>
+          <span class="w-2 h-1.5 bg-current rounded-full animate-bounce [animation-delay:0.3s]"></span>
+        </div>
+      </button>
+    </div>
+  </div>
+
+  <!-- Highlighted Text Snippet (Improved typography & readability - no monospace) -->
+  <p class="text-slate-700 dark:text-slate-200 leading-relaxed text-xs bg-slate-50/70 dark:bg-[#050814]/40 px-3 py-2.5 rounded-lg border border-slate-200/20 dark:border-slate-800/40 shadow-2xs font-normal"
+    [innerHTML]="result.snippet"></p>
+
+  <!-- Severity Gauge & Compounding Pill -->
+  <div *ngIf="result.criminalDetails" class="flex flex-wrap items-center gap-4 mt-1.5 relative z-10 text-xs">
+    <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+      <span class="font-bold">Severity:</span>
+      <div
+        class="w-20 bg-slate-100 dark:bg-slate-800/80 h-1.5 rounded-full overflow-hidden border border-slate-200/20 dark:border-slate-800/20">
+        <div class="h-full rounded-full transition-all duration-500" [ngClass]="{
+          'bg-red-500 w-full': result.criminalDetails.severity === 'high',
+          'bg-amber-500 w-2/3': result.criminalDetails.severity === 'medium',
+          'bg-green-500 w-1/3': result.criminalDetails.severity === 'low'
+        }"></div>
+      </div>
+      <span class="font-bold uppercase text-[9px] px-1.5 py-0.5 rounded tracking-wider" [ngClass]="{
+        'bg-red-500/10 text-red-500': result.criminalDetails.severity === 'high',
+        'bg-amber-500/10 text-amber-500': result.criminalDetails.severity === 'medium',
+        'bg-green-500/10 text-green-500': result.criminalDetails.severity === 'low'
+      }">{{ result.criminalDetails.severity }}</span>
+    </div>
+
+    <span
+      class="text-[10px] font-bold px-2 py-0.5 rounded border border-slate-200/40 dark:border-slate-800/60 text-slate-600 dark:text-slate-300 bg-slate-500/5"
+      appTooltip="Compounding: Whether the legal offense can be settled out-of-court by mutual compromise."
+      tooltipPlacement="top">
+      Compounding: {{ result.criminalDetails.compoundable }}
+    </span>
+  </div>
+
+  <!-- Companion sections frequently read together & jump link filters (COMPLETELY DYNAMIC) -->
+  <div *ngIf="citedWithSections.length > 0" class="flex flex-wrap items-center gap-2 mt-0.5 text-[10px] font-bold">
+    <span class="text-slate-400 dark:text-slate-500 uppercase tracking-wider">Often Cited With:</span>
+    <span *ngFor="let sec of citedWithSections; let last = last" class="inline-flex items-center gap-1.5">
+      <button (click)="onCitedQueryClick(sec)"
+        class="text-[11px] font-black text-accent hover:underline bg-transparent border-0 p-0 cursor-pointer">
+        Section {{ sec }}
+      </button>
+      <span *ngIf="!last" class="text-slate-300 dark:text-slate-700">,</span>
+    </span>
+    <span class="text-slate-300 dark:text-slate-800">|</span>
+    <button (click)="findExpertsForAct()"
+      class="text-[11px] font-black text-indigo-500 dark:text-indigo-400 hover:underline bg-transparent border-0 p-0 cursor-pointer">
+      Find {{ result.shortName }} Experts →
+    </button>
+  </div>
+
+  <!-- ======================= INLINE COMPONENT COMPARE PANEL ======================= -->
+  <div *ngIf="showInlineCompare"
+    class="border border-indigo-200/40 dark:border-indigo-900/50 rounded-xl bg-indigo-50/20 dark:bg-indigo-950/10 p-4 mt-2 animate-fade-in relative z-10">
+    <div class="flex justify-between items-center border-b border-indigo-100/50 dark:border-indigo-900/50 pb-2 mb-3">
+      <span class="text-xs font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 002 2h2a2 2 0 002-2" />
+        </svg>
+        Reform Code Comparison (IPC vs BNS)
+      </span>
+      <button (click)="toggleInlineCompare()"
+        class="text-indigo-400 hover:text-red-500 text-xs bg-transparent border-0 cursor-pointer transition-colors">Close</button>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+      <div class="p-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+        <div class="font-bold text-slate-500 mb-1">Old Historical Code Text:</div>
+        <p class="text-slate-600 dark:text-slate-300 leading-relaxed m-0">{{ getCompareDiff().oldText }}</p>
+      </div>
+      <div class="p-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
+        <div class="font-bold text-indigo-500 mb-1">New Enacted Reform (With Highlighted Diffs):</div>
+        <p class="text-slate-700 dark:text-slate-200 leading-relaxed m-0" [innerHTML]="getCompareDiff().newText"></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Collapsible Drawers Header with Expand/Collapse All -->
+  <div class="flex justify-between items-center mt-1 pt-2.5 border-t border-slate-200/30 dark:border-slate-800/40">
+    <span class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Quick Analysis
+      &amp; Reference Tools</span>
+    <button (click)="toggleAllDrawers()"
+      class="text-[10px] font-bold text-indigo-500 hover:text-indigo-600 bg-transparent border-0 cursor-pointer flex items-center gap-1 transition-colors">
+      <svg class="w-3 h-3 text-indigo-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 15L12 18.75 15.75 15m-7.5-6L12 5.25 15.75 9" />
+      </svg>
+      {{ areAllDrawersExpanded() ? 'Collapse All' : 'Expand All' }}
+    </button>
+  </div>
+
+  <!-- Collapsible Drawers (Single Column Stack - Best for Search Results UX) -->
+  <div class="flex flex-col gap-2 mt-2">
+
+    <!-- 1. Landmark Judgments Drawer -->
+    <div class="pt-1">
+      <button (click)="togglePrecedent()"
+        [ngClass]="expandedPrecedents ? 'bg-blue-500/10 dark:bg-blue-500/10 border-blue-500/20 text-blue-600 dark:text-blue-300' : 'bg-transparent border-transparent text-blue-500 dark:text-blue-400'"
+        class="flex justify-between items-center w-full text-left text-xs font-bold rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200 group border hover:bg-blue-500/5 dark:hover:bg-blue-500/10 hover:border-blue-500/20">
+        <span class="flex items-center gap-2">
+          <svg
+            [ngClass]="expandedPrecedents ? 'text-blue-600 dark:text-blue-300' : 'text-blue-500/80 dark:text-blue-400/80 group-hover:text-blue-600 dark:group-hover:text-blue-300'"
+            class="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+          </svg>
+          <span
+            [ngClass]="expandedPrecedents ? 'text-blue-700 dark:text-blue-300 font-extrabold' : 'text-blue-500/80 dark:text-blue-400/80 group-hover:text-blue-700 dark:group-hover:text-blue-300'"
+            class="transition-colors duration-200">
+            Landmark Court Judgments &amp; Precedents
+          </span>
+        </span>
+        <svg
+          [ngClass]="expandedPrecedents ? 'rotate-180 text-blue-600 dark:text-blue-300' : 'text-blue-500/50 dark:text-blue-400/50 group-hover:text-blue-600 dark:group-hover:text-blue-400'"
+          class="w-3.5 h-3.5 transition-all duration-350" fill="none" stroke="currentColor" stroke-width="2.5"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <div *ngIf="expandedPrecedents" class="pl-0 mt-2 flex flex-col gap-2 animate-fade-in">
+        <div *ngFor="let prec of cachedPrecedents"
+          class="text-xs p-3 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/40">
+          <div class="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1">
+            <span class="font-bold text-slate-800 dark:text-slate-200">{{ prec.caseName }}</span>
+            <span class="text-[10px] font-mono text-slate-400 dark:text-slate-500 font-bold sm:self-end">{{
+              prec.citation
+              }}</span>
+          </div>
+          <p class="text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ prec.holding }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. Amendment Timeline Drawer -->
+    <div class="border-t border-slate-200/30 dark:border-slate-800/40 pt-1.5">
+      <button (click)="toggleTimeline()"
+        [ngClass]="expandedTimeline ? 'bg-amber-500/10 dark:bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-300' : 'bg-transparent border-transparent text-amber-500 dark:text-amber-400'"
+        class="flex justify-between items-center w-full text-left text-xs font-bold rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200 group border hover:bg-amber-500/5 dark:hover:bg-amber-500/10 hover:border-amber-500/20">
+        <span class="flex items-center gap-2">
+          <svg
+            [ngClass]="expandedTimeline ? 'text-amber-600 dark:text-amber-300' : 'text-amber-500/80 dark:text-amber-400/80 group-hover:text-amber-600 dark:group-hover:text-amber-300'"
+            class="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span
+            [ngClass]="expandedTimeline ? 'text-amber-700 dark:text-amber-300 font-extrabold' : 'text-amber-500/80 dark:text-amber-400/80 group-hover:text-amber-700 dark:group-hover:text-amber-300'"
+            class="transition-colors duration-200">
+            Statutory Amendment History Timeline
+          </span>
+        </span>
+        <svg
+          [ngClass]="expandedTimeline ? 'rotate-180 text-amber-600 dark:text-amber-300' : 'text-amber-500/50 dark:text-amber-400/50 group-hover:text-amber-600 dark:group-hover:text-amber-400'"
+          class="w-3.5 h-3.5 transition-all duration-355" fill="none" stroke="currentColor" stroke-width="2.5"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <div *ngIf="expandedTimeline"
+        class="pl-3 mt-3 border-l border-slate-200 dark:border-slate-800 ml-2 flex flex-col gap-4 animate-fade-in">
+        <div *ngFor="let item of cachedTimeline" class="relative pl-4">
+          <div
+            class="absolute -left-[19px] top-1.5 w-2 h-2 rounded-full bg-accent border-2 border-white dark:border-slate-900">
+          </div>
+          <div class="flex items-center gap-2">
+            <span
+              class="font-black font-mono text-[10px] text-accent tracking-wider bg-accent/10 px-1.5 py-0.5 rounded">{{
+              item.year }}</span>
+            <span class="font-bold text-xs text-slate-800 dark:text-slate-200">{{ item.title }}</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ item.desc }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Pro Se litigant guide Drawer (Upgraded visual timeline) -->
+    <div class="border-t border-slate-200/30 dark:border-slate-800/40 pt-1.5">
+      <button (click)="toggleProSe()"
+        [ngClass]="expandedProSe ? 'bg-teal-500/10 dark:bg-teal-500/10 border-teal-500/20 text-teal-600 dark:text-teal-300' : 'bg-transparent border-transparent text-teal-500 dark:text-teal-400'"
+        class="flex justify-between items-center w-full text-left text-xs font-bold rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200 group border hover:bg-teal-500/5 dark:hover:bg-teal-500/10 hover:border-teal-500/20">
+        <span class="flex items-center gap-2">
+          <svg
+            [ngClass]="expandedProSe ? 'text-teal-600 dark:text-teal-300' : 'text-teal-500/80 dark:text-teal-400/80 group-hover:text-teal-600 dark:group-hover:text-teal-300'"
+            class="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7V2m0 2h12m0 0h3m-3 0l-3 1m0 0l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9V2" />
+          </svg>
+          <span
+            [ngClass]="expandedProSe ? 'text-teal-700 dark:text-teal-300 font-extrabold' : 'text-teal-500/80 dark:text-teal-400/80 group-hover:text-teal-700 dark:group-hover:text-teal-300'"
+            class="transition-colors duration-200">
+            Pro Se (Represent Yourself) Litigation Guide
+          </span>
+        </span>
+        <svg
+          [ngClass]="expandedProSe ? 'rotate-180 text-teal-600 dark:text-teal-300' : 'text-teal-500/50 dark:text-teal-400/50 group-hover:text-teal-600 dark:group-hover:text-teal-400'"
+          class="w-3.5 h-3.5 text-slate-400 group-hover:text-accent transition-all duration-355" fill="none"
+          stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <div *ngIf="expandedProSe"
+        class="mt-2 flex flex-col gap-3 text-xs p-3.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/40 animate-fade-in leading-relaxed text-slate-600 dark:text-slate-400">
+        <!-- Step 1 -->
+        <div class="flex gap-3 relative">
+          <div class="absolute top-4 bottom-0 left-2.5 w-0.5 bg-slate-200 dark:bg-slate-800/60"></div>
+          <div
+            class="w-5 h-5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-[10px] shrink-0 border border-teal-500/20">
+            1</div>
+          <div class="flex-1">
+            <strong class="text-slate-800 dark:text-slate-200 block mb-0.5">Appropriate Judicial Forum</strong>
+            <span>{{ cachedProSe.court }}</span>
+          </div>
+        </div>
+        <!-- Step 2 -->
+        <div class="flex gap-3 relative">
+          <div class="absolute top-4 bottom-0 left-2.5 w-0.5 bg-slate-200 dark:bg-slate-800/60"></div>
+          <div
+            class="w-5 h-5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-[10px] shrink-0 border border-teal-500/20">
+            2</div>
+          <div class="flex-1">
+            <strong class="text-slate-800 dark:text-slate-200 block mb-0.5">Required Court Fees</strong>
+            <span>{{ cachedProSe.fee }}</span>
+          </div>
+        </div>
+        <!-- Step 3 -->
+        <div class="flex gap-3">
+          <div
+            class="w-5 h-5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 flex items-center justify-center font-bold text-[10px] shrink-0 border border-teal-500/20">
+            3</div>
+          <div class="flex-1">
+            <strong class="text-slate-800 dark:text-slate-200 block mb-0.5">Pre-requisite Notice Rules & Wait
+              Times</strong>
+            <span>{{ cachedProSe.prep }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Plain-English Layman Explanation Drawer -->
+    <div class="border-t border-slate-200/30 dark:border-slate-800/40 pt-1.5">
+      <button (click)="toggleLayman()"
+        [ngClass]="expandedLayman ? 'bg-indigo-500/10 dark:bg-indigo-500/10 border-indigo-500/20 text-indigo-600 dark:text-indigo-300' : 'bg-transparent border-transparent text-indigo-500 dark:text-indigo-400'"
+        class="flex justify-between items-center w-full text-left text-xs font-bold rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200 group border hover:bg-indigo-500/5 dark:hover:bg-indigo-500/10 hover:border-indigo-500/20">
+        <span class="flex items-center gap-2">
+          <svg
+            [ngClass]="expandedLayman ? 'text-indigo-600 dark:text-indigo-300' : 'text-indigo-500/80 dark:text-indigo-400/80 group-hover:text-indigo-600 dark:group-hover:text-indigo-300'"
+            class="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9.663 17h4.673M12 3v1m6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+          </svg>
+          <span
+            [ngClass]="expandedLayman ? 'text-indigo-700 dark:text-indigo-300 font-extrabold' : 'text-indigo-550/85 dark:text-indigo-455/90 group-hover:text-indigo-700 dark:group-hover:text-indigo-300'"
+            class="transition-colors duration-200">
+            Simplified Layman's Explanation
+          </span>
+        </span>
+        <svg
+          [ngClass]="expandedLayman ? 'rotate-180 text-indigo-600 dark:text-indigo-300' : 'text-indigo-500/50 dark:text-indigo-400/50 group-hover:text-indigo-600 dark:group-hover:text-indigo-355'"
+          class="w-3.5 h-3.5 transition-all duration-350" fill="none" stroke="currentColor" stroke-width="2.5"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <div *ngIf="expandedLayman"
+        class="mt-2 text-xs p-3.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/40 animate-fade-in leading-relaxed text-slate-700 dark:text-slate-300">
+        <!-- Loading indicator -->
+        <div *ngIf="laymanLoading" class="flex items-center gap-2 py-1 text-slate-400 dark:text-slate-500">
+          <svg class="animate-spin h-4 w-4 text-indigo-500" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          <span>Demystifying legal section clauses via Legal AI...</span>
+        </div>
+        <p *ngIf="!laymanLoading" class="m-0">{{ laymanExplanation || 'No explanation found.' }}</p>
+      </div>
+    </div>
+
+    <!-- 5. Citation exporter drawer -->
+    <div class="border-t border-slate-200/30 dark:border-slate-800/40 pt-1.5">
+      <button (click)="toggleCitation()"
+        [ngClass]="expandedCitation ? 'bg-rose-500/10 dark:bg-rose-500/10 border-rose-500/20 text-rose-600 dark:text-rose-300' : 'bg-transparent border-transparent text-rose-500 dark:text-rose-400'"
+        class="flex justify-between items-center w-full text-left text-xs font-bold rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200 group border hover:bg-rose-500/5 dark:hover:bg-rose-500/10 hover:border-rose-500/20">
+        <span class="flex items-center gap-2">
+          <svg
+            [ngClass]="expandedCitation ? 'text-rose-600 dark:text-rose-300' : 'text-rose-500/80 dark:text-rose-400/80 group-hover:text-rose-600 dark:group-hover:text-rose-300'"
+            class="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+          </svg>
+          <span
+            [ngClass]="expandedCitation ? 'text-rose-700 dark:text-rose-300 font-extrabold' : 'text-rose-600 dark:text-slate-400 group-hover:text-rose-700 dark:group-hover:text-rose-300'"
+            class="transition-colors duration-200">
+            Copy Professional Legal Citations
+          </span>
+        </span>
+        <svg
+          [ngClass]="expandedCitation ? 'rotate-180 text-rose-600 dark:text-rose-300' : 'text-rose-500/50 dark:text-rose-400/50 group-hover:text-rose-600 dark:group-hover:text-rose-300'"
+          class="w-3.5 h-3.5 transition-all duration-350" fill="none" stroke="currentColor" stroke-width="2.5"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <div *ngIf="expandedCitation" class="mt-2 flex gap-2 flex-wrap animate-fade-in">
+        <button (click)="copyCitation('bluebook')"
+          [ngClass]="activeCopiedFormat === 'bluebook' ? 'bg-green-600 text-white border-green-600 shadow-sm font-bold' : 'btn-outline text-slate-500 border-slate-200 dark:border-slate-800'"
+          class="border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1.5 font-mono text-xs rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all"
+          appTooltip="Copy citation in standard Bluebook format" tooltipPlacement="top">
+          {{ activeCopiedFormat === 'bluebook' ? 'Copied! ✓' : 'Bluebook Standard' }}
+        </button>
+        <button (click)="copyCitation('ili')"
+          [ngClass]="activeCopiedFormat === 'ili' ? 'bg-green-600 text-white border-green-600 shadow-sm font-bold' : 'btn-outline text-slate-500 border-slate-200 dark:border-slate-800'"
+          class="border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1.5 font-mono text-xs rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all"
+          appTooltip="Copy citation in Indian Law Institute (ILI) format" tooltipPlacement="top">
+          {{ activeCopiedFormat === 'ili' ? 'Copied! ✓' : 'ILI Format' }}
+        </button>
+        <button (click)="copyCitation('standard')"
+          [ngClass]="activeCopiedFormat === 'standard' ? 'bg-green-600 text-white border-green-600 shadow-sm font-bold' : 'btn-outline text-slate-500 border-slate-200 dark:border-slate-800'"
+          class="border border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 px-2 py-1.5 font-mono text-xs rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer transition-all"
+          appTooltip="Copy citation in plain-text standard format" tooltipPlacement="top">
+          {{ activeCopiedFormat === 'standard' ? 'Copied! ✓' : 'Standard Citation' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- 6. Private Observations Sticky Notes Drawer -->
+    <div class="border-t border-slate-200/30 dark:border-slate-800/40 pt-1.5">
+      <button (click)="showNotesEditor = !showNotesEditor"
+        [ngClass]="showNotesEditor ? 'bg-amber-500/10 dark:bg-amber-500/10 border-amber-500/20 text-amber-600 dark:text-amber-300' : 'bg-transparent border-transparent text-amber-500 dark:text-amber-400'"
+        class="flex justify-between items-center w-full text-left text-xs font-bold rounded-lg px-2.5 py-2 cursor-pointer transition-all duration-200 group border hover:bg-amber-500/5 dark:hover:bg-amber-500/10 hover:border-amber-500/20">
+        <span class="flex items-center gap-2">
+          <svg
+            [ngClass]="showNotesEditor ? 'text-amber-600 dark:text-amber-300' : 'text-amber-500/80 dark:text-amber-400/80 group-hover:text-amber-600 dark:group-hover:text-amber-300'"
+            class="w-4 h-4 transition-colors duration-200" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span
+            [ngClass]="showNotesEditor ? 'text-amber-700 dark:text-amber-300 font-extrabold' : 'text-amber-600 dark:text-slate-400 group-hover:text-amber-700 dark:group-hover:text-amber-300 font-bold'"
+            class="transition-colors duration-200 flex items-center gap-1.5">
+            Private Observations Pad
+            <span *ngIf="noteText" class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"
+              appTooltip="You have saved active observations for this section" tooltipPlacement="top"></span>
+          </span>
+        </span>
+        <svg
+          [ngClass]="showNotesEditor ? 'rotate-180 text-amber-600 dark:text-amber-300' : 'text-amber-500/50 dark:text-amber-400/50 group-hover:text-amber-600 dark:group-hover:text-amber-400'"
+          class="w-3.5 h-3.5 transition-all duration-350" fill="none" stroke="currentColor" stroke-width="2.5"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+        </svg>
+      </button>
+
+      <div *ngIf="showNotesEditor"
+        class="mt-2 text-xs p-3.5 rounded-lg bg-amber-500/5 dark:bg-amber-950/10 border border-amber-500/20 animate-fade-in flex flex-col gap-2.5">
+        <textarea #noteInput [value]="noteText"
+          placeholder="Write private observations, file references, or case summaries here (saved locally)..."
+          class="w-full h-20 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 text-xs text-slate-800 dark:text-white focus:outline-none focus:border-amber-500/60 leading-relaxed"></textarea>
+        <div class="flex justify-end gap-2">
+          <button (click)="showNotesEditor = false"
+            class="px-3 py-1 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700 rounded-md cursor-pointer text-[10px]">Cancel</button>
+          <button (click)="saveNote(noteInput.value)"
+            class="px-3.5 py-1 bg-amber-500 hover:bg-amber-600 text-white font-bold border-0 rounded-md cursor-pointer text-[10px]">Save
+            Note</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Card Action Row (Fully Mobile Responsive Grid/Flex layout) -->
+  <div
+    class="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3.5 mt-2.5 border-t border-slate-200/40 dark:border-slate-800/50 pt-4">
+
+    <!-- Left actions (Utilities) -->
+    <div class="flex items-center justify-start gap-2.5">
+      <!-- Add to Case Pack Button -->
+      <button (click)="onToggleSave()"
+        [ngClass]="saved ? 'bg-indigo-600 border-indigo-600 text-white shadow-xs hover:bg-indigo-700 hover:border-indigo-700' : 'bg-indigo-50/50 dark:bg-indigo-950/15 border-indigo-200/50 dark:border-indigo-900/50 text-indigo-500 dark:text-indigo-400 hover:bg-indigo-100/60 dark:hover:bg-indigo-950/30 hover:border-indigo-300 dark:hover:border-indigo-800 hover:text-indigo-600 dark:hover:text-indigo-300'"
+        class="w-10 h-10 border rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-xs"
+        appTooltip="Save this law section to your case pack dossier for offline use" tooltipPlacement="top">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9l-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+      </button>
+
+      <!-- Inline Chat Toggle -->
+      <button (click)="toggleInlineChat()"
+        [ngClass]="showChat ? 'bg-purple-600 border-purple-600 text-white shadow-xs hover:bg-purple-700 hover:border-purple-700' : 'bg-purple-50/50 dark:bg-purple-950/15 border-purple-200/50 dark:border-purple-900/50 text-purple-500 dark:text-purple-400 hover:bg-purple-100/60 dark:hover:bg-purple-950/30 hover:border-purple-300 dark:hover:border-purple-800 hover:text-purple-600 dark:hover:text-purple-300'"
+        class="w-10 h-10 border rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-xs"
+        appTooltip="Ask our AI assistant contextual clarification questions about this section" tooltipPlacement="top">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      </button>
+
+      <!-- Quick share on WhatsApp -->
+      <a [href]="'https://api.whatsapp.com/send?text=Section ' + result.section_number + ': ' + result.title + ' in LegalConnect'"
+        target="_blank"
+        class="w-10 h-10 border border-green-200/50 dark:border-green-900/50 text-green-500 dark:text-green-400 bg-green-50/50 dark:bg-green-950/15 hover:bg-green-100/60 dark:hover:bg-green-950/30 hover:border-green-300 dark:hover:border-green-800 hover:text-green-600 dark:hover:text-green-300 rounded-xl flex items-center justify-center transition-all shadow-xs cursor-pointer"
+        appTooltip="Share details of this legal section via WhatsApp" tooltipPlacement="top">
+        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+          <path
+            d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.746.953 3.71 1.458 5.705 1.459h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
+        </svg>
+      </a>
+
+      <!-- Quick Download Client PDF Report -->
+      <button (click)="exportToPDF()"
+        class="w-10 h-10 border border-blue-200/50 dark:border-blue-900/50 text-blue-500 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-950/15 hover:bg-blue-100/60 dark:hover:bg-blue-950/30 hover:border-blue-300 dark:hover:border-blue-800 hover:text-blue-600 dark:hover:text-blue-300 rounded-xl flex items-center justify-center transition-all shadow-xs cursor-pointer"
+        appTooltip="Download full legal analysis report as PDF" tooltipPlacement="top">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+        </svg>
+      </button>
+
+      <!-- Copy Full Text Snippet -->
+      <button (click)="copyContent()"
+        [ngClass]="copiedContent ? 'bg-green-600 border-green-600 text-white hover:bg-green-700' : 'text-amber-500 dark:text-amber-400 border-amber-200/50 dark:border-amber-900/50 bg-amber-50/50 dark:bg-amber-950/15 hover:bg-amber-100/60 dark:hover:bg-amber-950/30 hover:border-amber-300 dark:hover:border-amber-800 hover:text-amber-600 dark:hover:text-amber-300'"
+        class="w-10 h-10 border rounded-xl flex items-center justify-center transition-all cursor-pointer shadow-xs"
+        appTooltip="Copy legal section details and text snippet" tooltipPlacement="top">
+        <svg *ngIf="!copiedContent" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+        </svg>
+        <svg *ngIf="copiedContent" class="w-5 h-5 text-white" fill="none" stroke="currentColor" stroke-width="2.5"
+          viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Right main actions -->
+    <div class="flex items-center gap-2.5 justify-between sm:justify-end">
+      <button (click)="onOpenReader()"
+        class="flex-1 sm:flex-none btn btn-outline btn-sm font-semibold px-4 py-2 rounded-xl cursor-pointer">Reader
+        Mode</button>
+      <a [routerLink]="['/laws', result.shortName]" [fragment]="'sec-' + result.section_number"
+        class="flex-1 sm:flex-none btn btn-accent btn-sm font-semibold px-4 py-2 rounded-xl cursor-pointer shadow-xs no-underline flex items-center justify-center">
+        View Full Details
+      </a>
+    </div>
+  </div>
+
+  <!-- ======================= INLINE AI CHAT ASSISTANT ======================= -->
+  <div *ngIf="showChat"
+    class="border border-slate-200/50 dark:border-slate-800/50 rounded-xl bg-slate-50/50 dark:bg-slate-900/30 p-4 mt-2 animate-fade-in relative z-10">
+    <div class="flex justify-between items-center border-b border-slate-200/50 dark:border-slate-800/50 pb-2 mb-3">
+      <span class="text-xs font-bold text-slate-600 dark:text-slate-300">Contextual Section AI Assistant</span>
+      <button (click)="toggleInlineChat()"
+        class="text-slate-400 hover:text-red-500 text-xs bg-transparent border-0 cursor-pointer transition-colors">Close</button>
+    </div>
+
+    <!-- Chat Message List -->
+    <div class="flex flex-col gap-3 max-h-48 overflow-y-auto mb-3 text-xs">
+      <div *ngFor="let chat of chatHistory"
+        [ngClass]="chat.sender === 'user' ? 'self-end bg-accent/10 border-accent/20 text-slate-800 dark:text-slate-200' : 'self-start bg-slate-200/50 dark:bg-slate-800/50 text-slate-600 dark:text-slate-300'"
+        class="p-2.5 rounded-lg max-w-[85%] border">
+        {{ chat.message }}
+      </div>
+      <div *ngIf="chatLoading" class="self-start text-[10px] text-slate-400 dark:text-slate-500 animate-pulse">
+        Evaluating request...</div>
+    </div>
+
+    <!-- Chat Input box -->
+    <div class="flex gap-2">
+      <input type="text" [(ngModel)]="chatInput" (keyup.enter)="sendSectionMessage()"
+        placeholder="Ask: 'Is this cognizable?' or 'What is the penalty limit?'"
+        class="flex-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2 text-xs focus:outline-none focus:border-accent text-slate-800 dark:text-white">
+      <button (click)="sendSectionMessage()" class="btn btn-accent btn-sm py-2 px-3 rounded-lg text-xs"
+        [disabled]="chatLoading">Send</button>
+    </div>
+
+    <!-- Quick Question suggested pills -->
+    <div class="flex flex-wrap gap-1.5 mt-2.5 border-t border-slate-200/30 dark:border-slate-800/40 pt-2.5">
+      <span
+        class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block w-full mb-1">Suggested
+        Inquiries:</span>
+      <button *ngFor="let prompt of suggestedPrompts" (click)="sendSectionMessage(prompt)"
+        class="px-2.5 py-1 text-[10px] font-semibold rounded-lg bg-purple-500/5 hover:bg-purple-500/12 border border-purple-500/20 text-purple-600 dark:text-purple-400 cursor-pointer transition-colors flex items-center gap-1"
+        appTooltip="Click to instantly ask the AI this prompt" tooltipPlacement="top">
+        <svg class="w-2.5 h-2.5 text-purple-500 dark:text-purple-400 shrink-0" fill="currentColor" viewBox="0 0 20 20">
+          <path
+            d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+        </svg>
+        {{ prompt }}
+      </button>
+    </div>
+  </div>
+
+</div>
