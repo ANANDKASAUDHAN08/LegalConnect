@@ -99,7 +99,7 @@ export class FormattingService {
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
           </svg>
           <div class="flex-1 text-[11px] leading-relaxed text-slate-500 dark:text-slate-400 font-sans">
-            <span class="font-black text-[10px] text-slate-655 dark:text-slate-350 uppercase tracking-widest block mb-1 select-none">Footnote / Commencement Info</span>
+            <span class="font-black text-[10px] text-slate-600 dark:text-slate-300 uppercase tracking-widest block mb-1 select-none">Footnote / Commencement Info</span>
             <span class="font-medium">${footnoteContent}</span>
           </div>
         </div>`;
@@ -135,7 +135,7 @@ export class FormattingService {
         const body = illusMatch[3];
         return `<div class="flex items-start gap-2 pl-3.5 my-2 border-l border-slate-200 dark:border-white/5 py-0.5 text-left">
           <span class="text-xs font-bold text-indigo-500/70 dark:text-indigo-400/60 select-none min-w-[20px] mt-0.5">${prefixHtml}(${letter})</span>
-          <div class="flex-1 text-sm text-slate-655 dark:text-slate-300 leading-relaxed font-medium">${body}</div>
+          <div class="flex-1 text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">${body}</div>
         </div>`;
       }
 

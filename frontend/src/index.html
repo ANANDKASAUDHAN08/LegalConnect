@@ -3,6 +3,15 @@
 
 <head>
   <meta charset="utf-8">
+  <script>
+    (function() {
+      try {
+        const theme = localStorage.getItem('lc_theme') || localStorage.getItem('theme') || 'system';
+        const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        if (isDark) document.documentElement.classList.add('dark');
+      } catch (e) {}
+    })();
+  </script>
   <title>LegalConnect — Know Your Rights</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -24,7 +33,95 @@
 </head>
 
 <body>
-  <app-root></app-root>
+  <app-root>
+    <style>
+      .app-initial-loader {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        transition: background-color 0.2s ease;
+        background-color: #f8fafc;
+        color: #0f172a;
+      }
+      html.dark .app-initial-loader {
+        background-color: #0b1220;
+        color: #f8fafc;
+      }
+      .loader-logo-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+      }
+      .loader-spinner {
+        position: absolute;
+        width: 64px;
+        height: 64px;
+        border: 2.5px solid transparent;
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+      }
+      .loader-logo {
+        width: 38px;
+        height: 38px;
+        background: linear-gradient(135deg, #2563eb, #4f46e5);
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #ffffff;
+        box-shadow: 0 4px 14px rgba(79,70,229,0.25);
+        animation: pulse 1.8s ease-in-out infinite;
+      }
+      .loader-title {
+        font-size: 18px;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        margin: 0;
+      }
+      .loader-subtitle {
+        font-size: 11px;
+        font-weight: 750;
+        color: #64748b;
+        margin-top: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      html.dark .loader-subtitle {
+        color: #475569;
+      }
+      @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      @keyframes pulse {
+        0%, 100% { transform: scale(1); }
+        50% { transform: scale(1.05); }
+      }
+    </style>
+    <div class="app-initial-loader">
+      <div class="loader-logo-wrapper">
+        <div class="loader-spinner"></div>
+        <div class="loader-logo">
+          <!-- Mini Scale Logo SVG -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="w-5 h-5" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 4v16M8 20h8M5 8h14" stroke-linecap="round" />
+            <path d="M5 8l-2 5M5 8l2 5M2 13c0 1.5 3 1.5 3 0" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M19 8l-2 5M19 8l2 5M16 13c0 1.5 3 1.5 3 0" stroke-linecap="round" stroke-linejoin="round" />
+          </svg>
+        </div>
+      </div>
+      <h2 class="loader-title">LegalConnect</h2>
+      <span class="loader-subtitle">Loading workspace...</span>
+    </div>
+  </app-root>
   <noscript>Please enable JavaScript to continue using this application.</noscript>
 </body>
 

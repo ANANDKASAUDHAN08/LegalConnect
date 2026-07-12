@@ -65,31 +65,30 @@
     --s-primary: 25%;
     --l-primary: 15%;
 
-    /* Dark Theme Backgrounds */
-    --bg-base: hsl(222, 47%, 11%);
-    /* Midnight */
-    --bg-surface: hsl(215, 25%, 18%);
-    /* Deep Slate */
-    --bg-elevated: hsl(215, 25%, 27%);
-    --bg-card: hsla(215, 25%, 18%, 0.8);
+    /* Dark Theme Backgrounds (Obsidian Midnight Blue) */
+    --bg-base: hsl(228, 48%, 6%);
+    --bg-surface: hsl(226, 36%, 11%);
+    --bg-elevated: hsl(225, 30%, 18%);
+    --bg-card: hsla(226, 36%, 11%, 0.75);
 
-    /* Dark Theme Text */
+    /* Dark Theme Text - Vibrant & High Contrast */
     --text-primary: hsl(210, 40%, 98%);
-    --text-secondary: hsl(212, 33%, 80%);
-    --text-muted: hsl(215, 20%, 65%);
+    --text-secondary: hsl(220, 40%, 90%);
+    --text-muted: hsl(218, 25%, 72%);
 
     /* Borders */
-    --border-subtle: hsla(210, 40%, 98%, 0.08);
-    --border-accent: hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.4);
+    --border-subtle: hsla(220, 30%, 95%, 0.08);
+    --border-accent: hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.5);
 
     /* Shadows */
-    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
-    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.4);
-    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.5);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.55);
+    --shadow-lg: 0 24px 64px rgba(0, 0, 0, 0.7);
   }
 
   html {
     scroll-behavior: smooth;
+    scrollbar-gutter: stable;
   }
 
   body {
@@ -232,6 +231,19 @@ h6 {
   background: rgba(217, 119, 6, 0.1);
   color: var(--color-accent);
   border: 1px solid rgba(217, 119, 6, 0.3);
+}
+
+/* Custom Dynamic Act Badge styling */
+.act-badge {
+  background-color: hsla(var(--act-hue, 215), 85%, 40%, 0.08) !important;
+  border-color: hsla(var(--act-hue, 215), 85%, 40%, 0.22) !important;
+  color: hsl(var(--act-hue, 215), 80%, 35%) !important;
+  
+  .dark & {
+    background-color: hsla(var(--act-hue, 215), 75%, 60%, 0.12) !important;
+    border-color: hsla(var(--act-hue, 215), 75%, 60%, 0.25) !important;
+    color: hsl(var(--act-hue, 215), 85%, 72%) !important;
+  }
 }
 
 /* --- Section Container --- */

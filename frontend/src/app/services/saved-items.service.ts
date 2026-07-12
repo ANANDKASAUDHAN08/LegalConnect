@@ -1,6 +1,8 @@
 import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { SnackbarService } from './snackbar.service';
 
@@ -28,6 +30,7 @@ export class SavedItemsService {
   public savedLawyers = signal<SavedLawyerInfo[]>([]);
   public savedHelplines = signal<SavedHelplineInfo[]>([]);
   public savedResources = signal<SavedResourceInfo[]>([]);
+  public initialLoadComplete = signal(false);
 
   // Derived sets for fast isSaved check
   public savedLawyerIds = computed(() => new Set(this.savedLawyers().map(l => l.lawyerId)));
@@ -50,14 +53,28 @@ export class SavedItemsService {
 
   private loadAll() {
     if (this.isLoggedIn) {
-      this.loadLawyersFromApi();
-      this.loadResourcesFromApi();
-      this.loadHelplinesFromApi();
+      this.initialLoadComplete.set(false);
+      const lawyers$ = this.http.get<SavedLawyerInfo[]>(`${this.apiBase}/favouritelawyer`, { withCredentials: true }).pipe(catchError(() => of([])));
+      const resources$ = this.http.get<SavedResourceInfo[]>(`${this.apiBase}/favouriteresource`, { withCredentials: true }).pipe(catchError(() => of([])));
+      const helplines$ = this.http.get<SavedHelplineInfo[]>(`${this.apiBase}/helpline/favourites`, { withCredentials: true }).pipe(catchError(() => of([])));
+
+      forkJoin([lawyers$, resources$, helplines$]).subscribe({
+        next: ([lawyers, resources, helplines]) => {
+          this.savedLawyers.set(lawyers || []);
+          this.savedResources.set(resources || []);
+          this.savedHelplines.set(helplines || []);
+          this.initialLoadComplete.set(true);
+        },
+        error: () => {
+          this.initialLoadComplete.set(true);
+        }
+      });
     } else {
       // Clear all state when logged out
       this.savedLawyers.set([]);
       this.savedResources.set([]);
       this.savedHelplines.set([]);
+      this.initialLoadComplete.set(true);
     }
   }
 

@@ -145,18 +145,28 @@ export class LegalService {
     return this.actsCache$;
   }
 
-  getHelpCategories(location: string): Observable<ApiResponse<Category[]>> {
-    return this.http.get<ApiResponse<Category[]>>(`${this.apiUrl}/help/categories?location=${encodeURIComponent(location)}`);
+  getHelpCategories(location: string, lat?: number, lng?: number): Observable<ApiResponse<Category[]>> {
+    let url = `${this.apiUrl}/help/categories?location=${encodeURIComponent(location)}`;
+    if (lat !== undefined && lng !== undefined) {
+      url += `&lat=${lat}&lng=${lng}`;
+    }
+    return this.http.get<ApiResponse<Category[]>>(url);
   }
 
   getHelpStats(): Observable<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number }>> {
     return this.http.get<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number }>>(`${this.apiUrl}/help/stats`);
   }
 
-  getHelpNearMe(category: string, location: string, state?: string): Observable<ApiResponse<any>> {
+  getHelpNearMe(category: string, location: string, state?: string, lat?: number, lng?: number): Observable<ApiResponse<any>> {
     let url = `${this.apiUrl}/help-near-me?category=${encodeURIComponent(category)}&location=${encodeURIComponent(location)}`;
     if (state) {
       url += `&state=${encodeURIComponent(state)}`;
+    }
+    if (lat !== undefined && lat !== null) {
+      url += `&lat=${lat}`;
+    }
+    if (lng !== undefined && lng !== null) {
+      url += `&lng=${lng}`;
     }
     return this.http.get<ApiResponse<any>>(url);
   }
@@ -263,14 +273,41 @@ export class LegalService {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/acts/${shortName}/sections/${sectionNumber}?t=${Date.now()}`);
   }
 
-  searchLaws(query: string): Observable<ApiResponse<SearchResultItem[]>> {
-    return this.http.get<ApiResponse<SearchResultItem[]>>(`${this.apiUrl}/search?q=${encodeURIComponent(query)}`).pipe(
+  searchLaws(query: string, page = 1, limit = 20): Observable<ApiResponse<SearchResultItem[]>> {
+    const url = `${this.apiUrl}/search?q=${encodeURIComponent(query)}&page=${page}&limit=${limit}`;
+    return this.http.get<ApiResponse<SearchResultItem[]>>(url).pipe(
       map(res => {
         if (res && res.data) {
           res.data = res.data.map(item => ({
             ...item,
             actName: this.cleanActName(item.actName)
           }));
+        }
+        return res;
+      })
+    );
+  }
+
+  searchHub(query: string, city = '', limit = 3, lat?: number, lng?: number): Observable<ApiResponse<{ laws: any[], lawyers: any[], resources: any[] }>> {
+    let url = `${this.apiUrl}/search-hub?q=${encodeURIComponent(query)}&city=${encodeURIComponent(city)}&limit=${limit}`;
+    if (lat !== undefined && lng !== undefined) {
+      url += `&lat=${lat}&lng=${lng}`;
+    }
+    return this.http.get<ApiResponse<any>>(url).pipe(
+      map(res => {
+        if (res && res.data) {
+          if (res.data.laws) {
+            res.data.laws = res.data.laws.map((item: any) => ({
+              ...item,
+              actName: this.cleanActName(item.actName)
+            }));
+          }
+          if (res.data.lawyers) {
+            res.data.lawyers = res.data.lawyers.map((item: any) => ({
+              ...item,
+              name: this.cleanActName(item.name)
+            }));
+          }
         }
         return res;
       })
@@ -478,5 +515,10 @@ export class LegalService {
       return of({ success: true, data: [] });
     }
     return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/resources/batch`, { ids });
+  }
+
+  // Delete a synced case pack roadmap from server
+  deleteCasePack(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<any>(`${this.apiUrl}/case-packs/${id}`, { withCredentials: true });
   }
 }

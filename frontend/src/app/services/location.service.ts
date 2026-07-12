@@ -11,6 +11,9 @@ export class LocationService {
   private isEstimatedSubject = new BehaviorSubject<boolean>(this.getStoredEstimatedState());
   isEstimated$ = this.isEstimatedSubject.asObservable();
 
+  private coordinatesSubject = new BehaviorSubject<{ lat: number; lng: number } | null>(this.getStoredCoordinates());
+  coordinates$ = this.coordinatesSubject.asObservable();
+
   constructor() { }
 
   getCurrentLocation(): string {
@@ -19,6 +22,10 @@ export class LocationService {
 
   isLocationEstimated(): boolean {
     return this.isEstimatedSubject.value;
+  }
+
+  getCoordinates(): { lat: number; lng: number } | null {
+    return this.coordinatesSubject.value;
   }
 
   cleanAddress(address: string): string {
@@ -62,15 +69,25 @@ export class LocationService {
     return parts[parts.length - 1].replace(/\b\d{5,}\b/g, '').trim();
   }
 
-  setLocation(location: string, isEstimated: boolean = false) {
+  setLocation(location: string, isEstimated: boolean = false, coordinates?: { lat: number; lng: number } | null) {
     if (!location || !location.trim()) return;
     const trimmedLoc = location.trim();
+    const coords = coordinates;
+
     if (typeof window !== 'undefined') {
       localStorage.setItem('user_location', trimmedLoc);
       localStorage.setItem('user_location_estimated', isEstimated ? 'true' : 'false');
+      if (coords) {
+        localStorage.setItem('user_location_lat', String(coords.lat));
+        localStorage.setItem('user_location_lng', String(coords.lng));
+      } else {
+        localStorage.removeItem('user_location_lat');
+        localStorage.removeItem('user_location_lng');
+      }
     }
     this.activeLocationSubject.next(trimmedLoc);
     this.isEstimatedSubject.next(isEstimated);
+    this.coordinatesSubject.next(coords || null);
   }
 
   private getStoredLocation(): string | null {
@@ -89,6 +106,17 @@ export class LocationService {
       return stored !== 'false';
     }
     return true;
+  }
+
+  private getStoredCoordinates(): { lat: number; lng: number } | null {
+    if (typeof window !== 'undefined') {
+      const lat = localStorage.getItem('user_location_lat');
+      const lng = localStorage.getItem('user_location_lng');
+      if (lat && lng) {
+        return { lat: Number(lat), lng: Number(lng) };
+      }
+    }
+    return null;
   }
 
   // List of Union Territories in India (including merged/variant names for DB matching)
