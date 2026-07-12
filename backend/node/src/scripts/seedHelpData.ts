@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import path from 'path';
 import HelpCategory from '../models/HelpCategory';
@@ -296,9 +297,20 @@ const seedHelpData = async () => {
     }
 
     console.log('💾 Seeding HelpHelpline records...');
+    const processedHelplineIds = new Set();
     for (const hp of helplines) {
-      await new HelpHelpline(hp).save();
-      console.log(`  ✅ Seeded Helpline: ${hp.name}`);
+      const hash = crypto.createHash('md5').update(hp.name).digest('hex');
+      const deterministicId = hash.substring(0, 24);
+      if (processedHelplineIds.has(deterministicId)) {
+        console.log(`  ⚠️ Skipping duplicate helpline: "${hp.name}"`);
+        continue;
+      }
+      processedHelplineIds.add(deterministicId);
+      await new HelpHelpline({
+        _id: new mongoose.Types.ObjectId(deterministicId),
+        ...hp
+      }).save();
+      console.log(`  ✅ Seeded Helpline: ${hp.name} [ID: ${deterministicId}]`);
     }
 
     console.log('\n🎉 Help metadata seeded successfully!');

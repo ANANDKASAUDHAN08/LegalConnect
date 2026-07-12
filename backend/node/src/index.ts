@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
+import { seedFullDatabaseIfEmpty } from './utils/autoSeeder';
 import legalRoutes from './routes/legalRoutes';
 import lawyerRoutes from './routes/lawyerRoutes';
 import templateRoutes from './routes/templateRoutes';
@@ -31,6 +32,7 @@ app.use('/api/lawyers', lawyerRoutes);
 // Start Server
 const startServer = async () => {
   await connectDB();
+  await seedFullDatabaseIfEmpty();
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
   });

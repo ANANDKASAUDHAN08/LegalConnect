@@ -42,7 +42,7 @@ const LawyerSchema = new Schema<ILawyer>({
   bio: { type: String, required: true },
   phone: { type: String },
   email: { type: String },
-  isVerified: { type: Boolean, default: false },
+  isVerified: { type: Boolean, default: true },
   consultationFee: { type: Number, default: 0 },
   inPersonFee: { type: Number, default: 0 },
   casesCompleted: { type: Number, default: 150 },

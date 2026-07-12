@@ -1,4 +1,7 @@
 import mongoose from 'mongoose';
+import '../models/BareAct';
+import '../models/Lawyer';
+import '../models/LegalResource';
 
 export const connectDB = async () => {
   try {
@@ -9,6 +12,7 @@ export const connectDB = async () => {
     
     // Explicitly sync/build model indexes to prevent text-search failures
     await conn.connection.model('BareAct').createIndexes();
+    await conn.connection.model('Section').createIndexes();
     await conn.connection.model('Lawyer').createIndexes();
     await conn.connection.model('LegalResource').createIndexes();
     console.log('✅ MongoDB Indexes verified and synchronized.');

@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
@@ -26,10 +27,21 @@ const seedResources = async () => {
     await LegalResource.deleteMany({});
     console.log('💾 Seeding LegalResources database...');
 
+    const processedResourceIds = new Set();
     for (const res of resources) {
-      const newResource = new LegalResource(res);
+      const hash = crypto.createHash('md5').update(res.name).digest('hex');
+      const deterministicId = hash.substring(0, 24);
+      if (processedResourceIds.has(deterministicId)) {
+        console.log(`  ⚠️ Skipping duplicate resource: "${res.name}"`);
+        continue;
+      }
+      processedResourceIds.add(deterministicId);
+      const newResource = new LegalResource({
+        _id: new mongoose.Types.ObjectId(deterministicId),
+        ...res
+      });
       await newResource.save();
-      console.log(`  ✅ Inserted: "${res.name}" (${res.city}, ${res.state}) [${res.type}]`);
+      console.log(`  ✅ Inserted: "${res.name}" (${res.city}, ${res.state}) [${res.type}] [ID: ${deterministicId}]`);
     }
 
     console.log('\n🎉 LegalResources database seeded successfully!');

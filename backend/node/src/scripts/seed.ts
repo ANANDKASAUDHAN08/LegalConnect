@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import crypto from 'crypto';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
@@ -127,13 +128,23 @@ const seedData = async () => {
     console.log('\n🗑️  Clearing existing Lawyers...');
     await Lawyer.deleteMany({});
     console.log('💾 Seeding lawyers...');
+    const processedIds = new Set();
     for (const lawyer of lawyers) {
+      const hashKey = lawyer.email || lawyer.name;
+      const hash = crypto.createHash('md5').update(hashKey).digest('hex');
+      const deterministicId = hash.substring(0, 24);
+      if (processedIds.has(deterministicId)) {
+        console.log(`  ⚠️ Skipping duplicate lawyer: "${lawyer.name}"`);
+        continue;
+      }
+      processedIds.add(deterministicId);
       const newLawyer = new Lawyer({
+        _id: new mongoose.Types.ObjectId(deterministicId),
         ...lawyer,
         isVerified: true
       });
       await newLawyer.save();
-      console.log(`  ✅ Inserted: "${lawyer.name}"`);
+      console.log(`  ✅ Inserted: "${lawyer.name}" [ID: ${deterministicId}]`);
     }
 
     console.log('\n🎉 Database seeded successfully!');

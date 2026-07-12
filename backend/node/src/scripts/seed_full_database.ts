@@ -563,7 +563,59 @@ async function seedData() {
       }
     }
 
-    console.log('\n🎉 All 15 Bare Acts seeded successfully!');
+    // --- 6. Annotated Central Acts Library ---
+    const centralActsPath = path.resolve(__dirname, '../data/central_acts.seed.json');
+    if (fs.existsSync(centralActsPath)) {
+      console.log('\n📖 Processing Central Acts Library...');
+      const centralActs = JSON.parse(fs.readFileSync(centralActsPath, 'utf-8'));
+      console.log(`  Found ${centralActs.length} acts in Central Acts Library seed.`);
+
+      const actsToInsert: any[] = [];
+      const sectionsToInsert: any[] = [];
+
+      const seededShortNames = new Set([
+        'BNS', 'BNSS', 'BSA', 'CONSTITUTION', 'IPC', 'CRPC', 'IEA', 'NIA',
+        'CPC', 'MVA', 'IDA', 'HMA', 'RTI', 'DVA', 'HSA'
+      ]);
+
+      for (const act of centralActs) {
+        if (!act.shortName || seededShortNames.has(act.shortName.toUpperCase())) {
+          continue;
+        }
+
+        seededShortNames.add(act.shortName.toUpperCase());
+
+        if (act.chapters) {
+          for (const chap of act.chapters) {
+            if (chap.sections) {
+              for (const sec of chap.sections) {
+                sectionsToInsert.push({
+                  actShortName: act.shortName,
+                  chapterNumber: chap.chapterNumber,
+                  section_number: sec.section_number,
+                  title: sec.title,
+                  content: sec.content,
+                  clean_title: sec.title,
+                  content_blocks: [{ type: 'paragraph', text: sec.content }]
+                });
+              }
+            }
+          }
+        }
+
+        actsToInsert.push(act);
+      }
+
+      if (actsToInsert.length > 0) {
+        await BareAct.insertMany(actsToInsert);
+      }
+      if (sectionsToInsert.length > 0) {
+        await SectionModel.insertMany(sectionsToInsert);
+      }
+      console.log(`  ✅ Successfully saved Central Acts Library (${actsToInsert.length} acts, ${sectionsToInsert.length} sections)`);
+    }
+
+    console.log('\n🎉 All 15 Bare Acts and Central Acts Library seeded successfully!');
     process.exit(0);
   } catch (error: any) {
     console.error('❌ Database seeding failed:', error.message);
