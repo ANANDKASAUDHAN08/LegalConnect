@@ -45,6 +45,8 @@ export class AuthService {
   private _isSessionLoaded = new BehaviorSubject<boolean>(false);
   isSessionLoaded$ = this._isSessionLoaded.asObservable();
 
+  private _logoutTimerId: ReturnType<typeof setTimeout> | null = null;
+
   private httpOptions = {
     withCredentials: true
   };
@@ -55,22 +57,31 @@ export class AuthService {
 
   constructor(private http: HttpClient, private router: Router) {
     // Session is initialized via APP_INITIALIZER in app.config.ts.
-    // This listener handles cross-tab login/logout events.
-    window.addEventListener('storage', (event) => {
-      if (event.key === 'lc_token') {
-        const newToken = event.newValue;
-        if (newToken) {
-          this.token = newToken;
-          this.checkSession().subscribe();
-        } else {
-          this.token = null;
-          this._currentUser.next(null);
-          this._isLoggedIn.next(false);
-          this._isSessionLoaded.next(true);
-          this.router.navigate(['/login']);
+    if (typeof window !== 'undefined') {
+      // This listener handles cross-tab login/logout events.
+      window.addEventListener('storage', (event) => {
+        if (event.key === 'lc_token') {
+          const newToken = event.newValue;
+          if (newToken) {
+            this.token = newToken;
+            this.checkSession().subscribe();
+          } else {
+            this.token = null;
+            this._currentUser.next(null);
+            this._isLoggedIn.next(false);
+            this._isSessionLoaded.next(true);
+            this.router.navigate(['/login']);
+          }
         }
-      }
-    });
+      });
+
+      // Re-validate session when browser transitions from offline to online
+      window.addEventListener('online', () => {
+        if (this.token) {
+          this.checkSession().subscribe();
+        }
+      });
+    }
   }
 
   checkSession(): Observable<boolean> {
@@ -86,22 +97,55 @@ export class AuthService {
           if (user.token) {
             this.token = user.token;
             localStorage.setItem('lc_token', user.token);
+            this.scheduleAutoLogout(user.token);
+          } else if (this.token) {
+            this.scheduleAutoLogout(this.token);
           }
           if (user.role) {
             localStorage.setItem('lc_preferred_role', user.role);
           }
+          try {
+            // Sanitize user profile to avoid caching sensitive PII locally in plaintext
+            const sanitizedUser: Partial<UserProfile> = {
+              id: user.id,
+              fullName: user.fullName,
+              role: user.role,
+              avatarUrl: user.avatarUrl,
+              isAuthenticated: user.isAuthenticated
+            };
+            localStorage.setItem('lc_user_profile', JSON.stringify(sanitizedUser));
+          } catch (e) {}
         } else {
           this.token = null;
           localStorage.removeItem('lc_token');
+          localStorage.removeItem('lc_user_profile');
           this._currentUser.next(null);
           this._isLoggedIn.next(false);
           this._isSessionLoaded.next(true);
         }
       }),
       map(user => user && user.isAuthenticated !== false),
-      catchError(() => {
+      catchError((error) => {
+        // Differentiate true offline status from server-down / CORS misconfiguration
+        const isOffline = error.status === 0 && (typeof navigator !== 'undefined' && !navigator.onLine);
+        if (isOffline) {
+          const cached = localStorage.getItem('lc_user_profile');
+          const token = localStorage.getItem('lc_token');
+          if (cached && token) {
+            try {
+              const user = JSON.parse(cached);
+              this._currentUser.next(user);
+              this._isLoggedIn.next(true);
+              this._isSessionLoaded.next(true);
+              return of(true);
+            } catch (e) {}
+          }
+        } else if (error.status === 0) {
+          console.error('API connection failed (status 0). This may indicate backend is offline or CORS is misconfigured.');
+        }
         this.token = null;
         localStorage.removeItem('lc_token');
+        localStorage.removeItem('lc_user_profile');
         this._currentUser.next(null);
         this._isLoggedIn.next(false);
         this._isSessionLoaded.next(true);
@@ -120,6 +164,7 @@ export class AuthService {
         if (res.token) {
           this.token = res.token;
           localStorage.setItem('lc_token', res.token);
+          this.scheduleAutoLogout(res.token);
         }
       })
     );
@@ -165,6 +210,7 @@ export class AuthService {
       tap(() => {
         this.token = null;
         localStorage.removeItem('lc_token');
+        localStorage.removeItem('lc_user_profile');
         this._currentUser.next(null);
         this._isLoggedIn.next(false);
       })
@@ -211,18 +257,72 @@ export class AuthService {
     return this.http.get<any>(`${this.apiUrl}/export-data`, this.httpOptions);
   }
 
+  /**
+   * Parses the JWT token's `exp` claim and schedules a timer
+   * to automatically log the user out when the token expires.
+   * This is deterministic and avoids the cascading 401 problem
+   * that reactive interceptor-based logout causes.
+   */
+  private scheduleAutoLogout(token: string): void {
+    this.clearAutoLogout();
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      if (payload.exp) {
+        const expiresAt = payload.exp * 1000; // convert to ms
+        const now = Date.now();
+        const msUntilExpiry = expiresAt - now;
+        if (msUntilExpiry > 0) {
+          this._logoutTimerId = setTimeout(() => {
+            this.handleSessionExpired();
+          }, msUntilExpiry);
+        } else {
+          // Token already expired
+          this.handleSessionExpired();
+        }
+      }
+    } catch (e) {
+      // Malformed token — don't schedule anything
+    }
+  }
+
+  private clearAutoLogout(): void {
+    if (this._logoutTimerId) {
+      clearTimeout(this._logoutTimerId);
+      this._logoutTimerId = null;
+    }
+  }
+
+  /**
+   * Called when the JWT token expires (by the timer) or when
+   * a cross-tab logout is detected via the storage event.
+   * Performs a local-only cleanup without making any HTTP call.
+   */
+  private handleSessionExpired(): void {
+    this.clearAutoLogout();
+    this.token = null;
+    localStorage.removeItem('lc_token');
+    localStorage.removeItem('lc_user_profile');
+    this._currentUser.next(null);
+    this._isLoggedIn.next(false);
+    this.router.navigate(['/login']);
+  }
+
   logout() {
     return this.http.post<any>(`${this.apiUrl}/logout`, {}, this.httpOptions).pipe(
       tap(() => {
+        this.clearAutoLogout();
         this.token = null;
         localStorage.removeItem('lc_token');
+        localStorage.removeItem('lc_user_profile');
         this._currentUser.next(null);
         this._isLoggedIn.next(false);
         this.router.navigate(['/login']);
       }),
       catchError(() => {
+        this.clearAutoLogout();
         this.token = null;
         localStorage.removeItem('lc_token');
+        localStorage.removeItem('lc_user_profile');
         this._currentUser.next(null);
         this._isLoggedIn.next(false);
         this.router.navigate(['/login']);

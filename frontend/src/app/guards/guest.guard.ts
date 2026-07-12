@@ -10,7 +10,7 @@ export const guestGuard: CanActivateFn = () => {
   return auth.isSessionLoaded$.pipe(
     filter(loaded => loaded),
     take(1),
-    switchMap(() => auth.isLoggedIn$),
+    switchMap(() => auth.isLoggedIn$.pipe(take(1))),
     map(isLoggedIn => {
       if (isLoggedIn) {
         router.navigate(['/dashboard']);

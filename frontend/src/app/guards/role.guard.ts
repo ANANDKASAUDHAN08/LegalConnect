@@ -11,7 +11,7 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
   return auth.isSessionLoaded$.pipe(
     filter(loaded => loaded),
     take(1),
-    switchMap(() => auth.currentUser$),
+    switchMap(() => auth.currentUser$.pipe(take(1))),
     map(user => {
       if (user && (expectedRoles.length === 0 || expectedRoles.includes(user.role))) {
         return true;
