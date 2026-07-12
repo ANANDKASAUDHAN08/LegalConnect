@@ -68,6 +68,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         {
             OnMessageReceived = context =>
             {
+                // Prefer the Authorization Bearer header (set by Angular interceptor)
+                // over the cookie. This prevents stale cookies from overriding valid tokens.
+                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
+                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
+                {
+                    // Let the default JwtBearer handler extract the token from the header
+                    return Task.CompletedTask;
+                }
+                // Fallback to cookie for SSR or non-SPA clients
                 if (context.Request.Cookies.ContainsKey("lc_token"))
                 {
                     context.Token = context.Request.Cookies["lc_token"];

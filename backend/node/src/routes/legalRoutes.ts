@@ -13,6 +13,14 @@ import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
+function normalizeActShortName(shortName: string): string {
+  if (!shortName) return shortName;
+  const upper = shortName.toUpperCase().trim();
+  if (upper === 'CPA') return 'CP';
+  if (upper === 'ITA') return 'IT';
+  return shortName;
+}
+
 // In-Memory Cache Fallback Stores
 const searchCache = new Map<string, any>();
 const mappingCache = new Map<string, any>();
@@ -21,6 +29,18 @@ let cachedAllActs: any = null;
 const cachedActsByShortName = new Map<string, any>();
 
 // Redis Initialization with Graceful Fallback
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 const redisUrl = process.env.REDIS_URL;
 let redisClient: any = null;
 let isRedisConnected = false;
@@ -134,11 +154,14 @@ router.get('/search', async (req: Request, res: Response) => {
     // Using MongoDB $text index for fast section-level full-text search
     const sections = await SectionModel.find(
       { $text: { $search: query } },
-      { score: { $meta: "textScore" } }
+      { score: { $meta: "textScore" }, content_blocks: 0, content_blocks_hi: 0 }
     ).sort({ score: { $meta: "textScore" } }).limit(20);
 
-    // Fetch act metadata to match shortNames to full names/years
-    const acts = await BareAct.find({}, 'actName shortName year description');
+    // Fetch act metadata to match shortNames to full names/years (optimized lookup)
+    const actShortNames = [...new Set(sections.map(s => s.actShortName || ''))].filter(Boolean);
+    const acts = actShortNames.length > 0
+      ? await BareAct.find({ shortName: { $in: actShortNames } }, 'actName shortName year description')
+      : [];
     const actMap = new Map(acts.map(a => [a.shortName, a]));
 
     const data = sections.map(sec => {
@@ -188,6 +211,331 @@ router.get('/search', async (req: Request, res: Response) => {
 
     const finalResponse = { success: true, count: data.length, data };
     await setCache(`legal:search:${cacheKey}`, finalResponse, 3600); // cache search results for 1 hour
+
+    res.json(finalResponse);
+  } catch (error: any) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Unified Omnisearch Hub
+router.get('/search-hub', async (req: Request, res: Response) => {
+  try {
+    const query = (req.query.q as string || '').trim();
+    const city = (req.query.city as string || '').trim();
+    const limit = parseInt(req.query.limit as string) || 3;
+
+    if (!query) {
+      return res.status(400).json({ success: false, message: 'Query parameter "q" is required.' });
+    }
+
+    const latVal = (req.query.lat && req.query.lat !== 'null' && req.query.lat !== 'undefined') ? Number(req.query.lat) : null;
+    const lngVal = (req.query.lng && req.query.lng !== 'null' && req.query.lng !== 'undefined') ? Number(req.query.lng) : null;
+    const latParamStr = latVal !== null ? latVal.toFixed(4) : '';
+    const lngParamStr = lngVal !== null ? lngVal.toFixed(4) : '';
+
+    const cacheKey = `legal:search-hub:${query.toLowerCase()}:${city.toLowerCase()}:${latParamStr}:${lngParamStr}:${limit}`;
+    if (req.query.refresh !== 'true') {
+      const cached = await getCache(cacheKey);
+      if (cached) {
+        return res.json({ ...cached, fromCache: true });
+      }
+    }
+
+    // Direct Act/Section parser
+    let directSection: any = null;
+    let parsedActShort = '';
+    let parsedSectionNum = '';
+
+    const actSecMatch1 = query.match(/^([A-Za-z0-9() -]+)\s+Sec(?:tion)?\s+(\d+[A-Za-z0-9]*)$/i);
+    if (actSecMatch1) {
+      parsedActShort = actSecMatch1[1].trim();
+      parsedSectionNum = actSecMatch1[2].trim();
+    } else {
+      const actSecMatch2 = query.match(/^Sec(?:tion)?\s+(\d+[A-Za-z0-9]*)(?:\s+of)?\s+([A-Za-z0-9() -]+)$/i);
+      if (actSecMatch2) {
+        parsedSectionNum = actSecMatch2[1].trim();
+        parsedActShort = actSecMatch2[2].trim();
+      }
+    }
+
+    if (parsedActShort && parsedSectionNum) {
+      const matchedAct = await BareAct.findOne({
+        $or: [
+          { shortName: { $regex: new RegExp(`^${parsedActShort.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } },
+          { actName: { $regex: new RegExp(`^${parsedActShort.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i') } }
+        ]
+      });
+
+      if (matchedAct) {
+        directSection = await SectionModel.findOne({
+          actShortName: matchedAct.shortName,
+          section_number: { $regex: new RegExp(`^${parsedSectionNum}$`, 'i') }
+        });
+      }
+    }
+
+    // Prepare Lawyer filter
+    const lawyerFilter: any = { isVerified: true };
+    const queryWords = query.split(/\s+/).filter(w => w.length > 2);
+    const expertMatch = query.match(/^expert:([A-Za-z0-9() -]+)$/i);
+
+    if (expertMatch) {
+      const actForExpert = expertMatch[1].trim().toUpperCase();
+      let mappedSpecialization = 'Civil Law';
+      if (['IPC', 'BNS', 'CRPC', 'BNSS', 'BSA', 'IEA'].includes(actForExpert)) {
+        mappedSpecialization = 'Criminal Law';
+      } else if (['WOD', 'RENT CONTROL ACT', 'RENT ACT', 'TRANSFER OF PROPERTY'].includes(actForExpert)) {
+        mappedSpecialization = 'Property Disputes';
+      } else if (['NI ACT', 'CONTRACT ACT'].includes(actForExpert)) {
+        mappedSpecialization = 'Contract Law';
+      } else if (['DVA', 'DOMESTIC VIOLENCE'].includes(actForExpert)) {
+        mappedSpecialization = 'Family Law';
+      }
+      lawyerFilter.specializations = { $regex: new RegExp(mappedSpecialization, 'i') };
+    } else {
+      if (queryWords.length > 0) {
+        const regexPatterns = queryWords.map((w: string) => new RegExp(w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i'));
+        lawyerFilter.$or = [
+          { name: { $in: regexPatterns } },
+          { specializations: { $in: regexPatterns } },
+          { bio: { $in: regexPatterns } }
+        ];
+      } else {
+        lawyerFilter.$or = [
+          { name: { $regex: query, $options: 'i' } },
+          { specializations: { $regex: query, $options: 'i' } },
+          { bio: { $regex: query, $options: 'i' } }
+        ];
+      }
+    }
+
+    let resolvedCity = city;
+    const nearbyCities = new Set<string>();
+    let coordsResolved = false;
+
+    if (city) {
+      if (latVal !== null && lngVal !== null && !isNaN(latVal) && !isNaN(lngVal)) {
+        const delta = 0.8;
+        const nearbyResources = await LegalResource.find({
+          'coordinates.lat': { $gte: latVal - delta, $lte: latVal + delta },
+          'coordinates.lng': { $gte: lngVal - delta, $lte: lngVal + delta }
+        }).lean();
+
+        if (nearbyResources.length > 0) {
+          let minDistance = Infinity;
+          let closestResource: any = null;
+          for (const res of nearbyResources) {
+            if (res.coordinates && typeof res.coordinates.lat === 'number' && typeof res.coordinates.lng === 'number') {
+              const dist = calculateDistance(latVal, lngVal, res.coordinates.lat, res.coordinates.lng);
+              if (res.city) nearbyCities.add(res.city);
+              if (dist < minDistance) {
+                minDistance = dist;
+                closestResource = res;
+              }
+            }
+          }
+          if (closestResource) {
+            resolvedCity = closestResource.city;
+            coordsResolved = true;
+          }
+        }
+      }
+
+      if (!coordsResolved) {
+        const textRes = await resolveCityAndStateFromText(city);
+        resolvedCity = textRes.city;
+        if (textRes.lat && textRes.lng) {
+          const delta = 0.8;
+          const nearbyResources = await LegalResource.find({
+            'coordinates.lat': { $gte: textRes.lat - delta, $lte: textRes.lat + delta },
+            'coordinates.lng': { $gte: textRes.lng - delta, $lte: textRes.lng + delta }
+          }).lean();
+          for (const res of nearbyResources) {
+            if (res.city) nearbyCities.add(res.city);
+          }
+        }
+      }
+    }
+
+    let cityPattern = `^${resolvedCity}$`;
+    if (resolvedCity) {
+      const cleanedCity = resolvedCity.toLowerCase().trim();
+      if (cleanedCity === 'delhi' || cleanedCity === 'new delhi') {
+        cityPattern = '^(delhi|new delhi)$';
+      } else if (cleanedCity === 'bengaluru' || cleanedCity === 'bangalore') {
+        cityPattern = '^(bengaluru|bangalore)$';
+      } else if (cleanedCity === 'gurgaon' || cleanedCity === 'gurugram') {
+        cityPattern = '^(gurgaon|gurugram)$';
+      }
+    }
+
+    if (nearbyCities.size > 1) {
+      const escaped = Array.from(nearbyCities).map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      cityPattern = `^(${escaped.join('|')})$`;
+    }
+
+    if (city) {
+      lawyerFilter.city = { $regex: new RegExp(cityPattern, 'i') };
+    }
+
+    // Prepare LegalResource filter
+    const resourceFilter: any = { status: 'approved' };
+    if (queryWords.length > 0) {
+      const regexPatterns = queryWords.map(w => new RegExp(w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i'));
+      resourceFilter.$or = [
+        { name: { $in: regexPatterns } },
+        { address: { $in: regexPatterns } },
+        { categories: { $in: regexPatterns } },
+        { subcategories: { $in: regexPatterns } },
+        { tags: { $in: regexPatterns } }
+      ];
+    } else {
+      resourceFilter.$or = [
+        { name: { $regex: query, $options: 'i' } },
+        { address: { $regex: query, $options: 'i' } },
+        { categories: { $regex: query, $options: 'i' } },
+        { subcategories: { $regex: query, $options: 'i' } },
+        { tags: { $regex: query, $options: 'i' } }
+      ];
+    }
+
+    if (city) {
+      resourceFilter.city = { $regex: new RegExp(cityPattern, 'i') };
+    }
+
+    // Fetch sections, inserting the direct match at index 0 if found
+    let sectionQuery;
+    if (directSection) {
+      sectionQuery = SectionModel.find(
+        { 
+          $text: { $search: query.replace(/sec(?:tion)?\s+\d+/i, '').trim() || query },
+          _id: { $ne: directSection._id }
+        },
+        { score: { $meta: "textScore" }, content_blocks: 0, content_blocks_hi: 0 }
+      ).sort({ score: { $meta: "textScore" } }).limit(limit - 1);
+    } else {
+      sectionQuery = SectionModel.find(
+        { $text: { $search: query } },
+        { score: { $meta: "textScore" }, content_blocks: 0, content_blocks_hi: 0 }
+      ).sort({ score: { $meta: "textScore" } }).limit(limit);
+    }
+
+    const [sectionsList, lawyers, resources] = await Promise.all([
+      sectionQuery,
+      Lawyer.find(lawyerFilter).sort({ rating: -1 }).limit(limit).lean(),
+      LegalResource.find(resourceFilter).limit(limit).lean()
+    ]);
+
+    const sections = directSection ? [directSection].concat(sectionsList) : sectionsList;
+
+    // Fetch matching act metadata dynamically (only lookup referenced acts to optimize performance)
+    const actShortNames = [...new Set(sections.map(s => s.actShortName || ''))].filter(Boolean);
+    const acts = actShortNames.length > 0
+      ? await BareAct.find({ shortName: { $in: actShortNames } }, 'actName shortName year description')
+      : [];
+    const actMap = new Map(acts.map(a => [a.shortName, a]));
+
+    // Map section results with highlighting and metadata
+    const mappedSections = sections.map(sec => {
+      const act = actMap.get(sec.actShortName || '');
+      let snippet = '';
+      const text = sec.content || '';
+      const textHi = sec.content_hi || '';
+
+      // Determine snippet source text (use Hindi if search query is in Hindi)
+      const isHindiQuery = /[\u0900-\u097F]/.test(query);
+      const targetText = (isHindiQuery && textHi) ? textHi : text;
+
+      const searchWords = query.split(/\s+/).filter(w => w.length > 1);
+      let bestIndex = -1;
+      for (const word of searchWords) {
+        const idx = targetText.toLowerCase().indexOf(word.toLowerCase());
+        if (idx !== -1) {
+          bestIndex = idx;
+          break;
+        }
+      }
+
+      if (bestIndex !== -1) {
+        const start = Math.max(0, bestIndex - 60);
+        const end = Math.min(targetText.length, bestIndex + 100);
+        snippet = (start > 0 ? '...' : '') + targetText.substring(start, end).trim() + (end < targetText.length ? '...' : '');
+      } else {
+        snippet = targetText.substring(0, 150).trim() + (targetText.length > 150 ? '...' : '');
+      }
+
+      // Highlight matching query words in the snippet
+      if (searchWords.length > 0) {
+        const wordsPattern = searchWords.map(w => w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')).join('|');
+        const highlightRegex = new RegExp(`(${wordsPattern})`, 'gi');
+        snippet = snippet.replace(highlightRegex, '<mark class="bg-accent/20 text-accent dark:bg-accent/30 dark:text-accent-light px-0.5 rounded">$1</mark>');
+      }
+
+      // Heuristic rules for criminal offense details for IPC/BNS sections
+      const secNum = parseInt(sec.section_number) || 0;
+      let isBailable = true;
+      let isCognizable = false;
+      let compoundable = 'Non-Compoundable';
+      let punishment = 'Fine or minor imprisonment';
+      let severity = 'low';
+
+      if (sec.actShortName === 'IPC' || sec.actShortName === 'BNS') {
+        if (secNum === 302 || secNum === 101 || secNum === 307 || secNum === 109 || secNum === 376 || secNum === 64) {
+          isBailable = false;
+          isCognizable = true;
+          punishment = 'Death or Life Imprisonment';
+          severity = 'high';
+        } else if (secNum === 379 || secNum === 303 || secNum === 420 || secNum === 318 || secNum === 324 || secNum === 117) {
+          isBailable = false;
+          isCognizable = true;
+          punishment = 'Up to 3 to 7 Years Imprisonment';
+          severity = 'medium';
+          if (secNum === 420 || secNum === 318) {
+            compoundable = 'Compoundable with court permission';
+          }
+        } else if (secNum === 323 || secNum === 115 || secNum === 504 || secNum === 352) {
+          isBailable = true;
+          isCognizable = false;
+          compoundable = 'Compoundable';
+          punishment = 'Up to 1 Year or Fine';
+          severity = 'low';
+        }
+      }
+
+      return {
+        _id: sec._id,
+        section_number: sec.section_number,
+        title: sec.title,
+        title_hi: sec.title_hi || sec.title,
+        content: sec.content,
+        content_hi: sec.content_hi || sec.content,
+        actName: act ? act.actName : sec.actShortName,
+        shortName: sec.actShortName,
+        year: act ? act.year : null,
+        chapterNumber: sec.chapterNumber,
+        snippet,
+        criminalDetails: {
+          isBailable,
+          isCognizable,
+          compoundable,
+          punishment,
+          severity
+        }
+      };
+    });
+
+    const finalResponse = {
+      success: true,
+      data: {
+        laws: mappedSections,
+        lawyers,
+        resources
+      }
+    };
+
+    // Cache the result for 5 minutes (300 seconds)
+    await setCache(cacheKey, finalResponse, 300);
 
     res.json(finalResponse);
   } catch (error: any) {
@@ -270,6 +618,7 @@ router.get('/acts', async (req: Request, res: Response) => {
 router.get('/acts/:shortName', async (req: Request, res: Response) => {
   try {
     const shortName = req.params.shortName as string;
+    const normalizedShortName = normalizeActShortName(shortName);
     if (req.query.refresh !== 'true') {
       const cached = await getCache(`legal:act:${shortName}`);
       if (cached) {
@@ -278,18 +627,21 @@ router.get('/acts/:shortName', async (req: Request, res: Response) => {
       }
     }
 
-    const act = await BareAct.findOne({ shortName });
+    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') });
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    await setCache(`legal:act:${shortName}`, act);
+    const actObj = act.toObject ? act.toObject() : { ...act };
+    actObj.shortName = shortName;
+
+    await setCache(`legal:act:${shortName}`, actObj);
     if (req.query.refresh === 'true') {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     } else {
       res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     }
-    res.json({ success: true, data: act });
+    res.json({ success: true, data: actObj });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -299,6 +651,7 @@ router.get('/acts/:shortName', async (req: Request, res: Response) => {
 router.get('/acts/:shortName/outline', async (req: Request, res: Response) => {
   try {
     const shortName = req.params.shortName as string;
+    const normalizedShortName = normalizeActShortName(shortName);
     const cacheKey = `legal:act:outline:${shortName}`;
     if (req.query.refresh !== 'true') {
       const cached = await getCache(cacheKey);
@@ -309,7 +662,7 @@ router.get('/acts/:shortName/outline', async (req: Request, res: Response) => {
     }
 
     const act = await BareAct.findOne(
-      { shortName },
+      { shortName: new RegExp(`^${normalizedShortName}$`, 'i') },
       {
         actName: 1,
         shortName: 1,
@@ -329,13 +682,16 @@ router.get('/acts/:shortName/outline', async (req: Request, res: Response) => {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    await setCache(cacheKey, act);
+    const actObj = act.toObject ? act.toObject() : { ...act };
+    actObj.shortName = shortName; // preserve requested shortName
+
+    await setCache(cacheKey, actObj);
     if (req.query.refresh === 'true') {
       res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
     } else {
       res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
     }
-    res.json({ success: true, data: act });
+    res.json({ success: true, data: actObj });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -344,13 +700,60 @@ router.get('/acts/:shortName/outline', async (req: Request, res: Response) => {
 // Get a specific section
 router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res: Response) => {
   try {
-    const section = await SectionModel.findOne({
-      actShortName: req.params.shortName,
-      section_number: req.params.sectionNumber
+    const shortName = req.params.shortName as string;
+    const sectionNumber = req.params.sectionNumber as string;
+    const normalizedShortName = normalizeActShortName(shortName);
+    let section = await SectionModel.findOne({
+      actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+      section_number: sectionNumber
     });
+
+    if (!section && sectionNumber.includes('_')) {
+      const baseSecNum = sectionNumber.split('_')[0];
+      section = await SectionModel.findOne({
+        actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+        section_number: baseSecNum
+      });
+    }
+
     if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
+
+    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName year');
+
+    // Heuristic rules for criminal offense details for IPC/BNS sections
+    const secNum = parseInt(section.section_number) || 0;
+    let isBailable = true;
+    let isCognizable = false;
+    let compoundable = 'Non-Compoundable';
+    let punishment = 'Fine or minor imprisonment';
+    let severity = 'low';
+
+    if (normalizedShortName === 'IPC' || normalizedShortName === 'BNS') {
+      if (secNum === 302 || secNum === 101 || secNum === 307 || secNum === 109 || secNum === 376 || secNum === 64) {
+        isBailable = false;
+        isCognizable = true;
+        punishment = 'Death or Life Imprisonment';
+        severity = 'high';
+      } else if (secNum === 379 || secNum === 303 || secNum === 420 || secNum === 318 || secNum === 324 || secNum === 117) {
+        isBailable = false;
+        isCognizable = true;
+        punishment = 'Up to 3 to 7 Years Imprisonment';
+        severity = 'medium';
+        if (secNum === 420 || secNum === 318) {
+          compoundable = 'Compoundable with court permission';
+        }
+      } else if (secNum === 323 || secNum === 115 || secNum === 504 || secNum === 352) {
+        isBailable = true;
+        isCognizable = false;
+        compoundable = 'Compoundable';
+        punishment = 'Up to 1 Year or Fine';
+        severity = 'low';
+      }
+    }
+
+    const complexityRating = severity === 'high' ? 'High' : (severity === 'medium' ? 'Medium' : 'Low');
 
     const foundSection = {
       chapter: section.chapterNumber,
@@ -365,7 +768,17 @@ router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res:
       introduction_text: section.introduction_text,
       introduction_text_hi: section.introduction_text_hi,
       content_blocks: section.content_blocks,
-      content_blocks_hi: section.content_blocks_hi
+      content_blocks_hi: section.content_blocks_hi,
+      actName: act ? act.actName : req.params.shortName,
+      year: act ? act.year : null,
+      complexityRating,
+      criminalDetails: {
+        isBailable,
+        isCognizable,
+        compoundable,
+        punishment,
+        severity
+      }
     };
 
     res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
@@ -374,24 +787,31 @@ router.get('/acts/:shortName/sections/:sectionNumber', async (req: Request, res:
     res.status(500).json({ success: false, message: error.message });
   }
 });
-
 // Generate or get AI Summary
 router.get('/acts/:shortName/sections/:sectionNumber/summary', async (req: Request, res: Response) => {
   try {
     const shortName = req.params.shortName as string;
+    const normalizedShortName = normalizeActShortName(shortName);
     const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName }, 'actName shortName');
+    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName');
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+
+    if (!section && sectionNumber.includes('_')) {
+      const baseSecNum = sectionNumber.split('_')[0];
+      section = await SectionModel.findOne({
+        actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+        section_number: baseSecNum
+      });
+    }
+
     if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
-
-    // If summary already exists, return it from DB
     if (section.aiSummary) {
       res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
       return res.json({ success: true, data: { summary: section.aiSummary, cached: true } });
@@ -429,18 +849,26 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
   });
 
   res.write(': ping\n\n');
-
   try {
     const shortName = req.params.shortName as string;
+    const normalizedShortName = normalizeActShortName(shortName);
     const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName }, 'actName shortName');
+    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName');
     if (!act) {
       res.write(`event: error\ndata: ${JSON.stringify({ message: 'Act not found.' })}\n\n`);
       return res.end();
     }
+    let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
 
-    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    if (!section && sectionNumber.includes('_')) {
+      const baseSecNum = sectionNumber.split('_')[0];
+      section = await SectionModel.findOne({
+        actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+        section_number: baseSecNum
+      });
+    }
+
     if (!section) {
       res.write(`event: error\ndata: ${JSON.stringify({ message: 'Section not found.' })}\n\n`);
       return res.end();
@@ -484,11 +912,91 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
   }
 });
 
+async function resolveCityAndStateFromText(locationStr: string): Promise<{ city: string; state: string | null; lat?: number; lng?: number }> {
+  const cleanLoc = locationStr.toLowerCase().trim();
+  
+  try {
+    // Get all unique cities from database dynamically
+    const dbCities = await LegalResource.distinct('city');
+    // Sort by length descending to match longer names first (e.g. "New Delhi" before "Delhi")
+    dbCities.sort((a, b) => b.length - a.length);
+
+    for (const city of dbCities) {
+      if (city && cleanLoc.includes(city.toLowerCase())) {
+        // Find the state for this city from the database
+        const sample = await LegalResource.findOne({
+          city: { $regex: new RegExp(`^${city}$`, 'i') },
+          state: { $exists: true }
+        }).lean();
+        
+        // Find coordinates of any resource in this city to assist proximity mapping
+        const coordSample = await LegalResource.findOne({
+          city: { $regex: new RegExp(`^${city}$`, 'i') },
+          'coordinates.lat': { $exists: true }
+        }).lean();
+
+        return {
+          city: city,
+          state: (sample && sample.state) ? sample.state : null,
+          lat: coordSample?.coordinates?.lat || undefined,
+          lng: coordSample?.coordinates?.lng || undefined
+        };
+      }
+    }
+  } catch (err) {
+    console.error('Failed to query distinct cities from DB:', err);
+  }
+
+  // Comma-separated address fallback
+  if (locationStr.includes(',')) {
+    const parts = locationStr.split(',').map(p => p.trim());
+    if (parts.length >= 3) {
+      const cityCandidate = parts[parts.length - 3];
+      try {
+        const sample = await LegalResource.findOne({
+          city: { $regex: new RegExp(`^${cityCandidate}$`, 'i') }
+        }).lean();
+        if (sample) {
+          return {
+            city: sample.city,
+            state: sample.state || null,
+            lat: sample.coordinates?.lat || undefined,
+            lng: sample.coordinates?.lng || undefined
+          };
+        }
+      } catch (err) {}
+    } else if (parts.length >= 2) {
+      const cityCandidate = parts[parts.length - 2];
+      try {
+        const sample = await LegalResource.findOne({
+          city: { $regex: new RegExp(`^${cityCandidate}$`, 'i') }
+        }).lean();
+        if (sample) {
+          return {
+            city: sample.city,
+            state: sample.state || null,
+            lat: sample.coordinates?.lat || undefined,
+            lng: sample.coordinates?.lng || undefined
+          };
+        }
+      } catch (err) {}
+    }
+  }
+
+  // If no city from DB matches, capitalize and clean original location string
+  const cleanTarget = locationStr.replace(/\b\d{5,}\b/g, '').replace(/,?\s*india/i, '').trim();
+  return { city: cleanTarget || locationStr, state: null };
+}
+
 // GET /api/legal/help/categories - Fetch all legal help categories with dynamic counts
 router.get('/help/categories', async (req: Request, res: Response) => {
   try {
     const locationStr = (req.query.location as string || 'New Delhi').trim();
-    const cacheKey = `legal:help:categories:${locationStr.toLowerCase()}`;
+    const latVal = (req.query.lat && req.query.lat !== 'null' && req.query.lat !== 'undefined') ? Number(req.query.lat) : null;
+    const lngVal = (req.query.lng && req.query.lng !== 'null' && req.query.lng !== 'undefined') ? Number(req.query.lng) : null;
+    const latParamStr = latVal !== null ? latVal.toFixed(4) : '';
+    const lngParamStr = lngVal !== null ? lngVal.toFixed(4) : '';
+    const cacheKey = `legal:help:categories:${locationStr.toLowerCase()}:${latParamStr}:${lngParamStr}`;
 
     const cachedData = await getCache(cacheKey);
     if (cachedData) {
@@ -502,15 +1010,68 @@ router.get('/help/categories', async (req: Request, res: Response) => {
       return res.json({ success: true, data: [] });
     }
 
-    // Handle city aliases dynamically (e.g., Delhi vs New Delhi, Bengaluru vs Bangalore)
-    let cityPattern = `^${locationStr}$`;
-    const cleanedLoc = locationStr.trim().toLowerCase();
+    // Resolve city from coordinates if available
+    let resolvedCity = locationStr;
+    const nearbyCities = new Set<string>();
+    let coordsResolved = false;
+
+    if (latVal !== null && lngVal !== null && !isNaN(latVal) && !isNaN(lngVal)) {
+      const delta = 0.8;
+      const nearbyResources = await LegalResource.find({
+        'coordinates.lat': { $gte: latVal - delta, $lte: latVal + delta },
+        'coordinates.lng': { $gte: lngVal - delta, $lte: lngVal + delta }
+      }).lean();
+
+      if (nearbyResources.length > 0) {
+        let minDistance = Infinity;
+        let closestResource: any = null;
+        for (const res of nearbyResources) {
+          if (res.coordinates && typeof res.coordinates.lat === 'number' && typeof res.coordinates.lng === 'number') {
+            const dist = calculateDistance(latVal, lngVal, res.coordinates.lat, res.coordinates.lng);
+            if (res.city) nearbyCities.add(res.city);
+            if (dist < minDistance) {
+              minDistance = dist;
+              closestResource = res;
+            }
+          }
+        }
+        if (closestResource) {
+          resolvedCity = closestResource.city;
+          coordsResolved = true;
+        }
+      }
+    }
+
+    if (!coordsResolved) {
+      const textRes = await resolveCityAndStateFromText(locationStr);
+      resolvedCity = textRes.city;
+      if (textRes.lat && textRes.lng) {
+        const delta = 0.8;
+        const nearbyResources = await LegalResource.find({
+          'coordinates.lat': { $gte: textRes.lat - delta, $lte: textRes.lat + delta },
+          'coordinates.lng': { $gte: textRes.lng - delta, $lte: textRes.lng + delta }
+        }).lean();
+        for (const res of nearbyResources) {
+          if (res.city) nearbyCities.add(res.city);
+        }
+      }
+    }
+
+    // Handle city aliases dynamically
+    let cityPattern = `^${resolvedCity}$`;
+    const cleanedLoc = resolvedCity.trim().toLowerCase();
     if (cleanedLoc === 'delhi' || cleanedLoc === 'new delhi') {
       cityPattern = '^(delhi|new delhi)$';
     } else if (cleanedLoc === 'bengaluru' || cleanedLoc === 'bangalore') {
       cityPattern = '^(bengaluru|bangalore)$';
     } else if (cleanedLoc === 'gurgaon' || cleanedLoc === 'gurugram') {
       cityPattern = '^(gurgaon|gurugram)$';
+    }
+
+    // Include all nearby cities from coordinate resolution
+    if (nearbyCities.size > 1) {
+      const escaped = Array.from(nearbyCities).map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      cityPattern = `^(${escaped.join('|')})$`;
     }
 
     // Compute active counts for the given location in parallel
@@ -625,82 +1186,69 @@ router.get('/help-near-me', async (req: Request, res: Response) => {
     const locationStr = location as string;
     const stateParam = state as string;
 
-    const cacheKey = `legal:help-near-me:${categoryStr.toLowerCase()}:${locationStr.toLowerCase()}:${(stateParam || '').toLowerCase()}`;
+    const latParamStr = req.query.lat ? String(req.query.lat) : '';
+    const lngParamStr = req.query.lng ? String(req.query.lng) : '';
+    const cacheKey = `legal:help-near-me:${categoryStr.toLowerCase()}:${locationStr.toLowerCase()}:${(stateParam || '').toLowerCase()}:${latParamStr}:${lngParamStr}`;
     const cachedResult = await getCache(cacheKey);
     if (cachedResult) {
       res.set('Cache-Control', 'public, max-age=300, must-revalidate');
       return res.json({ ...cachedResult, fromCache: true });
     }
 
-    // Resolve state for small villages or towns fallback
+    let targetCity = locationStr.trim();
     let resolvedState = stateParam;
 
-    const cityToStateMap: Record<string, string> = {
-      'ayodhya': 'Uttar Pradesh',
-      'lucknow': 'Uttar Pradesh',
-      'kanpur': 'Uttar Pradesh',
-      'noida': 'Uttar Pradesh',
-      'ghaziabad': 'Uttar Pradesh',
-      'mumbai': 'Maharashtra',
-      'pune': 'Maharashtra',
-      'nagpur': 'Maharashtra',
-      'bengaluru': 'Karnataka',
-      'bangalore': 'Karnataka',
-      'mysore': 'Karnataka',
-      'chennai': 'Tamil Nadu',
-      'coimbatore': 'Tamil Nadu',
-      'kolkata': 'West Bengal',
-      'darjeeling': 'West Bengal',
-      'hyderabad': 'Telangana',
-      'ahmedabad': 'Gujarat',
-      'surat': 'Gujarat',
-      'jaipur': 'Rajasthan',
-      'jodhpur': 'Rajasthan',
-      'patna': 'Bihar',
-      'gaya': 'Bihar',
-      'bhopal': 'Madhya Pradesh',
-      'indore': 'Madhya Pradesh',
-      'ernakulam': 'Kerala',
-      'kochi': 'Kerala',
-      'trivandrum': 'Kerala',
-      'panchkula': 'Haryana',
-      'gurugram': 'Haryana',
-      'amritsar': 'Punjab',
-      'ludhiana': 'Punjab',
-      'shimla': 'Himachal Pradesh',
-      'dehradun': 'Uttarakhand',
-      'nainital': 'Uttarakhand',
-      'ranchi': 'Jharkhand',
-      'jamshedpur': 'Jharkhand',
-      'raipur': 'Chhattisgarh',
-      'bilaspur': 'Chhattisgarh',
-      'panaji': 'Goa',
-      'port blair': 'Andaman & Nicobar',
-      'leh': 'Ladakh',
-      'kavaratti': 'Lakshadweep',
-      'silvassa': 'Dadra & Nagar Haveli',
-      'daman': 'Daman & Diu',
-      'new delhi': 'Delhi'
-    };
+    const latVal = (req.query.lat && req.query.lat !== 'null' && req.query.lat !== 'undefined') ? Number(req.query.lat) : null;
+    const lngVal = (req.query.lng && req.query.lng !== 'null' && req.query.lng !== 'undefined') ? Number(req.query.lng) : null;
+    let coordsResolved = false;
 
-    const cleanLoc = locationStr.toLowerCase().trim();
-    if (!resolvedState) {
-      for (const [city, st] of Object.entries(cityToStateMap)) {
-        if (cleanLoc.includes(city)) {
-          resolvedState = st;
-          break;
+    // 0. Geospatial resolution: If coordinates are passed, resolve closest resource and its city name
+    const nearbyCities = new Set<string>();
+    if (latVal !== null && lngVal !== null && !isNaN(latVal) && !isNaN(lngVal)) {
+      const delta = 0.8; // roughly 80km bounding box
+      const nearbyResources = await LegalResource.find({
+        'coordinates.lat': { $gte: latVal - delta, $lte: latVal + delta },
+        'coordinates.lng': { $gte: lngVal - delta, $lte: lngVal + delta }
+      }).lean();
+
+      if (nearbyResources.length > 0) {
+        let minDistance = Infinity;
+        let closestResource: any = null;
+        for (const res of nearbyResources) {
+          if (res.coordinates && typeof res.coordinates.lat === 'number' && typeof res.coordinates.lng === 'number') {
+            const dist = calculateDistance(latVal, lngVal, res.coordinates.lat, res.coordinates.lng);
+            // Collect all cities within the bounding box
+            if (res.city) {
+              nearbyCities.add(res.city);
+            }
+            if (dist < minDistance) {
+              minDistance = dist;
+              closestResource = res;
+            }
+          }
+        }
+        if (closestResource) {
+          targetCity = closestResource.city;
+          resolvedState = closestResource.state || resolvedState;
+          coordsResolved = true;
         }
       }
     }
 
-    if (!resolvedState) {
-      // Look up any resource in this city in database to extract state
-      const sample = await LegalResource.findOne({
-        city: { $regex: new RegExp(`^${locationStr}$`, 'i') },
-        state: { $exists: true }
-      }).lean();
-      if (sample && sample.state) {
-        resolvedState = sample.state;
+    // Fallback to text matching if coordinates are not available or couldn't resolve a city
+    if (!coordsResolved) {
+      const textRes = await resolveCityAndStateFromText(locationStr);
+      targetCity = textRes.city;
+      resolvedState = textRes.state || resolvedState;
+      if (textRes.lat && textRes.lng) {
+        const delta = 0.8;
+        const nearbyResources = await LegalResource.find({
+          'coordinates.lat': { $gte: textRes.lat - delta, $lte: textRes.lat + delta },
+          'coordinates.lng': { $gte: textRes.lng - delta, $lte: textRes.lng + delta }
+        }).lean();
+        for (const res of nearbyResources) {
+          if (res.city) nearbyCities.add(res.city);
+        }
       }
     }
 
@@ -722,15 +1270,21 @@ router.get('/help-near-me', async (req: Request, res: Response) => {
       specQuery = /Corporate|Commercial|Contract|Business/i;
     }
 
-    // Handle city aliases dynamically (e.g., Delhi vs New Delhi, Bengaluru vs Bangalore)
-    let cityPattern = `^${locationStr}$`;
-    const cleanedLoc = locationStr.trim().toLowerCase();
+    // Handle city aliases dynamically using the clean targetCity
+    let cityPattern = `^${targetCity}$`;
+    const cleanedLoc = targetCity.trim().toLowerCase();
     if (cleanedLoc === 'delhi' || cleanedLoc === 'new delhi') {
       cityPattern = '^(delhi|new delhi)$';
     } else if (cleanedLoc === 'bengaluru' || cleanedLoc === 'bangalore') {
       cityPattern = '^(bengaluru|bangalore)$';
     } else if (cleanedLoc === 'gurgaon' || cleanedLoc === 'gurugram') {
       cityPattern = '^(gurgaon|gurugram)$';
+    }
+
+    // If coordinate resolution found multiple nearby cities, include them all
+    if (nearbyCities.size > 1) {
+      const escaped = Array.from(nearbyCities).map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      cityPattern = `^(${escaped.join('|')})$`;
     }
 
     const resourceFilter = {
@@ -849,8 +1403,9 @@ router.get('/mapping/suggestions', async (req: Request, res: Response) => {
       return res.json({ success: true, data: cached, fromCache: true });
     }
 
-    // Search across all supported acts for matching section numbers or titles
-    const supportedActs = ['IPC', 'CrPC', 'IEA', 'BNS', 'BNSS', 'BSA'];
+    // Search across all supported acts dynamically fetched from database
+    const acts = await BareAct.find({}, 'shortName').lean();
+    const supportedActs = acts.length > 0 ? acts.map(a => a.shortName) : ['IPC', 'CrPC', 'IEA', 'BNS', 'BNSS', 'BSA'];
     const isNumeric = /^\d/.test(q);
 
     let filter: any;
@@ -1022,14 +1577,23 @@ router.post('/acts/:shortName/sections/:sectionNumber/chat', async (req: Request
   try {
     const { question } = req.body;
     const shortName = req.params.shortName as string;
+    const normalizedShortName = normalizeActShortName(shortName);
     const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName }, 'actName shortName');
+    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName');
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+    if (!section && sectionNumber.includes('_')) {
+      const baseSecNum = sectionNumber.split('_')[0];
+      section = await SectionModel.findOne({
+        actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+        section_number: baseSecNum
+      });
+    }
+
     if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
@@ -1057,14 +1621,23 @@ Provide a helpful, direct, and concise answer in plain language (1-2 short parag
 router.post('/acts/:shortName/sections/:sectionNumber/translate', async (req: Request, res: Response) => {
   try {
     const shortName = req.params.shortName as string;
+    const normalizedShortName = normalizeActShortName(shortName);
     const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName }, 'actName shortName year');
+    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName year');
     if (!act) {
       return res.status(404).json({ success: false, message: 'Act not found.' });
     }
 
-    const section = await SectionModel.findOne({ actShortName: shortName, section_number: sectionNumber });
+    let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+    if (!section && sectionNumber.includes('_')) {
+      const baseSecNum = sectionNumber.split('_')[0];
+      section = await SectionModel.findOne({
+        actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+        section_number: baseSecNum
+      });
+    }
+
     if (!section) {
       return res.status(404).json({ success: false, message: 'Section not found.' });
     }
@@ -1109,10 +1682,45 @@ ${section.content}`;
 Title: ${section.title}`;
 
     // Run translations in parallel
-    const [contentResult, titleResult] = await Promise.all([
-      aiService.generateRawContent(contentPrompt),
-      aiService.generateRawContent(titlePrompt)
-    ]);
+    let contentResult = '';
+    let titleResult = '';
+    let isFallback = false;
+
+    try {
+      const [cRes, tRes] = await Promise.all([
+        aiService.generateRawContent(contentPrompt),
+        aiService.generateRawContent(titlePrompt)
+      ]);
+      contentResult = cRes;
+      titleResult = tRes;
+      
+      if (contentResult.includes('Mock Translation') || contentResult.includes('GEMINI_API_KEY')) {
+        isFallback = true;
+      }
+    } catch (err: any) {
+      console.error('Gemini translation failed, falling back to English:', err);
+      isFallback = true;
+    }
+
+    if (isFallback) {
+      const cleanTitleHi = section.clean_title || section.title;
+      const contentBlocksHi = section.content_blocks && section.content_blocks.length > 0
+        ? section.content_blocks.map(b => ({ type: b.type, text: b.text }))
+        : [{ type: 'main', text: section.content }];
+
+      return res.json({
+        success: true,
+        data: {
+          content_hi: section.content,
+          title_hi: section.title,
+          clean_title_hi: cleanTitleHi,
+          introduction_text_hi: section.introduction_text || undefined,
+          content_blocks_hi: contentBlocksHi,
+          cached: false,
+          translationUnavailable: true
+        }
+      });
+    }
 
     const { cleanTitle: cleanTitleHi, introText: introTextHi } = splitTitle(titleResult);
     const contentBlocksHi = getParsedContent(contentResult, introTextHi);
