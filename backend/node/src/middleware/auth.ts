@@ -21,18 +21,20 @@ export const requireAuth = (req: AuthenticatedRequest, res: Response, next: Next
 
   try {
     const decoded = jwt.verify(token, jwtSecret) as any;
+    console.log('[DEBUG NODE AUTH] JWT validation succeeded. User ID:', decoded.sub || decoded.nameid || decoded.id || 'unknown');
 
     // Support standard .NET NameIdentifier claim URI and standard JWT 'sub' / 'nameid' claims
     const userId = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || decoded.sub || decoded.nameid || decoded.id;
 
     if (!userId) {
+      console.warn('[DEBUG NODE AUTH] Token valid but missing user identity claims.');
       return res.status(401).json({ success: false, message: 'Invalid token structure' });
     }
 
     req.userId = String(userId);
     next();
   } catch (err: any) {
-    console.error('JWT Verification failed:', err.message);
+    console.error('[DEBUG NODE AUTH] JWT Verification failed:', err.message, 'Token used:', token.substring(0, 15) + '...');
     return res.status(401).json({ success: false, message: 'Invalid or expired authorization token' });
   }
 };

@@ -2017,10 +2017,10 @@ router.post('/help/ai-solve', async (req: Request, res: Response) => {
 // GET /api/legal/case-packs — Get all synced Case Packs for logged-in user
 router.get('/case-packs', requireAuth, async (req: Request, res: Response) => {
   try {
-    const user = (req as any).user;
-    if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    const packs = await SavedCasePack.find({ userId: user._id }).sort({ savedAt: -1 }).lean();
+    const packs = await SavedCasePack.find({ userId }).sort({ savedAt: -1 }).lean();
     res.json({ success: true, data: packs });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });
@@ -2030,8 +2030,8 @@ router.get('/case-packs', requireAuth, async (req: Request, res: Response) => {
 // POST /api/legal/case-packs/sync — Upsert an array of offline Case Packs for user
 router.post('/case-packs/sync', requireAuth, async (req: Request, res: Response) => {
   try {
-    const user = (req as any).user;
-    if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
     const { packs } = req.body;
     if (!Array.isArray(packs) || packs.length === 0) {
@@ -2042,9 +2042,9 @@ router.post('/case-packs/sync', requireAuth, async (req: Request, res: Response)
     for (const pack of packs) {
       if (!pack.category || !pack.location) continue;
       await SavedCasePack.findOneAndUpdate(
-        { userId: user._id, category: pack.category, location: pack.location },
+        { userId, category: pack.category, location: pack.location },
         {
-          userId: user._id,
+          userId,
           category: pack.category,
           location: pack.location,
           roadmap: pack.roadmap || {},
@@ -2066,10 +2066,10 @@ router.post('/case-packs/sync', requireAuth, async (req: Request, res: Response)
 // DELETE /api/legal/case-packs/:id — Remove a specific synced Case Pack
 router.delete('/case-packs/:id', requireAuth, async (req: Request, res: Response) => {
   try {
-    const user = (req as any).user;
-    if (!user) return res.status(401).json({ success: false, message: 'Unauthorized' });
+    const userId = (req as any).userId;
+    if (!userId) return res.status(401).json({ success: false, message: 'Unauthorized' });
 
-    await SavedCasePack.findOneAndDelete({ _id: req.params.id, userId: user._id });
+    await SavedCasePack.findOneAndDelete({ _id: req.params.id, userId });
     res.json({ success: true, message: 'Case Pack removed from account.' });
   } catch (error: any) {
     res.status(500).json({ success: false, message: error.message });

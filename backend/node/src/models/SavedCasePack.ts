@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface ISavedCasePack extends Document {
-  userId: mongoose.Types.ObjectId;
+  userId: string;
   category: string;
   location: string;
   roadmap: {
@@ -16,7 +16,7 @@ export interface ISavedCasePack extends Document {
 }
 
 const SavedCasePackSchema = new Schema<ISavedCasePack>({
-  userId: { type: Schema.Types.ObjectId, required: true, ref: 'User', index: true },
+  userId: { type: String, required: true, index: true },
   category: { type: String, required: true },
   location: { type: String, required: true },
   roadmap: {
