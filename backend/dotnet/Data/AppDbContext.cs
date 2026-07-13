@@ -15,6 +15,7 @@ namespace CoreApi.Data
         public DbSet<Bookmark> Bookmarks { get; set; }
         public DbSet<Review> Reviews { get; set; }
         public DbSet<ActiveSession> ActiveSessions { get; set; }
+        public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<LoginHistory> LoginHistories { get; set; }
         public DbSet<ResearchNote> ResearchNotes { get; set; }
         public DbSet<Helpline> Helplines { get; set; }
@@ -25,6 +26,16 @@ namespace CoreApi.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure RefreshToken relationships
+            modelBuilder.Entity<RefreshToken>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(r => r.Token);
 
             // Configure ActiveSession & LoginHistory relationships
             modelBuilder.Entity<ActiveSession>()
