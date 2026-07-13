@@ -19,6 +19,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
 
 namespace CoreApi.Controllers
 {
@@ -187,7 +188,12 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
 
             var token = CreateToken(user, sessionId);
+            var (rawRefresh, refreshEntity) = GenerateRefreshToken(user.Id, sessionId);
+            _context.RefreshTokens.Add(refreshEntity);
+            await _context.SaveChangesAsync();
+
             SetTokenCookie(token);
+            SetRefreshTokenCookie(rawRefresh);
 
             return Ok(new { token, message = "Logged in successfully!" });
         }
@@ -195,6 +201,7 @@ namespace CoreApi.Controllers
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             var sessionIdClaim = User.FindFirst("SessionId")?.Value;
             if (!string.IsNullOrEmpty(sessionIdClaim))
             {
@@ -202,18 +209,122 @@ namespace CoreApi.Controllers
                 if (session != null)
                 {
                     _context.ActiveSessions.Remove(session);
-                    await _context.SaveChangesAsync();
                 }
+
+                // Revoke all refresh tokens for this session
+                var refreshTokens = await _context.RefreshTokens
+                    .Where(r => r.SessionId == sessionIdClaim && r.RevokedAt == null)
+                    .ToListAsync();
+                foreach (var rt in refreshTokens)
+                {
+                    rt.RevokedAt = DateTime.UtcNow;
+                    rt.RevokedByIp = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+                }
+                await _context.SaveChangesAsync();
             }
 
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             Response.Cookies.Delete("lc_token", new CookieOptions
             {
                 HttpOnly = true,
                 Secure = isSecure,
                 SameSite = SameSiteMode.Lax
             });
+
+            Response.Cookies.Delete("lc_refresh", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = SameSiteMode.Lax,
+                Path = "/"
+            });
+
             return Ok(new { message = "Logged out successfully." });
+        }
+
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        public async Task<IActionResult> RefreshToken()
+        {
+            Console.WriteLine("[DEBUG AUTH] RefreshToken endpoint hit.");
+            var rawRefreshToken = Request.Cookies["lc_refresh"];
+            if (string.IsNullOrEmpty(rawRefreshToken))
+            {
+                Console.WriteLine("[DEBUG AUTH] No lc_refresh cookie found in request.");
+                return Unauthorized(new { message = "No refresh token provided." });
+            }
+
+            string hashedToken;
+            try
+            {
+                hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawRefreshToken)));
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DEBUG AUTH] Error hashing token: {ex.Message}");
+                return Unauthorized(new { message = "Invalid refresh token format." });
+            }
+
+            var storedToken = await _context.RefreshTokens
+                .Include(r => r.User)
+                .FirstOrDefaultAsync(r => r.Token == hashedToken);
+
+            if (storedToken == null)
+            {
+                Console.WriteLine("[DEBUG AUTH] Refresh token hash not found in database.");
+                return Unauthorized(new { message = "Invalid refresh token." });
+            }
+
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+
+            // Detect token reuse (replay attack)
+            if (storedToken.RevokedAt != null)
+            {
+                Console.WriteLine($"[DEBUG AUTH] Revoked token used! Replay attack detected. Token ID: {storedToken.Id}");
+                // Someone is using a revoked token — revoke ALL tokens for this user
+                await RevokeAllUserRefreshTokens(storedToken.UserId, $"REPLAY:{ip}");
+                return Unauthorized(new { message = "Token reuse detected. All sessions revoked." });
+            }
+
+            if (storedToken.ExpiresAt <= DateTime.UtcNow)
+            {
+                Console.WriteLine($"[DEBUG AUTH] Token expired. ExpiresAt: {storedToken.ExpiresAt}, UtcNow: {DateTime.UtcNow}");
+                return Unauthorized(new { message = "Refresh token expired. Please log in again." });
+            }
+
+            var user = storedToken.User;
+            if (user == null)
+            {
+                Console.WriteLine("[DEBUG AUTH] User associated with token not found.");
+                return Unauthorized(new { message = "User not found." });
+            }
+
+            Console.WriteLine($"[DEBUG AUTH] Refresh token valid. Rotating token for User: {user.Email}");
+
+            // Rotate: revoke old, issue new
+            storedToken.RevokedAt = DateTime.UtcNow;
+            storedToken.RevokedByIp = ip;
+
+            var (newRawRefresh, newRefreshEntity) = GenerateRefreshToken(user.Id, storedToken.SessionId);
+            storedToken.ReplacedByToken = newRefreshEntity.Token;
+
+            _context.RefreshTokens.Add(newRefreshEntity);
+
+            // Update session last active
+            var session = await _context.ActiveSessions
+                .FirstOrDefaultAsync(s => s.TokenId == storedToken.SessionId);
+            if (session != null)
+            {
+                session.LastActive = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Issue new access token
+            var newAccessToken = CreateToken(user, storedToken.SessionId);
+            SetTokenCookie(newAccessToken);
+            SetRefreshTokenCookie(newRawRefresh);
+
+            return Ok(new { token = newAccessToken, message = "Token refreshed successfully!" });
         }
 
         [HttpGet("verify-email")]
@@ -869,9 +980,54 @@ namespace CoreApi.Controllers
                 HttpOnly = true,
                 Secure = isSecure,
                 SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddDays(1)
+                Expires = DateTime.UtcNow.AddMinutes(15),
+                Path = "/"
             };
             Response.Cookies.Append("lc_token", token, cookieOptions);
+        }
+
+        private void SetRefreshTokenCookie(string refreshToken)
+        {
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
+            var cookieOptions = new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddDays(30),
+                Path = "/"
+            };
+            Response.Cookies.Append("lc_refresh", refreshToken, cookieOptions);
+        }
+
+        private (string rawToken, RefreshToken entity) GenerateRefreshToken(int userId, string sessionId)
+        {
+            var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
+            var hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
+
+            var entity = new RefreshToken
+            {
+                Token = hashedToken,
+                UserId = userId,
+                SessionId = sessionId,
+                CreatedAt = DateTime.UtcNow,
+                ExpiresAt = DateTime.UtcNow.AddDays(30)
+            };
+
+            return (rawToken, entity);
+        }
+
+        private async Task RevokeAllUserRefreshTokens(int userId, string reason)
+        {
+            var tokens = await _context.RefreshTokens
+                .Where(r => r.UserId == userId && r.RevokedAt == null)
+                .ToListAsync();
+            foreach (var t in tokens)
+            {
+                t.RevokedAt = DateTime.UtcNow;
+                t.RevokedByIp = reason;
+            }
+            await _context.SaveChangesAsync();
         }
 
         private string CreateToken(User user, string sessionId)
@@ -892,7 +1048,7 @@ namespace CoreApi.Controllers
 
             var token = new JwtSecurityToken(
                 claims: claims,
-                expires: DateTime.Now.AddDays(1),
+                expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: creds
             );
 
