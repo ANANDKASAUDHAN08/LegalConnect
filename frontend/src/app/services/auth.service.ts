@@ -91,16 +91,16 @@ export class AuthService {
           if (user.avatarUrl && user.avatarUrl.startsWith('/')) {
             user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
           }
-          this._currentUser.next(user);
-          this._isLoggedIn.next(true);
-          this._isSessionLoaded.next(true);
           if (user.token) {
             this.token = user.token;
             localStorage.setItem('lc_token', user.token);
-            this.scheduleAutoLogout(user.token);
+            this.scheduleProactiveRefresh(user.token);
           } else if (this.token) {
-            this.scheduleAutoLogout(this.token);
+            this.scheduleProactiveRefresh(this.token);
           }
+          this._currentUser.next(user);
+          this._isLoggedIn.next(true);
+          this._isSessionLoaded.next(true);
           if (user.role) {
             localStorage.setItem('lc_preferred_role', user.role);
           }
@@ -164,7 +164,7 @@ export class AuthService {
         if (res.token) {
           this.token = res.token;
           localStorage.setItem('lc_token', res.token);
-          this.scheduleAutoLogout(res.token);
+          this.scheduleProactiveRefresh(res.token);
         }
       })
     );
@@ -257,13 +257,23 @@ export class AuthService {
     return this.http.get<any>(`${this.apiUrl}/export-data`, this.httpOptions);
   }
 
-  /**
-   * Parses the JWT token's `exp` claim and schedules a timer
-   * to automatically log the user out when the token expires.
-   * This is deterministic and avoids the cascading 401 problem
-   * that reactive interceptor-based logout causes.
-   */
-  private scheduleAutoLogout(token: string): void {
+  refreshToken(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/refresh`, {}, this.httpOptions).pipe(
+      tap((res) => {
+        if (res.token) {
+          this.token = res.token;
+          localStorage.setItem('lc_token', res.token);
+          this.scheduleProactiveRefresh(res.token);
+        }
+      })
+    );
+  }
+
+  handleRefreshFailure(): void {
+    this.handleSessionExpired();
+  }
+
+  private scheduleProactiveRefresh(token: string): void {
     this.clearAutoLogout();
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -272,15 +282,28 @@ export class AuthService {
         const now = Date.now();
         const msUntilExpiry = expiresAt - now;
         if (msUntilExpiry > 0) {
+          // Refresh 2 minutes before the token expires
+          const refreshAt = Math.max(msUntilExpiry - 120000, 0);
           this._logoutTimerId = setTimeout(() => {
-            this.handleSessionExpired();
-          }, msUntilExpiry);
+            this.refreshToken().subscribe({
+              error: (err) => {
+                console.error('Proactive refresh failed:', err);
+                this.handleSessionExpired();
+              }
+            });
+          }, refreshAt);
         } else {
-          // Token already expired
-          this.handleSessionExpired();
+          // Token already expired — try refresh immediately
+          this.refreshToken().subscribe({
+            error: (err) => {
+              console.error('Immediate refresh failed:', err);
+              this.handleSessionExpired();
+            }
+          });
         }
       }
     } catch (e) {
+      console.error('Error parsing token payload:', e);
       // Malformed token — don't schedule anything
     }
   }
