@@ -279,10 +279,19 @@ namespace CoreApi.Controllers
             // Detect token reuse (replay attack)
             if (storedToken.RevokedAt != null)
             {
-                Console.WriteLine($"[DEBUG AUTH] Revoked token used! Replay attack detected. Token ID: {storedToken.Id}");
-                // Someone is using a revoked token — revoke ALL tokens for this user
-                await RevokeAllUserRefreshTokens(storedToken.UserId, $"REPLAY:{ip}");
-                return Unauthorized(new { message = "Token reuse detected. All sessions revoked." });
+                // Allow a grace period of 30 seconds for concurrent requests / multiple tabs
+                if (storedToken.RevokedAt.Value.AddSeconds(30) > DateTime.UtcNow)
+                {
+                    Console.WriteLine($"[DEBUG AUTH] Revoked token used within 30s grace period. Granting normal token rotation.");
+                    // Fall through to rotation logic as normal, instead of revoking all sessions!
+                }
+                else
+                {
+                    Console.WriteLine($"[DEBUG AUTH] Revoked token used! Replay attack detected. Token ID: {storedToken.Id}");
+                    // Someone is using a revoked token — revoke ALL tokens for this user
+                    await RevokeAllUserRefreshTokens(storedToken.UserId, $"REPLAY:{ip}");
+                    return Unauthorized(new { message = "Token reuse detected. All sessions revoked." });
+                }
             }
 
             if (storedToken.ExpiresAt <= DateTime.UtcNow)
@@ -392,6 +401,15 @@ namespace CoreApi.Controllers
             var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
             if (!isAuthenticated)
             {
+                // Check if the client attempted to authenticate (sent a token in header or cookie)
+                var authHeader = Request.Headers["Authorization"].ToString();
+                var hasTokenCookie = Request.Cookies.ContainsKey("lc_token") || Request.Cookies.ContainsKey("lc_refresh");
+                if (!string.IsNullOrEmpty(authHeader) || hasTokenCookie)
+                {
+                    // Client tried to authenticate but failed (e.g. token expired)
+                    // Return 401 Unauthorized so the interceptor can refresh the token!
+                    return Unauthorized(new { message = "Session expired or invalid token." });
+                }
                 return Ok(new { isAuthenticated = false });
             }
 
