@@ -17,6 +17,7 @@ import { SnackbarService } from '../../../../services/snackbar.service';
 export class ResourceCardComponent implements OnInit {
   @Input() resource: any;
   @Input() isFreeAidEligible = false;
+  @Input() loading = false;
 
   @Output() bookmark = new EventEmitter<string>(); // backwards compat
   @Output() directions = new EventEmitter<{ lat: number, lng: number }>();
@@ -33,7 +34,14 @@ export class ResourceCardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.operatingStatus = this.getLiveOperatingStatus();
+    if (!this.loading && this.resource) {
+      this.operatingStatus = this.getLiveOperatingStatus();
+    } else {
+      this.operatingStatus = {
+        label: 'Open Now',
+        colorClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+      };
+    }
   }
 
   copyCardDetails() {

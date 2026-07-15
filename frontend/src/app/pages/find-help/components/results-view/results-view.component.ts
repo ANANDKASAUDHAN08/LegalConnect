@@ -10,7 +10,8 @@ import {
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   NgZone,
-  HostListener
+  HostListener,
+  inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -21,6 +22,7 @@ import { LegalService } from '../../../../services/legal.service';
 import { LocationService } from '../../../../services/location.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { ThemeService } from '../../../../services/theme.service';
+import { FreeAidService } from '../../../../services/free-aid.service';
 
 // Child Components
 import { FiltersPanelComponent } from '../filters-panel/filters-panel.component';
@@ -135,9 +137,19 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   };
 
   // Eligibility Flow
-  eligibilityStep = 0;
-  eligibilityAnswers: any = { gender: '', income: '', category: '' };
-  isFreeAidEligible = false;
+  private freeAidService = inject(FreeAidService);
+
+  get eligibilityStep(): number {
+    return this.freeAidService.eligibilityStep;
+  }
+
+  get eligibilityAnswers(): any {
+    return this.freeAidService.eligibilityAnswers;
+  }
+
+  get isFreeAidEligible(): boolean {
+    return this.freeAidService.isFreeAidEligible;
+  }
   isFiltering = false;
   filterTimeout: any = null;
   isMapReady = false;
@@ -834,8 +846,8 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
 
   // Eligibility Flow Check
   startEligibilityCheck() {
-    this.eligibilityStep = 1;
-    this.eligibilityAnswers = { gender: '', income: '', category: '' };
+    this.freeAidService.startEligibilityCheck();
+    this.cdr.markForCheck();
   }
 
   openFreeAidModal() {
@@ -865,19 +877,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   submitEligibilityStep() {
-    const ans = this.eligibilityAnswers;
-    const isWomanOrChild = ans.gender === 'female' || ans.gender === 'other';
-    const isScStOrWorkman = ans.category === 'sc' || ans.category === 'st' || ans.category === 'labour';
-    const isLowIncome = ans.income === 'under125' || ans.income === 'under300';
-
-    if (isWomanOrChild || isScStOrWorkman || isLowIncome) {
-      this.isFreeAidEligible = true;
-    } else {
-      this.isFreeAidEligible = false;
-    }
-
-    this.eligibilityStep = 2;
-
+    this.freeAidService.submitEligibilityStep(this.eligibilityAnswers);
     if (this.isFreeAidEligible) {
       this.filters.resourceTypes.Court = false;
       this.filters.resourceTypes.GovernmentOffice = false;
@@ -886,17 +886,23 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
       this.activeTab = 'LegalAid';
       this.applyFilters();
     }
+    this.cdr.markForCheck();
   }
 
   resetEligibilityCheck() {
-    this.eligibilityStep = 0;
-    this.isFreeAidEligible = false;
+    this.freeAidService.resetEligibilityCheck();
     this.filters.resourceTypes.Court = true;
     this.filters.resourceTypes.GovernmentOffice = true;
     this.filters.resourceTypes.Lawyer = true;
     this.filters.resourceTypes.LegalAid = true;
     this.activeTab = 'All';
     this.applyFilters();
+    this.cdr.markForCheck();
+  }
+
+  setEligibilityStep(step: number) {
+    this.freeAidService.setStep(step);
+    this.cdr.markForCheck();
   }
 
   resetFilters() {

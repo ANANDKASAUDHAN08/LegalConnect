@@ -19,6 +19,7 @@ export class LawyerCardComponent implements OnInit {
   @Input() lawyer: any;
   @Input() viewMode: 'grid' | 'list' = 'grid';
   @Input() showActions = true; // default true — always show actions bar
+  @Input() loading = false;
 
   @Output() cardClick = new EventEmitter<string>();
   @Output() avatarClick = new EventEmitter<string>();

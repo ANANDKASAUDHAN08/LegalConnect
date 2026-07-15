@@ -165,10 +165,6 @@ export class LawMapperComponent implements OnInit, OnDestroy {
     'teal': 'group-hover:text-teal-600 dark:group-hover:text-teal-400',
   };
 
-  private readonly actDotClassMap: Record<string, string> = {
-    'amber': 'bg-amber-400', 'indigo': 'bg-indigo-400', 'emerald': 'bg-emerald-400'
-  };
-
   // All supported acts (bidirectional)
   actOptions: ActOption[] = [
     { value: 'IPC', label: 'Indian Penal Code (IPC)', shortLabel: 'IPC', group: 'old' },
@@ -669,19 +665,6 @@ export class LawMapperComponent implements OnInit, OnDestroy {
       'BNS': 'scale', 'BNSS': 'gavel', 'BSA': 'scroll'
     };
     return icons[shortName] || 'file';
-  }
-
-  getActColor(shortName: string): string {
-    const colors: Record<string, string> = {
-      'IPC': 'amber', 'CrPC': 'indigo', 'IEA': 'emerald',
-      'BNS': 'amber', 'BNSS': 'indigo', 'BSA': 'emerald'
-    };
-    return colors[shortName] || 'slate';
-  }
-
-  getActDotClass(act: string): string {
-    const c = this.getActColor(act);
-    return this.actDotClassMap[c] || 'bg-slate-400';
   }
 
   truncateText(text: string, maxLen: number): string {

@@ -360,22 +360,13 @@
                       : 'bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-50/60 dark:hover:bg-white/5'">
                     <span
                       class="text-[8px] md:text-[9px] font-extrabold px-1.5 md:px-2 py-0.5 rounded-md shrink-0 tracking-wider border text-center min-w-[44px] md:min-w-[52px]"
-                      [ngClass]="{
-                            'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20': getActColor(s.act) === 'amber',
-                            'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20': getActColor(s.act) === 'indigo',
-                            'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20': getActColor(s.act) === 'emerald'
-                          }">
+                      [ngClass]="formatter.getActTagClass(s.act)">
                       {{ s.act }}
                     </span>
-                    <span class="font-bold shrink-0 text-[11px] md:text-xs transition-colors" [ngClass]="{
-                            'text-amber-600 dark:text-amber-400': getActColor(s.act) === 'amber',
-                            'text-indigo-600 dark:text-indigo-400': getActColor(s.act) === 'indigo',
-                            'text-emerald-600 dark:text-emerald-400': getActColor(s.act) === 'emerald'
-                          }">
+                    <span class="font-bold shrink-0 text-[11px] md:text-xs text-slate-800 dark:text-slate-200">
                       § {{ s.section }}
                     </span>
-                    <span class="text-slate-500 dark:text-slate-400 text-[11px] md:text-xs truncate flex-1">{{ s.title
-                      }}</span>
+                    <span class="text-slate-500 dark:text-slate-400 text-[11px] md:text-xs truncate flex-1">{{ s.title }}</span>
                   </button>
                 </div>
               </div>
@@ -457,7 +448,7 @@
                          hover:border-[hsl(35,92%,47%)]/40 hover:text-[hsl(35,92%,47%)]
                          hover:bg-[hsl(35,92%,47%)]/5 flex items-center gap-1.5">
             <!-- Color-coded dot for act -->
-            <span class="w-2 h-2 rounded-full shrink-0" [ngClass]="getActDotClass(h.act)"></span>
+            <span class="w-2 h-2 rounded-full shrink-0" [ngClass]="formatter.getActDotClass(h.act)"></span>
             {{ h.label }}
           </button>
         </div>
@@ -1492,7 +1483,7 @@
         <div class="flex flex-wrap gap-2">
           <button *ngFor="let h of recentSearches" (click)="selectHistory(h); toggleMobileDrawer()"
             class="px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer transition-all bg-slate-50 dark:bg-white/5 border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:border-[hsl(35,92%,47%)]/40 flex items-center gap-1.5">
-            <span class="w-2 h-2 rounded-full shrink-0" [ngClass]="getActDotClass(h.act)"></span>
+            <span class="w-2 h-2 rounded-full shrink-0" [ngClass]="formatter.getActDotClass(h.act)"></span>
             {{ h.label }}
           </button>
         </div>
