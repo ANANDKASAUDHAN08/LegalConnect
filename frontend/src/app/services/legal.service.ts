@@ -117,6 +117,9 @@ export class LegalService {
   private actsCache$: Observable<ApiResponse<BareAct[]>> | null = null;
   private actDetailsCache = new Map<string, Observable<ApiResponse<BareAct>>>();
   private actOutlineCache = new Map<string, Observable<ApiResponse<BareAct>>>();
+  
+  // Singleton cache for search hub queries (5-minute TTL)
+  searchCache = new Map<string, { results: any; aiRoadmap: any; timestamp: number }>();
 
   constructor(private http: HttpClient) { }
 
@@ -520,5 +523,110 @@ export class LegalService {
   // Delete a synced case pack roadmap from server
   deleteCasePack(id: string): Observable<{ success: boolean; message: string }> {
     return this.http.delete<any>(`${this.apiUrl}/case-packs/${id}`, { withCredentials: true });
+  }
+
+  // --- Client-Side Mock Data Fallbacks (Production Readiness Extraction) ---
+  getMockPrecedents(val: any): Array<{ caseName: string; citation: string; holding: string }> {
+    const num = val.section_number;
+    const short = val.shortName ? val.shortName.toUpperCase() : '';
+    const is302 = num === '302' || num === '101';
+    const is138 = num === '138';
+
+    if (is302) {
+      return [
+        { caseName: 'Bachchan Singh v. State of Punjab', citation: 'AIR 1980 SC 898', holding: 'Established the "rarest of rare cases" doctrine for death penalty sentencing.' },
+        { caseName: 'Machhi Singh v. State of Punjab', citation: '(1983) 3 SCC 470', holding: 'Outlined standard guidelines for capital sentencing indicators.' }
+      ];
+    } else if (is138) {
+      return [
+        { caseName: 'Dalmia Cement Ltd. v. Galaxy Traders', citation: 'AIR 2001 SC 676', holding: 'Held that NI Act provisions must be construed to enforce commercial integrity.' },
+        { caseName: 'Kaushalya Devi Massand v. Roopkishore', citation: '(2011) 4 SCC 593', holding: 'Held that compounding is encouraged but criminal fines are compensatory.' }
+      ];
+    } else if (short.includes('ARCHITECT')) {
+      return [
+        { caseName: 'Association of Indian Architects v. Council of Architecture', citation: '2019 SC 841', holding: 'Clarified the statutory role and powers of the Council in maintaining registration standards.' },
+        { caseName: 'Council of Architecture v. Mukesh Goyal', citation: 'AIR 2020 SC 1204', holding: 'Held that Section 37 only prohibits unregistered persons from using the title "Architect".' }
+      ];
+    } else if (short === 'TPA' || short.includes('PROPERTY')) {
+      return [
+        { caseName: 'Nopany Investments (P) Ltd. v. Santokh Singh', citation: '(2008) 2 SCC 728', holding: 'Validity of notice under Section 106 TPA does not automatically expire if landlord accepts rent post-notice.' }
+      ];
+    } else {
+      return [
+        { caseName: 'Hari Prasad v. State of UP', citation: '2021 SC 109', holding: 'Strict interpretation of statutory intent of section clauses.' }
+      ];
+    }
+  }
+
+  getMockTimeline(val: any): Array<{ year: string; title: string; desc: string }> {
+    const num = val.section_number;
+    const short = val.shortName ? val.shortName.toUpperCase() : '';
+    const is302 = num === '302' || num === '101';
+    
+    if (is302) {
+      return [
+        { year: '1860', title: 'Original Enactment', desc: 'Introduced in Macaulay\'s Indian Penal Code.' },
+        { year: '1973', title: 'CrPC Amendment', desc: 'Shifted judicial priority away from capital punishment as default sentence.' },
+        { year: '2023', title: 'BNS Reform Integration', desc: 'Replaced by BNS Section 101 detailing updated murder classification.' }
+      ];
+    } else if (short.includes('ARCHITECT')) {
+      return [
+        { year: '1972', title: 'Act Promulgated', desc: 'Enacted to regulate registration qualifications and title of architects.' },
+        { year: '2020', title: 'Supreme Court Clarification', desc: 'Narrowed title use scope, confirming registration is not required to practice drafting.' }
+      ];
+    } else if (short === 'TPA' || short.includes('PROPERTY')) {
+      return [
+        { year: '1882', title: 'Original Enactment', desc: 'Enacted to establish uniform rules for transfer of immovable properties.' },
+        { year: '2002', title: 'Notice Period Amendment', desc: 'Simplified notice rules under Section 106, preventing dismissal on technical errors.' }
+      ];
+    } else {
+      return [
+        { year: '1988', title: 'Act Revision', desc: 'Amended criminal penalty liabilities.' },
+        { year: '2002', title: 'Fines Doubled', desc: 'Penalty limit increased to twice the cheque amount.' },
+        { year: '2018', title: 'Interim Compensation', desc: 'Courts empowered to order 20% interim deposit.' }
+      ];
+    }
+  }
+
+  getMockProSeGuide(val: any): { court: string; fee: string; prep: string } {
+    const num = val.section_number;
+    const short = val.shortName ? val.shortName.toUpperCase() : '';
+    const is138 = num === '138';
+    const isTPA = short === 'TPA' || short.includes('PROPERTY');
+
+    return {
+      court: short === 'RENT CONTROL ACT' ? 'Rent Tribunal' : 
+             (short === 'IPC' || short === 'BNS' ? 'Judicial Magistrate Court' : 
+             (short.includes('ARCHITECT') ? 'Council of Architecture / High Court (Writ)' : 'Civil Court (Senior Division)')),
+      fee: is138 ? '10% of bounced cheque value (max 10,000)' : 
+           (short.includes('ARCHITECT') ? 'Standard regulatory appeal fee (Rs. 1,000)' : 'Flat Rs. 200 standard judicial filing stamps'),
+      prep: is138 ? '30-day statutory legal notice served to drawer; 15 days wait period.' : 
+            (isTPA ? 'Serve 15-day prior written notice of termination under Section 106.' :
+            (short.includes('ARCHITECT') ? 'Submit formal representation to the Registrar or Central Government within 30 days.' :
+            'Consult statutory compliance guidelines under the governing act.'))
+    };
+  }
+
+  getMockCompareDiff(val: any): { oldText: string; newText: string } {
+    const num = val.section_number;
+    const is302 = num === '302' || num === '101';
+    const is378 = num === '378' || num === '379' || num === '303';
+
+    if (is302) {
+      return {
+        oldText: 'Whoever commits murder shall be punished with death, or imprisonment for life, and shall also be liable to fine.',
+        newText: 'Whoever commits murder shall be punished with death or imprisonment for life, and shall also be liable to fine. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Provided that where a group of five or more persons commits murder on the ground of race, caste, sex, place of birth, language, or community, each member shall be punished with death or life imprisonment.</ins>'
+      };
+    } else if (is378) {
+      return {
+        oldText: 'Whoever, intending to take dishonestly any moveable property out of the possession of any person without consent, moves that property in order to such taking, is said to commit theft.',
+        newText: 'Whoever, intending to take dishonestly any movable property <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">including digital assets or data</ins> out of the possession of any person without consent... is said to commit theft.'
+      };
+    } else {
+      return {
+        oldText: 'Whoever commits the offense specified under this section shall be liable to standard prosecution, fine, or imprisonment.',
+        newText: 'Whoever commits the offense under this section shall be liable to standard prosecution. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Fines have been increased by 100% and provisions for community service have been introduced as alternative punishment.</ins>'
+      };
+    }
   }
 }

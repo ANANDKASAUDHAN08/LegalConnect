@@ -238,7 +238,7 @@ h6 {
   background-color: hsla(var(--act-hue, 215), 85%, 40%, 0.08) !important;
   border-color: hsla(var(--act-hue, 215), 85%, 40%, 0.22) !important;
   color: hsl(var(--act-hue, 215), 80%, 35%) !important;
-  
+
   .dark & {
     background-color: hsla(var(--act-hue, 215), 75%, 60%, 0.12) !important;
     border-color: hsla(var(--act-hue, 215), 75%, 60%, 0.25) !important;
@@ -266,6 +266,27 @@ h6 {
   height: 1px;
   background: var(--border-subtle);
   margin: 32px 0;
+}
+
+.premium-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsla(222, 47%, 11%, 0.15) 15%, hsla(222, 47%, 11%, 0.15) 85%, transparent);
+  width: 100%;
+  margin: 8px 0;
+  border: none;
+
+  .dark & {
+    background: linear-gradient(90deg, transparent, hsla(220, 30%, 95%, 0.1) 15%, hsla(220, 30%, 95%, 0.1) 85%, transparent);
+  }
+}
+
+.fading-border-t {
+  border-top: 1px solid transparent;
+  border-image: linear-gradient(90deg, transparent, hsla(222, 47%, 11%, 0.12) 15%, hsla(222, 47%, 11%, 0.12) 85%, transparent) 1;
+
+  .dark & {
+    border-image: linear-gradient(90deg, transparent, hsla(220, 30%, 95%, 0.08) 15%, hsla(220, 30%, 95%, 0.08) 85%, transparent) 1;
+  }
 }
 
 /* --- Form Inputs --- */
@@ -1040,4 +1061,51 @@ body.mobile-drawer-open app-bottom-nav {
   --color-legalaid-border: #a855f7;
   --color-court-border: #3b82f6;
   --color-gov-border: #f97316;
+}
+
+/* ─── Premium Custom Audio Wave Visualizer Animation ─── */
+.audio-visualizer-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+  width: 14px;
+}
+
+.audio-visualizer-bar {
+  width: 2px;
+  height: 100%;
+  background-color: currentColor;
+  border-radius: 99px;
+  transform-origin: bottom;
+  animation: audio-wave-pulse 1.2s ease-in-out infinite alternate;
+}
+
+.audio-visualizer-bar:nth-child(1) {
+  animation-duration: 0.8s;
+  animation-delay: 0.15s;
+}
+
+.audio-visualizer-bar:nth-child(2) {
+  animation-duration: 1.1s;
+  animation-delay: 0.3s;
+}
+
+.audio-visualizer-bar:nth-child(3) {
+  animation-duration: 0.9s;
+  animation-delay: 0.05s;
+}
+
+.audio-visualizer-bar:nth-child(4) {
+  animation-duration: 1.3s;
+  animation-delay: 0.25s;
+}
+
+@keyframes audio-wave-pulse {
+  0% {
+    transform: scaleY(0.2);
+  }
+  100% {
+    transform: scaleY(1);
+  }
 }

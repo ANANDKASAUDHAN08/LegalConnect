@@ -8,6 +8,8 @@ import { SnackbarService } from './snackbar.service';
 export class SpeechService {
   isSpeaking = false;
   isPaused = false;
+  activeSpeakerId: string | null = null;
+  activeSpeakerId$ = new Subject<string | null>();
   private currentUtterance: SpeechSynthesisUtterance | null = null;
   
   sentences: string[] = [];
@@ -30,10 +32,12 @@ export class SpeechService {
 
   constructor(private ngZone: NgZone, private snackbar: SnackbarService) {}
 
-  speak(textToSpeak: string, isHindi: boolean) {
+  speak(textToSpeak: string, isHindi: boolean, speakerId?: string) {
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       window.speechSynthesis.cancel();
 
+      this.activeSpeakerId = speakerId || null;
+      this.activeSpeakerId$.next(this.activeSpeakerId);
       this.isHindi = isHindi;
       const regex = isHindi ? /(?<=[।!?\.])\s+/ : /(?<=[.!?])\s+/;
       this.sentences = textToSpeak.split(regex).filter(s => s.trim().length > 0);
@@ -41,13 +45,13 @@ export class SpeechService {
       this.isSpeaking = true;
       this.isPaused = false;
 
-      this.speakSentence();
+      this.speakSentence(this.activeSpeakerId);
     } else {
       this.snackbar.show('Text-to-speech is not supported in this browser.', 'warning');
     }
   }
 
-  private speakSentence() {
+  private speakSentence(speakerId: string | null) {
     if (this.activeSentenceIndex < 0 || this.activeSentenceIndex >= this.sentences.length) {
       this.stop();
       return;
@@ -67,16 +71,24 @@ export class SpeechService {
 
     utterance.onend = () => {
       this.ngZone.run(() => {
+        if (this.activeSpeakerId !== speakerId) {
+          return; // Ignore callbacks from interrupted speakers
+        }
         if (this.isSpeaking && !this.isPaused) {
           this.activeSentenceIndex++;
-          this.speakSentence();
+          this.speakSentence(speakerId);
         }
       });
     };
 
     utterance.onerror = (e) => {
-      console.error('Speech error:', e);
       this.ngZone.run(() => {
+        if (this.activeSpeakerId !== speakerId) {
+          return; // Ignore callbacks from interrupted speakers
+        }
+        if (e.error !== 'interrupted') {
+          console.error('Speech error:', e);
+        }
         this.stop();
       });
     };
@@ -107,6 +119,8 @@ export class SpeechService {
     }
     this.isSpeaking = false;
     this.isPaused = false;
+    this.activeSpeakerId = null;
+    this.activeSpeakerId$.next(null);
     this.currentUtterance = null;
     this.sentences = [];
     this.activeSentenceIndex = -1;

@@ -72,6 +72,62 @@ export class FormattingService {
     return { title, content };
   }
 
+  // Dynamic color hashing selector for any Act tags supporting dark/light mode
+  getActTagClass(shortName: string): string {
+    const act = (shortName || '').toUpperCase().trim();
+    if (!act) {
+      return 'bg-slate-50 dark:bg-slate-800/60 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700/50';
+    }
+
+    const themes = [
+      'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200/60 dark:border-emerald-500/20', // Emerald
+      'bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-200/60 dark:border-rose-500/20',             // Rose
+      'bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200/60 dark:border-indigo-500/20', // Indigo
+      'bg-purple-50 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200/60 dark:border-purple-500/20', // Purple
+      'bg-blue-50 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-200/60 dark:border-blue-500/20',             // Blue
+      'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200/60 dark:border-amber-500/20',       // Amber
+      'bg-teal-50 dark:bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-200/60 dark:border-teal-500/20',             // Teal
+      'bg-cyan-50 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-200/60 dark:border-cyan-500/20',             // Cyan
+      'bg-orange-50 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-200/60 dark:border-orange-500/20', // Orange
+      'bg-violet-50 dark:bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-200/60 dark:border-violet-500/20'  // Violet
+    ];
+
+    let hash = 0;
+    for (let i = 0; i < act.length; i++) {
+      hash = act.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const index = Math.abs(hash) % themes.length;
+    return themes[index];
+  }
+
+  // Dynamic matching dot color for search histories/lists
+  getActDotClass(shortName: string): string {
+    const act = (shortName || '').toUpperCase().trim();
+    if (!act) return 'bg-slate-400';
+
+    const colors = [
+      'bg-emerald-500',
+      'bg-rose-500',
+      'bg-indigo-500',
+      'bg-purple-500',
+      'bg-blue-500',
+      'bg-amber-500',
+      'bg-teal-500',
+      'bg-cyan-500',
+      'bg-orange-500',
+      'bg-violet-500'
+    ];
+
+    let hash = 0;
+    for (let i = 0; i < act.length; i++) {
+      hash = act.charCodeAt(i) + ((hash << 5) - hash);
+    }
+
+    const index = Math.abs(hash) % colors.length;
+    return colors[index];
+  }
+
   formatSectionHtml(htmlOrText: string): string {
     if (!htmlOrText) return '';
     const paragraphs = htmlOrText.split('\n\n');
@@ -372,5 +428,86 @@ export class FormattingService {
       .replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;')
       .replace(/'/g, '&#039;');
+  }
+
+  readonly commonWordsBlocklist = [
+    'rate', 'fine', 'file', 'cases', 'date', 'here', 'make', 'what', 'how', 'when', 'where',
+    'who', 'why', 'which', 'their', 'there', 'about', 'above', 'after', 'again', 'against',
+    'all', 'any', 'are', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by',
+    'can', 'did', 'does', 'doing', 'down', 'during', 'each', 'few', 'for', 'from', 'further',
+    'had', 'has', 'have', 'having', 'her', 'here', 'hers', 'him', 'his', 'into', 'its', 'just',
+    'more', 'most', 'once', 'only', 'other', 'our', 'ours', 'out', 'over', 'own', 'same', 'she',
+    'should', 'some', 'such', 'than', 'that', 'the', 'their', 'them', 'then', 'there', 'these',
+    'they', 'this', 'those', 'through', 'too', 'under', 'until', 'up', 'very', 'was', 'were',
+    'with', 'you', 'your', 'yours', 'yourself', 'yourselves', 'court', 'legal', 'lawyer', 'act',
+    'section', 'clause', 'order', 'right', 'rights', 'guidelines'
+  ];
+
+  highlightKeywords(text: string, query: string, blocklist = this.commonWordsBlocklist): string {
+    if (!text || !query) return text;
+    const words = query.toLowerCase()
+      .split(/[\s,.:;'"?()!-]+/)
+      .filter(w => w.length > 2 && !blocklist.includes(w));
+
+    if (words.length === 0) return text;
+
+    let highlighted = text;
+    words.forEach(w => {
+      const escaped = w.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+      const regex = new RegExp(`(${escaped})`, 'gi');
+      highlighted = highlighted.replace(regex, '<mark class="bg-yellow-500/20 text-yellow-800 dark:text-yellow-200 px-0.5 rounded font-semibold">$1</mark>');
+    });
+    return highlighted;
+  }
+
+  getLevenshteinDistance(a: string, b: string): number {
+    const tmp = [];
+    let i, j;
+    for (i = 0; i <= a.length; i++) {
+      tmp.push([i]);
+    }
+    for (j = 1; j <= b.length; j++) {
+      tmp[0].push(j);
+    }
+    for (i = 1; i <= a.length; i++) {
+      for (j = 1; j <= b.length; j++) {
+        tmp[i][j] = Math.min(
+          tmp[i - 1][j] + 1,
+          tmp[i][j - 1] + 1,
+          tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
+        );
+      }
+    }
+    return tmp[a.length][b.length];
+  }
+
+  checkSpelling(query: string, dictionary: string[], blocklist = this.commonWordsBlocklist): string | null {
+    const words = query.toLowerCase().split(/\s+/);
+    let corrections = [...words];
+    let hasChanged = false;
+
+    for (let i = 0; i < words.length; i++) {
+      const w = words[i];
+      if (w.length < 4 || dictionary.includes(w) || blocklist.includes(w)) continue;
+
+      let bestMatch: string | null = null;
+      let minDistance = 3;
+      const maxAllowedDistance = w.length <= 5 ? 1 : 2;
+
+      for (const dictWord of dictionary) {
+        const dist = this.getLevenshteinDistance(w, dictWord);
+        if (dist < minDistance && dist <= maxAllowedDistance) {
+          minDistance = dist;
+          bestMatch = dictWord;
+        }
+      }
+
+      if (bestMatch) {
+        corrections[i] = bestMatch;
+        hasChanged = true;
+      }
+    }
+
+    return hasChanged ? corrections.join(' ') : null;
   }
 }

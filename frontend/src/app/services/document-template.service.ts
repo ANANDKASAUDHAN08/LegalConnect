@@ -23,6 +23,9 @@ export interface Template {
   body: string;
   isCustom?: boolean;
   synced?: boolean;
+  jurisdiction?: string;
+  highlightedTitle?: string;
+  highlightedDescription?: string;
 }
 
 export interface Draft {
