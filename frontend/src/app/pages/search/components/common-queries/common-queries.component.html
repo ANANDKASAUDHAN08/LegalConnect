@@ -1,0 +1,32 @@
+<div class="grid grid-cols-2 gap-2 md:gap-3 py-1.5">
+  <button *ngFor="let item of commonQueries; trackBy: trackByQueryLabel" (click)="selectQuery.emit(item.query)"
+    class="group p-3 md:p-4 text-left cursor-pointer transition-all duration-200 flex flex-wrap md:flex-nowrap items-start gap-x-2.5 gap-y-1 md:gap-3 rounded-xl border hover:shadow-lg"
+    [ngClass]="item.btnClass">
+
+    <!-- Icon (stays aligned at the top-left) -->
+    <div
+      class="w-7 h-7 md:w-9 md:h-9 rounded-lg md:rounded-xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform"
+      [ngClass]="item.iconBoxClass">
+      <svg class="w-3.5 h-3.5 md:w-4 md:h-4" [ngClass]="item.iconClass" fill="none" stroke="currentColor"
+        stroke-width="2.5" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" [attr.d]="item.icon" />
+      </svg>
+    </div>
+
+    <!-- Label Container (flex-1 keeps this on the right side of the icon) -->
+    <div class="flex flex-col flex-1">
+      <span class="text-[11px] md:text-xs font-bold leading-tight" [ngClass]="item.labelClass">
+        {{ item.label }}
+      </span>
+      <!-- Desktop-only Subtitle -->
+      <span class="hidden md:inline text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+        {{ item.subtitle }}
+      </span>
+    </div>
+
+    <!-- Mobile-only Subtitle (basis-full forces it below the icon and label, starting from the left) -->
+    <span class="basis-full md:hidden text-[9px] text-slate-500 dark:text-slate-400 pl-0.5">
+      {{ item.subtitle }}
+    </span>
+  </button>
+</div>

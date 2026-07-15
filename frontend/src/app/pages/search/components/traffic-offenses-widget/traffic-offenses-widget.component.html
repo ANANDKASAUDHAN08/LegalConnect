@@ -1,0 +1,85 @@
+<!-- Traffic Fines Calculator Skeleton -->
+<div *ngIf="loading"
+  class="card p-3 md:p-6 border-amber-200 dark:border-amber-950/60 bg-amber-50/50 dark:bg-amber-950/10 shadow-lg animate-pulse relative w-full mb-6">
+  <div class="flex flex-row items-start justify-between gap-1.5 md:gap-4 mb-4">
+    <div class="flex-1 flex flex-row items-start gap-1.5 md:gap-4 min-w-0">
+      <div class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-amber-200 dark:bg-amber-800/80 shrink-0"></div>
+      <div class="flex-1 space-y-2">
+        <div class="h-3 bg-amber-200 dark:bg-amber-800/80 rounded w-32"></div>
+        <div class="h-5.5 bg-amber-200 dark:bg-amber-800/80 rounded w-1/2"></div>
+      </div>
+    </div>
+  </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3 w-full md:pl-14">
+    <div *ngFor="let x of [1, 2, 3, 4]"
+      class="p-2.5 bg-white/40 dark:bg-slate-900/40 rounded-xl border border-slate-200/50 dark:border-slate-800/50 flex flex-col md:flex-row md:justify-between md:items-center gap-1.5">
+      <div class="space-y-1 flex-1">
+        <div class="h-3.5 bg-slate-200 dark:bg-slate-800/80 rounded w-16"></div>
+        <div class="h-3 bg-slate-100 dark:bg-slate-900/40 rounded w-10"></div>
+      </div>
+      <div class="h-4 bg-red-200 dark:bg-red-800/80 rounded w-12 shrink-0"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Actual Traffic Offenses Widget -->
+<div *ngIf="!loading"
+  class="card p-3 md:p-6 border-amber-200 dark:border-amber-950/60 bg-amber-50/50 dark:bg-amber-950/10 shadow-lg animate-fade-in relative w-full mb-2">
+
+  <!-- Header Flex container -->
+  <div class="flex flex-row items-start justify-between gap-1.5 md:gap-4" [class.mb-4]="!collapsedTraffic">
+    <!-- Left Side Clickable area for collapse toggle -->
+    <div (click)="toggleTrafficCollapse()"
+      class="flex-1 flex flex-row items-start gap-1.5 md:gap-4 cursor-pointer select-none min-w-0 group/header">
+      <div
+        class="w-8 h-8 md:w-10 md:h-10 rounded-xl bg-amber-500 flex items-center justify-center text-white shrink-0 group-hover/header:bg-amber-600 transition-colors">
+        <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        </svg>
+      </div>
+      <div class="flex-1 min-w-0">
+        <span class="text-[10px] font-bold text-amber-500 dark:text-amber-400 uppercase tracking-widest block mb-0">
+          Traffic Offenses Calculator
+        </span>
+        <h2 class="font-sans text-sm md:text-xl font-bold text-slate-800 dark:text-white leading-none m-0">
+          Motor Vehicle Act Standard Penalty Chart
+          <span class="inline-flex items-center gap-1.5 whitespace-nowrap">
+            Chart
+            <svg [class]="collapsedTraffic ? '' : 'rotate-180'"
+              class="w-4 h-4 text-amber-500 dark:text-amber-400 transition-transform duration-200 shrink-0" fill="none"
+              stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+            </svg>
+          </span>
+        </h2>
+      </div>
+    </div>
+    <!-- Actions -->
+    <div class="flex items-center shrink-0 self-start pt-1 md:pt-1.5">
+      <button (click)="dismiss.emit()"
+        class="p-1.5 rounded-lg hover:bg-red-500/10 text-slate-400 hover:text-red-600 dark:hover:text-red-400 cursor-pointer border-none bg-transparent flex items-center justify-center transition-colors"
+        aria-label="Dismiss traffic offenses">
+        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Grid Container: Collapsible wrapper -->
+  <div *ngIf="!collapsedTraffic"
+    class="grid grid-cols-2 gap-2 md:gap-3 text-[11px] md:text-xs text-slate-600 dark:text-slate-300 w-full md:pl-14 animate-slide-up">
+    <div *ngFor="let item of trafficOffenses; trackBy: trackByOffense"
+      class="p-2.5 bg-white/40 dark:bg-slate-900/40 rounded-xl border border-slate-200/50 dark:border-slate-800/50 flex flex-col md:flex-row md:justify-between md:items-center gap-1 md:gap-4">
+      <div>
+        <strong>{{ item.offense }}</strong>
+        <span class="text-[9px] text-slate-400 dark:text-slate-500 block md:inline md:ml-1">
+          {{ item.section }}
+        </span>
+      </div>
+      <span class="text-red-500 font-black shrink-0" [class.text-xs]="item.isSmallText">
+        {{ item.fine }}
+      </span>
+    </div>
+  </div>
+</div>
