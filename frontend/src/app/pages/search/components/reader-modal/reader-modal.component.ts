@@ -236,12 +236,12 @@ export class ReaderModeModalComponent implements OnInit, OnDestroy, AfterViewIni
     const isHindi = this.readerLanguage === 'HI';
     let titleText = isHindi
       ? (this.readerSection.title_hi || this.readerSection.title)
-      : this.readerSection.title;
+      : (this.readerSection.rawTitle || this.readerSection.title);
     if (isHindi && titleText) {
       titleText = titleText.replace(/^\(हिंदी अनुवाद अनुपलब्ध\)\s*/, '');
       titleText = titleText.replace(/^\(Mock Translation\)\s*/, '');
     }
-    return titleText || '';
+    return (titleText || '').replace(/<[^>]*>/g, '');
   }
 
   private getCleanReaderContent(): string {

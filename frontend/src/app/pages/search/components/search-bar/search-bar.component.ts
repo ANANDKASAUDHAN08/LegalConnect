@@ -1,8 +1,7 @@
-import * as Tesseract from 'tesseract.js';
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, ChangeDetectionStrategy, HostListener, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, inject, ChangeDetectionStrategy, HostListener, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Subject, Subscription } from 'rxjs';
+import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { LegalService } from '../../../../services/legal.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
@@ -19,11 +18,13 @@ export class SearchBarComponent implements OnInit, OnDestroy {
   private legalService = inject(LegalService);
   private snackbar = inject(SnackbarService);
   private cdr = inject(ChangeDetectorRef);
+  private ngZone = inject(NgZone);
 
   @Input() query = '';
   @Input() loading = false;
   @Input() isOffline = false;
   @Input() size: 'normal' | 'compact' = 'normal';
+  @Input() showPills = true;
 
   @Output() queryChange = new EventEmitter<string>();
   @Output() search = new EventEmitter<string>();
@@ -41,40 +42,52 @@ export class SearchBarComponent implements OnInit, OnDestroy {
   voiceLanguage: 'ENG' | 'HI' = 'ENG';
   private recognition: any = null;
 
+  // Lifecycle memory-leak & crash guard
+  private isDestroyed = false;
+
   ngOnInit() {
     this.initVoiceRecognition();
 
     // RxJS autocomplete debounce (Optimization #2)
     this.autocompleteSub = this.queryInputSubject.pipe(
-      debounceTime(250),
+      debounceTime(220),
       distinctUntilChanged(),
       switchMap(query => {
-        if (!query.trim() || this.isOffline) {
+        const trimmed = query.trim();
+        if (!trimmed || this.isOffline) {
           this.isSearchingSuggestions = false;
           this.showSuggestions = false;
-          this.cdr.markForCheck();
-          return [];
+          this.safeMarkForCheck();
+          return of({ success: true, data: [] });
         }
         this.isSearchingSuggestions = true;
         this.showSuggestions = true;
-        this.cdr.markForCheck();
-        return this.legalService.getMappingSuggestions(query);
+        this.safeMarkForCheck();
+        return this.legalService.getMappingSuggestions(trimmed);
       })
     ).subscribe({
       next: (res: any) => {
-        this.suggestions = res.data || [];
+        const rawList = res.data || [];
+        // Performance Tuning: Pre-calculate categories and clean names in TS
+        // to avoid calling functions in HTML template on every CD cycle
+        this.suggestions = rawList.map((s: any) => ({
+          ...s,
+          category: this.getActCategory(s.act),
+          cleanedAct: this.cleanActName(s.act)
+        }));
         this.isSearchingSuggestions = false;
-        this.cdr.markForCheck();
+        this.safeMarkForCheck();
       },
       error: () => {
         this.suggestions = [];
         this.isSearchingSuggestions = false;
-        this.cdr.markForCheck();
+        this.safeMarkForCheck();
       }
     });
   }
 
   ngOnDestroy() {
+    this.isDestroyed = true;
     if (this.autocompleteSub) {
       this.autocompleteSub.unsubscribe();
     }
@@ -84,6 +97,17 @@ export class SearchBarComponent implements OnInit, OnDestroy {
     }
   }
 
+  // Safe wrapper to prevent ViewDestroyedException
+  private safeMarkForCheck() {
+    if (!this.isDestroyed) {
+      this.cdr.markForCheck();
+    }
+  }
+
+  trackBySuggestion(index: number, item: any): string {
+    return `${item.act}-${item.section}`;
+  }
+
   onQueryChange(val: string) {
     this.query = val;
     this.queryChange.emit(val);
@@ -91,7 +115,7 @@ export class SearchBarComponent implements OnInit, OnDestroy {
       this.suggestions = [];
       this.showSuggestions = false;
       this.isSearchingSuggestions = false;
-      this.cdr.markForCheck();
+      this.safeMarkForCheck();
     }
     this.queryInputSubject.next(val);
   }
@@ -99,22 +123,69 @@ export class SearchBarComponent implements OnInit, OnDestroy {
   onFocus() {
     if (this.query.trim() && !this.isOffline) {
       this.showSuggestions = true;
-      this.cdr.markForCheck();
+      this.safeMarkForCheck();
     }
   }
 
   performSearch() {
     this.showSuggestions = false;
     this.search.emit(this.query);
-    this.cdr.markForCheck();
+    this.safeMarkForCheck();
   }
 
   selectSuggestion(s: any) {
-    this.query = `${s.act} Section ${s.section}: ${s.title}`;
+    const cleanTitle = (s.title || '').replace(/<[^>]*>/g, '');
+    this.query = `${s.act} Section ${s.section}: ${cleanTitle}`;
     this.queryChange.emit(this.query);
     this.showSuggestions = false;
     this.performSearch();
-    this.cdr.markForCheck();
+    this.safeMarkForCheck();
+  }
+
+  getActCategory(act: string): 'criminal' | 'evidence' | 'general' {
+    if (!act) return 'general';
+    const upper = act.toUpperCase();
+    if (upper.includes('BNS') || upper.includes('IPC') || upper.includes('CRPC')) {
+      return 'criminal';
+    }
+    if (upper.includes('BSA') || upper.includes('IEA')) {
+      return 'evidence';
+    }
+    return 'general';
+  }
+
+  cleanActName(act: string): string {
+    if (!act) return '';
+    const upper = act.trim().toUpperCase();
+    
+    // Exact mapping for messy DB keys
+    const mapping: Record<string, string> = {
+      'A(DOFAOSBAS': 'Aadhaar Act',
+      'AAOI': 'Airports Authority Act',
+      'RAAOIP': 'Requisitioning of Property Act',
+      'ATALR': 'Ajmer Tenancy Act',
+      'AF_1950': 'Air Force Act',
+      'A_1950': 'Army Act',
+      'ITA': 'IT Act',
+      'CPA': 'Consumer Protection Act',
+      'ICA': 'Contract Act',
+      'RTI': 'RTI Act',
+      'CONSTITUTION': 'Constitution of India'
+    };
+
+    if (mapping[upper]) {
+      return mapping[upper];
+    }
+
+    // Strip year underscore suffix if present e.g. AF_1950 -> AF
+    if (act.includes('_')) {
+      const parts = act.split('_');
+      if (parts[0] && !isNaN(Number(parts[1]))) {
+        return parts[0];
+      }
+    }
+
+    return act;
   }
 
   // --- Voice Input (Web Speech API) ---
@@ -128,34 +199,50 @@ export class SearchBarComponent implements OnInit, OnDestroy {
     this.recognition.interimResults = false;
 
     this.recognition.onstart = () => {
-      this.isRecording = true;
-      this.snackbar.show('Listening... Speak your legal question.', 'info');
-      this.cdr.markForCheck();
+      this.ngZone.run(() => {
+        this.isRecording = true;
+        this.snackbar.show('Listening... Speak your question.', 'info');
+        this.safeMarkForCheck();
+      });
     };
 
     this.recognition.onerror = (err: any) => {
-      console.error(err);
-      this.isRecording = false;
-      this.snackbar.show('Voice input failed. Please speak again.', 'error');
-      this.cdr.markForCheck();
+      this.ngZone.run(() => {
+        console.error('Speech recognition error:', err);
+        this.isRecording = false;
+
+        if (err.error === 'no-speech') {
+          this.snackbar.show('No speech detected. Please speak clearly.', 'info');
+        } else if (err.error === 'not-allowed') {
+          this.snackbar.show('Microphone access blocked. Check browser settings.', 'error');
+        } else {
+          this.snackbar.show('Voice input failed. Please try again.', 'error');
+        }
+
+        this.safeMarkForCheck();
+      });
     };
 
     this.recognition.onend = () => {
-      if (this.isRecording) {
-        this.isRecording = false;
-        this.snackbar.show('Voice search stopped.', 'info');
-      }
-      this.cdr.markForCheck();
+      this.ngZone.run(() => {
+        if (this.isRecording) {
+          this.isRecording = false;
+          this.snackbar.show('Voice search stopped.', 'info');
+        }
+        this.safeMarkForCheck();
+      });
     };
 
     this.recognition.onresult = (event: any) => {
-      const resultText = event.results[0][0].transcript;
-      if (resultText) {
-        this.query = resultText;
-        this.queryChange.emit(resultText);
-        this.performSearch();
-        this.cdr.markForCheck();
-      }
+      this.ngZone.run(() => {
+        const resultText = event.results[0][0].transcript;
+        if (resultText) {
+          this.query = resultText;
+          this.queryChange.emit(resultText);
+          this.performSearch();
+          this.safeMarkForCheck();
+        }
+      });
     };
   }
 
@@ -166,20 +253,33 @@ export class SearchBarComponent implements OnInit, OnDestroy {
     }
 
     if (this.isRecording) {
+      try {
+        this.recognition.stop();
+        this.snackbar.show('Voice search stopped.', 'info');
+      } catch (e) {
+        console.error('Error stopping speech recognition:', e);
+      }
       this.isRecording = false;
-      this.recognition.stop();
-      this.snackbar.show('Voice search stopped.', 'info');
     } else {
       this.recognition.lang = this.voiceLanguage === 'ENG' ? 'en-IN' : 'hi-IN';
-      this.recognition.start();
+      try {
+        this.recognition.start();
+      } catch (e) {
+        console.error('Error starting speech recognition:', e);
+        try {
+          this.recognition.abort();
+        } catch (abortError) { }
+        this.isRecording = false;
+        this.snackbar.show('Microphone is busy. Please tap again.', 'warning');
+      }
     }
-    this.cdr.markForCheck();
+    this.safeMarkForCheck();
   }
 
   setVoiceLanguage(lang: 'ENG' | 'HI') {
     this.voiceLanguage = lang;
     this.snackbar.show(`Voice input language set to ${lang === 'ENG' ? 'English' : 'Hindi'}.`, 'success');
-    this.cdr.markForCheck();
+    this.safeMarkForCheck();
   }
 
   // --- Real OCR Document Scanner using Tesseract.js ---
@@ -189,47 +289,64 @@ export class SearchBarComponent implements OnInit, OnDestroy {
       const file = input.files[0];
       this.snackbar.show(`Reading ${file.name}... Initializing OCR engine.`, 'info');
       this.loading = true;
-      this.cdr.markForCheck();
+      this.safeMarkForCheck();
 
       const reader = new FileReader();
       reader.onload = () => {
         const dataUrl = reader.result as string;
 
-        // Execute real OCR character recognition directly in browser
-        Tesseract.recognize(
-          dataUrl,
-          'eng',
-          {
-            logger: m => {
-              if (m.status === 'recognizing') {
-                // Show real-time progress update percentages in snackbar!
-                this.snackbar.show(`Scanning document... ${Math.round(m.progress * 100)}%`, 'info');
+        // Bundle Size Optimization: Lazy load tesseract.js dynamically only when scanning is clicked
+        import('tesseract.js').then(tesseract => {
+          // Angular Zone Optimization: Run outside Angular zone so hundreds of Web Worker progress logging events 
+          // do not trigger unnecessary Change Detection cycles on the main thread.
+          this.ngZone.runOutsideAngular(() => {
+            tesseract.recognize(
+              dataUrl,
+              'eng',
+              {
+                logger: m => {
+                  if (m.status === 'recognizing') {
+                    // Update progress snackbar inside Angular zone
+                    this.ngZone.run(() => {
+                      this.snackbar.show(`Scanning document... ${Math.round(m.progress * 100)}%`, 'info');
+                    });
+                  }
+                }
               }
-            }
-          }
-        ).then(({ data: { text } }) => {
-          this.loading = false;
+            ).then(({ data: { text } }) => {
+              this.ngZone.run(() => {
+                this.loading = false;
 
-          if (text && text.trim()) {
-            // Clean up the text: remove linebreaks, double spaces, and crop to safe length
-            const cleanText = text.trim()
-              .replace(/[\r\n]+/g, ' ')
-              .replace(/\s+/g, ' ')
-              .substring(0, 120); // Capture the main keyword context
+                if (text && text.trim()) {
+                  // Clean up the text: remove linebreaks, double spaces, and crop to safe length
+                  const cleanText = text.trim()
+                    .replace(/[\r\n]+/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .substring(0, 120); // Capture the main keyword context
 
-            this.query = cleanText;
-            this.queryChange.emit(cleanText);
-            this.performSearch();
-            this.snackbar.show('Document scan complete! Searching extracted text.', 'success');
-          } else {
-            this.snackbar.show('Scan complete, but no readable English text was found.', 'warning');
-          }
-          this.cdr.markForCheck();
+                  this.query = cleanText;
+                  this.queryChange.emit(cleanText);
+                  this.performSearch();
+                  this.snackbar.show('Document scan complete! Searching extracted text.', 'success');
+                } else {
+                  this.snackbar.show('Scan complete, but no readable English text was found.', 'warning');
+                }
+                this.safeMarkForCheck();
+              });
+            }).catch(err => {
+              this.ngZone.run(() => {
+                this.loading = false;
+                console.error('OCR Error:', err);
+                this.snackbar.show('OCR scan failed. Please try a different image.', 'error');
+                this.safeMarkForCheck();
+              });
+            });
+          });
         }).catch(err => {
           this.loading = false;
-          console.error('OCR Error:', err);
-          this.snackbar.show('OCR scan failed. Please try a different image.', 'error');
-          this.cdr.markForCheck();
+          console.error('Failed to import Tesseract:', err);
+          this.snackbar.show('Failed to initialize document scanner.', 'error');
+          this.safeMarkForCheck();
         });
       };
 
@@ -241,9 +358,10 @@ export class SearchBarComponent implements OnInit, OnDestroy {
   onClickOutside(event: Event) {
     if (this.showSuggestions) {
       const target = event.target as HTMLElement;
-      if (!target.closest('.search-bar-container')) {
+      // Check against both the search bar and the suggestions panel
+      if (!target.closest('.search-bar-container') && !target.closest('.suggestions-panel')) {
         this.showSuggestions = false;
-        this.cdr.markForCheck();
+        this.safeMarkForCheck();
       }
     }
   }

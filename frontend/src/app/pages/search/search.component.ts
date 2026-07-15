@@ -10,6 +10,8 @@ import { DocumentTemplateService, Template } from '../../services/document-templ
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { LocationService } from '../../services/location.service';
 import { BookmarkService } from '../../services/bookmark.service';
+import { FormattingService } from '../../services/formatting.service';
+import { FreeAidService } from '../../services/free-aid.service';
 
 // Standalone sub-components
 import { SearchBarComponent } from './components/search-bar/search-bar.component';
@@ -19,6 +21,10 @@ import { FreeAidCheckerComponent } from '../find-help/components/free-aid-checke
 import { ReaderModeModalComponent } from './components/reader-modal/reader-modal.component';
 import { LawViewerCompareComponent } from '../law-viewer/law-viewer-compare/law-viewer-compare.component';
 import { LawyerCardComponent } from '../../components/lawyer-card/lawyer-card.component';
+import { CommonQueriesComponent } from './components/common-queries/common-queries.component';
+import { AiRoadmapWidgetComponent } from './components/ai-roadmap-widget/ai-roadmap-widget.component';
+import { EmergencyRightsWidgetComponent } from './components/emergency-rights-widget/emergency-rights-widget.component';
+import { TrafficOffensesWidgetComponent } from './components/traffic-offenses-widget/traffic-offenses-widget.component';
 
 @Component({
   selector: 'app-search',
@@ -34,7 +40,11 @@ import { LawyerCardComponent } from '../../components/lawyer-card/lawyer-card.co
     FreeAidCheckerComponent,
     ReaderModeModalComponent,
     LawViewerCompareComponent,
-    LawyerCardComponent
+    LawyerCardComponent,
+    CommonQueriesComponent,
+    AiRoadmapWidgetComponent,
+    EmergencyRightsWidgetComponent,
+    TrafficOffensesWidgetComponent
   ],
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss'],
@@ -52,6 +62,8 @@ export class SearchComponent implements OnInit, OnDestroy {
   private bookmarkService = inject(BookmarkService);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
+  private freeAidService = inject(FreeAidService);
+  private formatting = inject(FormattingService);
 
   queryStack: string[] = [];
   private isGoingBack = false;
@@ -86,6 +98,21 @@ export class SearchComponent implements OnInit, OnDestroy {
   loading = false;
   hasSearched = false;
   isOffline = !navigator.onLine;
+
+  // Pagination & Loading States
+  loadingMore = false;
+  loadingMoreLawyers = false;
+  hasMoreLaws = false;
+  hasMoreLawyers = false;
+  lawsPage = 1;
+  lawyersPage = 1;
+  showLawyerLocationFallback = false;
+  lawyerLocationFallbackMsg = '';
+  activeSectionOrder: string[] = ['laws', 'lawyers', 'resources', 'templates'];
+
+  // Scroll Affordance State
+  canScrollLeft = false;
+  canScrollRight = false;
 
   // Search Cache (Optimization #11)
   private searchCache = new Map<string, any>();
@@ -130,14 +157,37 @@ export class SearchComponent implements OnInit, OnDestroy {
   aiRoadmap: any = null;
   aiRoadmapLoading = false;
 
-  // Free Legal Aid Eligibility state
-  eligibilityStep = 0;
-  eligibilityAnswers: { gender: string; income: string; category: string } = {
-    gender: '',
-    income: '',
-    category: ''
-  };
-  isFreeAidEligible = false;
+  dismissedRoadmap = false;
+  dismissedEmergency = false;
+  dismissedTraffic = false;
+
+  dismissRoadmap() {
+    this.dismissedRoadmap = true;
+    this.cdr.markForCheck();
+  }
+
+  dismissEmergency() {
+    this.dismissedEmergency = true;
+    this.cdr.markForCheck();
+  }
+
+  dismissTraffic() {
+    this.dismissedTraffic = true;
+    this.cdr.markForCheck();
+  }
+
+  // Free Legal Aid Eligibility getters
+  get eligibilityStep(): number {
+    return this.freeAidService.eligibilityStep;
+  }
+
+  get eligibilityAnswers() {
+    return this.freeAidService.eligibilityAnswers;
+  }
+
+  get isFreeAidEligible(): boolean {
+    return this.freeAidService.isFreeAidEligible;
+  }
 
   // Mobile Filter State
   showMobileFilters = false;
@@ -145,21 +195,7 @@ export class SearchComponent implements OnInit, OnDestroy {
   filterCognizable: 'all' | 'cognizable' | 'non-cognizable' = 'all';
   filterMaxFee = 25000;
 
-  // Standard Legal FAQs/Presets (readonly — never mutated, avoids unnecessary CD checks)
-  readonly quickFAQs = [
-    { title: 'Cheque Bounce Notice', icon: 'notice', query: 'cheque bounce notice section 138' },
-    { title: 'Eviction Protection', icon: 'home', query: 'tenant eviction security deposit protection' },
-    { title: 'Arrest Rights Guide', icon: 'alert', query: 'arrest warrant bail guidelines police custody' },
-    { title: 'Mutual Divorce Deed', icon: 'scale', query: 'mutual consent divorce deed petition' },
-    { title: 'Cyber Crime/Fraud', icon: 'cyber', query: 'cyber crime phishing fraud BNS' },
-    { title: 'Motor Vehicle Fine', icon: 'car', query: 'drunk driving penalty overspeeding fine' },
-    { title: 'Domestic Violence', icon: 'shield', query: 'domestic violence protection order complaint FIR' },
-    { title: 'Right to Information', icon: 'document', query: 'RTI application filing guide procedure fee' },
-    { title: 'Consumer Dispute', icon: 'shop', query: 'consumer court complaint unfair trade practices' },
-    { title: 'Property Inheritance', icon: 'folder', query: 'will draft inheritance family property rights succession' }
-  ] as const;
-
-  // Skeleton placeholder array (readonly — avoids recreating inline [1,2,3] on every CD cycle)
+  // Skeleton placeholder array
   readonly skeletonItems = [1, 2, 3];
 
   ngOnInit() {
@@ -335,7 +371,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     }
 
     // Spellcheck matching Levenshtein
-    this.checkSpelling(query);
+    this.suggestedCorrection = this.formatting.checkSpelling(query, this.legalDictionary);
 
     const cacheKey = `${query.trim().toLowerCase()}:${this.selectedCity.toLowerCase()}`;
 
@@ -544,59 +580,7 @@ export class SearchComponent implements OnInit, OnDestroy {
       });
   }
 
-  // --- Levenshtein Spellchecker ---
-  private checkSpelling(query: string) {
-    this.suggestedCorrection = null;
-    const words = query.toLowerCase().split(/\s+/);
-    let corrections = [...words];
-    let hasChanged = false;
 
-    for (let i = 0; i < words.length; i++) {
-      const w = words[i];
-      if (w.length < 4 || this.legalDictionary.includes(w)) continue;
-
-      let bestMatch: string | null = null;
-      let minDistance = 3;
-
-      for (const dictWord of this.legalDictionary) {
-        const dist = this.getLevenshteinDistance(w, dictWord);
-        if (dist < minDistance) {
-          minDistance = dist;
-          bestMatch = dictWord;
-        }
-      }
-
-      if (bestMatch) {
-        corrections[i] = bestMatch;
-        hasChanged = true;
-      }
-    }
-
-    if (hasChanged) {
-      this.suggestedCorrection = corrections.join(' ');
-    }
-  }
-
-  private getLevenshteinDistance(a: string, b: string): number {
-    const tmp = [];
-    let i, j;
-    for (i = 0; i <= a.length; i++) {
-      tmp.push([i]);
-    }
-    for (j = 1; j <= b.length; j++) {
-      tmp[0].push(j);
-    }
-    for (i = 1; i <= a.length; i++) {
-      for (j = 1; j <= b.length; j++) {
-        tmp[i][j] = Math.min(
-          tmp[i - 1][j] + 1,
-          tmp[i][j - 1] + 1,
-          tmp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)
-        );
-      }
-    }
-    return tmp[a.length][b.length];
-  }
 
   applySpellcheck() {
     if (this.suggestedCorrection) {
@@ -686,27 +670,133 @@ export class SearchComponent implements OnInit, OnDestroy {
   }
 
   startEligibilityCheck() {
-    this.eligibilityStep = 1;
-    this.eligibilityAnswers = { gender: '', income: '', category: '' };
+    this.freeAidService.startEligibilityCheck();
     this.cdr.markForCheck();
   }
 
   submitEligibilityStep() {
-    const ans = this.eligibilityAnswers;
-    const isWomanOrChild = ans.gender === 'female' || ans.gender === 'other';
-    const isScStOrWorkman = ans.category === 'sc' || ans.category === 'st' || ans.category === 'labour';
-    const isLowIncome = ans.income === 'under125' || ans.income === 'under300';
-
-    this.isFreeAidEligible = !!(isWomanOrChild || isScStOrWorkman || isLowIncome);
-    this.eligibilityStep = 2;
+    this.freeAidService.submitEligibilityStep(this.eligibilityAnswers);
     this.cdr.markForCheck();
   }
 
   resetEligibilityCheck() {
-    this.eligibilityStep = 0;
-    this.isFreeAidEligible = false;
-    this.eligibilityAnswers = { gender: '', income: '', category: '' };
+    this.freeAidService.resetEligibilityCheck();
     this.cdr.markForCheck();
+  }
+
+  setEligibilityStep(step: number) {
+    this.freeAidService.setStep(step);
+    this.cdr.markForCheck();
+  }
+
+  // --- 'Load More' Pagination on Laws ---
+  loadMoreLaws() {
+    if (this.loadingMore || !this.hasMoreLaws) return;
+    this.loadingMore = true;
+    this.lawsPage++;
+    this.cdr.markForCheck();
+
+    this.legalService.searchLaws(this.lastQuery, this.lawsPage, 20)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const newLaws = res.data || [];
+
+          const highlightedNewLaws = newLaws.map((item: any) => ({
+            ...item,
+            rawTitle: item.title,
+            title: this.formatting.highlightKeywords(item.title, this.lastQuery),
+            snippet: this.formatting.highlightKeywords(item.snippet || item.content || '', this.lastQuery),
+            highlightedContent: this.formatting.highlightKeywords(item.content || '', this.lastQuery),
+            criminalDetails: item.criminalDetails || null
+          }));
+
+          this.results.laws = [...this.results.laws, ...highlightedNewLaws];
+          this.hasMoreLaws = newLaws.length >= 20;
+          this.loadingMore = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.loadingMore = false;
+          this.snackbar.show('Failed to load more laws.', 'error');
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // --- 'Load More' Pagination on Lawyers ---
+  loadMoreLawyers() {
+    if (this.loadingMoreLawyers || !this.hasMoreLawyers) return;
+    this.loadingMoreLawyers = true;
+    this.lawyersPage++;
+    this.cdr.markForCheck();
+
+    const nextLimit = this.lawyersPage * 10;
+    const coords = this.locationService.getCoordinates();
+
+    this.legalService.searchHub(this.lastQuery, this.selectedCity, nextLimit, coords?.lat, coords?.lng)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const newLawyers = res.data?.lawyers || [];
+
+          this.results.lawyers = newLawyers;
+          this.hasMoreLawyers = newLawyers.length >= nextLimit;
+          this.loadingMoreLawyers = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.loadingMoreLawyers = false;
+          this.snackbar.show('Failed to load more advocates.', 'error');
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  // --- Dynamic Intent-Based Category Sorting ---
+  getSortedSectionsBasedOnQueryIntent(query: string): string[] {
+    const q = query.toLowerCase();
+    const defaults = ['laws', 'lawyers', 'resources', 'templates'];
+
+    if (q.includes('arrest') || q.includes('police') || q.includes('custody') || q.includes('bail') || q.includes('fir') || q.includes('summons')) {
+      return ['laws', 'resources', 'lawyers', 'templates'];
+    }
+    if (q.includes('draft') || q.includes('notice') || q.includes('agreement') || q.includes('will') || q.includes('deed') || q.includes('template')) {
+      return ['templates', 'laws', 'lawyers', 'resources'];
+    }
+    if (q.includes('lawyer') || q.includes('advocate') || q.includes('consult') || q.includes('expert') || q.includes('contact') || q.includes('legal help')) {
+      return ['lawyers', 'laws', 'resources', 'templates'];
+    }
+    return defaults;
+  }
+
+  getSectionOrder(sectionId: string): number {
+    return this.activeSectionOrder.indexOf(sectionId);
+  }
+
+  // --- Regional Location Fallback for Advocates ---
+  triggerAdvocateFallback(query: string) {
+    let fallbackRegion = 'Delhi NCR';
+    const cityLower = this.selectedCity.toLowerCase();
+    if (cityLower.includes('mumbai')) fallbackRegion = 'Maharashtra';
+    else if (cityLower.includes('bangalore') || cityLower.includes('bengaluru')) fallbackRegion = 'Karnataka';
+    else if (cityLower.includes('chennai')) fallbackRegion = 'Tamil Nadu';
+    else if (cityLower.includes('gurgaon') || cityLower.includes('gurugram') || cityLower.includes('noida')) fallbackRegion = 'Delhi NCR';
+    else fallbackRegion = 'All India';
+
+    this.showLawyerLocationFallback = true;
+    this.lawyerLocationFallbackMsg = `No advocates found in ${this.selectedCity}. Showing advocates in ${fallbackRegion} fallback.`;
+
+    const coords = this.locationService.getCoordinates();
+    this.legalService.searchHub(query, fallbackRegion, 10, coords?.lat, coords?.lng)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          const lawyers = res.data?.lawyers || [];
+          this.results.lawyers = lawyers;
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   // --- DOM Node Recycling trackBy Helpers (Optimization #3) ---
@@ -736,6 +826,68 @@ export class SearchComponent implements OnInit, OnDestroy {
 
   trackBySkeleton(_index: number, item: number): number {
     return item;
+  }
+
+  onQueryChange(query: string) {
+    this.searchQuery = query;
+    this.cdr.markForCheck();
+  }
+
+  removeSearchHistoryItem(query: string) {
+    this.searchHistory = this.searchHistory.filter(h => h !== query);
+    localStorage.setItem('lc_search_history', JSON.stringify(this.searchHistory));
+    this.cdr.markForCheck();
+  }
+
+  checkScrollAffordance() {
+    const container = document.querySelector('#tabContainer') as HTMLElement;
+    if (container) {
+      this.canScrollLeft = container.scrollLeft > 0;
+      this.canScrollRight = container.scrollLeft < (container.scrollWidth - container.clientWidth - 1);
+      this.cdr.markForCheck();
+    }
+  }
+
+  scrollToActiveTab(smooth = false) {
+    const container = document.querySelector('#tabContainer') as HTMLElement;
+    const activeEl = document.querySelector('.active-tab-btn') as HTMLElement;
+    if (container && activeEl) {
+      container.scrollTo({
+        left: activeEl.offsetLeft - (container.clientWidth / 2) + (activeEl.clientWidth / 2),
+        behavior: smooth ? 'smooth' : 'auto'
+      });
+    }
+  }
+
+  // Smart Filter State Getters
+  readonly FILTER_THRESHOLD = 15;
+
+  get showLawFilters(): boolean {
+    return this.results.laws.length >= this.FILTER_THRESHOLD
+      && (this.activeTab === 'laws' || this.activeTab === 'all');
+  }
+
+  get hasActiveFilters(): boolean {
+    return this.filterBailable !== 'all' || this.filterCognizable !== 'all';
+  }
+
+  get filteredLaws(): any[] {
+    let laws = this.results.laws;
+    if (this.filterBailable !== 'all') {
+      const wantBailable = this.filterBailable === 'bailable';
+      laws = laws.filter(l => l.criminalDetails?.isBailable === wantBailable);
+    }
+    if (this.filterCognizable !== 'all') {
+      const wantCognizable = this.filterCognizable === 'cognizable';
+      laws = laws.filter(l => l.criminalDetails?.isCognizable === wantCognizable);
+    }
+    return laws;
+  }
+
+  clearFilters() {
+    this.filterBailable = 'all';
+    this.filterCognizable = 'all';
+    this.cdr.markForCheck();
   }
 
   onCitedQueryClick(queryText: string) {

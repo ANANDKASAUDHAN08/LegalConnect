@@ -2,56 +2,152 @@ import { Component, Input, Output, EventEmitter, inject, ChangeDetectionStrategy
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { LegalService } from '../../../../services/legal.service';
+import { SpeechService } from '../../../../services/speech.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
-import { Subscription } from 'rxjs';
+import { Subscription, Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
+import { FormattingService } from '../../../../services/formatting.service';
+import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
 
 @Component({
   selector: 'app-law-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective, RouterLink],
+  imports: [CommonModule, FormsModule, TooltipDirective, RouterLink, ShareMenuComponent],
   templateUrl: './law-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LawResultCardComponent implements OnDestroy {
   private legalService = inject(LegalService);
+  public speechService = inject(SpeechService);
   private snackbar = inject(SnackbarService);
   private cdr = inject(ChangeDetectorRef);
+  private sanitizer = inject(DomSanitizer);
+  public formatter = inject(FormattingService);
+
+  private destroy$ = new Subject<void>();
+
+  constructor() {
+    this.speechService.activeSentenceIndex$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.cdr.markForCheck();
+      });
+
+    this.speechService.activeSpeakerId$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => {
+        this.cdr.markForCheck();
+      });
+  }
 
   // Cached and computed variables for template binding (Performance Optimization)
   private _result: any;
   cachedPrecedents: Array<{ caseName: string; citation: string; holding: string }> = [];
   cachedTimeline: Array<{ year: string; title: string; desc: string }> = [];
   cachedProSe: { court: string; fee: string; prep: string } = { court: '', fee: '', prep: '' };
+  isCompoundable = false;
+  mobileToolTitle = '';
+
+  get isSpeaking(): boolean {
+    const speakerId = `${this.result?.shortName}_${this.result?.section_number}`;
+    return this.speechService.isSpeaking && this.speechService.activeSpeakerId === speakerId;
+  }
+  compareDiff: { oldText: string; newText: SafeHtml } = { oldText: '', newText: '' };
+
+  readonly mobileTools = [
+    {
+      id: 'precedent',
+      label: 'Judgments',
+      class: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+      svgPath: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9m3 0h9m0 0l-3 1m0 0l-3 9a5.002 5.002 0 006.001 0l-3-9M12 3v18M12 21h4m-8 0h4'
+    },
+    {
+      id: 'timeline',
+      label: 'History',
+      class: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      svgPath: 'M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z'
+    },
+    {
+      id: 'proSe',
+      label: 'Pro Se Guide',
+      class: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20',
+      svgPath: 'M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z'
+    },
+    {
+      id: 'layman',
+      label: 'Layman Info',
+      class: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
+      svgPath: 'M12 18.044l.008-.008.007-.007v-.004m-6.364.364l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z'
+    },
+    {
+      id: 'citation',
+      label: 'Citations',
+      class: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      svgPath: 'M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3'
+    },
+    {
+      id: 'notes',
+      label: 'Notes',
+      class: 'bg-yellow-500/10 text-yellow-600 dark:text-yellow-400 border border-yellow-500/20',
+      svgPath: 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+    }
+  ] as const;
+
+  trackByMobileTool(_index: number, item: typeof this.mobileTools[number]) {
+    return item.id;
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
+  trackByString(_index: number, item: string): string {
+    return item;
+  }
+
+  trackByPrecedent(_index: number, item: any): string {
+    return item.citation;
+  }
+
+  trackByTimelineItem(_index: number, item: any): string {
+    return item.title;
+  }
 
   readingTimeMins = 1;
   complexityRating = 'Simple';
   reformLink: { label: 'replaces' | 'replaced by'; section: string; shortName: string } | null = null;
-  
+
   // Dynamic Layman Q&A fetching
   laymanExplanation = '';
   laymanLoading = false;
-  
+
   // Dynamic related elements
   suggestedPrompts: string[] = [];
   citedWithSections: string[] = [];
-  
+
   // Local sticky notes state
   noteText = '';
   showNotesEditor = false;
 
-  // Text-To-Speech state
-  isSpeaking = false;
-
   // Inline Comparison state
   showInlineCompare = false;
+
+  isExpandedContent = false;
+
+  toggleContentExpansion() {
+    this.isExpandedContent = !this.isExpandedContent;
+    this.cdr.markForCheck();
+  }
 
   // Copy micro-interaction triggers
   activeCopiedFormat: string | null = null;
   copiedContent = false;
 
   @Input() saved = false;
+  @Input() loading = false;
 
   @Output() compare = new EventEmitter<any>();
   @Output() openReader = new EventEmitter<any>();
@@ -65,6 +161,43 @@ export class LawResultCardComponent implements OnDestroy {
   expandedCitation = false;
   expandedLayman = false;
 
+  // Mobile Tool Deck states
+  activeMobileTool: 'precedent' | 'timeline' | 'proSe' | 'layman' | 'citation' | 'notes' | null = null;
+  showMobileToolSheet = false;
+
+  openMobileTool(tool: 'precedent' | 'timeline' | 'proSe' | 'layman' | 'citation' | 'notes') {
+    this.activeMobileTool = tool;
+    this.mobileToolTitle = this.getMobileToolTitleText(tool);
+    this.showMobileToolSheet = true;
+
+    // Proactively trigger layman loading if chosen
+    if (tool === 'layman') {
+      this.fetchLaymanExplanation();
+    }
+
+    document.body.style.overflow = 'hidden';
+    this.cdr.markForCheck();
+  }
+
+  closeMobileTool() {
+    this.showMobileToolSheet = false;
+    this.activeMobileTool = null;
+    document.body.style.overflow = '';
+    this.cdr.markForCheck();
+  }
+
+  private getMobileToolTitleText(tool: string): string {
+    switch (tool) {
+      case 'precedent': return 'Landmark Court Judgments';
+      case 'timeline': return 'Statutory Amendment History';
+      case 'proSe': return 'Pro Se Litigation Guide';
+      case 'layman': return 'Simplified Explanation';
+      case 'citation': return 'Professional Citation Exporter';
+      case 'notes': return 'Private Observations Pad';
+      default: return '';
+    }
+  }
+
   // Inline AI Chat Q&A state
   showChat = false;
   chatLoading = false;
@@ -76,16 +209,23 @@ export class LawResultCardComponent implements OnDestroy {
     this._result = val;
     if (val) {
       // Pre-compute lists exactly once to prevent change detection CPU bottlenecks
-      this.cachedPrecedents = this.calculatePrecedents(val);
-      this.cachedTimeline = this.calculateTimeline(val);
-      this.cachedProSe = this.calculateProSeGuide(val);
-      
+      this.cachedPrecedents = this.legalService.getMockPrecedents(val);
+      this.cachedTimeline = this.legalService.getMockTimeline(val);
+      this.cachedProSe = this.legalService.getMockProSeGuide(val);
+
       // Pre-calculate custom reading metrics
       this.readingTimeMins = Math.max(1, Math.ceil((val.snippet || '').replace(/<[^>]*>/g, '').split(/\s+/).length / 130));
       this.complexityRating = this.getComplexity(val);
       this.reformLink = this.getReformLink(val);
       this.suggestedPrompts = this.getSuggestedPrompts(val);
       this.citedWithSections = this.getCitedWith(val);
+      this.isCompoundable = val.criminalDetails?.compoundable?.toLowerCase() === 'compoundable';
+
+      const rawCompare = this.legalService.getMockCompareDiff(val);
+      this.compareDiff = {
+        oldText: rawCompare.oldText,
+        newText: this.sanitizer.bypassSecurityTrustHtml(rawCompare.newText)
+      };
 
       // Reset explanation when result changes to reload dynamically
       this.laymanExplanation = '';
@@ -101,10 +241,14 @@ export class LawResultCardComponent implements OnDestroy {
   }
 
   ngOnDestroy() {
+    this.destroy$.next();
+    this.destroy$.complete();
     if (this.chatSub) {
       this.chatSub.unsubscribe();
     }
-    this.stopSpeaking();
+    if (this.isSpeaking) {
+      this.stopSpeaking();
+    }
   }
 
   togglePrecedent() {
@@ -113,11 +257,11 @@ export class LawResultCardComponent implements OnDestroy {
 
   areAllDrawersExpanded(): boolean {
     return this.expandedPrecedents &&
-           this.expandedTimeline &&
-           this.expandedProSe &&
-           this.expandedLayman &&
-           this.expandedCitation &&
-           this.showNotesEditor;
+      this.expandedTimeline &&
+      this.expandedProSe &&
+      this.expandedLayman &&
+      this.expandedCitation &&
+      this.showNotesEditor;
   }
 
   toggleAllDrawers() {
@@ -127,30 +271,13 @@ export class LawResultCardComponent implements OnDestroy {
     this.expandedProSe = expand;
     this.expandedCitation = expand;
     this.showNotesEditor = expand;
-    
+
     // For layman explanation, fetch dynamically if expanding
     this.expandedLayman = expand;
-    if (expand && !this.laymanExplanation) {
-      this.laymanLoading = true;
-      this.cdr.markForCheck();
-      this.legalService.getSectionSummary(this.result.shortName, this.result.section_number).subscribe({
-        next: (res) => {
-          if (res && res.success && res.data) {
-            this.laymanExplanation = res.data.summary;
-          } else {
-            this.laymanExplanation = 'Failed to generate simplified explanation. Standard legal content applies.';
-          }
-          this.laymanLoading = false;
-          this.cdr.markForCheck();
-        },
-        error: () => {
-          this.laymanExplanation = 'Error fetching layman explanation. Make sure the backend server is running.';
-          this.laymanLoading = false;
-          this.cdr.markForCheck();
-        }
-      });
+    if (expand) {
+      this.fetchLaymanExplanation();
     }
-    
+
     this.cdr.markForCheck();
   }
 
@@ -168,12 +295,20 @@ export class LawResultCardComponent implements OnDestroy {
 
   toggleLayman() {
     this.expandedLayman = !this.expandedLayman;
-    if (this.expandedLayman && !this.laymanExplanation) {
-      this.laymanLoading = true;
-      this.cdr.markForCheck();
+    if (this.expandedLayman) {
+      this.fetchLaymanExplanation();
+    }
+  }
 
-      // Dynamically fetch AI simplified summary from backend API
-      this.legalService.getSectionSummary(this.result.shortName, this.result.section_number).subscribe({
+  private fetchLaymanExplanation(): void {
+    if (this.laymanExplanation || this.laymanLoading) return;
+
+    this.laymanLoading = true;
+    this.cdr.markForCheck();
+
+    this.legalService.getSectionSummary(this.result.shortName, this.result.section_number)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
         next: (res) => {
           if (res && res.success && res.data) {
             this.laymanExplanation = res.data.summary;
@@ -189,7 +324,6 @@ export class LawResultCardComponent implements OnDestroy {
           this.cdr.markForCheck();
         }
       });
-    }
   }
 
   toggleInlineCompare() {
@@ -211,26 +345,32 @@ export class LawResultCardComponent implements OnDestroy {
     const msg = suggestedText ? suggestedText.trim() : this.chatInput.trim();
     if (!msg) return;
 
+    if (this.chatSub) {
+      this.chatSub.unsubscribe();
+    }
+
     this.chatHistory.push({ sender: 'user', message: msg });
     this.chatInput = '';
     this.chatLoading = true;
     this.cdr.markForCheck();
 
-    this.chatSub = this.legalService.chatAboutSection(this.result.shortName, this.result.section_number, msg).subscribe({
-      next: (res) => {
-        this.chatHistory.push({ sender: 'ai', message: res.answer });
-        this.chatLoading = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.chatHistory.push({
-          sender: 'ai',
-          message: 'Sorry, I failed to evaluate your query. Make sure the backend server is running.'
-        });
-        this.chatLoading = false;
-        this.cdr.markForCheck();
-      }
-    });
+    this.chatSub = this.legalService.chatAboutSection(this.result.shortName, this.result.section_number, msg)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.chatHistory.push({ sender: 'ai', message: res.answer });
+          this.chatLoading = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.chatHistory.push({
+            sender: 'ai',
+            message: 'Sorry, I failed to evaluate your query. Make sure the backend server is running.'
+          });
+          this.chatLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   // --- Copy citation helper ---
@@ -251,7 +391,7 @@ export class LawResultCardComponent implements OnDestroy {
     navigator.clipboard.writeText(citationText);
     this.activeCopiedFormat = format;
     this.snackbar.show(`Copied ${format.toUpperCase()} citation: "${citationText}"`, 'success');
-    
+
     setTimeout(() => {
       this.activeCopiedFormat = null;
       this.cdr.markForCheck();
@@ -263,11 +403,11 @@ export class LawResultCardComponent implements OnDestroy {
     const act = this.result.actName || this.result.shortName;
     const cleanSnippet = this.result.snippet.replace(/<[^>]*>/g, '');
     const textToCopy = `Section ${this.result.section_number}: ${this.result.title} [${act}]\n\n${cleanSnippet}`;
-    
+
     navigator.clipboard.writeText(textToCopy);
     this.copiedContent = true;
     this.snackbar.show('Copied section content to clipboard.', 'success');
-    
+
     setTimeout(() => {
       this.copiedContent = false;
       this.cdr.markForCheck();
@@ -276,35 +416,17 @@ export class LawResultCardComponent implements OnDestroy {
 
   // --- Text-to-Speech audio reader ---
   speakSectionText() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel(); // cancel any ongoing speech
-      const cleanSnippet = this.result.snippet.replace(/<[^>]*>/g, '');
-      const textToSpeak = `Section ${this.result.section_number}: ${this.result.title}. ${cleanSnippet}`;
-      const utterance = new SpeechSynthesisUtterance(textToSpeak);
-      
-      utterance.onend = () => {
-        this.isSpeaking = false;
-        this.cdr.markForCheck();
-      };
-      utterance.onerror = () => {
-        this.isSpeaking = false;
-        this.cdr.markForCheck();
-      };
-      
-      this.isSpeaking = true;
-      this.cdr.markForCheck();
-      window.speechSynthesis.speak(utterance);
-    } else {
-      this.snackbar.show('Text-to-Speech is not supported in this browser.', 'error');
-    }
+    const cleanSnippet = this.result.snippet.replace(/<[^>]*>/g, '');
+    const textToSpeak = `Section ${this.result.section_number}: ${this.result.title}. ${cleanSnippet}`;
+    const speakerId = `${this.result.shortName}_${this.result.section_number}`;
+
+    this.speechService.speak(textToSpeak, false, speakerId);
+    this.cdr.markForCheck();
   }
 
   stopSpeaking() {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      this.isSpeaking = false;
-      this.cdr.markForCheck();
-    }
+    this.speechService.stop();
+    this.cdr.markForCheck();
   }
 
   // --- Sticky notes storage ---
@@ -326,135 +448,184 @@ export class LawResultCardComponent implements OnDestroy {
     this.showNotesEditor = false;
   }
 
-  // --- Export to PDF report ---
+  // --- Export to PDF report (Isolated print engine) ---
   exportToPDF() {
-    const act = this.result.actName || this.result.shortName;
-    const cleanSnippet = this.result.snippet.replace(/<[^>]*>/g, '');
+    this.snackbar.show('Preparing client report dossier...', 'success');
+
+    // Create a hidden iframe
+    const iframe = document.createElement('iframe');
+    iframe.style.position = 'absolute';
+    iframe.style.width = '0px';
+    iframe.style.height = '0px';
+    iframe.style.border = 'none';
+    iframe.style.visibility = 'hidden';
     
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      this.snackbar.show('Failed to open print window. Please allow popups.', 'error');
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document || iframe.contentDocument;
+    if (!doc) {
+      this.snackbar.show('Failed to initialize print engine.', 'error');
+      document.body.removeChild(iframe);
       return;
     }
-    
+
+    const act = this.result.actName || this.result.shortName;
+    const cleanSnippet = (this.result.snippet || '').replace(/<[^>]*>/g, '');
+
     let precedentsHtml = '';
-    this.cachedPrecedents.forEach(p => {
-      precedentsHtml += `
-        <div style="margin-bottom: 12px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-          <strong>${p.caseName}</strong> (${p.citation})<br/>
-          <span style="font-size: 13px; color: #555;">Holding: ${p.holding}</span>
-        </div>`;
-    });
+    if (this.cachedPrecedents && this.cachedPrecedents.length > 0) {
+      this.cachedPrecedents.forEach(p => {
+        precedentsHtml += `
+          <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
+            <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; color: #1e293b; margin-bottom: 4px;">
+              <span>${p.caseName}</span>
+              <span style="font-family: monospace; color: #64748b;">${p.citation}</span>
+            </div>
+            <p style="font-size: 12px; color: #475569; margin: 0;"><strong>Holding:</strong> ${p.holding}</p>
+          </div>`;
+      });
+    }
 
     const proSe = this.cachedProSe;
-    
-    printWindow.document.write(`
+
+    const content = `
       <html>
         <head>
-          <title>LegalConnect Report - Sec ${this.result.section_number}</title>
+          <title>LegalConnect Case Pack - Section ${this.result.section_number}</title>
           <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 40px; color: #333; line-height: 1.5; }
-            .header { border-bottom: 2px solid #4f46e5; padding-bottom: 10px; margin-bottom: 20px; }
-            .title { font-size: 24px; font-weight: bold; color: #4f46e5; }
-            .meta { font-size: 12px; color: #666; margin-top: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
-            .section-box { background: #f7fafc; border: 1px solid #e2e8f0; border-left: 5px solid #3182ce; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+            body { 
+              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+              padding: 40px; 
+              color: #1e293b; 
+              line-height: 1.6; 
+              background: #ffffff;
+            }
+            .header { 
+              border-bottom: 2px solid #4f46e5; 
+              padding-bottom: 14px; 
+              margin-bottom: 24px; 
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-end;
+            }
+            .title-box h1 { font-size: 22px; font-weight: bold; color: #1e3a8a; margin: 0; }
+            .title-box p { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 0 0; }
+            .date-box { font-size: 11px; color: #64748b; font-family: monospace; }
+            
+            .section-box { 
+              background: #f8fafc; 
+              border: 1px solid #e2e8f0; 
+              border-left: 6px solid #4f46e5; 
+              padding: 18px; 
+              border-radius: 8px; 
+              margin-bottom: 22px; 
+            }
             .section-box.high { border-left-color: #ef4444; }
             .section-box.medium { border-left-color: #f59e0b; }
             .section-box.low { border-left-color: #10b981; }
-            .subtitle { font-size: 18px; font-weight: bold; margin-top: 25px; margin-bottom: 10px; color: #1e3a8a; border-bottom: 1px solid #e2e8f0; padding-bottom: 5px; }
-            .note { background: #fffaf0; border: 1px solid #feebc8; padding: 10px; border-radius: 6px; font-style: italic; }
+            
+            .section-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; }
+            .section-text { font-family: monospace; font-size: 12.5px; color: #334155; white-space: pre-wrap; margin: 0; }
+            
+            .subtitle { 
+              font-size: 13px; 
+              font-weight: 700; 
+              text-transform: uppercase; 
+              letter-spacing: 0.5px; 
+              margin-top: 26px; 
+              margin-bottom: 10px; 
+              color: #475569; 
+              border-bottom: 1px solid #e2e8f0; 
+              padding-bottom: 5px; 
+            }
+            .layman-text { font-size: 13px; color: #334155; margin: 0; }
+            
+            .guide-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+            .guide-table td { padding: 9px; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; }
+            .guide-label { font-weight: 600; color: #475569; width: 30%; }
+            .guide-value { color: #334155; }
+            
+            .footer { 
+              margin-top: 40px; 
+              border-top: 1px solid #e2e8f0; 
+              padding-top: 14px; 
+              text-align: center; 
+              font-size: 10px; 
+              color: #94a3b8; 
+            }
+            @media print {
+              body { padding: 10px; }
+            }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="title">${act}</div>
-            <div class="meta">LegalConnect Case Pack Report &bull; Printed on ${new Date().toLocaleDateString()}</div>
+            <div class="title-box">
+              <h1>${act}</h1>
+              <p>LegalConnect Case Pack Report</p>
+            </div>
+            <div class="date-box">Printed: ${new Date().toLocaleDateString()}</div>
           </div>
           
           <div class="section-box ${this.result.criminalDetails?.severity || 'low'}">
-            <h2 style="margin: 0 0 10px 0; font-size: 20px;">Section ${this.result.section_number}: ${this.result.title}</h2>
-            <p style="margin: 0; font-family: monospace; font-size: 13px; white-space: pre-wrap;">${cleanSnippet}</p>
+            <h2 class="section-title">Section ${this.result.section_number}: ${this.result.title}</h2>
+            <p class="section-text">${cleanSnippet}</p>
           </div>
           
-          <div class="subtitle">Simplified Layman's Explanation</div>
-          <p>${this.laymanExplanation || 'No summary fetched.'}</p>
+          ${this.laymanExplanation ? `
+            <div class="subtitle">Simplified Layman's Explanation</div>
+            <p class="layman-text">${this.laymanExplanation}</p>
+          ` : ''}
           
-          <div class="subtitle">Precedents & Landmark Judgments</div>
-          ${precedentsHtml || '<p>No specific landmark precedents loaded for this section.</p>'}
+          ${precedentsHtml ? `
+            <div class="subtitle">Precedents & Landmark Judgments</div>
+            ${precedentsHtml}
+          ` : ''}
           
           <div class="subtitle">Pro Se Litigation Guide</div>
-          <ul>
-            <li><strong>Judicial Forum:</strong> ${proSe.court}</li>
-            <li><strong>Court Fees:</strong> ${proSe.fee}</li>
-            <li><strong>Pre-requisite notice rules:</strong> ${proSe.prep}</li>
-          </ul>
+          <table class="guide-table">
+            <tr>
+              <td class="guide-label">Judicial Forum</td>
+              <td class="guide-value">${proSe.court}</td>
+            </tr>
+            <tr>
+              <td class="guide-label">Court Fees</td>
+              <td class="guide-value">${proSe.fee}</td>
+            </tr>
+            <tr>
+              <td class="guide-label">Pre-requisite Rules</td>
+              <td class="guide-value">${proSe.prep}</td>
+            </tr>
+          </table>
           
           ${this.noteText ? `
             <div class="subtitle">Personal Case Notes</div>
-            <div class="note">${this.noteText}</div>
+            <div style="background: #fffdf5; border: 1px solid #fef08a; padding: 12px; border-radius: 8px; font-style: italic; font-size: 13px; color: #713f12; margin: 0;">
+              ${this.noteText}
+            </div>
           ` : ''}
           
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
+          <div class="footer">
+            Generated automatically by LegalConnect AI Platform. Private Client Dossier. Confidential.
+          </div>
         </body>
       </html>
-    `);
-    printWindow.document.close();
-    this.snackbar.show('Sent report to print window.', 'success');
-  }
+    `;
 
-  // --- Mock calculations (Run once per result update) ---
-  private calculatePrecedents(val: any): Array<{ caseName: string; citation: string; holding: string }> {
-    const num = val.section_number;
-    const is302 = num === '302' || num === '101';
-    const is138 = num === '138';
+    doc.open();
+    doc.write(content);
+    doc.close();
 
-    if (is302) {
-      return [
-        { caseName: 'Bachchan Singh v. State of Punjab', citation: 'AIR 1980 SC 898', holding: 'Established the "rarest of rare cases" doctrine for death penalty sentencing.' },
-        { caseName: 'Machhi Singh v. State of Punjab', citation: '(1983) 3 SCC 470', holding: 'Outlined standard guidelines for capital sentencing indicators.' }
-      ];
-    } else if (is138) {
-      return [
-        { caseName: 'Dalmia Cement Ltd. v. Galaxy Traders', citation: 'AIR 2001 SC 676', holding: 'Held that NI Act provisions must be construed to enforce commercial integrity.' },
-        { caseName: 'Kaushalya Devi Massand v. Roopkishore', citation: '(2011) 4 SCC 593', holding: 'Held that compounding is encouraged but criminal fines are compensatory.' }
-      ];
-    } else {
-      return [
-        { caseName: 'Hari Prasad v. State of UP', citation: '2021 SC 109', holding: 'Strict interpretation of statutory intent of section clauses.' }
-      ];
-    }
-  }
-
-  private calculateTimeline(val: any): Array<{ year: string; title: string; desc: string }> {
-    const num = val.section_number;
-    const is302 = num === '302' || num === '101';
-    if (is302) {
-      return [
-        { year: '1860', title: 'Original Enactment', desc: 'Introduced in Macaulay\'s Indian Penal Code.' },
-        { year: '1973', title: 'CrPC Amendment', desc: 'Shifted judicial priority away from capital punishment as default sentence.' },
-        { year: '2023', title: 'BNS Reform Integration', desc: 'Replaced by BNS Section 101 detailing updated murder classification.' }
-      ];
-    } else {
-      return [
-        { year: '1988', title: 'Act Revision', desc: 'Amended criminal penalty liabilities.' },
-        { year: '2002', title: 'Fines Doubled', desc: 'Penalty limit increased to twice the cheque amount.' },
-        { year: '2018', title: 'Interim Compensation', desc: 'Courts empowered to order 20% interim deposit.' }
-      ];
-    }
-  }
-
-  private calculateProSeGuide(val: any): { court: string; fee: string; prep: string } {
-    const is138 = val.section_number === '138';
-    return {
-      court: val.shortName === 'Rent Control Act' ? 'Rent Tribunal' : (val.shortName === 'IPC' || val.shortName === 'BNS' ? 'Judicial Magistrate Court' : 'Civil Court (Senior Division)'),
-      fee: is138 ? '10% of bounced cheque value (max 10,000)' : 'Flat Rs. 200 standard judicial filing stamps',
-      prep: is138 ? '30-day statutory legal notice served to drawer; 15 days wait period.' : 'Serve 15-day prior written notice of termination under Section 106.'
-    };
+    // Give iframe short delay to mount, then execute print dialog in isolated context
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+      
+      // Remove temporary iframe after printing dialog is closed/canceled
+      setTimeout(() => {
+        document.body.removeChild(iframe);
+      }, 1000);
+    }, 250);
   }
 
   private getComplexity(val: any): string {
@@ -468,7 +639,7 @@ export class LawResultCardComponent implements OnDestroy {
   private getReformLink(val: any): { label: 'replaces' | 'replaced by'; section: string; shortName: string } | null {
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const num = val.section_number;
-    
+
     if (short === 'IPC' && num === '302') {
       return { label: 'replaced by', section: '101', shortName: 'BNS' };
     }
@@ -516,25 +687,25 @@ export class LawResultCardComponent implements OnDestroy {
     }
   }
 
-  getCompareDiff(): { oldText: string; newText: string } {
-    const num = this.result.section_number;
+  private calculateCompareDiff(val: any): { oldText: string; newText: SafeHtml } {
+    const num = val.section_number;
     const is302 = num === '302' || num === '101';
     const is378 = num === '378' || num === '379' || num === '303';
-    
+
     if (is302) {
       return {
         oldText: 'Whoever commits murder shall be punished with death, or imprisonment for life, and shall also be liable to fine.',
-        newText: 'Whoever commits murder shall be punished with death or imprisonment for life, and shall also be liable to fine. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Provided that where a group of five or more persons commits murder on the ground of race, caste, sex, place of birth, language, or community, each member shall be punished with death or life imprisonment.</ins>'
+        newText: this.sanitizer.bypassSecurityTrustHtml('Whoever commits murder shall be punished with death or imprisonment for life, and shall also be liable to fine. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Provided that where a group of five or more persons commits murder on the ground of race, caste, sex, place of birth, language, or community, each member shall be punished with death or life imprisonment.</ins>')
       };
     } else if (is378) {
       return {
         oldText: 'Whoever, intending to take dishonestly any moveable property out of the possession of any person without consent, moves that property in order to such taking, is said to commit theft.',
-        newText: 'Whoever, intending to take dishonestly any movable property <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">including digital assets or data</ins> out of the possession of any person without consent... is said to commit theft.'
+        newText: this.sanitizer.bypassSecurityTrustHtml('Whoever, intending to take dishonestly any movable property <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">including digital assets or data</ins> out of the possession of any person without consent... is said to commit theft.')
       };
     } else {
       return {
         oldText: 'Whoever commits the offense specified under this section shall be liable to standard prosecution, fine, or imprisonment.',
-        newText: 'Whoever commits the offense under this section shall be liable to standard prosecution. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Fines have been increased by 100% and provisions for community service have been introduced as alternative punishment.</ins>'
+        newText: this.sanitizer.bypassSecurityTrustHtml('Whoever commits the offense under this section shall be liable to standard prosecution. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Fines have been increased by 100% and provisions for community service have been introduced as alternative punishment.</ins>')
       };
     }
   }
@@ -558,5 +729,23 @@ export class LawResultCardComponent implements OnDestroy {
 
   findExpertsForAct() {
     this.citedQuery.emit(`expert:${this.result.shortName}`);
+  }
+
+  getShareUrl(): string {
+    if (typeof window !== 'undefined' && this.result) {
+      return `${window.location.origin}/laws/${this.result.shortName}#sec-${this.result.section_number}`;
+    }
+    return '';
+  }
+
+  getShareSubject(): string {
+    if (!this.result) return 'LegalConnect';
+    return `${this.result.shortName} — Sec. ${this.result.section_number}`;
+  }
+
+  getShareText(): string {
+    if (!this.result) return '';
+    const cleanTitle = (this.result.rawTitle || this.result.title || '').replace(/<[^>]*>/g, '');
+    return `Read Section ${this.result.section_number} of ${this.result.shortName}: ${cleanTitle}`;
   }
 }

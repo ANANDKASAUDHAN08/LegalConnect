@@ -16,7 +16,8 @@
         <div class="flex items-center gap-2 flex-wrap">
           <span class="act-badge px-2 py-0.5 rounded text-[10px] font-extrabold tracking-wider uppercase border"
             [style.--act-hue]="actHue">
-            {{ readerSection.shortName }}
+            <span class="inline md:hidden">{{ readerSection.shortName }}</span>
+            <span class="hidden md:inline">{{ readerSection.actName || readerSection.shortName }}</span>
           </span>
           <span *ngIf="readerSection.chapterNumber" class="text-[10px] text-slate-400 font-semibold uppercase">Ch. {{
             readerSection.chapterNumber }}</span>

@@ -213,3 +213,82 @@ button:hover .tab-badge-templates:not(.active-tab-templates *) {
   color: #be184a;
   border-color: rgba(244, 63, 94, 0.3);
 }
+
+/* Mobile & Touch UX Enhancements */
+@media (max-width: 768px) {
+  // Edge-to-edge full-bleed breakout for mobile scrolling comfort
+  .mobile-bleed-container {
+    margin-left: -5.5vw;
+    margin-right: -5.5vw;
+    width: calc(100% + 11vw);
+    padding: 0 4px;
+
+    // Custom theme gradient overrides for the dynamic border fades
+    .bg-gradient-to-r {
+      background-image: linear-gradient(to right, #f8fafc, transparent);
+    }
+
+    .bg-gradient-to-l {
+      background-image: linear-gradient(to left, #f8fafc, transparent);
+    }
+  }
+}
+
+// Angular host context context to override gradient fades for dark theme
+:host-context(.dark) {
+  @media (max-width: 768px) {
+    .mobile-bleed-container {
+      .bg-gradient-to-r {
+        background-image: linear-gradient(to right, #05060d, transparent) !important;
+      }
+
+      .bg-gradient-to-l {
+        background-image: linear-gradient(to left, #05060d, transparent) !important;
+      }
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  // Disable ugly mobile tap highlight outline
+  button, a, label, select, input, [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+    outline: none;
+    
+    // Smooth haptic-like scale down on active touch
+    &:active {
+      transform: scale(0.97);
+      transition: transform 0.1s ease;
+    }
+  }
+
+  // Smooth scroll snapping for mobile carousels
+  .snap-x {
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .snap-start {
+    scroll-snap-align: start;
+  }
+
+  // Sticky Category Tab Bar Dock Shadow on Scroll
+  nav.sticky {
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+    border-radius: 0 !important;
+    border-left: none !important;
+    border-right: none !important;
+    
+    .dark & {
+      box-shadow: 0 4px 24px -5px rgba(0, 0, 0, 0.4);
+    }
+  }
+
+  // Enhance button touch targets
+  nav.sticky button {
+    padding-top: 0.75rem !important; // py-3 equivalent
+    padding-bottom: 0.75rem !important;
+    min-height: 46px; // Great touch feedback height
+  }
+}
