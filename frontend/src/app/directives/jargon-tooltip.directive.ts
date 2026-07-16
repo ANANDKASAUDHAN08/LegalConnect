@@ -86,7 +86,7 @@ export class JargonTooltipDirective implements OnDestroy {
     this.tooltipEl = tooltip;
 
     // Fetch definition from backend
-    this.http.get<any>(`http://localhost:8888/api/legal/jargon?term=${encodeURIComponent(term)}`).subscribe({
+    this.http.get<any>(`/api/legal/jargon?term=${encodeURIComponent(term)}`).subscribe({
       next: (res) => {
         if (this.tooltipEl === tooltip) {
           tooltip.innerHTML = `<div class="font-bold uppercase tracking-wider text-[9px] text-amber-500 mb-0.5">Jargon Explainer: "${term}"</div>

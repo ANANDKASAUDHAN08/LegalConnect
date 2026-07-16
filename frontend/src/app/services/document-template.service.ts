@@ -45,8 +45,8 @@ export class DocumentTemplateService {
   private draftsKey = 'lc_vault_drafts_v2';
   private customTemplatesKey = 'lc_custom_templates';
 
-  private draftsUrl = 'http://localhost:8888/api/legal/drafts';
-  private templatesUrl = 'http://localhost:8888/api/legal/templates';
+  private draftsUrl = '/api/legal/drafts';
+  private templatesUrl = '/api/legal/templates';
 
   private draftsSubject = new BehaviorSubject<Draft[]>([]);
   drafts$ = this.draftsSubject.asObservable();

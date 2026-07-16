@@ -113,7 +113,7 @@ export interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class LegalService {
-  private apiUrl = 'http://localhost:8888/api/legal';
+  private apiUrl = '/api/legal';
   private actsCache$: Observable<ApiResponse<BareAct[]>> | null = null;
   private actDetailsCache = new Map<string, Observable<ApiResponse<BareAct>>>();
   private actOutlineCache = new Map<string, Observable<ApiResponse<BareAct>>>();

@@ -23,7 +23,7 @@ export interface SavedResourceInfo {
 
 @Injectable({ providedIn: 'root' })
 export class SavedItemsService {
-  private apiBase = 'http://localhost:8888/api';
+  private apiBase = '/api';
   private isLoggedIn = false;
 
   // Public signals containing list of saved items

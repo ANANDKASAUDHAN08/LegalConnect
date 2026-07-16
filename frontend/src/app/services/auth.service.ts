@@ -33,7 +33,7 @@ export interface UserProfile {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private apiUrl = 'http://localhost:8888/api/auth';
+  private apiUrl = '/api/auth';
 
   private _currentUser = new BehaviorSubject<UserProfile | null>(null);
   currentUser$ = this._currentUser.asObservable();
@@ -89,7 +89,8 @@ export class AuthService {
       tap(user => {
         if (user && user.isAuthenticated !== false) {
           if (user.avatarUrl && user.avatarUrl.startsWith('/')) {
-            user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
+            // Keep it relative so it works via proxy in local dev and rewrites in prod
+            user.avatarUrl = user.avatarUrl;
           }
           if (user.token) {
             this.token = user.token;
@@ -190,7 +191,7 @@ export class AuthService {
     return this.http.get<UserProfile>(`${this.apiUrl}/me`, this.httpOptions).pipe(
       map(user => {
         if (user && user.avatarUrl && user.avatarUrl.startsWith('/')) {
-          user.avatarUrl = `http://localhost:8888${user.avatarUrl}`;
+          user.avatarUrl = user.avatarUrl;
         }
         return user;
       })

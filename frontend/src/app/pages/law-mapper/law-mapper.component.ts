@@ -509,6 +509,13 @@ export class LawMapperComponent implements OnInit, OnDestroy {
     return `Compare ${oldAct} Section ${oldSec} and ${newAct} Section ${newSec} (${similarity}% similarity) on LegalConnect:`;
   }
 
+  getShareUrl(): string {
+    if (typeof window !== 'undefined') {
+      return window.location.origin + this.router.url;
+    }
+    return 'https://legalconnect-501109.web.app' + this.router.url;
+  }
+
   // ── NEW: Print / Export ──
   triggerPrint() {
     window.print();

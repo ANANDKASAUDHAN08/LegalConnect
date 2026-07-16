@@ -17,7 +17,7 @@ export interface UserSettings {
   providedIn: 'root'
 })
 export class SettingsService {
-  private apiUrl = 'http://localhost:8888/api/auth/settings';
+  private apiUrl = '/api/auth/settings';
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 

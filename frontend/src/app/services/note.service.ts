@@ -15,7 +15,7 @@ export interface ResearchNote {
 })
 export class NoteService {
   private notesKeyPrefix = 'legalconnect_note_';
-  private apiUrl = 'http://localhost:8888/api/notes';
+  private apiUrl = '/api/notes';
 
   private notesSignal = signal<Record<string, string>>({}); // key: "shortName_secNum" -> noteText
   notes = this.notesSignal.asReadonly();

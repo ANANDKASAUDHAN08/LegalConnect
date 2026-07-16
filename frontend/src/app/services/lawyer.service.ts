@@ -94,10 +94,10 @@ export interface LawyerProfileData {
 
 @Injectable({ providedIn: 'root' })
 export class LawyerService {
-  private apiUrl = 'http://localhost:8888/api/lawyers';
-  private lawyerApiUrl = 'http://localhost:8888/api/lawyer';
-  private consultationApiUrl = 'http://localhost:8888/api/consultation';
-  private reviewApiUrl = 'http://localhost:8888/api/review';
+  private apiUrl = '/api/lawyers';
+  private lawyerApiUrl = '/api/lawyer';
+  private consultationApiUrl = '/api/consultation';
+  private reviewApiUrl = '/api/review';
 
   constructor(private http: HttpClient) {}
 
@@ -111,10 +111,10 @@ export class LawyerService {
         if (res.success && res.data) {
           res.data.forEach(lawyer => {
             if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
-              lawyer.avatarUrl = `http://localhost:8888${lawyer.avatarUrl}`;
+              lawyer.avatarUrl = lawyer.avatarUrl;
             }
             if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
-              lawyer.bannerUrl = `http://localhost:8888${lawyer.bannerUrl}`;
+              lawyer.bannerUrl = lawyer.bannerUrl;
             }
           });
         }
@@ -129,10 +129,10 @@ export class LawyerService {
         if (res.success && res.data) {
           const lawyer = res.data;
           if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
-            lawyer.avatarUrl = `http://localhost:8888${lawyer.avatarUrl}`;
+            lawyer.avatarUrl = lawyer.avatarUrl;
           }
           if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
-            lawyer.bannerUrl = `http://localhost:8888${lawyer.bannerUrl}`;
+            lawyer.bannerUrl = lawyer.bannerUrl;
           }
         }
         return res;
@@ -149,10 +149,10 @@ export class LawyerService {
         if (res.success && res.data) {
           res.data.forEach(lawyer => {
             if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
-              lawyer.avatarUrl = `http://localhost:8888${lawyer.avatarUrl}`;
+              lawyer.avatarUrl = lawyer.avatarUrl;
             }
             if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
-              lawyer.bannerUrl = `http://localhost:8888${lawyer.bannerUrl}`;
+              lawyer.bannerUrl = lawyer.bannerUrl;
             }
           });
         }
@@ -171,7 +171,7 @@ export class LawyerService {
       map(profile => {
         if (profile) {
           if (profile.bannerUrl && profile.bannerUrl.startsWith('/')) {
-            profile.bannerUrl = `http://localhost:8888${profile.bannerUrl}`;
+            profile.bannerUrl = profile.bannerUrl;
           }
         }
         return profile;

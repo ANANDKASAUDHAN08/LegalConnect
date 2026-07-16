@@ -19,7 +19,7 @@ export interface Bookmark {
   providedIn: 'root'
 })
 export class BookmarkService {
-  private apiUrl = 'http://localhost:8888/api/bookmark';
+  private apiUrl = '/api/bookmark';
 
   // RxJS backing fields for backwards compatibility
   private bookmarksSubject = new BehaviorSubject<Bookmark[]>([]);

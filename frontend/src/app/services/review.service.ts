@@ -18,7 +18,7 @@ export interface ReviewItem {
   providedIn: 'root'
 })
 export class ReviewService {
-  private apiUrl = 'http://localhost:8888/api/review';
+  private apiUrl = '/api/review';
 
   constructor(private http: HttpClient) {}
 

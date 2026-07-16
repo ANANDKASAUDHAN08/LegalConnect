@@ -14,7 +14,12 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:4200', 'http://localhost:4300'],
+  origin: [
+    'http://localhost:4200',
+    'http://localhost:4300',
+    'https://legalconnect-501109.web.app',
+    'https://legalconnect-501109.firebaseapp.com'
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
@@ -30,11 +35,19 @@ app.use('/api/legal', templateRoutes);
 app.use('/api/lawyers', lawyerRoutes);
 
 // Start Server
-const startServer = async () => {
-  await connectDB();
-  await seedFullDatabaseIfEmpty();
+const startServer = () => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+    
+    // Connect to database and run auto-seeder asynchronously in the background
+    connectDB()
+      .then(() => seedFullDatabaseIfEmpty())
+      .then(() => {
+        console.log('✅ Database initialization and seeding check completed.');
+      })
+      .catch((err) => {
+        console.error('❌ Database initialization failed:', err);
+      });
   });
 };
 

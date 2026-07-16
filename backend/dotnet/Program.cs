@@ -31,7 +31,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins("http://localhost:4200", "http://localhost:4300")
+        policy.WithOrigins(
+                  "http://localhost:4200",
+                  "http://localhost:4300",
+                  "https://legalconnect-501109.web.app",
+                  "https://legalconnect-501109.firebaseapp.com"
+              )
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
