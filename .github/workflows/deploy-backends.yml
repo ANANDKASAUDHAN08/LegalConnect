@@ -1,0 +1,41 @@
+name: Deploy Backends to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'backend/**'
+      - '.github/workflows/deploy-backends.yml'
+
+jobs:
+  deploy-backends:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Authenticate with Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: legalconnect-501109
+
+      - name: Deploy .NET Auth Service to Cloud Run
+        run: |
+          gcloud run deploy legalconnect-auth \
+            --source backend/dotnet \
+            --region us-central1 \
+            --allow-unauthenticated
+
+      - name: Deploy Node.js Legal Service to Cloud Run
+        run: |
+          gcloud run deploy legalconnect-legal \
+            --source backend/node \
+            --region us-central1 \
+            --allow-unauthenticated
