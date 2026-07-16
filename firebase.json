@@ -1,0 +1,101 @@
+{
+  "hosting": {
+    "site": "legalconnect-501109",
+    "public": "frontend/dist/frontend/browser",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/auth{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/bookmark{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/notes{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/lawyer{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/consultation{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/review{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/favouritelawyer{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/favouriteresource{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/helpline{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/uploads{,/**}",
+        "run": {
+          "serviceId": "legalconnect-auth",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/legal{,/**}",
+        "run": {
+          "serviceId": "legalconnect-legal",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/api/lawyers{,/**}",
+        "run": {
+          "serviceId": "legalconnect-legal",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
