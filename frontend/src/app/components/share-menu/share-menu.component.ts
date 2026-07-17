@@ -194,9 +194,13 @@ export class ShareMenuComponent implements OnDestroy {
         this.showShareDropdown = false;
         this.cdr.markForCheck();
       }).catch((err) => {
-        // Fallback to custom sheet if sharing encounters issues or is cancelled
-        this.showShareDropdown = true;
-        this.updateBodyScroll();
+        // Fallback to custom sheet if sharing encounters issues, but NOT if cancelled by the user
+        if (err && err.name === 'AbortError') {
+          this.showShareDropdown = false;
+        } else {
+          this.showShareDropdown = true;
+          this.updateBodyScroll();
+        }
         this.cdr.markForCheck();
       });
     }
