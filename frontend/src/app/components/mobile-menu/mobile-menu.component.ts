@@ -7,6 +7,9 @@ import { NotificationService } from '../../services/notification.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 
+import { PwaInstallService } from '../../services/pwa-install.service';
+import { SystemAnnouncementService } from '../../services/system-announcement.service';
+
 @Component({
   selector: 'app-mobile-menu',
   standalone: true,
@@ -55,6 +58,8 @@ export class MobileMenuComponent implements OnDestroy {
     public auth: AuthService,
     public themeService: ThemeService,
     public notificationService: NotificationService,
+    public pwaInstall: PwaInstallService,
+    public systemAnnouncements: SystemAnnouncementService,
     private snackbar: SnackbarService,
     public router: Router,
     private cdr: ChangeDetectorRef

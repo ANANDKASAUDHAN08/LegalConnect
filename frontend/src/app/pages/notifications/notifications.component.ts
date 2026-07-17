@@ -1,19 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { NotificationService, FollowedAct } from '../../services/notification.service';
+import { SystemAnnouncementService, SystemAnnouncement } from '../../services/system-announcement.service';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-notifications',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TooltipDirective],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss']
 })
 export class NotificationsComponent implements OnInit {
+  activeTab: 'all' | 'system' | 'laws' = 'all';
   followedActs: FollowedAct[] = [];
 
-  constructor(private notificationService: NotificationService) {}
+  systemAnnouncementService = inject(SystemAnnouncementService);
+  notificationService = inject(NotificationService);
 
   ngOnInit() {
     this.loadNotifications();
@@ -21,6 +25,15 @@ export class NotificationsComponent implements OnInit {
 
   loadNotifications() {
     this.followedActs = this.notificationService.getFollowedActs();
+    this.systemAnnouncementService.fetchLatestAnnouncements();
+  }
+
+  setTab(tab: 'all' | 'system' | 'laws') {
+    this.activeTab = tab;
+  }
+
+  markRead(announcementId: number) {
+    this.systemAnnouncementService.markAsRead(announcementId);
   }
 
   unfollow(shortName: string, event: Event) {
@@ -31,7 +44,7 @@ export class NotificationsComponent implements OnInit {
   }
 
   clearAll() {
-    if (confirm('Are you sure you want to clear all alerts?')) {
+    if (confirm('Are you sure you want to clear all followed law alerts?')) {
       this.notificationService.clearAll();
       this.loadNotifications();
     }

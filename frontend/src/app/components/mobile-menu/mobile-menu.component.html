@@ -113,6 +113,7 @@
           Navigation
         </p>
         <div class="flex flex-col">
+
           <!-- Home -->
           <a routerLink="/home" routerLinkActive="active-mobile" [routerLinkActiveOptions]="{exact: true}"
             class="mobile-main-link group stagger-1" (click)="onClose()">
@@ -405,6 +406,39 @@
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
           </a>
+        </div>
+      </div>
+
+      <div class="h-px bg-slate-100 dark:bg-slate-800/40 w-full" *ngIf="!pwaInstall.isStandalone()"></div>
+
+      <!-- CATEGORY 5: APP UTILITIES (Visible to ALL users - Logged in & Guest) -->
+      <div class="mb-2" *ngIf="!pwaInstall.isStandalone()">
+        <p
+          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
+          App Experience
+        </p>
+        <div class="flex flex-col">
+          <!-- Install LegalConnect App (PWA) -->
+          <button
+            (click)="pwaInstall.promptInstall(); onClose()"
+            class="mobile-main-link group"
+            appTooltip="Download & install LegalConnect to your device home screen" tooltipPlacement="top">
+            <span class="link-icon-container text-blue-600 dark:text-blue-400">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                class="w-5 h-5 group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                <line x1="12" y1="18" x2="12.01" y2="18"></line>
+              </svg>
+            </span>
+            <span class="font-bold text-slate-800 dark:text-slate-100">Install LegalConnect App</span>
+            <span class="ml-2 text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider">PWA</span>
+            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+              stroke="currentColor" stroke-width="2.5"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
         </div>
       </div>
 

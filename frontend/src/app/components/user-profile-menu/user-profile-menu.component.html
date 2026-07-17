@@ -81,6 +81,20 @@
         <span class="text-[0.82rem] font-semibold">Settings</span>
       </a>
 
+      <!-- Install Desktop App (PWA) -->
+      <button *ngIf="!pwaInstall.isStandalone()" (click)="pwaInstall.promptInstall()"
+        class="profile-dropdown-link flex w-full items-center gap-3 px-2.5 py-2 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 no-underline transition-colors bg-transparent border-0 cursor-pointer text-left"
+        appTooltip="Install LegalConnect application to desktop/phone" tooltipPlacement="left">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        <span class="text-[0.82rem] font-bold">Install App</span>
+      </button>
+
+      <div class="h-px bg-slate-100 dark:bg-slate-800/60 my-0.5"></div>
+
       <!-- Logout Button (Common) -->
       <button (click)="logout.emit()"
         class="profile-dropdown-link flex w-full items-center gap-3 px-2.5 py-2 rounded-xl text-rose-500 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 no-underline transition-colors bg-transparent border-0 cursor-pointer text-left">

@@ -1,0 +1,152 @@
+<!-- Floating Install Prompt Banner for Desktop (Pops up after delay, then auto-dismisses) -->
+<div *ngIf="isVisible && !pwaInstall.isStandalone()"
+  class="hidden md:block fixed bottom-6 left-6 z-40 max-w-sm p-4 bg-slate-900/95 border border-blue-500/40 rounded-2xl shadow-2xl backdrop-blur-md text-slate-100"
+  [ngClass]="isLeaving ? 'animate-pop-out' : 'animate-pop-in'">
+  <div class="flex items-start justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-full bg-blue-600 text-white flex items-center justify-center shadow-md shadow-blue-600/30 shrink-0 border border-blue-400/30">
+        <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+          <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5"
+            stroke-linecap="round" stroke-linejoin="round" />
+          <circle cx="12" cy="11" r="2.2" fill="currentColor" class="animate-pulse-fast" />
+        </svg>
+      </div>
+      <div>
+        <h4 class="text-sm font-bold text-white">Download LegalConnect App</h4>
+        <p class="text-xs text-slate-300">Fast access, offline bare acts & push alerts.</p>
+      </div>
+    </div>
+    <button (click)="dismissBanner()" class="text-slate-400 hover:text-slate-200 text-xs p-1 cursor-pointer"
+      appTooltip="Dismiss installation banner" tooltipPlacement="top">✕</button>
+  </div>
+
+  <div class="mt-3 flex items-center justify-end">
+    <button (click)="installApp()"
+      class="px-4 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 transition-all shadow-md shadow-blue-600/20 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+      appTooltip="Install LegalConnect application to your device" tooltipPlacement="top">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+        <line x1="12" y1="18" x2="12.01" y2="18"></line>
+      </svg>
+      <span>Install App</span>
+    </button>
+  </div>
+</div>
+
+<!-- Desktop Installation Modal Guide (Closes on outside click) -->
+<div *ngIf="pwaInstall.showDesktopGuide()" (click)="pwaInstall.closeDesktopGuide()"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in cursor-pointer">
+  <div (click)="$event.stopPropagation()"
+    class="w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl p-6 text-slate-100 shadow-2xl cursor-default">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-white flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
+          <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+          <line x1="8" y1="21" x2="16" y2="21"></line>
+          <line x1="12" y1="17" x2="12" y2="21"></line>
+        </svg>
+        <span>Install LegalConnect App</span>
+      </h3>
+      <button (click)="pwaInstall.closeDesktopGuide()" class="text-slate-400 hover:text-white cursor-pointer"
+        appTooltip="Close guide" tooltipPlacement="left">✕</button>
+    </div>
+
+    <p class="text-xs text-slate-300 mb-4">
+      Install LegalConnect directly to your desktop or mobile home screen:
+    </p>
+
+    <div class="space-y-3 text-xs text-slate-200">
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        <span
+          class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 font-bold text-white shrink-0">1</span>
+        <div>
+          <p class="font-semibold text-white">Look at Address Bar Icon</p>
+          <p class="text-slate-400">Click the <strong>Install Icon</strong> at the right side of your browser's address
+            bar (Chrome, Edge, Brave).</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        <span
+          class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 font-bold text-white shrink-0">2</span>
+        <div>
+          <p class="font-semibold text-white">Or via Browser Menu</p>
+          <p class="text-slate-400">Click browser menu (⋮) ➔ <strong>Save & Share</strong> ➔ <strong>Install
+              LegalConnect</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <button (click)="pwaInstall.closeDesktopGuide()"
+      class="w-full mt-5 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white transition-all shadow-md cursor-pointer">
+      Got It
+    </button>
+  </div>
+</div>
+
+<!-- iOS Installation Modal Guide (Closes on outside click) -->
+<div *ngIf="pwaInstall.showIosGuide()" (click)="pwaInstall.closeIosGuide()"
+  class="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in cursor-pointer">
+  <div (click)="$event.stopPropagation()"
+    class="w-full max-w-md bg-slate-900 border border-slate-700/80 rounded-2xl p-6 text-slate-100 shadow-2xl cursor-default">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-white flex items-center gap-2">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+          stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-400">
+          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+          <line x1="12" y1="18" x2="12.01" y2="18"></line>
+        </svg>
+        <span>Install on iPhone / iPad</span>
+      </h3>
+      <button (click)="pwaInstall.closeIosGuide()" class="text-slate-400 hover:text-white cursor-pointer"
+        appTooltip="Close guide" tooltipPlacement="left">✕</button>
+    </div>
+
+    <p class="text-xs text-slate-300 mb-4">
+      Follow these quick steps in Safari to install LegalConnect as a home screen app:
+    </p>
+
+    <div class="space-y-3 text-xs text-slate-200">
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        <span
+          class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 font-bold text-white shrink-0">1</span>
+        <div>
+          <p class="font-semibold text-white">Tap the Share Button</p>
+          <p class="text-slate-400">Tap the Share icon <span class="px-1.5 py-0.5 rounded bg-slate-700">⎋</span> in
+            Safari's bottom bar.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        <span
+          class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 font-bold text-white shrink-0">2</span>
+        <div>
+          <p class="font-semibold text-white">Select 'Add to Home Screen'</p>
+          <p class="text-slate-400">Scroll down the menu options and tap <strong>'Add to Home Screen'</strong>.</p>
+        </div>
+      </div>
+
+      <div class="flex items-start gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/50">
+        <span
+          class="flex items-center justify-center w-6 h-6 rounded-full bg-blue-600 font-bold text-white shrink-0">3</span>
+        <div>
+          <p class="font-semibold text-white">Launch App Anytime</p>
+          <p class="text-slate-400">Tap <strong>'Add'</strong> at the top right to launch LegalConnect directly from
+            your home screen.</p>
+        </div>
+      </div>
+    </div>
+
+    <button (click)="pwaInstall.closeIosGuide()"
+      class="w-full mt-5 py-2.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-white transition-colors border border-slate-700 cursor-pointer">
+      Got It
+    </button>
+  </div>
+</div>

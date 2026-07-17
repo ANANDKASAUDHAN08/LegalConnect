@@ -16,6 +16,9 @@ import { ScrollService } from '../../services/scroll.service';
 import { NavigationEnd } from '@angular/router';
 import { filter } from 'rxjs/operators';
 
+import { PwaInstallService } from '../../services/pwa-install.service';
+import { SystemAnnouncementService } from '../../services/system-announcement.service';
+
 declare var google: any;
 
 @Component({
@@ -67,6 +70,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     public auth: AuthService,
     public themeService: ThemeService,
     public notificationService: NotificationService,
+    public pwaInstall: PwaInstallService,
+    public systemAnnouncements: SystemAnnouncementService,
     private snackbar: SnackbarService,
     public router: Router,
     private locationService: LocationService,

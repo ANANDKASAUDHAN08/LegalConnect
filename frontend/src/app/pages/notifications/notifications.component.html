@@ -1,72 +1,214 @@
-<div class="page-wrapper min-h-screen pt-[100px] pb-24">
+<div class="page-wrapper min-h-screen pt-[100px] pb-24 bg-slate-950/20 dark:bg-slate-950">
   <div class="container max-w-[900px] mx-auto px-6">
-    
-    <header class="mb-10 flex justify-between items-end">
+
+    <header class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4">
       <div>
-        <h1 class="font-serif text-[2.5rem] font-bold text-text-primary dark:text-white mb-2">Law Alerts</h1>
-        <p class="text-text-secondary dark:text-slate-400">Track amendments and updates for your followed laws</p>
+        <h1 class="font-serif text-[2.5rem] font-bold text-slate-900 dark:text-white mb-2 leading-tight">
+          Notifications & System Updates
+        </h1>
+        <p class="text-slate-600 dark:text-slate-400 text-sm">
+          Platform releases, major bug fixes, and law amendment alerts.
+        </p>
       </div>
-      <button *ngIf="followedActs.length > 0" (click)="clearAll()" class="text-sm text-red-500 hover:underline mb-2">Clear All</button>
+
+      <!-- Tab Filters -->
+      <div class="flex items-center p-1 bg-slate-100 dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 self-start sm:self-auto">
+        <button (click)="setTab('all')"
+          [class.bg-white]="activeTab === 'all'"
+          [class.dark:bg-slate-800]="activeTab === 'all'"
+          [class.text-slate-900]="activeTab === 'all'"
+          [class.dark:text-white]="activeTab === 'all'"
+          [class.shadow-sm]="activeTab === 'all'"
+          class="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 transition-all cursor-pointer"
+          appTooltip="Display all platform updates and law alerts" tooltipPlacement="top">
+          All Updates
+        </button>
+
+        <button (click)="setTab('system')"
+          [class.bg-white]="activeTab === 'system'"
+          [class.dark:bg-slate-800]="activeTab === 'system'"
+          [class.text-slate-900]="activeTab === 'system'"
+          [class.dark:text-white]="activeTab === 'system'"
+          [class.shadow-sm]="activeTab === 'system'"
+          class="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 transition-all flex items-center gap-1.5 cursor-pointer"
+          appTooltip="Display major releases and critical bug fixes" tooltipPlacement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-amber-500">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          <span>System Releases</span>
+          <span *ngIf="systemAnnouncementService.unreadCount() as unread"
+            class="px-1.5 py-0.2 text-[10px] bg-amber-500 text-slate-950 rounded-full font-black">
+            {{ unread }}
+          </span>
+        </button>
+
+        <button (click)="setTab('laws')"
+          [class.bg-white]="activeTab === 'laws'"
+          [class.dark:bg-slate-800]="activeTab === 'laws'"
+          [class.text-slate-900]="activeTab === 'laws'"
+          [class.dark:text-white]="activeTab === 'laws'"
+          [class.shadow-sm]="activeTab === 'laws'"
+          class="px-3.5 py-1.5 text-xs font-bold rounded-lg text-slate-600 dark:text-slate-400 transition-all cursor-pointer flex items-center gap-1.5"
+          appTooltip="Display statutes you are currently monitoring" tooltipPlacement="top">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-blue-500">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+          <span>Followed Laws ({{ followedActs.length }})</span>
+        </button>
+      </div>
     </header>
 
-    <div *ngIf="followedActs.length === 0" class="card p-20 text-center flex flex-col items-center gap-4">
-      <span class="text-6xl opacity-20">🔔</span>
-      <h2 class="text-xl font-bold text-text-primary dark:text-white">No active alerts</h2>
-      <p class="text-text-secondary dark:text-slate-400 max-w-[400px]">
-        Follow laws from the Browse page to receive instant updates on amendments, news, and critical changes.
-      </p>
-      <a routerLink="/laws" class="btn btn-primary mt-4">Browse Laws to Follow</a>
-    </div>
-
-    <div *ngIf="followedActs.length > 0" class="flex flex-col gap-4">
-      
-      <div *ngFor="let act of followedActs" class="card p-6 flex items-center justify-between hover:border-accent/30 transition-all group">
-        <div class="flex items-center gap-6">
-          <div class="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center text-2xl">
-            📜
-          </div>
-          <div>
-            <h3 class="font-bold text-text-primary dark:text-white group-hover:text-accent transition-colors">
-              <a [routerLink]="['/laws', act.shortName]" class="no-underline text-inherit">{{ act.actName }}</a>
-            </h3>
-            <p class="text-xs text-text-muted mt-1 flex items-center gap-2">
-              <span>🔔 Following since {{ formatDate(act.followedAt) }}</span>
-              <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-              <span class="text-green-500 font-medium">Up to date</span>
-            </p>
-          </div>
-        </div>
-        
-        <div class="flex items-center gap-4">
-          <a [routerLink]="['/laws', act.shortName]" class="btn btn-outline btn-sm py-1.5">View Law</a>
-          <button (click)="unfollow(act.shortName, $event)" class="text-text-muted hover:text-red-500 transition-colors p-2" title="Unfollow">
-            🗑️
-          </button>
-        </div>
+    <!-- SYSTEM RELEASES SECTION -->
+    <div *ngIf="activeTab === 'all' || activeTab === 'system'" class="mb-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Platform Releases & Major Bug Fixes
+        </h2>
       </div>
 
-      <!-- Mock Amendment Notification -->
-      <div class="card p-6 border-l-4 border-l-amber-500 bg-amber-500/5 relative overflow-hidden">
-        <div class="flex items-start gap-6">
-          <div class="w-12 h-12 rounded-xl bg-amber-500/20 flex items-center justify-center text-2xl">
-            ⚡
-          </div>
-          <div class="flex-1">
-            <div class="flex justify-between items-start">
-              <h3 class="font-bold text-text-primary dark:text-white">Recent Amendment Alert</h3>
-              <span class="text-[10px] uppercase tracking-widest font-bold bg-amber-500 text-black px-2 py-0.5 rounded">Critical</span>
+      <div class="space-y-4">
+        <div *ngFor="let item of systemAnnouncementService.announcements()"
+          class="p-6 rounded-2xl bg-white dark:bg-slate-900 border transition-all shadow-sm relative overflow-hidden"
+          [ngClass]="item.isRead ? 'border-slate-200 dark:border-slate-800' : 'border-amber-500/50'">
+
+          <!-- Left Border Highlight for Unread -->
+          <div *ngIf="!item.isRead" class="absolute left-0 top-0 bottom-0 w-1.5 bg-amber-500"></div>
+
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+            <div class="flex items-start gap-4">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold shrink-0"
+                [ngClass]="item.typeValue === 1 ? 'bg-amber-500/10 text-amber-500' : 'bg-blue-500/10 text-blue-500'"
+                [appTooltip]="item.typeName" tooltipPlacement="top">
+                <!-- SVG Rocket for Major Release -->
+                <svg *ngIf="item.typeValue === 1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+                <!-- SVG Wrench for Bug Fix -->
+                <svg *ngIf="item.typeValue !== 1" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+                </svg>
+              </div>
+
+              <div>
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                  <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full uppercase tracking-wide"
+                    [ngClass]="item.typeValue === 1 ? 'bg-amber-500/20 text-amber-500' : 'bg-blue-500/20 text-blue-400'"
+                    [appTooltip]="'Category: ' + item.typeName" tooltipPlacement="top">
+                    {{ item.typeName }}
+                  </span>
+                  <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                    appTooltip="Version build tag" tooltipPlacement="top">
+                    v{{ item.version }}
+                  </span>
+                  <span class="text-xs text-slate-400" appTooltip="Published date" tooltipPlacement="top">
+                    • {{ formatDate(item.publishedAt) }}
+                  </span>
+                </div>
+
+                <h3 class="text-lg font-bold text-slate-900 dark:text-white mb-2 leading-snug">
+                  {{ item.title }}
+                </h3>
+
+                <p class="text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-3">
+                  {{ item.summary }}
+                </p>
+
+                <div *ngIf="item.detailsMarkdown"
+                  class="p-4 rounded-xl bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800/80 text-xs text-slate-600 dark:text-slate-300 space-y-1">
+                  <pre class="whitespace-pre-wrap font-sans">{{ item.detailsMarkdown }}</pre>
+                </div>
+              </div>
             </div>
-            <p class="text-sm text-text-secondary dark:text-slate-400 mt-2">
-              The Central Government has notified changes to the **Information Technology Rules** regarding data privacy and intermediary guidelines.
-            </p>
-            <div class="flex gap-4 mt-4">
-              <button class="text-xs font-bold text-accent hover:underline">Read Notification</button>
-              <button class="text-xs font-bold text-text-muted hover:underline">Dismiss</button>
-            </div>
+
+            <!-- Mark Read Button -->
+            <button *ngIf="!item.isRead" (click)="markRead(item.id)"
+              class="px-3 py-1.5 text-xs font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-amber-500 hover:text-slate-950 text-slate-600 dark:text-slate-300 transition-colors self-end sm:self-start shrink-0 flex items-center gap-1 cursor-pointer"
+              appTooltip="Mark this system release note as read" tooltipPlacement="top">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Mark Read</span>
+            </button>
           </div>
         </div>
       </div>
-
     </div>
+
+    <!-- FOLLOWED LAWS SECTION -->
+    <div *ngIf="activeTab === 'all' || activeTab === 'laws'">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-sm font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Followed Laws & Amendment Alerts
+        </h2>
+        <button *ngIf="followedActs.length > 0" (click)="clearAll()" class="text-xs text-red-500 hover:underline cursor-pointer" appTooltip="Clear all statute monitoring alerts" tooltipPlacement="top">
+          Clear All
+        </button>
+      </div>
+
+      <div *ngIf="followedActs.length === 0"
+        class="p-12 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center flex flex-col items-center gap-3">
+        <div class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-400">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+        <h3 class="text-lg font-bold text-slate-900 dark:text-white">No followed laws yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+          Follow statutes from the Browse page to receive instant amendment alerts when legislation changes.
+        </p>
+        <a routerLink="/laws"
+          class="mt-2 px-4 py-2 text-xs font-bold rounded-xl bg-blue-600 text-white hover:bg-blue-500 transition-all shadow-md no-underline"
+          appTooltip="Explore statutes and bare acts to follow" tooltipPlacement="top">
+          Browse Laws to Follow
+        </a>
+      </div>
+
+      <div *ngIf="followedActs.length > 0" class="space-y-3">
+        <div *ngFor="let act of followedActs"
+          class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-center justify-between hover:border-blue-500/40 transition-all">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white">
+                <a [routerLink]="['/laws', act.shortName]"
+                  class="no-underline text-inherit hover:text-blue-500 transition-colors"
+                  [appTooltip]="'View full text of ' + act.actName" tooltipPlacement="top">
+                  {{ act.actName }}
+                </a>
+              </h3>
+              <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-2">
+                <span>Following since {{ formatDate(act.followedAt) }}</span>
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span class="text-emerald-500 font-semibold">Active Monitoring</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3">
+            <a [routerLink]="['/laws', act.shortName]"
+              class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-blue-500 hover:text-blue-500 transition-all no-underline"
+              appTooltip="Open statute details" tooltipPlacement="top">
+              View Law
+            </a>
+            <button (click)="unfollow(act.shortName, $event)"
+              class="text-slate-400 hover:text-red-500 transition-colors p-1.5 cursor-pointer"
+              appTooltip="Unfollow this statute" tooltipPlacement="top">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
