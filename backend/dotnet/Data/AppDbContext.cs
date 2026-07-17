@@ -22,10 +22,29 @@ namespace CoreApi.Data
         public DbSet<FavouriteLawyer> FavouriteLawyers { get; set; }
         public DbSet<FavouriteHelpline> FavouriteHelplines { get; set; }
         public DbSet<FavouriteResource> FavouriteResources { get; set; }
+        public DbSet<SystemAnnouncement> SystemAnnouncements { get; set; }
+        public DbSet<UserAnnouncementRead> UserAnnouncementReads { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure UserAnnouncementRead relationships
+            modelBuilder.Entity<UserAnnouncementRead>()
+                .HasOne(r => r.User)
+                .WithMany()
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserAnnouncementRead>()
+                .HasOne(r => r.Announcement)
+                .WithMany()
+                .HasForeignKey(r => r.AnnouncementId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<UserAnnouncementRead>()
+                .HasIndex(r => new { r.UserId, r.AnnouncementId })
+                .IsUnique();
 
             // Configure RefreshToken relationships
             modelBuilder.Entity<RefreshToken>()

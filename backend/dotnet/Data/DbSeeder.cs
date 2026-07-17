@@ -245,6 +245,42 @@ namespace CoreApi.Data
                 context.SaveChanges();
                 Console.WriteLine("Helplines table seeded with 15 national helplines.");
             }
+
+            // Seed SystemAnnouncements if none exist
+            if (!context.SystemAnnouncements.Any())
+            {
+                var announcements = new[]
+                {
+                    new SystemAnnouncement
+                    {
+                        Version = "1.2.0",
+                        Title = "🚀 LegalConnect 1.2.0: Install App & Performance Upgrade",
+                        Summary = "Download LegalConnect as an app for desktop and mobile! Experience offline bare act reading, faster law search, and mobile UX improvements.",
+                        DetailsMarkdown = "### What's New in Version 1.2.0\n\n- 📱 **Progressive Web App (PWA)**: Click 'Install App' in the menu to install LegalConnect as a native app on Windows, Mac, Android, and iOS!\n- ⚡ **Offline Bare Acts Reader**: Access your saved acts and statutes without an active internet connection.\n- 🛠️ **Mobile Share & Overlay Fix**: Fixed an issue where closing native share sheets triggered secondary overlays.\n- 🔔 **System Announcements**: Live notifications for platform updates and legal changes.",
+                        Type = AnnouncementType.MajorRelease,
+                        IsModalTrigger = true,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow,
+                        PublishedAt = DateTime.UtcNow
+                    },
+                    new SystemAnnouncement
+                    {
+                        Version = "1.1.5",
+                        Title = "🛠️ Critical Fix: Mobile Navigation & Statute Filters",
+                        Summary = "Resolved filter reset glitches on statute browsing and optimized mobile navbar rendering speed.",
+                        DetailsMarkdown = "### Bug Fixes & Refinements\n\n- Fixed an issue where statute category filters reset during fast scrolling.\n- Improved touch response times on low-power mobile devices.",
+                        Type = AnnouncementType.MajorBugFix,
+                        IsModalTrigger = false,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow.AddDays(-5),
+                        PublishedAt = DateTime.UtcNow.AddDays(-5)
+                    }
+                };
+
+                context.SystemAnnouncements.AddRange(announcements);
+                context.SaveChanges();
+                Console.WriteLine("SystemAnnouncements table seeded with 1.2.0 release notes.");
+            }
         }
     }
 }
