@@ -6,15 +6,43 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged, takeUntil } from 'rxjs/operators';
 import { LegalService } from '../../services/legal.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-civil-family-portal',
   standalone: true,
-  imports: [NgIf, NgFor, RouterLink, SlicePipe, NgClass, FormsModule, TooltipDirective],
+  imports: [NgIf, NgFor, RouterLink, SlicePipe, NgClass, FormsModule, TooltipDirective, ConfirmDialogComponent],
   templateUrl: './civil-family-portal.component.html',
   styleUrls: ['./civil-family-portal.component.scss']
 })
 export class CivilFamilyPortalComponent implements OnInit, OnDestroy {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
+
   acts: any[] = [];
   loading = true;
   searchQuery = '';
@@ -403,7 +431,7 @@ PETITION FOR MONTHLY MAINTENANCE ALLOWANCE
     // 1. Assign originalIndex, precompute stepDocs, and digital evidence flags
     this.guides.forEach((guide: any, idx: number) => {
       (guide as any).originalIndex = idx;
-      
+
       // Precompute step documents mapping
       (guide as any).stepDocs = ((guide.steps as string[]) || []).map((_: string, sIdx: number) => {
         const docIndices = this.stepDocMappings[idx]?.[sIdx] || [];
@@ -412,7 +440,7 @@ PETITION FOR MONTHLY MAINTENANCE ALLOWANCE
 
       // Precompute digital evidence flags
       const digitalKeywords = ['statement', 'receipt', 'email', 'screenshot', 'WhatsApp', 'record'];
-      (guide as any).hasDigitalEvidence = ((guide as any).stepDocs as any[]).map((docs: any[]) => 
+      (guide as any).hasDigitalEvidence = ((guide as any).stepDocs as any[]).map((docs: any[]) =>
         docs.some((d: any) => digitalKeywords.some((k: string) => d.name.toLowerCase().includes(k.toLowerCase())))
       );
     });
@@ -627,7 +655,7 @@ PETITION FOR MONTHLY MAINTENANCE ALLOWANCE
       this.expandedGuideIndex = null;
     } else {
       this.expandedGuideIndex = index;
-      
+
       // Initialize/reset stepper state to the first incomplete step
       let active = 0;
       const steps = this.guides[index]?.steps || [];
@@ -639,11 +667,11 @@ PETITION FOR MONTHLY MAINTENANCE ALLOWANCE
           break;
         }
       }
-      
+
       if (this.activeStepIndex[index] !== undefined) {
         active = this.activeStepIndex[index];
       }
-      
+
       this.setStep(index, active);
 
       // Reset contextual states for the newly opened guide
@@ -766,7 +794,12 @@ PETITION FOR MONTHLY MAINTENANCE ALLOWANCE
   startVoiceSearch() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) {
-      alert('Voice search is not supported in this browser. Please try Chrome or Edge.');
+      this.triggerConfirm(
+        'Speech Recognition Unsupported',
+        'Voice search is not supported in this browser. Please use a modern browser like Google Chrome or Microsoft Edge.',
+        'info',
+        () => { }
+      );
       return;
     }
 
