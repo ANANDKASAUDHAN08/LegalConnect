@@ -1,0 +1,671 @@
+<div class="min-h-screen bg-slate-50 dark:bg-slate-950 pb-5 pt-[72px] transition-colors duration-300">
+  <div class="relative mx-auto w-[92%] sm:w-[90%] max-w-[1800px] px-0 md:px-5 py-2 md:py-4">
+
+    <!-- Header -->
+    <header class="mb-3 md:mb-6 border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col gap-3">
+      <!-- Eyebrow Kicker (Badge) -->
+      <div class="flex items-center">
+        <span
+          class="px-2.5 py-1 text-[9px] md:text-[10px] font-extrabold bg-blue-500/10 text-blue-600 dark:text-amber-400 dark:bg-amber-500/10 rounded-full border border-blue-500/20 dark:border-amber-500/20 uppercase tracking-widest">
+          DPDP 2023 Compliant
+        </span>
+      </div>
+
+      <!-- Title & Description -->
+      <div class="flex flex-col gap-2">
+        <h1 class="text-xl md:text-3xl font-black text-slate-900 dark:text-white leading-tight m-0">
+          Privacy & Data Processing Consent
+        </h1>
+        <p class="text-slate-500 dark:text-slate-400 text-xs md:text-sm m-0 leading-relaxed max-w-4xl">
+          Review and customize your personal data processing preferences under India's Digital Personal Data Protection
+          (DPDP) Act 2023.
+        </p>
+      </div>
+    </header>
+
+    <!-- SKELETON LOADER (Shimmer state) -->
+    <div *ngIf="isLoading" class="animate-pulse flex flex-col gap-8">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        <!-- Sidebar Skeleton -->
+        <div class="lg:col-span-4 order-2 lg:order-1 flex flex-col gap-6">
+          <div class="h-44 bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+          </div>
+          <div class="h-32 bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+          </div>
+          <div class="h-28 bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+          </div>
+        </div>
+        <!-- Settings Skeleton -->
+        <div class="lg:col-span-8 order-1 lg:order-2">
+          <div
+            class="h-[600px] bg-slate-200 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONSENT STATUS CARD (Mobile Only: Top of Page - Glassmorphic State-Tinted Design) -->
+    <div *ngIf="!isLoading" class="block lg:hidden mb-6">
+
+      <!-- Case 1: Needs Re-Consent (Orange Tint) -->
+      <div *ngIf="needsReConsent"
+        class="bg-orange-50/40 dark:bg-orange-950/10 border border-orange-200/50 dark:border-orange-900/30 rounded-3xl p-5 shadow-[0_4px_20px_-4px_rgba(249,115,22,0.05)]">
+        <h3 class="text-[10px] font-black uppercase tracking-widest text-orange-600 dark:text-orange-400/80 mb-3.5">
+          Consent Status</h3>
+        <div class="flex flex-row items-start gap-4">
+          <div
+            class="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-sm font-black text-orange-850 dark:text-orange-300 uppercase tracking-wide m-0">Action
+              Required</h4>
+            <p class="text-xs text-orange-755 dark:text-orange-400/80 leading-relaxed mt-1 m-0 font-medium">
+              Our Privacy and Consent Policy has been updated to version <span class="font-bold">v{{
+                currentPolicyVersion }}</span>. Please review the updated options and re-save your preferences.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 2A: Active Consent - Tracking Enabled (Green Tint) -->
+      <div
+        *ngIf="hasConsentedState && !needsReConsent && (preferences.analyticsConsent || preferences.marketingConsent)"
+        class="bg-emerald-50/40 dark:bg-emerald-950/10 border border-emerald-200/50 dark:border-emerald-900/30 rounded-3xl p-5 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.05)]">
+        <h3 class="text-[10px] font-black uppercase tracking-widest text-emerald-600 dark:text-emerald-400/80 mb-3.5">
+          Consent Status</h3>
+        <div class="flex flex-row items-start gap-4">
+          <div
+            class="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-450 shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-sm font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-wide m-0">Active &
+              Compliant</h4>
+            <p class="text-xs text-emerald-600 dark:text-emerald-450 leading-relaxed mt-1 m-0 font-medium font-sans">
+              Your optional data preferences are active and logged under Policy Version <span class="font-bold">v{{
+                policyVersion }}</span>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 2B: Essential Only - Opted-Out (Blue Tint) -->
+      <div
+        *ngIf="hasConsentedState && !needsReConsent && !preferences.analyticsConsent && !preferences.marketingConsent"
+        class="bg-blue-50/40 dark:bg-blue-950/10 border border-blue-200/50 dark:border-blue-900/30 rounded-3xl p-5 shadow-[0_4px_20px_-4px_rgba(59,130,246,0.05)]">
+        <h3 class="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400/80 mb-3.5">Consent
+          Status</h3>
+        <div class="flex flex-row items-start gap-4">
+          <div
+            class="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 0v3" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-sm font-black text-blue-800 dark:text-blue-400 uppercase tracking-wide m-0">Essential Only
+            </h4>
+            <p class="text-xs text-blue-600 dark:text-blue-400 leading-relaxed mt-1 m-0 font-medium font-sans">
+              You have declined optional tracking. Only essential system cookies are active under Policy Version <span
+                class="font-bold">v{{ policyVersion }}</span>.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Case 3: Consent Pending (Slate/Gray Tint) -->
+      <div *ngIf="!hasConsentedState"
+        class="bg-slate-50/50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-sm">
+        <h3 class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-3.5">Consent
+          Status</h3>
+        <div class="flex flex-row items-start gap-4">
+          <div
+            class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01" />
+            </svg>
+          </div>
+          <div class="flex-1">
+            <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide m-0">Pending
+              Configuration</h4>
+            <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1 m-0 font-medium">
+              You haven't customized your privacy settings yet. Essential security and session cookies are active.
+              Optional cookies are currently paused.
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <div *ngIf="!isLoading" class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+
+      <!-- ==================== LEFT COLUMN: STATUS & AUDIT (4/12) ==================== -->
+      <!-- order-2 lg:order-1 pushes this below the switches on mobile, but keeps it on the left on desktop -->
+      <div class="lg:col-span-4 order-2 lg:order-1 flex flex-col gap-4 lg:sticky lg:top-[96px]">
+
+        <!-- Visual Consent Status Card (Desktop Only) -->
+        <div
+          class="hidden lg:block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 md:p-6 shadow-sm">
+          <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-4">Consent
+            Status</h3>
+
+          <!-- Case 1: Needs Re-Consent -->
+          <div *ngIf="needsReConsent" class="flex flex-row items-start gap-4">
+            <div
+              class="w-10 h-10 rounded-2xl bg-orange-500/10 flex items-center justify-center text-orange-600 dark:text-orange-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-black text-orange-800 dark:text-orange-400 uppercase tracking-wide m-0">Action
+                Required</h4>
+              <p class="text-xs text-orange-700 dark:text-orange-400/90 leading-relaxed mt-1 m-0">
+                Our Privacy and Consent Policy has been updated to version <span class="font-bold">v{{
+                  currentPolicyVersion }}</span>. Please review the updated options and re-save your preferences.
+              </p>
+            </div>
+          </div>
+
+          <!-- Case 2A: Active Consent (Tracking Enabled) -->
+          <div
+            *ngIf="hasConsentedState && !needsReConsent && (preferences.analyticsConsent || preferences.marketingConsent)"
+            class="flex flex-row items-start gap-4">
+            <div
+              class="w-10 h-10 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-black text-emerald-800 dark:text-emerald-400 uppercase tracking-wide m-0">Active &
+                Compliant</h4>
+              <p class="text-xs text-emerald-600 dark:text-emerald-500 leading-relaxed mt-1 m-0 font-medium font-sans">
+                Your optional data preferences are active and logged under Policy Version <span class="font-bold">v{{
+                  policyVersion }}</span>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Case 2B: Essential Only (Opted-Out of Tracking) -->
+          <div
+            *ngIf="hasConsentedState && !needsReConsent && !preferences.analyticsConsent && !preferences.marketingConsent"
+            class="flex flex-row items-start gap-4">
+            <div
+              class="w-10 h-10 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-600 dark:text-blue-400 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 11a1.5 1.5 0 100-3 1.5 1.5 0 000 3zm0 0v3" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-black text-blue-800 dark:text-blue-400 uppercase tracking-wide m-0">Essential Only
+              </h4>
+              <p class="text-xs text-blue-600 dark:text-blue-400 leading-relaxed mt-1 m-0 font-medium font-sans">
+                You have declined optional tracking. Only essential system cookies are active under Policy Version <span
+                  class="font-bold">v{{
+                  policyVersion }}</span>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Case 3: Consent Pending -->
+          <div *ngIf="!hasConsentedState" class="flex flex-row items-start gap-4">
+            <div
+              class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
+              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 16v-4m0-4h.01" />
+              </svg>
+            </div>
+            <div class="flex-1">
+              <h4 class="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wide m-0">Pending
+                Configuration</h4>
+              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed mt-1 m-0">
+                You haven't customized your privacy settings yet. Essential security and session cookies are active.
+                Optional cookies are currently paused.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section Divider & Header (Mobile Only) -->
+        <div *ngIf="hasConsentedState" class="block lg:hidden mb-1">
+          <div class="h-[1.5px] w-full bg-gradient-to-r from-blue-500/55 to-transparent dark:from-blue-500/30 mb-4">
+          </div>
+          <h4 class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-550 m-0">
+            Compliance Record & Audit Logs
+          </h4>
+        </div>
+
+        <!-- Audit & Grievance Info Card -->
+        <div *ngIf="hasConsentedState && lastUpdated"
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-5 md:p-6 shadow-sm flex flex-col gap-4">
+          <h3 class="text-xs font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500">Audit Metadata
+          </h3>
+
+          <div class="flex flex-col gap-3 text-xs">
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2">
+              <span class="text-slate-500 dark:text-slate-400 font-semibold">Audit track ID</span>
+              <span
+                class="font-mono font-black text-slate-900 dark:text-slate-200 bg-slate-100 dark:bg-slate-950 px-2 py-0.5 rounded-lg">{{
+                consentService.getAnonymousId().split('-')[0] }}</span>
+            </div>
+            <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800/80 pb-2">
+              <span class="text-slate-500 dark:text-slate-400 font-semibold">Audit Update</span>
+              <span class="font-medium text-slate-800 dark:text-slate-300">{{ lastUpdated }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-slate-500 dark:text-slate-400 font-semibold">Policy Version</span>
+              <span class="font-extrabold text-blue-600 dark:text-amber-500">v{{ policyVersion }}</span>
+            </div>
+          </div>
+
+          <!-- Muted Destructive Action inside the Audit Card -->
+          <div class="border-t border-slate-100 dark:border-slate-800/80 pt-3.5 flex justify-end">
+            <button (click)="resetConsent()" [disabled]="isSaving"
+              appTooltip="Withdraw all consent preferences and trigger banner reload"
+              class="text-[11px] font-bold text-red-500 hover:text-red-650 dark:text-red-400 dark:hover:text-red-305 bg-transparent border-0 cursor-pointer disabled:opacity-50 flex items-center gap-1.5 p-0 transition-all focus:outline-none focus:ring-2 focus:ring-red-500/20 rounded-md">
+              <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              Withdraw Consent Record
+            </button>
+          </div>
+        </div>
+
+        <!-- Law/Compliance Quick Note -->
+        <div
+          class="bg-slate-100/50 dark:bg-slate-900/40 border border-slate-200/60 dark:border-slate-800/50 rounded-3xl p-5 md:p-6">
+          <h4
+            class="text-xs font-extrabold uppercase tracking-wide text-slate-800 dark:text-slate-300 flex items-center gap-1.5 mb-2">
+            <svg class="w-4 h-4 text-blue-600 dark:text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Why this matters
+          </h4>
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed m-0">
+            Under India's Digital Personal Data Protection (DPDP) Act 2023, you have the right to request access,
+            correction, or complete withdrawal of your data processing consent at any time.
+          </p>
+        </div>
+
+        <!-- Withdraw & Quick Links Sidebar Group -->
+        <div class="flex flex-col gap-3">
+          <a routerLink="/privacy" appTooltip="Read our detailed privacy documentation"
+            class="px-5 py-3 border border-slate-200 dark:border-slate-800 hover:bg-slate-100/50 dark:hover:bg-slate-800/40 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-2xl transition no-underline flex items-center justify-center gap-2">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+            </svg>
+            Read Full Privacy Policy
+          </a>
+
+          <!-- Mobile Save Preferences Button (At the very bottom of stacked flow when bottom nav is visible) -->
+          <button *ngIf="isBottomNavVisible" (click)="savePreferences()" [disabled]="isSaving || !hasUnsavedChanges"
+            class="md:hidden w-full px-6 py-3 bg-slate-900 hover:bg-slate-950 dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 text-white text-xs font-extrabold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 mt-2">
+            <span *ngIf="isSaving"
+              class="w-3.5 h-3.5 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+            Save Preferences
+          </button>
+        </div>
+
+      </div>
+
+      <!-- ==================== RIGHT COLUMN: SETTINGS LIST (8/12) ==================== -->
+      <!-- order-1 lg:order-2 pulls this to the top on mobile, but keeps it on the right on desktop -->
+      <div class="lg:col-span-8 order-1 lg:order-2 flex flex-col gap-6">
+
+        <!-- Outer Card is Borderless on Mobile, Bordered on Desktop -->
+        <div
+          class="bg-transparent md:bg-white md:dark:bg-slate-900 md:border md:border-slate-200 md:dark:border-slate-800 md:rounded-3xl p-0 md:p-8 md:shadow-sm flex flex-col gap-3 md:gap-6">
+
+          <!-- CATEGORIES LIST -->
+          <div class="flex flex-col gap-3 md:gap-5">
+
+            <!-- SLEEK TOOLBAR WITH QUICK ACTIONS -->
+            <div
+              class="flex items-center justify-between pb-3.5 border-b border-slate-200/60 dark:border-slate-800/80 mb-1">
+              <h4
+                class="text-[10px] sm:text-xs font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest m-0">
+                Cookie Categories
+              </h4>
+              <div class="flex items-center gap-3">
+                <button (click)="quickRejectAll()" [disabled]="isSaving"
+                  appTooltip="Decline all optional cookies and analytics tracking"
+                  class="text-[10px] sm:text-[11px] font-extrabold text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition bg-transparent border-0 cursor-pointer disabled:opacity-40 p-0">
+                  Reject Optional
+                </button>
+                <span class="text-slate-300 dark:text-slate-800 text-[10px] select-none">|</span>
+                <button (click)="quickAcceptAll()" [disabled]="isSaving"
+                  appTooltip="Accept all analytics and newsletter communications"
+                  class="text-[10px] sm:text-[11px] font-extrabold text-blue-600 dark:text-amber-500 hover:text-blue-700 dark:hover:text-amber-400 transition bg-transparent border-0 cursor-pointer disabled:opacity-40 p-0">
+                  Accept All
+                </button>
+              </div>
+            </div>
+
+            <!-- Item 1: Essential (Locked) -->
+            <div
+              class="p-5 md:p-6 bg-slate-50/40 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-305 dark:hover:border-slate-700/85 hover:bg-slate-50/80 dark:hover:bg-slate-900/50 rounded-2xl transition-all duration-300 flex flex-col gap-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="space-y-2 min-w-0">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <h3 class="text-sm md:text-base font-semibold text-slate-900 dark:text-white tracking-tight m-0">
+                      Essential Data Processing
+                    </h3>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-full">
+                      <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                      Required
+                    </span>
+                    <span
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full">
+                      <svg class="w-3 h-3 text-emerald-550 dark:text-emerald-400" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                      Always Active
+                    </span>
+                  </div>
+                  <p
+                    class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl m-0 font-medium">
+                    Necessary for fundamental platform operations, including JWT secure session storage, active
+                    workspace folder loading, and CSRF protection. Disabling this would break core site mechanics.
+                  </p>
+                </div>
+                <div
+                  class="relative w-9 h-5 bg-blue-650 dark:bg-amber-500 rounded-full flex items-center justify-end px-[3px] shrink-0 mt-1 shadow-[0_0_8px_rgba(245,158,11,0.25)] select-none cursor-not-allowed">
+                  <div class="w-4 h-4 bg-white rounded-full flex items-center justify-center shadow-sm">
+                    <svg class="w-2.5 h-2.5 text-blue-650 dark:text-amber-600" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd"
+                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                        clip-rule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div class="pt-1">
+                <button (click)="toggleExpand('essential')"
+                  class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-extrabold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/25">
+                  <svg class="w-3 h-3 transition-transform duration-200" [class.rotate-90]="expanded['essential']"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  {{ expanded['essential'] ? 'Hide Details' : 'Show Details & Cookies' }}
+                </button>
+                <div class="grid transition-all duration-300 ease-in-out"
+                  [class.grid-rows-[1fr]]="expanded['essential']" [class.grid-rows-[0fr]]="!expanded['essential']">
+                  <div class="overflow-hidden">
+                    <div
+                      class="mt-4 pl-5 border-l-2 border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex flex-col gap-4 pb-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-2">Cookies
+                            Logged</span>
+                          <div class="flex flex-wrap gap-2">
+                            <code
+                              class="px-2.5 py-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-250/60 dark:border-slate-800/80 rounded-md font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">lc_token</code>
+                            <code
+                              class="px-2.5 py-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-250/60 dark:border-slate-800/80 rounded-md font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">lc_anonymous_id</code>
+                            <code
+                              class="px-2.5 py-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-250/60 dark:border-slate-800/80 rounded-md font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">XSRF-TOKEN</code>
+                          </div>
+                        </div>
+                        <div>
+                          <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-2">Retention
+                            Policy</span>
+                          <span
+                            class="font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-800/50 inline-block font-sans">
+                            Session, 30 days & 1 year values
+                          </span>
+                        </div>
+                      </div>
+                      <div class="border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-1.5">Scope &
+                          Purpose</span>
+                        <span class="leading-relaxed text-slate-550 dark:text-slate-400">Allows secure login sessions
+                          state preservation, preventing
+                          unauthorized cross-site request
+                          forgery attacks, and keeping track of cookie choices. No personal profiling data is
+                          loaded.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Item 2: Analytics -->
+            <div
+              class="p-5 md:p-6 bg-slate-50/40 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-305 dark:hover:border-slate-700/85 hover:bg-slate-50/80 dark:hover:bg-slate-900/50 rounded-2xl transition-all duration-300 flex flex-col gap-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="space-y-2 min-w-0">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <h3 class="text-sm md:text-base font-semibold text-slate-900 dark:text-white tracking-tight m-0">
+                      Workstation Analytics
+                    </h3>
+                    <span
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-full">
+                      Optional
+                    </span>
+                    <span *ngIf="preferences.analyticsConsent"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      {{ analyticsConsentedAt ? 'Active since: ' + analyticsConsentedAt : 'Active (Unsaved)' }}
+                    </span>
+                    <span *ngIf="!preferences.analyticsConsent"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/80 rounded-full">
+                      Inactive
+                    </span>
+                  </div>
+                  <p
+                    class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl m-0 font-medium">
+                    Helps us record profile views and inquiry conversion statistics to help lawyers optimize their
+                    listings. We compile deduplicated, privacy-safe analytics without storing permanent IP identifiers.
+                  </p>
+                </div>
+                <label appTooltip="Permit anonymous visitor analytics logging"
+                  class="relative inline-flex items-center cursor-pointer select-none shrink-0 mt-1 group">
+                  <input type="checkbox" [(ngModel)]="preferences.analyticsConsent" class="sr-only peer">
+                  <div
+                    class="relative w-10 h-6 bg-slate-250 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[18px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:duration-250 peer-checked:bg-blue-600 dark:peer-checked:bg-amber-500 shadow-inner group-hover:scale-105 active:after:w-5">
+                  </div>
+                </label>
+              </div>
+              <div class="pt-1">
+                <button (click)="toggleExpand('analytics')"
+                  class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-extrabold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/25">
+                  <svg class="w-3 h-3 transition-transform duration-200" [class.rotate-90]="expanded['analytics']"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  {{ expanded['analytics'] ? 'Hide Details' : 'Show Details & Cookies' }}
+                </button>
+                <div class="grid transition-all duration-300 ease-in-out"
+                  [class.grid-rows-[1fr]]="expanded['analytics']" [class.grid-rows-[0fr]]="!expanded['analytics']">
+                  <div class="overflow-hidden">
+                    <div
+                      class="mt-4 pl-5 border-l-2 border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex flex-col gap-4 pb-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-2">Cookies
+                            Logged</span>
+                          <div class="flex flex-wrap gap-2">
+                            <code
+                              class="px-2.5 py-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-250/60 dark:border-slate-800/80 rounded-md font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">_lc_analytics_views</code>
+                            <code
+                              class="px-2.5 py-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-250/60 dark:border-slate-800/80 rounded-md font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">_lc_search_queries</code>
+                          </div>
+                        </div>
+                        <div>
+                          <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-2">Retention
+                            Policy</span>
+                          <span
+                            class="font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-800/50 inline-block font-sans">
+                            12 Months (views metrics data)
+                          </span>
+                        </div>
+                      </div>
+                      <div class="border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-1.5">Scope &
+                          Purpose</span>
+                        <span class="leading-relaxed text-slate-550 dark:text-slate-400">Tracks aggregate metrics of
+                          lawyer profiles view metrics (city level
+                          localization, no direct
+                          identities stored) and central acts searched statistics to help evaluate platform
+                          usability.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Item 3: Marketing -->
+            <div
+              class="p-5 md:p-6 bg-slate-50/40 dark:bg-slate-900/30 border border-slate-200/60 dark:border-slate-800/60 hover:border-slate-305 dark:hover:border-slate-700/85 hover:bg-slate-50/80 dark:hover:bg-slate-900/50 rounded-2xl transition-all duration-300 flex flex-col gap-4">
+              <div class="flex items-start justify-between gap-4">
+                <div class="space-y-2 min-w-0">
+                  <div class="flex items-center gap-2.5 flex-wrap">
+                    <h3 class="text-sm md:text-base font-semibold text-slate-900 dark:text-white tracking-tight m-0">
+                      Communications & Newsletter
+                    </h3>
+                    <span
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 text-[10px] font-semibold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 rounded-full">
+                      Optional
+                    </span>
+                    <span *ngIf="preferences.marketingConsent"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                      {{ marketingConsentedAt ? 'Active since: ' + marketingConsentedAt : 'Active (Unsaved)' }}
+                    </span>
+                    <span *ngIf="!preferences.marketingConsent"
+                      class="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700/80 rounded-full">
+                      Inactive
+                    </span>
+                  </div>
+                  <p
+                    class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-3xl m-0 font-medium">
+                    Permits us to send you periodic weekly digests, legislative amendment announcements, and system
+                    update releases. You will never receive third-party promotional emails.
+                  </p>
+                </div>
+                <label appTooltip="Receive platform emails & announcements"
+                  class="relative inline-flex items-center cursor-pointer select-none shrink-0 mt-1 group">
+                  <input type="checkbox" [(ngModel)]="preferences.marketingConsent" class="sr-only peer">
+                  <div
+                    class="relative w-10 h-6 bg-slate-250 dark:bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-[18px] peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all after:duration-250 peer-checked:bg-blue-600 dark:peer-checked:bg-amber-500 shadow-inner group-hover:scale-105 active:after:w-5">
+                  </div>
+                </label>
+              </div>
+              <div class="pt-1">
+                <button (click)="toggleExpand('marketing')"
+                  class="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-extrabold px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700/80 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-500/25">
+                  <svg class="w-3 h-3 transition-transform duration-200" [class.rotate-90]="expanded['marketing']"
+                    fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
+                  {{ expanded['marketing'] ? 'Hide Details' : 'Show Details & Cookies' }}
+                </button>
+                <div class="grid transition-all duration-300 ease-in-out"
+                  [class.grid-rows-[1fr]]="expanded['marketing']" [class.grid-rows-[0fr]]="!expanded['marketing']">
+                  <div class="overflow-hidden">
+                    <div
+                      class="mt-4 pl-5 border-l-2 border-slate-200 dark:border-slate-800 text-xs text-slate-500 dark:text-slate-400 flex flex-col gap-4 pb-2">
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                          <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-2">Cookies
+                            Logged</span>
+                          <div class="flex flex-wrap gap-2">
+                            <code
+                              class="px-2.5 py-1 bg-slate-100 dark:bg-slate-950/80 border border-slate-250/60 dark:border-slate-800/80 rounded-md font-mono text-[10.5px] text-slate-700 dark:text-slate-300 font-medium">_lc_comm_pref</code>
+                          </div>
+                        </div>
+                        <div>
+                          <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-2">Retention
+                            Policy</span>
+                          <span
+                            class="font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-950 px-2.5 py-1.5 rounded-lg border border-slate-200/50 dark:border-slate-800/50 inline-block font-sans">
+                            Until Consent Withdrawn
+                          </span>
+                        </div>
+                      </div>
+                      <div class="border-t border-slate-200/60 dark:border-slate-800/80 pt-3">
+                        <span class="font-extrabold text-slate-700 dark:text-slate-300 block mb-1.5">Scope &
+                          Purpose</span>
+                        <span class="leading-relaxed text-slate-550 dark:text-slate-400">Preserves preference settings
+                          for weekly legislative amendment digest
+                          subscriptions and legal
+                          workstation newsletters. Never shared with third parties.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Submit Footer: Hidden on Mobile, Shown on Desktop -->
+          <div class="pt-6 border-t border-slate-100 dark:border-slate-800 hidden md:flex justify-end">
+            <button (click)="savePreferences()" [disabled]="isSaving || !hasUnsavedChanges"
+              appTooltip="Save selection to audit log database"
+              class="w-full sm:w-auto px-6 py-3 bg-slate-900 hover:bg-slate-950 dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 text-white text-xs font-extrabold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5">
+              <span *ngIf="isSaving"
+                class="w-3.5 h-3.5 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+              {{ isSaving ? 'Saving...' : 'Save Preferences' }}
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- STICKY BOTTOM ACTION BAR FOR MOBILE (Translucent backdrop blur design) -->
+    <div *ngIf="!isLoading && !isBottomNavVisible"
+      class="fixed bottom-0 left-0 right-0 z-40 md:hidden bg-white/80 dark:bg-slate-950/80 backdrop-blur-md border-t border-slate-200 dark:border-slate-900 px-6 py-4 shadow-[0_-8px_30px_rgb(0,0,0,0.06)] dark:shadow-[0_-8px_30px_rgb(0,0,0,0.3)] transition-colors duration-300">
+      <div class="flex items-center justify-between gap-4 max-w-[600px] mx-auto">
+        <div class="text-[10px] text-slate-500 dark:text-slate-400 font-bold flex flex-col min-w-0">
+          <span class="truncate">{{ hasUnsavedChanges ? 'Unsaved Configuration' : 'Configuration Saved' }}</span>
+          <span class="text-blue-600 dark:text-amber-500 font-black text-[11px] mt-0.5 truncate"
+            *ngIf="hasUnsavedChanges">Changes pending...</span>
+          <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-[11px] mt-0.5 truncate"
+            *ngIf="!hasUnsavedChanges">Saved & compliant</span>
+        </div>
+        <button (click)="savePreferences()" [disabled]="isSaving || !hasUnsavedChanges"
+          class="flex-1 px-5 py-3 bg-slate-900 hover:bg-slate-950 dark:bg-amber-500 dark:hover:bg-amber-600 dark:text-slate-950 text-white text-xs font-extrabold rounded-xl transition-all shadow-md active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2 shrink-0">
+          <span *ngIf="isSaving"
+            class="w-3.5 h-3.5 border-2 border-white dark:border-slate-950 border-t-transparent rounded-full animate-spin"></span>
+          {{ isSaving ? 'Saving...' : 'Save Preferences' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Custom Withdraw Consent Confirm Dialog -->
+    <app-confirm-dialog [isOpen]="isConfirmOpen" title="Withdraw Consent Records"
+      message="Are you sure you want to withdraw all data processing consent? This will delete your compliance audit record, turn off optional cookies, and reopen the consent banner."
+      type="danger" (confirm)="executeReset()" (cancel)="isConfirmOpen = false">
+    </app-confirm-dialog>
+
+  </div>
+</div>

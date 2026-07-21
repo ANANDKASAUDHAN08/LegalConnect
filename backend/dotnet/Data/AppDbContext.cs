@@ -24,10 +24,21 @@ namespace CoreApi.Data
         public DbSet<FavouriteResource> FavouriteResources { get; set; }
         public DbSet<SystemAnnouncement> SystemAnnouncements { get; set; }
         public DbSet<UserAnnouncementRead> UserAnnouncementReads { get; set; }
+        public DbSet<ConsentPreference> ConsentPreferences { get; set; }
+        public DbSet<ContactSubmission> ContactSubmissions { get; set; }
+        public DbSet<ProfileView> ProfileViews { get; set; }
+        public DbSet<PolicyFeedback> PolicyFeedbacks { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure PolicyFeedback relationships
+            modelBuilder.Entity<PolicyFeedback>()
+                .HasOne(f => f.User)
+                .WithMany()
+                .HasForeignKey(f => f.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
 
             // Configure UserAnnouncementRead relationships
             modelBuilder.Entity<UserAnnouncementRead>()
