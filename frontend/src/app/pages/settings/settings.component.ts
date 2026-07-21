@@ -6,6 +6,7 @@ import { SettingsService, UserSettings } from '../../services/settings.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 
 interface TabDef {
   id: string;
@@ -16,11 +17,38 @@ interface TabDef {
 @Component({
   selector: 'app-settings',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TooltipDirective],
+  imports: [CommonModule, FormsModule, RouterLink, TooltipDirective, ConfirmDialogComponent],
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.scss']
 })
 export class SettingsComponent implements OnInit {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
+
   public settingsService = inject(SettingsService);
   private authService = inject(AuthService);
   private snackbar = inject(SnackbarService);
@@ -310,31 +338,41 @@ export class SettingsComponent implements OnInit {
   }
 
   revokeSession(id: number) {
-    if (confirm('Are you sure you want to log out this device?')) {
-      this.authService.revokeSession(id).subscribe({
-        next: () => {
-          this.snackbar.show('Device session revoked.', 'success');
-          this.loadSessions();
-        },
-        error: () => {
-          this.snackbar.show('Failed to revoke session.', 'error');
-        }
-      });
-    }
+    this.triggerConfirm(
+      'Revoke Device Session',
+      'Are you sure you want to log out this device? Any unsaved changes on that device will be lost.',
+      'danger',
+      () => {
+        this.authService.revokeSession(id).subscribe({
+          next: () => {
+            this.snackbar.show('Device session revoked.', 'success');
+            this.loadSessions();
+          },
+          error: () => {
+            this.snackbar.show('Failed to revoke session.', 'error');
+          }
+        });
+      }
+    );
   }
 
   revokeAllOtherSessions() {
-    if (confirm('This will log you out from all other devices. Proceed?')) {
-      this.authService.revokeAllOtherSessions().subscribe({
-        next: () => {
-          this.snackbar.show('Logged out from all other devices.', 'success');
-          this.loadSessions();
-        },
-        error: () => {
-          this.snackbar.show('Failed to revoke other sessions.', 'error');
-        }
-      });
-    }
+    this.triggerConfirm(
+      'Revoke All Other Sessions',
+      'This will log you out from all other active devices. Proceed?',
+      'danger',
+      () => {
+        this.authService.revokeAllOtherSessions().subscribe({
+          next: () => {
+            this.snackbar.show('Logged out from all other devices.', 'success');
+            this.loadSessions();
+          },
+          error: () => {
+            this.snackbar.show('Failed to revoke other sessions.', 'error');
+          }
+        });
+      }
+    );
   }
 
   // --- Export Data ---

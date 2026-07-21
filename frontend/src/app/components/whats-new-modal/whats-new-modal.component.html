@@ -5,41 +5,41 @@
     <!-- Header Gradient Accent -->
     <div class="h-2 w-full bg-gradient-to-r from-amber-500 via-blue-500 to-indigo-500"></div>
 
-    <div class="p-6">
+    <div class="p-5 sm:p-6">
       <!-- Top Row: Badge & Version -->
       <div class="flex items-center justify-between mb-4">
         <span
-          class="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-semibold tracking-wide uppercase rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20"
+          class="inline-flex items-center gap-1.5 px-3 py-1 text-[10px] sm:text-xs font-semibold tracking-wide uppercase rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20"
           appTooltip="Official platform update release notification" tooltipPlacement="top">
-          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+          <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-amber-400 animate-pulse"></span>
           {{ announcement()?.typeName || 'Platform Update' }}
         </span>
-        <span class="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md"
+        <span class="text-[10px] sm:text-xs font-mono text-slate-400 bg-slate-800 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md"
           appTooltip="Target release version build tag" tooltipPlacement="top">
           v{{ announcement()?.version }}
         </span>
       </div>
 
       <!-- Title -->
-      <h2 class="text-xl font-bold text-white mb-2 leading-tight">
-        {{ announcement()?.title }}
+      <h2 class="text-base sm:text-xl font-bold text-white mb-2 leading-tight"
+        [innerHTML]="replaceEmojis(announcement()?.title || '')">
       </h2>
 
       <!-- Summary -->
-      <p class="text-sm text-slate-300 mb-4 leading-relaxed">
-        {{ announcement()?.summary }}
+      <p class="text-xs sm:text-sm text-slate-300 mb-4 leading-relaxed"
+        [innerHTML]="replaceEmojis(announcement()?.summary || '')">
       </p>
 
       <!-- Details Breakdown -->
       <div *ngIf="announcement()?.detailsMarkdown"
-        class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 mb-6 max-h-48 overflow-y-auto custom-scrollbar text-xs text-slate-300 space-y-2">
+        class="p-3.5 sm:p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 mb-6 max-h-40 sm:max-h-48 overflow-y-auto custom-scrollbar text-[11px] sm:text-xs text-slate-300 space-y-2">
         <div [innerHTML]="formatMarkdown(announcement()?.detailsMarkdown)"></div>
       </div>
 
       <!-- Action Buttons -->
       <div class="flex items-center justify-end gap-3 pt-2 border-t border-slate-800">
         <button (click)="dismiss()"
-          class="px-5 py-2.5 text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-1.5 cursor-pointer"
+          class="px-4 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-medium rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-600/20 active:scale-95 flex items-center gap-1.5 cursor-pointer"
           appTooltip="Acknowledge release notes and close announcement window" tooltipPlacement="top">
           <span>Got it, thanks!</span>
         </button>

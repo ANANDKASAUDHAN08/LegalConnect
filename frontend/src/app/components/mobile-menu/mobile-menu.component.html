@@ -385,7 +385,7 @@
           </a>
 
           <!-- Alerts / Notifications -->
-          <a routerLink="/notifications" routerLinkActive="active-mobile" class="mobile-main-link group relative"
+          <a *ngIf="auth.isLoggedIn$ | async" routerLink="/notifications" routerLinkActive="active-mobile" class="mobile-main-link group relative"
             (click)="onClose()">
             <span class="link-icon-container text-rose-600 dark:text-rose-450">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor"

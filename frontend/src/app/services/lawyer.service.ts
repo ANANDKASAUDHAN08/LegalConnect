@@ -204,4 +204,15 @@ export class LawyerService {
   getMyReviews(): Observable<any[]> {
     return this.http.get<any[]>(`${this.reviewApiUrl}/mine`, { withCredentials: true });
   }
+
+  trackProfileView(lawyerIdOrEmail: number | string): Observable<any> {
+    const payload = typeof lawyerIdOrEmail === 'number'
+      ? { lawyerId: lawyerIdOrEmail }
+      : { lawyerEmail: lawyerIdOrEmail };
+    return this.http.post<any>('/api/analytics/profile-view', payload, { withCredentials: true });
+  }
+
+  getMyAnalytics(): Observable<any> {
+    return this.http.get<any>('/api/analytics/my-stats', { withCredentials: true });
+  }
 }

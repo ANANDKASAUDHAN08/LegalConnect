@@ -115,6 +115,9 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
             this.initializeTimeSlots();
             this.loadReviews();
             this.animateStats();
+            this.lawyerService.trackProfileView(this.lawyer.email).subscribe({
+              error: () => { /* ignore tracking errors silently */ }
+            });
           }
         }, 500);
       },

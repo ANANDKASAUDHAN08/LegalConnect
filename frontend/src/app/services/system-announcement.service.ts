@@ -54,6 +54,29 @@ export class SystemAnnouncementService {
     });
   }
 
+  private dismissedKey = 'lc_dismissed_announcements';
+
+  private getDismissedFromStorage(): number[] {
+    if (typeof window === 'undefined') return [];
+    try {
+      const val = localStorage.getItem(this.dismissedKey);
+      return val ? JSON.parse(val) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private saveDismissedToStorage(id: number) {
+    if (typeof window === 'undefined') return;
+    try {
+      const dismissed = this.getDismissedFromStorage();
+      if (!dismissed.includes(id)) {
+        dismissed.push(id);
+        localStorage.setItem(this.dismissedKey, JSON.stringify(dismissed));
+      }
+    } catch {}
+  }
+
   fetchLatestAnnouncements() {
     this.http.get<SystemAnnouncement[]>(`${this.apiUrl}/latest`).subscribe({
       next: (data) => {
@@ -63,7 +86,10 @@ export class SystemAnnouncementService {
           this.unreadCount.set(unread);
 
           // Check if there is an un-dismissed modal trigger announcement
-          const modalCandidate = data.find(a => a.isModalTrigger && !a.isDismissedModal);
+          const dismissedInStorage = this.getDismissedFromStorage();
+          const modalCandidate = data.find(
+            a => a.isModalTrigger && !a.isDismissedModal && !dismissedInStorage.includes(a.id)
+          );
           if (modalCandidate) {
             this.activeModalAnnouncement.set(modalCandidate);
           }
@@ -74,6 +100,7 @@ export class SystemAnnouncementService {
   }
 
   markAsRead(announcementId: number) {
+    this.saveDismissedToStorage(announcementId);
     this.announcements.update(list =>
       list.map(a => a.id === announcementId ? { ...a, isRead: true } : a)
     );
@@ -86,6 +113,7 @@ export class SystemAnnouncementService {
 
   dismissModal(announcementId: number) {
     this.activeModalAnnouncement.set(null);
+    this.saveDismissedToStorage(announcementId);
     this.http.post(`${this.apiUrl}/dismiss-modal/${announcementId}`, {}).subscribe({
       error: () => { }
     });

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, tap, catchError, of, map, Observable, switchMap } from 'rxjs';
+import { BehaviorSubject, tap, catchError, of, map, Observable, switchMap, timer } from 'rxjs';
 import { Router } from '@angular/router';
 
 export interface UserProfile {
@@ -30,6 +30,13 @@ export interface UserProfile {
   token?: string;
 }
 
+/** Routes that don't require authentication — no redirect to /login from these */
+const PUBLIC_ROUTES = [
+  '/home', '/about', '/privacy', '/terms', '/help', '/contact',
+  '/laws', '/search', '/find-help', '/lawyers', '/reviews',
+  '/specializations', '/cookie-preferences', '/login', '/register',
+  '/forgot-password', '/reset-password'
+];
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -46,6 +53,9 @@ export class AuthService {
   isSessionLoaded$ = this._isSessionLoaded.asObservable();
 
   private _logoutTimerId: ReturnType<typeof setTimeout> | null = null;
+  private _proactiveRefreshRetries = 0;
+  private readonly MAX_REFRESH_RETRIES = 2;
+  private readonly RETRY_DELAY_MS = 3000;
 
   private httpOptions = {
     withCredentials: true
@@ -115,21 +125,21 @@ export class AuthService {
               isAuthenticated: user.isAuthenticated
             };
             localStorage.setItem('lc_user_profile', JSON.stringify(sanitizedUser));
-          } catch (e) {}
+          } catch (e) { }
         } else {
-          this.token = null;
-          localStorage.removeItem('lc_token');
-          localStorage.removeItem('lc_user_profile');
-          this._currentUser.next(null);
-          this._isLoggedIn.next(false);
+          this.clearAuthState();
           this._isSessionLoaded.next(true);
         }
       }),
       map(user => user && user.isAuthenticated !== false),
       catchError((error) => {
-        // Differentiate true offline status from server-down / CORS misconfiguration
-        const isOffline = error.status === 0 && (typeof navigator !== 'undefined' && !navigator.onLine);
-        if (isOffline) {
+        // TRANSIENT FAILURE RESILIENCE:
+        // If backend is temporarily unreachable (status 0) — whether truly offline
+        // or just a dev-server restart / brief network blip — preserve cached auth
+        // state instead of logging the user out. This is the industry-standard
+        // "offline-first" pattern used by apps like Gmail, Slack, and Notion.
+        const isTransient = error.status === 0;
+        if (isTransient) {
           const cached = localStorage.getItem('lc_user_profile');
           const token = localStorage.getItem('lc_token');
           if (cached && token) {
@@ -138,17 +148,17 @@ export class AuthService {
               this._currentUser.next(user);
               this._isLoggedIn.next(true);
               this._isSessionLoaded.next(true);
+              this.token = token;
+              console.warn('[AuthService] Backend unreachable — using cached session. Will re-validate when connectivity resumes.');
               return of(true);
-            } catch (e) {}
+            } catch (e) { }
           }
-        } else if (error.status === 0) {
-          console.error('API connection failed (status 0). This may indicate backend is offline or CORS is misconfigured.');
+          console.error('[AuthService] Backend unreachable and no cached session available.');
         }
-        this.token = null;
-        localStorage.removeItem('lc_token');
-        localStorage.removeItem('lc_user_profile');
-        this._currentUser.next(null);
-        this._isLoggedIn.next(false);
+
+        // DEFINITIVE AUTH FAILURE (401, 403, or no cached fallback):
+        // Only now do we clear auth state.
+        this.clearAuthState();
         this._isSessionLoaded.next(true);
         return of(false);
       })
@@ -258,22 +268,41 @@ export class AuthService {
     return this.http.get<any>(`${this.apiUrl}/export-data`, this.httpOptions);
   }
 
+  downloadDataDossier(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/export-data`, {
+      ...this.httpOptions,
+      responseType: 'blob'
+    });
+  }
+
   refreshToken(): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/refresh`, {}, this.httpOptions).pipe(
       tap((res) => {
         if (res.token) {
           this.token = res.token;
           localStorage.setItem('lc_token', res.token);
+          this._proactiveRefreshRetries = 0; // Reset retry counter on success
           this.scheduleProactiveRefresh(res.token);
         }
       })
     );
   }
 
+  /**
+   * Called by the HTTP interceptor when a 401 refresh attempt fails.
+   * Uses smart redirect — only navigates to /login from protected routes.
+   */
   handleRefreshFailure(): void {
     this.handleSessionExpired();
   }
 
+  /**
+   * INDUSTRY-STANDARD PROACTIVE REFRESH WITH RETRY:
+   * Schedules a token refresh ~2 minutes before JWT expiry.
+   * On failure, retries up to MAX_REFRESH_RETRIES times with exponential backoff
+   * before giving up. This prevents logout on transient failures (dev HMR restarts,
+   * brief network blips, backend deploys).
+   */
   private scheduleProactiveRefresh(token: string): void {
     this.clearAutoLogout();
     try {
@@ -286,27 +315,42 @@ export class AuthService {
           // Refresh 2 minutes before the token expires
           const refreshAt = Math.max(msUntilExpiry - 120000, 0);
           this._logoutTimerId = setTimeout(() => {
-            this.refreshToken().subscribe({
-              error: (err) => {
-                console.error('Proactive refresh failed:', err);
-                this.handleSessionExpired();
-              }
-            });
+            this._proactiveRefreshRetries = 0;
+            this.attemptProactiveRefresh();
           }, refreshAt);
         } else {
           // Token already expired — try refresh immediately
-          this.refreshToken().subscribe({
-            error: (err) => {
-              console.error('Immediate refresh failed:', err);
-              this.handleSessionExpired();
-            }
-          });
+          this._proactiveRefreshRetries = 0;
+          this.attemptProactiveRefresh();
         }
       }
     } catch (e) {
-      console.error('Error parsing token payload:', e);
+      console.error('[AuthService] Error parsing token payload:', e);
       // Malformed token — don't schedule anything
     }
+  }
+
+  /**
+   * Attempts a proactive refresh with retry logic.
+   * On transient failure (status 0), retries after a delay.
+   * On definitive failure (401/403), triggers session expiry.
+   */
+  private attemptProactiveRefresh(): void {
+    this.refreshToken().subscribe({
+      error: (err) => {
+        const isTransient = err.status === 0 || err.status === 504 || err.status === 503;
+
+        if (isTransient && this._proactiveRefreshRetries < this.MAX_REFRESH_RETRIES) {
+          this._proactiveRefreshRetries++;
+          const delay = this.RETRY_DELAY_MS * this._proactiveRefreshRetries;
+          console.warn(`[AuthService] Proactive refresh failed (transient). Retry ${this._proactiveRefreshRetries}/${this.MAX_REFRESH_RETRIES} in ${delay}ms.`);
+          this._logoutTimerId = setTimeout(() => this.attemptProactiveRefresh(), delay);
+        } else {
+          console.error('[AuthService] Proactive refresh failed permanently:', err.status || err.message);
+          this.handleSessionExpired();
+        }
+      }
+    });
   }
 
   private clearAutoLogout(): void {
@@ -317,38 +361,48 @@ export class AuthService {
   }
 
   /**
-   * Called when the JWT token expires (by the timer) or when
-   * a cross-tab logout is detected via the storage event.
-   * Performs a local-only cleanup without making any HTTP call.
+   * SMART SESSION EXPIRY HANDLER:
+   * Clears local auth state and navigates to /login ONLY if the user is
+   * currently on a protected route. If they're on a public page (e.g. /terms,
+   * /privacy, /laws), auth state is cleared silently without a jarring redirect.
+   * This is how production apps like GitHub, Stripe, and Linear handle it.
    */
   private handleSessionExpired(): void {
     this.clearAutoLogout();
+    this.clearAuthState();
+
+    // Only redirect if the user is on a protected route
+    const currentPath = this.router.url.split('?')[0].split('#')[0];
+    const isOnPublicRoute = PUBLIC_ROUTES.some(route => currentPath === route || currentPath.startsWith(route + '/'));
+
+    if (!isOnPublicRoute) {
+      this.router.navigate(['/login']);
+    }
+  }
+
+  /**
+   * Centralized auth state cleanup (DRY helper).
+   * Clears token, cached profile, and BehaviorSubjects.
+   * Does NOT navigate — callers decide whether to redirect.
+   */
+  private clearAuthState(): void {
     this.token = null;
     localStorage.removeItem('lc_token');
     localStorage.removeItem('lc_user_profile');
     this._currentUser.next(null);
     this._isLoggedIn.next(false);
-    this.router.navigate(['/login']);
   }
 
   logout() {
     return this.http.post<any>(`${this.apiUrl}/logout`, {}, this.httpOptions).pipe(
       tap(() => {
         this.clearAutoLogout();
-        this.token = null;
-        localStorage.removeItem('lc_token');
-        localStorage.removeItem('lc_user_profile');
-        this._currentUser.next(null);
-        this._isLoggedIn.next(false);
+        this.clearAuthState();
         this.router.navigate(['/login']);
       }),
       catchError(() => {
         this.clearAutoLogout();
-        this.token = null;
-        localStorage.removeItem('lc_token');
-        localStorage.removeItem('lc_user_profile');
-        this._currentUser.next(null);
-        this._isLoggedIn.next(false);
+        this.clearAuthState();
         this.router.navigate(['/login']);
         return of(null);
       })

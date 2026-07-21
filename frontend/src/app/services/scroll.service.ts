@@ -6,7 +6,7 @@ import { BehaviorSubject, auditTime } from 'rxjs';
 })
 export class ScrollService implements OnDestroy {
   private lastScrollY = 0;
-  
+
   // Expose scroll direction: 'up' | 'down' (throttled at ~60fps)
   private directionSubject = new BehaviorSubject<'up' | 'down'>('up');
   scrollDirection$ = this.directionSubject.asObservable().pipe(auditTime(16));
@@ -28,14 +28,16 @@ export class ScrollService implements OnDestroy {
     this.zone.runOutsideAngular(() => {
       this.scrollListener = () => {
         const currentScrollY = window.scrollY;
-        
+
         // 1. Detect scroll direction
         const delta = currentScrollY - this.lastScrollY;
         const currentDirection = this.directionSubject.value;
-        
+        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const isNearBottom = currentScrollY >= docHeight - 80;
+
         if (Math.abs(delta) > 5) { // threshold of 5px
           const newDirection = delta > 0 ? 'down' : 'up';
-          if (newDirection !== currentDirection && currentScrollY > 80) {
+          if (newDirection !== currentDirection && currentScrollY > 80 && !isNearBottom) {
             this.zone.run(() => {
               this.directionSubject.next(newDirection);
             });
@@ -45,7 +47,7 @@ export class ScrollService implements OnDestroy {
             });
           }
         }
-        
+
         // 2. Is Scrolled state (for navbar shrinking)
         const isScrolled = currentScrollY > 20;
         if (isScrolled !== this.isScrolledSubject.value) {
@@ -55,7 +57,6 @@ export class ScrollService implements OnDestroy {
         }
 
         // 3. Calculate reading progress percentage
-        const docHeight = document.documentElement.scrollHeight - window.innerHeight;
         if (docHeight > 0) {
           const pct = Math.min(Math.max((currentScrollY / docHeight) * 100, 0), 100);
           if (Math.abs(pct - this.percentageSubject.value) > 0.5) { // only trigger change if changed by 0.5%

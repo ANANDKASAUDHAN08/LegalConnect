@@ -7,6 +7,7 @@ import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component
 import { WhatsNewModalComponent } from './components/whats-new-modal/whats-new-modal.component';
 import { VersionReloadPillComponent } from './components/version-reload-pill/version-reload-pill.component';
 import { PwaInstallBannerComponent } from './components/pwa-install-banner/pwa-install-banner.component';
+import { ConsentBannerComponent } from './components/consent-banner/consent-banner.component';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 
@@ -21,7 +22,8 @@ import { SettingsService } from './services/settings.service';
     BottomNavComponent,
     WhatsNewModalComponent,
     VersionReloadPillComponent,
-    PwaInstallBannerComponent
+    PwaInstallBannerComponent,
+    ConsentBannerComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']

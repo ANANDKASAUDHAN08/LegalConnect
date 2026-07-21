@@ -256,12 +256,14 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
     this.libraryEnactmentYear = year;
     this.libraryPage = 1;
     this.isYearDropdownOpen = false;
+    this.updateLibraryActs();
   }
 
   selectSort(sortBy: 'name-asc' | 'name-desc' | 'year-desc' | 'year-asc') {
     this.librarySortBy = sortBy;
     this.libraryPage = 1;
     this.isSortDropdownOpen = false;
+    this.updateLibraryActs();
   }
 
   getSortLabel(sortBy: string): string {
