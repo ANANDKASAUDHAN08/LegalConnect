@@ -7,15 +7,43 @@ import { AuthService, UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { WriteReviewModalComponent } from '../../components/write-review-modal/write-review-modal.component';
 import { ReviewCardComponent } from '../../components/review-card/review-card.component';
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-reviews',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, WriteReviewModalComponent, ReviewCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, WriteReviewModalComponent, ReviewCardComponent, ConfirmDialogComponent],
   templateUrl: './reviews.component.html',
   styleUrls: ['./reviews.component.scss']
 })
 export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
+
   currentUser: UserProfile | null = null;
   allReviews: ReviewItem[] = [];
   filteredReviews: ReviewItem[] = [];
@@ -307,18 +335,23 @@ export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onDeleteReview(review: ReviewItem) {
     if (!review.id) return;
-    if (confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
-      this.reviewService.deleteReview(review.id).subscribe({
-        next: () => {
-          this.allReviews = this.allReviews.filter(r => r.id !== review.id);
-          this.applyFilters();
-          this.snackbar.show('Review deleted successfully.', 'info');
-        },
-        error: (err) => {
-          console.error('Failed to delete review', err);
-          this.snackbar.show('Failed to delete review.', 'error');
-        }
-      });
-    }
+    this.triggerConfirm(
+      'Delete Review',
+      'Are you sure you want to delete this review? This action cannot be undone and will permanently remove your feedback.',
+      'danger',
+      () => {
+        this.reviewService.deleteReview(review.id!).subscribe({
+          next: () => {
+            this.allReviews = this.allReviews.filter(r => r.id !== review.id);
+            this.applyFilters();
+            this.snackbar.show('Review deleted successfully.', 'info');
+          },
+          error: (err) => {
+            console.error('Failed to delete review', err);
+            this.snackbar.show('Failed to delete review.', 'error');
+          }
+        });
+      }
+    );
   }
 }

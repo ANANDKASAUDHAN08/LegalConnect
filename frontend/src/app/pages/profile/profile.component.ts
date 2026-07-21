@@ -17,6 +17,8 @@ import { MyCasesTabComponent } from './components/my-cases-tab/my-cases-tab.comp
 import { MyReviewsTabComponent } from './components/my-reviews-tab/my-reviews-tab.component';
 import { SavedLawsTabComponent } from './components/saved-laws-tab/saved-laws-tab.component';
 
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
+
 // Client tabs
 type ClientTab = 'overview' | 'profile-details' | 'activity-log' | 'security' | 'my-reviews';
 
@@ -52,12 +54,40 @@ interface ProfileStrengthItem {
     VerificationTabComponent,
     MyCasesTabComponent,
     MyReviewsTabComponent,
-    SavedLawsTabComponent
+    SavedLawsTabComponent,
+    ConfirmDialogComponent
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
 export class ProfileComponent implements OnInit, OnDestroy {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
+
   profile: UserProfile | null = null;
   lawyerProfile: LawyerProfileData | null = null;
   loading = true;
@@ -224,21 +254,26 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   deleteAvatar() {
     if (!this.profile) return;
-    if (!confirm('Are you sure you want to remove your profile picture?')) return;
-
-    this.auth.updateProfile({ avatarUrl: '' }).subscribe({
-      next: () => {
-        this.closeAvatarMenu();
-        this.snackbar.show('Profile picture removed successfully!', 'success');
-        if (this.profile) {
-          this.profile.avatarUrl = undefined;
-          this.onProfileUpdated({ avatarUrl: undefined });
-        }
-      },
-      error: () => {
-        this.snackbar.show('Failed to remove profile picture.', 'error');
+    this.triggerConfirm(
+      'Remove Profile Picture',
+      'Are you sure you want to remove your profile picture? This will revert it to the default initials placeholder.',
+      'danger',
+      () => {
+        this.auth.updateProfile({ avatarUrl: '' }).subscribe({
+          next: () => {
+            this.closeAvatarMenu();
+            this.snackbar.show('Profile picture removed successfully!', 'success');
+            if (this.profile) {
+              this.profile.avatarUrl = undefined;
+              this.onProfileUpdated({ avatarUrl: undefined });
+            }
+          },
+          error: () => {
+            this.snackbar.show('Failed to remove profile picture.', 'error');
+          }
+        });
       }
-    });
+    );
   }
 
   constructor(

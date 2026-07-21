@@ -78,14 +78,9 @@
 
       <!-- Review Card -->
       <app-review-card *ngFor="let rev of filteredReviews"
-        class="carousel-card snap-start h-[210px] block w-[280px] sm:w-[320px] flex-shrink-0"
-        [review]="rev"
-        [currentUser]="currentUser"
-        [showReadMore]="true"
-        (edit)="openEditModal($event)"
-        (delete)="onDeleteReview($event)"
-        (like)="likeReview($event)"
-        (readMore)="openReadMoreModal($event)">
+        class="carousel-card snap-start h-[210px] block w-[280px] sm:w-[320px] flex-shrink-0" [review]="rev"
+        [currentUser]="currentUser" [showReadMore]="true" (edit)="openEditModal($event)"
+        (delete)="onDeleteReview($event)" (like)="likeReview($event)" (readMore)="openReadMoreModal($event)">
       </app-review-card>
     </div>
 
@@ -162,3 +157,7 @@
     </div>
   </div>
 </section>
+
+<app-confirm-dialog [isOpen]="isConfirmOpen" [title]="confirmTitle" [message]="confirmMessage" [type]="confirmType"
+  (confirm)="onConfirmDialog()" (cancel)="onCancelDialog()">
+</app-confirm-dialog>

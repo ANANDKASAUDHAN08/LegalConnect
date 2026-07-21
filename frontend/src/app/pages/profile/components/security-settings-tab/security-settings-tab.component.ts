@@ -3,14 +3,41 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../services/auth.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
+import { ConfirmDialogComponent } from '../../../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-security-settings-tab',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
   templateUrl: './security-settings-tab.component.html'
 })
 export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
   @Input() profile!: UserProfile;
   @Output() profileUpdated = new EventEmitter<Partial<UserProfile>>();
 
@@ -78,22 +105,27 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
   }
 
   revokeSession(id: number) {
-    if (confirm('Are you sure you want to revoke this session?')) {
-      this.auth.revokeSession(id).subscribe({
-        next: () => {
-          this.snackbar.show('Session revoked successfully.', 'success');
-          const session = this.activeSessions.find(s => s.id === id);
-          if (session && session.isCurrent) {
-            this.auth.logout().subscribe();
-          } else {
-            this.loadActiveSessions();
+    this.triggerConfirm(
+      'Revoke Device Session',
+      'Are you sure you want to revoke this session? Any unsaved changes on that device will be lost.',
+      'danger',
+      () => {
+        this.auth.revokeSession(id).subscribe({
+          next: () => {
+            this.snackbar.show('Session revoked successfully.', 'success');
+            const session = this.activeSessions.find(s => s.id === id);
+            if (session && session.isCurrent) {
+              this.auth.logout().subscribe();
+            } else {
+              this.loadActiveSessions();
+            }
+          },
+          error: (err) => {
+            this.snackbar.show(err.error || 'Failed to revoke session.', 'error');
           }
-        },
-        error: (err) => {
-          this.snackbar.show(err.error || 'Failed to revoke session.', 'error');
-        }
-      });
-    }
+        });
+      }
+    );
   }
 
   changePassword() {

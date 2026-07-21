@@ -102,14 +102,9 @@
     <div *ngIf="filteredReviews.length > 0; else noReviews" class="reviews-grid-container flex flex-col gap-8">
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         <!-- Review Card -->
-        <app-review-card *ngFor="let rev of paginatedReviews"
-          [review]="rev"
-          [currentUser]="currentUser"
-          [showReadMore]="false"
-          [highlightGlow]="highlightedReviewId === rev.id"
-          (edit)="openEditModal($event)"
-          (delete)="onDeleteReview($event)"
-          (like)="likeReview($event)">
+        <app-review-card *ngFor="let rev of paginatedReviews" [review]="rev" [currentUser]="currentUser"
+          [showReadMore]="false" [highlightGlow]="highlightedReviewId === rev.id" (edit)="openEditModal($event)"
+          (delete)="onDeleteReview($event)" (like)="likeReview($event)">
         </app-review-card>
       </div>
 
@@ -173,3 +168,7 @@
 
   </div>
 </section>
+
+<app-confirm-dialog [isOpen]="isConfirmOpen" [title]="confirmTitle" [message]="confirmMessage" [type]="confirmType"
+  (confirm)="onConfirmDialog()" (cancel)="onCancelDialog()">
+</app-confirm-dialog>

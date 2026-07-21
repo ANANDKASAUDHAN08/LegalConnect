@@ -7,6 +7,7 @@ import { UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { WriteReviewModalComponent } from '../write-review-modal/write-review-modal.component';
 import { ReviewCardComponent, formatReviewContent } from '../review-card/review-card.component';
+import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
 
 interface QuickChip {
   emoji: string;
@@ -16,11 +17,38 @@ interface QuickChip {
 @Component({
   selector: 'app-reviews-section',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, WriteReviewModalComponent, ReviewCardComponent],
+  imports: [CommonModule, FormsModule, RouterLink, WriteReviewModalComponent, ReviewCardComponent, ConfirmDialogComponent],
   templateUrl: './reviews-section.component.html',
   styleUrls: ['./reviews-section.component.scss']
 })
 export class ReviewsSectionComponent implements OnInit, OnDestroy {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
+
   @Input() currentUser: UserProfile | null = null;
 
   @ViewChild('carouselTrack') carouselTrack!: ElementRef<HTMLDivElement>;
@@ -34,6 +62,7 @@ export class ReviewsSectionComponent implements OnInit, OnDestroy {
   get showWriteModal(): boolean {
     return this._showWriteModal;
   }
+
   set showWriteModal(value: boolean) {
     this._showWriteModal = value;
     if (value) {
@@ -59,8 +88,6 @@ export class ReviewsSectionComponent implements OnInit, OnDestroy {
       this.updateNavbarHeight();
     }
   }
-
-
 
   constructor(
     private reviewService: ReviewService,
@@ -149,23 +176,26 @@ export class ReviewsSectionComponent implements OnInit, OnDestroy {
     this.filterReviews();
   }
 
-
-
   onDeleteReview(review: ReviewItem) {
     if (!review.id) return;
-    if (confirm('Are you sure you want to delete this review? This action cannot be undone.')) {
-      this.reviewService.deleteReview(review.id).subscribe({
-        next: () => {
-          this.allReviews = this.allReviews.filter(r => r.id !== review.id);
-          this.filterReviews();
-          this.snackbar.show('Review deleted successfully.', 'info');
-        },
-        error: (err) => {
-          console.error('Failed to delete review', err);
-          this.snackbar.show(err.error || 'Failed to delete review. Please try again.', 'error');
-        }
-      });
-    }
+    this.triggerConfirm(
+      'Delete Review',
+      'Are you sure you want to delete this review? This action cannot be undone and will permanently remove your feedback.',
+      'danger',
+      () => {
+        this.reviewService.deleteReview(review.id!).subscribe({
+          next: () => {
+            this.allReviews = this.allReviews.filter(r => r.id !== review.id);
+            this.filterReviews();
+            this.snackbar.show('Review deleted successfully.', 'info');
+          },
+          error: (err) => {
+            console.error('Failed to delete review', err);
+            this.snackbar.show(err.error || 'Failed to delete review. Please try again.', 'error');
+          }
+        });
+      }
+    );
   }
 
   private updateNavbarHeight() {
