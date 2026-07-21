@@ -1,0 +1,304 @@
+<!-- ==================== PREMIUM TERMS OF SERVICE VIEW ==================== -->
+<div class="space-y-4 md:space-y-8 text-xs md:text-sm font-medium text-slate-600 dark:text-slate-400 leading-relaxed">
+
+  <!-- ================= BORDERLESS INTERACTIVE READER CONTROLS BAR ================= -->
+  <div class="p-0 border-0 bg-transparent flex flex-col md:flex-row md:items-center justify-between gap-3 print:hidden">
+    <!-- Title & Description Header -->
+    <div class="space-y-0.5">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-blue-600 dark:bg-amber-400 animate-pulse"></span>
+        <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-slate-900 dark:text-white m-0">
+          Interactive Reader Settings
+        </h3>
+      </div>
+      <p class="text-[10.5px] sm:text-xs text-slate-500 dark:text-slate-400 m-0 font-normal">
+        Customize plain-English translation summaries and filter statutory clauses locally
+      </p>
+    </div>
+
+    <!-- Action Controls Group (Search Box + Plain English Toggle in 1 line on mobile & desktop) -->
+    <div class="flex flex-row items-center gap-2 w-full md:w-auto">
+
+      <!-- Search Input Box Container -->
+      <div class="relative flex-1 md:w-60">
+        <input type="text" [value]="searchQuery" (input)="onSearchChange($event)" placeholder="Search policy terms..."
+          class="w-full pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-950 text-xs font-bold text-slate-800 dark:text-slate-200 placeholder-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-amber-400 focus:ring-2 focus:ring-blue-500/20 dark:focus:ring-amber-400/20 transition-all shadow-xs" />
+
+        <button *ngIf="searchQuery" (click)="clearSearch()"
+          class="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-0.5">
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Plain English Toggle Switch Button (Single Line Fit) -->
+      <button (click)="showPlainEnglish = !showPlainEnglish"
+        class="flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border transition-all cursor-pointer text-xs font-black uppercase tracking-wider active:scale-[0.97] shadow-xs shrink-0 whitespace-nowrap"
+        [ngClass]="showPlainEnglish ? 
+          'bg-blue-600 dark:bg-amber-500 border-blue-600 dark:border-amber-500 text-white dark:text-slate-950' : 
+          'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'">
+
+        <!-- Lightbulb Icon -->
+        <svg class="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+
+        <span class="hidden sm:inline">Plain English Summaries</span>
+        <span class="inline sm:hidden">Summaries</span>
+
+        <!-- Active ON / OFF Badge Chip -->
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-black tracking-widest uppercase transition-all shrink-0"
+          [ngClass]="showPlainEnglish ? 'bg-white/20 text-white dark:bg-slate-950/30 dark:text-slate-950' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'">
+          {{ showPlainEnglish ? 'ON' : 'OFF' }}
+        </span>
+      </button>
+
+    </div>
+  </div>
+
+  <!-- Quick Summary Highlights Grid -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 print:hidden">
+    <!-- Card 1 -->
+    <div (click)="scrollToSection('acceptance')"
+      class="p-2 md:p-4 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-blue-500/40 dark:hover:border-amber-500/40 hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5">
+      <div class="flex items-center gap-2 md:gap-3 mb-0 md:mb-3">
+        <div
+          class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-blue-50 dark:bg-blue-500/10 flex items-center justify-center shrink-0">
+          <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-blue-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+        </div>
+        <h4
+          class="text-[10px] md:text-xs font-bold text-slate-800 dark:text-white m-0 group-hover:text-blue-600 dark:group-hover:text-amber-400 transition-colors leading-tight">
+          1. Agreement</h4>
+      </div>
+      <p class="hidden md:block text-[10px] text-slate-400 dark:text-slate-500 leading-normal mt-1 mb-0">Accessing
+        LegalConnect means you agree to obey Indian law and platform rules.</p>
+    </div>
+
+    <!-- Card 2 -->
+    <div (click)="scrollToSection('eligibility')"
+      class="p-2 md:p-4 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-emerald-500/40 dark:hover:border-emerald-500/40 hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5">
+      <div class="flex items-center gap-2 md:gap-3 mb-0 md:mb-3">
+        <div
+          class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-emerald-50 dark:bg-emerald-500/10 flex items-center justify-center shrink-0">
+          <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-emerald-600 dark:text-emerald-400" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </div>
+        <h4
+          class="text-[10px] md:text-xs font-bold text-slate-800 dark:text-white m-0 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight">
+          2. Licensing</h4>
+      </div>
+      <p class="hidden md:block text-[10px] text-slate-400 dark:text-slate-500 leading-normal mt-1 mb-0">Lawyers must
+        provide active Bar Council licenses. Misleading info causes bans.</p>
+    </div>
+
+    <!-- Card 3 -->
+    <div (click)="scrollToSection('disclaimer')"
+      class="p-2 md:p-4 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-rose-500/40 dark:hover:border-rose-500/40 hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5">
+      <div class="flex items-center gap-2 md:gap-3 mb-0 md:mb-3">
+        <div
+          class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center shrink-0">
+          <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-rose-600 dark:text-rose-400" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h4
+          class="text-[10px] md:text-xs font-bold text-slate-800 dark:text-white m-0 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors leading-tight">
+          3. Disclaimer</h4>
+      </div>
+      <p class="hidden md:block text-[10px] text-slate-400 dark:text-slate-500 leading-normal mt-1 mb-0">We are an
+        informational directory. We are not a law firm and do not provide legal advice.</p>
+    </div>
+
+    <!-- Card 4 -->
+    <div (click)="scrollToSection('liability')"
+      class="p-2 md:p-4 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-purple-500/40 dark:hover:border-purple-500/40 hover:shadow-md transition-all cursor-pointer group hover:-translate-y-0.5">
+      <div class="flex items-center gap-2 md:gap-3 mb-0 md:mb-3">
+        <div
+          class="w-6 h-6 md:w-8 md:h-8 rounded-lg bg-purple-50 dark:bg-purple-500/10 flex items-center justify-center shrink-0">
+          <svg class="w-3.5 h-3.5 md:w-4 md:h-4 text-purple-600 dark:text-purple-400" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+          </svg>
+        </div>
+        <h4
+          class="text-[10px] md:text-xs font-bold text-slate-800 dark:text-white m-0 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors leading-tight">
+          4. Liability</h4>
+      </div>
+      <p class="hidden md:block text-[10px] text-slate-400 dark:text-slate-500 leading-normal mt-1 mb-0">We are not
+        responsible for disputes with advocates or third-party representation.</p>
+    </div>
+  </div>
+
+  <!-- Elegant fading linear gradient divider -->
+  <div
+    class="h-[1.5px] w-full bg-gradient-to-r from-transparent via-blue-500/40 dark:via-amber-500/40 to-transparent !mt-3 md:!mt-4 print:hidden">
+  </div>
+
+  <!-- Main Terms Layout Grid -->
+  <div class="grid grid-cols-1 gap-6 !mt-3 md:!mt-4">
+
+    <!-- Left Hand: Document content (Span 8) -->
+    <div class="space-y-6">
+
+      <!-- Headline & subtitle -->
+      <div class="mb-4">
+        <h1 class="font-serif text-3xl font-bold text-slate-900 dark:text-white leading-tight mb-2">
+          Terms of Service
+        </h1>
+        <p class="text-xs md:text-sm text-slate-500 dark:text-slate-400 leading-normal">
+          Agreement governing the use of LegalConnect directory and lawyer workstation services.
+        </p>
+      </div>
+
+      <!-- Dynamic Terms Sections -->
+      <ng-container *ngFor="let sec of sections; trackBy: trackById">
+        <section [id]="sec.id" class="space-y-3.5 scroll-mt-28 group relative">
+
+          <!-- Anchor anchor hover button -->
+          <div class="absolute left-[-24px] top-[6px] hidden lg:block opacity-0 group-hover:opacity-100 transition-all">
+            <button (click)="copySectionLink(sec.id)" appTooltip="Copy anchor link"
+              class="p-1 rounded-md bg-transparent border-0 cursor-pointer text-slate-300 dark:text-slate-700 hover:text-slate-500 dark:hover:text-slate-400 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </button>
+          </div>
+
+          <h2
+            class="text-sm md:text-base font-extrabold text-slate-800 dark:text-white uppercase tracking-wider flex items-center gap-2">
+            <span class="w-1.5 h-3.5 bg-blue-600 dark:bg-amber-400 rounded-xs"></span>
+            <span>{{ sec.title }}</span>
+            <button (click)="copySectionLink(sec.id)" appTooltip="Copy link to this section"
+              class="opacity-40 group-hover:opacity-100 transition-opacity p-1 bg-transparent border-0 cursor-pointer text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 lg:hidden print:hidden">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </button>
+          </h2>
+
+          <!-- Legal Text Block -->
+          <div class="text-slate-600 dark:text-slate-400 space-y-3">
+            <p [innerHTML]="getHighlightedText(sec.legalText)"></p>
+          </div>
+
+          <!-- Plain English Translation layer (rendered dynamically depending on toggle state) -->
+          <div *ngIf="showPlainEnglish"
+            class="p-4 rounded-xl bg-gradient-to-r from-blue-500/[0.04] to-indigo-500/[0.04] dark:from-amber-500/[0.02] dark:to-amber-500/[0.04] border border-blue-500/10 dark:border-amber-500/10 space-y-1.5 transition-all">
+            <div
+              class="flex items-center gap-1.5 text-[9.5px] font-black uppercase text-blue-600 dark:text-amber-400 tracking-wider">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Plain English Summary</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-300 font-bold m-0 leading-relaxed"
+              [innerHTML]="getHighlightedText(sec.plainEnglish)"></p>
+          </div>
+        </section>
+
+        <!-- Elegant fading radial line divider -->
+        <div
+          class="h-[1.5px] w-full bg-gradient-to-r from-transparent via-slate-200/50 to-transparent dark:via-slate-800/60 my-6 print:hidden">
+        </div>
+      </ng-container>
+    </div>
+
+  </div>
+
+  <!-- Interactive Compliance Flowchart / Step Widget -->
+  <div
+    class="p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl print:hidden">
+    <div class="mb-4">
+      <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider m-0">Advocate Compliance &
+        Verification Process</h3>
+      <p class="text-[10px] text-slate-400 dark:text-slate-500 m-0">How LegalConnect maintains directory integrity and
+        validates active Bar Council credentials</p>
+    </div>
+
+    <!-- Step Items Flow Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+      <!-- Step 1 -->
+      <div class="relative p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60">
+        <span class="absolute right-3 top-3 text-[14px] font-black text-slate-100 dark:text-slate-800">01</span>
+        <h4 class="text-[11px] font-extrabold text-blue-600 dark:text-amber-500 uppercase tracking-wider mb-2">BCI Input
+          Validation</h4>
+        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal m-0">Advocate registers workstation with
+          State Bar license ID, enrollment year, and digital ID card credentials.</p>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="relative p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60">
+        <span class="absolute right-3 top-3 text-[14px] font-black text-slate-100 dark:text-slate-800">02</span>
+        <h4 class="text-[11px] font-extrabold text-blue-600 dark:text-amber-500 uppercase tracking-wider mb-2">Audit &
+          Background</h4>
+        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal m-0">Our compliance DPO team matches
+          records with public state Bar registers and runs biometric/ID document audits.</p>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="relative p-4 rounded-xl bg-white dark:bg-slate-950 border border-slate-100 dark:border-slate-800/60">
+        <span class="absolute right-3 top-3 text-[14px] font-black text-slate-100 dark:text-slate-800">03</span>
+        <h4 class="text-[11px] font-extrabold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider mb-2">
+          Verified Activation</h4>
+        <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal m-0">Once verified, directory status is
+          flagged "Verified Profile", enabling workstation inquiry features.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Changes Timeline Version History (Changelog) -->
+  <div
+    class="p-5 md:p-6 bg-slate-50 dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 rounded-2xl print:hidden">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+      <div class="space-y-0.5">
+        <h3 class="text-xs font-black text-slate-800 dark:text-white uppercase tracking-wider m-0">Terms Revision
+          Changelog</h3>
+        <p class="text-[10px] text-slate-400 dark:text-slate-500 m-0">Historical log of modifications to standard
+          client-lawyer directory terms</p>
+      </div>
+
+      <!-- Year Filter Chips -->
+      <div class="flex gap-1.5">
+        <button *ngFor="let year of changelogYears; trackBy: trackByYear" (click)="activeChangelogYear = year.value"
+          class="px-2.5 py-1 rounded-lg border text-[9px] font-extrabold uppercase transition-all cursor-pointer"
+          [ngClass]="activeChangelogYear === year.value ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-950 border-slate-800 dark:border-slate-200 shadow-xs' : 'bg-white dark:bg-slate-950 border-slate-200 dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-white'">
+          {{ year.label }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Timeline entries -->
+    <div class="relative pl-4 space-y-4">
+      <div class="absolute left-[3px] top-1.5 bottom-1.5 w-[1.5px] bg-slate-200 dark:bg-slate-800/80 rounded"></div>
+
+      <div *ngFor="let item of filteredChangelog; trackBy: trackByDate" class="relative pl-5 group">
+        <!-- Dot -->
+        <span
+          class="absolute left-[-2.5px] top-[5px] w-2 h-2 rounded-full bg-slate-300 dark:bg-slate-700 border border-slate-50 dark:border-slate-900 z-10 group-hover:bg-blue-500 dark:group-hover:bg-amber-500 transition-colors"></span>
+
+        <div class="flex flex-wrap items-center gap-2 mb-1">
+          <span class="text-[9.5px] font-black text-slate-400 dark:text-slate-500 tracking-wider uppercase">{{ item.date
+            }}</span>
+          <span class="px-2 py-0.5 rounded text-[8px] font-bold uppercase tracking-wider {{ item.badgeClass }}">{{
+            item.type }}</span>
+        </div>
+        <p class="text-[10px] text-slate-600 dark:text-slate-400 leading-normal m-0"
+          [innerHTML]="getHighlightedText(item.description)"></p>
+      </div>
+    </div>
+  </div>

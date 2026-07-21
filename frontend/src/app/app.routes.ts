@@ -82,6 +82,30 @@ export const routes: Routes = [
     path: 'specializations',
     loadComponent: () => import('./pages/specializations/specializations.component').then(m => m.SpecializationsComponent)
   },
+  {
+    path: 'about',
+    loadComponent: () => import('./pages/info/info-page.component').then(m => m.InfoPageComponent)
+  },
+  {
+    path: 'privacy',
+    loadComponent: () => import('./pages/info/info-page.component').then(m => m.InfoPageComponent)
+  },
+  {
+    path: 'terms',
+    loadComponent: () => import('./pages/info/info-page.component').then(m => m.InfoPageComponent)
+  },
+  {
+    path: 'contact',
+    loadComponent: () => import('./pages/contact/contact.component').then(m => m.ContactComponent)
+  },
+  {
+    path: 'help',
+    loadComponent: () => import('./pages/info/info-page.component').then(m => m.InfoPageComponent)
+  },
+  {
+    path: 'cookie-preferences',
+    loadComponent: () => import('./pages/cookie-preferences/cookie-preferences.component').then(m => m.CookiePreferencesComponent)
+  },
 
   // 5. User Workstations & Dashboards (Auth Required)
   {

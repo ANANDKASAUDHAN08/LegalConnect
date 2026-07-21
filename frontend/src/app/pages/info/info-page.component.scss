@@ -1,0 +1,136 @@
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide navbar, footer, sidebar, scrollbar navigation, widgets, print buttons, and other components */
+  header,
+  footer,
+  aside,
+  .sticky,
+  button,
+  .print\:hidden,
+  app-navbar,
+  app-footer {
+    display: none !important;
+  }
+
+  main {
+    border: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    box-shadow: none !important;
+    background: transparent !important;
+  }
+
+  h1,
+  h2,
+  h3,
+  p,
+  li,
+  strong,
+  span,
+  div {
+    color: black !important;
+  }
+
+  /* Page break safety on legal sections */
+  section {
+    page-break-inside: avoid;
+  }
+}
+
+/* MOBILE ONLY sticky horizontal navigation bar enhancements */
+.mobile-sticky-nav {
+  position: sticky;
+  z-index: 30;
+  top: 72px;
+  /* fallback offset matching non-scrolled navbar height */
+  transition: top 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    padding 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &.scrolled {
+    top: 57px;
+    /* matches scrolled navbar height exactly */
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* ==================== MOBILE BOTTOM DRAWER ==================== */
+
+/* Floating Action Pill - subtle pulse glow on idle */
+.drawer-fab {
+  animation: fabAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.12),
+    0 0 0 0 rgba(59, 130, 246, 0);
+
+  &:not(:active) {
+    animation: fabAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+      fabPulse 3s ease-in-out 1s infinite;
+  }
+}
+
+@keyframes fabAppear {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(20px) scale(0.8);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0) scale(1);
+  }
+}
+
+@keyframes fabPulse {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.12),
+      0 0 0 0 rgba(59, 130, 246, 0.15);
+  }
+
+  50% {
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.12),
+      0 0 0 6px rgba(59, 130, 246, 0);
+  }
+}
+
+/* Backdrop fade-in */
+.drawer-backdrop {
+  animation: backdropIn 0.25s ease-out both;
+}
+
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Dark mode pulse uses amber */
+:host-context(.dark) .drawer-fab:not(:active) {
+  animation: fabAppear 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both,
+    fabPulseDark 3s ease-in-out 1s infinite;
+}
+
+@keyframes fabPulseDark {
+
+  0%,
+  100% {
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3),
+      0 0 0 0 rgba(245, 158, 11, 0.2);
+  }
+
+  50% {
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.3),
+      0 0 0 6px rgba(245, 158, 11, 0);
+  }
+}

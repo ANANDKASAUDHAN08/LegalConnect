@@ -10,6 +10,7 @@ import { LegalService } from '../../../services/legal.service';
 import { LocationService } from '../../../services/location.service';
 import { SavedItemsService } from '../../../services/saved-items.service';
 import { SnackbarService } from '../../../services/snackbar.service';
+import { InfoApiService } from '../../info/services/info-api.service';
 import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged, map, switchMap, catchError, of } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
@@ -249,6 +250,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   private sub = new Subscription();
   private summarySub: Subscription | null = null;
+  private inquiriesSub: Subscription | null = null;
   private notesSubject = new Subject<string>();
 
   constructor(
@@ -259,6 +261,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private snackbarService: SnackbarService,
     public savedItemsService: SavedItemsService,
     private locationService: LocationService,
+    private infoApi: InfoApiService,
     private route: ActivatedRoute,
     private eRef: ElementRef,
     private cdr: ChangeDetectorRef,
@@ -456,6 +459,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     if (this.summarySub) {
       this.summarySub.unsubscribe();
     }
+    if (this.inquiriesSub) {
+      this.inquiriesSub.unsubscribe();
+    }
     if (typeof document !== 'undefined') {
       document.body.classList.remove('overflow-hidden');
     }
@@ -527,14 +533,72 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   loadInquiries() {
+    if (this.inquiriesSub) {
+      this.inquiriesSub.unsubscribe();
+    }
+
     this.loadingInquiries.set(true);
-    this.lawyerService.getSentInquiries().subscribe({
-      next: (res) => {
-        this.inquiries.set(res || []);
+    const user = this.currentUser();
+    const userEmail = user?.email || '';
+
+    this.inquiriesSub = this.lawyerService.getSentInquiries().pipe(
+      switchMap((consultations: Consultation[]) => {
+        const list = Array.isArray(consultations) ? consultations : [];
+        if (!userEmail) {
+          return of(list);
+        }
+
+        return this.infoApi.trackTicket(userEmail).pipe(
+          map((res) => {
+            let tickets = (res && res.success && res.tickets) ? res.tickets : [];
+
+            if (typeof window !== 'undefined') {
+              try {
+                const key = `legalconnect_history_${userEmail.toLowerCase()}`;
+                const saved = localStorage.getItem(key);
+                if (saved) {
+                  const localItems: any[] = JSON.parse(saved);
+                  const ticketIdSet = new Set(tickets.map((t: any) => t.ticketId));
+                  localItems.forEach(item => {
+                    if (!ticketIdSet.has(item.ticketId)) {
+                      tickets.push(item);
+                      ticketIdSet.add(item.ticketId);
+                    }
+                  });
+                }
+              } catch (e) { }
+            }
+
+            const mappedTickets: Consultation[] = tickets.map((t: any, idx: number) => ({
+              id: Number((t.ticketId || `100${idx}`).replace(/[^0-9]/g, '')) || (1000 + idx),
+              lawyerName: `Support Desk: ${t.ticketId || 'LC-REF'}`,
+              lawyerEmail: 'support@legalconnect.com',
+              clientName: t.name || user?.fullName || 'Client',
+              clientEmail: t.email || userEmail,
+              message: `[${(t.type || 'ticket').toUpperCase()}] ${t.subject}: ${t.status || 'Received'}. SLA: ${t.slaTarget || '24h'}.`,
+              status: t.status?.includes('Scheduled') || t.status?.includes('Closed') ? 'Closed' : t.status?.includes('Acknowledged') ? 'Contacted' : 'Pending',
+              createdAt: t.timestamp || new Date().toISOString()
+            }));
+
+            const merged = [...list, ...mappedTickets].sort((a, b) =>
+              new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+            );
+
+            return merged;
+          }),
+          catchError(() => of(list))
+        );
+      }),
+      catchError(() => of([]))
+    ).subscribe({
+      next: (mergedInquiries) => {
+        this.inquiries.set(mergedInquiries);
         this.loadingInquiries.set(false);
+        this.cdr.markForCheck();
       },
       error: () => {
         this.loadingInquiries.set(false);
+        this.cdr.markForCheck();
       }
     });
   }

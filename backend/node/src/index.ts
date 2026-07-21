@@ -6,6 +6,7 @@ import { seedFullDatabaseIfEmpty } from './utils/autoSeeder';
 import legalRoutes from './routes/legalRoutes';
 import lawyerRoutes from './routes/lawyerRoutes';
 import templateRoutes from './routes/templateRoutes';
+import infoRoutes from './routes/infoRoutes';
 
 dotenv.config();
 
@@ -33,6 +34,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/legal', legalRoutes);
 app.use('/api/legal', templateRoutes);
 app.use('/api/lawyers', lawyerRoutes);
+app.use('/api/info', infoRoutes);
 
 // Start Server
 const startServer = () => {
