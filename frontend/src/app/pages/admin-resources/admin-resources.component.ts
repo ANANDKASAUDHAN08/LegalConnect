@@ -2,15 +2,43 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { LegalService } from '../../services/legal.service';
+import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 
 @Component({
   selector: 'app-admin-resources',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, ConfirmDialogComponent],
   templateUrl: './admin-resources.component.html',
   styleUrls: ['./admin-resources.component.scss']
 })
 export class AdminResourcesComponent implements OnInit {
+  // Modal Dialog variables
+  isConfirmOpen = false;
+  confirmTitle = '';
+  confirmMessage = '';
+  confirmType: 'danger' | 'warning' | 'info' = 'warning';
+  onConfirmAction: (() => void) | null = null;
+
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle = title;
+    this.confirmMessage = message;
+    this.confirmType = type;
+    this.onConfirmAction = action;
+    this.isConfirmOpen = true;
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen = false;
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen = false;
+    this.onConfirmAction = null;
+  }
+
   resources: any[] = [];
   totalItems = 0;
   currentPage = 1;
@@ -51,7 +79,7 @@ export class AdminResourcesComponent implements OnInit {
     status: 'approved'
   };
 
-  constructor(private legalService: LegalService) {}
+  constructor(private legalService: LegalService) { }
 
   ngOnInit() {
     this.fetchResources();
@@ -227,15 +255,20 @@ export class AdminResourcesComponent implements OnInit {
   }
 
   deleteResource(id: string) {
-    if (confirm('Are you sure you want to permanently delete this resource?')) {
-      this.legalService.deleteAdminResource(id).subscribe({
-        next: (res) => {
-          if (res.success) {
-            this.fetchResources();
-          }
-        },
-        error: (err) => console.error('Deletion failed:', err)
-      });
-    }
+    this.triggerConfirm(
+      'Delete Legal Resource',
+      'Are you sure you want to permanently delete this legal resource? This action cannot be undone and will remove it from search listings.',
+      'danger',
+      () => {
+        this.legalService.deleteAdminResource(id).subscribe({
+          next: (res) => {
+            if (res.success) {
+              this.fetchResources();
+            }
+          },
+          error: (err) => console.error('Deletion failed:', err)
+        });
+      }
+    );
   }
 }
