@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, Router, NavigationEnd } from '@angular/router';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { filter, map } from 'rxjs/operators';
 import { ConsentService } from '../../services/consent.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { trigger, transition, style, animate } from '@angular/animations';
@@ -11,6 +13,7 @@ import { trigger, transition, style, animate } from '@angular/animations';
   imports: [CommonModule, RouterLink, TooltipDirective],
   templateUrl: './consent-banner.component.html',
   styleUrls: ['./consent-banner.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
   animations: [
     trigger('bannerAnimation', [
       transition(':enter', [
@@ -25,31 +28,34 @@ import { trigger, transition, style, animate } from '@angular/animations';
     ])
   ]
 })
-export class ConsentBannerComponent implements OnInit {
-  showBanner = false;
+export class ConsentBannerComponent {
+  // Signal tracking current route path
+  private currentPath = toSignal(
+    this.router.events.pipe(
+      filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+      map(e => e.urlAfterRedirects.split('?')[0].split('#')[0])
+    ),
+    { initialValue: typeof window !== 'undefined' ? window.location.pathname : '/' }
+  );
 
-  constructor(private consentService: ConsentService) { }
+  // Computed signal for banner visibility — 100% reactive, declarative & memory-leak free!
+  showBanner = computed(() => {
+    if (this.consentService.hasUserConsented()) {
+      return false;
+    }
+    return this.currentPath() !== '/cookie-preferences';
+  });
 
-  ngOnInit() {
-    // Show banner after a brief delay to avoid layout flash
-    setTimeout(() => {
-      this.showBanner = !this.consentService.hasUserConsented();
-    }, 1200);
-  }
+  constructor(
+    public consentService: ConsentService,
+    private router: Router
+  ) { }
 
   acceptAll() {
-    this.consentService.saveConsent(true, true).subscribe({
-      next: () => {
-        this.showBanner = false;
-      }
-    });
+    this.consentService.saveConsent(true, true).subscribe();
   }
 
   rejectAll() {
-    this.consentService.saveConsent(false, false).subscribe({
-      next: () => {
-        this.showBanner = false;
-      }
-    });
+    this.consentService.saveConsent(false, false).subscribe();
   }
 }

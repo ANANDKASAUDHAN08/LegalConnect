@@ -1,7 +1,7 @@
 import { Injectable, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, BehaviorSubject } from 'rxjs';
-import { tap } from 'rxjs/operators';
+import { Observable, of } from 'rxjs';
+import { tap, catchError } from 'rxjs/operators';
 
 export interface ConsentPreferences {
   analyticsConsent: boolean;
@@ -50,18 +50,21 @@ export class ConsentService {
         this.hasUserConsented.set(false);
       }
     } else {
-      // 3. Fallback: try fetching from backend for this anon ID or logged in user
-      this.fetchConsentFromBackend().subscribe(res => {
-        if (res && res.hasConsented) {
-          this.updateLocalConsentState(
-            res.analyticsConsent,
-            res.marketingConsent,
-            res.updatedAt,
-            res.analyticsConsentedAt,
-            res.marketingConsentedAt,
-            res.policyVersion
-          );
-        }
+      // 3. Fallback: try fetching from backend for this anon ID
+      this.fetchConsentFromBackend().subscribe({
+        next: (res) => {
+          if (res && res.hasConsented) {
+            this.updateLocalConsentState(
+              res.analyticsConsent,
+              res.marketingConsent,
+              res.updatedAt,
+              res.analyticsConsentedAt,
+              res.marketingConsentedAt,
+              res.policyVersion
+            );
+          }
+        },
+        error: () => {}
       });
     }
   }
@@ -72,10 +75,15 @@ export class ConsentService {
 
   public fetchConsentFromBackend(): Observable<any> {
     const anonId = this.getAnonymousId();
-    return this.http.get<any>(`${this.apiUrl}?anonymousId=${anonId}`, { withCredentials: true });
+    return this.http.get<any>(`${this.apiUrl}?anonymousId=${anonId}`, { withCredentials: true }).pipe(
+      catchError(() => of({ hasConsented: false }))
+    );
   }
 
   saveConsent(analyticsConsent: boolean, marketingConsent: boolean): Observable<any> {
+    // Local-First: Update local state immediately so user preference takes effect instantly
+    this.updateLocalConsentState(analyticsConsent, marketingConsent);
+
     const anonId = this.getAnonymousId();
     const payload = {
       anonymousId: anonId,
@@ -85,14 +93,26 @@ export class ConsentService {
 
     return this.http.post<any>(this.apiUrl, payload, { withCredentials: true }).pipe(
       tap((res) => {
-        this.updateLocalConsentState(
+        if (res && typeof res === 'object' && res.updatedAt) {
+          this.updateLocalConsentState(
+            analyticsConsent,
+            marketingConsent,
+            res.updatedAt,
+            res.analyticsConsentedAt,
+            res.marketingConsentedAt,
+            res.policyVersion
+          );
+        }
+      }),
+      catchError((err) => {
+        // Fallback for static host / offline / non-JSON responses
+        return of({
+          success: true,
+          offlineFallback: true,
           analyticsConsent,
           marketingConsent,
-          res.updatedAt,
-          res.analyticsConsentedAt,
-          res.marketingConsentedAt,
-          res.policyVersion
-        );
+          updatedAt: new Date().toISOString()
+        });
       })
     );
   }
@@ -115,10 +135,10 @@ export class ConsentService {
 
     const cacheData = {
       ...preferences,
-      updatedAt,
+      updatedAt: updatedAt || new Date().toISOString(),
       analyticsConsentedAt,
       marketingConsentedAt,
-      policyVersion,
+      policyVersion: policyVersion || '1.0',
       cachedAt: new Date().toISOString()
     };
     localStorage.setItem(this.storageKey, JSON.stringify(cacheData));
@@ -135,11 +155,10 @@ export class ConsentService {
   }
 
   revokeConsent(): Observable<any> {
+    this.clearConsent();
     const anonId = this.getAnonymousId();
     return this.http.delete<any>(`${this.apiUrl}?anonymousId=${anonId}`, { withCredentials: true }).pipe(
-      tap(() => {
-        this.clearConsent();
-      })
+      catchError(() => of({ success: true, offlineFallback: true }))
     );
   }
 

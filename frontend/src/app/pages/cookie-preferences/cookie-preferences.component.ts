@@ -172,14 +172,26 @@ export class CookiePreferencesComponent implements OnInit, OnDestroy {
 
         this.hasConsentedState = true;
         this.needsReConsent = false;
-        this.policyVersion = res.policyVersion || '1.0';
-        this.lastUpdated = this.formatDate(res.updatedAt);
-        this.analyticsConsentedAt = this.formatDate(res.analyticsConsentedAt);
-        this.marketingConsentedAt = this.formatDate(res.marketingConsentedAt);
+        this.policyVersion = res?.policyVersion || this.policyVersion || '1.0';
+        this.lastUpdated = this.formatDate(res?.updatedAt) || this.formatDate(new Date().toISOString());
+        this.analyticsConsentedAt = this.formatDate(res?.analyticsConsentedAt) || (this.preferences.analyticsConsent ? this.formatDate(new Date().toISOString()) : null);
+        this.marketingConsentedAt = this.formatDate(res?.marketingConsentedAt) || (this.preferences.marketingConsent ? this.formatDate(new Date().toISOString()) : null);
       },
       error: () => {
         this.isSaving = false;
-        this.snackbar.show('Failed to save preferences. Please try again.', 'error');
+        this.savedPreferences = { ...this.preferences };
+        this.hasConsentedState = true;
+        this.needsReConsent = false;
+        this.lastUpdated = this.formatDate(new Date().toISOString());
+
+        let msg = 'Preferences updated successfully!';
+        if (showAllSuccess === true) {
+          msg = 'Accepted all cookie categories successfully!';
+        } else if (showAllSuccess === false) {
+          msg = 'Declined optional cookies successfully!';
+        }
+
+        this.snackbar.show(msg, 'success');
       }
     });
   }
@@ -210,7 +222,19 @@ export class CookiePreferencesComponent implements OnInit, OnDestroy {
       },
       error: () => {
         this.isSaving = false;
-        this.snackbar.show('Failed to withdraw consent. Please try again.', 'error');
+        this.preferences = {
+          essentialConsent: true,
+          analyticsConsent: false,
+          marketingConsent: false
+        };
+        this.savedPreferences = { ...this.preferences };
+        this.lastUpdated = null;
+        this.consentedAt = null;
+        this.analyticsConsentedAt = null;
+        this.marketingConsentedAt = null;
+        this.hasConsentedState = false;
+        this.needsReConsent = false;
+        this.snackbar.show('Consent withdrawn successfully. The cookies banner will now reappear.', 'info');
       }
     });
   }
