@@ -8,6 +8,7 @@ import { AuthService } from '../../services/auth.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { InfoApiService } from '../info/services/info-api.service';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
+import { TicketCardComponent } from '../../components/ticket-card/ticket-card.component';
 
 interface ContactForm {
   fullName: string;
@@ -25,7 +26,7 @@ interface FaqItem {
 @Component({
   selector: 'app-contact',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, TooltipDirective, ConfirmDialogComponent],
+  imports: [CommonModule, FormsModule, RouterLink, TooltipDirective, ConfirmDialogComponent, TicketCardComponent],
   templateUrl: './contact.component.html',
   styleUrls: ['./contact.component.scss']
 })
@@ -46,8 +47,19 @@ export class ContactComponent implements OnInit, OnDestroy {
   selectedAction: 'ticket' | 'callback' | 'grievance' = 'ticket';
   callbackRequested = false;
   isDropdownOpen = false;
+  isRoleDropdownOpen = false;
+
+  @ViewChild('roleDropdownRef') roleDropdownRef?: ElementRef;
+  @ViewChild('subjectDropdownRef') subjectDropdownRef?: ElementRef;
+
   activeMode: 'send' | 'track' = 'send';
   trackQuery = '';
+
+  clearTrackQuery() {
+    this.trackQuery = '';
+    this.trackError = null;
+  }
+
   isTracking = false;
   trackedTickets: any[] = [];
   trackError: string | null = null;
@@ -134,14 +146,86 @@ export class ContactComponent implements OnInit, OnDestroy {
     return this.estimatesList.find(e => e.id === this.selectedEstimateId) || this.estimatesList[0];
   }
 
+  get defaultDisplayLimit(): number {
+    return (typeof window !== 'undefined' && window.innerWidth < 640) ? 3 : 6;
+  }
+
+  get isMobileView(): boolean {
+    return typeof window !== 'undefined' && window.innerWidth < 640;
+  }
+
+  get remainingTicketCount(): number {
+    return Math.max(0, this.filteredTickets.length - this.displayLimit);
+  }
+
+  isFilterLoading = false;
+  private filterTimeout: any = null;
+
+  setFilter(filter: 'all' | 'active' | 'withdrawn') {
+    if (this.trackerFilter === filter) return;
+    this.trackerFilter = filter;
+    this.triggerFilterSkeleton();
+  }
+
+  triggerFilterSkeleton() {
+    this.isFilterLoading = true;
+    if (this.filterTimeout) clearTimeout(this.filterTimeout);
+    this.filterTimeout = setTimeout(() => {
+      this.isFilterLoading = false;
+    }, 280);
+  }
+
+  scrollToNewCard(targetIndex: number) {
+    if (typeof document === 'undefined') return;
+    setTimeout(() => {
+      const el = document.getElementById(`ticket-card-${targetIndex}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 300);
+  }
+
   loadMoreTickets() {
-    this.displayLimit += 5;
+    const prevCount = this.visibleTickets.length;
+    const isMobile = this.isMobileView;
+    const step = isMobile ? 3 : 6;
+    const remaining = this.remainingTicketCount;
+    if (remaining <= step * 2) {
+      this.displayLimit = this.filteredTickets.length;
+    } else {
+      this.displayLimit += step;
+    }
+    this.triggerFilterSkeleton();
+    this.scrollToNewCard(prevCount);
+  }
+
+  showAllTickets() {
+    const prevCount = this.visibleTickets.length;
+    this.displayLimit = this.filteredTickets.length;
+    this.triggerFilterSkeleton();
+    this.scrollToNewCard(prevCount);
+  }
+
+  showLessTickets() {
+    this.displayLimit = this.defaultDisplayLimit;
+    this.triggerFilterSkeleton();
+    this.scrollToHistory();
+  }
+
+  emailTouched = false;
+
+  get isEmailInvalid(): boolean {
+    const val = this.form.email.trim();
+    if (!val) {
+      return this.emailTouched;
+    }
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    return !emailPattern.test(val);
   }
 
   get isFormValid(): boolean {
     const nameValid = this.form.fullName.trim().length >= 2;
-    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    const emailValid = emailPattern.test(this.form.email.trim());
+    const emailValid = !this.isEmailInvalid && this.form.email.trim().length > 0;
     const roleValid = !!this.form.role;
     const subjectValid = !!this.form.subject;
 
@@ -162,13 +246,60 @@ export class ContactComponent implements OnInit, OnDestroy {
     return q.length >= 4;
   }
 
+  toggleRoleDropdown() {
+    this.isRoleDropdownOpen = !this.isRoleDropdownOpen;
+    if (this.isRoleDropdownOpen) {
+      this.isDropdownOpen = false;
+    }
+  }
+
+  selectRole(value: 'client' | 'advocate') {
+    this.form.role = value;
+    this.isRoleDropdownOpen = false;
+  }
+
+  get currentRoleLabel(): string {
+    if (this.form.role === 'client') return 'Client Seeking Legal Help';
+    if (this.form.role === 'advocate') return 'Practicing Advocate';
+    return 'Select your role...';
+  }
+
   toggleDropdown() {
     this.isDropdownOpen = !this.isDropdownOpen;
+    if (this.isDropdownOpen) {
+      this.isRoleDropdownOpen = false;
+    }
   }
 
   selectSubject(value: string) {
     this.form.subject = value;
     this.isDropdownOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as Node;
+    if (this.roleDropdownRef && !this.roleDropdownRef.nativeElement.contains(target)) {
+      this.isRoleDropdownOpen = false;
+    }
+    if (this.subjectDropdownRef && !this.subjectDropdownRef.nativeElement.contains(target)) {
+      this.isDropdownOpen = false;
+    }
+    if (this.dropdownRef && !this.dropdownRef.nativeElement.contains(target)) {
+      this.isDropdownOpen = false;
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (typeof window !== 'undefined') {
+      const isMobile = window.innerWidth < 640;
+      if (isMobile && this.displayLimit === 6) {
+        this.displayLimit = 3;
+      } else if (!isMobile && this.displayLimit < 6) {
+        this.displayLimit = 6;
+      }
+    }
   }
 
   requestTypes = [
@@ -233,13 +364,6 @@ export class ContactComponent implements OnInit, OnDestroy {
 
   @ViewChild('dropdownRef') dropdownRef?: ElementRef;
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    if (this.isDropdownOpen && this.dropdownRef && !this.dropdownRef.nativeElement.contains(event.target)) {
-      this.isDropdownOpen = false;
-    }
-  }
-
   ngOnInit() {
     this.titleService.setTitle('Contact Support & Grievance Desk — LegalConnect');
     this.metaService.updateTag({ name: 'description', content: 'Get help from LegalConnect support. Raise tickets, request callbacks, or file statutory grievances under the DPDP Act 2023.' });
@@ -256,9 +380,12 @@ export class ContactComponent implements OnInit, OnDestroy {
     });
 
     if (typeof window !== 'undefined') {
+      this.displayLimit = window.innerWidth < 640 ? 3 : 6;
       this.timerInterval = setInterval(() => {
         this.now = Date.now();
       }, 1000);
+    } else {
+      this.displayLimit = 6;
     }
   }
 
@@ -583,37 +710,25 @@ export class ContactComponent implements OnInit, OnDestroy {
     }
   }
 
-  submitFollowUp(ticket: any) {
-    const status = this.getFollowUpStatus(ticket);
-    if (!status.allowed) {
-      this.snackbar.show(status.reason || 'Follow-up restricted.', 'warning');
-      return;
-    }
+  handleFollowUpSubmit(event: { ticket: any; text: string }, cardComp?: any) {
+    const { ticket, text } = event;
 
-    if (!this.followUpText.trim()) {
-      this.snackbar.show('Please enter a follow-up note.', 'warning');
-      return;
-    }
-
-    this.isSubmittingFollowUp = true;
-
-    this.infoApi.addFollowUpNote(ticket.ticketId, this.followUpText.trim()).subscribe({
+    this.infoApi.addFollowUpNote(ticket.ticketId, text).subscribe({
       next: (res) => {
-        this.isSubmittingFollowUp = false;
+        if (cardComp) cardComp.isSubmittingFollowUp = false;
         if (res && res.success) {
           if (!ticket.notes) ticket.notes = [];
-          const addedNote = res.note || { text: this.followUpText, date: new Date(), sender: 'user' };
+          const addedNote = res.note || { text, date: new Date(), sender: 'user' };
           ticket.notes.push(addedNote);
           this.syncTicketToLocalHistory(ticket);
           this.snackbar.show('Follow-up note appended successfully!', 'success');
-          this.followUpText = '';
-          this.activeFollowUpTicketId = null;
+          if (cardComp) cardComp.resetFollowUp();
         } else {
           this.snackbar.show(res.message || 'Failed to post follow-up note.', 'warning');
         }
       },
       error: (err) => {
-        this.isSubmittingFollowUp = false;
+        if (cardComp) cardComp.isSubmittingFollowUp = false;
         const msg = err.error?.message || 'Failed to post follow-up note. Please try again.';
         this.snackbar.show(msg, 'error');
       }
@@ -656,6 +771,22 @@ export class ContactComponent implements OnInit, OnDestroy {
         this.ticketToWithdraw = null;
       }
     });
+  }
+
+  scrollToHistory() {
+    if (typeof document !== 'undefined') {
+      const el = document.getElementById('history-section');
+      if (el) {
+        const navbarOffset = window.innerWidth < 640 ? 50 : 60;
+        const elementPosition = el.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - navbarOffset;
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth'
+        });
+      }
+    }
   }
 
   // ═══ 🚀 TRACKBY OPTIMIZATIONS FOR NG-FOR LOOPS ═══
