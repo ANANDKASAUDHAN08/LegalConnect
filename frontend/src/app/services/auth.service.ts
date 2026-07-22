@@ -95,6 +95,13 @@ export class AuthService {
   }
 
   checkSession(): Observable<boolean> {
+    const token = this.getToken();
+    if (!token) {
+      this.clearAuthState();
+      this._isSessionLoaded.next(true);
+      return of(false);
+    }
+
     return this.http.get<UserProfile>(`${this.apiUrl}/me`, this.httpOptions).pipe(
       tap(user => {
         if (user && user.isAuthenticated !== false) {

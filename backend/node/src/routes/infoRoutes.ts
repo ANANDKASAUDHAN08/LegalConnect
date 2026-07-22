@@ -355,7 +355,12 @@ router.get('/contact/track/:query', async (req: Request, res: Response) => {
         }]
       });
     } else {
-      res.status(404).json({ success: false, message: `No active ticket or inquiry found for "${req.params.query}".` });
+      res.json({
+        success: true,
+        count: 0,
+        tickets: [],
+        message: `No active tickets found for "${req.params.query}".`
+      });
     }
   }
 });
@@ -377,7 +382,7 @@ router.post('/contact/followup', async (req: Request, res: Response) => {
     ticketDoc = await ContactTicket.findOne({
       ticketId: { $regex: new RegExp(`^${cleanTicketId}$`, 'i') }
     }).lean();
-  } catch (e) {}
+  } catch (e) { }
 
   const cachedTicket = contactSubmissions.find(t => t.ticketId.toUpperCase() === cleanTicketId);
   const existingNotes: any[] = (ticketDoc?.notes || (cachedTicket as any)?.notes || []);

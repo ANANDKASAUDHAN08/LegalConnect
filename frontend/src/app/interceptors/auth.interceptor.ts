@@ -11,11 +11,14 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
 
-  // Don't attach token to the refresh endpoint itself
-  const isRefreshRequest = req.url.includes('/auth/refresh');
+  // Don't attach token or attempt refresh for auth endpoints
+  const isAuthEndpoint = req.url.includes('/auth/refresh') ||
+                         req.url.includes('/auth/login') ||
+                         req.url.includes('/auth/me') ||
+                         req.url.includes('/auth/logout');
 
   let clonedReq = req;
-  if (token && !isRefreshRequest) {
+  if (token && !isAuthEndpoint) {
     clonedReq = req.clone({
       headers: req.headers.set('Authorization', `Bearer ${token}`)
     });
@@ -23,8 +26,8 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // Only attempt refresh on 401 errors for non-refresh, non-login requests
-      if (error.status === 401 && !isRefreshRequest && !req.url.includes('/auth/login')) {
+      // Only attempt refresh on 401 errors for non-auth endpoints
+      if (error.status === 401 && !isAuthEndpoint) {
         return handle401Error(authService, req, next);
       }
       return throwError(() => error);
