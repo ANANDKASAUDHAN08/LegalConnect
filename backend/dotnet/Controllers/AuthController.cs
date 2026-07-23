@@ -230,7 +230,7 @@ namespace CoreApi.Controllers
                 SameSite = SameSiteMode.Lax
             });
 
-            Response.Cookies.Delete("lc_refresh", new CookieOptions
+            Response.Cookies.Delete("__session", new CookieOptions
             {
                 HttpOnly = true,
                 Secure = isSecure,
@@ -246,7 +246,7 @@ namespace CoreApi.Controllers
         public async Task<IActionResult> RefreshToken()
         {
             Console.WriteLine("[DEBUG AUTH] RefreshToken endpoint hit.");
-            var rawRefreshToken = Request.Cookies["lc_refresh"];
+            var rawRefreshToken = Request.Cookies["__session"];
             if (string.IsNullOrEmpty(rawRefreshToken))
             {
                 Console.WriteLine("[DEBUG AUTH] No lc_refresh cookie found in request.");
@@ -403,7 +403,7 @@ namespace CoreApi.Controllers
             {
                 // Check if the client attempted to authenticate (sent a token in header or cookie)
                 var authHeader = Request.Headers["Authorization"].ToString();
-                var hasTokenCookie = Request.Cookies.ContainsKey("lc_token") || Request.Cookies.ContainsKey("lc_refresh");
+                var hasTokenCookie = Request.Cookies.ContainsKey("lc_token") || Request.Cookies.ContainsKey("__session");
                 if (!string.IsNullOrEmpty(authHeader) || hasTokenCookie)
                 {
                     // Client tried to authenticate but failed (e.g. token expired)
@@ -1015,7 +1015,7 @@ namespace CoreApi.Controllers
                 Expires = DateTime.UtcNow.AddDays(30),
                 Path = "/"
             };
-            Response.Cookies.Append("lc_refresh", refreshToken, cookieOptions);
+            Response.Cookies.Append("__session", refreshToken, cookieOptions);
         }
 
         private (string rawToken, RefreshToken entity) GenerateRefreshToken(int userId, string sessionId)

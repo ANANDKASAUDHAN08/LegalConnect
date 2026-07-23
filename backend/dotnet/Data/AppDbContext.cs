@@ -74,6 +74,9 @@ namespace CoreApi.Data
                 .HasForeignKey(s => s.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<ActiveSession>()
+                .HasIndex(s => s.TokenId);
+
             modelBuilder.Entity<LoginHistory>()
                 .HasOne(h => h.User)
                 .WithMany()

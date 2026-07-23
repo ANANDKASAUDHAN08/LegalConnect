@@ -141,11 +141,9 @@ export class AuthService {
       map(user => user && user.isAuthenticated !== false),
       catchError((error) => {
         // TRANSIENT FAILURE RESILIENCE:
-        // If backend is temporarily unreachable (status 0) — whether truly offline
-        // or just a dev-server restart / brief network blip — preserve cached auth
-        // state instead of logging the user out. This is the industry-standard
-        // "offline-first" pattern used by apps like Gmail, Slack, and Notion.
-        const isTransient = error.status === 0;
+        // Treat status 0 and 5xx (server errors/restarts) as transient, keeping the
+        // user's session active rather than logging them out.
+        const isTransient = error.status === 0 || (error.status >= 500 && error.status < 600);
         if (isTransient) {
           const cached = localStorage.getItem('lc_user_profile');
           const token = localStorage.getItem('lc_token');
@@ -156,11 +154,11 @@ export class AuthService {
               this._isLoggedIn.next(true);
               this._isSessionLoaded.next(true);
               this.token = token;
-              console.warn('[AuthService] Backend unreachable — using cached session. Will re-validate when connectivity resumes.');
+              console.warn('[AuthService] Backend unreachable or server error — using cached session. Will re-validate when connectivity resumes.');
               return of(true);
             } catch (e) { }
           }
-          console.error('[AuthService] Backend unreachable and no cached session available.');
+          console.error('[AuthService] Backend unreachable/server error and no cached session available.');
         }
 
         // DEFINITIVE AUTH FAILURE (401, 403, or no cached fallback):
@@ -314,19 +312,26 @@ export class AuthService {
     this.clearAutoLogout();
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
-      if (payload.exp) {
-        const expiresAt = payload.exp * 1000; // convert to ms
+      if (payload.exp && payload.iat) {
+        // Clock-drift resilient scheduling: use duration relative to issued time (iat)
+        const tokenDurationSec = payload.exp - payload.iat;
+        const refreshDelaySec = Math.max(tokenDurationSec - 120, 0); // Refresh 2 minutes before expiry
+        this._logoutTimerId = setTimeout(() => {
+          this._proactiveRefreshRetries = 0;
+          this.attemptProactiveRefresh();
+        }, refreshDelaySec * 1000);
+      } else if (payload.exp) {
+        // Fallback if iat is missing
+        const expiresAt = payload.exp * 1000;
         const now = Date.now();
         const msUntilExpiry = expiresAt - now;
         if (msUntilExpiry > 0) {
-          // Refresh 2 minutes before the token expires
           const refreshAt = Math.max(msUntilExpiry - 120000, 0);
           this._logoutTimerId = setTimeout(() => {
             this._proactiveRefreshRetries = 0;
             this.attemptProactiveRefresh();
           }, refreshAt);
         } else {
-          // Token already expired — try refresh immediately
           this._proactiveRefreshRetries = 0;
           this.attemptProactiveRefresh();
         }
@@ -345,16 +350,22 @@ export class AuthService {
   private attemptProactiveRefresh(): void {
     this.refreshToken().subscribe({
       error: (err) => {
-        const isTransient = err.status === 0 || err.status === 504 || err.status === 503;
+        // Treat status 0 and 5xx (server errors/restarts) as transient
+        const isTransient = err.status === 0 || (err.status >= 500 && err.status < 600);
 
         if (isTransient && this._proactiveRefreshRetries < this.MAX_REFRESH_RETRIES) {
           this._proactiveRefreshRetries++;
           const delay = this.RETRY_DELAY_MS * this._proactiveRefreshRetries;
           console.warn(`[AuthService] Proactive refresh failed (transient). Retry ${this._proactiveRefreshRetries}/${this.MAX_REFRESH_RETRIES} in ${delay}ms.`);
           this._logoutTimerId = setTimeout(() => this.attemptProactiveRefresh(), delay);
-        } else {
-          console.error('[AuthService] Proactive refresh failed permanently:', err.status || err.message);
+        } else if (!isTransient) {
+          // Only log out on definitive auth failure (401/403).
+          // If we fail on transient errors after max retries, we keep the session
+          // and let the next lazy interceptor call handle the refresh.
+          console.error('[AuthService] Proactive refresh failed permanently (auth error):', err.status || err.message);
           this.handleSessionExpired();
+        } else {
+          console.warn('[AuthService] Proactive refresh failed permanently (transient server down). Session preserved.');
         }
       }
     });

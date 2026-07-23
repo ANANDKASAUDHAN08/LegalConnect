@@ -14,13 +14,15 @@ export class DashboardComponent implements OnInit {
   constructor(
     private authService: AuthService,
     private router: Router
-  ) {}
+  ) { }
 
   ngOnInit() {
     this.authService.currentUser$.subscribe(user => {
       if (user) {
         if (user.role === 'Lawyer') {
           this.router.navigate(['/lawyer/workstation']);
+        } else if (user.role === 'Admin') {
+          this.router.navigate(['/admin/resources']);
         } else {
           this.router.navigate(['/client/portal']);
         }
@@ -28,5 +30,3 @@ export class DashboardComponent implements OnInit {
     });
   }
 }
-
-

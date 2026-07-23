@@ -31,7 +31,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private snackbar: SnackbarService
-  ) {}
+  ) { }
 
   ngOnInit() {
     const rememberedEmail = localStorage.getItem('lc_remembered_email');
@@ -88,10 +88,16 @@ export class LoginComponent implements OnInit, OnDestroy {
 
         // Complete session if token was received
         this.auth.completeLogin().subscribe({
-          next: () => {
-            this.snackbar.show('Welcome back! Signed in successfully.', 'success');
-            const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-            this.router.navigateByUrl(returnUrl);
+          next: (isLoggedIn) => {
+            if (isLoggedIn) {
+              this.snackbar.show('Welcome back! Signed in successfully.', 'success');
+              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+              this.router.navigateByUrl(returnUrl);
+            } else {
+              this.error.set('Session initialization failed.');
+              this.snackbar.show('Failed to complete session setup.', 'error');
+              this.loading.set(false);
+            }
           },
           error: () => {
             this.loading.set(false);

@@ -11,11 +11,9 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
   const token = authService.getToken();
 
-  // Don't attach token or attempt refresh for auth endpoints
+  // Don't attach token or attempt refresh for endpoints that authenticate/rotate sessions
   const isAuthEndpoint = req.url.includes('/auth/refresh') ||
-                         req.url.includes('/auth/login') ||
-                         req.url.includes('/auth/me') ||
-                         req.url.includes('/auth/logout');
+    req.url.includes('/auth/login');
 
   let clonedReq = req;
   if (token && !isAuthEndpoint) {
