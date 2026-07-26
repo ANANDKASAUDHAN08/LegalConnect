@@ -10,9 +10,12 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.ResponseCompression;
 
+using LegalConnect.Middleware;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddHealthChecks();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
@@ -129,6 +132,8 @@ using (var scope = app.Services.CreateScope())
     DbSeeder.Seed(context, app.Configuration);
 }
 
+app.UseMiddleware<GlobalExceptionMiddleware>();
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -156,6 +161,7 @@ app.UseAuthorization();
 
 app.UseResponseCompression();
 
+app.MapHealthChecks("/api/health");
 app.MapControllers();
 
 app.Run();

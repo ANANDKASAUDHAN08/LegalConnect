@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, isDevMode } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -80,7 +80,7 @@ export class DocumentTemplateService {
 
     // Offline auto-sync listener
     window.addEventListener('online', () => {
-      console.log('Browser back online, syncing pending drafts and custom templates...');
+      if (isDevMode()) console.log('Browser back online, syncing pending drafts and custom templates...');
       this.syncPendingDrafts();
       this.syncPendingTemplates();
     });

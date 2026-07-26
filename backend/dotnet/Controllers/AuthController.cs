@@ -21,6 +21,8 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Security.Cryptography;
 
+using Microsoft.Extensions.Logging;
+
 namespace CoreApi.Controllers
 {
     [Route("api/[controller]")]
@@ -32,14 +34,16 @@ namespace CoreApi.Controllers
         private readonly IEmailService _emailService;
         private readonly IWebHostEnvironment _env;
         private readonly ILawyerSyncService _syncService;
+        private readonly ILogger<AuthController> _logger;
 
-        public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService, IWebHostEnvironment env, ILawyerSyncService syncService)
+        public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService, IWebHostEnvironment env, ILawyerSyncService syncService, ILogger<AuthController> logger)
         {
             _context = context;
             _configuration = configuration;
             _emailService = emailService;
             _env = env;
             _syncService = syncService;
+            _logger = logger;
         }
 
         [HttpPost("register")]
