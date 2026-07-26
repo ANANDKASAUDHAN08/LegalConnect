@@ -1,0 +1,155 @@
+<div class="page-container">
+  <!-- Header -->
+  <div class="page-header-row">
+    <div>
+      <h2 class="page-title">Bookmarks & Research Telemetry</h2>
+      <p class="page-subtitle">Read-only anonymized research behavior analytics, most bookmarked Bare Act sections &
+        researcher leaderboards.</p>
+    </div>
+  </div>
+
+  <!-- KPI Overview Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card glass-panel cursor-pointer"
+      [adminTooltip]="'Total statutory section bookmarks saved by all platform users'" tooltipPosition="top">
+      <div class="kpi-icon icon-indigo">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Total Section Bookmarks</span>
+        <h3 class="kpi-value">{{ isLoading ? '...' : (stats?.totalBookmarks || 0 | number) }}</h3>
+        <span class="kpi-trend trend-up">Platform Saved Items</span>
+      </div>
+    </div>
+
+    <div class="kpi-card glass-panel cursor-pointer"
+      [adminTooltip]="'Total private research annotations & notes created by legal researchers'" tooltipPosition="top">
+      <div class="kpi-icon icon-emerald">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Research Notes Created</span>
+        <h3 class="kpi-value">{{ isLoading ? '...' : (stats?.totalNotes || 0 | number) }}</h3>
+        <span class="kpi-trend trend-neutral">Private Annotations</span>
+      </div>
+    </div>
+
+    <div class="kpi-card glass-panel cursor-pointer"
+      [adminTooltip]="'Most frequently bookmarked Bare Act in the database'" tooltipPosition="top">
+      <div class="kpi-icon icon-amber">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+          </polygon>
+        </svg>
+      </div>
+      <div class="kpi-content">
+        <span class="kpi-label">Top Saved Statutory Act</span>
+        <h3 class="kpi-value">{{ isLoading ? '...' : (stats?.bookmarksByAct?.[0]?.actShortName || 'BNS') }}</h3>
+        <span class="kpi-trend trend-up">{{ stats?.bookmarksByAct?.[0]?.count || 0 }} bookmarks</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Grid -->
+  <div class="dashboard-grid">
+    <!-- Top 10 Most Bookmarked Sections Leaderboard -->
+    <div class="glass-panel content-card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Top 10 Most Bookmarked Sections</h3>
+          <p class="card-subtitle">Highest volume statutory sections saved by legal researchers.</p>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (isLoading) {
+        @for (i of [1,2,3,4,5]; track $index) {
+        <admin-skeleton height="36px" borderRadius="8px"></admin-skeleton>
+        }
+        } @else if (!stats?.topBookmarkedSections?.length) {
+        <div class="empty-state">No section bookmarks recorded in database yet.</div>
+        } @else {
+        <div class="section-list">
+          @for (item of stats.topBookmarkedSections; track item.actShortName + item.sectionNumber; let idx = $index) {
+          <div class="section-item cursor-pointer"
+            [adminTooltip]="'Section ' + item.sectionNumber + ' of ' + item.actTitle + ' saved ' + item.count + ' times'">
+            <div class="rank-badge">{{ idx + 1 }}</div>
+            <div class="section-info">
+              <div class="font-medium text-white">{{ item.actShortName }} — Section {{ item.sectionNumber }}</div>
+              <div class="text-xs text-slate-400 truncate max-w-sm">{{ item.actTitle }}</div>
+            </div>
+            <div class="count-badge" [adminTooltip]="item.count + ' total users have bookmarked this section'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+              </svg>
+              <span>{{ item.count }} saves</span>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Top Anonymized Researchers -->
+    <div class="glass-panel content-card">
+      <div class="card-header">
+        <div>
+          <h3 class="card-title">Top Active Legal Researchers</h3>
+          <p class="card-subtitle">Anonymized user research telemetry breakdown (DPDPA Compliant).</p>
+        </div>
+      </div>
+      <div class="card-body">
+        @if (isLoading) {
+        @for (i of [1,2,3,4,5]; track $index) {
+        <admin-skeleton height="36px" borderRadius="8px"></admin-skeleton>
+        }
+        } @else if (!stats?.topResearchers?.length) {
+
+        <div class="empty-state">No user research telemetry available.</div>
+        } @else {
+        <div class="researcher-list">
+          @for (r of stats.topResearchers; track r.clientId) {
+          <div class="researcher-item">
+            <div class="user-avatar"
+              [adminTooltip]="r.role === 'Lawyer' ? 'Verified Lawyer Account' : 'Client Account'">
+              @if (r.role === 'Lawyer') {
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="text-indigo-400">
+                <path
+                  d="M12 3v18M3 7l6 3m6-3l6 3M3 13l6 3m6-3l6 3M6 10a3 3 0 1 0 0-6 3 3 0 0 0 0 6zm12 0a3 3 0 1 0 0-6 3 3 0 0 0 0 6z">
+                </path>
+              </svg>
+              } @else {
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="text-slate-400">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              }
+            </div>
+            <div class="user-info">
+              <div class="font-medium text-white">{{ r.userName }}</div>
+              <div class="text-xs text-slate-400">{{ r.role }} Account</div>
+            </div>
+            <div class="stats-pills">
+              <span class="pill pill-indigo" [adminTooltip]="'Total section bookmarks saved by ' + r.userName">{{
+                r.bookmarkCount }} Bookmarks</span>
+              <span class="pill pill-emerald" [adminTooltip]="'Total research notes authored by ' + r.userName">{{
+                r.noteCount }} Notes</span>
+            </div>
+          </div>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

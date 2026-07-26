@@ -1,0 +1,143 @@
+<div class="support-page stagger-children">
+  <!-- Filter & Search Bar -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div class="search-box">
+      <input type="text" class="form-input" placeholder="Search inquiries by name, email, or subject..."
+        [value]="search" (input)="onSearchInput($any($event.target).value)"
+        [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
+    </div>
+
+    <div class="filter-group">
+      <admin-select [options]="statusOptions" [value]="selectedStatus"
+        (valueChange)="selectedStatus = $event; fetchContacts();" minWidth="180px"
+        [adminTooltip]="'Filter by ticket status'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary" (click)="fetchContacts()" [adminTooltip]="'Refresh support ticket directory'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Refresh Desk</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Support Data Table -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Applicant / Email</th>
+            <th>Subject</th>
+            <th>Source</th>
+            <th>Status</th>
+            <th>Submitted At</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <div>
+                  <admin-skeleton width="120px" height="14px" />
+                  <admin-skeleton width="140px" height="11px" class="mt-1" />
+                </div>
+              </div>
+            </td>
+            <td><admin-skeleton width="160px" height="14px" /></td>
+            <td><admin-skeleton width="90px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="90px" height="14px" /></td>
+            <td class="text-right"><admin-skeleton width="130px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (contact of contacts; track contact.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ contact.fullName.charAt(0).toUpperCase() }}</div>
+                <div>
+                  <div class="user-name">{{ contact.fullName }}</div>
+                  <div class="text-xs text-secondary">{{ contact.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="font-medium max-w-xs truncate">{{ contact.subject }}</td>
+            <td>
+              <span class="badge" [class.badge-info]="!contact.source?.includes('MongoDB')"
+                [class.badge-warning]="contact.source?.includes('MongoDB')">
+                {{ contact.source || 'Standard Contact' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="{
+                    'badge-success': contact.status === 'Replied',
+                    'badge-info': contact.status === 'New',
+                    'badge-neutral': contact.status === 'Read'
+                  }">
+                {{ contact.status }}
+              </span>
+            </td>
+            <td class="text-xs text-secondary">{{ contact.createdAt | date:'mediumDate' }}</td>
+            <td class="text-right">
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-sm" (click)="viewTicket(contact)"
+                  [adminTooltip]="'View detailed ticket content'" tooltipPosition="left">
+                  View
+                </button>
+                @if (contact.status !== 'Replied') {
+                <button class="btn btn-success btn-sm" (click)="updateStatus(contact, 'Replied')"
+                  [adminTooltip]="'Mark inquiry as resolved/replied'" tooltipPosition="left">
+                  Mark Replied
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="empty-state py-8 text-center">
+              <div class="text-muted mb-2">No support inquiries or statutory grievances found.</div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  @if (selectedTicket) {
+  <div class="modal-backdrop animate-in" (click)="selectedTicket = null">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>{{ selectedTicket.subject }}</h3>
+          <p class="text-xs text-secondary">From: {{ selectedTicket.fullName }} ({{ selectedTicket.email }})</p>
+        </div>
+        <button class="btn-close" (click)="selectedTicket = null">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="ticket-content-box">
+          {{ selectedTicket.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-success" (click)="updateStatus(selectedTicket, 'Replied'); selectedTicket = null;">
+          Mark as Resolved
+        </button>
+        <button class="btn btn-secondary" (click)="selectedTicket = null">Close</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

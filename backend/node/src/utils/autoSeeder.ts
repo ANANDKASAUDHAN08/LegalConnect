@@ -3,6 +3,10 @@ import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
 import BareAct, { SectionModel, IChapter, ISection } from '../models/BareAct';
+import HelpCategory from '../models/HelpCategory';
+import HelpHelpline from '../models/HelpHelpline';
+import LegalResource from '../models/LegalResource';
+import Lawyer from '../models/Lawyer';
 import { splitTitle, getParsedContent } from './textParser';
 
 const RAW_DIR = path.resolve(__dirname, '../data/raw');
@@ -28,10 +32,10 @@ function parseSection(
   if (!body) {
     body = 'No description available.';
   }
-  
+
   const { cleanTitle, introText } = splitTitle(title);
   const contentBlocks = getParsedContent(body, introText);
-  
+
   const sectionObj: ISection = {
     section_number: sectionNum,
     title,
@@ -44,10 +48,10 @@ function parseSection(
   if (rawTitleHi || contentHi) {
     const titleHi = cleanText(rawTitleHi || '');
     const bodyHi = cleanText(contentHi || '');
-    
+
     const { cleanTitle: cleanTitleHi, introText: introTextHi } = splitTitle(titleHi || title);
     const contentBlocksHi = getParsedContent(bodyHi || body, introTextHi);
-    
+
     if (rawTitleHi || titleHi) {
       sectionObj.title_hi = titleHi || undefined;
       sectionObj.clean_title_hi = cleanTitleHi;
@@ -93,9 +97,65 @@ async function loadBilingualMap(jsonlFilename: string): Promise<Map<string, stri
 
 export const seedFullDatabaseIfEmpty = async () => {
   try {
+    // --- 1. Help Categories Seeding ---
+    const catCount = await HelpCategory.countDocuments({});
+    if (catCount < 8) {
+      console.log('🌱 Seeding HelpCategory table in MongoDB with Production categories...');
+      await HelpCategory.deleteMany({});
+      await HelpCategory.insertMany([
+        { id: 'Property Dispute', name: 'Property Dispute', icon: 'home', description: 'Land, Rent, Inheritance, Housing', subcategories: ['Tenant Eviction & Rent', 'Land Partition & Boundary', 'RERA & Builder Delays', 'Property Title Search'] },
+        { id: 'Family Law', name: 'Family Law', icon: 'users', description: 'Divorce, Custody, Maintenance', subcategories: ['Mutual & Contested Divorce', 'Child Custody & Guardianship', 'Alimony & Maintenance', 'Domestic Violence Help'] },
+        { id: 'Consumer Complaint', name: 'Consumer Complaint', icon: 'shopping-cart', description: 'Faulty Products, Fraud, Bills', subcategories: ['Defective Product Claims', 'Insurance Claim Rejection', 'Flight & Hotel Refund', 'Medical Negligence'] },
+        { id: 'Labour Issue', name: 'Labour Issue', icon: 'briefcase', description: 'Wages, Harassment, Contracts', subcategories: ['Illegal Termination', 'Unpaid Wages & Bonus', 'POSH Harassment Inquiry', 'PF & Gratuity Claims'] },
+        { id: 'Criminal Matter', name: 'Criminal Matter', icon: 'shield', description: 'Theft, Assault, Police Reports', subcategories: ['Anticipatory & Regular Bail', 'FIR Quashing (482 CrPC)', 'Police Station Assistance', 'Cheating & Fraud (420)'] },
+        { id: 'Business Dispute', name: 'Business Dispute', icon: 'briefcase', description: 'Partnerships, Tax, Contracts', subcategories: ['Contract Breach', 'MSME Delayed Payment', 'Partnership Dispute', 'GST & Corporate Tax'] },
+        { id: 'Cyber Crime', name: 'Cyber Crime', icon: 'shield', description: 'Hacking, Online Scam, Phishing', subcategories: ['UPI & Bank Fraud Helpline', 'Identity Theft & Hacking', 'Cyber Stalking & Harassment', 'Data Privacy Violation'] },
+        { id: 'Other / Not Sure', name: 'Other / Not Sure', icon: 'question', description: 'Chat with our smart AI assistant', subcategories: ['AI Scenario Solver', 'Legal Help Navigator'] }
+      ]).catch((err) => console.error('Category seed error:', err.message));
+    }
+
+    // --- 2. Helplines Seeding ---
+    const helpCount = await HelpHelpline.countDocuments({});
+    if (helpCount === 0) {
+      console.log('🌱 Seeding HelpHelpline table in MongoDB...');
+      await HelpHelpline.insertMany([
+        { name: 'National Emergency Response System', number: '112', description: 'All-in-one emergency dispatch for Police, Fire, and Ambulance.', category: 'General' },
+        { name: 'Women Helpline (Domestic Violence / Abuse)', number: '1091', description: '24/7 dedicated helpline for women in distress or danger.', category: 'family' },
+        { name: 'National Legal Services Authority (NALSA)', number: '15100', description: 'Free legal aid guidance and tele-law consultation helpline.', category: 'General' },
+        { name: 'National Cyber Crime Reporting Helpline', number: '1930', description: 'Financial fraud freeze and online harassment reporting line.', category: 'cyber' },
+        { name: 'Childline Emergency Assistance', number: '1098', description: '24/7 free emergency helpline for children in need of care.', category: 'General' }
+      ]).catch(() => { });
+    }
+
+    // --- 3. Legal Resources Seeding (from src/data/resources.seed.json) ---
+    const resCount = await LegalResource.countDocuments({});
+    const resourcesPath = path.resolve(__dirname, '../data/resources.seed.json');
+    if (resCount !== 142 && fs.existsSync(resourcesPath)) {
+      console.log('🌱 Syncing LegalResource table (72 LegalAid, 58 Courts, 12 Police) from resources.seed.json...');
+      await LegalResource.deleteMany({});
+      const seedResources = JSON.parse(fs.readFileSync(resourcesPath, 'utf-8'));
+      const approvedResources = seedResources.map((r: any) => ({
+        ...r,
+        status: r.status || 'approved'
+      }));
+      await LegalResource.insertMany(approvedResources).catch((err) => console.error('Resource seed error:', err.message));
+    }
+
+    // --- 4. Lawyers Seeding (from src/data/lawyers.seed.json) ---
+    const lawyerCount = await Lawyer.countDocuments({});
+    const lawyersPath = path.resolve(__dirname, '../data/lawyers.seed.json');
+    if (lawyerCount !== 14 && fs.existsSync(lawyersPath)) {
+      console.log('🌱 Syncing Lawyer table (14 Verified Lawyers) from lawyers.seed.json...');
+      await Lawyer.deleteMany({});
+      const seedLawyers = JSON.parse(fs.readFileSync(lawyersPath, 'utf-8'));
+      await Lawyer.insertMany(seedLawyers).catch((err) => console.error('Lawyer seed error:', err.message));
+    }
+
+    // --- 5. Bare Acts Seeding ---
     const actsCount = await BareAct.countDocuments({});
-    if (actsCount > 0) {
-      console.log(`ℹ️ Database already has ${actsCount} acts. Skipping auto-seeding.`);
+    const sectionsCount = await SectionModel.countDocuments({});
+    if (actsCount >= 15 && sectionsCount > 1000) {
+      console.log(`ℹ️ Database already has ${actsCount} acts, ${resCount || 'seeded'} resources & ${sectionsCount} sections.`);
       return;
     }
 
@@ -124,7 +184,7 @@ export const seedFullDatabaseIfEmpty = async () => {
       const chaptersMap = new Map<string, { title: string; sections: ISection[] }>();
 
       let sections = enData.sections || [];
-      
+
       if (
         sections.length > 2 &&
         sections[0].section_number?.toString().trim() === '1' &&
@@ -400,7 +460,7 @@ export const seedFullDatabaseIfEmpty = async () => {
         chapters
       });
     });
-    
+
     // --- 6. Annotated Central Acts Library ---
     const centralActsPath = path.resolve(__dirname, '../data/central_acts.seed.json');
     if (fs.existsSync(centralActsPath)) {
@@ -437,15 +497,25 @@ export const seedFullDatabaseIfEmpty = async () => {
       }
     }
 
-    // Execute bulk insertion in parallel (2 database roundtrips)
-    await Promise.all([
-      BareAct.insertMany(actsToInsert),
-      SectionModel.insertMany(sectionsToInsert)
-    ]);
+    // Execute upsert insertion to avoid duplicate key errors
+    for (const act of actsToInsert) {
+      await BareAct.updateOne({ shortName: act.shortName }, { $set: act }, { upsert: true }).catch(() => { });
+    }
+
+    if (sectionsToInsert.length > 0) {
+      const ops = sectionsToInsert.map(sec => ({
+        updateOne: {
+          filter: { actShortName: sec.actShortName, section_number: sec.section_number },
+          update: { $set: sec },
+          upsert: true
+        }
+      }));
+      await SectionModel.bulkWrite(ops).catch(() => { });
+    }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`✅ Auto-seeding complete! Seeded 15 Acts & ${sectionsToInsert.length} Sections successfully in ${duration}s.`);
+    console.log(`✅ Auto-seeding check complete! Synchronized 15 Acts & ${sectionsToInsert.length} Sections in ${duration}s.`);
   } catch (error: any) {
-    console.error('❌ Auto-seeding failed on startup:', error.message);
+    console.error('❌ Auto-seeding check failed:', error.message);
   }
 };

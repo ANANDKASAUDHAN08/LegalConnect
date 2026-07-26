@@ -3,20 +3,21 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import { seedFullDatabaseIfEmpty } from './utils/autoSeeder';
-import legalRoutes from './routes/legalRoutes';
-import lawyerRoutes from './routes/lawyerRoutes';
-import templateRoutes from './routes/templateRoutes';
-import infoRoutes from './routes/infoRoutes';
+import publicRoutes from './routes/public';
+import lawyerRoutes from './routes/lawyer';
+import adminRoutes from './routes/admin';
+import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
+// Global Middleware
 app.use(cors({
   origin: [
     'http://localhost:4200',
+    'http://localhost:4201',
     'http://localhost:4300',
     'https://legalconnect-501109.web.app',
     'https://legalconnect-501109.firebaseapp.com'
@@ -27,14 +28,20 @@ app.use(cors({
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
-// Routes
+// Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'Node.js API is running! 🚀' });
+  res.json({ status: 'Node.js API is running cleanly! 🚀' });
 });
-app.use('/api/legal', legalRoutes);
-app.use('/api/legal', templateRoutes);
+
+// Role-Separated Router Gateway
+app.use('/api/admin', adminRoutes);
+app.use('/api/legal/admin', adminRoutes);
+app.use('/api', publicRoutes);
 app.use('/api/lawyers', lawyerRoutes);
-app.use('/api/info', infoRoutes);
+
+// Global Error & Unmatched Route Middleware (Industry Standard)
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // Start Server
 const startServer = () => {

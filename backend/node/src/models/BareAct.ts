@@ -5,6 +5,8 @@ export interface ISectionOutline {
   section_number: string;
   title: string;
   title_hi?: string;
+  content?: string;
+  content_hi?: string;
   clean_title?: string;
   clean_title_hi?: string;
   introduction_text?: string;

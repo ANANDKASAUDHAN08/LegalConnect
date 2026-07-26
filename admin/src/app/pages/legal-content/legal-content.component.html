@@ -1,0 +1,45 @@
+<div class="legal-content-page stagger-children">
+  <!-- Header Bar -->
+  <div class="glass-card page-filters mb-3 animate-in">
+    <div>
+      <h3 class="text-primary font-bold text-lg">Bare Acts & Statutory Content Directory</h3>
+      <p class="text-xs text-secondary mt-1">Manage statutory legal acts, chapters, and section content stored in MongoDB.</p>
+    </div>
+
+    <button class="btn btn-secondary" (click)="fetchActs()" [adminTooltip]="'Refresh statutory acts list'" tooltipPosition="top">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="1 4 1 10 7 10"></polyline>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+      </svg>
+      <span>Refresh Directory</span>
+    </button>
+  </div>
+
+  <!-- Acts Grid -->
+  @if (isLoading) {
+    <div class="glass-card p-6">
+      <admin-skeleton type="table"></admin-skeleton>
+    </div>
+  } @else {
+    <div class="grid-3 mb-3 animate-in">
+      @for (act of acts; track act.shortName) {
+        <div class="glass-card act-card cursor-pointer" (click)="openActDetail(act.shortName, true)">
+          <div class="act-header">
+            <span class="badge purple font-mono font-bold">{{ act.shortName }}</span>
+            <span class="text-xs text-tertiary">Year {{ act.year }}</span>
+          </div>
+          <h4 class="act-title">{{ act.actName }}</h4>
+          <p class="act-desc">{{ act.description || 'Statutory legal act registered in database.' }}</p>
+          <div class="act-footer">
+            <span class="text-xs text-secondary font-medium">{{ act.chapters?.length || 0 }} Chapters</span>
+            <button class="btn btn-primary btn-sm" (click)="openActDetail(act.shortName, true); $event.stopPropagation();">
+              Inspect Sections (Full Width) ↗
+            </button>
+          </div>
+        </div>
+      } @empty {
+        <div class="glass-card p-8 text-center text-muted">No bare acts registered in MongoDB.</div>
+      }
+    </div>
+  }
+</div>

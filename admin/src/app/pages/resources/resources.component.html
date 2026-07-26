@@ -1,0 +1,583 @@
+<div class="resources-page stagger-children">
+  <!-- Header Bar -->
+  <div class="glass-card page-filters mb-3 animate-in">
+    <div>
+      <div class="flex items-center gap-1">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-info">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <h3 class="text-primary font-bold text-lg">Legal Resources & Institutional Directory</h3>
+      </div>
+      <p class="text-xs text-secondary mt-1">Manage verified court complexes, state legal services authorities
+        (SLSA/DLSA), police stations, and government legal aid desks.</p>
+    </div>
+
+    <div class="flex items-center gap-2">
+      <button class="btn btn-secondary" (click)="exportCSV()" [adminTooltip]="'Download resources directory as CSV'"
+        tooltipPosition="bottom">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Export CSV</span>
+      </button>
+
+      <button class="btn btn-secondary" (click)="openImportModal()"
+        [adminTooltip]="'Bulk import resources from JSON file/text'" tooltipPosition="bottom">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="17 8 12 3 7 8"></polyline>
+          <line x1="12" y1="3" x2="12" y2="15"></line>
+        </svg>
+        <span>Bulk Import</span>
+      </button>
+
+
+      <button class="btn btn-secondary" (click)="fetchResources()"
+        [adminTooltip]="'Refresh resources list from backend database'" tooltipPosition="bottom">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [class.animate-spin]="isLoading">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Refresh</span>
+      </button>
+
+      <button class="btn btn-primary" (click)="openCreateModal()"
+        [adminTooltip]="'Onboard a new legal institution or help desk'" tooltipPosition="bottom">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Create Resource</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Metrics Banner (Grid 4 Layout) -->
+  <div class="grid-4 mb-3">
+    <div class="glass-card stat-card blue animate-in">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        } @else {
+        <div class="stat-value text-info">{{ totalRecords }}</div>
+        }
+      </div>
+      <div class="stat-label">Total Institutions</div>
+    </div>
+
+    <div class="glass-card stat-card green animate-in">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        } @else {
+        <div class="stat-value text-success">{{ verifiedCount }}</div>
+        }
+      </div>
+      <div class="stat-label">Verified & Approved</div>
+    </div>
+
+    <div class="glass-card stat-card purple animate-in">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 21h18"></path>
+            <path d="M5 21V7l8-4 8 4v14"></path>
+            <path d="M9 18h6"></path>
+          </svg>
+        </div>
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        } @else {
+        <div class="stat-value text-primary">{{ courtsCount }}</div>
+        }
+      </div>
+      <div class="stat-label">Courts & Judiciary</div>
+    </div>
+
+    <div class="glass-card stat-card amber animate-in">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        } @else {
+        <div class="stat-value text-warning">{{ pendingCount }}</div>
+        }
+      </div>
+      <div class="stat-label">Pending Review</div>
+    </div>
+  </div>
+
+  <!-- Filter Controls Bar -->
+  <div class="glass-card page-filters mb-3">
+    <div class="search-box" style="flex: 1; max-width: 380px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="search-icon">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" class="form-input" placeholder="Search resources by name, city, or address..." [value]="search"
+        (input)="onSearchInput($any($event.target).value)"
+        [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
+    </div>
+
+    <div class="flex items-center gap-2">
+      <admin-select [options]="typeOptions" [value]="selectedType"
+        (valueChange)="selectedType = $event; onFilterChange();" minWidth="180px"
+        [adminTooltip]="'Filter by resource category'" tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="cityOptions" [value]="selectedCity"
+        (valueChange)="selectedCity = $event; onFilterChange();" minWidth="140px"
+        [adminTooltip]="'Filter by city location'" tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="statusOptions" [value]="selectedStatus"
+        (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="170px"
+        [adminTooltip]="'Filter by verification status'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary" (click)="resetFilters()" [adminTooltip]="'Clear search query and filters'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Reset</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Resources Data Table -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      @if (!isInitialLoad && isLoading) {
+      <div class="table-loading-bar"></div>
+      }
+      <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoading">
+        <thead>
+          <tr>
+            <th>Resource Name</th>
+            <th>Type</th>
+            <th>City / Location</th>
+            <th>Physical Address</th>
+            <th>Verification Status</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isInitialLoad && isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+
+          <tr>
+            <td><admin-skeleton width="200px" height="16px" /></td>
+            <td><admin-skeleton width="100px" height="22px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="90px" height="16px" /></td>
+            <td><admin-skeleton width="240px" height="16px" /></td>
+            <td><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
+            <td class="text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (res of resources; track res._id || res.id) {
+          <tr>
+            <td class="font-bold text-primary">
+              <div class="flex items-center gap-1">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-info">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{{ res.name }}</span>
+              </div>
+            </td>
+            <td>
+              <span class="badge info flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <span>{{ res.type || 'Legal Institution' }}</span>
+              </span>
+            </td>
+            <td class="text-sm font-semibold text-primary">{{ res.city || 'Delhi' }}</td>
+            <td class="text-xs text-secondary truncate" style="max-width: 300px;" [title]="res.address">{{ res.address
+              || 'N/A' }}</td>
+            <td>
+              @if (res.status === 'pending') {
+              <span class="badge warning flex items-center gap-1">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                  <circle cx="12" cy="12" r="10"></circle>
+                </svg>
+                <span>Pending Review</span>
+              </span>
+              } @else {
+              <span class="badge success flex items-center gap-1">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Verified</span>
+              </span>
+              }
+            </td>
+            <td class="text-right">
+              <div class="flex items-center justify-end gap-1">
+                @if (res.status === 'pending') {
+                <button class="btn btn-success btn-sm" (click)="approveResource(res)"
+                  [adminTooltip]="'Approve and verify this legal resource'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Approve</span>
+                </button>
+                }
+
+                <button class="btn btn-secondary btn-sm" (click)="openInspector(res)"
+                  [adminTooltip]="'Inspect GIS coordinates and contact metadata'" tooltipPosition="top">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
+                </button>
+
+                <button class="btn btn-secondary btn-sm" (click)="openEditModal(res)"
+                  [adminTooltip]="'Edit resource details and location'" tooltipPosition="top">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                </button>
+
+                <button class="btn btn-danger btn-sm" (click)="openDeleteModal(res)"
+                  [adminTooltip]="'Delete resource record permanently'" tooltipPosition="top">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="text-center text-muted" style="padding: 3rem 1rem;">
+              <div class="flex flex-col items-center justify-center">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  class="mb-1 text-muted">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <p class="font-semibold text-sm">No legal resources found.</p>
+                <p class="text-xs text-secondary mt-1">Try resetting filters or onboard a new legal resource.</p>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination (Image 3 Style) -->
+    <div class="pagination">
+      <div class="page-info">
+        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ totalRecords
+          }}</strong> records
+      </div>
+      <div class="pagination-controls">
+        <button class="pagination-btn" [disabled]="currentPage <= 1 || isLoading" (click)="prevPage()"
+          [adminTooltip]="'Previous page'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Previous</span>
+        </button>
+
+        <span class="page-indicator">
+          Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
+        </span>
+
+        <button class="pagination-btn" [disabled]="currentPage >= totalPages || isLoading" (click)="nextPage()"
+          [adminTooltip]="'Next page'">
+          <span>Next</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Create / Edit Slide-Over Drawer Modal -->
+  @if (isModalOpen) {
+  <div class="drawer-backdrop animate-in" (click)="closeModal()">
+    <div class="drawer-content" (click)="$event.stopPropagation()">
+      <div>
+        <div class="drawer-header">
+          <div class="flex items-center gap-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-info">
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              <circle cx="12" cy="10" r="3"></circle>
+            </svg>
+            <h4>{{ isEditMode ? 'Edit Legal Resource' : 'Onboard Legal Institution' }}</h4>
+          </div>
+          <button class="btn btn-secondary btn-sm" (click)="closeModal()" [adminTooltip]="'Close drawer form'"
+            tooltipPosition="left">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <div class="form-group">
+            <label class="form-label">Institution Name *</label>
+            <input type="text" class="form-input" placeholder="e.g. Delhi High Court or DLSA Office"
+              [(ngModel)]="formData.name" />
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Resource Type *</label>
+              <select class="form-select" [(ngModel)]="formData.type">
+                <option value="Court">Court / Judiciary</option>
+                <option value="LegalAid">Legal Aid Center</option>
+                <option value="PoliceStation">Police Station</option>
+                <option value="GovernmentOffice">Government Office</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Status *</label>
+              <select class="form-select" [(ngModel)]="formData.status">
+                <option value="approved">Approved & Verified</option>
+                <option value="pending">Pending Review</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">City *</label>
+              <input type="text" class="form-input" placeholder="e.g. Delhi" [(ngModel)]="formData.city" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">State</label>
+              <input type="text" class="form-input" placeholder="e.g. Delhi" [(ngModel)]="formData.state" />
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Street Address *</label>
+            <textarea class="form-input" style="height: 80px; resize: none;"
+              placeholder="Enter complete physical location address..." [(ngModel)]="formData.address"></textarea>
+          </div>
+
+          <!-- GIS Coordinates Box -->
+          <div
+            style="padding: 0.75rem; border-radius: var(--radius-md); background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 0.5rem;">
+            <label class="form-label text-info flex items-center gap-1" style="margin: 0;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+              </svg>
+              <span>GIS Location Coordinates</span>
+            </label>
+            <div class="grid-2">
+              <div class="form-group">
+                <label style="font-size: 0.65rem; color: var(--text-tertiary);">Latitude</label>
+                <input type="number" step="0.0001" class="form-input font-mono"
+                  style="padding: 6px 10px; font-size: 0.8rem;" [(ngModel)]="formData.lat" />
+              </div>
+              <div class="form-group">
+                <label style="font-size: 0.65rem; color: var(--text-tertiary);">Longitude</label>
+                <input type="number" step="0.0001" class="form-input font-mono"
+                  style="padding: 6px 10px; font-size: 0.8rem;" [(ngModel)]="formData.lng" />
+              </div>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Phone Number</label>
+              <input type="text" class="form-input font-mono" style="font-size: 0.8rem;"
+                placeholder="Comma separated phone numbers" [(ngModel)]="formData.phone" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Email Address</label>
+              <input type="email" class="form-input" style="font-size: 0.8rem;" placeholder="Official contact email"
+                [(ngModel)]="formData.email" />
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div class="form-group">
+              <label class="form-label">Website URL</label>
+              <input type="text" class="form-input" style="font-size: 0.8rem;" placeholder="https://..."
+                [(ngModel)]="formData.website" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Operating Hours</label>
+              <input type="text" class="form-input" style="font-size: 0.8rem;" placeholder="e.g. 09:30 AM - 05:00 PM"
+                [(ngModel)]="formData.operatingHours" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="drawer-footer">
+        <button class="btn btn-secondary" style="flex: 1;" (click)="closeModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex: 1;" (click)="saveResource()" [disabled]="isSaving">
+          @if (isSaving) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="animate-spin">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          }
+          <span>{{ isEditMode ? 'Save Changes' : 'Onboard Institution' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- GIS Inspector Modal -->
+  @if (inspectItem) {
+  <div class="modal-overlay animate-in" (click)="closeInspector()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="drawer-header" style="margin-bottom: 1rem;">
+        <div class="flex items-center gap-1">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-info">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+          <h4>{{ inspectItem.name }}</h4>
+        </div>
+        <button class="btn btn-secondary btn-sm" (click)="closeInspector()" [adminTooltip]="'Close preview modal'"
+          tooltipPosition="left">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-2 text-sm">
+        <div>
+          <div class="form-label" style="font-size: 0.65rem;">Category / Location</div>
+          <div class="text-primary font-semibold mt-1">{{ inspectItem.type }} ({{ inspectItem.city }})</div>
+        </div>
+
+        <div>
+          <div class="form-label" style="font-size: 0.65rem;">Physical Address</div>
+          <div class="text-primary mt-1">{{ inspectItem.address }}</div>
+        </div>
+
+        <div class="grid-2"
+          style="padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); font-family: monospace; font-size: 0.8rem;">
+          <div>
+            <div style="font-size: 0.65rem; color: var(--text-tertiary);">LATITUDE</div>
+            <div class="text-info font-bold mt-1">{{ inspectItem.coordinates?.lat || '28.6139' }}</div>
+          </div>
+          <div>
+            <div style="font-size: 0.65rem; color: var(--text-tertiary);">LONGITUDE</div>
+            <div class="text-info font-bold mt-1">{{ inspectItem.coordinates?.lng || '77.2090' }}</div>
+          </div>
+        </div>
+
+        @if (inspectItem.operatingHours) {
+        <div>
+          <div class="form-label" style="font-size: 0.65rem;">Operating Hours</div>
+          <div class="text-primary mt-1">{{ inspectItem.operatingHours }}</div>
+        </div>
+        }
+
+        @if (inspectItem.website) {
+        <div>
+          <div class="form-label" style="font-size: 0.65rem;">Official Website</div>
+          <a [href]="inspectItem.website" target="_blank" class="text-info mt-1 truncate"
+            style="display: inline-block; max-width: 100%;">
+            {{ inspectItem.website }}
+          </a>
+        </div>
+        }
+      </div>
+
+      <div class="drawer-footer" style="padding-top: 1rem; margin-top: 1rem; justify-content: flex-end;">
+        <button class="btn btn-secondary" (click)="closeInspector()">Close Preview</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Bulk Import Slide-Over Side Drawer -->
+  @if (showImportModal) {
+  <div class="drawer-backdrop animate-in" (click)="closeImportModal()">
+    <div class="drawer-content" (click)="$event.stopPropagation()"
+      style="display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <div class="drawer-header">
+          <div class="flex items-center gap-1">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-info">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+            <h4 class="text-primary font-bold">Bulk Import Legal Resources</h4>
+          </div>
+          <button class="btn btn-secondary btn-sm" (click)="closeImportModal()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+        </div>
+
+        <p class="text-xs text-secondary mb-3">Paste a JSON array containing institutional resource items matching the
+          schema below:</p>
+
+        <div class="form-group">
+          <label class="form-label">JSON Payload</label>
+          <textarea [(ngModel)]="bulkJsonText" rows="18" class="form-input font-mono text-xs w-full"
+            style="resize: vertical; min-height: 350px;"
+            placeholder='[&#10;  {&#10;    "name": "District Legal Services Authority Delhi",&#10;    "type": "LegalAid",&#10;    "city": "Delhi",&#10;    "state": "Delhi",&#10;    "address": "Tis Hazari Courts Complex",&#10;    "contactNumber": "011-23968018",&#10;    "status": "approved",&#10;    "coordinates": { "lat": 28.6667, "lng": 77.2167 }&#10;  }&#10;]'></textarea>
+        </div>
+      </div>
+
+      <div class="drawer-footer" style="margin-top: 1.5rem;">
+        <button class="btn btn-secondary" style="flex: 1;" (click)="closeImportModal()">Cancel</button>
+        <button class="btn btn-primary" style="flex: 1;" (click)="processBulkImport()">Import Resources</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

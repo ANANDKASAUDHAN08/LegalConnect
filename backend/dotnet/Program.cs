@@ -13,7 +13,11 @@ using Microsoft.AspNetCore.ResponseCompression;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+    });
 
 builder.Services.AddResponseCompression(options =>
 {
@@ -23,6 +27,7 @@ builder.Services.AddResponseCompression(options =>
 });
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
+builder.Services.AddHttpClient();
 builder.Services.AddHostedService<ProfileSyncWorker>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -35,7 +40,8 @@ builder.Services.AddCors(options =>
                   "http://localhost:4200",
                   "http://localhost:4300",
                   "https://legalconnect-501109.web.app",
-                  "https://legalconnect-501109.firebaseapp.com"
+                  "https://legalconnect-501109.firebaseapp.com",
+                  "https://admin.legalconnect-501109.web.app"
               )
               .AllowAnyHeader()
               .AllowAnyMethod()
@@ -86,6 +92,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 {
                     context.Token = context.Request.Cookies["lc_token"];
                 }
+                else if (context.Request.Cookies.ContainsKey("lc_admin_token"))
+                {
+                    context.Token = context.Request.Cookies["lc_admin_token"];
+                }
                 return Task.CompletedTask;
             },
             OnTokenValidated = async context =>
@@ -113,7 +123,7 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     context.Database.Migrate(); // Apply any pending EF migrations automatically
-    DbSeeder.Seed(context);
+    DbSeeder.Seed(context, app.Configuration);
 }
 
 // Configure the HTTP request pipeline.
@@ -146,3 +156,17 @@ app.UseResponseCompression();
 app.MapControllers();
 
 app.Run();
+
+public class UtcDateTimeConverter : System.Text.Json.Serialization.JsonConverter<DateTime>
+{
+    public override DateTime Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+    {
+        return DateTime.Parse(reader.GetString()!).ToUniversalTime();
+    }
+
+    public override void Write(System.Text.Json.Utf8JsonWriter writer, DateTime value, System.Text.Json.JsonSerializerOptions options)
+    {
+        var utcValue = value.Kind == DateTimeKind.Utc ? value : DateTime.SpecifyKind(value, DateTimeKind.Utc);
+        writer.WriteStringValue(utcValue.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+    }
+}

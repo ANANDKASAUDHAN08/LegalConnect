@@ -318,12 +318,26 @@ namespace CoreApi.Controllers
 
             _context.RefreshTokens.Add(newRefreshEntity);
 
-            // Update session last active
+            // Update or re-register active session
             var session = await _context.ActiveSessions
                 .FirstOrDefaultAsync(s => s.TokenId == storedToken.SessionId);
             if (session != null)
             {
                 session.LastActive = DateTime.UtcNow;
+                session.IpAddress = ip;
+            }
+            else
+            {
+                var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Mobile Device";
+                _context.ActiveSessions.Add(new ActiveSession
+                {
+                    UserId = user.Id,
+                    TokenId = storedToken.SessionId,
+                    IpAddress = ip,
+                    UserAgent = userAgent,
+                    CreatedAt = DateTime.UtcNow,
+                    LastActive = DateTime.UtcNow
+                });
             }
 
             await _context.SaveChangesAsync();
@@ -421,6 +435,34 @@ namespace CoreApi.Controllers
 
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return Ok(new { isAuthenticated = false });
+
+            // Auto-sync or register active session for this device (mobile / laptop / tablet)
+            var sessionIdClaim = User.FindFirst("SessionId")?.Value;
+            if (!string.IsNullOrEmpty(sessionIdClaim))
+            {
+                var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+                var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Mobile Device";
+
+                var session = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == sessionIdClaim);
+                if (session != null)
+                {
+                    session.LastActive = DateTime.UtcNow;
+                    session.IpAddress = ip;
+                }
+                else
+                {
+                    _context.ActiveSessions.Add(new ActiveSession
+                    {
+                        UserId = user.Id,
+                        TokenId = sessionIdClaim,
+                        IpAddress = ip,
+                        UserAgent = userAgent,
+                        CreatedAt = DateTime.UtcNow,
+                        LastActive = DateTime.UtcNow
+                    });
+                }
+                await _context.SaveChangesAsync();
+            }
 
             // Extract the token from Request
             string? token = Request.Cookies["lc_token"];

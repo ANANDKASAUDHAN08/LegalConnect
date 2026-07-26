@@ -1,0 +1,271 @@
+<div class="act-detail-page stagger-children">
+  <!-- Top Workspace Header -->
+  <div class="glass-card act-topbar mb-3 animate-in">
+    <div class="topbar-left">
+      <a routerLink="/legal-content" class="btn btn-secondary btn-sm"
+        [adminTooltip]="'Return to Bare Acts directory overview'" tooltipPosition="right">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back to Directory</span>
+      </a>
+      <div class="act-meta">
+        <h2 class="text-primary font-bold text-lg">{{ act?.actName || shortName }} ({{ shortName }})</h2>
+        <span class="text-xs text-secondary">Year {{ act?.year }} — Enacted Statutory Legal Code</span>
+      </div>
+    </div>
+
+    <div class="topbar-center">
+      <div class="search-input-wrapper" [adminTooltip]="'Filter sections by section number or title keyword'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="search-icon">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" class="form-input search-input" placeholder="Search section number or keyword..."
+          [(ngModel)]="searchQuery" />
+      </div>
+    </div>
+
+    <div class="topbar-right">
+      <!-- Language Selector Pill -->
+      <div class="lang-pill-group">
+        <button class="lang-btn" [class.active]="activeLanguage === 'en'" (click)="activeLanguage = 'en'"
+          [adminTooltip]="'Display English legal provisions only'" tooltipPosition="bottom">English</button>
+        <button class="lang-btn" [class.active]="activeLanguage === 'hi'" (click)="activeLanguage = 'hi'"
+          [adminTooltip]="'Display Hindi legal text only'" tooltipPosition="bottom">हिंदी</button>
+        <button class="lang-btn" [class.active]="activeLanguage === 'both'" (click)="activeLanguage = 'both'"
+          [adminTooltip]="'Display English & Hindi statutes side-by-side'" tooltipPosition="bottom">Dual View</button>
+      </div>
+
+      <!-- Edit Mode Toggle -->
+      <button class="btn btn-sm" [class.btn-primary]="isEditMode" [class.btn-secondary]="!isEditMode"
+        (click)="isEditMode = !isEditMode" [adminTooltip]="'Toggle statutory text editing privileges'"
+        tooltipPosition="left">
+        @if (isEditMode) {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Editing Active</span>
+        } @else {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+        <span>Admin Edit Mode</span>
+        }
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Two-Column Reader Workspace -->
+  @if (isLoading) {
+  <div class="workspace-grid animate-in">
+    <div class="glass-card p-6">
+      <admin-skeleton type="table"></admin-skeleton>
+    </div>
+    <div class="glass-card p-6 space-y-4">
+      <admin-skeleton type="card"></admin-skeleton>
+      <admin-skeleton type="card"></admin-skeleton>
+      <admin-skeleton type="card"></admin-skeleton>
+    </div>
+  </div>
+  } @else {
+  <div class="workspace-grid animate-in">
+    <!-- Left Column: Chapter & Section Navigation Index -->
+    <aside class="glass-card sidebar-index" [adminTooltip]="'Statutory Table of Contents — Click to jump'"
+      tooltipPosition="right">
+      <div class="sidebar-header">
+        <h4 class="font-bold text-primary text-sm">Table of Contents</h4>
+        <span class="badge neutral text-xs">{{ act?.chapters?.length || 0 }} Chapters</span>
+      </div>
+
+      <div class="index-tree">
+        @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
+        <div class="chapter-group">
+          <div class="chapter-title-row">
+            <span class="font-bold text-primary text-xs">Chapter {{ chap.chapterNumber || chap.chapter_number }}: {{
+              chap.title }}</span>
+          </div>
+          <div class="section-tree-list">
+            @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
+            <a class="section-tree-item" [class.active]="activeSectionId === getSecId(sec)"
+              (click)="scrollToSection(sec.section_number || sec.sectionNumber)">
+              <span class="sec-num-badge">Sec {{ sec.section_number || sec.sectionNumber }}</span>
+              <span class="sec-title-text">{{ getCleanTitle(sec) }}</span>
+            </a>
+            }
+          </div>
+        </div>
+        } @empty {
+        <div class="p-4 text-xs text-muted text-center">No matching sections found.</div>
+        }
+      </div>
+    </aside>
+
+    <!-- Right Column: Full-Width Document Reader -->
+    <main class="document-reader">
+      @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
+      <div class="chapter-block">
+        <div class="chapter-block-header">
+          <span class="badge purple font-mono font-bold">Chapter {{ chap.chapterNumber || chap.chapter_number }}</span>
+          <h3 class="chapter-block-title">{{ chap.title }}</h3>
+        </div>
+
+        <div class="sections-list">
+          @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
+          <div class="glass-card section-card" [id]="'section-' + (sec.section_number || sec.sectionNumber)"
+            [class.active-highlight]="activeSectionId === getSecId(sec)">
+            <div class="section-card-header">
+              <div class="sec-title-box">
+                <span class="sec-badge font-mono">Sec {{ sec.section_number || sec.sectionNumber }}</span>
+                <h4 class="section-card-title">{{ getCleanTitle(sec) }}</h4>
+              </div>
+
+              <div class="sec-actions-row">
+                <!-- Statute Language Badge (To the left of Cite button) -->
+                @if (activeLanguage === 'en') {
+                <span class="lang-tag">ENGLISH STATUTE</span>
+                } @else if (activeLanguage === 'hi') {
+                <span class="lang-tag hi">हिंदी पाठ</span>
+                } @else if (activeLanguage === 'both') {
+                <span class="lang-tag dual">DUAL VIEW</span>
+                }
+
+                <!-- Citation Copy Button -->
+                <button class="btn btn-secondary btn-xs" (click)="copySectionCitation(sec)"
+                  [adminTooltip]="'Copy formal legal citation'" tooltipPosition="top">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                  <span>Cite</span>
+                </button>
+
+                <!-- Direct Link Button -->
+                <button class="btn btn-secondary btn-xs" (click)="copySectionLink(sec)"
+                  [adminTooltip]="'Copy direct anchor link to Section ' + (sec.section_number || sec.sectionNumber)"
+                  tooltipPosition="top">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                  </svg>
+                  <span>Link</span>
+                </button>
+
+                @if (isEditMode) {
+                <button class="btn btn-primary btn-xs" (click)="openEditSection(sec)"
+                  [adminTooltip]="'Edit statutory text, title, or Hindi translation'" tooltipPosition="left">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Edit</span>
+                </button>
+                }
+              </div>
+            </div>
+
+            <!-- English Text View -->
+            @if (activeLanguage === 'en' || activeLanguage === 'both') {
+            <div class="legal-text-box en-text">
+              @if (sec.content_blocks && sec.content_blocks.length > 0) {
+              <div class="clauses-stack space-y-3">
+                @for (block of sec.content_blocks; track $index) {
+                <div class="clause-card" [ngStyle]="getClauseStyle(block.text, block.type)"
+                  [class.explanation-card]="block.type === 'explanation'"
+                  [class.illustration-card]="block.type === 'illustration'">
+                  @if (block.type === 'explanation') {
+                  <span class="clause-type-badge exp">EXPLANATION</span>
+                  } @else if (block.type === 'illustration') {
+                  <span class="clause-type-badge ill">ILLUSTRATION</span>
+                  }
+                  <p class="clause-body-text">{{ block.text }}</p>
+                </div>
+                }
+              </div>
+              } @else {
+              <p class="legal-paragraph">{{ getCleanBody(sec) }}</p>
+              }
+            </div>
+            }
+
+            <!-- Hindi Text View -->
+            @if ((activeLanguage === 'hi' || activeLanguage === 'both') && (sec.title_hi || sec.introduction_text_hi ||
+            sec.content_hi || sec.text_hi)) {
+            <div class="legal-text-box hi-text mt-3">
+              @if (sec.title_hi) {
+              <h5 class="hi-title font-bold text-primary mb-2">{{ sec.title_hi }}</h5>
+              }
+              @if (sec.content_blocks_hi && sec.content_blocks_hi.length > 0) {
+              <div class="clauses-stack space-y-3">
+                @for (block of sec.content_blocks_hi; track $index) {
+                <div class="clause-card hi" [ngStyle]="getClauseStyle(block.text, block.type)">
+                  <p class="clause-body-text hi">{{ block.text }}</p>
+                </div>
+                }
+              </div>
+              } @else {
+              <p class="legal-paragraph hi">{{ sec.content_hi || sec.introduction_text_hi || sec.text_hi }}</p>
+              }
+            </div>
+            }
+          </div>
+          }
+        </div>
+      </div>
+      } @empty {
+      <div class="glass-card p-8 text-center text-muted">No statutory sections available for display.</div>
+      }
+    </main>
+  </div>
+  }
+
+  <!-- Admin Section Edit Modal -->
+  @if (editingSection) {
+  <div class="modal-backdrop animate-in" (click)="editingSection = null">
+    <div class="modal-box edit-modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3 class="text-primary font-bold">Edit Section {{ editForm.section_number }}</h3>
+          <p class="text-xs text-secondary">{{ shortName }} — Statutory Text Amendment</p>
+        </div>
+        <button class="btn-close" (click)="editingSection = null" [adminTooltip]="'Close edit modal'"
+          tooltipPosition="left">&times;</button>
+      </div>
+
+      <div class="modal-body space-y-4">
+        <div class="form-group">
+          <label class="form-label">Section Title (English)</label>
+          <input type="text" class="form-input" [(ngModel)]="editForm.title" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Section Title (Hindi - title_hi)</label>
+          <input type="text" class="form-input" [(ngModel)]="editForm.title_hi" placeholder="e.g. एकांत परिरोध" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">English Legal Text & Full Subsections</label>
+          <textarea class="form-input" rows="8" [(ngModel)]="editForm.introduction_text"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Hindi Legal Text (introduction_text_hi / content_hi)</label>
+          <textarea class="form-input" rows="8" [(ngModel)]="editForm.introduction_text_hi"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-primary" (click)="saveSectionEdit()" [disabled]="isSaving"
+          [adminTooltip]="'Save updated statutory text to MongoDB database'" tooltipPosition="top">
+          {{ isSaving ? 'Saving to MongoDB...' : 'Save Statutory Amendment' }}
+        </button>
+        <button class="btn btn-secondary" (click)="editingSection = null">Cancel</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

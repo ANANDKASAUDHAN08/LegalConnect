@@ -1,0 +1,60 @@
+@if (dialog) {
+<div class="dialog-backdrop" (click)="cancel()">
+  <div class="dialog-box" [class]="(dialog.type || 'warning') + '-type'" (click)="$event.stopPropagation()">
+    <!-- Dynamic Icon Badge -->
+    <div class="dialog-icon-wrapper" [class]="dialog.type || 'warning'">
+      @switch (dialog.type) {
+      @case ('danger') {
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      }
+      @case ('success') {
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      }
+      @case ('info') {
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="16" x2="12" y2="12"></line>
+        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+      </svg>
+      }
+      @default {
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      }
+      }
+    </div>
+
+    <!-- Content -->
+    <h3 class="dialog-title">{{ dialog.title }}</h3>
+    <p class="dialog-message">{{ dialog.message }}</p>
+
+    <!-- Action Buttons -->
+    <div class="dialog-actions">
+      @if (!dialog.isAlert) {
+      <button class="dialog-btn dialog-btn-cancel" (click)="cancel()">
+        {{ dialog.cancelText || 'Cancel' }}
+      </button>
+      }
+      <button class="dialog-btn" [class.dialog-btn-danger]="dialog.type === 'danger'"
+        [class.dialog-btn-warning]="dialog.type === 'warning'" [class.dialog-btn-success]="dialog.type === 'success'"
+        [class.dialog-btn-primary]="dialog.type === 'info' || !dialog.type" (click)="confirm()">
+        {{ dialog.confirmText || 'Confirm' }}
+      </button>
+    </div>
+  </div>
+</div>
+}

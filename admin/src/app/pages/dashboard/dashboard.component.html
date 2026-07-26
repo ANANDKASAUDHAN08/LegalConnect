@@ -1,0 +1,207 @@
+<div class="dashboard-container stagger-children">
+  <!-- ─── Top KPI Stat Cards ─── -->
+  <div class="grid-4 mb-3">
+    <!-- Card 1: Users -->
+    <div class="glass-card stat-card purple animate-in cursor-pointer" (click)="navigateTo('/users')" [adminTooltip]="'Click to view & manage platform users'" tooltipPosition="top">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+        </div>
+        @if (!isLoading) {
+          <div class="stat-value">{{ overview?.totalUsers || 0 }}</div>
+        }
+      </div>
+      @if (isLoading) {
+        <admin-skeleton height="32px" width="120px" borderRadius="6px" class="mt-1" />
+        <admin-skeleton height="16px" width="140px" borderRadius="4px" class="mt-1" />
+      } @else {
+        <div class="stat-label">Total Platform Users</div>
+        <div class="stat-change positive">
+          <span>↑ {{ overview?.userGrowth || 0 }}% this month</span>
+        </div>
+      }
+    </div>
+
+    <!-- Card 2: Lawyers -->
+    <div class="glass-card stat-card blue animate-in cursor-pointer" (click)="navigateTo('/lawyers')" [adminTooltip]="'Click to view & verify lawyer credentials'" tooltipPosition="top">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <polyline points="16 11 18 13 22 9"></polyline>
+          </svg>
+        </div>
+        @if (!isLoading) {
+          <div class="stat-value">{{ overview?.totalLawyers || 0 }}</div>
+        }
+      </div>
+      @if (isLoading) {
+        <admin-skeleton height="32px" width="120px" borderRadius="6px" class="mt-1" />
+        <admin-skeleton height="16px" width="140px" borderRadius="4px" class="mt-1" />
+      } @else {
+        <div class="stat-label">Verified Lawyers</div>
+        <div class="stat-change" [class.positive]="overview?.pendingLawyers === 0" [class.negative]="(overview?.pendingLawyers || 0) > 0">
+          <span>{{ overview?.pendingLawyers || 0 }} pending approval</span>
+        </div>
+      }
+    </div>
+
+    <!-- Card 3: Active Sessions -->
+    <div class="glass-card stat-card green animate-in cursor-pointer" (click)="navigateTo('/security', { tab: 'sessions' })" [adminTooltip]="'Click to view active user sessions desk'" tooltipPosition="top">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        @if (!isLoading) {
+          <div class="stat-value">{{ overview?.activeSessions || 0 }}</div>
+        }
+      </div>
+      @if (isLoading) {
+        <admin-skeleton height="32px" width="120px" borderRadius="6px" class="mt-1" />
+        <admin-skeleton height="16px" width="140px" borderRadius="4px" class="mt-1" />
+      } @else {
+        <div class="stat-label">Active Sessions Now</div>
+        <div class="stat-change positive">
+          <span>● Realtime Connected</span>
+        </div>
+      }
+    </div>
+
+    <!-- Card 4: Reviews & Rating -->
+    <div class="glass-card stat-card amber animate-in cursor-pointer" (click)="navigateTo('/reviews')" [adminTooltip]="'Click to view & moderate client reviews'" tooltipPosition="top">
+      <div class="stat-header">
+        <div class="stat-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        @if (!isLoading) {
+          <div class="stat-value">{{ overview?.avgRating || 4.8 }}</div>
+        }
+      </div>
+      @if (isLoading) {
+        <admin-skeleton height="32px" width="120px" borderRadius="6px" class="mt-1" />
+        <admin-skeleton height="16px" width="140px" borderRadius="4px" class="mt-1" />
+      } @else {
+        <div class="stat-label">Platform Rating ({{ overview?.totalReviews || 0 }} reviews)</div>
+        <div class="stat-change positive">
+          <span>★ 96% Satisfaction</span>
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ─── Secondary Stats Grid ─── -->
+  <div class="grid-2 mb-3">
+    <div class="glass-card stat-card info-card cursor-pointer" (click)="navigateTo('/lawyers')" [adminTooltip]="'Click to open consultation directory'" tooltipPosition="bottom">
+      <div class="info-content">
+        <span class="info-label">Consultations Handled</span>
+        @if (isLoading) {
+          <admin-skeleton height="28px" width="80px" borderRadius="4px" class="mt-1" />
+        } @else {
+          <span class="info-num">{{ overview?.totalConsultations || 0 }}</span>
+          <span class="info-sub">{{ overview?.pendingConsultations || 0 }} pending lawyer responses</span>
+        }
+      </div>
+      <div class="info-action">
+        <span class="badge info">Consultation Desk</span>
+      </div>
+    </div>
+
+    <div class="glass-card stat-card info-card cursor-pointer" (click)="navigateTo('/support', { status: 'New' })" [adminTooltip]="'Click to view unread support tickets'" tooltipPosition="bottom">
+      <div class="info-content">
+        <span class="info-label">Contact & Support Queries</span>
+        @if (isLoading) {
+          <admin-skeleton height="28px" width="80px" borderRadius="4px" class="mt-1" />
+        } @else {
+          <span class="info-num">{{ overview?.totalContacts || 0 }}</span>
+          <span class="info-sub">{{ overview?.newContacts || 0 }} unread inquiries</span>
+        }
+      </div>
+      <div class="info-action">
+        <span class="badge warning">Grievance Desk</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Primary Charts Section ─── -->
+  <div class="grid-2 mb-3">
+    <!-- User Registrations Trend Chart -->
+    <div class="glass-card chart-container animate-in">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">User Registration Trend</h3>
+          <p class="chart-subtitle">30-day new account creation rate</p>
+        </div>
+        <span class="badge purple" [adminTooltip]="'Last 30 rolling calendar days'">30 Days</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas #regChartCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Login Activity (Success vs Failed) Chart -->
+    <div class="glass-card chart-container animate-in">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Authentication & Security Audit</h3>
+          <p class="chart-subtitle">Successful logins vs failed attempts</p>
+        </div>
+        <span class="badge info cursor-pointer" (click)="navigateTo('/security', { tab: 'logs' })" [adminTooltip]="'Click to view security audit logs desk'">Security</span>
+      </div>
+      <div class="chart-wrapper">
+        <canvas #loginChartCanvas></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── Secondary Charts Section ─── -->
+  <div class="grid-3 mb-3">
+    <!-- Role Distribution Chart -->
+    <div class="glass-card chart-container animate-in">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">User Roles</h3>
+          <p class="chart-subtitle">Platform composition</p>
+        </div>
+      </div>
+      <div class="chart-wrapper sm">
+        <canvas #roleChartCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Top Cities Distribution Chart -->
+    <div class="glass-card chart-container animate-in">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Top Regional Markets</h3>
+          <p class="chart-subtitle">Users by city</p>
+        </div>
+      </div>
+      <div class="chart-wrapper sm">
+        <canvas #cityChartCanvas></canvas>
+      </div>
+    </div>
+
+    <!-- Consent & Privacy Funnel Chart -->
+    <div class="glass-card chart-container animate-in">
+      <div class="chart-header">
+        <div>
+          <h3 class="chart-title">Consent Preferences</h3>
+          <p class="chart-subtitle">GDPR / DPDPA opt-in rates</p>
+        </div>
+      </div>
+      <div class="chart-wrapper sm">
+        <canvas #consentChartCanvas></canvas>
+      </div>
+    </div>
+  </div>
+</div>

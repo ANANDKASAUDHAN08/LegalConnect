@@ -56,6 +56,8 @@ namespace CoreApi.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("TokenId");
+
                     b.HasIndex("UserId");
 
                     b.ToTable("ActiveSessions");
@@ -856,6 +858,9 @@ namespace CoreApi.Migrations
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
 
                     b.Property<bool>("IsEmailVerified")
                         .HasColumnType("tinyint(1)");

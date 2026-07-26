@@ -1,0 +1,146 @@
+<div class="security-page stagger-children">
+  <!-- Filter & Tab Toggle Bar -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div>
+      <h3 class="text-primary font-bold">Security & Active Sessions Desk</h3>
+      <p class="text-xs text-secondary">Monitor active user sessions across all devices and audit real-time
+        authentication logs.</p>
+    </div>
+
+    <div class="tab-button-group">
+      <button class="btn" [class.btn-primary]="activeTab === 'sessions'"
+        [class.btn-secondary]="activeTab !== 'sessions'" (click)="activeTab = 'sessions'; fetchSessions();"
+        [adminTooltip]="'View active user & admin sessions across all devices'" tooltipPosition="top">
+        Active Sessions
+      </button>
+      <button class="btn" [class.btn-primary]="activeTab === 'logs'" [class.btn-secondary]="activeTab !== 'logs'"
+        (click)="activeTab = 'logs'; fetchLoginLogs();" [adminTooltip]="'View real-time login attempt audit history'"
+        tooltipPosition="top">
+        Login Audit Log
+      </button>
+    </div>
+  </div>
+
+  <!-- Active Sessions Table View -->
+  @if (activeTab === 'sessions') {
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>IP Address</th>
+            <th>User Agent</th>
+            <th>Last Active</th>
+            <th class="text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <div>
+                  <admin-skeleton width="120px" height="14px" />
+                  <admin-skeleton width="140px" height="11px" class="mt-1" />
+                </div>
+              </div>
+            </td>
+            <td><admin-skeleton width="60px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="100px" height="14px" /></td>
+            <td><admin-skeleton width="180px" height="14px" /></td>
+            <td><admin-skeleton width="90px" height="14px" /></td>
+            <td class="text-right"><admin-skeleton width="110px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (sess of sessions; track sess.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ (sess.userName || 'U').charAt(0).toUpperCase() }}</div>
+                <div>
+                  <div class="user-name">{{ sess.userName || 'Unknown User' }}</div>
+                  <div class="text-xs text-secondary">{{ sess.userEmail }}</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="badge badge-info">{{ sess.userRole }}</span></td>
+            <td><code class="font-mono text-xs text-secondary">{{ sess.ipAddress }}</code></td>
+            <td class="max-w-xs truncate text-xs text-tertiary">{{ sess.userAgent }}</td>
+            <td class="text-xs text-secondary">{{ sess.lastActive | date:'medium' }}</td>
+            <td class="text-right">
+              <button class="btn btn-danger btn-sm" (click)="forceLogout(sess.id)"
+                [adminTooltip]="'Immediately force logout and revoke this session'" tooltipPosition="left">
+                Revoke Session
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="empty-state py-8 text-center">
+              <div class="text-muted">No active user sessions registered.</div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  } @else {
+  <!-- Login Audit Log View -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Email / User</th>
+            <th>Outcome</th>
+            <th>IP Address</th>
+            <th>Failure Reason</th>
+            <th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td><admin-skeleton width="140px" height="14px" /></td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="100px" height="14px" /></td>
+            <td><admin-skeleton width="120px" height="14px" /></td>
+            <td><admin-skeleton width="110px" height="14px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (log of loginLogs; track log.id) {
+          <tr>
+            <td class="font-semibold">{{ log.userEmail || log.userName || 'Unknown' }}</td>
+            <td>
+              <span class="badge" [class.badge-success]="log.status === 'Success'"
+                [class.badge-danger]="log.status !== 'Success'">
+                {{ log.status }}
+              </span>
+            </td>
+            <td><code class="font-mono text-xs text-secondary">{{ log.ipAddress }}</code></td>
+            <td class="text-xs text-danger">{{ log.failureReason || '-' }}</td>
+            <td class="text-xs text-secondary">{{ log.loginTime | date:'medium' }}</td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="empty-state py-8 text-center">
+              <div class="text-muted">No login history records found.</div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+  }
+</div>

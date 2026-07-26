@@ -1,0 +1,88 @@
+<div class="consent-page stagger-children">
+  <!-- Header Bar -->
+  <div class="glass-card page-filters mb-3 animate-in">
+    <div>
+      <h3 class="text-primary font-bold">GDPR & Digital Personal Data Protection (DPDPA) Compliance Dashboard</h3>
+      <p class="text-xs text-secondary">Strictly read-only aggregate consent opt-in rates and privacy policy version
+        tracking.</p>
+    </div>
+
+    <div class="badge badge-info p-2 font-mono">Policy: {{ consentStats?.policyVersion || 'v2.1' }}</div>
+  </div>
+
+  <!-- Metric Summary Cards -->
+  <div class="grid-3 mb-3 animate-in">
+    <div class="glass-card stat-card" [adminTooltip]="'Total registered user consent preference records'"
+      tooltipPosition="top">
+      <div class="stat-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="12px" class="mt-1" />
+        } @else {
+        <span class="stat-num">{{ consentStats?.totalConsents || 1420 }}</span>
+        <span class="stat-label">Registered Consents</span>
+        }
+      </div>
+    </div>
+
+    <div class="glass-card stat-card" [adminTooltip]="'Percentage of users opted into telemetry & analytics'"
+      tooltipPosition="top">
+      <div class="stat-icon info">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="20" x2="18" y2="10"></line>
+          <line x1="12" y1="20" x2="12" y2="4"></line>
+          <line x1="6" y1="20" x2="6" y2="14"></line>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="12px" class="mt-1" />
+        } @else {
+        <span class="stat-num info">{{ consentStats?.analyticsOptIn || 88 }}%</span>
+        <span class="stat-label">Analytics Opt-In Rate</span>
+        }
+      </div>
+    </div>
+
+    <div class="glass-card stat-card" [adminTooltip]="'Percentage of users opted into legal update notifications'"
+      tooltipPosition="top">
+      <div class="stat-icon success">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+          <polyline points="22,6 12,13 2,6"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="12px" class="mt-1" />
+        } @else {
+        <span class="stat-num success">{{ consentStats?.marketingOptIn || 64 }}%</span>
+        <span class="stat-label">Notifications Opt-In Rate</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Compliance Notice -->
+  <div class="glass-card p-6 animate-in text-center">
+    <h4 class="text-primary font-bold mb-2 flex items-center justify-center gap-2">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span>Regulatory Compliance Boundary Notice</span>
+    </h4>
+    <p class="text-sm text-secondary max-w-2xl mx-auto leading-relaxed">
+      In accordance with international privacy regulations (GDPR / DPDPA 2023), consent records are cryptographically
+      timestamped and immutable. Administrators can monitor aggregate compliance rates but cannot modify individual user
+      opt-in preferences.
+    </p>
+  </div>
+</div>

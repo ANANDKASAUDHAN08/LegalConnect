@@ -1,0 +1,101 @@
+<div class="reviews-page stagger-children">
+  <!-- Filter Bar -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div>
+      <h3 class="text-primary font-bold">Review Moderation Desk</h3>
+      <p class="text-xs text-secondary">Audit and moderate public lawyer reviews & ratings across LegalConnect.</p>
+    </div>
+
+    <div class="filter-group">
+      <admin-select [options]="ratingOptions" [value]="ratingFilter"
+        (valueChange)="ratingFilter = $event; fetchReviews();" minWidth="180px"
+        [adminTooltip]="'Filter reviews by star rating'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary" (click)="fetchReviews()" [adminTooltip]="'Refresh client review directory'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Refresh Reviews</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Main Reviews Table -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Reviewer</th>
+            <th>Rating</th>
+            <th>Review Comment</th>
+            <th>Submitted At</th>
+            <th class="text-right">Moderation</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <div>
+                  <admin-skeleton width="120px" height="14px" />
+                  <admin-skeleton width="80px" height="11px" class="mt-1" />
+                </div>
+              </div>
+            </td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="220px" height="14px" /></td>
+            <td><admin-skeleton width="90px" height="14px" /></td>
+            <td class="text-right"><admin-skeleton width="100px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (rev of reviews; track rev.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ (rev.userName || 'A').charAt(0).toUpperCase() }}</div>
+                <div>
+                  <div class="user-name">{{ rev.userName || 'Anonymous Client' }}</div>
+                  <div class="text-xs text-tertiary">{{ rev.userRole || 'Client' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="rating-stars inline-flex items-center gap-1 font-bold text-amber-400">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                  </polygon>
+                </svg>
+                <span>{{ rev.rating }}/5</span>
+              </span>
+            </td>
+            <td class="max-w-md text-sm text-primary leading-relaxed">{{ rev.comment }}</td>
+            <td class="text-xs text-secondary">{{ rev.createdAt | date:'mediumDate' }}</td>
+            <td class="text-right">
+              <button class="btn btn-danger btn-sm" (click)="deleteReview(rev.id)"
+                [adminTooltip]="'Permanently delete this flaggable client review'" tooltipPosition="left">
+                Delete Review
+              </button>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="empty-state py-8 text-center">
+              <div class="text-muted">No client reviews submitted.</div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

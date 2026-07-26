@@ -33,8 +33,47 @@ namespace CoreApi.Data
             public object? availableTimeSlots { get; set; }
         }
 
-        public static void Seed(AppDbContext context)
+        public static void Seed(AppDbContext context, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
+            // Activate all existing users whose IsActive default was set to false by EF migration
+            var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
+            if (deactivatedUsers.Any())
+            {
+                foreach (var u in deactivatedUsers)
+                {
+                    u.IsActive = true;
+                }
+                context.SaveChanges();
+                Console.WriteLine($"✅ Auto-activated {deactivatedUsers.Count} existing users.");
+            }
+
+            // Seed Admin user if none exists
+            if (!context.Users.Any(u => u.Role == "Admin"))
+            {
+                var adminEmail = Environment.GetEnvironmentVariable("ADMIN_SEED_EMAIL") 
+                                 ?? configuration["AdminSeed:Email"] 
+                                 ?? "admin@legalconnect.com";
+                var adminPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD") 
+                                    ?? configuration["AdminSeed:Password"] 
+                                    ?? "Admin@123!";
+                var adminName = configuration["AdminSeed:FullName"] ?? "System Administrator";
+
+                var admin = new User
+                {
+                    FullName = adminName,
+                    Email = adminEmail,
+                    PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
+                    Role = "Admin",
+                    IsEmailVerified = true,
+                    IsPhoneVerified = true,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                context.Users.Add(admin);
+                context.SaveChanges();
+                Console.WriteLine($"✅ Admin user seeded from configuration: {adminEmail}");
+            }
+
             string? jsonContent = null;
             try
             {

@@ -1,0 +1,247 @@
+<div class="consultations-page stagger-children">
+  <!-- Summary Metric Cards -->
+  <div class="grid-4 mb-2 animate-in">
+    <!-- Card 1: Total Inquiries -->
+    <div class="glass-card stat-card" [adminTooltip]="'Total client consultation requests registered'"
+      tooltipPosition="top">
+      <div class="stat-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          <line x1="9" y1="12" x2="15" y2="12"></line>
+          <line x1="9" y1="16" x2="13" y2="16"></line>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
+        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
+        } @else {
+        <span class="stat-num">{{ pagination.total || consultations.length }}</span>
+        <span class="stat-label">Total Inquiries</span>
+        }
+      </div>
+    </div>
+
+    <!-- Card 2: Pending Action -->
+    <div class="glass-card stat-card" [adminTooltip]="'Inquiries awaiting lawyer response or assignment'"
+      tooltipPosition="top">
+      <div class="stat-icon warning">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
+        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
+        } @else {
+        <span class="stat-num warning">{{ pendingCount }}</span>
+        <span class="stat-label">Pending Action</span>
+        }
+      </div>
+    </div>
+
+    <!-- Card 3: Lawyer Contacted -->
+    <div class="glass-card stat-card" [adminTooltip]="'Consultations where lawyer has initiated contact'"
+      tooltipPosition="top">
+      <div class="stat-icon info">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
+        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
+        } @else {
+        <span class="stat-num info">{{ contactedCount }}</span>
+        <span class="stat-label">Lawyer Contacted</span>
+        }
+      </div>
+    </div>
+
+    <!-- Card 4: Closed & Resolved -->
+    <div class="glass-card stat-card" [adminTooltip]="'Successfully completed and closed consultations'"
+      tooltipPosition="top">
+      <div class="stat-icon success">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="stat-info">
+        @if (isLoading) {
+        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
+        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
+        } @else {
+        <span class="stat-num success">{{ closedCount }}</span>
+        <span class="stat-label">Closed & Resolved</span>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Header Bar -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div class="search-box">
+      <input type="text" class="form-input" placeholder="Search by client, lawyer name or message..."
+        [(ngModel)]="searchQuery" [adminTooltip]="'Type query to filter table'" tooltipPosition="top" />
+    </div>
+
+    <div class="filter-group">
+      <admin-select [options]="statusOptions" [value]="selectedStatus"
+        (valueChange)="selectedStatus = $event; fetchConsultations();" minWidth="180px"
+        [adminTooltip]="'Filter consultations by status'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary" (click)="fetchConsultations()" [adminTooltip]="'Refresh consultation directory'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Refresh</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Consultations Data Table -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Client Applicant</th>
+            <th>Target Lawyer</th>
+            <th>Consultation Message</th>
+            <th>Status</th>
+            <th>Requested Date</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <div>
+                  <admin-skeleton width="120px" height="14px" />
+                  <admin-skeleton width="140px" height="11px" class="mt-1" />
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <div>
+                  <admin-skeleton width="120px" height="14px" />
+                  <admin-skeleton width="140px" height="11px" class="mt-1" />
+                </div>
+              </div>
+            </td>
+            <td><admin-skeleton width="180px" height="14px" /></td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="90px" height="14px" /></td>
+            <td class="text-right"><admin-skeleton width="120px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (item of filteredConsultations; track item.id) {
+          <tr>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ (item.clientName || 'C').charAt(0).toUpperCase() }}</div>
+                <div>
+                  <div class="user-name">{{ item.clientName || item.clientUser || 'Anonymous Client' }}</div>
+                  <div class="text-xs text-secondary">{{ item.clientEmail || 'N/A' }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar blue">{{ (item.lawyerName || 'L').charAt(0).toUpperCase() }}</div>
+                <div>
+                  <div class="user-name">{{ item.lawyerName }}</div>
+                  <div class="text-xs text-secondary">{{ item.lawyerEmail || 'Bar Verified' }}</div>
+                </div>
+              </div>
+            </td>
+            <td class="max-w-xs truncate text-sm text-primary">{{ item.message }}</td>
+            <td>
+              <span class="badge" [ngClass]="{
+                    'badge-warning': item.status === 'Pending',
+                    'badge-info': item.status === 'Contacted',
+                    'badge-success': item.status === 'Closed'
+                  }">
+                {{ item.status }}
+              </span>
+            </td>
+            <td class="text-xs text-secondary">{{ item.createdAt | date:'medium' }}</td>
+            <td class="text-right">
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-sm" (click)="selectedConsultation = item"
+                  [adminTooltip]="'View full consultation request message'" tooltipPosition="left">
+                  View
+                </button>
+                @if (item.status === 'Pending') {
+                <button class="btn btn-primary btn-sm" (click)="updateStatus(item, 'Contacted')"
+                  [adminTooltip]="'Mark as Contacted by Lawyer'" tooltipPosition="left">
+                  Contacted
+                </button>
+                }
+                @if (item.status !== 'Closed') {
+                <button class="btn btn-success btn-sm" (click)="updateStatus(item, 'Closed')"
+                  [adminTooltip]="'Mark consultation as Closed / Resolved'" tooltipPosition="left">
+                  Close
+                </button>
+                }
+              </div>
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="6" class="empty-state py-8 text-center">
+              <div class="text-muted">No consultation requests found.</div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Detail Modal -->
+  @if (selectedConsultation) {
+  <div class="modal-backdrop animate-in" (click)="selectedConsultation = null">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>Consultation Request Details</h3>
+          <p class="text-xs text-secondary">Client: {{ selectedConsultation.clientName }} → Lawyer: {{
+            selectedConsultation.lawyerName }}</p>
+        </div>
+        <button class="btn-close" (click)="selectedConsultation = null">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="ticket-content-box">
+          {{ selectedConsultation.message }}
+        </div>
+      </div>
+      <div class="modal-footer">
+        @if (selectedConsultation.status !== 'Closed') {
+        <button class="btn btn-success"
+          (click)="updateStatus(selectedConsultation, 'Closed'); selectedConsultation = null;">
+          Mark as Closed
+        </button>
+        }
+        <button class="btn btn-secondary" (click)="selectedConsultation = null">Close</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

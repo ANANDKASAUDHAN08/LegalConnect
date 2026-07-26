@@ -1,0 +1,88 @@
+<div class="announcements-page stagger-children">
+  <!-- Top Action Bar -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div>
+      <h3 class="text-primary font-bold">Broadcast Management</h3>
+      <p class="text-xs text-secondary">Publish platform update notes, maintenance alerts, and legal release announcements.</p>
+    </div>
+
+    <button class="btn btn-primary" (click)="openCreateModal()" [adminTooltip]="'Create a new live announcement release'" tooltipPosition="left">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span>New Broadcast Announcement</span>
+    </button>
+  </div>
+
+  <!-- Main Announcements Grid -->
+  @if (isLoading) {
+    <div class="announcements-grid animate-in">
+      @for (item of [1,2,3]; track $index) {
+        <div class="glass-card p-5 space-y-3">
+          <div class="flex justify-between items-center">
+            <admin-skeleton width="60px" height="20px" borderRadius="12px" />
+            <admin-skeleton width="70px" height="26px" borderRadius="6px" />
+          </div>
+          <admin-skeleton width="70%" height="20px" />
+          <admin-skeleton width="100%" height="40px" />
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="announcements-grid animate-in">
+      @for (item of announcements; track item.id) {
+        <div class="glass-card announcement-card">
+          <div class="card-header-row">
+            <span class="badge badge-info font-bold">v{{ item.version }}</span>
+            <button class="btn btn-danger btn-sm" (click)="deleteAnnouncement(item.id)" [adminTooltip]="'Delete this announcement release'" tooltipPosition="left">
+              Delete
+            </button>
+          </div>
+          <h3 class="announcement-title">{{ item.title }}</h3>
+          <p class="announcement-summary">{{ item.summary }}</p>
+          <div class="card-footer-row">
+            <span class="text-xs text-tertiary">Published: {{ item.publishedAt | date:'mediumDate' }}</span>
+            <span class="badge" [class.badge-success]="item.isActive" [class.badge-danger]="!item.isActive">
+              {{ item.isActive ? 'Active Broadcast' : 'Draft' }}
+            </span>
+          </div>
+        </div>
+      } @empty {
+        <div class="glass-card empty-card text-center p-8">
+          <div class="text-muted">No system announcements published yet.</div>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Create Modal -->
+  @if (showModal) {
+    <div class="modal-backdrop animate-in" (click)="showModal = false">
+      <div class="modal-box" (click)="$event.stopPropagation()">
+        <div class="modal-header">
+          <h3>Publish New System Announcement</h3>
+          <button class="btn-close" (click)="showModal = false">&times;</button>
+        </div>
+        <div class="modal-body space-y-4">
+          <div class="form-group">
+            <label class="form-label">Release Version</label>
+            <input type="text" class="form-input" [(ngModel)]="form.version" placeholder="e.g. 1.3.0" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Announcement Title</label>
+            <input type="text" class="form-input" [(ngModel)]="form.title" placeholder="Enter concise release title" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Summary Notes</label>
+            <textarea class="form-input" rows="4" [(ngModel)]="form.summary" placeholder="Provide release details or maintenance notes..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-primary" (click)="saveAnnouncement()">Publish Broadcast</button>
+          <button class="btn btn-secondary" (click)="showModal = false">Cancel</button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,332 @@
+<div class="lawyers-page stagger-children">
+  <!-- ─── Filter & Search Bar ─── -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div class="search-box">
+      <input type="text" class="form-input" placeholder="Search lawyers by name, email, or Bar Council number..."
+        [value]="search" (input)="onSearchInput($any($event.target).value)"
+        [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
+    </div>
+
+    <div class="filter-group">
+      <admin-select [options]="verificationOptions" [value]="verificationFilter"
+        (valueChange)="verificationFilter = $event; onFilterChange();" minWidth="210px"
+        [adminTooltip]="'Filter by verification queue status'" tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="cityOptions" [value]="selectedCity"
+        (valueChange)="selectedCity = $event; onFilterChange();" minWidth="160px"
+        [adminTooltip]="'Filter by city location'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary" (click)="resetFilters()" [adminTooltip]="'Clear search and filter criteria'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Reset</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ─── Main Lawyer Data Table ─── -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      @if (!isInitialLoad && isLoading) {
+      <div class="table-loading-bar"></div>
+      }
+      <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoading">
+        <thead>
+          <tr>
+            <th>Bar Council #</th>
+            <th>Lawyer Profile</th>
+            <th>Specialization</th>
+            <th>City</th>
+            <th>Experience</th>
+            <th>Fee (₹)</th>
+            <th>Verification Status</th>
+            <th>Availability</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isInitialLoad && isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td><admin-skeleton width="90px" height="16px" /></td>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <div>
+                  <admin-skeleton width="130px" height="16px" />
+                  <admin-skeleton width="150px" height="12px" class="mt-1" />
+                </div>
+              </div>
+            </td>
+            <td><admin-skeleton width="110px" height="16px" /></td>
+            <td><admin-skeleton width="70px" height="16px" /></td>
+            <td><admin-skeleton width="50px" height="16px" /></td>
+            <td><admin-skeleton width="60px" height="16px" /></td>
+            <td><admin-skeleton width="80px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td class="text-right"><admin-skeleton width="160px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else if (lawyers.length === 0) {
+          <tr>
+            <td colspan="9" class="text-center py-3">No lawyer profiles found matching filters.</td>
+          </tr>
+          } @else {
+          @for (l of lawyers; track l.id) {
+          <tr>
+            <td class="font-mono">{{ l.profile?.barCouncilNumber || 'Pending' }}</td>
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ l.fullName?.charAt(0) || 'L' }}</div>
+                <div>
+                  <span class="user-name">{{ l.fullName }}</span>
+                  <div class="text-muted text-xs">{{ l.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="truncate-text" style="max-width: 140px;">
+                {{ l.profile?.specialization || 'General Practice' }}
+              </span>
+            </td>
+            <td>{{ l.profile?.city || 'N/A' }}</td>
+            <td>{{ l.profile?.experienceYears ? (l.profile?.experienceYears + ' yrs') : 'N/A' }}</td>
+            <td>₹{{ l.profile?.consultationFee || 0 }}</td>
+            <td>
+              <span class="badge" [class.success]="l.profile?.isVerified" [class.warning]="!l.profile?.isVerified"
+                [adminTooltip]="l.profile?.isVerified ? 'Bar Council credentials verified' : 'Pending verification review'">
+                {{ l.profile?.isVerified ? 'Verified' : 'Pending Review' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.info]="l.profile?.isAvailable" [class.neutral]="!l.profile?.isAvailable"
+                [adminTooltip]="l.profile?.isAvailable ? 'Available for consultations' : 'Currently offline'">
+                {{ l.profile?.isAvailable ? 'Available' : 'Unavailable' }}
+              </span>
+            </td>
+            <td class="text-right">
+              <div class="action-buttons">
+                <!-- Approve / Reject Verification Toggle -->
+                <button class="btn btn-sm" [class.btn-success]="!l.profile?.isVerified"
+                  [class.btn-danger]="l.profile?.isVerified" (click)="toggleVerification(l)"
+                  [adminTooltip]="l.profile?.isVerified ? 'Revoke verification badge' : 'Approve & verify lawyer credentials'"
+                  tooltipPosition="top">
+                  @if (l.profile?.isVerified) {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                  </svg>
+                  <span>Revoke</span>
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                  <span>Approve</span>
+                  }
+                </button>
+
+                <button class="btn btn-secondary btn-sm" (click)="viewLawyer(l.id)"
+                  [adminTooltip]="'View full lawyer bio & reviews'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <span>View</span>
+                </button>
+
+                <button class="btn btn-secondary btn-sm" (click)="openEditModal(l)"
+                  [adminTooltip]="'Edit fee, specialization, city or bio'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Edit</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination (Image 3 Style) -->
+    <div class="pagination">
+      <div class="page-info">
+        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ pagination.total
+          }}</strong> records
+      </div>
+      <div class="pagination-controls">
+        <button class="pagination-btn" [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
+          [adminTooltip]="'Previous page'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Previous</span>
+        </button>
+
+        <span class="page-indicator">
+          Page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong>
+        </span>
+
+        <button class="pagination-btn" [disabled]="pagination.page >= pagination.pages"
+          (click)="changePage(pagination.page + 1)" [adminTooltip]="'Next page'">
+          <span>Next</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── View Lawyer Detail Modal ─── -->
+@if (selectedLawyerDetail) {
+<div class="modal-overlay" (click)="closeViewModal()">
+  <div class="modal-content glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Lawyer Profile Credentials</h3>
+      <button class="btn btn-secondary btn-sm" (click)="closeViewModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-header mb-2">
+        <div class="avatar-lg">{{ selectedLawyerDetail.user.fullName?.charAt(0) }}</div>
+        <div>
+          <h2>{{ selectedLawyerDetail.user.fullName }}</h2>
+          <p class="text-muted">{{ selectedLawyerDetail.user.email }} • Bar #: {{
+            selectedLawyerDetail.user.profile?.barCouncilNumber }}</p>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-2">
+        <div><strong>Specialization:</strong> {{ selectedLawyerDetail.user.profile?.specialization }}</div>
+        <div><strong>City:</strong> {{ selectedLawyerDetail.user.profile?.city }}</div>
+        <div><strong>Experience:</strong> {{ selectedLawyerDetail.user.profile?.experienceYears }} years</div>
+        <div><strong>Consultation Fee:</strong> ₹{{ selectedLawyerDetail.user.profile?.consultationFee }}</div>
+        <div><strong>In-Person Fee:</strong> ₹{{ selectedLawyerDetail.user.profile?.inPersonFee }}</div>
+        <div><strong>Cases Completed:</strong> {{ selectedLawyerDetail.user.profile?.casesCompleted }}</div>
+        <div><strong>Success Rate:</strong> {{ selectedLawyerDetail.user.profile?.successRate }}%</div>
+        <div><strong>Verification:</strong> {{ selectedLawyerDetail.user.profile?.isVerified ? 'Verified ✅' : 'Pending
+          ⚠️' }}</div>
+      </div>
+
+      <div class="mb-2">
+        <strong>Office Address:</strong>
+        <p class="text-muted">{{ selectedLawyerDetail.user.profile?.officeAddress || 'N/A' }}</p>
+      </div>
+
+      <div class="mb-2">
+        <strong>Biography:</strong>
+        <p class="text-muted">{{ selectedLawyerDetail.user.profile?.bio || 'N/A' }}</p>
+      </div>
+
+      <h4 class="mb-1">Platform Stats</h4>
+      <div class="grid-3 mb-2 text-center">
+        <div class="stat-mini">
+          <span class="mini-num">{{ selectedLawyerDetail.stats?.reviewCount || 0 }}</span>
+          <span class="mini-label">Reviews</span>
+        </div>
+        <div class="stat-mini">
+          <span class="mini-num">★ {{ selectedLawyerDetail.stats?.avgRating || 5.0 }}</span>
+          <span class="mini-label">Avg Rating</span>
+        </div>
+        <div class="stat-mini">
+          <span class="mini-num">{{ selectedLawyerDetail.stats?.consultationCount || 0 }}</span>
+          <span class="mini-label">Consultations</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ─── Edit Lawyer Profile Modal ─── -->
+@if (editingLawyer) {
+<div class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-content glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Edit Lawyer Specifications</h3>
+      <button class="btn btn-secondary btn-sm" (click)="closeEditModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group mb-1">
+        <label class="form-label">Bar Council Number</label>
+        <input type="text" class="form-input" [(ngModel)]="editForm.barCouncilNumber" />
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">Specialization (comma-separated)</label>
+        <input type="text" class="form-input" [(ngModel)]="editForm.specialization" />
+      </div>
+
+      <div class="grid-2 gap-1 mb-1">
+        <div class="form-group">
+          <label class="form-label">City</label>
+          <input type="text" class="form-input" [(ngModel)]="editForm.city" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Experience (Years)</label>
+          <input type="number" class="form-input" [(ngModel)]="editForm.experienceYears" />
+        </div>
+      </div>
+
+      <div class="grid-2 gap-1 mb-1">
+        <div class="form-group">
+          <label class="form-label">Consultation Fee (₹)</label>
+          <input type="number" class="form-input" [(ngModel)]="editForm.consultationFee" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">In-Person Fee (₹)</label>
+          <input type="number" class="form-input" [(ngModel)]="editForm.inPersonFee" />
+        </div>
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">Office Address</label>
+        <input type="text" class="form-input" [(ngModel)]="editForm.officeAddress" />
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">Biography</label>
+        <textarea class="form-input" rows="3" [(ngModel)]="editForm.bio"></textarea>
+      </div>
+
+      <div class="form-group mb-1 flex items-center gap-2">
+        <input type="checkbox" id="isVerifiedCheck" [(ngModel)]="editForm.isVerified" />
+        <label for="isVerifiedCheck">Bar Council Verification Status</label>
+      </div>
+
+      <div class="form-group mb-1 flex items-center gap-2">
+        <input type="checkbox" id="isAvailableCheck" [(ngModel)]="editForm.isAvailable" />
+        <label for="isAvailableCheck">Available for Consultations</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveLawyerEdit()">Save Changes & Sync</button>
+    </div>
+  </div>
+</div>
+}

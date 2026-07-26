@@ -1,101 +1,76 @@
 {
-  "hosting": {
-    "site": "legalconnect-501109",
-    "public": "frontend/dist/frontend/browser",
-    "ignore": [
-      "firebase.json",
-      "**/.*",
-      "**/node_modules/**"
-    ],
-    "rewrites": [
-      {
-        "source": "/api/auth{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/bookmark{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/notes{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/lawyer{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/consultation{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/review{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/favouritelawyer{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/favouriteresource{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/helpline{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/uploads{,/**}",
-        "run": {
-          "serviceId": "legalconnect-auth",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/legal{,/**}",
-        "run": {
-          "serviceId": "legalconnect-legal",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "/api/lawyers{,/**}",
-        "run": {
-          "serviceId": "legalconnect-legal",
-          "region": "us-central1"
-        }
-      },
-      {
-        "source": "**",
-        "destination": "/index.html"
-      }
-    ]
-  }
+  "hosting": [
+    {
+      "target": "frontend",
+      "site": "legalconnect-501109",
+      "public": "frontend/dist/frontend/browser",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        { "source": "/api/admin{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/auth{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/stats{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/users{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/sessions{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/login-history{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/bookmark{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/notes{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/lawyer{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/consultation{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/consultations{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/review{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/reviews{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/favouritelawyer{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/favouriteresource{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/helpline{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/announcement{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/announcements{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/consent{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/contact{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/contacts{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/feedback{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/analytics{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/uploads{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/legal{,/**}", "run": { "serviceId": "legalconnect-legal", "region": "us-central1" } },
+        { "source": "/api/lawyers{,/**}", "run": { "serviceId": "legalconnect-legal", "region": "us-central1" } },
+        { "source": "/api/info{,/**}", "run": { "serviceId": "legalconnect-legal", "region": "us-central1" } },
+        { "source": "**", "destination": "/index.html" }
+      ]
+    },
+    {
+      "target": "admin",
+      "site": "legalconnect-admin",
+      "public": "admin/dist/admin/browser",
+      "ignore": [
+        "firebase.json",
+        "**/.*",
+        "**/node_modules/**"
+      ],
+      "rewrites": [
+        { "source": "/api/admin{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/auth{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/stats{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/users{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/sessions{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/login-history{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/lawyer{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/consultation{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/consultations{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/review{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/reviews{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/contact{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/contacts{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/announcement{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/announcements{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/uploads{,/**}", "run": { "serviceId": "legalconnect-auth", "region": "us-central1" } },
+        { "source": "/api/legal{,/**}", "run": { "serviceId": "legalconnect-legal", "region": "us-central1" } },
+        { "source": "/api/lawyers{,/**}", "run": { "serviceId": "legalconnect-legal", "region": "us-central1" } },
+        { "source": "/api/info{,/**}", "run": { "serviceId": "legalconnect-legal", "region": "us-central1" } },
+        { "source": "**", "destination": "/index.html" }
+      ]
+    }
+  ]
 }

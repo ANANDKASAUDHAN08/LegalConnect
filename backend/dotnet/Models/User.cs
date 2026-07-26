@@ -27,6 +27,8 @@ namespace CoreApi.Models
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
+        public bool IsActive { get; set; } = true;
+
         // Security & Verification Fields
         public bool IsEmailVerified { get; set; } = false;
         

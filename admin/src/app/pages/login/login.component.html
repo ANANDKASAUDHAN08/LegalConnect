@@ -1,0 +1,75 @@
+<div class="login-wrapper">
+  <div class="glow-bg"></div>
+
+  <div class="login-card glass-card animate-in">
+    <div class="brand">
+      <div class="logo">
+        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+          <polyline points="2 17 12 22 22 17"></polyline>
+          <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+      </div>
+      <h2>LegalConnect Admin</h2>
+      <p>Control Center & Analytics Portal</p>
+    </div>
+
+    @if (errorMessage) {
+    <div class="alert alert-danger mb-2">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <line x1="12" y1="8" x2="12" y2="12"></line>
+        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+      </svg>
+      <span>{{ errorMessage }}</span>
+    </div>
+    }
+
+    <form (ngSubmit)="onSubmit()" class="login-form">
+      <div class="form-group">
+        <label class="form-label" for="email">Admin Email</label>
+        <input id="email" type="email" class="form-input" [(ngModel)]="email" name="email"
+          placeholder="admin@legalconnect.com" required autocomplete="email"
+          [adminTooltip]="'Enter admin account email'" tooltipPosition="top" />
+      </div>
+
+      <div class="form-group mt-1">
+        <label class="form-label" for="password">Password</label>
+        <input id="password" type="password" class="form-input" [(ngModel)]="password" name="password"
+          placeholder="••••••••••••" required autocomplete="current-password"
+          [adminTooltip]="'Enter admin account password'" tooltipPosition="top" />
+      </div>
+
+      @if (requires2FA) {
+      <div class="form-group mt-1 animate-in">
+        <label class="form-label" for="twoFactorCode">2FA Verification Code</label>
+        <input id="twoFactorCode" type="text" class="form-input" [(ngModel)]="twoFactorCode" name="twoFactorCode"
+          placeholder="6-digit TOTP code" maxlength="6" [adminTooltip]="'Open Authenticator App for 6-digit code'"
+          tooltipPosition="top" />
+      </div>
+      }
+
+      <button type="submit" class="btn btn-primary w-full mt-2" [disabled]="isLoading"
+        [adminTooltip]="'Authenticate and open control center'" tooltipPosition="bottom">
+        @if (isLoading) {
+        <span>Authenticating...</span>
+        } @else {
+        <span>Sign In to Admin Console</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+          <polyline points="12 5 19 12 12 19"></polyline>
+        </svg>
+        }
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span>Restricted Access — Unauthorized entry is strictly logged</span>
+    </div>
+  </div>
+</div>

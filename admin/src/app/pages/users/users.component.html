@@ -1,0 +1,372 @@
+<div class="users-page stagger-children">
+  <!-- ─── Filter & Search Bar ─── -->
+  <div class="glass-card page-filters mb-2 animate-in">
+    <div class="search-box">
+      <input type="text" class="form-input" placeholder="Search users by name or email..." [value]="search"
+        (input)="onSearchInput($any($event.target).value)"
+        [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
+    </div>
+
+    <div class="filter-group">
+      <admin-select [options]="roleOptions" [value]="selectedRole"
+        (valueChange)="selectedRole = $event; onFilterChange();" minWidth="170px" [adminTooltip]="'Filter by user role'"
+        tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="statusOptions" [value]="selectedStatus"
+        (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="160px"
+        [adminTooltip]="'Filter by account status'" tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="sortOptions" [value]="sortBy" (valueChange)="sortBy = $event; onFilterChange();"
+        minWidth="175px" [adminTooltip]="'Select table sort order'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary" (click)="resetFilters()" [adminTooltip]="'Clear search and filter criteria'"
+        tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Reset</span>
+      </button>
+
+      <button class="btn btn-primary" (click)="exportToCsv()"
+        [adminTooltip]="'Export filtered users directory to CSV file'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Export CSV</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Bulk Action Bar -->
+  @if (selectedUserIds.size > 0) {
+  <div class="bulk-action-bar animate-in">
+    <div class="bulk-info">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-indigo-400">
+        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+      </svg>
+      <span><strong class="text-white">{{ selectedUserIds.size }}</strong> user account(s) selected</span>
+    </div>
+    <div class="bulk-buttons">
+      <button class="btn btn-success btn-sm" (click)="bulkUpdateStatus(true)"
+        [adminTooltip]="'Activate all selected accounts'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>Bulk Activate</span>
+      </button>
+      <button class="btn btn-danger btn-sm" (click)="bulkUpdateStatus(false)"
+        [adminTooltip]="'Suspend all selected accounts'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+        </svg>
+        <span>Bulk Suspend</span>
+      </button>
+    </div>
+  </div>
+  }
+
+
+  <!-- ─── Main User Data Table ─── -->
+  <div class="glass-card animate-in">
+    <div class="data-table-wrapper">
+      @if (!isInitialLoad && isLoading) {
+      <div class="table-loading-bar"></div>
+      }
+      <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoading">
+        <thead>
+          <tr>
+            <th width="35px">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+            </th>
+            <th>ID</th>
+            <th>User</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Account Status</th>
+            <th>Verified</th>
+            <th>Joined</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @if (isInitialLoad && isLoading) {
+          @for (item of [1,2,3,4,5]; track $index) {
+          <tr>
+            <td><admin-skeleton width="30px" height="16px" /></td>
+            <td>
+              <div class="user-cell">
+                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <admin-skeleton width="120px" height="16px" />
+              </div>
+            </td>
+            <td><admin-skeleton width="160px" height="16px" /></td>
+            <td><admin-skeleton width="60px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td><admin-skeleton width="90px" height="16px" /></td>
+            <td class="text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else if (users.length === 0) {
+          <tr>
+            <td colspan="8" class="text-center py-3">No users found matching filters.</td>
+          </tr>
+          } @else {
+          @for (u of users; track u.id) {
+          <tr>
+            <td>
+              <input type="checkbox" [checked]="selectedUserIds.has(u.id)" (change)="toggleSelectUser(u.id)" />
+            </td>
+            <td>#{{ u.id }}</td>
+
+            <td>
+              <div class="user-cell">
+                <div class="user-avatar">{{ u.fullName?.charAt(0) || 'U' }}</div>
+                <span class="user-name">{{ u.fullName }}</span>
+              </div>
+            </td>
+            <td>{{ u.email }}</td>
+            <td>
+              <span class="badge" [class.purple]="u.role === 'Admin'" [class.blue]="u.role === 'Lawyer'"
+                [class.neutral]="u.role === 'Client'" [adminTooltip]="'Account privilege level'">
+                {{ u.role }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.success]="u.isActive" [class.danger]="!u.isActive"
+                [adminTooltip]="u.isActive ? 'User can log in' : 'Account deactivated by admin'">
+                {{ u.isActive ? 'Active' : 'Deactivated' }}
+              </span>
+            </td>
+            <td>
+              <span class="badge" [class.success]="u.isEmailVerified" [class.warning]="!u.isEmailVerified"
+                [adminTooltip]="u.isEmailVerified ? 'Email address verified' : 'Unverified email'">
+                {{ u.isEmailVerified ? 'Verified' : 'Unverified' }}
+              </span>
+            </td>
+            <td>{{ u.createdAt | date:'mediumDate' }}</td>
+            <td class="text-right">
+              <div class="action-buttons">
+                <button class="btn btn-secondary btn-sm" (click)="viewUser(u.id)"
+                  [adminTooltip]="'Inspect user profile & login history'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  <span>View</span>
+                </button>
+                <button class="btn btn-secondary btn-sm" (click)="openEditModal(u)"
+                  [adminTooltip]="'Edit name, email, role or status'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Edit</span>
+                </button>
+                <button class="btn btn-sm" [class.btn-danger]="u.isActive" [class.btn-success]="!u.isActive"
+                  (click)="toggleActive(u)"
+                  [adminTooltip]="u.isActive ? 'Deactivate user account' : 'Restore active status'"
+                  tooltipPosition="top">
+                  @if (u.isActive) {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                  </svg>
+                  <span>Deactivate</span>
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                  </svg>
+                  <span>Activate</span>
+                  }
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination (Image 3 Style) -->
+    <div class="pagination">
+      <div class="page-info">
+        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ pagination.total
+          }}</strong> records
+      </div>
+      <div class="pagination-controls">
+        <button class="pagination-btn" [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
+          [adminTooltip]="'Previous page'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Previous</span>
+        </button>
+
+        <span class="page-indicator">
+          Page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong>
+        </span>
+
+        <button class="pagination-btn" [disabled]="pagination.page >= pagination.pages"
+          (click)="changePage(pagination.page + 1)" [adminTooltip]="'Next page'">
+          <span>Next</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ─── View User Modal ─── -->
+@if (selectedUserDetail) {
+<div class="modal-overlay" (click)="closeViewModal()">
+  <div class="modal-content glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>User Profile & Audit Log</h3>
+      <button class="btn btn-secondary btn-sm" (click)="closeViewModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="detail-header mb-2">
+        <div class="avatar-lg">{{ selectedUserDetail.user.fullName?.charAt(0) }}</div>
+        <div>
+          <h2>{{ selectedUserDetail.user.fullName }}</h2>
+          <p class="text-muted">{{ selectedUserDetail.user.email }} • Role: {{ selectedUserDetail.user.role }}</p>
+        </div>
+      </div>
+
+      <div class="grid-2 mb-2">
+        <div><strong>Status:</strong> {{ selectedUserDetail.user.isActive ? 'Active' : 'Deactivated' }}</div>
+        <div><strong>Phone:</strong> {{ selectedUserDetail.user.phone || 'N/A' }}</div>
+        <div><strong>City:</strong> {{ selectedUserDetail.user.clientCity || 'N/A' }}</div>
+        <div><strong>Email Verified:</strong> {{ selectedUserDetail.user.isEmailVerified ? 'Yes' : 'No' }}</div>
+        <div><strong>2FA Enabled:</strong> {{ selectedUserDetail.user.isTwoFactorEnabled ? 'Yes' : 'No' }}</div>
+        <div><strong>Joined Date:</strong> {{ selectedUserDetail.user.createdAt | date:'medium' }}</div>
+      </div>
+
+      @if (selectedUserDetail.user.lawyerProfile) {
+      <div class="lawyer-box mb-2">
+        <h4>Lawyer Profile Specs</h4>
+        <p><strong>Bar Council #:</strong> {{ selectedUserDetail.user.lawyerProfile.barCouncilNumber }}</p>
+        <p><strong>Specialization:</strong> {{ selectedUserDetail.user.lawyerProfile.specialization }}</p>
+        <p><strong>Fee:</strong> ₹{{ selectedUserDetail.user.lawyerProfile.consultationFee }} / consultation</p>
+      </div>
+      }
+
+      <h4 class="mb-1 mt-2">Activity Summary</h4>
+      <div class="grid-3 mb-2 text-center">
+        <div class="stat-mini">
+          <span class="mini-num">{{ selectedUserDetail.activity.loginCount }}</span>
+          <span class="mini-label">Total Logins</span>
+        </div>
+        <div class="stat-mini">
+          <span class="mini-num">{{ selectedUserDetail.activity.bookmarkCount }}</span>
+          <span class="mini-label">Bookmarks</span>
+        </div>
+        <div class="stat-mini">
+          <span class="mini-num">{{ selectedUserDetail.activity.consultationCount }}</span>
+          <span class="mini-label">Consultations</span>
+        </div>
+      </div>
+
+      <h4>Recent Login History</h4>
+      <div class="login-logs">
+        @for (log of selectedUserDetail.activity.recentLogins; track $index) {
+        <div class="log-item">
+          <span>{{ log.loginTime | date:'short' }}</span>
+          <span class="badge" [class.success]="log.status === 'Success'" [class.danger]="log.status !== 'Success'">{{
+            log.status }}</span>
+          <span class="truncate" style="max-width: 150px;">{{ log.ipAddress }}</span>
+        </div>
+        }
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
+      <button class="btn btn-warning" (click)="triggerPasswordReset(selectedUserDetail.user.id)"
+        [adminTooltip]="'Generate a secure temporary password'">Reset Password</button>
+    </div>
+  </div>
+</div>
+}
+
+<!-- ─── Edit User Modal ─── -->
+@if (editingUser) {
+<div class="modal-overlay" (click)="closeEditModal()">
+  <div class="modal-content glass-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>Edit User Details</h3>
+      <button class="btn btn-secondary btn-sm" (click)="closeEditModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group mb-1">
+        <label class="form-label">Full Name</label>
+        <input type="text" class="form-input" [(ngModel)]="editForm.fullName" />
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">Email</label>
+        <input type="email" class="form-input" [(ngModel)]="editForm.email" />
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">Role</label>
+        <select class="form-select" [(ngModel)]="editForm.role">
+          <option value="Client">Client</option>
+          <option value="Lawyer">Lawyer</option>
+          <option value="Admin">Admin</option>
+        </select>
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">City</label>
+        <input type="text" class="form-input" [(ngModel)]="editForm.clientCity" />
+      </div>
+
+      <div class="form-group mb-1">
+        <label class="form-label">Phone</label>
+        <input type="text" class="form-input" [(ngModel)]="editForm.phone" />
+      </div>
+
+      <div class="form-group mb-1 flex items-center gap-2">
+        <input type="checkbox" id="isActiveCheck" [(ngModel)]="editForm.isActive" />
+        <label for="isActiveCheck">Account Active Status</label>
+      </div>
+
+      <div class="form-group mb-1 flex items-center gap-2">
+        <input type="checkbox" id="isVerifiedCheck" [(ngModel)]="editForm.isEmailVerified" />
+        <label for="isVerifiedCheck">Email Verified Status</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary" (click)="saveUserEdit()">Save Changes</button>
+    </div>
+  </div>
+</div>
+}
