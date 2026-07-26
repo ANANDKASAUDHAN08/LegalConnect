@@ -49,8 +49,10 @@ namespace CoreApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto request)
         {
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
+                _logger.LogWarning("[Security Audit] Registration failed: Email already exists. Email: {Email}, IP: {IP}", request.Email, ip);
                 return BadRequest("User with this email already exists.");
             }
 
@@ -70,6 +72,8 @@ namespace CoreApi.Controllers
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("[Security Audit] User registered successfully. UserId: {UserId}, Email: {Email}, Role: {Role}, IP: {IP}", user.Id, user.Email, user.Role, ip);
 
             if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
             {
@@ -98,6 +102,10 @@ namespace CoreApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto request)
         {
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Unknown Device";
+            if (string.IsNullOrWhiteSpace(userAgent)) userAgent = "Unknown Device";
+
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             
             bool isPasswordValid = false;
@@ -113,12 +121,9 @@ namespace CoreApi.Controllers
                 }
             }
 
-            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
-            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Unknown Device";
-            if (string.IsNullOrWhiteSpace(userAgent)) userAgent = "Unknown Device";
-
             if (user == null || !isPasswordValid)
             {
+                _logger.LogWarning("[Security Audit] Failed login attempt for Email: {Email}, IP: {IP}, UserAgent: {UserAgent}", request.Email, ip, userAgent);
                 if (user != null)
                 {
                     var failHistory = new LoginHistory
@@ -143,6 +148,7 @@ namespace CoreApi.Controllers
                 }
                 if (string.IsNullOrEmpty(user.TwoFactorSecret) || !TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode))
                 {
+                    _logger.LogWarning("[Security Audit] Failed 2FA verification attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ip);
                     var failHistory = new LoginHistory
                     {
                         UserId = user.Id,
@@ -160,6 +166,7 @@ namespace CoreApi.Controllers
             var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
             if (requireVerification && !user.IsEmailVerified)
             {
+                _logger.LogWarning("[Security Audit] Login blocked for unverified email. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
                 return BadRequest("Please verify your email address before signing in.");
             }
 
@@ -199,6 +206,7 @@ namespace CoreApi.Controllers
             SetTokenCookie(token);
             SetRefreshTokenCookie(rawRefresh);
 
+            _logger.LogInformation("[Security Audit] Successful login. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}, IP: {IP}", user.Id, user.Email, sessionId, ip);
             return Ok(new { token, message = "Logged in successfully!" });
         }
 
@@ -207,6 +215,9 @@ namespace CoreApi.Controllers
         {
             var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             var sessionIdClaim = User.FindFirst("SessionId")?.Value;
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+
             if (!string.IsNullOrEmpty(sessionIdClaim))
             {
                 var session = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == sessionIdClaim);
@@ -222,7 +233,7 @@ namespace CoreApi.Controllers
                 foreach (var rt in refreshTokens)
                 {
                     rt.RevokedAt = DateTime.UtcNow;
-                    rt.RevokedByIp = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+                    rt.RevokedByIp = ip;
                 }
                 await _context.SaveChangesAsync();
             }
@@ -242,6 +253,7 @@ namespace CoreApi.Controllers
                 Path = "/"
             });
 
+            _logger.LogInformation("[Security Audit] User logged out. UserId: {UserId}, SessionId: {SessionId}, IP: {IP}", userIdClaim ?? "Unknown", sessionIdClaim ?? "N/A", ip);
             return Ok(new { message = "Logged out successfully." });
         }
 

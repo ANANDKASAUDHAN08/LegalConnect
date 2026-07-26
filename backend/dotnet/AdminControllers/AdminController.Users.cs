@@ -26,7 +26,7 @@ namespace CoreApi.Controllers
             [FromQuery] bool? isEmailVerified = null,
             [FromQuery] string? sort = "newest")
         {
-            var query = _context.Users.AsQueryable();
+            var query = _context.Users.AsNoTracking().AsQueryable();
 
             if (!string.IsNullOrEmpty(role))
                 query = query.Where(u => u.Role == role);
@@ -171,6 +171,7 @@ namespace CoreApi.Controllers
             var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             if (id == currentUserId && dto.Role != null && dto.Role != "Admin")
             {
+                _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) attempted to downgrade their own admin role.", currentUserId);
                 return BadRequest(new { message = "Cannot change your own admin role." });
             }
 
@@ -185,6 +186,8 @@ namespace CoreApi.Controllers
 
             await _context.SaveChangesAsync();
 
+            _logger.LogInformation("[Security Audit] Admin (Id: {AdminId}) updated user profile (Target UserId: {TargetUserId}, Role: {Role}, IsActive: {IsActive})", currentUserId, id, user.Role, user.IsActive);
+
             return Ok(new { success = true, message = "User updated." });
         }
 
@@ -198,12 +201,15 @@ namespace CoreApi.Controllers
             var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             if (id == currentUserId)
             {
+                _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) attempted to delete their own account.", currentUserId);
                 return BadRequest(new { message = "Cannot delete your own account." });
             }
 
             // Soft delete
             user.IsActive = false;
             await _context.SaveChangesAsync();
+
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) deactivated user account (Target UserId: {TargetUserId}, Email: {TargetEmail})", currentUserId, id, user.Email);
 
             return Ok(new { success = true, message = "User deactivated." });
         }
@@ -212,6 +218,7 @@ namespace CoreApi.Controllers
         [HttpPost("users/{id}/reset-password")]
         public async Task<IActionResult> ResetUserPassword(int id)
         {
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var user = await _context.Users.FindAsync(id);
             if (user == null) return NotFound(new { message = "User not found." });
 
@@ -219,7 +226,9 @@ namespace CoreApi.Controllers
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(tempPassword);
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Password reset.", tempPassword });
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) triggered password reset for user (Target UserId: {TargetUserId}, Email: {TargetEmail})", adminId ?? "Unknown", id, user.Email);
+
+            return Ok(new { success = true, tempPassword, message = "Password reset successfully." });
         }
     }
 }

@@ -1,4 +1,4 @@
-import { ApplicationConfig, isDevMode, APP_INITIALIZER } from '@angular/core';
+import { ApplicationConfig, isDevMode, APP_INITIALIZER, ErrorHandler } from '@angular/core';
 import { provideRouter, withInMemoryScrolling, withPreloading, PreloadAllModules } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
@@ -6,6 +6,7 @@ import { routes } from './app.routes';
 import { provideServiceWorker } from '@angular/service-worker';
 import { authInterceptor } from './interceptors/auth.interceptor';
 import { AuthService } from './services/auth.service';
+import { GlobalErrorHandler } from './core/global-error-handler';
 import { firstValueFrom } from 'rxjs';
 
 function initializeSession(auth: AuthService): () => Promise<boolean> {
@@ -14,15 +15,16 @@ function initializeSession(auth: AuthService): () => Promise<boolean> {
 
 export const appConfig: ApplicationConfig = {
   providers: [
-    provideRouter(routes, 
-      withInMemoryScrolling({ 
+    provideRouter(routes,
+      withInMemoryScrolling({
         scrollPositionRestoration: 'enabled',
-        anchorScrolling: 'enabled' 
+        anchorScrolling: 'enabled'
       }),
       withPreloading(PreloadAllModules)
     ),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
+    { provide: ErrorHandler, useClass: GlobalErrorHandler },
     {
       provide: APP_INITIALIZER,
       useFactory: initializeSession,
@@ -30,8 +32,8 @@ export const appConfig: ApplicationConfig = {
       multi: true
     },
     provideServiceWorker('ngsw-worker.js', {
-        enabled: !isDevMode(),
-        registrationStrategy: 'registerWhenStable:30000'
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000'
     })
   ]
 };

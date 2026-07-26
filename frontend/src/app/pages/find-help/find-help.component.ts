@@ -6,7 +6,8 @@ import {
   HostListener,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
-  NgZone
+  NgZone,
+  isDevMode
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -192,7 +193,7 @@ export class FindHelpComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onSuggestionSubmitted(resource: any) {
-    console.log('User suggested new resource:', resource);
+    if (isDevMode()) console.log('User suggested new resource:', resource);
   }
 
   ngOnInit() {

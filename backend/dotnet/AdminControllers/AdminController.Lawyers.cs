@@ -24,6 +24,7 @@ namespace CoreApi.Controllers
             [FromQuery] string? search = null)
         {
             var query = _context.Users
+                .AsNoTracking()
                 .Include(u => u.LawyerProfile)
                 .Where(u => u.Role == "Lawyer");
 

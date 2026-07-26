@@ -6,8 +6,12 @@ import { getCache, setCache } from '../../services/statsService';
 import aiService from '../../services/AiService';
 import { normalizeActShortName } from '../../utils/geoUtils';
 import { splitTitle, getParsedContent } from '../../utils/textParser';
+import { defaultAiRateLimiter } from '../../middlewares/aiRateLimiter';
 
 const router = Router();
+
+// Apply enterprise AI rate-limiting and prompt payload protection to all AI routes
+router.use(defaultAiRateLimiter);
 
 // POST /ask - AI-powered "Ask a Legal Question"
 router.post('/ask', asyncHandler(async (req: Request, res: Response) => {

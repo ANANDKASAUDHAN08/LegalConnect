@@ -40,6 +40,7 @@ namespace CoreApi.Controllers
 
             if (user == null || !isPasswordValid)
             {
+                _logger.LogWarning("[Security Audit] Failed admin login attempt for Email: {Email}, IP: {IP}, UserAgent: {UserAgent}", request.Email, ip, userAgent);
                 if (user != null)
                 {
                     _context.LoginHistories.Add(new LoginHistory
@@ -58,6 +59,7 @@ namespace CoreApi.Controllers
             // ADMIN-ONLY CHECK — reject non-admin users
             if (user.Role != "Admin")
             {
+                _logger.LogWarning("[Security Audit] Unauthorized non-admin user attempted admin login. UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ip);
                 _context.LoginHistories.Add(new LoginHistory
                 {
                     UserId = user.Id,
@@ -72,6 +74,7 @@ namespace CoreApi.Controllers
 
             if (!user.IsActive)
             {
+                _logger.LogWarning("[Security Audit] Deactivated admin user attempted login. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
                 return Unauthorized(new { message = "This account has been deactivated." });
             }
 
@@ -84,6 +87,7 @@ namespace CoreApi.Controllers
                 }
                 if (string.IsNullOrEmpty(user.TwoFactorSecret) || !TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode))
                 {
+                    _logger.LogWarning("[Security Audit] Admin 2FA verification failed for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ip);
                     _context.LoginHistories.Add(new LoginHistory
                     {
                         UserId = user.Id,
@@ -121,6 +125,7 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
 
             var token = CreateAdminToken(user, sessionId);
+            _logger.LogInformation("[Security Audit] Successful Admin Login. AdminId: {AdminId}, Email: {Email}, SessionId: {SessionId}, IP: {IP}", user.Id, user.Email, sessionId, ip);
 
             // Set cookie for admin panel
             var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();

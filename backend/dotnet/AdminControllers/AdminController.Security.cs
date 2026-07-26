@@ -19,6 +19,7 @@ namespace CoreApi.Controllers
         {
             var total = await _context.ActiveSessions.CountAsync();
             var sessions = await _context.ActiveSessions
+                .AsNoTracking()
                 .Include(s => s.User)
                 .OrderByDescending(s => s.LastActive)
                 .Skip((page - 1) * limit)
@@ -44,11 +45,14 @@ namespace CoreApi.Controllers
         [HttpDelete("sessions/{id}")]
         public async Task<IActionResult> ForceLogout(int id)
         {
+            var adminId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             var session = await _context.ActiveSessions.FindAsync(id);
             if (session == null) return NotFound(new { message = "Session not found." });
 
             _context.ActiveSessions.Remove(session);
             await _context.SaveChangesAsync();
+
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) forcefully terminated active session ID: {SessionId} (Target UserId: {TargetUserId})", adminId ?? "Unknown", id, session.UserId);
 
             return Ok(new { success = true, message = "Session terminated." });
         }
@@ -61,6 +65,7 @@ namespace CoreApi.Controllers
             [FromQuery] string? status = null)
         {
             var query = _context.LoginHistories
+                .AsNoTracking()
                 .Include(l => l.User)
                 .AsQueryable();
 

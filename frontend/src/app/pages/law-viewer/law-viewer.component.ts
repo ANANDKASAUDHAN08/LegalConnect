@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectionStrategy, ChangeDetectorRef, isDevMode } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
@@ -317,13 +317,13 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   private async checkCacheVersionAndClearIfNeeded(): Promise<void> {
     const currentVersion = localStorage.getItem('legalconnect_cache_version');
     if (currentVersion !== EXPECTED_CACHE_VERSION) {
-      console.log('🔄 App cache version mismatch/upgrade. Clearing local IndexedDB acts and sections cache...');
+      if (isDevMode()) console.log('🔄 App cache version mismatch/upgrade. Clearing local IndexedDB acts and sections cache...');
       try {
         await this.db.acts.clear();
         await this.db.sections.clear();
         localStorage.setItem('legalconnect_cache_version', EXPECTED_CACHE_VERSION);
         localStorage.removeItem('legalconnect_refreshed_acts');
-        console.log('✅ Local IndexedDB acts and sections cache cleared.');
+        if (isDevMode()) console.log('✅ Local IndexedDB acts and sections cache cleared.');
       } catch (err) {
         console.warn('Failed to clear acts/sections tables:', err);
       }
@@ -339,7 +339,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     if (forceRefresh) {
       refreshedActs.push(this.shortName);
       localStorage.setItem('legalconnect_refreshed_acts', refreshedActs.join(','));
-      console.log(`🔄 First load of ${this.shortName} since cache clear. Force-refreshing from backend API...`);
+      if (isDevMode()) console.log(`🔄 First load of ${this.shortName} since cache clear. Force-refreshing from backend API...`);
     }
 
     if (navigator.onLine) {
@@ -945,7 +945,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
             this.cdr.markForCheck();
             return;
           } else {
-            console.log('Cache expired for summary:', cacheKey);
+            if (isDevMode()) console.log('Cache expired for summary:', cacheKey);
           }
         } else {
           // Fallback for unexpected structured format

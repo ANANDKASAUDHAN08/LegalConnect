@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, isDevMode } from '@angular/core';
 import { NgIf, NgFor, SlicePipe, NgClass } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -817,7 +817,7 @@ PETITION FOR MONTHLY MAINTENANCE ALLOWANCE
     this.isListening = true;
 
     recognition.onstart = () => {
-      console.log('Voice recognition started...');
+      if (isDevMode()) console.log('Voice recognition started...');
     };
 
     recognition.onresult = (event: any) => {
