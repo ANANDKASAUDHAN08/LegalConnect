@@ -9,67 +9,104 @@ export interface AdminUser {
   id: number;
   fullName: string;
   email: string;
-  role: 'Admin' | 'Lawyer' | 'Client';
+  role: 'Admin' | 'Lawyer' | 'Client' | string;
   phone?: string;
   clientCity?: string;
   clientState?: string;
   isActive: boolean;
   isEmailVerified: boolean;
-  isTwoFactorEnabled: boolean;
+  isTwoFactorEnabled?: boolean;
   createdAt: string;
+}
+
+export interface UserListResponse {
+  users: AdminUser[];
+  total: number;
+  page: number;
+  limit: number;
 }
 
 export interface AdminLawyerProfile {
   id: number;
-  userId: number;
+  userId?: number;
   fullName: string;
   email: string;
-  barCouncilNumber: string;
+  phone?: string;
+  barCouncilNumber?: string;
+  barCouncilId?: string;
   specialization: string;
   experienceYears: number;
   city: string;
-  consultationFee: number;
-  inPersonFee: number;
+  state?: string;
+  consultationFee?: number;
+  inPersonFee?: number;
   isVerified: boolean;
-  isAvailable: boolean;
-  createdAt: string;
+  isAvailable?: boolean;
+  rating?: number;
+  reviewCount?: number;
+  createdAt?: string;
 }
 
-export interface AdminDashboardOverview {
+export type LawyerProfile = AdminLawyerProfile;
+
+export interface LawyerListResponse {
+  lawyers: LawyerProfile[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface DashboardOverview {
   totalUsers: number;
-  usersThisMonth: number;
+  usersThisMonth?: number;
   totalLawyers: number;
   verifiedLawyers: number;
-  pendingLawyerVerifications: number;
-  totalConsultations: number;
-  activeSessions: number;
-  totalContacts: number;
-  newContacts: number;
+  pendingLawyerVerifications?: number;
+  totalConsultations?: number;
+  activeConsultations?: number;
+  pendingReviews?: number;
+  totalHelplines?: number;
+  totalResources?: number;
+  systemStatus?: string;
+  activeSessions?: number;
+  totalContacts?: number;
+  newContacts?: number;
 }
 
+export type AdminDashboardOverview = DashboardOverview;
+
 export interface ContactSubmissionItem {
-  id: number | string;
+  id: number;
   fullName: string;
   email: string;
   phone?: string;
   subject: string;
+  userEmail?: string;
   message: string;
-  status: 'New' | 'Read' | 'Replied' | 'Archived' | string;
+  status: 'New' | 'Read' | 'Replied' | 'Archived' | 'open' | 'in_progress' | 'resolved' | string;
   createdAt: string;
   source?: string;
+  resolutionNote?: string;
 }
+
+export type SupportTicketItem = ContactSubmissionItem;
 
 export interface SystemAnnouncementItem {
   id: number;
-  version: string;
+  version?: string;
   title: string;
-  summary: string;
+  summary?: string;
+  message?: string;
   detailsMarkdown?: string;
   type: number;
-  isModalTrigger: boolean;
+  isModalTrigger?: boolean;
   isActive: boolean;
-  publishedAt: string;
+  publishedAt?: string;
+  createdAt?: string;
+  expiresAt?: string;
 }
+
+export type AnnouncementItem = SystemAnnouncementItem;
 
 export interface ActiveSessionItem {
   id: number;
@@ -97,11 +134,45 @@ export interface LoginHistoryItem {
 
 export interface AdminReviewItem {
   id: number;
-  lawyerId: number;
+  lawyerId?: number;
   lawyerName: string;
   userName: string;
-  userRole: string;
+  userRole?: string;
   rating: number;
   comment: string;
+  isApproved?: boolean;
   createdAt: string;
+}
+
+export type ReviewItem = AdminReviewItem;
+
+export interface HelplineItem {
+  id: string | number;
+  name: string;
+  number: string;
+  category: string;
+  location: string;
+  description?: string;
+  is24x7: boolean;
+}
+
+export interface ResourceItem {
+  id: string | number;
+  title: string;
+  category: string;
+  description: string;
+  linkUrl?: string;
+  contactNumber?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+}
+
+export interface ConsultationItem {
+  id: number;
+  lawyerName: string;
+  clientName: string;
+  scheduledAt: string;
+  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | string;
+  fee: number;
 }

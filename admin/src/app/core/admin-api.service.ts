@@ -15,7 +15,7 @@ import {
   SupportTicketItem,
   ReviewItem,
   ConsultationItem
-} from './models/admin-models';
+} from './models/admin.models';
 
 /**
  * AdminApiService - Master Facade Service:

@@ -203,6 +203,83 @@
       </div>
 
       <div class="topbar-right">
+        <!-- ─── Global Command Palette Trigger (Ctrl + K) ─── -->
+        <button class="topbar-action-btn cmd-trigger" (click)="openCommandPalette()"
+          [adminTooltip]="'Global Quick Search & Navigation (Ctrl + K)'" tooltipPosition="bottom">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <span class="cmd-shortcut-text">Ctrl K</span>
+        </button>
+
+        <!-- ─── Real-time Live Activity Stream ─── -->
+        <div class="activity-dropdown-wrapper">
+          <button class="topbar-action-btn" (click)="toggleActivityDropdown($event)"
+            [adminTooltip]="'Real-time Telemetry & Live Activity Stream'" tooltipPosition="bottom">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+            @if (activityService.unreadCount > 0) {
+            <span class="activity-badge">{{ activityService.unreadCount }}</span>
+            }
+          </button>
+
+          @if (showActivityDropdown) {
+          <div class="activity-dropdown-menu">
+            <div class="activity-header">
+              <div class="activity-title">
+                <span class="live-dot"></span>
+                <span>Live Activity Stream</span>
+              </div>
+              <span class="activity-count">{{ activityService.events().length }} events</span>
+            </div>
+            <div class="activity-list">
+              @for (ev of activityService.events(); track ev.id) {
+              <a [routerLink]="ev.link || '/dashboard'" class="activity-item" (click)="showActivityDropdown = false">
+                <div class="activity-icon" [ngClass]="ev.type">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                  </svg>
+                </div>
+                <div class="activity-content">
+                  <div class="activity-item-title">{{ ev.title }}</div>
+                  <div class="activity-item-msg">{{ ev.message }}</div>
+                  <div class="activity-item-time">{{ ev.timestamp | date:'shortTime' }}</div>
+                </div>
+              </a>
+              }
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- ─── Theme Toggle Button (Light/Dark) ─── -->
+        <button class="topbar-action-btn theme-toggle" (click)="toggleTheme()"
+          [adminTooltip]="themeService.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+          tooltipPosition="bottom">
+          @if (themeService.isDark) {
+          <!-- Sun Icon for Light Mode -->
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          } @else {
+          <!-- Moon Icon for Dark Mode -->
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          }
+        </button>
+
         <div class="admin-profile" [adminTooltip]="'Logged in as Super Admin'" tooltipPosition="left">
           <div class="avatar">{{ user?.fullName?.charAt(0) || 'A' }}</div>
           <div class="profile-info">
@@ -229,4 +306,6 @@
     </main>
   </div>
   <admin-dialog></admin-dialog>
+  <admin-command-palette></admin-command-palette>
+  <admin-two-factor-modal></admin-two-factor-modal>
 </div>

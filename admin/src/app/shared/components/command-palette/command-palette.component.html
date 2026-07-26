@@ -1,0 +1,55 @@
+@if (palette.isOpen()) {
+<div class="cmd-backdrop" (click)="palette.close()">
+  <div class="cmd-modal" (click)="$event.stopPropagation()">
+    <div class="cmd-search-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" placeholder="Type a command or search (e.g. Users, Lawyers, Audit Logs, Security)..."
+        [(ngModel)]="query" (input)="onSearch()" (keydown)="onKeyDown($event)" autofocus class="cmd-input" />
+      <span class="cmd-shortcut-badge">ESC</span>
+    </div>
+
+    <div class="cmd-body">
+      @if (filteredItems.length === 0) {
+      <div class="cmd-empty">
+        <p>No matching commands found for "{{ query }}".</p>
+      </div>
+      } @else {
+      <div class="cmd-list">
+        @for (item of filteredItems; track item.id; let idx = $index) {
+        <div class="cmd-item" [class.active]="selectedIndex === idx" (mouseenter)="selectedIndex = idx"
+          (click)="execute(item)">
+          <div class="cmd-item-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              @if (item.category === 'Navigation') {
+              <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+              <polyline points="2 17 12 22 22 17"></polyline>
+              } @else if (item.category === 'Directory') {
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+              <circle cx="9" cy="7" r="4"></circle>
+              } @else {
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+              }
+            </svg>
+          </div>
+          <div class="cmd-item-content">
+            <span class="cmd-item-title">{{ item.title }}</span>
+            <span class="cmd-item-desc">{{ item.description }}</span>
+          </div>
+          <span class="cmd-category-tag">{{ item.category }}</span>
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <div class="cmd-footer">
+      <span><kbd>↑</kbd> <kbd>↓</kbd> Navigate</span>
+      <span><kbd>↵</kbd> Select</span>
+      <span><kbd>ESC</kbd> Close</span>
+    </div>
+  </div>
+</div>
+}

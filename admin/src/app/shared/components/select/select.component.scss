@@ -6,7 +6,7 @@
   z-index: 10;
 
   &.is-open {
-    z-index: 99999 !important;
+    z-index: 9999 !important;
   }
 
   .custom-select-trigger {
@@ -15,22 +15,22 @@
     justify-content: space-between;
     gap: 10px;
     padding: 8px 14px;
-    background: rgba(17, 24, 39, 0.85);
+    background: var(--bg-tertiary, #1a2235);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--border-light, rgba(255, 255, 255, 0.12));
     border-radius: 10px;
-    color: #f1f5f9;
+    color: var(--text-primary, #f1f5f9);
     font-size: 0.85rem;
     font-weight: 500;
     cursor: pointer;
     transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-sm);
 
     &:hover {
-      background: rgba(26, 34, 53, 0.9);
-      border-color: rgba(99, 102, 241, 0.4);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+      background: var(--bg-card-hover, rgba(26, 34, 53, 0.9));
+      border-color: var(--accent-primary-light, rgba(99, 102, 241, 0.4));
+      box-shadow: var(--shadow-md);
     }
 
     .trigger-label {
@@ -54,20 +54,20 @@
     .arrow-icon {
       display: flex;
       align-items: center;
-      color: #94a3b8;
+      color: var(--text-tertiary, #94a3b8);
       transition: transform 250ms cubic-bezier(0.4, 0, 0.2, 1);
 
       &.rotated {
         transform: rotate(180deg);
-        color: #818cf8;
+        color: var(--accent-primary, #818cf8);
       }
     }
   }
 
   &.is-open .custom-select-trigger {
-    border-color: #6366f1;
+    border-color: var(--accent-primary, #6366f1);
     box-shadow: 0 0 16px rgba(99, 102, 241, 0.3);
-    background: rgba(26, 34, 53, 0.95);
+    background: var(--bg-card-hover, rgba(26, 34, 53, 0.95));
   }
 
   .custom-select-menu {
@@ -75,13 +75,13 @@
     top: calc(100% + 6px);
     left: 0;
     min-width: 100%;
-    z-index: 999999 !important;
-    background: #111827;
+    z-index: 99999 !important;
+    background: var(--bg-secondary, #111827);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    border: 1px solid var(--border-light, rgba(255, 255, 255, 0.18));
     border-radius: 12px;
-    box-shadow: 0 16px 48px rgba(0, 0, 0, 0.85);
+    box-shadow: var(--shadow-lg);
     overflow: hidden;
 
     .options-list {
@@ -94,7 +94,7 @@
       }
 
       &::-webkit-scrollbar-thumb {
-        background: #475569;
+        background: var(--text-muted, #475569);
         border-radius: 4px;
       }
 
@@ -105,7 +105,7 @@
         padding: 9px 12px;
         border-radius: 8px;
         font-size: 0.83rem;
-        color: #cbd5e1;
+        color: var(--text-secondary, #cbd5e1);
         cursor: pointer;
         transition: all 150ms ease;
 
@@ -124,19 +124,19 @@
         }
 
         .checkmark {
-          color: #10b981;
+          color: var(--accent-success, #10b981);
           font-weight: bold;
           font-size: 0.85rem;
         }
 
         &:hover {
-          background: rgba(99, 102, 241, 0.18);
-          color: #ffffff;
+          background: var(--bg-glass-hover, rgba(99, 102, 241, 0.18));
+          color: var(--text-primary, #ffffff);
         }
 
         &.selected {
-          background: rgba(99, 102, 241, 0.25);
-          color: #818cf8;
+          background: rgba(99, 102, 241, 0.15);
+          color: var(--accent-primary, #818cf8);
           font-weight: 600;
         }
       }

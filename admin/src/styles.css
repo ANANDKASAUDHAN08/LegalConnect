@@ -69,6 +69,32 @@
   --transition-slow: 400ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ─── Light Theme CSS Custom Properties Override ─── */
+[data-theme="light"],
+html[data-theme="light"],
+body[data-theme="light"] {
+  --bg-primary: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.9);
+  --bg-card-hover: rgba(241, 245, 249, 0.95);
+  --bg-glass: rgba(15, 23, 42, 0.04);
+  --bg-glass-hover: rgba(15, 23, 42, 0.08);
+
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+
+  --border-subtle: rgba(15, 23, 42, 0.08);
+  --border-light: rgba(15, 23, 42, 0.15);
+  --border-focus: rgba(99, 102, 241, 0.5);
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
 /* ─── Global SVG Icon Sizing Safeguard ─── */
 svg {
   display: inline-block;
@@ -80,6 +106,21 @@ svg:not([width]) {
   width: 1.125rem;
   height: 1.125rem;
   max-width: 100%;
+}
+
+/* ─── Global Animations ─── */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
 }
 
 /* ─── Global Reset & Typography ─── */
@@ -155,12 +196,12 @@ a:hover {
 .act-topbar {
   position: sticky !important;
   top: -1rem !important;
-  z-index: 1000 !important;
-  background: rgba(10, 14, 26, 0.95) !important;
+  z-index: 10 !important;
+  background: var(--bg-secondary) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+  box-shadow: var(--shadow-md) !important;
   margin-left: -1.5rem !important;
   margin-right: -1.5rem !important;
   padding-left: 1.5rem !important;
@@ -170,7 +211,7 @@ a:hover {
 
 .page-filters:has(.is-open),
 .act-topbar:has(.is-open) {
-  z-index: 99999 !important;
+  z-index: 20 !important;
 }
 
 /* ─── Shared UI Primitive: Data Table Shell ─── */
