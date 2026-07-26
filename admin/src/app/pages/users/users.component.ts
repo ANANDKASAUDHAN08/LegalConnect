@@ -11,6 +11,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { smartLoading } from '../../core/utils/smart-loading.operator';
 import { Subject } from 'rxjs';
+import { CsvExporter } from '../../core/utils/csv-exporter';
 
 @Component({
   selector: 'admin-users',
@@ -281,32 +282,49 @@ export class UsersComponent implements OnInit {
     }
   }
 
-  exportToCsv(): void {
-    if (!this.users.length) {
-      this.toast.warning('No user records available to export.');
-      return;
-    }
-    const headers = ['ID', 'Full Name', 'Email', 'Role', 'City', 'Phone', 'Email Verified', 'Active Status', 'Created At'];
-    const rows = this.users.map(u => [
-      u.id,
-      `"${u.fullName || ''}"`,
-      `"${u.email || ''}"`,
-      u.role || '',
-      `"${u.clientCity || ''}"`,
-      `"${u.phone || ''}"`,
-      u.isEmailVerified ? 'Yes' : 'No',
-      u.isActive ? 'Active' : 'Suspended',
-      u.createdAt || ''
-    ]);
+  isExporting = false;
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `legalconnect_users_export_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    this.toast.success(`Exported ${this.users.length} user records to CSV.`);
+  exportToCsv(): void {
+    if (this.isExporting) return;
+    this.isExporting = true;
+    this.api.getUsers({
+      search: this.search || undefined,
+      role: this.selectedRole || undefined,
+      status: this.selectedStatus || undefined,
+      page: 1,
+      limit: 5000
+    }).subscribe({
+      next: (res: any) => {
+        this.isExporting = false;
+        const fullList = res.data || res.users || res || [];
+        if (!fullList.length) {
+          this.toast.warning('No user records available to export.');
+          return;
+        }
+        const headers = ['ID', 'Full Name', 'Email', 'Role', 'City', 'Phone', 'Email Verified', 'Active Status', 'Created At'];
+        const rows = fullList.map((u: any) => [
+          u.id,
+          u.fullName || '',
+          u.email || '',
+          u.role || '',
+          u.clientCity || '',
+          u.phone || '',
+          u.isEmailVerified ? 'Yes' : 'No',
+          u.isActive ? 'Active' : 'Suspended',
+          u.createdAt || ''
+        ]);
+
+        try {
+          CsvExporter.export('legalconnect_user_directory_audit', headers, rows);
+          this.toast.success(`Exported all ${fullList.length} user records to CSV.`);
+        } catch (err: any) {
+          this.toast.error(err.message || 'Export failed.');
+        }
+      },
+      error: () => {
+        this.isExporting = false;
+        this.toast.error('Failed to fetch complete user records for export.');
+      }
+    });
   }
 }

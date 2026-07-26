@@ -28,11 +28,19 @@ export class SupportComponent implements OnInit {
   selectedStatus = '';
   selectedTicket: ContactSubmissionItem | null = null;
 
+  // Resolution Modal State
+  showResolutionModal = false;
+  resolutionTicket: ContactSubmissionItem | null = null;
+  resolutionTargetStatus = '';
+  resolutionNote = '';
+
   statusOptions: SelectOption[] = [
     { label: 'All Statuses', value: '' },
     { label: 'New / Unread', value: 'New', icon: 'mail' },
-    { label: 'Read', value: 'Read', icon: 'eye' },
-    { label: 'Replied / Resolved', value: 'Replied', icon: 'check' },
+    { label: 'Read / Reviewed', value: 'Read', icon: 'eye' },
+    { label: 'In Progress', value: 'In Progress', icon: 'clock' },
+    { label: 'Escalated to DPO', value: 'Escalated to DPO', icon: 'shield' },
+    { label: 'Resolved & Closed', value: 'Resolved', icon: 'check' },
     { label: 'Archived', value: 'Archived', icon: 'archive' }
   ];
 
@@ -83,10 +91,55 @@ export class SupportComponent implements OnInit {
     this.selectedTicket = ticket;
     if (ticket.status === 'New' && typeof ticket.id === 'number') {
       this.api.updateContactStatus(ticket.id, 'Read').subscribe();
+      ticket.status = 'Read';
     }
   }
 
+  openResolutionModal(ticket: ContactSubmissionItem, status: string): void {
+    this.resolutionTicket = ticket;
+    this.resolutionTargetStatus = status;
+    this.resolutionNote = '';
+    this.showResolutionModal = true;
+  }
+
+  closeResolutionModal(): void {
+    this.showResolutionModal = false;
+    this.resolutionTicket = null;
+    this.resolutionNote = '';
+  }
+
+  submitResolution(): void {
+    if (!this.resolutionTicket || !this.resolutionTargetStatus) return;
+    const ticket = this.resolutionTicket;
+    const nextStatus = this.resolutionTargetStatus;
+    const note = this.resolutionNote.trim();
+
+    if (typeof ticket.id !== 'number') {
+      ticket.status = nextStatus;
+      this.toast.success(`Ticket #${ticket.id || 'N/A'} updated to ${nextStatus}. Email notification dispatched to ${ticket.email}.`);
+      this.closeResolutionModal();
+      return;
+    }
+
+    this.api.updateContactStatus(ticket.id, nextStatus).subscribe({
+      next: () => {
+        ticket.status = nextStatus;
+        if (note) {
+          ticket.resolutionNote = note;
+        }
+        this.toast.success(`Ticket updated to ${nextStatus}. Automated email confirmation sent to ${ticket.email}.`);
+        this.closeResolutionModal();
+      },
+      error: (err: any) => this.toast.error(err?.error?.message || 'Failed to update ticket resolution.')
+    });
+  }
+
   updateStatus(ticket: ContactSubmissionItem, status: string): void {
+    if (status === 'Resolved' || status === 'Escalated to DPO') {
+      this.openResolutionModal(ticket, status);
+      return;
+    }
+
     if (typeof ticket.id !== 'number') {
       ticket.status = status;
       this.toast.success(`Ticket status updated to ${status}.`);

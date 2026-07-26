@@ -9,7 +9,7 @@
 
     <div class="filter-group">
       <admin-select [options]="statusOptions" [value]="selectedStatus"
-        (valueChange)="selectedStatus = $event; fetchContacts();" minWidth="180px"
+        (valueChange)="selectedStatus = $event; fetchContacts();" minWidth="200px"
         [adminTooltip]="'Filter by ticket status'" tooltipPosition="top">
       </admin-select>
 
@@ -33,7 +33,7 @@
             <th>Applicant / Email</th>
             <th>Subject</th>
             <th>Source</th>
-            <th>Status</th>
+            <th>Status Workflow</th>
             <th>Submitted At</th>
             <th class="text-right">Actions</th>
           </tr>
@@ -79,8 +79,9 @@
             </td>
             <td>
               <span class="badge" [ngClass]="{
-                    'badge-success': contact.status === 'Replied',
-                    'badge-info': contact.status === 'New',
+                    'badge-success': contact.status === 'Resolved' || contact.status === 'Replied',
+                    'badge-warning': contact.status === 'Escalated to DPO',
+                    'badge-info': contact.status === 'In Progress' || contact.status === 'New',
                     'badge-neutral': contact.status === 'Read'
                   }">
                 {{ contact.status }}
@@ -93,10 +94,14 @@
                   [adminTooltip]="'View detailed ticket content'" tooltipPosition="left">
                   View
                 </button>
-                @if (contact.status !== 'Replied') {
-                <button class="btn btn-success btn-sm" (click)="updateStatus(contact, 'Replied')"
-                  [adminTooltip]="'Mark inquiry as resolved/replied'" tooltipPosition="left">
-                  Mark Replied
+                @if (contact.status !== 'Resolved' && contact.status !== 'Replied') {
+                <button class="btn btn-warning btn-sm" (click)="openResolutionModal(contact, 'Escalated to DPO')"
+                  [adminTooltip]="'Escalate grievance to Data Protection Officer (DPO)'" tooltipPosition="left">
+                  Escalate DPO
+                </button>
+                <button class="btn btn-success btn-sm" (click)="openResolutionModal(contact, 'Resolved')"
+                  [adminTooltip]="'Resolve inquiry with resolution note & email notification'" tooltipPosition="left">
+                  Resolve
                 </button>
                 }
               </div>
@@ -115,7 +120,7 @@
     </div>
   </div>
 
-  <!-- Detail Modal -->
+  <!-- Ticket Detail Modal -->
   @if (selectedTicket) {
   <div class="modal-backdrop animate-in" (click)="selectedTicket = null">
     <div class="modal-box" (click)="$event.stopPropagation()">
@@ -127,15 +132,63 @@
         <button class="btn-close" (click)="selectedTicket = null">&times;</button>
       </div>
       <div class="modal-body">
-        <div class="ticket-content-box">
+        <div class="ticket-content-box mb-3">
           {{ selectedTicket.message }}
         </div>
+        @if (selectedTicket.resolutionNote) {
+        <div class="resolution-note-box">
+          <strong>Resolution Note:</strong> {{ selectedTicket.resolutionNote }}
+        </div>
+        }
       </div>
       <div class="modal-footer">
-        <button class="btn btn-success" (click)="updateStatus(selectedTicket, 'Replied'); selectedTicket = null;">
-          Mark as Resolved
+        @if (selectedTicket.status !== 'Resolved' && selectedTicket.status !== 'Replied') {
+        <button class="btn btn-warning"
+          (click)="openResolutionModal(selectedTicket, 'Escalated to DPO'); selectedTicket = null;">
+          Escalate DPO
         </button>
+        <button class="btn btn-success"
+          (click)="openResolutionModal(selectedTicket, 'Resolved'); selectedTicket = null;">
+          Resolve Ticket
+        </button>
+        }
         <button class="btn btn-secondary" (click)="selectedTicket = null">Close</button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Resolution & Escalation Note Modal -->
+  @if (showResolutionModal) {
+  <div class="modal-backdrop animate-in" (click)="closeResolutionModal()">
+    <div class="modal-box" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <h3>Ticket Workflow: {{ resolutionTargetStatus }}</h3>
+          <p class="text-xs text-secondary">Applicant: {{ resolutionTicket?.fullName }} ({{ resolutionTicket?.email }})
+          </p>
+        </div>
+        <button class="btn-close" (click)="closeResolutionModal()">&times;</button>
+      </div>
+
+      <div class="modal-body">
+        <label class="form-label font-bold text-xs uppercase text-secondary mb-1">
+          Resolution Note & Communication Summary
+        </label>
+        <textarea rows="4" class="form-input"
+          placeholder="Enter official resolution notes or DPO escalation rationale. An automated email dispatch summary will be sent to the applicant."
+          [(ngModel)]="resolutionNote"></textarea>
+        <p class="text-xs text-muted mt-1">
+          Submitting will update the workflow state and send an automated email response to <strong>{{
+            resolutionTicket?.email }}</strong>.
+        </p>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="closeResolutionModal()">Cancel</button>
+        <button class="btn btn-primary" (click)="submitResolution()">
+          Confirm & Send Email Notification
+        </button>
       </div>
     </div>
   </div>

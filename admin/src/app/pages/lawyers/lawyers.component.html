@@ -26,8 +26,60 @@
         </svg>
         <span>Reset</span>
       </button>
+
+      <button class="btn btn-secondary" (click)="exportToCsv()" [disabled]="isExporting"
+        [adminTooltip]="'Export advocate verification queue to CSV format'" tooltipPosition="top">
+        @if (isExporting) {
+        <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="2">
+          <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
+          <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
+        </svg>
+        <span>Exporting...</span>
+        } @else {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Export CSV</span>
+        }
+      </button>
     </div>
   </div>
+
+  <!-- ─── Floating Bulk Actions Bar ─── -->
+  @if (selectedLawyerIds.size > 0) {
+  <div class="bulk-actions-floating-bar animate-in">
+    <div class="bulk-selection-info">
+      <span class="bulk-counter-badge">{{ selectedLawyerIds.size }}</span>
+      <span>advocate profile(s) selected</span>
+    </div>
+    <div class="bulk-action-buttons">
+      <button class="btn btn-success btn-sm" (click)="bulkVerifyLawyers(true)"
+        [adminTooltip]="'Bulk approve and verify selected advocate bar credentials with 2FA protection'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Bulk Approve & Verify</span>
+      </button>
+
+      <button class="btn btn-warning btn-sm" (click)="bulkVerifyLawyers(false)"
+        [adminTooltip]="'Bulk revoke verification status for selected lawyers'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Bulk Revoke Verification</span>
+      </button>
+
+      <button class="btn btn-secondary btn-sm" (click)="selectedLawyerIds.clear()">
+        Cancel
+      </button>
+    </div>
+  </div>
+  }
 
   <!-- ─── Main Lawyer Data Table ─── -->
   <div class="glass-card animate-in">
@@ -38,6 +90,9 @@
       <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead>
           <tr>
+            <th class="checkbox-col" style="width: 40px;">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+            </th>
             <th>Bar Council #</th>
             <th>Lawyer Profile</th>
             <th>Specialization</th>
@@ -74,11 +129,14 @@
           }
           } @else if (lawyers.length === 0) {
           <tr>
-            <td colspan="9" class="text-center py-3">No lawyer profiles found matching filters.</td>
+            <td colspan="10" class="text-center py-3">No lawyer profiles found matching filters.</td>
           </tr>
           } @else {
           @for (l of lawyers; track l.id) {
-          <tr>
+          <tr [class.selected-row]="selectedLawyerIds.has(l.id)">
+            <td class="checkbox-col">
+              <input type="checkbox" [checked]="selectedLawyerIds.has(l.id)" (change)="toggleSelectLawyer(l.id)" />
+            </td>
             <td class="font-mono">{{ l.profile?.barCouncilNumber || 'Pending' }}</td>
             <td>
               <div class="user-cell">

@@ -11,6 +11,8 @@ import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { smartLoading } from '../../core/utils/smart-loading.operator';
+import { CsvExporter } from '../../core/utils/csv-exporter';
+import { TwoFactorEnforcerService } from '../../shared/services/two-factor-enforcer.service';
 
 @Component({
   selector: 'admin-lawyers',
@@ -68,12 +70,124 @@ export class LawyersComponent implements OnInit {
   editingLawyer: any = null;
   editForm: any = {};
 
+  selectedLawyerIds: Set<number> = new Set();
+
   constructor(
     private api: AdminApiService,
     private toast: ToastService,
     private dialog: DialogService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private twoFactor: TwoFactorEnforcerService
   ) { }
+
+  toggleSelectAll(event: any): void {
+    if (event.target.checked) {
+      this.lawyers.forEach(l => this.selectedLawyerIds.add(l.id));
+    } else {
+      this.selectedLawyerIds.clear();
+    }
+  }
+
+  toggleSelectLawyer(id: number): void {
+    if (this.selectedLawyerIds.has(id)) {
+      this.selectedLawyerIds.delete(id);
+    } else {
+      this.selectedLawyerIds.add(id);
+    }
+  }
+
+  isAllSelected(): boolean {
+    return this.lawyers.length > 0 && this.lawyers.every(l => this.selectedLawyerIds.has(l.id));
+  }
+
+  async bulkVerifyLawyers(targetStatus: boolean): Promise<void> {
+    if (this.selectedLawyerIds.size === 0) return;
+    const action = targetStatus ? 'Approve & Verify' : 'Revoke Verification for';
+    const count = this.selectedLawyerIds.size;
+
+    const confirmed = await this.dialog.confirm({
+      title: `Bulk Lawyer ${targetStatus ? 'Verification' : 'Revocation'}`,
+      message: `Are you sure you want to ${action} ${count} selected advocate profile(s)?`,
+      type: targetStatus ? 'info' : 'warning',
+      confirmText: `Bulk ${targetStatus ? 'Approve' : 'Revoke'}`
+    });
+
+    if (!confirmed) return;
+
+    // Trigger mandatory 2FA TOTP enforcement for bulk verification of advocate credentials
+    const is2FaAuthorized = await this.twoFactor.prompt({
+      title: '2FA Authorize Bulk Credential Verification',
+      actionDescription: `Confirm 6-digit authenticator code to execute bulk bar credential ${action.toLowerCase()} for ${count} lawyers.`
+    });
+
+    if (!is2FaAuthorized) {
+      this.toast.info('Bulk action cancelled: 2FA authorization required.');
+      return;
+    }
+
+    const ids = Array.from(this.selectedLawyerIds);
+    // Optimistic UI updates
+    this.lawyers.forEach(l => {
+      if (this.selectedLawyerIds.has(l.id)) {
+        if (!l.profile) l.profile = {};
+        l.profile.isVerified = targetStatus;
+      }
+    });
+
+    this.toast.success(`Bulk verification set to ${targetStatus ? 'Verified' : 'Pending'} for ${count} lawyers.`);
+    this.selectedLawyerIds.clear();
+
+    ids.forEach(id => {
+      this.api.verifyLawyer(id, { isVerified: targetStatus }).subscribe();
+    });
+  }
+
+  isExporting = false;
+
+  exportToCsv(): void {
+    if (this.isExporting) return;
+    this.isExporting = true;
+    this.api.getLawyers({
+      search: this.search || undefined,
+      isVerified: this.verificationFilter || undefined,
+      city: this.selectedCity || undefined,
+      page: 1,
+      limit: 5000
+    }).subscribe({
+      next: (res: any) => {
+        this.isExporting = false;
+        const fullList = res.data || res.lawyers || res || [];
+        if (!fullList.length) {
+          this.toast.warning('No lawyer records available to export.');
+          return;
+        }
+        const headers = ['ID', 'Full Name', 'Email', 'Phone', 'Bar License Number', 'City', 'Experience Years', 'Specialization', 'Verification Status', 'Consultation Fee'];
+        const rows = fullList.map((l: any) => [
+          l.id,
+          l.fullName || '',
+          l.email || '',
+          l.phoneNumber || l.phone || '',
+          l.profile?.barCouncilLicenseNumber || '',
+          l.profile?.city || l.city || '',
+          l.profile?.experienceYears || 0,
+          l.profile?.specialization || '',
+          l.profile?.isVerified ? 'Verified' : 'Pending',
+          l.profile?.consultationFee || 0
+        ]);
+
+        try {
+          CsvExporter.export('legalconnect_lawyers_verification_queue', headers, rows);
+          this.toast.success(`Exported all ${fullList.length} advocate verification records to CSV.`);
+        } catch (err: any) {
+          this.toast.error(err.message || 'Export failed.');
+        }
+      },
+      error: () => {
+        this.isExporting = false;
+        this.toast.error('Failed to fetch complete lawyer records for export.');
+      }
+    });
+  }
 
   ngOnInit(): void {
     this.searchSubject$.pipe(

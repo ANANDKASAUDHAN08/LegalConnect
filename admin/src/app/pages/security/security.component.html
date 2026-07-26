@@ -7,7 +7,7 @@
         authentication logs.</p>
     </div>
 
-    <div class="tab-button-group">
+    <div class="tab-button-group" style="display: flex; align-items: center; gap: 0.75rem;">
       <button class="btn" [class.btn-primary]="activeTab === 'sessions'"
         [class.btn-secondary]="activeTab !== 'sessions'" (click)="activeTab = 'sessions'; fetchSessions();"
         [adminTooltip]="'View active user & admin sessions across all devices'" tooltipPosition="top">
@@ -18,6 +18,28 @@
         tooltipPosition="top">
         Login Audit Log
       </button>
+
+      @if (activeTab === 'sessions') {
+        <button class="btn btn-secondary" (click)="exportSessionsCsv()"
+          [adminTooltip]="'Download active session audit logs for IT Act statutory compliance'" tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export Audit CSV</span>
+        </button>
+      } @else {
+        <button class="btn btn-secondary" (click)="exportLogsCsv()"
+          [adminTooltip]="'Download login history audit logs for IT Act statutory compliance'" tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export Audit CSV</span>
+        </button>
+      }
     </div>
   </div>
 
