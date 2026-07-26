@@ -38,9 +38,12 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins(
                   "http://localhost:4200",
+                  "http://localhost:4201",
                   "http://localhost:4300",
                   "https://legalconnect-501109.web.app",
                   "https://legalconnect-501109.firebaseapp.com",
+                  "https://legalconnect-admin.web.app",
+                  "https://legalconnect-admin.firebaseapp.com",
                   "https://admin.legalconnect-501109.web.app"
               )
               .AllowAnyHeader()
