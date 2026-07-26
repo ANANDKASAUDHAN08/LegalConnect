@@ -31,12 +31,15 @@ jobs:
 
       - name: Build Angular Application
         working-directory: frontend
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: npm run build -- --configuration=production
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy to Firebase Hosting (Frontend)
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_LEGALCONNECT_501109 }}
           projectId: legalconnect-501109
+          target: frontend
           channelId: live

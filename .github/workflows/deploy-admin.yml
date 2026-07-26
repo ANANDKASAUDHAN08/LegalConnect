@@ -31,6 +31,8 @@ jobs:
 
       - name: Build Admin Angular Application
         working-directory: admin
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
         run: npm run build -- --configuration=production
 
       - name: Deploy to Firebase Hosting (Admin)
