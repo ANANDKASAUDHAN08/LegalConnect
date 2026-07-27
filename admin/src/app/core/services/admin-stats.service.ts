@@ -19,6 +19,11 @@ export class AdminStatsService {
     return this.http.get(`${this.API}/stats/overview`);
   }
 
+  getHealth(): Observable<any> {
+    const baseApi = this.API.replace(/\/admin\/?$/, '');
+    return this.http.get(`${baseApi}/health`);
+  }
+
   getRegistrationTrends(): Observable<any> {
     return this.http.get(`${this.API}/stats/registrations`);
   }
@@ -59,10 +64,6 @@ export class AdminStatsService {
       );
     }
     return this.templateStatsCache$;
-  }
-
-  clearTemplateStatsCache(): void {
-    this.templateStatsCache$ = undefined;
   }
 
   getBookmarkStats(): Observable<any> {

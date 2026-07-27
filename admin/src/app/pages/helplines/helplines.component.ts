@@ -57,7 +57,7 @@ export class HelplinesComponent implements OnInit {
     this.api.getHelplines().subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        this.helplines = res.data || res || [];
+        this.helplines = Array.isArray(res) ? res : (res?.data || res?.helplines || res?.items || []);
       },
       error: (err: any) => {
         this.isLoading = false;

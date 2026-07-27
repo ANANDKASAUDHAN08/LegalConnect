@@ -43,7 +43,7 @@ export class ReviewsComponent implements OnInit {
     this.api.getReviews({ rating: this.ratingFilter || undefined }).subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        this.reviews = res.data || [];
+        this.reviews = Array.isArray(res) ? res : (res?.data || res?.reviews || res?.items || []);
       },
       error: (err: any) => {
         this.isLoading = false;

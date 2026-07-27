@@ -93,6 +93,7 @@ export type SupportTicketItem = ContactSubmissionItem;
 
 export interface SystemAnnouncementItem {
   id: number;
+  _id?: any;
   version?: string;
   title: string;
   summary?: string;

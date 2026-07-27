@@ -5,6 +5,10 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ─── CSS Custom Properties (Global Design Tokens) ─── */
 :root {
   /* Core Palette */
@@ -93,6 +97,193 @@ body[data-theme="light"] {
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
   --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
   --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+/* ─── Global Theme Utility Classes (Dark & Light Synchronized) ─── */
+.text-primary {
+  color: var(--text-primary) !important;
+}
+
+.text-secondary {
+  color: var(--text-secondary) !important;
+}
+
+.text-tertiary {
+  color: var(--text-tertiary) !important;
+}
+
+.text-muted {
+  color: var(--text-muted) !important;
+}
+
+.bg-primary {
+  background-color: var(--bg-primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--bg-secondary) !important;
+}
+
+.bg-tertiary {
+  background-color: var(--bg-tertiary) !important;
+}
+
+.bg-card {
+  background-color: var(--bg-card) !important;
+}
+
+/* ─── Light Theme Global Overrides ─── */
+[data-theme="light"],
+html[data-theme="light"],
+body[data-theme="light"] {
+  /* Backgrounds: Force all slate dark backgrounds to clean light backgrounds */
+  [class*="bg-slate-800"],
+  [class*="bg-slate-900"],
+  [class*="bg-slate-950"],
+  .pagination,
+  .pagination-controls,
+  .kpi-card,
+  .stat-card,
+  .ticket-content-box,
+  .drawer-content,
+  .drawer-header,
+  .drawer-footer,
+  .modal-box,
+  .modal-header,
+  .modal-footer {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  /* Activity Feed Cards (grey bars in audit stream) */
+  div[class*="bg-slate-800"],
+  div[class*="bg-slate-700"],
+  div[class*="bg-slate-900"],
+  div[class*="bg-slate-950"] {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    border-color: #cbd5e1 !important;
+    color: #0f172a !important;
+  }
+
+  /* Typography: Force light text to dark text in light mode */
+  [class*="text-slate-100"],
+  [class*="text-slate-200"],
+  [class*="text-white"],
+  .text-primary,
+  .user-name,
+  .page-title,
+  .stat-value,
+  .page-info,
+  h1, h2, h3, h4, h5, h6,
+  strong {
+    color: #0f172a !important;
+  }
+
+  [class*="text-slate-300"],
+  [class*="text-slate-400"],
+  .text-secondary,
+  .page-subtitle,
+  .stat-label,
+  .mini-label {
+    color: #334155 !important;
+  }
+
+  [class*="text-slate-500"],
+  .text-tertiary,
+  .text-muted {
+    color: #64748b !important;
+  }
+
+  /* Role Badges in Light Mode */
+  [class*="bg-purple-500"] {
+    background-color: rgba(168, 85, 247, 0.15) !important;
+    color: #7e22ce !important;
+    border-color: rgba(168, 85, 247, 0.3) !important;
+  }
+
+  [class*="bg-indigo-500"] {
+    background-color: rgba(99, 102, 241, 0.15) !important;
+    color: #4338ca !important;
+    border-color: rgba(99, 102, 241, 0.3) !important;
+  }
+
+  [class*="bg-slate-700"] {
+    background-color: #e2e8f0 !important;
+    color: #334155 !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  /* Inputs, Textareas & Selects */
+  .form-input,
+  .form-select,
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="search"],
+  select,
+  textarea {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+    color: #0f172a !important;
+    border-color: #cbd5e1 !important;
+  }
+
+  .form-input::placeholder,
+  input::placeholder,
+  textarea::placeholder {
+    color: #94a3b8 !important;
+  }
+
+  /* Data Table Overrides */
+  .data-table,
+  .data-table thead,
+  .data-table tbody,
+  .data-table thead tr,
+  .data-table tbody tr {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+  }
+
+  .data-table thead th {
+    background: #f1f5f9 !important;
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border-bottom: 2px solid #cbd5e1 !important;
+  }
+
+  .data-table tbody td {
+    color: #334155 !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+
+  .data-table tbody td:first-child,
+  .data-table tbody td .user-name {
+    color: #0f172a !important;
+  }
+
+  .data-table tbody tr:hover {
+    background: #f8fafc !important;
+    background-color: #f8fafc !important;
+  }
+
+  /* Glass Cards in Light Mode */
+  .glass-card {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    border-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  }
+
+  .glass-card:hover {
+    background: #f8fafc !important;
+    background-color: #f8fafc !important;
+    border-color: #cbd5e1 !important;
+  }
 }
 
 /* ─── Global SVG Icon Sizing Safeguard ─── */

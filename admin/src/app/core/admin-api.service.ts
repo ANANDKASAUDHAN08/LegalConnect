@@ -3,27 +3,10 @@ import { Observable } from 'rxjs';
 import { AdminStatsService } from './services/admin-stats.service';
 import { AdminUserService } from './services/admin-user.service';
 import { AdminContentService } from './services/admin-content.service';
-import {
-  DashboardOverview,
-  UserListResponse,
-  AdminUser,
-  LawyerListResponse,
-  LawyerProfile,
-  HelplineItem,
-  ResourceItem,
-  AnnouncementItem,
-  SupportTicketItem,
-  ReviewItem,
-  ConsultationItem
-} from './models/admin.models';
 
 /**
  * AdminApiService - Master Facade Service:
- * Decomposes master API responsibilities into 3 clean domain sub-services:
- * 1. AdminStatsService (KPIs, Telemetry, Trends)
- * 2. AdminUserService (Users, Lawyers, Sessions, Reviews, Support Contacts)
- * 3. AdminContentService (Acts, Resources, Helplines, Templates)
- * Maintains 100% backward compatibility for all Angular components!
+ * Delegates to domain sub-services and maintains 100% backward compatibility across all admin pages!
  */
 @Injectable({ providedIn: 'root' })
 export class AdminApiService {
@@ -34,7 +17,8 @@ export class AdminApiService {
   ) { }
 
   // ── Dashboard & Analytics Delegates ──
-  getOverview(): Observable<DashboardOverview | any> { return this.stats.getOverview(); }
+  getOverview(): Observable<any> { return this.stats.getOverview(); }
+  getHealth(): Observable<any> { return this.stats.getHealth(); }
   getRegistrationTrends(): Observable<any> { return this.stats.getRegistrationTrends(); }
   getLoginTrends(): Observable<any> { return this.stats.getLoginTrends(); }
   getConsultationTrends(): Observable<any> { return this.stats.getConsultationTrends(); }
@@ -46,44 +30,53 @@ export class AdminApiService {
   getBookmarkStats(): Observable<any> { return this.stats.getBookmarkStats(); }
 
   // ── User & Lawyer Management Delegates ──
-  getUsers(params: any = {}): Observable<UserListResponse | any> { return this.user.getUsers(params); }
-  getUser(id: number): Observable<AdminUser | any> { return this.user.getUser(id); }
-  updateUser(id: number, data: Partial<AdminUser> | any): Observable<any> { return this.user.updateUser(id, data); }
+  getUsers(params: any = {}): Observable<any> { return this.user.getUsers(params); }
+  getUser(id: number): Observable<any> { return this.user.getUser(id); }
+  updateUser(id: number, data: any): Observable<any> { return this.user.updateUser(id, data); }
   deleteUser(id: number): Observable<any> { return this.user.deleteUser(id); }
   resetUserPassword(id: number): Observable<any> { return this.user.resetUserPassword(id); }
-  getLawyers(params: any = {}): Observable<LawyerListResponse | any> { return this.user.getLawyers(params); }
-  getLawyer(id: number): Observable<LawyerProfile | any> { return this.user.getLawyer(id); }
+  getLawyers(params: any = {}): Observable<any> { return this.user.getLawyers(params); }
+  getLawyer(id: number): Observable<any> { return this.user.getLawyer(id); }
   verifyLawyer(id: number, statusData: { isVerified: boolean; remarks?: string }): Observable<any> { return this.user.verifyLawyer(id, statusData); }
-  updateLawyerProfile(id: number, data: Partial<LawyerProfile> | any): Observable<any> { return this.user.updateLawyerProfile(id, data); }
+  updateLawyerProfile(id: number, data: any): Observable<any> { return this.user.updateLawyerProfile(id, data); }
   getActiveSessions(page = 1): Observable<any> { return this.user.getActiveSessions(page); }
   forceLogout(sessionId: number): Observable<any> { return this.user.forceLogout(sessionId); }
   getLoginHistory(params: any = {}): Observable<any> { return this.user.getLoginHistory(params); }
-  getReviews(params: any = {}): Observable<ReviewItem[] | any> { return this.user.getReviews(params); }
+
+  // ── Reviews & Consultations Delegates ──
+  getReviews(params: any = {}): Observable<any> { return this.user.getReviews(params); }
   deleteReview(id: number): Observable<any> { return this.user.deleteReview(id); }
-  getConsultations(params: any = {}): Observable<ConsultationItem[] | any> { return this.user.getConsultations(params); }
+  getConsultations(params: any = {}): Observable<any> { return this.user.getConsultations(params); }
   updateConsultationStatus(id: number, status: string): Observable<any> { return this.user.updateConsultationStatus(id, status); }
-  getAnnouncements(): Observable<AnnouncementItem[] | any> { return this.user.getAnnouncements(); }
-  createAnnouncement(data: Partial<AnnouncementItem> | any): Observable<any> { return this.user.createAnnouncement(data); }
-  updateAnnouncement(id: number, data: Partial<AnnouncementItem> | any): Observable<any> { return this.user.updateAnnouncement(id, data); }
+
+  // ── Announcements Delegates ──
+  getAnnouncements(params: any = {}): Observable<any> { return this.user.getAnnouncements(); }
+  createAnnouncement(data: any): Observable<any> { return this.user.createAnnouncement(data); }
+  updateAnnouncement(id: number, data: any): Observable<any> { return this.user.updateAnnouncement(id, data); }
   deleteAnnouncement(id: number): Observable<any> { return this.user.deleteAnnouncement(id); }
-  getContacts(params: any = {}): Observable<SupportTicketItem[] | any> { return this.user.getContacts(params); }
+
+  // ── Contacts / Support Delegates ──
+  getContacts(params: any = {}): Observable<any> { return this.user.getContacts(params); }
   updateContactStatus(id: number, status: string): Observable<any> { return this.user.updateContactStatus(id, status); }
 
-  // ── Legal Content & Catalog Delegates ──
+  // ── Bare Acts Delegates ──
   getActs(): Observable<any> { return this.content.getActs(); }
   getActDetail(shortName: string): Observable<any> { return this.content.getActDetail(shortName); }
   updateSection(shortName: string, sectionId: string, data: any): Observable<any> { return this.content.updateSection(shortName, sectionId, data); }
-  getResources(params: any = {}): Observable<ResourceItem[] | any> { return this.content.getResources(params); }
-  createResource(data: Partial<ResourceItem> | any): Observable<any> { return this.content.createResource(data); }
-  updateResource(id: string, data: Partial<ResourceItem> | any): Observable<any> { return this.content.updateResource(id, data); }
-  deleteResource(id: string): Observable<any> { return this.content.deleteResource(id); }
-  getHelplines(): Observable<HelplineItem[] | any> { return this.content.getHelplines(); }
-  createHelpline(data: Partial<HelplineItem> | any): Observable<any> { return this.content.createHelpline(data); }
-  updateHelpline(id: string, data: Partial<HelplineItem> | any): Observable<any> { return this.content.updateHelpline(id, data); }
-  deleteHelpline(id: string): Observable<any> { return this.content.deleteHelpline(id); }
+
+  // ── Resources Delegates ──
+  getResources(params: any = {}): Observable<any> { return this.content.getResources(params); }
+  createResource(data: any): Observable<any> { return this.content.createResource(data); }
+  updateResource(id: any, data: any): Observable<any> { return this.content.updateResource(String(id), data); }
+  deleteResource(id: any): Observable<any> { return this.content.deleteResource(String(id)); }
+
+  // ── Helplines Delegates ──
+  getHelplines(params: any = {}): Observable<any> { return this.content.getHelplines(); }
+  createHelpline(data: any): Observable<any> { return this.content.createHelpline(data); }
+  updateHelpline(id: any, data: any): Observable<any> { return this.content.updateHelpline(String(id), data); }
+  deleteHelpline(id: any): Observable<any> { return this.content.deleteHelpline(String(id)); }
+
+  // ── Templates Delegates ──
   getTemplates(params: any = {}): Observable<any> { return this.content.getTemplates(params); }
-  deleteTemplate(id: string): Observable<any> {
-    this.stats.clearTemplateStatsCache();
-    return this.content.deleteTemplate(id);
-  }
+  deleteTemplate(id: string): Observable<any> { return this.content.deleteTemplate(id); }
 }

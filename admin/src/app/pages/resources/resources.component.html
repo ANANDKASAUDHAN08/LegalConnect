@@ -1,21 +1,20 @@
-<div class="resources-page stagger-children">
-  <!-- Header Bar -->
-  <div class="glass-card page-filters mb-3 animate-in">
-    <div>
-      <div class="flex items-center gap-1">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-info">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
-        <h3 class="text-primary font-bold text-lg">Legal Resources & Institutional Directory</h3>
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Top Header Banner ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
+    <div class="flex flex-col gap-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-semibold text-sky-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+        <span>Institutional Roster & Directory</span>
       </div>
-      <p class="text-xs text-secondary mt-1">Manage verified court complexes, state legal services authorities
-        (SLSA/DLSA), police stations, and government legal aid desks.</p>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Legal Resources & Institutional Directory</h1>
+      <p class="text-xs text-slate-400">
+        Manage verified court complexes, state legal services authorities (SLSA/DLSA), police stations, and government legal aid desks.
+      </p>
     </div>
 
-    <div class="flex items-center gap-2">
-      <button class="btn btn-secondary" (click)="exportCSV()" [adminTooltip]="'Download resources directory as CSV'"
+    <div class="flex flex-wrap items-center gap-2.5">
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="exportCSV()" [adminTooltip]="'Download resources directory as CSV'"
         tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -25,7 +24,7 @@
         <span>Export CSV</span>
       </button>
 
-      <button class="btn btn-secondary" (click)="openImportModal()"
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="openImportModal()"
         [adminTooltip]="'Bulk import resources from JSON file/text'" tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -35,8 +34,7 @@
         <span>Bulk Import</span>
       </button>
 
-
-      <button class="btn btn-secondary" (click)="fetchResources()"
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="fetchResources()"
         [adminTooltip]="'Refresh resources list from backend database'" tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           [class.animate-spin]="isLoading">
@@ -46,7 +44,7 @@
         <span>Refresh</span>
       </button>
 
-      <button class="btn btn-primary" (click)="openCreateModal()"
+      <button class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="openCreateModal()"
         [adminTooltip]="'Onboard a new legal institution or help desk'" tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -57,92 +55,87 @@
     </div>
   </div>
 
-  <!-- KPI Metrics Banner (Grid 4 Layout) -->
-  <div class="grid-4 mb-3">
-    <div class="glass-card stat-card blue animate-in">
-      <div class="stat-header">
-        <div class="stat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-        </div>
+  <!-- ─── 1. KPI Metrics Banner Grid ─── -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-sky-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+          <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+      </div>
+      <div class="flex flex-col">
         @if (isLoading) {
         <admin-skeleton width="60px" height="24px" />
         } @else {
-        <div class="stat-value text-info">{{ totalRecords }}</div>
+        <span class="text-xl font-extrabold text-sky-400">{{ totalRecords }}</span>
+        <span class="text-xs text-slate-400 font-medium">Total Institutions</span>
         }
       </div>
-      <div class="stat-label">Total Institutions</div>
     </div>
 
-    <div class="glass-card stat-card green animate-in">
-      <div class="stat-header">
-        <div class="stat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-        </div>
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="flex flex-col">
         @if (isLoading) {
         <admin-skeleton width="60px" height="24px" />
         } @else {
-        <div class="stat-value text-success">{{ verifiedCount }}</div>
+        <span class="text-xl font-extrabold text-emerald-400">{{ verifiedCount }}</span>
+        <span class="text-xs text-slate-400 font-medium">Verified & Approved</span>
         }
       </div>
-      <div class="stat-label">Verified & Approved</div>
     </div>
 
-    <div class="glass-card stat-card purple animate-in">
-      <div class="stat-header">
-        <div class="stat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 21h18"></path>
-            <path d="M5 21V7l8-4 8 4v14"></path>
-            <path d="M9 18h6"></path>
-          </svg>
-        </div>
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-indigo-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 21h18"></path>
+          <path d="M5 21V7l8-4 8 4v14"></path>
+          <path d="M9 18h6"></path>
+        </svg>
+      </div>
+      <div class="flex flex-col">
         @if (isLoading) {
         <admin-skeleton width="60px" height="24px" />
         } @else {
-        <div class="stat-value text-primary">{{ courtsCount }}</div>
+        <span class="text-xl font-extrabold text-indigo-300">{{ courtsCount }}</span>
+        <span class="text-xs text-slate-400 font-medium">Courts & Judiciary</span>
         }
       </div>
-      <div class="stat-label">Courts & Judiciary</div>
     </div>
 
-    <div class="glass-card stat-card amber animate-in">
-      <div class="stat-header">
-        <div class="stat-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
-        </div>
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div class="flex flex-col">
         @if (isLoading) {
         <admin-skeleton width="60px" height="24px" />
         } @else {
-        <div class="stat-value text-warning">{{ pendingCount }}</div>
+        <span class="text-xl font-extrabold text-amber-400">{{ pendingCount }}</span>
+        <span class="text-xs text-slate-400 font-medium">Pending Review</span>
         }
       </div>
-      <div class="stat-label">Pending Review</div>
     </div>
   </div>
 
-  <!-- Filter Controls Bar -->
-  <div class="glass-card page-filters mb-3">
-    <div class="search-box" style="flex: 1; max-width: 380px;">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="search-icon">
-        <circle cx="11" cy="11" r="8"></circle>
-        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-      </svg>
-      <input type="text" class="form-input" placeholder="Search resources by name, city, or address..." [value]="search"
+  <!-- ─── 2. Filter Controls Bar ─── -->
+  <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
+    <div class="search-box flex-1 min-w-[280px]">
+      <input type="text" class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-sm" placeholder="Search resources by name, city, or address..." [value]="search"
         (input)="onSearchInput($any($event.target).value)"
         [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2.5 flex-wrap">
       <admin-select [options]="typeOptions" [value]="selectedType"
         (valueChange)="selectedType = $event; onFilterChange();" minWidth="180px"
         [adminTooltip]="'Filter by resource category'" tooltipPosition="top">
@@ -158,7 +151,7 @@
         [adminTooltip]="'Filter by verification status'" tooltipPosition="top">
       </admin-select>
 
-      <button class="btn btn-secondary" (click)="resetFilters()" [adminTooltip]="'Clear search query and filters'"
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="resetFilters()" [adminTooltip]="'Clear search query and filters'"
         tooltipPosition="top">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="1 4 1 10 7 10"></polyline>
@@ -169,70 +162,66 @@
     </div>
   </div>
 
-  <!-- Resources Data Table -->
-  <div class="glass-card animate-in">
-    <div class="data-table-wrapper">
+  <!-- ─── 3. Resources Data Table ─── -->
+  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto">
       @if (!isInitialLoad && isLoading) {
-      <div class="table-loading-bar"></div>
+      <div class="table-loading-bar h-1 bg-indigo-500 animate-pulse w-full"></div>
       }
-      <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoading">
+      <table class="data-table w-full text-left border-collapse" [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead>
-          <tr>
-            <th>Resource Name</th>
-            <th>Type</th>
-            <th>City / Location</th>
-            <th>Physical Address</th>
-            <th>Verification Status</th>
-            <th class="text-right">Actions</th>
+          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5">Resource Name</th>
+            <th class="p-3.5">Type</th>
+            <th class="p-3.5">City / Location</th>
+            <th class="p-3.5">Physical Address</th>
+            <th class="p-3.5">Verification Status</th>
+            <th class="p-3.5 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isInitialLoad && isLoading) {
           @for (item of [1,2,3,4,5]; track $index) {
-
-          <tr>
-            <td><admin-skeleton width="200px" height="16px" /></td>
-            <td><admin-skeleton width="100px" height="22px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="90px" height="16px" /></td>
-            <td><admin-skeleton width="240px" height="16px" /></td>
-            <td><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
-            <td class="text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
+          <tr class="hover:bg-slate-800/30">
+            <td class="p-3.5"><admin-skeleton width="200px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="100px" height="22px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="240px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
+            <td class="p-3.5 text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
           </tr>
           }
           } @else {
           @for (res of resources; track res._id || res.id) {
-          <tr>
-            <td class="font-bold text-primary">
-              <div class="flex items-center gap-1">
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5 font-bold text-slate-100">
+              <div class="flex items-center gap-2">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-info">
+                  class="text-sky-400">
                   <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
                   <circle cx="12" cy="10" r="3"></circle>
                 </svg>
                 <span>{{ res.name }}</span>
               </div>
             </td>
-            <td>
-              <span class="badge info flex items-center gap-1">
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-sky-500/10 text-sky-400 border-sky-500/30 flex items-center gap-1 w-fit">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
                 <span>{{ res.type || 'Legal Institution' }}</span>
               </span>
             </td>
-            <td class="text-sm font-semibold text-primary">{{ res.city || 'Delhi' }}</td>
-            <td class="text-xs text-secondary truncate" style="max-width: 300px;" [title]="res.address">{{ res.address
-              || 'N/A' }}</td>
-            <td>
+            <td class="p-3.5 text-sm font-semibold text-slate-200">{{ res.city || 'Delhi' }}</td>
+            <td class="p-3.5 text-xs text-slate-400 truncate max-w-[300px]" [title]="res.address">{{ res.address || 'N/A' }}</td>
+            <td class="p-3.5">
               @if (res.status === 'pending') {
-              <span class="badge warning flex items-center gap-1">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
-                  <circle cx="12" cy="12" r="10"></circle>
-                </svg>
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-amber-500/10 text-amber-400 border-amber-500/30 flex items-center gap-1 w-fit">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
                 <span>Pending Review</span>
               </span>
               } @else {
-              <span class="badge success flex items-center gap-1">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 flex items-center gap-1 w-fit">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                   <polyline points="20 6 9 17 4 12"></polyline>
                 </svg>
@@ -240,19 +229,17 @@
               </span>
               }
             </td>
-            <td class="text-right">
-              <div class="flex items-center justify-end gap-1">
+            <td class="p-3.5 text-right">
+              <div class="flex items-center justify-end gap-1.5">
                 @if (res.status === 'pending') {
-                <button class="btn btn-success btn-sm" (click)="approveResource(res)"
+                <button class="btn btn-success btn-sm text-xs p-1.5" (click)="approveResource(res)"
                   [adminTooltip]="'Approve and verify this legal resource'" tooltipPosition="top">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="20 6 9 17 4 12"></polyline>
                   </svg>
-                  <span>Approve</span>
                 </button>
                 }
-
-                <button class="btn btn-secondary btn-sm" (click)="openInspector(res)"
+                <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="openInspector(res)"
                   [adminTooltip]="'Inspect GIS coordinates and contact metadata'" tooltipPosition="top">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>

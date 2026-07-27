@@ -1,12 +1,19 @@
-<div class="legal-content-page stagger-children">
-  <!-- Header Bar -->
-  <div class="glass-card page-filters mb-3 animate-in">
-    <div>
-      <h3 class="text-primary font-bold text-lg">Bare Acts & Statutory Content Directory</h3>
-      <p class="text-xs text-secondary mt-1">Manage statutory legal acts, chapters, and section content stored in MongoDB.</p>
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Header Banner ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
+    <div class="flex flex-col gap-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-semibold text-purple-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+        <span>Statutory Bare Acts Roster</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Bare Acts & Statutory Content Directory</h1>
+      <p class="text-xs text-slate-400">
+        Manage statutory legal acts, chapters, and section content stored in MongoDB.
+      </p>
     </div>
 
-    <button class="btn btn-secondary" (click)="fetchActs()" [adminTooltip]="'Refresh statutory acts list'" tooltipPosition="top">
+    <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="fetchActs()" [adminTooltip]="'Refresh statutory acts list'" tooltipPosition="top">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <polyline points="1 4 1 10 7 10"></polyline>
         <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
@@ -15,30 +22,37 @@
     </button>
   </div>
 
-  <!-- Acts Grid -->
+  <!-- ─── 1. Acts Grid ─── -->
   @if (isLoading) {
-    <div class="glass-card p-6">
+    <div class="glass-card p-6 rounded-2xl border border-white/10 bg-slate-900/70">
       <admin-skeleton type="table"></admin-skeleton>
     </div>
   } @else {
-    <div class="grid-3 mb-3 animate-in">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
       @for (act of acts; track act.shortName) {
-        <div class="glass-card act-card cursor-pointer" (click)="openActDetail(act.shortName, true)">
-          <div class="act-header">
-            <span class="badge purple font-mono font-bold">{{ act.shortName }}</span>
-            <span class="text-xs text-tertiary">Year {{ act.year }}</span>
+        <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl hover:border-indigo-500/30 transition-all flex flex-col justify-between gap-3 cursor-pointer" (click)="openActDetail(act.shortName, true)">
+          <div class="flex items-center justify-between">
+            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-purple-500/10 text-purple-300 border-purple-500/30">{{ act.shortName }}</span>
+            <span class="text-xs text-slate-400 font-medium">Year {{ act.year }}</span>
           </div>
-          <h4 class="act-title">{{ act.actName }}</h4>
-          <p class="act-desc">{{ act.description || 'Statutory legal act registered in database.' }}</p>
-          <div class="act-footer">
-            <span class="text-xs text-secondary font-medium">{{ act.chapters?.length || 0 }} Chapters</span>
-            <button class="btn btn-primary btn-sm" (click)="openActDetail(act.shortName, true); $event.stopPropagation();">
-              Inspect Sections (Full Width) ↗
+          <div class="flex flex-col gap-1">
+            <h4 class="text-base font-bold text-slate-100 line-clamp-2">{{ act.actName }}</h4>
+            <p class="text-xs text-slate-400 leading-relaxed line-clamp-3">{{ act.description || 'Statutory legal act registered in database.' }}</p>
+          </div>
+          <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 mt-1">
+            <span class="text-xs text-slate-400 font-medium">{{ act.chapters?.length || 0 }} Chapters</span>
+            <button class="btn btn-primary btn-sm text-xs px-3 py-1.5 flex items-center gap-1" (click)="openActDetail(act.shortName, true); $event.stopPropagation();">
+              <span>Inspect Sections</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <line x1="10" y1="14" x2="21" y2="3"></line>
+              </svg>
             </button>
           </div>
         </div>
       } @empty {
-        <div class="glass-card p-8 text-center text-muted">No bare acts registered in MongoDB.</div>
+        <div class="col-span-full glass-card p-12 text-center text-slate-400 text-sm">No bare acts registered in MongoDB.</div>
       }
     </div>
   }

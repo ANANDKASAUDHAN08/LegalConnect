@@ -1,23 +1,25 @@
-<div class="login-wrapper">
-  <div class="glow-bg"></div>
+<div class="min-h-screen w-full flex items-center justify-center p-4 bg-slate-950 relative overflow-hidden">
+  <!-- Glowing Background Blurs -->
+  <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none"></div>
+  <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="login-card glass-card animate-in">
-    <div class="brand">
-      <div class="logo">
-        <svg width="42" height="42" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2"
+  <div class="glass-card max-w-md w-full rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl p-8 flex flex-col gap-6 animate-in relative z-10">
+    <div class="flex flex-col items-center text-center gap-2">
+      <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shadow-inner mb-1">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           stroke-linecap="round" stroke-linejoin="round">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
           <polyline points="2 17 12 22 22 17"></polyline>
           <polyline points="2 12 12 17 22 12"></polyline>
         </svg>
       </div>
-      <h2>LegalConnect Admin</h2>
-      <p>Control Center & Analytics Portal</p>
+      <h2 class="text-2xl font-extrabold text-slate-100 tracking-tight">LegalConnect Admin</h2>
+      <p class="text-xs text-slate-400 font-medium">Control Center & Analytics Portal</p>
     </div>
 
     @if (errorMessage) {
-    <div class="alert alert-danger mb-2">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+    <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-xs flex items-center gap-2.5 animate-in">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-red-400">
         <circle cx="12" cy="12" r="10"></circle>
         <line x1="12" y1="8" x2="12" y2="12"></line>
         <line x1="12" y1="16" x2="12.01" y2="16"></line>
@@ -26,31 +28,31 @@
     </div>
     }
 
-    <form (ngSubmit)="onSubmit()" class="login-form">
-      <div class="form-group">
-        <label class="form-label" for="email">Admin Email</label>
-        <input id="email" type="email" class="form-input" [(ngModel)]="email" name="email"
+    <form (ngSubmit)="onSubmit()" class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-slate-300" for="email">Admin Email</label>
+        <input id="email" type="email" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl p-3 text-sm focus:border-indigo-500 transition-all" [(ngModel)]="email" name="email"
           placeholder="admin@legalconnect.com" required autocomplete="email"
           [adminTooltip]="'Enter admin account email'" tooltipPosition="top" />
       </div>
 
-      <div class="form-group mt-1">
-        <label class="form-label" for="password">Password</label>
-        <input id="password" type="password" class="form-input" [(ngModel)]="password" name="password"
+      <div class="flex flex-col gap-1.5">
+        <label class="text-xs font-semibold text-slate-300" for="password">Password</label>
+        <input id="password" type="password" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl p-3 text-sm focus:border-indigo-500 transition-all" [(ngModel)]="password" name="password"
           placeholder="••••••••••••" required autocomplete="current-password"
           [adminTooltip]="'Enter admin account password'" tooltipPosition="top" />
       </div>
 
       @if (requires2FA) {
-      <div class="form-group mt-1 animate-in">
-        <label class="form-label" for="twoFactorCode">2FA Verification Code</label>
-        <input id="twoFactorCode" type="text" class="form-input" [(ngModel)]="twoFactorCode" name="twoFactorCode"
+      <div class="flex flex-col gap-1.5 animate-in">
+        <label class="text-xs font-semibold text-slate-300" for="twoFactorCode">2FA Verification Code</label>
+        <input id="twoFactorCode" type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-amber-300 font-mono tracking-widest text-center rounded-xl p-3 text-sm focus:border-amber-500 transition-all" [(ngModel)]="twoFactorCode" name="twoFactorCode"
           placeholder="6-digit TOTP code" maxlength="6" [adminTooltip]="'Open Authenticator App for 6-digit code'"
           tooltipPosition="top" />
       </div>
       }
 
-      <button type="submit" class="btn btn-primary w-full mt-2" [disabled]="isLoading"
+      <button type="submit" class="btn btn-primary w-full py-3.5 px-4 text-xs font-bold rounded-xl flex items-center justify-center gap-2 mt-2 shadow-lg shadow-indigo-600/20" [disabled]="isLoading"
         [adminTooltip]="'Authenticate and open control center'" tooltipPosition="bottom">
         @if (isLoading) {
         <span>Authenticating...</span>
@@ -64,7 +66,7 @@
       </button>
     </form>
 
-    <div class="login-footer">
+    <div class="flex items-center justify-center gap-1.5 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400">
       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
         <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>

@@ -1,8 +1,9 @@
-<div class="act-detail-page stagger-children">
-  <!-- Top Workspace Header -->
-  <div class="glass-card act-topbar mb-3 animate-in">
-    <div class="topbar-left">
-      <a routerLink="/legal-content" class="btn btn-secondary btn-sm"
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Top Workspace Header ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl shadow-xl animate-in">
+    <div class="flex items-center gap-4">
+      <a routerLink="/legal-content" class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
         [adminTooltip]="'Return to Bare Acts directory overview'" tooltipPosition="right">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="19" y1="12" x2="5" y2="12"></line>
@@ -10,40 +11,33 @@
         </svg>
         <span>Back to Directory</span>
       </a>
-      <div class="act-meta">
-        <h2 class="text-primary font-bold text-lg">{{ act?.actName || shortName }} ({{ shortName }})</h2>
-        <span class="text-xs text-secondary">Year {{ act?.year }} — Enacted Statutory Legal Code</span>
+      <div class="flex flex-col">
+        <h1 class="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">{{ act?.actName || shortName }} ({{ shortName }})</h1>
+        <span class="text-xs text-[var(--text-secondary)]">Year {{ act?.year }} — Enacted Statutory Legal Code</span>
       </div>
     </div>
 
-    <div class="topbar-center">
-      <div class="search-input-wrapper" [adminTooltip]="'Filter sections by section number or title keyword'"
-        tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="search-icon">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" class="form-input search-input" placeholder="Search section number or keyword..."
+    <div class="flex-1 max-w-md">
+      <div class="search-box relative" [adminTooltip]="'Filter sections by section number or title keyword'" tooltipPosition="top">
+        <input type="text" class="form-input w-full bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] rounded-lg text-sm p-2" placeholder="Search section number or keyword..."
           [(ngModel)]="searchQuery" />
       </div>
     </div>
 
-    <div class="topbar-right">
+    <div class="flex items-center gap-3">
       <!-- Language Selector Pill -->
-      <div class="lang-pill-group">
-        <button class="lang-btn" [class.active]="activeLanguage === 'en'" (click)="activeLanguage = 'en'"
+      <div class="flex bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border-subtle)]">
+        <button class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors" [class.bg-indigo-600]="activeLanguage === 'en'" [class.text-white]="activeLanguage === 'en'" [class.text-[var(--text-secondary)]]="activeLanguage !== 'en'" (click)="activeLanguage = 'en'"
           [adminTooltip]="'Display English legal provisions only'" tooltipPosition="bottom">English</button>
-        <button class="lang-btn" [class.active]="activeLanguage === 'hi'" (click)="activeLanguage = 'hi'"
+        <button class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors" [class.bg-indigo-600]="activeLanguage === 'hi'" [class.text-white]="activeLanguage === 'hi'" [class.text-[var(--text-secondary)]]="activeLanguage !== 'hi'" (click)="activeLanguage = 'hi'"
           [adminTooltip]="'Display Hindi legal text only'" tooltipPosition="bottom">हिंदी</button>
-        <button class="lang-btn" [class.active]="activeLanguage === 'both'" (click)="activeLanguage = 'both'"
+        <button class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors" [class.bg-indigo-600]="activeLanguage === 'both'" [class.text-white]="activeLanguage === 'both'" [class.text-[var(--text-secondary)]]="activeLanguage !== 'both'" (click)="activeLanguage = 'both'"
           [adminTooltip]="'Display English & Hindi statutes side-by-side'" tooltipPosition="bottom">Dual View</button>
       </div>
 
       <!-- Edit Mode Toggle -->
-      <button class="btn btn-sm" [class.btn-primary]="isEditMode" [class.btn-secondary]="!isEditMode"
-        (click)="isEditMode = !isEditMode" [adminTooltip]="'Toggle statutory text editing privileges'"
-        tooltipPosition="left">
+      <button class="btn btn-sm text-xs font-semibold px-3 py-1.5 flex items-center gap-1.5" [class.btn-primary]="isEditMode" [class.btn-secondary]="!isEditMode"
+        (click)="isEditMode = !isEditMode" [adminTooltip]="'Toggle statutory text editing privileges'" tooltipPosition="left">
         @if (isEditMode) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="20 6 9 17 4 12"></polyline>
@@ -60,82 +54,79 @@
     </div>
   </div>
 
-  <!-- Main Two-Column Reader Workspace -->
+  <!-- ─── 1. Main Two-Column Reader Workspace ─── -->
   @if (isLoading) {
-  <div class="workspace-grid animate-in">
-    <div class="glass-card p-6">
+  <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 animate-in">
+    <div class="glass-card p-6 rounded-2xl">
       <admin-skeleton type="table"></admin-skeleton>
     </div>
-    <div class="glass-card p-6 space-y-4">
+    <div class="glass-card p-6 rounded-2xl space-y-4">
       <admin-skeleton type="card"></admin-skeleton>
       <admin-skeleton type="card"></admin-skeleton>
       <admin-skeleton type="card"></admin-skeleton>
     </div>
   </div>
   } @else {
-  <div class="workspace-grid animate-in">
+  <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 animate-in">
     <!-- Left Column: Chapter & Section Navigation Index -->
-    <aside class="glass-card sidebar-index" [adminTooltip]="'Statutory Table of Contents — Click to jump'"
+    <aside class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-4 max-h-[calc(100vh-140px)] overflow-hidden" [adminTooltip]="'Statutory Table of Contents — Click to jump'"
       tooltipPosition="right">
-      <div class="sidebar-header">
-        <h4 class="font-bold text-primary text-sm">Table of Contents</h4>
-        <span class="badge neutral text-xs">{{ act?.chapters?.length || 0 }} Chapters</span>
+      <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
+        <h4 class="font-bold text-[var(--text-primary)] text-xs uppercase tracking-wider">Table of Contents</h4>
+        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-[var(--bg-glass)] text-[var(--text-secondary)] border-[var(--border-subtle)]">{{ act?.chapters?.length || 0 }} Chapters</span>
       </div>
 
-      <div class="index-tree">
+      <div class="overflow-y-auto flex flex-col gap-3 pr-1 text-xs">
         @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
-        <div class="chapter-group">
-          <div class="chapter-title-row">
-            <span class="font-bold text-primary text-xs">Chapter {{ chap.chapterNumber || chap.chapter_number }}: {{
-              chap.title }}</span>
+        <div class="flex flex-col gap-1">
+          <div class="py-1 font-bold text-[var(--text-primary)] text-xs">
+            Chapter {{ chap.chapterNumber || chap.chapter_number }}: {{ chap.title }}
           </div>
-          <div class="section-tree-list">
+          <div class="flex flex-col gap-1 pl-2 border-l border-[var(--border-subtle)]">
             @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
-            <a class="section-tree-item" [class.active]="activeSectionId === getSecId(sec)"
+            <a class="flex items-center gap-2 p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-indigo-600/20 hover:text-[var(--text-primary)] transition-colors cursor-pointer" [class.bg-indigo-900]="activeSectionId === getSecId(sec)" [class.font-bold]="activeSectionId === getSecId(sec)"
               (click)="scrollToSection(sec.section_number || sec.sectionNumber)">
-              <span class="sec-num-badge">Sec {{ sec.section_number || sec.sectionNumber }}</span>
-              <span class="sec-title-text">{{ getCleanTitle(sec) }}</span>
+              <span class="font-mono text-indigo-400 font-semibold text-[11px]">Sec {{ sec.section_number || sec.sectionNumber }}</span>
+              <span class="truncate text-[11px]">{{ getCleanTitle(sec) }}</span>
             </a>
             }
           </div>
         </div>
         } @empty {
-        <div class="p-4 text-xs text-muted text-center">No matching sections found.</div>
+        <div class="p-4 text-xs text-[var(--text-tertiary)] text-center">No matching sections found.</div>
         }
       </div>
     </aside>
 
     <!-- Right Column: Full-Width Document Reader -->
-    <main class="document-reader">
+    <main class="flex flex-col gap-6">
       @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
-      <div class="chapter-block">
-        <div class="chapter-block-header">
-          <span class="badge purple font-mono font-bold">Chapter {{ chap.chapterNumber || chap.chapter_number }}</span>
-          <h3 class="chapter-block-title">{{ chap.title }}</h3>
+      <div class="flex flex-col gap-4">
+        <div class="flex items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
+          <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-purple-500/10 text-purple-300 border-purple-500/30">Chapter {{ chap.chapterNumber || chap.chapter_number }}</span>
+          <h3 class="text-lg font-bold text-[var(--text-primary)]">{{ chap.title }}</h3>
         </div>
 
-        <div class="sections-list">
+        <div class="flex flex-col gap-4">
           @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
-          <div class="glass-card section-card" [id]="'section-' + (sec.section_number || sec.sectionNumber)"
-            [class.active-highlight]="activeSectionId === getSecId(sec)">
-            <div class="section-card-header">
-              <div class="sec-title-box">
-                <span class="sec-badge font-mono">Sec {{ sec.section_number || sec.sectionNumber }}</span>
-                <h4 class="section-card-title">{{ getCleanTitle(sec) }}</h4>
+          <div class="glass-card p-5 rounded-2xl border border-[var(--border-subtle)] shadow-xl flex flex-col gap-3 transition-all" [id]="'section-' + (sec.section_number || sec.sectionNumber)"
+            [class.border-indigo-500]="activeSectionId === getSecId(sec)">
+            <div class="flex items-start justify-between gap-4 flex-wrap">
+              <div class="flex items-center gap-3">
+                <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-indigo-500/10 text-indigo-300 border-indigo-500/30">Sec {{ sec.section_number || sec.sectionNumber }}</span>
+                <h4 class="text-base font-bold text-[var(--text-primary)]">{{ getCleanTitle(sec) }}</h4>
               </div>
 
-              <div class="sec-actions-row">
-                <!-- Statute Language Badge (To the left of Cite button) -->
+              <div class="flex items-center gap-2">
                 @if (activeLanguage === 'en') {
-                <span class="lang-tag">ENGLISH STATUTE</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">ENGLISH STATUTE</span>
                 } @else if (activeLanguage === 'hi') {
-                <span class="lang-tag hi">हिंदी पाठ</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">हिंदी पाठ</span>
                 } @else if (activeLanguage === 'both') {
-                <span class="lang-tag dual">DUAL VIEW</span>
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">DUAL VIEW</span>
                 }
 
-                <!-- Citation Copy Button -->
-                <button class="btn btn-secondary btn-xs" (click)="copySectionCitation(sec)"
+                <button class="btn btn-secondary btn-xs text-xs px-2.5 py-1 flex items-center gap-1" (click)="copySectionCitation(sec)"
                   [adminTooltip]="'Copy formal legal citation'" tooltipPosition="top">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
@@ -144,8 +135,7 @@
                   <span>Cite</span>
                 </button>
 
-                <!-- Direct Link Button -->
-                <button class="btn btn-secondary btn-xs" (click)="copySectionLink(sec)"
+                <button class="btn btn-secondary btn-xs text-xs px-2.5 py-1 flex items-center gap-1" (click)="copySectionLink(sec)"
                   [adminTooltip]="'Copy direct anchor link to Section ' + (sec.section_number || sec.sectionNumber)"
                   tooltipPosition="top">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -156,7 +146,7 @@
                 </button>
 
                 @if (isEditMode) {
-                <button class="btn btn-primary btn-xs" (click)="openEditSection(sec)"
+                <button class="btn btn-primary btn-xs text-xs px-2.5 py-1 flex items-center gap-1" (click)="openEditSection(sec)"
                   [adminTooltip]="'Edit statutory text, title, or Hindi translation'" tooltipPosition="left">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -170,24 +160,22 @@
 
             <!-- English Text View -->
             @if (activeLanguage === 'en' || activeLanguage === 'both') {
-            <div class="legal-text-box en-text">
+            <div class="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-xs leading-relaxed text-[var(--text-primary)]">
               @if (sec.content_blocks && sec.content_blocks.length > 0) {
-              <div class="clauses-stack space-y-3">
+              <div class="flex flex-col gap-3">
                 @for (block of sec.content_blocks; track $index) {
-                <div class="clause-card" [ngStyle]="getClauseStyle(block.text, block.type)"
-                  [class.explanation-card]="block.type === 'explanation'"
-                  [class.illustration-card]="block.type === 'illustration'">
+                <div class="p-3 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-subtle)]" [ngStyle]="getClauseStyle(block.text, block.type)">
                   @if (block.type === 'explanation') {
-                  <span class="clause-type-badge exp">EXPLANATION</span>
+                  <span class="inline-block mb-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">EXPLANATION</span>
                   } @else if (block.type === 'illustration') {
-                  <span class="clause-type-badge ill">ILLUSTRATION</span>
+                  <span class="inline-block mb-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20">ILLUSTRATION</span>
                   }
-                  <p class="clause-body-text">{{ block.text }}</p>
+                  <p class="text-xs text-[var(--text-primary)] leading-relaxed">{{ block.text }}</p>
                 </div>
                 }
               </div>
               } @else {
-              <p class="legal-paragraph">{{ getCleanBody(sec) }}</p>
+              <p class="whitespace-pre-wrap font-sans text-xs text-[var(--text-primary)] leading-relaxed">{{ getCleanBody(sec) }}</p>
               }
             </div>
             }
@@ -195,20 +183,20 @@
             <!-- Hindi Text View -->
             @if ((activeLanguage === 'hi' || activeLanguage === 'both') && (sec.title_hi || sec.introduction_text_hi ||
             sec.content_hi || sec.text_hi)) {
-            <div class="legal-text-box hi-text mt-3">
+            <div class="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-xs leading-relaxed text-[var(--text-primary)] mt-2">
               @if (sec.title_hi) {
-              <h5 class="hi-title font-bold text-primary mb-2">{{ sec.title_hi }}</h5>
+              <h5 class="font-bold text-[var(--text-primary)] text-xs mb-2">{{ sec.title_hi }}</h5>
               }
               @if (sec.content_blocks_hi && sec.content_blocks_hi.length > 0) {
-              <div class="clauses-stack space-y-3">
+              <div class="flex flex-col gap-3">
                 @for (block of sec.content_blocks_hi; track $index) {
-                <div class="clause-card hi" [ngStyle]="getClauseStyle(block.text, block.type)">
-                  <p class="clause-body-text hi">{{ block.text }}</p>
+                <div class="p-3 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-subtle)]" [ngStyle]="getClauseStyle(block.text, block.type)">
+                  <p class="text-xs text-[var(--text-primary)] leading-relaxed">{{ block.text }}</p>
                 </div>
                 }
               </div>
               } @else {
-              <p class="legal-paragraph hi">{{ sec.content_hi || sec.introduction_text_hi || sec.text_hi }}</p>
+              <p class="whitespace-pre-wrap font-sans text-xs text-[var(--text-primary)] leading-relaxed">{{ sec.content_hi || sec.introduction_text_hi || sec.text_hi }}</p>
               }
             </div>
             }
@@ -217,7 +205,7 @@
         </div>
       </div>
       } @empty {
-      <div class="glass-card p-8 text-center text-muted">No statutory sections available for display.</div>
+      <div class="glass-card p-12 text-center text-[var(--text-tertiary)] text-sm rounded-2xl">No statutory sections available for display.</div>
       }
     </main>
   </div>
@@ -225,45 +213,45 @@
 
   <!-- Admin Section Edit Modal -->
   @if (editingSection) {
-  <div class="modal-backdrop animate-in" (click)="editingSection = null">
-    <div class="modal-box edit-modal-box" (click)="$event.stopPropagation()">
-      <div class="modal-header">
+  <div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in" (click)="editingSection = null">
+    <div class="glass-card max-w-2xl w-full rounded-2xl p-6 flex flex-col gap-4 shadow-2xl" (click)="$event.stopPropagation()">
+      <div class="modal-header flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
         <div>
-          <h3 class="text-primary font-bold">Edit Section {{ editForm.section_number }}</h3>
-          <p class="text-xs text-secondary">{{ shortName }} — Statutory Text Amendment</p>
+          <h3 class="text-lg font-bold text-[var(--text-primary)]">Edit Section {{ editForm.section_number }}</h3>
+          <p class="text-xs text-[var(--text-secondary)]">{{ shortName }} — Statutory Text Amendment</p>
         </div>
-        <button class="btn-close" (click)="editingSection = null" [adminTooltip]="'Close edit modal'"
+        <button class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1" (click)="editingSection = null" [adminTooltip]="'Close edit modal'"
           tooltipPosition="left">&times;</button>
       </div>
 
-      <div class="modal-body space-y-4">
-        <div class="form-group">
-          <label class="form-label">Section Title (English)</label>
-          <input type="text" class="form-input" [(ngModel)]="editForm.title" />
+      <div class="modal-body flex flex-col gap-3 text-xs">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-[var(--text-secondary)]">Section Title (English)</label>
+          <input type="text" class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2" [(ngModel)]="editForm.title" />
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Section Title (Hindi - title_hi)</label>
-          <input type="text" class="form-input" [(ngModel)]="editForm.title_hi" placeholder="e.g. एकांत परिरोध" />
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-[var(--text-secondary)]">Section Title (Hindi - title_hi)</label>
+          <input type="text" class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2" [(ngModel)]="editForm.title_hi" placeholder="e.g. एकांत परिरोध" />
         </div>
 
-        <div class="form-group">
-          <label class="form-label">English Legal Text & Full Subsections</label>
-          <textarea class="form-input" rows="8" [(ngModel)]="editForm.introduction_text"></textarea>
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-[var(--text-secondary)]">English Legal Text & Full Subsections</label>
+          <textarea class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2 text-xs" rows="6" [(ngModel)]="editForm.introduction_text"></textarea>
         </div>
 
-        <div class="form-group">
-          <label class="form-label">Hindi Legal Text (introduction_text_hi / content_hi)</label>
-          <textarea class="form-input" rows="8" [(ngModel)]="editForm.introduction_text_hi"></textarea>
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-[var(--text-secondary)]">Hindi Legal Text (introduction_text_hi / content_hi)</label>
+          <textarea class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2 text-xs" rows="6" [(ngModel)]="editForm.introduction_text_hi"></textarea>
         </div>
       </div>
 
-      <div class="modal-footer">
-        <button class="btn btn-primary" (click)="saveSectionEdit()" [disabled]="isSaving"
+      <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]">
+        <button class="btn btn-primary px-4 py-2 text-xs font-semibold" (click)="saveSectionEdit()" [disabled]="isSaving"
           [adminTooltip]="'Save updated statutory text to MongoDB database'" tooltipPosition="top">
           {{ isSaving ? 'Saving to MongoDB...' : 'Save Statutory Amendment' }}
         </button>
-        <button class="btn btn-secondary" (click)="editingSection = null">Cancel</button>
+        <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="editingSection = null">Cancel</button>
       </div>
     </div>
   </div>

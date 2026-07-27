@@ -1,18 +1,25 @@
-<div class="reviews-page stagger-children">
-  <!-- Filter Bar -->
-  <div class="glass-card page-filters mb-2 animate-in">
-    <div>
-      <h3 class="text-primary font-bold">Review Moderation Desk</h3>
-      <p class="text-xs text-secondary">Audit and moderate public lawyer reviews & ratings across LegalConnect.</p>
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Header Banner ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
+    <div class="flex flex-col gap-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+        <span>Review Moderation Desk</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Client Reviews & Rating Audit</h1>
+      <p class="text-xs text-slate-400">
+        Audit and moderate public lawyer reviews & ratings across LegalConnect.
+      </p>
     </div>
 
-    <div class="filter-group">
+    <div class="filter-group flex items-center gap-2.5 flex-wrap">
       <admin-select [options]="ratingOptions" [value]="ratingFilter"
         (valueChange)="ratingFilter = $event; fetchReviews();" minWidth="180px"
         [adminTooltip]="'Filter reviews by star rating'" tooltipPosition="top">
       </admin-select>
 
-      <button class="btn btn-secondary" (click)="fetchReviews()" [adminTooltip]="'Refresh client review directory'"
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="fetchReviews()" [adminTooltip]="'Refresh client review directory'"
         tooltipPosition="top">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="1 4 1 10 7 10"></polyline>
@@ -23,25 +30,25 @@
     </div>
   </div>
 
-  <!-- Main Reviews Table -->
-  <div class="glass-card animate-in">
-    <div class="data-table-wrapper">
-      <table class="data-table">
+  <!-- ─── 1. Main Reviews Table ─── -->
+  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto">
+      <table class="data-table w-full text-left border-collapse">
         <thead>
-          <tr>
-            <th>Reviewer</th>
-            <th>Rating</th>
-            <th>Review Comment</th>
-            <th>Submitted At</th>
-            <th class="text-right">Moderation</th>
+          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5">Reviewer</th>
+            <th class="p-3.5">Rating</th>
+            <th class="p-3.5">Review Comment</th>
+            <th class="p-3.5">Submitted At</th>
+            <th class="p-3.5 text-right">Moderation</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isLoading) {
           @for (item of [1,2,3,4,5]; track $index) {
-          <tr>
-            <td>
-              <div class="user-cell">
+          <tr class="hover:bg-slate-800/30">
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-2.5">
                 <admin-skeleton width="32px" height="32px" borderRadius="50%" />
                 <div>
                   <admin-skeleton width="120px" height="14px" />
@@ -49,26 +56,28 @@
                 </div>
               </div>
             </td>
-            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="220px" height="14px" /></td>
-            <td><admin-skeleton width="90px" height="14px" /></td>
-            <td class="text-right"><admin-skeleton width="100px" height="28px" borderRadius="6px" /></td>
+            <td class="p-3.5"><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="220px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="14px" /></td>
+            <td class="p-3.5 text-right"><admin-skeleton width="100px" height="28px" borderRadius="6px" /></td>
           </tr>
           }
           } @else {
           @for (rev of reviews; track rev.id) {
-          <tr>
-            <td>
-              <div class="user-cell">
-                <div class="user-avatar">{{ (rev.userName || 'A').charAt(0).toUpperCase() }}</div>
-                <div>
-                  <div class="user-name">{{ rev.userName || 'Anonymous Client' }}</div>
-                  <div class="text-xs text-tertiary">{{ rev.userRole || 'Client' }}</div>
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-2.5">
+                <div class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
+                  {{ (rev.userName || 'A').charAt(0).toUpperCase() }}
+                </div>
+                <div class="flex flex-col">
+                  <div class="user-name font-bold text-slate-200">{{ rev.userName || 'Anonymous Client' }}</div>
+                  <div class="text-slate-400 text-[11px]">{{ rev.userRole || 'Client' }}</div>
                 </div>
               </div>
             </td>
-            <td>
-              <span class="rating-stars inline-flex items-center gap-1 font-bold text-amber-400">
+            <td class="p-3.5">
+              <span class="rating-stars inline-flex items-center gap-1 font-extrabold text-amber-400">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <polygon
                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
@@ -77,10 +86,10 @@
                 <span>{{ rev.rating }}/5</span>
               </span>
             </td>
-            <td class="max-w-md text-sm text-primary leading-relaxed">{{ rev.comment }}</td>
-            <td class="text-xs text-secondary">{{ rev.createdAt | date:'mediumDate' }}</td>
-            <td class="text-right">
-              <button class="btn btn-danger btn-sm" (click)="deleteReview(rev.id)"
+            <td class="p-3.5 max-w-md text-xs text-slate-300 leading-relaxed">{{ rev.comment }}</td>
+            <td class="p-3.5 text-slate-400 text-[11px]">{{ rev.createdAt | date:'mediumDate' }}</td>
+            <td class="p-3.5 text-right">
+              <button class="btn btn-danger btn-sm text-xs px-2.5 py-1" (click)="deleteReview(rev.id)"
                 [adminTooltip]="'Permanently delete this flaggable client review'" tooltipPosition="left">
                 Delete Review
               </button>
@@ -88,8 +97,8 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="5" class="empty-state py-8 text-center">
-              <div class="text-muted">No client reviews submitted.</div>
+            <td colspan="5" class="empty-state py-8 text-center text-slate-400 text-sm">
+              <div>No client reviews submitted.</div>
             </td>
           </tr>
           }

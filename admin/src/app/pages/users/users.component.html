@@ -1,13 +1,57 @@
-<div class="users-page stagger-children">
-  <!-- ─── Filter & Search Bar ─── -->
-  <div class="glass-card page-filters mb-2 animate-in">
-    <div class="search-box">
-      <input type="text" class="form-input" placeholder="Search users by name or email..." [value]="search"
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Header & Quick Stats Summary Banner ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl">
+    <div class="flex flex-col gap-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-semibold text-sky-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+        <span>User Access & RBAC Roster</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">User Directory & Security Permissions</h1>
+      <p class="text-xs text-slate-400">
+        Manage accounts across Clients, Advocates, and Administrators. Perform bulk activations, password resets, and view audit history.
+      </p>
+    </div>
+
+    <!-- Quick Stats Metric Pills -->
+    <div class="flex flex-wrap items-center gap-3">
+      <div class="px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/70 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xs text-slate-400 font-medium">Total Accounts</span>
+          <span class="text-base font-extrabold text-slate-100">{{ pagination.total || users.length }} Registered</span>
+        </div>
+      </div>
+
+      <div class="px-4 py-2.5 rounded-xl bg-slate-800/80 border border-slate-700/70 flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-xs text-slate-400 font-medium">Active Status</span>
+          <span class="text-base font-extrabold text-emerald-400">Normal</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── 1. Filter & Search Bar ─── -->
+  <div class="glass-card page-filters p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
+    <div class="search-box flex-1 min-w-[280px]">
+      <input type="text" class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-sm" placeholder="Search users by name or email..." [value]="search"
         (input)="onSearchInput($any($event.target).value)"
         [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
     </div>
 
-    <div class="filter-group">
+    <div class="filter-group flex items-center gap-2.5 flex-wrap">
       <admin-select [options]="roleOptions" [value]="selectedRole"
         (valueChange)="selectedRole = $event; onFilterChange();" minWidth="170px" [adminTooltip]="'Filter by user role'"
         tooltipPosition="top">
@@ -22,7 +66,7 @@
         minWidth="175px" [adminTooltip]="'Select table sort order'" tooltipPosition="top">
       </admin-select>
 
-      <button class="btn btn-secondary" (click)="resetFilters()" [adminTooltip]="'Clear search and filter criteria'"
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="resetFilters()" [adminTooltip]="'Clear search and filter criteria'"
         tooltipPosition="top">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="1 4 1 10 7 10"></polyline>
@@ -31,7 +75,7 @@
         <span>Reset</span>
       </button>
 
-      <button class="btn btn-primary" (click)="exportToCsv()" [disabled]="isExporting"
+      <button class="btn btn-primary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="exportToCsv()" [disabled]="isExporting"
         [adminTooltip]="'Export filtered users directory to CSV file'" tooltipPosition="top">
         @if (isExporting) {
         <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -54,8 +98,8 @@
 
   <!-- Bulk Action Bar -->
   @if (selectedUserIds.size > 0) {
-  <div class="bulk-action-bar animate-in">
-    <div class="bulk-info">
+  <div class="bulk-action-bar p-3.5 rounded-xl border border-indigo-500/40 bg-indigo-950/60 backdrop-blur-xl shadow-2xl flex items-center justify-between gap-4 animate-in">
+    <div class="bulk-info flex items-center gap-2 text-sm text-slate-200 font-semibold">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
         class="text-indigo-400">
         <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -63,8 +107,8 @@
       </svg>
       <span><strong class="text-white">{{ selectedUserIds.size }}</strong> user account(s) selected</span>
     </div>
-    <div class="bulk-buttons">
-      <button class="btn btn-success btn-sm" (click)="bulkUpdateStatus(true)"
+    <div class="bulk-buttons flex items-center gap-2">
+      <button class="btn btn-success btn-sm flex items-center gap-1.5 text-xs px-3 py-1.5" (click)="bulkUpdateStatus(true)"
         [adminTooltip]="'Activate all selected accounts'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
@@ -72,7 +116,7 @@
         </svg>
         <span>Bulk Activate</span>
       </button>
-      <button class="btn btn-danger btn-sm" (click)="bulkUpdateStatus(false)"
+      <button class="btn btn-danger btn-sm flex items-center gap-1.5 text-xs px-3 py-1.5" (click)="bulkUpdateStatus(false)"
         [adminTooltip]="'Suspend all selected accounts'">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <circle cx="12" cy="12" r="10"></circle>
@@ -84,90 +128,99 @@
   </div>
   }
 
-
   <!-- ─── Main User Data Table ─── -->
-  <div class="glass-card animate-in">
-    <div class="data-table-wrapper">
+  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto">
       @if (!isInitialLoad && isLoading) {
-      <div class="table-loading-bar"></div>
+      <div class="table-loading-bar h-1 bg-indigo-500 animate-pulse w-full"></div>
       }
-      <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoading">
+      <table class="data-table w-full text-left border-collapse" [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead>
-          <tr>
-            <th width="35px">
-              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
+          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5 text-center" width="35px">
+              <input type="checkbox" class="rounded border-slate-700 bg-slate-800" [checked]="isAllSelected()" (change)="toggleSelectAll($event)" />
             </th>
-            <th>ID</th>
-            <th>User</th>
-            <th>Email</th>
-            <th>Role</th>
-            <th>Account Status</th>
-            <th>Verified</th>
-            <th>Joined</th>
-            <th class="text-right">Actions</th>
+            <th class="p-3.5">ID</th>
+            <th class="p-3.5">User</th>
+            <th class="p-3.5">Email</th>
+            <th class="p-3.5">Role</th>
+            <th class="p-3.5">Account Status</th>
+            <th class="p-3.5">Verified</th>
+            <th class="p-3.5">Joined</th>
+            <th class="p-3.5 text-right">Actions</th>
           </tr>
         </thead>
 
-        <tbody>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isInitialLoad && isLoading) {
           @for (item of [1,2,3,4,5]; track $index) {
-          <tr>
-            <td><admin-skeleton width="30px" height="16px" /></td>
-            <td>
-              <div class="user-cell">
+          <tr class="hover:bg-slate-800/30">
+            <td class="p-3.5 text-center"><admin-skeleton width="20px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="30px" height="16px" /></td>
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-2.5">
                 <admin-skeleton width="32px" height="32px" borderRadius="50%" />
                 <admin-skeleton width="120px" height="16px" />
               </div>
             </td>
-            <td><admin-skeleton width="160px" height="16px" /></td>
-            <td><admin-skeleton width="60px" height="20px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="90px" height="16px" /></td>
-            <td class="text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
+            <td class="p-3.5"><admin-skeleton width="160px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="60px" height="20px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="16px" /></td>
+            <td class="p-3.5 text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
           </tr>
           }
           } @else if (users.length === 0) {
           <tr>
-            <td colspan="8" class="text-center py-3">No users found matching filters.</td>
+            <td colspan="9" class="text-center py-8 text-slate-400 text-sm">No users found matching filters.</td>
           </tr>
           } @else {
           @for (u of users; track u.id) {
-          <tr>
-            <td>
-              <input type="checkbox" [checked]="selectedUserIds.has(u.id)" (change)="toggleSelectUser(u.id)" />
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5 text-center">
+              <input type="checkbox" class="rounded border-slate-700 bg-slate-800" [checked]="selectedUserIds.has(u.id)" (change)="toggleSelectUser(u.id)" />
             </td>
-            <td>#{{ u.id }}</td>
+            <td class="p-3.5 font-mono text-slate-400">#{{ u.id }}</td>
 
-            <td>
-              <div class="user-cell">
-                <div class="user-avatar">{{ u.fullName?.charAt(0) || 'U' }}</div>
-                <span class="user-name">{{ u.fullName }}</span>
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-2.5">
+                <div class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-cyan-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
+                  {{ u.fullName?.charAt(0) || 'U' }}
+                </div>
+                <span class="user-name font-bold text-slate-200">{{ u.fullName }}</span>
               </div>
             </td>
-            <td>{{ u.email }}</td>
-            <td>
-              <span class="badge" [class.purple]="u.role === 'Admin'" [class.blue]="u.role === 'Lawyer'"
-                [class.neutral]="u.role === 'Client'" [adminTooltip]="'Account privilege level'">
+            <td class="p-3.5 text-slate-300">{{ u.email }}</td>
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border"
+                [ngClass]="{
+                  'bg-purple-500/10 text-purple-300 border-purple-500/30': u.role === 'Admin',
+                  'bg-indigo-500/10 text-indigo-300 border-indigo-500/30': u.role === 'Lawyer',
+                  'bg-slate-700/40 text-slate-300 border-slate-700/50': u.role === 'Client'
+                }"
+                [adminTooltip]="'Account privilege level'">
                 {{ u.role }}
               </span>
             </td>
-            <td>
-              <span class="badge" [class.success]="u.isActive" [class.danger]="!u.isActive"
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border"
+                [ngClass]="u.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'"
                 [adminTooltip]="u.isActive ? 'User can log in' : 'Account deactivated by admin'">
                 {{ u.isActive ? 'Active' : 'Deactivated' }}
               </span>
             </td>
-            <td>
-              <span class="badge" [class.success]="u.isEmailVerified" [class.warning]="!u.isEmailVerified"
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border"
+                [ngClass]="u.isEmailVerified ? 'bg-sky-500/10 text-sky-400 border-sky-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'"
                 [adminTooltip]="u.isEmailVerified ? 'Email address verified' : 'Unverified email'">
-                {{ u.isEmailVerified ? 'Verified' : 'Unverified' }}
+                {{ u.isEmailVerified ? 'Verified ✓' : 'Unverified' }}
               </span>
             </td>
-            <td>{{ u.createdAt | date:'mediumDate' }}</td>
-            <td class="text-right">
-              <div class="action-buttons">
-                <button class="btn btn-secondary btn-sm" (click)="viewUser(u.id)"
+            <td class="p-3.5 text-slate-400 text-[11px]">{{ u.createdAt | date:'mediumDate' }}</td>
+            <td class="p-3.5 text-right">
+              <div class="action-buttons flex items-center justify-end gap-1.5">
+                <button class="btn btn-secondary btn-sm text-xs px-2.5 py-1 flex items-center gap-1" (click)="viewUser(u.id)"
                   [adminTooltip]="'Inspect user profile & login history'" tooltipPosition="top">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
@@ -175,7 +228,7 @@
                   </svg>
                   <span>View</span>
                 </button>
-                <button class="btn btn-secondary btn-sm" (click)="openEditModal(u)"
+                <button class="btn btn-secondary btn-sm text-xs px-2.5 py-1 flex items-center gap-1" (click)="openEditModal(u)"
                   [adminTooltip]="'Edit name, email, role or status'" tooltipPosition="top">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
@@ -183,7 +236,7 @@
                   </svg>
                   <span>Edit</span>
                 </button>
-                <button class="btn btn-sm" [class.btn-danger]="u.isActive" [class.btn-success]="!u.isActive"
+                <button class="btn btn-sm text-xs px-2.5 py-1 flex items-center gap-1" [class.btn-danger]="u.isActive" [class.btn-success]="!u.isActive"
                   (click)="toggleActive(u)"
                   [adminTooltip]="u.isActive ? 'Deactivate user account' : 'Restore active status'"
                   tooltipPosition="top">
@@ -210,14 +263,13 @@
       </table>
     </div>
 
-    <!-- Pagination (Image 3 Style) -->
-    <div class="pagination">
+    <!-- Pagination -->
+    <div class="pagination p-4 border-t border-slate-800 bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
       <div class="page-info">
-        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ pagination.total
-          }}</strong> records
+        Showing <strong class="text-slate-200">{{ startRecord }}</strong> to <strong class="text-slate-200">{{ endRecord }}</strong> of <strong class="text-slate-200">{{ pagination.total }}</strong> records
       </div>
-      <div class="pagination-controls">
-        <button class="pagination-btn" [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
+      <div class="pagination-controls flex items-center gap-3">
+        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5" [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
           [adminTooltip]="'Previous page'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
@@ -226,10 +278,10 @@
         </button>
 
         <span class="page-indicator">
-          Page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong>
+          Page <strong class="text-slate-200">{{ pagination.page }}</strong> of <strong class="text-slate-200">{{ pagination.pages }}</strong>
         </span>
 
-        <button class="pagination-btn" [disabled]="pagination.page >= pagination.pages"
+        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5" [disabled]="pagination.page >= pagination.pages"
           (click)="changePage(pagination.page + 1)" [adminTooltip]="'Next page'">
           <span>Next</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -244,75 +296,76 @@
 
 <!-- ─── View User Modal ─── -->
 @if (selectedUserDetail) {
-<div class="modal-overlay" (click)="closeViewModal()">
-  <div class="modal-content glass-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>User Profile & Audit Log</h3>
-      <button class="btn btn-secondary btn-sm" (click)="closeViewModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4" (click)="closeViewModal()">
+  <div class="glass-card max-w-2xl w-full rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in" (click)="$event.stopPropagation()">
+    <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
+      <h3 class="text-lg font-bold text-slate-100">User Profile & Audit Log</h3>
+      <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="closeViewModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
-    <div class="modal-body">
-      <div class="detail-header mb-2">
-        <div class="avatar-lg">{{ selectedUserDetail.user.fullName?.charAt(0) }}</div>
-        <div>
-          <h2>{{ selectedUserDetail.user.fullName }}</h2>
-          <p class="text-muted">{{ selectedUserDetail.user.email }} • Role: {{ selectedUserDetail.user.role }}</p>
+    <div class="modal-body flex flex-col gap-4 text-xs">
+      <div class="detail-header flex items-center gap-4 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
+        <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-cyan-500 to-indigo-600 text-white font-extrabold text-xl flex items-center justify-center shadow-lg">
+          {{ selectedUserDetail.user.fullName?.charAt(0) }}
+        </div>
+        <div class="flex flex-col">
+          <h2 class="text-base font-bold text-slate-100">{{ selectedUserDetail.user.fullName }}</h2>
+          <p class="text-slate-400">{{ selectedUserDetail.user.email }} • Role: <strong class="text-indigo-300">{{ selectedUserDetail.user.role }}</strong></p>
         </div>
       </div>
 
-      <div class="grid-2 mb-2">
-        <div><strong>Status:</strong> {{ selectedUserDetail.user.isActive ? 'Active' : 'Deactivated' }}</div>
-        <div><strong>Phone:</strong> {{ selectedUserDetail.user.phone || 'N/A' }}</div>
-        <div><strong>City:</strong> {{ selectedUserDetail.user.clientCity || 'N/A' }}</div>
-        <div><strong>Email Verified:</strong> {{ selectedUserDetail.user.isEmailVerified ? 'Yes' : 'No' }}</div>
-        <div><strong>2FA Enabled:</strong> {{ selectedUserDetail.user.isTwoFactorEnabled ? 'Yes' : 'No' }}</div>
-        <div><strong>Joined Date:</strong> {{ selectedUserDetail.user.createdAt | date:'medium' }}</div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-slate-800/40 border border-slate-800">
+        <div><strong class="text-slate-400">Status:</strong> <span class="text-slate-200 font-medium ml-1">{{ selectedUserDetail.user.isActive ? 'Active' : 'Deactivated' }}</span></div>
+        <div><strong class="text-slate-400">Phone:</strong> <span class="text-slate-200 font-medium ml-1">{{ selectedUserDetail.user.phone || 'N/A' }}</span></div>
+        <div><strong class="text-slate-400">City:</strong> <span class="text-slate-200 font-medium ml-1">{{ selectedUserDetail.user.clientCity || 'N/A' }}</span></div>
+        <div><strong class="text-slate-400">Email Verified:</strong> <span class="text-slate-200 font-medium ml-1">{{ selectedUserDetail.user.isEmailVerified ? 'Yes' : 'No' }}</span></div>
+        <div><strong class="text-slate-400">2FA Enabled:</strong> <span class="text-slate-200 font-medium ml-1">{{ selectedUserDetail.user.isTwoFactorEnabled ? 'Yes' : 'No' }}</span></div>
+        <div><strong class="text-slate-400">Joined Date:</strong> <span class="text-slate-200 font-medium ml-1">{{ selectedUserDetail.user.createdAt | date:'medium' }}</span></div>
       </div>
 
       @if (selectedUserDetail.user.lawyerProfile) {
-      <div class="lawyer-box mb-2">
-        <h4>Lawyer Profile Specs</h4>
-        <p><strong>Bar Council #:</strong> {{ selectedUserDetail.user.lawyerProfile.barCouncilNumber }}</p>
-        <p><strong>Specialization:</strong> {{ selectedUserDetail.user.lawyerProfile.specialization }}</p>
-        <p><strong>Fee:</strong> ₹{{ selectedUserDetail.user.lawyerProfile.consultationFee }} / consultation</p>
+      <div class="lawyer-box p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/30 flex flex-col gap-1">
+        <h4 class="font-bold text-indigo-300 text-xs">Lawyer Profile Specs</h4>
+        <p><strong class="text-slate-400">Bar Council #:</strong> <span class="text-slate-200 font-mono ml-1">{{ selectedUserDetail.user.lawyerProfile.barCouncilNumber }}</span></p>
+        <p><strong class="text-slate-400">Specialization:</strong> <span class="text-slate-200 ml-1">{{ selectedUserDetail.user.lawyerProfile.specialization }}</span></p>
+        <p><strong class="text-slate-400">Fee:</strong> <span class="text-emerald-400 font-bold ml-1">₹{{ selectedUserDetail.user.lawyerProfile.consultationFee }}</span> / consultation</p>
       </div>
       }
 
-      <h4 class="mb-1 mt-2">Activity Summary</h4>
-      <div class="grid-3 mb-2 text-center">
-        <div class="stat-mini">
-          <span class="mini-num">{{ selectedUserDetail.activity.loginCount }}</span>
-          <span class="mini-label">Total Logins</span>
+      <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider">Activity Summary</h4>
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex flex-col items-center">
+          <span class="text-base font-extrabold text-slate-100">{{ selectedUserDetail.activity.loginCount }}</span>
+          <span class="text-[10px] text-slate-400 uppercase font-semibold mt-0.5">Total Logins</span>
         </div>
-        <div class="stat-mini">
-          <span class="mini-num">{{ selectedUserDetail.activity.bookmarkCount }}</span>
-          <span class="mini-label">Bookmarks</span>
+        <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex flex-col items-center">
+          <span class="text-base font-extrabold text-indigo-400">{{ selectedUserDetail.activity.bookmarkCount }}</span>
+          <span class="text-[10px] text-slate-400 uppercase font-semibold mt-0.5">Bookmarks</span>
         </div>
-        <div class="stat-mini">
-          <span class="mini-num">{{ selectedUserDetail.activity.consultationCount }}</span>
-          <span class="mini-label">Consultations</span>
+        <div class="p-3 rounded-xl bg-slate-800/80 border border-slate-700/60 flex flex-col items-center">
+          <span class="text-base font-extrabold text-sky-400">{{ selectedUserDetail.activity.consultationCount }}</span>
+          <span class="text-[10px] text-slate-400 uppercase font-semibold mt-0.5">Consultations</span>
         </div>
       </div>
 
-      <h4>Recent Login History</h4>
-      <div class="login-logs">
+      <h4 class="font-bold text-slate-200 text-xs uppercase tracking-wider">Recent Login History</h4>
+      <div class="login-logs flex flex-col gap-2 max-h-40 overflow-y-auto pr-1">
         @for (log of selectedUserDetail.activity.recentLogins; track $index) {
-        <div class="log-item">
-          <span>{{ log.loginTime | date:'short' }}</span>
-          <span class="badge" [class.success]="log.status === 'Success'" [class.danger]="log.status !== 'Success'">{{
-            log.status }}</span>
-          <span class="truncate" style="max-width: 150px;">{{ log.ipAddress }}</span>
+        <div class="log-item p-2.5 rounded-lg bg-slate-800/50 border border-slate-800 flex items-center justify-between">
+          <span class="text-slate-300 font-mono">{{ log.loginTime | date:'short' }}</span>
+          <span class="px-2 py-0.5 rounded text-[10px] font-bold" [ngClass]="log.status === 'Success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'">{{ log.status }}</span>
+          <span class="font-mono text-slate-400 text-[11px] truncate max-w-[150px]">{{ log.ipAddress }}</span>
         </div>
         }
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeViewModal()">Close</button>
-      <button class="btn btn-warning" (click)="triggerPasswordReset(selectedUserDetail.user.id)"
+    <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+      <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="closeViewModal()">Close</button>
+      <button class="btn btn-warning px-4 py-2 text-xs font-semibold" (click)="triggerPasswordReset(selectedUserDetail.user.id)"
         [adminTooltip]="'Generate a secure temporary password'">Reset Password</button>
     </div>
   </div>
@@ -321,60 +374,60 @@
 
 <!-- ─── Edit User Modal ─── -->
 @if (editingUser) {
-<div class="modal-overlay" (click)="closeEditModal()">
-  <div class="modal-content glass-card" (click)="$event.stopPropagation()">
-    <div class="modal-header">
-      <h3>Edit User Details</h3>
-      <button class="btn btn-secondary btn-sm" (click)="closeEditModal()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+<div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4" (click)="closeEditModal()">
+  <div class="glass-card max-w-md w-full rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4 animate-in" (click)="$event.stopPropagation()">
+    <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
+      <h3 class="text-lg font-bold text-slate-100">Edit User Details</h3>
+      <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="closeEditModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="18" y1="6" x2="6" y2="18"></line>
           <line x1="6" y1="6" x2="18" y2="18"></line>
         </svg>
       </button>
     </div>
-    <div class="modal-body">
-      <div class="form-group mb-1">
-        <label class="form-label">Full Name</label>
-        <input type="text" class="form-input" [(ngModel)]="editForm.fullName" />
+    <div class="modal-body flex flex-col gap-3 text-xs">
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">Full Name</label>
+        <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="editForm.fullName" />
       </div>
 
-      <div class="form-group mb-1">
-        <label class="form-label">Email</label>
-        <input type="email" class="form-input" [(ngModel)]="editForm.email" />
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">Email</label>
+        <input type="email" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="editForm.email" />
       </div>
 
-      <div class="form-group mb-1">
-        <label class="form-label">Role</label>
-        <select class="form-select" [(ngModel)]="editForm.role">
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">Role</label>
+        <select class="form-select bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="editForm.role">
           <option value="Client">Client</option>
           <option value="Lawyer">Lawyer</option>
           <option value="Admin">Admin</option>
         </select>
       </div>
 
-      <div class="form-group mb-1">
-        <label class="form-label">City</label>
-        <input type="text" class="form-input" [(ngModel)]="editForm.clientCity" />
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">City</label>
+        <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="editForm.clientCity" />
       </div>
 
-      <div class="form-group mb-1">
-        <label class="form-label">Phone</label>
-        <input type="text" class="form-input" [(ngModel)]="editForm.phone" />
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">Phone</label>
+        <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="editForm.phone" />
       </div>
 
-      <div class="form-group mb-1 flex items-center gap-2">
-        <input type="checkbox" id="isActiveCheck" [(ngModel)]="editForm.isActive" />
-        <label for="isActiveCheck">Account Active Status</label>
+      <div class="flex items-center gap-2 mt-1">
+        <input type="checkbox" id="isActiveCheck" class="rounded border-slate-700 bg-slate-800" [(ngModel)]="editForm.isActive" />
+        <label for="isActiveCheck" class="text-slate-200 font-semibold cursor-pointer">Account Active Status</label>
       </div>
 
-      <div class="form-group mb-1 flex items-center gap-2">
-        <input type="checkbox" id="isVerifiedCheck" [(ngModel)]="editForm.isEmailVerified" />
-        <label for="isVerifiedCheck">Email Verified Status</label>
+      <div class="flex items-center gap-2">
+        <input type="checkbox" id="isVerifiedCheck" class="rounded border-slate-700 bg-slate-800" [(ngModel)]="editForm.isEmailVerified" />
+        <label for="isVerifiedCheck" class="text-slate-200 font-semibold cursor-pointer">Email Verified Status</label>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" (click)="closeEditModal()">Cancel</button>
-      <button class="btn btn-primary" (click)="saveUserEdit()">Save Changes</button>
+    <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+      <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="closeEditModal()">Cancel</button>
+      <button class="btn btn-primary px-4 py-2 text-xs font-semibold" (click)="saveUserEdit()">Save Changes</button>
     </div>
   </div>
 </div>

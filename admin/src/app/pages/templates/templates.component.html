@@ -1,138 +1,136 @@
-<div class="page-container">
-  <!-- Header -->
-  <div class="page-header-row">
-    <div>
-      <h2 class="page-title">Legal Templates & Drafts Analytics</h2>
-      <p class="page-subtitle">Read-only usage telemetry & admin moderation controls for custom document templates &
-        user drafts.</p>
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Top Header Banner ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
+    <div class="flex flex-col gap-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+        <span>Legal Templates & Drafts Desk</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Legal Templates & Drafts Analytics</h1>
+      <p class="text-xs text-slate-400">
+        Read-only usage telemetry & admin moderation controls for custom document templates & user drafts.
+      </p>
     </div>
   </div>
 
-  <!-- KPI Overview Cards -->
-  <div class="kpi-grid">
-    <div class="kpi-card glass-panel">
-      <div class="kpi-icon icon-indigo">
+  <!-- ─── 1. KPI Overview Cards Grid ─── -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-indigo-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
           <polyline points="14 2 14 8 20 8"></polyline>
           <line x1="16" y1="13" x2="8" y2="13"></line>
           <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
         </svg>
       </div>
-      <div class="kpi-content">
-        <span class="kpi-label">Total Custom Templates</span>
-        <h3 class="kpi-value">{{ isLoadingStats ? '...' : (stats?.totalTemplates || 0 | number) }}</h3>
-        <span class="kpi-trend trend-neutral">In Database</span>
+      <div class="flex flex-col">
+        <span class="text-xs text-slate-400 font-medium">Total Custom Templates</span>
+        <h3 class="text-xl font-extrabold text-slate-100">{{ isLoadingStats ? '...' : (stats?.totalTemplates || 0 | number) }}</h3>
       </div>
     </div>
 
-    <div class="kpi-card glass-panel">
-      <div class="kpi-icon icon-emerald">
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
           <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
         </svg>
       </div>
-      <div class="kpi-content">
-        <span class="kpi-label">User Drafts Created</span>
-        <h3 class="kpi-value">{{ isLoadingStats ? '...' : (stats?.totalDrafts || 0 | number) }}</h3>
-        <span class="kpi-trend trend-up">Active User Usage</span>
+      <div class="flex flex-col">
+        <span class="text-xs text-slate-400 font-medium">User Drafts Created</span>
+        <h3 class="text-xl font-extrabold text-emerald-400">{{ isLoadingStats ? '...' : (stats?.totalDrafts || 0 | number) }}</h3>
       </div>
     </div>
 
-    <div class="kpi-card glass-panel">
-      <div class="kpi-icon icon-amber">
+    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/30 transition-all">
+      <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
           <polyline points="2 17 12 22 22 17"></polyline>
           <polyline points="2 12 12 17 22 12"></polyline>
         </svg>
       </div>
-      <div class="kpi-content">
-        <span class="kpi-label">Top Category</span>
-        <h3 class="kpi-value truncate">{{ isLoadingStats ? '...' : (stats?.categoryStats?.[0]?._id || 'Commercial') }}
-        </h3>
-        <span class="kpi-trend trend-neutral">{{ stats?.categoryStats?.[0]?.count || 0 }} templates</span>
+      <div class="flex flex-col">
+        <span class="text-xs text-slate-400 font-medium">Top Category</span>
+        <h3 class="text-xl font-extrabold text-amber-400 truncate max-w-[160px]">{{ isLoadingStats ? '...' : (stats?.categoryStats?.[0]?._id || 'Commercial') }}</h3>
       </div>
     </div>
   </div>
 
-  <!-- Filter & Search Bar -->
-  <div class="table-card glass-panel">
-    <div class="table-controls">
-      <div class="search-box">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text" [value]="search" (input)="onSearchInput($any($event.target).value)"
-          placeholder="Search templates by title, description or act..." class="search-input"
-          [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
-      </div>
-
-      <div class="filter-group">
-        <admin-select [options]="categoryOptions" [(value)]="selectedCategory" (valueChange)="onFilterChange()"
-          placeholder="Category"></admin-select>
-        <button class="btn btn-secondary btn-sm" (click)="resetFilters()"
-          [adminTooltip]="'Reset all filters'">Reset</button>
-      </div>
+  <!-- ─── 2. Filter Controls & Table Card ─── -->
+  <div class="glass-card page-filters p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
+    <div class="search-box flex-1 min-w-[280px]">
+      <input type="text" class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-sm" [value]="search" (input)="onSearchInput($any($event.target).value)"
+        placeholder="Search templates by title, description or act..."
+        [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
     </div>
 
-    <!-- Data Table -->
-    <div class="table-responsive" style="position: relative;">
+    <div class="filter-group flex items-center gap-2.5 flex-wrap">
+      <admin-select [options]="categoryOptions" [(value)]="selectedCategory" (valueChange)="onFilterChange()"
+        placeholder="Category"></admin-select>
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="resetFilters()"
+        [adminTooltip]="'Reset all filters'">Reset</button>
+    </div>
+  </div>
+
+  <!-- ─── 3. Data Table ─── -->
+  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto">
       @if (!isInitialLoad && isLoadingTable) {
-      <div class="table-loading-bar"></div>
+      <div class="table-loading-bar h-1 bg-indigo-500 animate-pulse w-full"></div>
       }
-      <table class="data-table" [class.table-refreshing]="!isInitialLoad && isLoadingTable">
+      <table class="data-table w-full text-left border-collapse" [class.table-refreshing]="!isInitialLoad && isLoadingTable">
         <thead>
-          <tr>
-            <th>Template Title</th>
-            <th>Act Reference</th>
-            <th>Category</th>
-            <th>Fields Count</th>
-            <th>Last Updated</th>
-            <th class="text-right">Actions</th>
+          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5">Template Title</th>
+            <th class="p-3.5">Act Reference</th>
+            <th class="p-3.5">Category</th>
+            <th class="p-3.5">Fields Count</th>
+            <th class="p-3.5">Last Updated</th>
+            <th class="p-3.5 text-right">Actions</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isInitialLoad && isLoadingTable) {
           @for (i of [1,2,3,4,5]; track $index) {
-          <tr>
-            <td colspan="6"><admin-skeleton height="32px"></admin-skeleton></td>
+          <tr class="hover:bg-slate-800/30">
+            <td colspan="6" class="p-3.5"><admin-skeleton height="32px"></admin-skeleton></td>
           </tr>
           }
           } @else if (templates.length === 0) {
           <tr>
-            <td colspan="6" class="empty-state">No legal templates match the filter criteria.</td>
+            <td colspan="6" class="empty-state py-8 text-center text-slate-400 text-sm">No legal templates match the filter criteria.</td>
           </tr>
           } @else {
           @for (tpl of templates; track tpl._id) {
-          <tr>
-            <td>
-              <div class="font-medium text-white">{{ tpl.title }}</div>
-              <div class="text-xs text-slate-400 truncate max-w-xs">{{ tpl.description || 'No description provided' }}
-              </div>
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5">
+              <div class="font-bold text-slate-100">{{ tpl.title }}</div>
+              <div class="text-xs text-slate-400 truncate max-w-xs">{{ tpl.description || 'No description provided' }}</div>
             </td>
-            <td><span class="badge badge-info">{{ tpl.actRef }}</span></td>
-            <td><span class="badge badge-neutral">{{ tpl.category || 'General' }}</span></td>
-            <td>{{ tpl.fields?.length || 0 }} fields</td>
-            <td class="text-slate-400 text-sm">{{ tpl.updatedAt | date:'shortDate' }}</td>
-            <td class="text-right action-cells">
-              <button class="btn btn-icon btn-secondary" (click)="viewTemplate(tpl)"
-                [adminTooltip]="'View template preview'">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-              <button class="btn btn-icon btn-danger" (click)="deleteTemplate(tpl)"
-                [adminTooltip]="'Moderate & Delete Template'">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
-              </button>
+            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-sky-500/10 text-sky-400 border-sky-500/30">{{ tpl.actRef }}</span></td>
+            <td class="p-3.5"><span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-800 text-slate-300 border-slate-700/50">{{ tpl.category || 'General' }}</span></td>
+            <td class="p-3.5 text-slate-300 font-medium">{{ tpl.fields?.length || 0 }} fields</td>
+            <td class="p-3.5 text-slate-400 text-[11px]">{{ tpl.updatedAt | date:'shortDate' }}</td>
+            <td class="p-3.5 text-right">
+              <div class="flex items-center justify-end gap-1.5">
+                <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="viewTemplate(tpl)"
+                  [adminTooltip]="'View template preview'">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+                <button class="btn btn-danger btn-sm text-xs p-1.5" (click)="deleteTemplate(tpl)"
+                  [adminTooltip]="'Moderate & Delete Template'">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
           }
@@ -141,14 +139,13 @@
       </table>
     </div>
 
-    <!-- Pagination (Image 3 Style) -->
-    <div class="pagination">
+    <!-- Pagination -->
+    <div class="pagination p-4 border-t border-slate-800 bg-slate-900/50 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400">
       <div class="page-info">
-        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ pagination.total
-          }}</strong> records
+        Showing <strong class="text-slate-200">{{ startRecord }}</strong> to <strong class="text-slate-200">{{ endRecord }}</strong> of <strong class="text-slate-200">{{ pagination.total }}</strong> records
       </div>
-      <div class="pagination-controls">
-        <button class="pagination-btn" [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
+      <div class="pagination-controls flex items-center gap-3">
+        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5" [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
           [adminTooltip]="'Previous page'">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polyline points="15 18 9 12 15 6"></polyline>
@@ -157,10 +154,10 @@
         </button>
 
         <span class="page-indicator">
-          Page <strong>{{ pagination.page }}</strong> of <strong>{{ pagination.pages }}</strong>
+          Page <strong class="text-slate-200">{{ pagination.page }}</strong> of <strong class="text-slate-200">{{ pagination.pages }}</strong>
         </span>
 
-        <button class="pagination-btn" [disabled]="pagination.page >= pagination.pages"
+        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5" [disabled]="pagination.page >= pagination.pages"
           (click)="changePage(pagination.page + 1)" [adminTooltip]="'Next page'">
           <span>Next</span>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -172,28 +169,28 @@
 
   </div>
 
-  <!-- Preview Modal -->
+  <!-- ─── 4. Preview Modal ─── -->
   @if (selectedTemplate) {
-  <div class="modal-backdrop" (click)="closeModal()">
-    <div class="modal-card modal-lg" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3>{{ selectedTemplate.title }}</h3>
-        <button class="btn-close" (click)="closeModal()">✕</button>
+  <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in" (click)="closeModal()">
+    <div class="glass-card max-w-2xl w-full rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4" (click)="$event.stopPropagation()">
+      <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-lg font-bold text-slate-100">{{ selectedTemplate.title }}</h3>
+        <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="closeModal()">✕</button>
       </div>
-      <div class="modal-body">
-        <div class="meta-row">
-          <span class="badge badge-info">{{ selectedTemplate.actRef }}</span>
-          <span class="badge badge-neutral">{{ selectedTemplate.category }}</span>
+      <div class="modal-body flex flex-col gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-sky-500/10 text-sky-400 border-sky-500/30">{{ selectedTemplate.actRef }}</span>
+          <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-slate-800 text-slate-300 border-slate-700/50">{{ selectedTemplate.category }}</span>
         </div>
-        <p class="text-slate-300 mb-4">{{ selectedTemplate.description }}</p>
-        <div class="preview-box">
-          <h4 class="text-sm font-semibold text-slate-400 mb-2">Template Document Body:</h4>
-          <pre class="body-pre">{{ selectedTemplate.body }}</pre>
+        <p class="text-slate-300 leading-relaxed">{{ selectedTemplate.description }}</p>
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col gap-2">
+          <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400">Template Document Body:</h4>
+          <pre class="whitespace-pre-wrap font-mono text-xs text-slate-200 leading-relaxed max-h-60 overflow-y-auto">{{ selectedTemplate.body }}</pre>
         </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-danger" (click)="deleteTemplate(selectedTemplate)">Delete Template</button>
-        <button class="btn btn-secondary" (click)="closeModal()">Close</button>
+      <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button class="btn btn-danger px-4 py-2 text-xs font-semibold" (click)="deleteTemplate(selectedTemplate)">Delete Template</button>
+        <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="closeModal()">Close</button>
       </div>
     </div>
   </div>

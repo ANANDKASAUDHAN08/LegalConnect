@@ -1,26 +1,43 @@
-<div class="security-page stagger-children">
-  <!-- Filter & Tab Toggle Bar -->
-  <div class="glass-card page-filters mb-2 animate-in">
-    <div>
-      <h3 class="text-primary font-bold">Security & Active Sessions Desk</h3>
-      <p class="text-xs text-secondary">Monitor active user sessions across all devices and audit real-time
-        authentication logs.</p>
+<div class="p-2 w-full flex flex-col gap-4">
+
+  <!-- ─── 0. Header & Tab Toggle Bar ─── -->
+  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl">
+    <div class="flex flex-col gap-1">
+      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-semibold text-purple-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
+        <span>Security & Active Sessions Desk</span>
+      </div>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Audit Log & Session Monitoring</h1>
+      <p class="text-xs text-slate-400">
+        Monitor active user sessions across all devices, enforce session revocations, and audit real-time authentication logs.
+      </p>
     </div>
 
-    <div class="tab-button-group" style="display: flex; align-items: center; gap: 0.75rem;">
-      <button class="btn" [class.btn-primary]="activeTab === 'sessions'"
-        [class.btn-secondary]="activeTab !== 'sessions'" (click)="activeTab = 'sessions'; fetchSessions();"
-        [adminTooltip]="'View active user & admin sessions across all devices'" tooltipPosition="top">
-        Active Sessions
-      </button>
-      <button class="btn" [class.btn-primary]="activeTab === 'logs'" [class.btn-secondary]="activeTab !== 'logs'"
-        (click)="activeTab = 'logs'; fetchLoginLogs();" [adminTooltip]="'View real-time login attempt audit history'"
-        tooltipPosition="top">
-        Login Audit Log
-      </button>
+    <!-- Tab Buttons & Export Action -->
+    <div class="flex flex-wrap items-center gap-2.5">
+      <div class="p-1 rounded-xl bg-slate-800/80 border border-slate-700/70 flex items-center gap-1">
+        <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+          [class.bg-indigo-600]="activeTab === 'sessions'"
+          [class.text-white]="activeTab === 'sessions'"
+          [class.text-slate-400]="activeTab !== 'sessions'"
+          [class.hover:text-slate-200]="activeTab !== 'sessions'"
+          (click)="activeTab = 'sessions'; fetchSessions();"
+          [adminTooltip]="'View active user & admin sessions across all devices'" tooltipPosition="top">
+          Active Sessions
+        </button>
+        <button class="px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all"
+          [class.bg-indigo-600]="activeTab === 'logs'"
+          [class.text-white]="activeTab === 'logs'"
+          [class.text-slate-400]="activeTab !== 'logs'"
+          [class.hover:text-slate-200]="activeTab !== 'logs'"
+          (click)="activeTab = 'logs'; fetchLoginLogs();"
+          [adminTooltip]="'View real-time login attempt audit history'" tooltipPosition="top">
+          Login Audit Log
+        </button>
+      </div>
 
       @if (activeTab === 'sessions') {
-        <button class="btn btn-secondary" (click)="exportSessionsCsv()"
+        <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="exportSessionsCsv()"
           [adminTooltip]="'Download active session audit logs for IT Act statutory compliance'" tooltipPosition="top">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -30,7 +47,7 @@
           <span>Export Audit CSV</span>
         </button>
       } @else {
-        <button class="btn btn-secondary" (click)="exportLogsCsv()"
+        <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="exportLogsCsv()"
           [adminTooltip]="'Download login history audit logs for IT Act statutory compliance'" tooltipPosition="top">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -43,27 +60,27 @@
     </div>
   </div>
 
-  <!-- Active Sessions Table View -->
+  <!-- ─── Active Sessions Table View ─── -->
   @if (activeTab === 'sessions') {
-  <div class="glass-card animate-in">
-    <div class="data-table-wrapper">
-      <table class="data-table">
+  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto">
+      <table class="data-table w-full text-left border-collapse">
         <thead>
-          <tr>
-            <th>User</th>
-            <th>Role</th>
-            <th>IP Address</th>
-            <th>User Agent</th>
-            <th>Last Active</th>
-            <th class="text-right">Action</th>
+          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5">User</th>
+            <th class="p-3.5">Role</th>
+            <th class="p-3.5">IP Address</th>
+            <th class="p-3.5">User Agent</th>
+            <th class="p-3.5">Last Active</th>
+            <th class="p-3.5 text-right">Action</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isLoading) {
           @for (item of [1,2,3,4,5]; track $index) {
-          <tr>
-            <td>
-              <div class="user-cell">
+          <tr class="hover:bg-slate-800/30">
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-2.5">
                 <admin-skeleton width="32px" height="32px" borderRadius="50%" />
                 <div>
                   <admin-skeleton width="120px" height="14px" />
@@ -71,31 +88,37 @@
                 </div>
               </div>
             </td>
-            <td><admin-skeleton width="60px" height="20px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="100px" height="14px" /></td>
-            <td><admin-skeleton width="180px" height="14px" /></td>
-            <td><admin-skeleton width="90px" height="14px" /></td>
-            <td class="text-right"><admin-skeleton width="110px" height="28px" borderRadius="6px" /></td>
+            <td class="p-3.5"><admin-skeleton width="60px" height="20px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="100px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="180px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="14px" /></td>
+            <td class="p-3.5 text-right"><admin-skeleton width="110px" height="28px" borderRadius="6px" /></td>
           </tr>
           }
           } @else {
           @for (sess of sessions; track sess.id) {
-          <tr>
-            <td>
-              <div class="user-cell">
-                <div class="user-avatar">{{ (sess.userName || 'U').charAt(0).toUpperCase() }}</div>
-                <div>
-                  <div class="user-name">{{ sess.userName || 'Unknown User' }}</div>
-                  <div class="text-xs text-secondary">{{ sess.userEmail }}</div>
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-2.5">
+                <div class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-purple-600 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
+                  {{ (sess.userName || 'U').charAt(0).toUpperCase() }}
+                </div>
+                <div class="flex flex-col">
+                  <div class="user-name font-bold text-slate-200">{{ sess.userName || 'Unknown User' }}</div>
+                  <div class="text-slate-400 text-[11px]">{{ sess.userEmail }}</div>
                 </div>
               </div>
             </td>
-            <td><span class="badge badge-info">{{ sess.userRole }}</span></td>
-            <td><code class="font-mono text-xs text-secondary">{{ sess.ipAddress }}</code></td>
-            <td class="max-w-xs truncate text-xs text-tertiary">{{ sess.userAgent }}</td>
-            <td class="text-xs text-secondary">{{ sess.lastActive | date:'medium' }}</td>
-            <td class="text-right">
-              <button class="btn btn-danger btn-sm" (click)="forceLogout(sess.id)"
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-sky-500/10 text-sky-400 border-sky-500/30">
+                {{ sess.userRole }}
+              </span>
+            </td>
+            <td class="p-3.5"><code class="font-mono text-xs text-indigo-300">{{ sess.ipAddress }}</code></td>
+            <td class="p-3.5 max-w-xs truncate text-xs text-slate-400">{{ sess.userAgent }}</td>
+            <td class="p-3.5 text-slate-400 text-[11px]">{{ sess.lastActive | date:'medium' }}</td>
+            <td class="p-3.5 text-right">
+              <button class="btn btn-danger btn-sm text-xs px-2.5 py-1" (click)="forceLogout(sess.id)"
                 [adminTooltip]="'Immediately force logout and revoke this session'" tooltipPosition="left">
                 Revoke Session
               </button>
@@ -103,8 +126,8 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="empty-state py-8 text-center">
-              <div class="text-muted">No active user sessions registered.</div>
+            <td colspan="6" class="empty-state py-8 text-center text-slate-400 text-sm">
+              <div>No active user sessions registered.</div>
             </td>
           </tr>
           }
@@ -114,48 +137,48 @@
     </div>
   </div>
   } @else {
-  <!-- Login Audit Log View -->
-  <div class="glass-card animate-in">
-    <div class="data-table-wrapper">
-      <table class="data-table">
+  <!-- ─── Login Audit Log View ─── -->
+  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto">
+      <table class="data-table w-full text-left border-collapse">
         <thead>
-          <tr>
-            <th>Email / User</th>
-            <th>Outcome</th>
-            <th>IP Address</th>
-            <th>Failure Reason</th>
-            <th>Timestamp</th>
+          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5">Email / User</th>
+            <th class="p-3.5">Outcome</th>
+            <th class="p-3.5">IP Address</th>
+            <th class="p-3.5">Failure Reason</th>
+            <th class="p-3.5">Timestamp</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isLoading) {
           @for (item of [1,2,3,4,5]; track $index) {
-          <tr>
-            <td><admin-skeleton width="140px" height="14px" /></td>
-            <td><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
-            <td><admin-skeleton width="100px" height="14px" /></td>
-            <td><admin-skeleton width="120px" height="14px" /></td>
-            <td><admin-skeleton width="110px" height="14px" /></td>
+          <tr class="hover:bg-slate-800/30">
+            <td class="p-3.5"><admin-skeleton width="140px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="100px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="120px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="110px" height="14px" /></td>
           </tr>
           }
           } @else {
           @for (log of loginLogs; track log.id) {
-          <tr>
-            <td class="font-semibold">{{ log.userEmail || log.userName || 'Unknown' }}</td>
-            <td>
-              <span class="badge" [class.badge-success]="log.status === 'Success'"
-                [class.badge-danger]="log.status !== 'Success'">
+          <tr class="hover:bg-slate-800/40 transition-colors">
+            <td class="p-3.5 font-semibold text-slate-200">{{ log.userEmail || log.userName || 'Unknown' }}</td>
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border"
+                [ngClass]="log.status === 'Success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'">
                 {{ log.status }}
               </span>
             </td>
-            <td><code class="font-mono text-xs text-secondary">{{ log.ipAddress }}</code></td>
-            <td class="text-xs text-danger">{{ log.failureReason || '-' }}</td>
-            <td class="text-xs text-secondary">{{ log.loginTime | date:'medium' }}</td>
+            <td class="p-3.5"><code class="font-mono text-xs text-indigo-300">{{ log.ipAddress }}</code></td>
+            <td class="p-3.5 text-xs text-red-400">{{ log.failureReason || '-' }}</td>
+            <td class="p-3.5 text-slate-400 text-[11px]">{{ log.loginTime | date:'medium' }}</td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="5" class="empty-state py-8 text-center">
-              <div class="text-muted">No login history records found.</div>
+            <td colspan="5" class="empty-state py-8 text-center text-slate-400 text-sm">
+              <div>No login history records found.</div>
             </td>
           </tr>
           }

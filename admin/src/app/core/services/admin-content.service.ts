@@ -13,11 +13,11 @@ export class AdminContentService {
 
   // ── Legal Content (Bare Acts & Sections) ──
   getActs(): Observable<any> {
-    return this.http.get(`${this.NODE_API}/legal/acts?refresh=true`);
+    return this.http.get(`${this.NODE_API}/acts?refresh=true`);
   }
 
   getActDetail(shortName: string): Observable<any> {
-    return this.http.get(`${this.NODE_API}/legal/acts/${shortName}?refresh=true`);
+    return this.http.get(`${this.NODE_API}/acts/${shortName}?refresh=true`);
   }
 
   updateSection(shortName: string, sectionId: string, data: any): Observable<any> {

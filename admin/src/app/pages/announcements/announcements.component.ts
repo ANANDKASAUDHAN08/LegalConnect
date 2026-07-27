@@ -36,7 +36,9 @@ export class AnnouncementsComponent implements OnInit {
     this.api.getAnnouncements().subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        this.announcements = res || [];
+        this.announcements = Array.isArray(res)
+          ? res
+          : (res?.announcements || res?.data || res?.items || []);
       },
       error: (err: any) => {
         this.isLoading = false;

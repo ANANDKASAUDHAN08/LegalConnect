@@ -29,7 +29,7 @@ export class LegalContentComponent implements OnInit {
     this.api.getActs().subscribe({
       next: (res: any) => {
         this.isLoading = false;
-        this.acts = res.data || [];
+        this.acts = Array.isArray(res) ? res : (res?.data || res?.acts || res?.items || []);
       },
       error: (err: any) => {
         this.isLoading = false;
