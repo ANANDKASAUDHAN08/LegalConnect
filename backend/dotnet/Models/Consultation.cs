@@ -35,6 +35,10 @@ namespace CoreApi.Models
         [MaxLength(20)]
         public string Status { get; set; } = "Pending"; // Pending, Contacted, Closed
 
+        public string? AdminRemark { get; set; }
+
+        public string? AuditLogJson { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     }
 }

@@ -12,10 +12,10 @@ namespace CoreApi.Models
         public int UserId { get; set; }
 
         [MaxLength(250)]
-        public string UserAgent { get; set; } = "Unknown Device";
+        public string? UserAgent { get; set; }
 
         [MaxLength(50)]
-        public string IpAddress { get; set; } = "Unknown IP";
+        public string? IpAddress { get; set; }
 
         public DateTime LoginTime { get; set; } = DateTime.UtcNow;
 

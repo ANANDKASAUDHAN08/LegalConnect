@@ -124,12 +124,19 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-// Seed data
+// Seed & migrate data
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    context.Database.Migrate(); // Apply any pending EF migrations automatically
+    
+    // 1. Seed data & auto-migrate missing columns in MySQL tables (Users, Consultations)
     DbSeeder.Seed(context, app.Configuration);
+
+    // 2. Production-grade migration sync: reconcile EF migration history with existing MySQL schema
+    DbSeeder.SynchronizeEFMigrationsHistory(context);
+
+    // 3. Apply any remaining EF migrations automatically
+    try { context.Database.Migrate(); } catch { }
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

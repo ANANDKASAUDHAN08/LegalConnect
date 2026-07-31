@@ -19,11 +19,8 @@ export const createAiRateLimiter = (options: AiRateLimitOptions = {}) => {
 
   return async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const ip = (
-        req.headers['x-forwarded-for'] as string ||
-        req.socket.remoteAddress ||
-        '127.0.0.1'
-      ).split(',')[0].trim();
+      const rawIp = (req.headers['x-forwarded-for'] as string) || req.ip || req.socket.remoteAddress || 'anonymous';
+      const ip = rawIp.split(',')[0].trim();
 
       const rateKey = `rate:ai:${ip}`;
       const { count, ttlSeconds } = await incrRateLimitKey(rateKey, windowSeconds);

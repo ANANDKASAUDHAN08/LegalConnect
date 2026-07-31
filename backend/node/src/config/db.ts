@@ -4,40 +4,27 @@ import '../models/Lawyer';
 import '../models/LegalResource';
 
 export const connectDB = async () => {
-  const uris = [
-    process.env.MONGODB_URI as string,
-    'mongodb://localhost:27017/legalconnect_db',
-    'mongodb://127.0.0.1:27017/legalconnect_db',
-    'mongodb://root:rootpassword@localhost:27018/legalconnect_db?authSource=admin'
-  ].filter(Boolean);
+  const uri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/legalconnect_db';
 
-  let connected = false;
+  try {
+    const hostLabel = uri.includes('@') ? uri.split('@').pop() : uri;
+    console.log(`Connecting to MongoDB at: ${hostLabel}...`);
+    
+    const conn = await mongoose.connect(uri, {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000
+    } as mongoose.ConnectOptions);
 
-  for (const uri of uris) {
-    try {
-      console.log(`Connecting to MongoDB at: ${uri.split('@').pop() || uri}...`);
-      const conn = await mongoose.connect(uri, {
-        maxPoolSize: 10,
-        serverSelectionTimeoutMS: 4000
-      } as mongoose.ConnectOptions);
+    console.log(`✅ MongoDB Connected successfully to host: ${conn.connection.host}`);
 
-      console.log(`✅ MongoDB Connected successfully to host: ${conn.connection.host}`);
-      connected = true;
-
-      // Explicitly sync/build model indexes to prevent text-search failures
-      await conn.connection.model('BareAct').createIndexes().catch(() => { });
-      await conn.connection.model('Section').createIndexes().catch(() => { });
-      await conn.connection.model('Lawyer').createIndexes().catch(() => { });
-      await conn.connection.model('LegalResource').createIndexes().catch(() => { });
-      console.log('✅ MongoDB Indexes verified and synchronized.');
-      break;
-    } catch (error: any) {
-      console.warn(`⚠️ Connection attempt failed for ${uri.split('@').pop() || uri}: ${error.message}`);
-    }
-  }
-
-  if (!connected) {
-    console.error('❌ Error: Could not connect to any MongoDB instance.');
+    // Explicitly sync/build model indexes to prevent text-search failures
+    await conn.connection.model('BareAct').createIndexes().catch(() => { });
+    await conn.connection.model('Section').createIndexes().catch(() => { });
+    await conn.connection.model('Lawyer').createIndexes().catch(() => { });
+    await conn.connection.model('LegalResource').createIndexes().catch(() => { });
+    console.log('✅ MongoDB Indexes verified and synchronized.');
+  } catch (error: any) {
+    console.error(`❌ MongoDB Connection Error: ${error.message}`);
     process.exit(1);
   }
 };

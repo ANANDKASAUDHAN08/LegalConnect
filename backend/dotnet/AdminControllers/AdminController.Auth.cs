@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Claims;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CoreApi.Models;
 using CoreApi.Services;
@@ -19,10 +21,11 @@ namespace CoreApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> AdminLogin([FromBody] LoginDto request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
+            var emailInput = (request.Email ?? "").Trim().ToLower();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == emailInput);
 
             bool isPasswordValid = false;
-            if (user != null)
+            if (user != null && !string.IsNullOrEmpty(user.PasswordHash))
             {
                 if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
                 {
@@ -34,9 +37,8 @@ namespace CoreApi.Controllers
                 }
             }
 
-            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
-            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Unknown Device";
-            if (string.IsNullOrWhiteSpace(userAgent)) userAgent = "Unknown Device";
+            string? ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+            string? userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
 
             if (user == null || !isPasswordValid)
             {
@@ -78,14 +80,52 @@ namespace CoreApi.Controllers
                 return Unauthorized(new { message = "This account has been deactivated." });
             }
 
-            // 2FA check for admin
+            // 2FA check for admin (supports TOTP codes and one-time backup codes)
             if (user.IsTwoFactorEnabled)
             {
                 if (string.IsNullOrEmpty(request.TwoFactorCode))
                 {
                     return Ok(new { requires2fa = true, message = "2FA verification required." });
                 }
-                if (string.IsNullOrEmpty(user.TwoFactorSecret) || !TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode))
+
+                bool is2FaValid = false;
+
+                // First try TOTP validation
+                if (!string.IsNullOrEmpty(user.TwoFactorSecret))
+                {
+                    is2FaValid = TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode);
+                }
+
+                // If TOTP failed, try backup code validation
+                if (!is2FaValid && !string.IsNullOrEmpty(user.TwoFactorBackupCodes))
+                {
+                    try
+                    {
+                        var hashedCodes = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes) ?? new List<string>();
+                        var normalizedInput = request.TwoFactorCode.Trim().ToUpperInvariant();
+                        int matchIndex = -1;
+                        for (int i = 0; i < hashedCodes.Count; i++)
+                        {
+                            if (BCrypt.Net.BCrypt.Verify(normalizedInput, hashedCodes[i]))
+                            {
+                                matchIndex = i;
+                                break;
+                            }
+                        }
+                        if (matchIndex >= 0)
+                        {
+                            // Consume the used backup code
+                            hashedCodes.RemoveAt(matchIndex);
+                            user.TwoFactorBackupCodes = JsonSerializer.Serialize(hashedCodes);
+                            await _context.SaveChangesAsync();
+                            is2FaValid = true;
+                            _logger.LogWarning("[Security Audit] Admin (Id: {UserId}) used a backup code for 2FA login. Remaining: {Count}", user.Id, hashedCodes.Count);
+                        }
+                    }
+                    catch { /* Corrupted backup codes — ignore and fail */ }
+                }
+
+                if (!is2FaValid)
                 {
                     _logger.LogWarning("[Security Audit] Admin 2FA verification failed for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ip);
                     _context.LoginHistories.Add(new LoginHistory
@@ -97,9 +137,13 @@ namespace CoreApi.Controllers
                         Status = "Failed"
                     });
                     await _context.SaveChangesAsync();
-                    return BadRequest(new { message = "Invalid 2FA verification code." });
+                    return BadRequest(new { message = "Invalid 2FA verification code or backup code." });
                 }
             }
+
+            // Update user's last login metrics
+            user.LastLoginAt = DateTime.UtcNow;
+            user.LastIpAddress = ip;
 
             // Create session
             var sessionId = Guid.NewGuid().ToString("N");
@@ -188,6 +232,46 @@ namespace CoreApi.Controllers
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound();
 
+            // Count remaining backup codes for display
+            int backupCodeCount = 0;
+            if (!string.IsNullOrEmpty(user.TwoFactorBackupCodes))
+            {
+                try { backupCodeCount = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes)?.Count ?? 0; } catch { }
+            }
+
+            // Fallback resolution for LastLoginAt and LastIpAddress if null on user record
+            var lastLoginAt = user.LastLoginAt;
+            var lastIpAddress = user.LastIpAddress;
+
+            if (lastLoginAt == null || string.IsNullOrEmpty(lastIpAddress))
+            {
+                var lastHistory = await _context.LoginHistories
+                    .AsNoTracking()
+                    .Where(l => l.UserId == user.Id && l.Status == "Success")
+                    .OrderByDescending(l => l.LoginTime)
+                    .FirstOrDefaultAsync();
+
+                if (lastHistory != null)
+                {
+                    lastLoginAt ??= lastHistory.LoginTime;
+                    lastIpAddress ??= lastHistory.IpAddress;
+                }
+                else
+                {
+                    var activeSession = await _context.ActiveSessions
+                        .AsNoTracking()
+                        .Where(s => s.UserId == user.Id)
+                        .OrderByDescending(s => s.LastActive)
+                        .FirstOrDefaultAsync();
+
+                    if (activeSession != null)
+                    {
+                        lastLoginAt ??= activeSession.LastActive;
+                        lastIpAddress ??= activeSession.IpAddress;
+                    }
+                }
+            }
+
             return Ok(new
             {
                 user.Id,
@@ -195,7 +279,11 @@ namespace CoreApi.Controllers
                 user.Email,
                 user.Role,
                 user.AvatarUrl,
-                user.CreatedAt
+                user.CreatedAt,
+                user.IsTwoFactorEnabled,
+                lastLoginAt,
+                lastIpAddress = string.IsNullOrWhiteSpace(lastIpAddress) ? null : lastIpAddress,
+                backupCodeCount
             });
         }
     }

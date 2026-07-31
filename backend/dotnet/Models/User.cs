@@ -52,6 +52,21 @@ namespace CoreApi.Models
         [MaxLength(100)]
         public string? TwoFactorSecret { get; set; }
 
+        /// <summary>
+        /// JSON array of BCrypt-hashed one-time backup codes for 2FA recovery.
+        /// Each code can only be used once; consumed codes are removed from the array.
+        /// </summary>
+        [MaxLength(2000)]
+        public string? TwoFactorBackupCodes { get; set; }
+
+        [MaxLength(50)]
+        public string AuthProvider { get; set; } = "Email + Password";
+
+        public DateTime? LastLoginAt { get; set; }
+
+        [MaxLength(50)]
+        public string? LastIpAddress { get; set; }
+
         [MaxLength(30)]
         public string? ClientLanguage { get; set; } = "English";
 

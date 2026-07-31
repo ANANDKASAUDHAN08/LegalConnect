@@ -206,5 +206,55 @@ namespace CoreApi.Controllers
 
             return Ok(new { success = true, message = "Lawyer profile updated." });
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("lawyers/bulk-verify")]
+        public async Task<IActionResult> BulkVerifyLawyers([FromBody] AdminBulkVerifyLawyersDto dto)
+        {
+            if (dto.LawyerIds == null || !dto.LawyerIds.Any())
+            {
+                return BadRequest(new { message = "No lawyer IDs provided." });
+            }
+
+            var lawyers = await _context.Users
+                .Include(u => u.LawyerProfile)
+                .Where(u => dto.LawyerIds.Contains(u.Id) && u.Role == "Lawyer" && u.LawyerProfile != null)
+                .ToListAsync();
+
+            foreach (var l in lawyers)
+            {
+                if (l.LawyerProfile != null)
+                {
+                    l.LawyerProfile.IsVerified = dto.IsVerified;
+                    l.LawyerProfile.UpdatedAt = DateTime.UtcNow;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            // Background MongoDB sync for all updated lawyers
+            _ = Task.Run(async () =>
+            {
+                foreach (var l in lawyers)
+                {
+                    try
+                    {
+                        await _syncService.SyncProfileToMongoAsync(l.Id);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Bulk Mongo sync warning for Lawyer #{l.Id}: {ex.Message}");
+                    }
+                }
+            });
+
+            return Ok(new { success = true, message = $"Bulk verification status updated to {dto.IsVerified} for {lawyers.Count} advocate(s)." });
+        }
+    }
+
+    public class AdminBulkVerifyLawyersDto
+    {
+        public System.Collections.Generic.List<int> LawyerIds { get; set; } = new();
+        public bool IsVerified { get; set; }
     }
 }

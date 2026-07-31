@@ -49,7 +49,7 @@ namespace CoreApi.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto request)
         {
-            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
                 _logger.LogWarning("[Security Audit] Registration failed: Email already exists. Email: {Email}, IP: {IP}", request.Email, ip);
@@ -102,9 +102,8 @@ namespace CoreApi.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto request)
         {
-            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
-            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Unknown Device";
-            if (string.IsNullOrWhiteSpace(userAgent)) userAgent = "Unknown Device";
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             
@@ -216,7 +215,7 @@ namespace CoreApi.Controllers
             var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             var sessionIdClaim = User.FindFirst("SessionId")?.Value;
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
 
             if (!string.IsNullOrEmpty(sessionIdClaim))
             {
@@ -290,7 +289,7 @@ namespace CoreApi.Controllers
                 return Unauthorized(new { message = "Invalid refresh token." });
             }
 
-            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
 
             // Detect token reuse (replay attack)
             if (storedToken.RevokedAt != null)
@@ -456,7 +455,7 @@ namespace CoreApi.Controllers
             var sessionIdClaim = User.FindFirst("SessionId")?.Value;
             if (!string.IsNullOrEmpty(sessionIdClaim))
             {
-                var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown IP";
+                var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
                 var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Mobile Device";
 
                 var session = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == sessionIdClaim);
@@ -1008,7 +1007,7 @@ namespace CoreApi.Controllers
             return Ok(new { message = $"{otherSessions.Count} other session(s) signed out successfully." });
         }
 
-        private string ParseDeviceFromUserAgent(string userAgent)
+        private string ParseDeviceFromUserAgent(string? userAgent)
         {
             if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
             if (userAgent.Contains("iPhone", StringComparison.OrdinalIgnoreCase)) return "Apple iPhone";
@@ -1020,7 +1019,7 @@ namespace CoreApi.Controllers
             return "Web Browser";
         }
 
-        private string ParseBrowserFromUserAgent(string userAgent)
+        private string ParseBrowserFromUserAgent(string? userAgent)
         {
             if (string.IsNullOrEmpty(userAgent)) return "Unknown Browser";
             if (userAgent.Contains("Edg/", StringComparison.OrdinalIgnoreCase)) return "Microsoft Edge";
@@ -1030,22 +1029,9 @@ namespace CoreApi.Controllers
             return "Browser";
         }
 
-        private string GetLocationFromIp(string ipAddress)
+        private string? GetLocationFromIp(string? ipAddress)
         {
-            if (string.IsNullOrEmpty(ipAddress) || ipAddress == "::1" || ipAddress == "127.0.5.1" || ipAddress == "127.0.0.1")
-            {
-                return "New Delhi, India (Local)";
-            }
-            int hash = Math.Abs(ipAddress.GetHashCode());
-            string[] locations = new[] {
-                "Mumbai, India",
-                "Bengaluru, India",
-                "New York, USA",
-                "London, UK",
-                "San Francisco, USA",
-                "New Delhi, India"
-            };
-            return locations[hash % locations.Length];
+            return null; // Geolocation service (MaxMind / IP2Location) not configured
         }
 
         private void SetTokenCookie(string token)

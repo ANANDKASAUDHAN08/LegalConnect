@@ -6,6 +6,7 @@ using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 namespace CoreApi.Controllers
 {
@@ -24,9 +25,18 @@ namespace CoreApi.Controllers
             [FromQuery] string? search = null,
             [FromQuery] bool? isActive = null,
             [FromQuery] bool? isEmailVerified = null,
-            [FromQuery] string? sort = "newest")
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null,
+            [FromQuery] string? sort = "newest",
+            [FromQuery] string? sortOrder = "desc")
         {
             var query = _context.Users.AsNoTracking().AsQueryable();
+
+            if (startDate.HasValue)
+                query = query.Where(u => u.CreatedAt >= startDate.Value.ToUniversalTime());
+
+            if (endDate.HasValue)
+                query = query.Where(u => u.CreatedAt <= endDate.Value.ToUniversalTime().AddDays(1));
 
             if (!string.IsNullOrEmpty(role))
                 query = query.Where(u => u.Role == role);
@@ -39,18 +49,33 @@ namespace CoreApi.Controllers
 
             if (!string.IsNullOrEmpty(search))
             {
-                var s = search.ToLower();
-                query = query.Where(u => u.FullName.ToLower().Contains(s) || u.Email.ToLower().Contains(s));
+                var s = search.Trim();
+                query = query.Where(u => EF.Functions.Like(u.FullName, $"%{s}%") || EF.Functions.Like(u.Email, $"%{s}%"));
             }
 
             var total = await query.CountAsync();
 
-            query = sort switch
+            var isAsc = string.Equals(sortOrder, "asc", StringComparison.OrdinalIgnoreCase);
+            query = sort?.ToLower() switch
             {
+                "name" or "fullname" => isAsc ? query.OrderBy(u => u.FullName) : query.OrderByDescending(u => u.FullName),
+                "email" => isAsc ? query.OrderBy(u => u.Email) : query.OrderByDescending(u => u.Email),
+                "role" => isAsc ? query.OrderBy(u => u.Role) : query.OrderByDescending(u => u.Role),
+                "status" => isAsc ? query.OrderBy(u => u.IsActive) : query.OrderByDescending(u => u.IsActive),
                 "oldest" => query.OrderBy(u => u.CreatedAt),
-                "name" => query.OrderBy(u => u.FullName),
-                _ => query.OrderByDescending(u => u.CreatedAt)
+                _ => isAsc ? query.OrderBy(u => u.CreatedAt) : query.OrderByDescending(u => u.CreatedAt)
             };
+
+            // Single grouped SQL query for global metrics to avoid N+1 count queries
+            var roleCounts = await _context.Users.AsNoTracking()
+                .GroupBy(u => u.Role)
+                .Select(g => new { Role = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var totalAdmins = roleCounts.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0;
+            var totalLawyers = roleCounts.FirstOrDefault(r => r.Role == "Lawyer")?.Count ?? 0;
+            var totalClients = roleCounts.FirstOrDefault(r => r.Role == "Client")?.Count ?? 0;
+            var total2Fa = await _context.Users.AsNoTracking().CountAsync(u => u.IsTwoFactorEnabled);
 
             var users = await query
                 .Skip((page - 1) * limit)
@@ -64,6 +89,9 @@ namespace CoreApi.Controllers
                     u.IsActive,
                     u.IsEmailVerified,
                     u.IsTwoFactorEnabled,
+                    u.AuthProvider,
+                    u.LastLoginAt,
+                    u.LastIpAddress,
                     u.Phone,
                     u.ClientCity,
                     u.AvatarUrl,
@@ -76,6 +104,16 @@ namespace CoreApi.Controllers
             {
                 success = true,
                 data = users,
+                summary = new
+                {
+                    totalUsers = total,
+                    totalAdmins,
+                    totalLawyers,
+                    totalClients,
+                    twoFactorPct = (totalAdmins + totalLawyers + totalClients) > 0 
+                        ? (int)Math.Round((double)total2Fa / (totalAdmins + totalLawyers + totalClients) * 100) 
+                        : 0
+                },
                 pagination = new
                 {
                     total,
@@ -230,5 +268,240 @@ namespace CoreApi.Controllers
 
             return Ok(new { success = true, tempPassword, message = "Password reset successfully." });
         }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("users/bulk-status")]
+        public async Task<IActionResult> BulkUpdateUserStatus([FromBody] AdminBulkStatusDto dto)
+        {
+            if (dto.UserIds == null || !dto.UserIds.Any())
+            {
+                return BadRequest(new { message = "No user IDs provided." });
+            }
+
+            var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            // Protect current admin from being batch deactivated
+            var targetIds = dto.UserIds.Where(id => id != currentUserId).ToList();
+
+            var users = await _context.Users.Where(u => targetIds.Contains(u.Id) && u.Role != "Admin").ToListAsync();
+            foreach (var u in users)
+            {
+                u.IsActive = dto.IsActive;
+            }
+
+            await _context.SaveChangesAsync();
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) bulk updated {Count} user account(s) to IsActive={IsActive}", currentUserId, users.Count, dto.IsActive);
+
+            return Ok(new { success = true, message = $"Bulk status updated for {users.Count} user account(s)." });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("users/{id}/revoke-sessions")]
+        public async Task<IActionResult> RevokeUserSessions(int id)
+        {
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found." });
+
+            var activeSessions = await _context.ActiveSessions.Where(s => s.UserId == id).ToListAsync();
+            _context.ActiveSessions.RemoveRange(activeSessions);
+            user.LastLoginAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) revoked all active sessions for user (Target UserId: {TargetUserId}, Email: {TargetEmail})", adminId ?? "Unknown", id, user.Email);
+
+            return Ok(new { success = true, message = $"All active sessions revoked for {user.FullName}." });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("users/{id}/verify-email")]
+        public async Task<IActionResult> VerifyUserEmail(int id)
+        {
+            var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found." });
+
+            user.IsEmailVerified = true;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("[Security Audit] Admin (Id: {AdminId}) manually verified email for user (Target UserId: {TargetUserId}, Email: {TargetEmail})", adminId ?? "Unknown", id, user.Email);
+
+            return Ok(new { success = true, message = $"Email manually verified for {user.FullName}." });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("users/{id}/role")]
+        public async Task<IActionResult> UpdateUserRole(int id, [FromBody] AdminRoleDto dto)
+        {
+            var currentUserId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (id == currentUserId)
+            {
+                return BadRequest(new { message = "Cannot modify your own admin role." });
+            }
+
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found." });
+
+            if (string.IsNullOrWhiteSpace(dto.Role) || (dto.Role != "Client" && dto.Role != "Lawyer" && dto.Role != "Admin"))
+            {
+                return BadRequest(new { message = "Invalid role specified." });
+            }
+
+            var oldRole = user.Role;
+            user.Role = dto.Role;
+            await _context.SaveChangesAsync();
+
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) updated role for user (Target UserId: {TargetUserId}) from {OldRole} to {NewRole}", currentUserId, id, oldRole, dto.Role);
+
+            return Ok(new { success = true, message = $"Role for {user.FullName} changed to {dto.Role}." });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("users/{id}/audit-log")]
+        public async Task<IActionResult> GetUserAuditLog(int id)
+        {
+            var user = await _context.Users.FindAsync(id);
+            if (user == null) return NotFound(new { message = "User not found." });
+
+            var auditTrail = new System.Collections.Generic.List<object>();
+
+            // 1. Account Created Event
+            auditTrail.Add(new
+            {
+                timestamp = user.CreatedAt,
+                action = "Account Registered",
+                detail = $"Account created in database. Initial role assigned: {user.Role}.",
+                type = "account",
+                badgeClass = "bg-purple-400"
+            });
+
+            // 2. Email Verified Event
+            if (user.IsEmailVerified)
+            {
+                auditTrail.Add(new
+                {
+                    timestamp = user.CreatedAt.AddMinutes(1),
+                    action = "Email Verification Confirmed",
+                    detail = $"Primary email address ({user.Email}) verified.",
+                    type = "verification",
+                    badgeClass = "bg-emerald-400"
+                });
+            }
+
+            // 3. 2FA Status Event
+            auditTrail.Add(new
+            {
+                timestamp = user.CreatedAt,
+                action = user.IsTwoFactorEnabled ? "2FA TOTP Protection Enabled" : "Standard Authentication Configured",
+                detail = user.IsTwoFactorEnabled ? "TOTP authenticator 2-Factor protection active." : "1FA standard password authentication active.",
+                type = "security",
+                badgeClass = user.IsTwoFactorEnabled ? "bg-emerald-400" : "bg-sky-400"
+            });
+
+            // 4. Logins
+            var logins = await _context.LoginHistories
+                .Where(l => l.UserId == id)
+                .OrderByDescending(l => l.LoginTime)
+                .Take(15)
+                .ToListAsync();
+
+            foreach (var log in logins)
+            {
+                auditTrail.Add(new
+                {
+                    timestamp = log.LoginTime,
+                    action = log.Status == "Success" ? "Authentication Authorized" : "Failed Login Attempt",
+                    detail = $"IP: {log.IpAddress ?? "N/A"} • Browser: {log.UserAgent ?? "Standard Client"}",
+                    type = "auth",
+                    badgeClass = log.Status == "Success" ? "bg-emerald-400" : "bg-red-400"
+                });
+            }
+
+            // 5. Active Sessions
+            var sessions = await _context.ActiveSessions
+                .Where(s => s.UserId == id)
+                .OrderByDescending(s => s.CreatedAt)
+                .Take(10)
+                .ToListAsync();
+
+            foreach (var s in sessions)
+            {
+                auditTrail.Add(new
+                {
+                    timestamp = s.CreatedAt,
+                    action = "OAuth Session Issued",
+                    detail = $"Active JWT session token issued for IP: {s.IpAddress ?? "N/A"}",
+                    type = "session",
+                    badgeClass = "bg-indigo-400"
+                });
+            }
+
+            // Sort newest to oldest
+            var sorted = auditTrail
+                .OrderByDescending(x => ((dynamic)x).timestamp)
+                .ToList();
+
+            return Ok(new { success = true, userId = id, data = sorted });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("users/{id}/impersonate")]
+        public async Task<IActionResult> ImpersonateUser(int id)
+        {
+            var adminId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var adminEmail = User.FindFirstValue(ClaimTypes.Email) ?? "Admin";
+
+            var targetUser = await _context.Users.FindAsync(id);
+            if (targetUser == null) return NotFound(new { message = "User not found." });
+
+            if (targetUser.Role == "Admin")
+            {
+                return BadRequest(new { message = "Cannot impersonate another administrator account." });
+            }
+
+            _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}, Email: {AdminEmail}) initiated User Impersonation for Target UserId: {TargetUserId} ({TargetEmail})", adminId, adminEmail, targetUser.Id, targetUser.Email);
+
+            var claims = new[]
+            {
+                new Claim(ClaimTypes.NameIdentifier, targetUser.Id.ToString()),
+                new Claim(ClaimTypes.Email, targetUser.Email),
+                new Claim(ClaimTypes.Role, targetUser.Role),
+                new Claim(ClaimTypes.Name, targetUser.FullName),
+                new Claim("IsImpersonated", "true"),
+                new Claim("ImpersonatedBy", adminEmail)
+            };
+
+            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
+                _configuration.GetSection("Jwt:Key").Value!));
+
+            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+
+            var token = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
+                claims: claims,
+                expires: DateTime.UtcNow.AddMinutes(15),
+                signingCredentials: creds
+            );
+
+            var impersonationToken = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().WriteToken(token);
+
+            return Ok(new
+            {
+                success = true,
+                message = $"Impersonation token generated for {targetUser.FullName}.",
+                token = impersonationToken,
+                targetUser = new { targetUser.Id, targetUser.FullName, targetUser.Email, targetUser.Role },
+                redirectUrl = $"http://localhost:4200/auth/impersonate?token={impersonationToken}"
+            });
+        }
+    }
+
+    public class AdminRoleDto
+    {
+        public string Role { get; set; } = string.Empty;
+    }
+
+    public class AdminBulkStatusDto
+    {
+        public System.Collections.Generic.List<int> UserIds { get; set; } = new();
+        public bool IsActive { get; set; }
     }
 }

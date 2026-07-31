@@ -51,6 +51,11 @@ namespace CoreApi.Models
         public string? ClientZip { get; set; }
         public string? ClientBio { get; set; }
         public string? AvatarUrl { get; set; }
+
+        public string? PreferredTimezone { get; set; }
+        public bool? NotifyLawAmendments { get; set; }
+        public bool? NotifyEmailDigest { get; set; }
+        public bool? NotifyPushEnabled { get; set; }
     }
 
     public class ChangePasswordDto

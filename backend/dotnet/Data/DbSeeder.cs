@@ -35,6 +35,14 @@ namespace CoreApi.Data
 
         public static void Seed(AppDbContext context, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
+            // Auto-migrate missing columns in MySQL Users & Consultations tables safely if they don't exist yet
+            EnsureColumnExists(context, "Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'");
+            EnsureColumnExists(context, "Users", "LastLoginAt", "DATETIME NULL");
+            EnsureColumnExists(context, "Users", "LastIpAddress", "VARCHAR(50) NULL");
+            EnsureColumnExists(context, "Users", "TwoFactorBackupCodes", "varchar(2000) NULL");
+            EnsureColumnExists(context, "Consultations", "AdminRemark", "TEXT NULL");
+            EnsureColumnExists(context, "Consultations", "AuditLogJson", "LONGTEXT NULL");
+
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
             if (deactivatedUsers.Any())
@@ -47,20 +55,20 @@ namespace CoreApi.Data
                 Console.WriteLine($"✅ Auto-activated {deactivatedUsers.Count} existing users.");
             }
 
-            // Seed Admin user if none exists
-            if (!context.Users.Any(u => u.Role == "Admin"))
-            {
-                var adminEmail = Environment.GetEnvironmentVariable("ADMIN_SEED_EMAIL") 
-                                 ?? configuration["AdminSeed:Email"] 
-                                 ?? "admin@legalconnect.com";
-                var adminPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD") 
-                                    ?? configuration["AdminSeed:Password"] 
-                                    ?? "Admin@123!";
-                var adminName = configuration["AdminSeed:FullName"] ?? "System Administrator";
+            // Ensure Admin user is seeded and hash is synchronized
+            var adminEmail = (Environment.GetEnvironmentVariable("ADMIN_SEED_EMAIL") 
+                             ?? configuration["AdminSeed:Email"] 
+                             ?? "admin@legalconnect.com").Trim().ToLower();
+            var adminPassword = Environment.GetEnvironmentVariable("ADMIN_SEED_PASSWORD") 
+                                ?? configuration["AdminSeed:Password"] 
+                                ?? "Admin@123!";
 
+            var existingAdmin = context.Users.FirstOrDefault(u => u.Email.ToLower() == adminEmail);
+            if (existingAdmin == null)
+            {
                 var admin = new User
                 {
-                    FullName = adminName,
+                    FullName = configuration["AdminSeed:FullName"] ?? "System Administrator",
                     Email = adminEmail,
                     PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
                     Role = "Admin",
@@ -72,6 +80,14 @@ namespace CoreApi.Data
                 context.Users.Add(admin);
                 context.SaveChanges();
                 Console.WriteLine($"✅ Admin user seeded from configuration: {adminEmail}");
+            }
+            else
+            {
+                existingAdmin.Role = "Admin";
+                existingAdmin.IsActive = true;
+                existingAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+                context.SaveChanges();
+                Console.WriteLine($"✅ Admin user password hash & role synchronized: {adminEmail}");
             }
 
             string? jsonContent = null;
@@ -319,6 +335,79 @@ namespace CoreApi.Data
                 context.SystemAnnouncements.AddRange(announcements);
                 context.SaveChanges();
                 Console.WriteLine("SystemAnnouncements table seeded with 1.2.0 release notes.");
+            }
+        }
+
+        private static void EnsureColumnExists(AppDbContext context, string tableName, string columnName, string columnDefinition)
+        {
+            try
+            {
+                var conn = context.Database.GetDbConnection();
+                bool wasOpen = conn.State == System.Data.ConnectionState.Open;
+                if (!wasOpen) conn.Open();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = @tableName AND column_name = @columnName";
+
+                var p1 = cmd.CreateParameter();
+                p1.ParameterName = "@tableName";
+                p1.Value = tableName;
+                cmd.Parameters.Add(p1);
+
+                var p2 = cmd.CreateParameter();
+                p2.ParameterName = "@columnName";
+                p2.Value = columnName;
+                cmd.Parameters.Add(p2);
+
+                var count = Convert.ToInt32(cmd.ExecuteScalar());
+                if (!wasOpen) conn.Close();
+
+                if (count == 0)
+                {
+                    string alterSql = string.Format("ALTER TABLE `{0}` ADD COLUMN `{1}` {2};", tableName, columnName, columnDefinition);
+                    context.Database.ExecuteSqlRaw(alterSql);
+                }
+            }
+            catch
+            {
+                // Ignore if schema check fails or column exists
+            }
+        }
+
+        public static void SynchronizeEFMigrationsHistory(AppDbContext context)
+        {
+            try
+            {
+                var conn = context.Database.GetDbConnection();
+                bool wasOpen = conn.State == System.Data.ConnectionState.Open;
+                if (!wasOpen) conn.Open();
+
+                using var cmd = conn.CreateCommand();
+                cmd.CommandText = @"
+                    CREATE TABLE IF NOT EXISTS `__EFMigrationsHistory` (
+                        `MigrationId` varchar(150) CHARACTER SET utf8mb4 NOT NULL,
+                        `ProductVersion` varchar(32) CHARACTER SET utf8mb4 NOT NULL,
+                        PRIMARY KEY (`MigrationId`)
+                    );";
+                cmd.ExecuteNonQuery();
+
+                // If Users table already has AuthProvider column, mark 20260728162946_AddTwoFactorBackupCodes as applied in EF history table
+                using var checkCmd = conn.CreateCommand();
+                checkCmd.CommandText = "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'Users' AND column_name = 'AuthProvider'";
+                var colCount = Convert.ToInt32(checkCmd.ExecuteScalar());
+
+                if (colCount > 0)
+                {
+                    using var markCmd = conn.CreateCommand();
+                    markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4');";
+                    markCmd.ExecuteNonQuery();
+                }
+
+                if (!wasOpen) conn.Close();
+            }
+            catch
+            {
+                // Silently ignore if connection/table check fails
             }
         }
     }

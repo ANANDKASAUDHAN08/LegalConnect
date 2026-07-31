@@ -70,6 +70,46 @@ namespace CoreApi.Controllers
 
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
+
+        [HttpGet("telemetry/stream")]
+        public async Task StreamTelemetry(System.Threading.CancellationToken cancellationToken)
+        {
+            Response.Headers.Append("Content-Type", "text/event-stream");
+            Response.Headers.Append("Cache-Control", "no-cache");
+            Response.Headers.Append("Connection", "keep-alive");
+
+            var initialPayload = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                type = "connected",
+                message = "Admin SSE Telemetry Stream Established",
+                timestamp = DateTime.UtcNow
+            });
+
+            try
+            {
+                await Response.WriteAsync($"data: {initialPayload}\n\n", cancellationToken);
+                await Response.Body.FlushAsync(cancellationToken);
+
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    await Task.Delay(15000, cancellationToken);
+
+                    var eventPayload = System.Text.Json.JsonSerializer.Serialize(new
+                    {
+                        type = "ping",
+                        timestamp = DateTime.UtcNow,
+                        status = "healthy"
+                    });
+
+                    await Response.WriteAsync($"data: {eventPayload}\n\n", cancellationToken);
+                    await Response.Body.FlushAsync(cancellationToken);
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Client disconnected
+            }
+        }
     }
 
     // ═══════════════════════════════════════════════════════════════

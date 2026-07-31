@@ -5,6 +5,7 @@ import adminResourcesRoutes from './adminResourcesRoutes';
 import adminTicketsRoutes from './adminTicketsRoutes';
 import adminHelplinesRoutes from './adminHelplinesRoutes';
 import adminTemplatesRoutes from './adminTemplatesRoutes';
+import adminStatsRoutes from './adminStatsRoutes';
 
 const adminRouter = Router();
 
@@ -17,5 +18,6 @@ adminRouter.use('/', adminResourcesRoutes);
 adminRouter.use('/', adminTicketsRoutes);
 adminRouter.use('/', adminHelplinesRoutes);
 adminRouter.use('/', adminTemplatesRoutes);
+adminRouter.use('/', adminStatsRoutes);
 
 export default adminRouter;
