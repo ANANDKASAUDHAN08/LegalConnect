@@ -16,6 +16,9 @@ export class AdminApiService {
     public content: AdminContentService
   ) { }
 
+  // ── Telemetry SSE Stream Delegate ──
+  getTelemetryStream(): Observable<any> { return this.stats.getTelemetryStream(); }
+
   // ── Dashboard & Analytics Delegates ──
   getOverview(): Observable<any> { return this.stats.getOverview(); }
   getHealth(): Observable<any> { return this.stats.getHealth(); }
@@ -35,9 +38,16 @@ export class AdminApiService {
   updateUser(id: number, data: any): Observable<any> { return this.user.updateUser(id, data); }
   deleteUser(id: number): Observable<any> { return this.user.deleteUser(id); }
   resetUserPassword(id: number): Observable<any> { return this.user.resetUserPassword(id); }
+  bulkUpdateUserStatus(userIds: number[], isActive: boolean): Observable<any> { return this.user.bulkUpdateUserStatus(userIds, isActive); }
+  revokeUserSessions(userId: number): Observable<any> { return this.user.revokeUserSessions(userId); }
+  verifyUserEmail(userId: number): Observable<any> { return this.user.verifyUserEmail(userId); }
+  updateUserRole(userId: number, role: string): Observable<any> { return this.user.updateUserRole(userId, role); }
+  getUserAuditLog(id: number): Observable<any> { return this.user.getUserAuditLog(id); }
+  impersonateUser(id: number): Observable<any> { return this.user.impersonateUser(id); }
   getLawyers(params: any = {}): Observable<any> { return this.user.getLawyers(params); }
   getLawyer(id: number): Observable<any> { return this.user.getLawyer(id); }
   verifyLawyer(id: number, statusData: { isVerified: boolean; remarks?: string }): Observable<any> { return this.user.verifyLawyer(id, statusData); }
+  bulkVerifyLawyers(lawyerIds: number[], isVerified: boolean): Observable<any> { return this.user.bulkVerifyLawyers(lawyerIds, isVerified); }
   updateLawyerProfile(id: number, data: any): Observable<any> { return this.user.updateLawyerProfile(id, data); }
   getActiveSessions(page = 1): Observable<any> { return this.user.getActiveSessions(page); }
   forceLogout(sessionId: number): Observable<any> { return this.user.forceLogout(sessionId); }
@@ -48,6 +58,9 @@ export class AdminApiService {
   deleteReview(id: number): Observable<any> { return this.user.deleteReview(id); }
   getConsultations(params: any = {}): Observable<any> { return this.user.getConsultations(params); }
   updateConsultationStatus(id: number, status: string): Observable<any> { return this.user.updateConsultationStatus(id, status); }
+  bulkUpdateConsultationStatus(ids: number[], status: string): Observable<any> { return this.user.bulkUpdateConsultationStatus(ids, status); }
+  updateConsultationNotes(id: number, adminRemark: string): Observable<any> { return this.user.updateConsultationNotes(id, adminRemark); }
+  dispatchConsultationEmail(id: number, data: any): Observable<any> { return this.user.dispatchConsultationEmail(id, data); }
 
   // ── Announcements Delegates ──
   getAnnouncements(params: any = {}): Observable<any> { return this.user.getAnnouncements(); }
@@ -79,4 +92,15 @@ export class AdminApiService {
   // ── Templates Delegates ──
   getTemplates(params: any = {}): Observable<any> { return this.content.getTemplates(params); }
   deleteTemplate(id: string): Observable<any> { return this.content.deleteTemplate(id); }
+
+  // ── Admin Account Self-Service Delegates ──
+  changeOwnPassword(data: { currentPassword: string; newPassword: string }): Observable<any> { return this.user.changeOwnPassword(data); }
+  setup2FA(): Observable<any> { return this.user.setup2FA(); }
+  verify2FA(code: string): Observable<any> { return this.user.verify2FA(code); }
+  disable2FA(password: string): Observable<any> { return this.user.disable2FA(password); }
+  getOwnSessions(): Observable<any> { return this.user.getOwnSessions(); }
+  revokeOwnSession(sessionId: number): Observable<any> { return this.user.revokeOwnSession(sessionId); }
+  revokeAllOtherSessions(): Observable<any> { return this.user.revokeAllOtherSessions(); }
+  updateOwnProfile(data: any): Observable<any> { return this.user.updateOwnProfile(data); }
+  getAccountAuditLog(): Observable<any> { return this.user.getAccountAuditLog(); }
 }

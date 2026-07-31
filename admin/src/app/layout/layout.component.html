@@ -1,23 +1,35 @@
-<div class="app-layout">
+<div class="app-layout flex h-screen w-screen overflow-hidden bg-slate-950 text-slate-100">
+
   <!-- ─── Sidebar ─── -->
-  <aside class="sidebar" [class.collapsed]="isCollapsed">
-    <div class="sidebar-brand">
-      <div class="logo">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="brand-icon">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
+  <aside
+    class="sidebar flex flex-col z-20 border-r border-white/10 bg-slate-900/90 backdrop-blur-2xl transition-all duration-300 shadow-2xl"
+    [class.collapsed]="isCollapsed">
+
+    <!-- Brand Header -->
+    <div
+      class="sidebar-brand flex items-center justify-between h-16 px-4 border-b border-white/10 bg-slate-950/40 relative">
+      <div class="flex items-center gap-3">
+        <div
+          class="logo p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-blue-500/20 border border-indigo-500/30 text-indigo-400 shadow-lg shadow-indigo-500/10 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="brand-icon">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+          </svg>
+        </div>
+        @if (!isCollapsed) {
+        <div class="brand-text flex flex-col">
+          <span class="brand-title font-extrabold text-sm tracking-tight text-white">LegalConnect</span>
+          <span class="brand-badge text-[9px] font-black tracking-widest text-indigo-400 uppercase">ADMIN PANEL</span>
+        </div>
+        }
       </div>
-      @if (!isCollapsed) {
-      <div class="brand-text">
-        <span class="brand-title">LegalConnect</span>
-        <span class="brand-badge">ADMIN</span>
-      </div>
-      }
-      <button class="toggle-btn" (click)="toggleSidebar()"
-        [adminTooltip]="isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'" tooltipPosition="right">
+
+      <button
+        class="toggle-btn p-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-700/80 text-slate-400 hover:text-white transition-all shadow-sm flex items-center justify-center"
+        (click)="toggleSidebar()" [adminTooltip]="isCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
+        tooltipPosition="right">
         @if (isCollapsed) {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6"></polyline>
@@ -30,10 +42,21 @@
       </button>
     </div>
 
-    <nav class="sidebar-nav">
-      <div class="nav-section-title">CORE MANAGEMENT</div>
-      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Dashboard' : ''" tooltipPosition="right">
+    <!-- Navigation Items -->
+    <nav class="sidebar-nav flex-1 px-3 py-2 overflow-y-auto flex flex-col gap-1 custom-scrollbar">
+
+      <!-- SECTION 1: CORE MANAGEMENT -->
+      @if (isCollapsed) {
+      <div class="w-full my-1.5 flex items-center justify-center relative py-1" [adminTooltip]="'CORE MANAGEMENT'"
+        tooltipPosition="right">
+        <div class="w-full border-t border-indigo-500/30"></div>
+        <span class="absolute w-1.5 h-1.5 rounded-full bg-indigo-400 shadow-sm shadow-indigo-500/50"></span>
+      </div>
+      } @else {
+      <div class="nav-section-title cat-core">CORE MANAGEMENT</div>
+      }
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-item cat-core"
+        [adminTooltip]="'Dashboard: Control Center Overview & Real-Time Metrics'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="3" width="7" height="9"></rect>
@@ -42,10 +65,10 @@
             <rect x="3" y="16" width="7" height="5"></rect>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Dashboard</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">Dashboard</span> }
       </a>
-      <a routerLink="/users" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'User Management' : ''" tooltipPosition="right">
+      <a routerLink="/users" routerLinkActive="active" class="nav-item cat-core"
+        [adminTooltip]="'User Management: Citizens, seeker accounts & permissions'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
@@ -54,10 +77,10 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">User Management</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">User Management</span> }
       </a>
-      <a routerLink="/lawyers" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Lawyer Verification & Management' : ''" tooltipPosition="right">
+      <a routerLink="/lawyers" routerLinkActive="active" class="nav-item cat-core"
+        [adminTooltip]="'Lawyer Profiles: Bar License verification & advocate credentials'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
@@ -65,52 +88,25 @@
             <polyline points="16 11 18 13 22 9"></polyline>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Lawyer Profiles</span> }
+        @if (!isCollapsed) {
+        <span class="nav-text flex-1">Lawyer Profiles</span>
+        <span
+          class="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Verify</span>
+        }
       </a>
 
-      <div class="nav-section-title">PLATFORM OPERATIONS</div>
-      <a routerLink="/support" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Support & Grievances' : ''" tooltipPosition="right">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
-        </span>
-        @if (!isCollapsed) { <span class="nav-text">Support Desk</span> }
-      </a>
-      <a routerLink="/announcements" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Announcements Broadcast' : ''" tooltipPosition="right">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
-        </span>
-        @if (!isCollapsed) { <span class="nav-text">Announcements</span> }
-      </a>
-      <a routerLink="/security" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Security & Sessions' : ''" tooltipPosition="right">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
-        </span>
-        @if (!isCollapsed) { <span class="nav-text">Security & Sessions</span> }
-      </a>
-      <a routerLink="/reviews" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Review Moderation' : ''" tooltipPosition="right">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
-        </span>
-        @if (!isCollapsed) { <span class="nav-text">Review Moderation</span> }
-      </a>
-      <a routerLink="/consultations" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Consultations Tracking' : ''" tooltipPosition="right">
+      <!-- SECTION 2: OPERATIONS & SERVICES -->
+      @if (isCollapsed) {
+      <div class="w-full my-1.5 flex items-center justify-center relative py-1" [adminTooltip]="'OPERATIONS & SERVICES'"
+        tooltipPosition="right">
+        <div class="w-full border-t border-sky-500/30"></div>
+        <span class="absolute w-1.5 h-1.5 rounded-full bg-sky-400 shadow-sm shadow-sky-500/50"></span>
+      </div>
+      } @else {
+      <div class="nav-section-title cat-ops pt-2 border-t border-white/5 mt-2">OPERATIONS & SERVICES</div>
+      }
+      <a routerLink="/consultations" routerLinkActive="active" class="nav-item cat-ops"
+        [adminTooltip]="'Consultations Desk: Track legal consultations & booking logs'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -119,30 +115,67 @@
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Consultations Desk</span> }
+        @if (!isCollapsed) {
+        <span class="nav-text flex-1">Consultations Desk</span>
+        }
       </a>
-      <a routerLink="/legal-content" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Bare Acts & Statutory Content' : ''" tooltipPosition="right">
+      <a routerLink="/support" routerLinkActive="active" class="nav-item cat-ops"
+        [adminTooltip]="'Support Desk: Platform support tickets & grievance desk'" tooltipPosition="right">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </span>
+        @if (!isCollapsed) {
+        <span class="nav-text flex-1">Support Desk</span>
+        <span
+          class="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/30">Desk</span>
+        }
+      </a>
+      <a routerLink="/reviews" routerLinkActive="active" class="nav-item cat-ops"
+        [adminTooltip]="'Review Moderation: Moderate client feedback, ratings & reviews'" tooltipPosition="right">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+        </span>
+        @if (!isCollapsed) { <span class="nav-text flex-1">Review Moderation</span> }
+      </a>
+
+      <!-- SECTION 3: LEGAL RESOURCES -->
+      @if (isCollapsed) {
+      <div class="w-full my-1.5 flex items-center justify-center relative py-1" [adminTooltip]="'LEGAL RESOURCES'"
+        tooltipPosition="right">
+        <div class="w-full border-t border-emerald-500/30"></div>
+        <span class="absolute w-1.5 h-1.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-500/50"></span>
+      </div>
+      } @else {
+      <div class="nav-section-title cat-legal pt-2 border-t border-white/5 mt-2">LEGAL RESOURCES</div>
+      }
+      <a routerLink="/legal-content" routerLinkActive="active" class="nav-item cat-legal"
+        [adminTooltip]="'Statutory Acts: Browse BNS, BNSS & BSA legal bare acts'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
             <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Statutory Acts</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">Statutory Acts</span> }
       </a>
-      <a routerLink="/resources" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Legal Aid & Courts' : ''" tooltipPosition="right">
+      <a routerLink="/resources" routerLinkActive="active" class="nav-item cat-legal"
+        [adminTooltip]="'Legal Resources: Legal aid centers & court databases'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
             <circle cx="12" cy="10" r="3"></circle>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Legal Resources</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">Legal Resources</span> }
       </a>
-      <a routerLink="/helplines" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Emergency Helplines' : ''" tooltipPosition="right">
+      <a routerLink="/helplines" routerLinkActive="active" class="nav-item cat-legal"
+        [adminTooltip]="'Helplines: 24/7 emergency & legal distress helplines'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path
@@ -150,19 +183,10 @@
             </path>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Helplines</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">Helplines</span> }
       </a>
-      <a routerLink="/consent" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'GDPR / Privacy Compliance' : ''" tooltipPosition="right">
-        <span class="nav-icon">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-        </span>
-        @if (!isCollapsed) { <span class="nav-text">Consent Dashboard</span> }
-      </a>
-      <a routerLink="/templates" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Legal Templates & Drafts Analytics' : ''" tooltipPosition="right">
+      <a routerLink="/templates" routerLinkActive="active" class="nav-item cat-legal"
+        [adminTooltip]="'Templates & Drafts: Legal document templates & analytics'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -171,82 +195,153 @@
             <line x1="16" y1="17" x2="8" y2="17"></line>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Templates & Drafts</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">Templates & Drafts</span> }
       </a>
-      <a routerLink="/bookmarks" routerLinkActive="active" class="nav-item"
-        [adminTooltip]="isCollapsed ? 'Bookmarks & Research Telemetry' : ''" tooltipPosition="right">
+      <a routerLink="/bookmarks" routerLinkActive="active" class="nav-item cat-legal"
+        [adminTooltip]="'Bookmarks & Research: Saved legal research bookmarks'" tooltipPosition="right">
         <span class="nav-icon">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
           </svg>
         </span>
-        @if (!isCollapsed) { <span class="nav-text">Bookmarks & Research</span> }
+        @if (!isCollapsed) { <span class="nav-text flex-1">Bookmarks & Research</span> }
+      </a>
+
+      <!-- SECTION 4: SYSTEM & SECURITY -->
+      @if (isCollapsed) {
+      <div class="w-full my-1.5 flex items-center justify-center relative py-1" [adminTooltip]="'SYSTEM & SECURITY'"
+        tooltipPosition="right">
+        <div class="w-full border-t border-amber-500/30"></div>
+        <span class="absolute w-1.5 h-1.5 rounded-full bg-amber-400 shadow-sm shadow-amber-500/50"></span>
+      </div>
+      } @else {
+      <div class="nav-section-title cat-system pt-2 border-t border-white/5 mt-2">SYSTEM & SECURITY</div>
+      }
+      <a routerLink="/announcements" routerLinkActive="active" class="nav-item cat-system"
+        [adminTooltip]="'Broadcast platform-wide system announcements'" tooltipPosition="right">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </span>
+        @if (!isCollapsed) { <span class="nav-text flex-1">Announcements</span> }
+      </a>
+      <a routerLink="/security" routerLinkActive="active" class="nav-item cat-system"
+        [adminTooltip]="'Audit logs, active sessions & 2FA compliance'" tooltipPosition="right">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </span>
+        @if (!isCollapsed) { <span class="nav-text flex-1">Security & Sessions</span> }
+      </a>
+      <a routerLink="/consent" routerLinkActive="active" class="nav-item cat-system"
+        [adminTooltip]="'GDPR privacy consent & data policy audit'" tooltipPosition="right">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </span>
+        @if (!isCollapsed) { <span class="nav-text flex-1">Consent Dashboard</span> }
       </a>
     </nav>
 
-    <div class="sidebar-footer">
+    <!-- Footer Status Banner -->
+    <div class="sidebar-footer p-2 border-t border-white/10 bg-slate-950/30">
       @if (!isCollapsed) {
-      <div class="system-status" [adminTooltip]="'All backend microservices running clean'" tooltipPosition="top">
-        <span class="status-dot"></span>
-        <span>All Systems Operational</span>
+      <div
+        class="system-status px-3 py-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 text-xs font-medium flex items-center justify-between shadow-sm backdrop-blur-md"
+        [adminTooltip]="'All backend microservices running clean'" tooltipPosition="top">
+        <div class="flex items-center gap-2">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-sm shadow-emerald-500"></span>
+          </span>
+          <span class="text-[11px] font-semibold tracking-wide">All Systems Operational</span>
+        </div>
       </div>
       }
     </div>
   </aside>
 
-  <!-- ─── Main Content Area ─── -->
-  <div class="main-wrapper">
-    <!-- Top Bar -->
-    <header class="topbar">
-      <div class="topbar-left">
-        <h1 class="page-header">Control Center</h1>
+  <!-- ─── Main Content Wrapper ─── -->
+  <div class="main-wrapper flex-1 flex flex-col min-w-0 overflow-hidden bg-slate-950">
+
+    <!-- Topbar Header -->
+    <header
+      class="topbar h-16 px-6 flex items-center justify-between border-b border-white/10 bg-slate-900/80 backdrop-blur-xl sticky top-0 z-30 shadow-md">
+      <div class="topbar-left flex items-center gap-3">
+        <h1 class="page-header text-base font-extrabold text-slate-100 tracking-tight flex items-center gap-2">
+          <span>Control Center</span>
+        </h1>
       </div>
 
-      <div class="topbar-right">
-        <!-- ─── Global Command Palette Trigger (Ctrl + K) ─── -->
-        <button class="topbar-action-btn cmd-trigger" (click)="openCommandPalette()"
-          [adminTooltip]="'Global Quick Search & Navigation (Ctrl + K)'" tooltipPosition="bottom">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="topbar-right flex items-center gap-3">
+        <!-- Command Palette Trigger (Ctrl + K) -->
+        <button
+          class="topbar-action-btn cmd-trigger flex items-center gap-2 px-3 py-1.5 rounded-xl border border-white/10 bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white text-xs transition-all shadow-sm cursor-pointer hover:border-indigo-500/40"
+          (click)="openCommandPalette()" [adminTooltip]="'Global Quick Search & Navigation (Ctrl + K)'"
+          tooltipPosition="bottom">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
-          <span class="cmd-shortcut-text">Ctrl K</span>
+          <span
+            class="cmd-shortcut-text text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-900 border border-white/10 text-slate-400">Ctrl
+            K</span>
         </button>
 
-        <!-- ─── Real-time Live Activity Stream ─── -->
-        <div class="activity-dropdown-wrapper">
-          <button class="topbar-action-btn" (click)="toggleActivityDropdown($event)"
-            [adminTooltip]="'Real-time Telemetry & Live Activity Stream'" tooltipPosition="bottom">
+        <!-- Live Activity Dropdown -->
+        <div class="activity-dropdown-wrapper relative">
+          <button
+            class="topbar-action-btn relative flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white transition-all shadow-sm"
+            (click)="toggleActivityDropdown($event)" [adminTooltip]="'Real-time Telemetry & Live Activity Stream'"
+            tooltipPosition="bottom">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
             </svg>
             @if (activityService.unreadCount > 0) {
-            <span class="activity-badge">{{ activityService.unreadCount }}</span>
+            <span
+              class="activity-badge absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-rose-500 text-[9px] font-extrabold text-white shadow-md shadow-rose-500/40 animate-pulse">{{
+              activityService.unreadCount }}</span>
             }
           </button>
 
           @if (showActivityDropdown) {
-          <div class="activity-dropdown-menu">
-            <div class="activity-header">
-              <div class="activity-title">
-                <span class="live-dot"></span>
+          <div
+            class="activity-dropdown-menu absolute top-full right-0 mt-3 w-80 sm:w-96 rounded-2xl border border-white/15 bg-slate-900/95 backdrop-blur-2xl shadow-2xl z-50 overflow-hidden divide-y divide-white/10">
+            <div class="activity-header px-4 py-3 flex items-center justify-between bg-slate-950/50">
+              <div class="activity-title flex items-center gap-2 text-xs font-bold text-slate-200">
+                <span class="relative flex h-2 w-2">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
                 <span>Live Activity Stream</span>
               </div>
-              <span class="activity-count">{{ activityService.events().length }} events</span>
+              <span class="activity-count text-[11px] font-semibold text-slate-400">{{ activityService.events().length
+                }} events</span>
             </div>
-            <div class="activity-list">
+            <div class="activity-list max-h-72 overflow-y-auto divide-y divide-white/5">
               @for (ev of activityService.events(); track ev.id) {
-              <a [routerLink]="ev.link || '/dashboard'" class="activity-item" (click)="showActivityDropdown = false">
-                <div class="activity-icon" [ngClass]="ev.type">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <a [routerLink]="ev.link || '/dashboard'"
+                class="activity-item group flex gap-3 p-3.5 hover:bg-white/5 transition-all text-left"
+                (click)="showActivityDropdown = false">
+                <div class="activity-icon mt-0.5 text-indigo-400 group-hover:scale-110 transition-transform"
+                  [ngClass]="ev.type">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                   </svg>
                 </div>
-                <div class="activity-content">
-                  <div class="activity-item-title">{{ ev.title }}</div>
-                  <div class="activity-item-msg">{{ ev.message }}</div>
-                  <div class="activity-item-time">{{ ev.timestamp | date:'shortTime' }}</div>
+                <div class="activity-content flex-1 min-w-0">
+                  <div class="activity-item-title text-xs font-bold text-slate-200 truncate">{{ ev.title }}</div>
+                  <div class="activity-item-msg text-[11px] text-slate-400 mt-0.5 line-clamp-2 leading-relaxed">{{
+                    ev.message }}</div>
+                  <div class="activity-item-time text-[10px] text-slate-500 font-medium mt-1">{{ ev.timestamp |
+                    date:'shortTime' }}</div>
                 </div>
               </a>
               }
@@ -255,13 +350,13 @@
           }
         </div>
 
-        <!-- ─── Theme Toggle Button (Light/Dark) ─── -->
-        <button class="topbar-action-btn theme-toggle" (click)="toggleTheme()"
-          [adminTooltip]="themeService.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
+        <!-- Theme Toggle -->
+        <button
+          class="topbar-action-btn theme-toggle flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-slate-800/60 hover:bg-slate-800 text-amber-400 hover:scale-105 transition-all shadow-sm"
+          (click)="toggleTheme()" [adminTooltip]="themeService.isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'"
           tooltipPosition="bottom">
           @if (themeService.isDark) {
-          <!-- Sun Icon for Light Mode -->
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2">
             <circle cx="12" cy="12" r="5"></circle>
             <line x1="12" y1="1" x2="12" y2="3"></line>
             <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -273,38 +368,48 @@
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
           } @else {
-          <!-- Moon Icon for Dark Mode -->
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
           }
         </button>
 
-        <div class="admin-profile" [adminTooltip]="'Logged in as Super Admin'" tooltipPosition="left">
-          <div class="avatar">{{ user?.fullName?.charAt(0) || 'A' }}</div>
-          <div class="profile-info">
-            <span class="admin-name">{{ user?.fullName || 'Administrator' }}</span>
-            <span class="admin-email">{{ user?.email || 'admin@legalconnect.com' }}</span>
+        <!-- Admin Profile Pill (Click to open Account Security) -->
+        <a routerLink="/account" routerLinkActive="ring-1 ring-indigo-500/40"
+          class="admin-profile hidden sm:flex items-center gap-2.5 px-3 py-1.5 rounded-xl border border-white/10 bg-slate-800/40 hover:bg-slate-800/80 hover:border-indigo-500/30 transition-all cursor-pointer"
+          [adminTooltip]="'Account Security & Settings'" tooltipPosition="left">
+          <div
+            class="avatar w-7 h-7 rounded-lg bg-gradient-to-br from-indigo-500 via-purple-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shadow-md shadow-indigo-500/20 ring-1 ring-white/20">
+            {{ user?.fullName?.charAt(0) || 'A' }}
           </div>
-        </div>
+          <div class="profile-info flex flex-col">
+            <span class="admin-name text-xs font-bold text-slate-200 leading-tight">{{ user?.fullName || 'Administrator'
+              }}</span>
+            <span class="admin-email text-[10px] text-slate-400 font-medium truncate max-w-[140px]">{{ user?.email ||
+              'admin@legalconnect.com' }}</span>
+          </div>
+        </a>
 
-        <button class="btn btn-secondary btn-sm" (click)="logout()" [adminTooltip]="'End admin session'"
-          tooltipPosition="bottom">
+        <!-- Sign Out Button -->
+        <button
+          class="btn btn-secondary btn-sm flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-red-500/20 hover:border-red-500/40 bg-red-500/10 hover:bg-red-500/20 text-red-400 hover:text-red-300 font-semibold text-xs transition-all shadow-sm"
+          (click)="logout()" [adminTooltip]="'End admin session'" tooltipPosition="bottom">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
             <polyline points="16 17 21 12 16 7"></polyline>
             <line x1="21" y1="12" x2="9" y2="12"></line>
           </svg>
-          <span>Sign Out</span>
+          <span class="hidden md:inline">Sign Out</span>
         </button>
       </div>
     </header>
 
-    <!-- Main Body -->
-    <main class="content-body">
+    <!-- Content Body Router Outlet -->
+    <main class="content-body flex-1 overflow-y-auto px-4 py-0 bg-slate-950 relative">
       <router-outlet></router-outlet>
     </main>
   </div>
+
   <admin-dialog></admin-dialog>
   <admin-command-palette></admin-command-palette>
   <admin-two-factor-modal></admin-two-factor-modal>

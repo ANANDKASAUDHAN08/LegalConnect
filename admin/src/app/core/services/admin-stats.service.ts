@@ -74,4 +74,22 @@ export class AdminStatsService {
     }
     return this.bookmarkStatsCache$;
   }
+
+  getTelemetryStream(): Observable<any> {
+    return new Observable(observer => {
+      const eventSource = new EventSource('/api/admin/telemetry/stream');
+      eventSource.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          observer.next(data);
+        } catch (e) {
+          observer.next(event.data);
+        }
+      };
+      eventSource.onerror = (error) => {
+        observer.error(error);
+      };
+      return () => eventSource.close();
+    });
+  }
 }

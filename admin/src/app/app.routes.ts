@@ -88,6 +88,11 @@ export const routes: Routes = [
         path: 'bookmarks',
         loadComponent: () => import('./pages/bookmarks/bookmarks.component').then(m => m.BookmarksComponent),
         title: 'Bookmarks & Research Telemetry | LegalConnect Admin'
+      },
+      {
+        path: 'account',
+        loadComponent: () => import('./pages/account/account.component').then(m => m.AccountComponent),
+        title: 'Account Security | LegalConnect Admin'
       }
     ]
   },

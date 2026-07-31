@@ -70,6 +70,24 @@ export class TooltipDirective implements OnDestroy {
         break;
     }
 
+    // Viewport Boundary Protection (Prevent Clipping)
+    const margin = 12;
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+
+    if (left + tooltipPos.width > viewportWidth - margin) {
+      left = viewportWidth - tooltipPos.width - margin;
+    }
+    if (left < margin) {
+      left = margin;
+    }
+    if (top < margin) {
+      top = hostPos.bottom + 8;
+    }
+    if (top + tooltipPos.height > viewportHeight - margin) {
+      top = hostPos.top - tooltipPos.height - 8;
+    }
+
     this.renderer.setStyle(this.tooltipElement, 'top', `${top + window.scrollY}px`);
     this.renderer.setStyle(this.tooltipElement, 'left', `${left + window.scrollX}px`);
   }

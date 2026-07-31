@@ -36,6 +36,30 @@ export class AdminUserService {
     return this.http.post(`${this.API}/users/${id}/reset-password`, {});
   }
 
+  bulkUpdateUserStatus(userIds: number[], isActive: boolean): Observable<any> {
+    return this.http.post(`${this.API}/users/bulk-status`, { userIds, isActive });
+  }
+
+  revokeUserSessions(id: number): Observable<any> {
+    return this.http.post(`${this.API}/users/${id}/revoke-sessions`, {});
+  }
+
+  verifyUserEmail(id: number): Observable<any> {
+    return this.http.post(`${this.API}/users/${id}/verify-email`, {});
+  }
+
+  updateUserRole(id: number, role: string): Observable<any> {
+    return this.http.put(`${this.API}/users/${id}/role`, { role });
+  }
+
+  getUserAuditLog(id: number): Observable<any> {
+    return this.http.get(`${this.API}/users/${id}/audit-log`);
+  }
+
+  impersonateUser(id: number): Observable<any> {
+    return this.http.post(`${this.API}/users/${id}/impersonate`, {});
+  }
+
   // ── Lawyer Management & Verification Queue ──
   getLawyers(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
@@ -57,6 +81,10 @@ export class AdminUserService {
 
   updateLawyerProfile(id: number, data: any): Observable<any> {
     return this.http.put(`${this.API}/lawyers/${id}/profile`, data);
+  }
+
+  bulkVerifyLawyers(lawyerIds: number[], isVerified: boolean): Observable<any> {
+    return this.http.post(`${this.API}/lawyers/bulk-verify`, { lawyerIds, isVerified });
   }
 
   // ── Sessions ──
@@ -109,6 +137,18 @@ export class AdminUserService {
     return this.http.put(`${this.API}/consultations/${id}/status`, { status });
   }
 
+  bulkUpdateConsultationStatus(consultationIds: number[], status: string): Observable<any> {
+    return this.http.post(`${this.API}/consultations/bulk-status`, { consultationIds, status });
+  }
+
+  updateConsultationNotes(id: number, adminRemark: string): Observable<any> {
+    return this.http.put(`${this.API}/consultations/${id}/notes`, { adminRemark });
+  }
+
+  dispatchConsultationEmail(id: number, data: { template: string; recipient: string; customMessage?: string }): Observable<any> {
+    return this.http.post(`${this.API}/consultations/${id}/dispatch-email`, data);
+  }
+
   // ── Announcements ──
   getAnnouncements(): Observable<any> {
     return this.http.get(`${this.API}/announcements`);
@@ -139,5 +179,42 @@ export class AdminUserService {
 
   updateContactStatus(id: number, status: string): Observable<any> {
     return this.http.put(`${this.API}/contacts/${id}/status`, { status });
+  }
+
+  // ── Admin Account Self-Service ──
+  changeOwnPassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
+    return this.http.put(`${this.API}/account/password`, data);
+  }
+
+  setup2FA(): Observable<any> {
+    return this.http.post(`${this.API}/account/2fa/setup`, {});
+  }
+
+  verify2FA(code: string): Observable<any> {
+    return this.http.post(`${this.API}/account/2fa/verify`, { code });
+  }
+
+  disable2FA(password: string): Observable<any> {
+    return this.http.post(`${this.API}/account/2fa/disable`, { password });
+  }
+
+  getOwnSessions(): Observable<any> {
+    return this.http.get(`${this.API}/account/sessions`);
+  }
+
+  revokeOwnSession(sessionId: number): Observable<any> {
+    return this.http.delete(`${this.API}/account/sessions/${sessionId}`);
+  }
+
+  revokeAllOtherSessions(): Observable<any> {
+    return this.http.delete(`${this.API}/account/sessions/revoke-others`);
+  }
+
+  updateOwnProfile(data: any): Observable<any> {
+    return this.http.put(`${this.API}/account/profile`, data);
+  }
+
+  getAccountAuditLog(): Observable<any> {
+    return this.http.get(`${this.API}/account/audit-log`);
   }
 }

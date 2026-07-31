@@ -21,10 +21,12 @@ export class SelectComponent {
   @Input() width: string = 'auto';
   @Input() minWidth: string = '160px';
   @Input() icon?: string;
+  @Input() dropPosition: 'down' | 'up' | 'auto' = 'auto';
 
   @Output() valueChange = new EventEmitter<any>();
 
   isOpen = false;
+  dropUp = false;
 
   constructor(private elementRef: ElementRef) { }
 
@@ -38,6 +40,18 @@ export class SelectComponent {
 
   toggleOpen(): void {
     this.isOpen = !this.isOpen;
+    if (this.isOpen) {
+      if (this.dropPosition === 'up') {
+        this.dropUp = true;
+      } else if (this.dropPosition === 'down') {
+        this.dropUp = false;
+      } else {
+        // Auto detect viewport space below trigger element
+        const rect = this.elementRef.nativeElement.getBoundingClientRect();
+        const spaceBelow = window.innerHeight - rect.bottom;
+        this.dropUp = spaceBelow < 220;
+      }
+    }
   }
 
   selectOption(option: SelectOption, event: MouseEvent): void {

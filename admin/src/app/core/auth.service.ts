@@ -10,6 +10,11 @@ export interface AdminUser {
   email: string;
   role: string;
   avatarUrl?: string;
+  isTwoFactorEnabled?: boolean;
+  lastLoginAt?: string;
+  lastIpAddress?: string;
+  createdAt?: string;
+  backupCodeCount?: number;
 }
 
 @Injectable({ providedIn: 'root' })
