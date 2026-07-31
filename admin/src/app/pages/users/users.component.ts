@@ -506,7 +506,6 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   fetchUsers(): void {
-    const isFirstTime = this.isInitialLoad;
     const params: any = {
       page: this.pagination.page,
       limit: this.pagination.limit,
@@ -519,9 +518,26 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (this.startDate) params.startDate = this.startDate;
     if (this.endDate) params.endDate = this.endDate;
 
+    const cached = this.api.user.getCachedUsers(params);
+    if (cached && cached.success) {
+      this.users = cached.data || [];
+      this.pagination = cached.pagination || this.pagination;
+      if (cached.summary) {
+        this.globalTotalUsers = cached.summary.totalUsers;
+        this.globalAdminCount = cached.summary.totalAdmins;
+        this.globalLawyerCount = cached.summary.totalLawyers;
+        this.globalClientCount = cached.summary.totalClients;
+        this.globalTwoFactorPct = cached.summary.twoFactorPct;
+      }
+      this.isLoading = false;
+      this.isInitialLoad = false;
+    }
+
+    const showLoader = this.isInitialLoad && !cached;
+
     this.fetchSub?.unsubscribe();
 
-    this.fetchSub = this.api.getUsers(params).pipe(smartLoading(l => this.isLoading = l, isFirstTime)).subscribe({
+    this.fetchSub = this.api.getUsers(params).pipe(smartLoading(l => this.isLoading = l, showLoader)).subscribe({
       next: (res) => {
         this.isInitialLoad = false;
         if (res.success) {
@@ -539,7 +555,9 @@ export class UsersComponent implements OnInit, OnDestroy {
       },
       error: (err) => {
         this.isInitialLoad = false;
-        this.toast.error(err?.error?.message || 'Failed to load users.');
+        if (!cached) {
+          this.toast.error(err?.error?.message || 'Failed to load users.');
+        }
       }
     });
   }

@@ -1,13 +1,42 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class AdminUserService {
   private readonly API = environment.apiUrl;
 
+  private usersCache = new Map<string, any>();
+  private consultationsCache = new Map<string, any>();
+  private lastUsersCacheKey: string | null = null;
+  private lastConsultationsCacheKey: string | null = null;
+
   constructor(private http: HttpClient) { }
+
+  private getParamKey(params: any): string {
+    return JSON.stringify(params || {});
+  }
+
+  getCachedUsers(params: any = {}): any | null {
+    const key = this.getParamKey(params);
+    return this.usersCache.get(key) || (this.lastUsersCacheKey ? this.usersCache.get(this.lastUsersCacheKey) : null);
+  }
+
+  clearUsersCache(): void {
+    this.usersCache.clear();
+    this.lastUsersCacheKey = null;
+  }
+
+  getCachedConsultations(params: any = {}): any | null {
+    const key = this.getParamKey(params);
+    return this.consultationsCache.get(key) || (this.lastConsultationsCacheKey ? this.consultationsCache.get(this.lastConsultationsCacheKey) : null);
+  }
+
+  clearConsultationsCache(): void {
+    this.consultationsCache.clear();
+    this.lastConsultationsCacheKey = null;
+  }
 
   // ── User Management ──
   getUsers(params: any = {}): Observable<any> {
@@ -17,7 +46,15 @@ export class AdminUserService {
         httpParams = httpParams.set(key, params[key]);
       }
     });
-    return this.http.get(`${this.API}/users`, { params: httpParams });
+    return this.http.get<any>(`${this.API}/users`, { params: httpParams }).pipe(
+      tap((res: any) => {
+        if (res && res.success) {
+          const key = this.getParamKey(params);
+          this.usersCache.set(key, res);
+          this.lastUsersCacheKey = key;
+        }
+      })
+    );
   }
 
   getUser(id: number): Observable<any> {
@@ -25,10 +62,12 @@ export class AdminUserService {
   }
 
   updateUser(id: number, data: any): Observable<any> {
+    this.clearUsersCache();
     return this.http.put(`${this.API}/users/${id}`, data);
   }
 
   deleteUser(id: number): Observable<any> {
+    this.clearUsersCache();
     return this.http.delete(`${this.API}/users/${id}`);
   }
 
@@ -37,6 +76,7 @@ export class AdminUserService {
   }
 
   bulkUpdateUserStatus(userIds: number[], isActive: boolean): Observable<any> {
+    this.clearUsersCache();
     return this.http.post(`${this.API}/users/bulk-status`, { userIds, isActive });
   }
 
@@ -49,6 +89,7 @@ export class AdminUserService {
   }
 
   updateUserRole(id: number, role: string): Observable<any> {
+    this.clearUsersCache();
     return this.http.put(`${this.API}/users/${id}/role`, { role });
   }
 
@@ -130,14 +171,24 @@ export class AdminUserService {
         httpParams = httpParams.set(key, params[key]);
       }
     });
-    return this.http.get(`${this.API}/consultations`, { params: httpParams });
+    return this.http.get<any>(`${this.API}/consultations`, { params: httpParams }).pipe(
+      tap((res: any) => {
+        if (res && res.success) {
+          const key = this.getParamKey(params);
+          this.consultationsCache.set(key, res);
+          this.lastConsultationsCacheKey = key;
+        }
+      })
+    );
   }
 
   updateConsultationStatus(id: number, status: string): Observable<any> {
+    this.clearConsultationsCache();
     return this.http.put(`${this.API}/consultations/${id}/status`, { status });
   }
 
   bulkUpdateConsultationStatus(consultationIds: number[], status: string): Observable<any> {
+    this.clearConsultationsCache();
     return this.http.post(`${this.API}/consultations/bulk-status`, { consultationIds, status });
   }
 

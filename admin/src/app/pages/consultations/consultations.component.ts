@@ -384,7 +384,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   fetchConsultations(): void {
-    const isFirstTime = this.isInitialLoad;
     const params: any = {
       page: this.pagination.page,
       limit: this.pagination.limit,
@@ -398,7 +397,22 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     if (this.startDate) params.startDate = this.startDate;
     if (this.endDate) params.endDate = this.endDate;
 
-    this.api.getConsultations(params).pipe(smartLoading(l => this.isLoading = l, isFirstTime)).subscribe({
+    const cached = this.api.user.getCachedConsultations(params);
+    if (cached && cached.success) {
+      this.consultations = cached.data || [];
+      this.pagination = cached.pagination || this.pagination;
+      if (cached.metrics) {
+        this.summaryMetrics = cached.metrics;
+      }
+      const totalRecs = cached.pagination?.total ?? this.consultations.length;
+      this.pagination.pages = Math.max(1, Math.ceil(totalRecs / this.pagination.limit));
+      this.isLoading = false;
+      this.isInitialLoad = false;
+    }
+
+    const showLoader = this.isInitialLoad && !cached;
+
+    this.api.getConsultations(params).pipe(smartLoading(l => this.isLoading = l, showLoader)).subscribe({
       next: (res: any) => {
         this.isInitialLoad = false;
         if (res.metrics) {
@@ -413,7 +427,9 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
       },
       error: (err: any) => {
         this.isInitialLoad = false;
-        this.toast.error(err?.error?.message || 'Failed to fetch consultation records.');
+        if (!cached) {
+          this.toast.error(err?.error?.message || 'Failed to fetch consultation records.');
+        }
       }
     });
   }

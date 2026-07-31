@@ -6,6 +6,7 @@ using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace CoreApi.Controllers
 {
@@ -14,6 +15,8 @@ namespace CoreApi.Controllers
         // ═══════════════════════════════════════════════════════════════
         //  REVIEWS MANAGEMENT
         // ═══════════════════════════════════════════════════════════════
+        // ... (lines remain untouched)
+
 
         [Authorize(Roles = "Admin")]
         [HttpGet("reviews")]
@@ -151,10 +154,21 @@ namespace CoreApi.Controllers
             };
 
             var total = await query.CountAsync();
-            var allCount = await _context.Consultations.CountAsync();
-            var pending = await _context.Consultations.CountAsync(c => c.Status == "Pending");
-            var contacted = await _context.Consultations.CountAsync(c => c.Status == "Contacted");
-            var closed = await _context.Consultations.CountAsync(c => c.Status == "Closed");
+
+            if (!_cache.TryGetValue("ConsultationMetricsSummary", out Dictionary<string, int>? statusCounts) || statusCounts == null)
+            {
+                statusCounts = await _context.Consultations.AsNoTracking()
+                    .GroupBy(c => c.Status)
+                    .Select(g => new { Status = g.Key, Count = g.Count() })
+                    .ToDictionaryAsync(g => g.Status ?? "", g => g.Count);
+
+                _cache.Set("ConsultationMetricsSummary", statusCounts, TimeSpan.FromSeconds(30));
+            }
+
+            var allCount = statusCounts.Values.Sum();
+            var pending = statusCounts.GetValueOrDefault("Pending", 0);
+            var contacted = statusCounts.GetValueOrDefault("Contacted", 0);
+            var closed = statusCounts.GetValueOrDefault("Closed", 0);
 
             var queryToExecute = exportAll ? query : query.Skip((page - 1) * limit).Take(limit);
 
@@ -171,7 +185,7 @@ namespace CoreApi.Controllers
                     c.Message,
                     c.Status,
                     c.AdminRemark,
-                    c.AuditLogJson,
+                    AuditLogJson = (string?)null, // Omit heavy audit JSON payload in list view
                     c.CreatedAt
                 })
                 .ToListAsync();
@@ -181,6 +195,39 @@ namespace CoreApi.Controllers
                 data = consultationsList,
                 pagination = new { total, page, limit },
                 metrics = new { total = allCount, pending, contacted, closed }
+            });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("consultations/{id}")]
+        public async Task<IActionResult> GetConsultationDetail(int id)
+        {
+            var consultation = await _context.Consultations
+                .Include(c => c.Client)
+                .Include(c => c.Lawyer)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == id);
+
+            if (consultation == null) return NotFound(new { message = "Consultation not found." });
+
+            return Ok(new
+            {
+                success = true,
+                data = new
+                {
+                    consultation.Id,
+                    consultation.ClientName,
+                    consultation.ClientEmail,
+                    clientPhone = consultation.Client != null ? consultation.Client.Phone : null,
+                    clientUser = consultation.Client != null ? consultation.Client.FullName : null,
+                    lawyerName = consultation.Lawyer != null ? consultation.Lawyer.FullName : "Unknown Advocate",
+                    lawyerEmail = consultation.Lawyer != null ? consultation.Lawyer.Email : null,
+                    consultation.Message,
+                    consultation.Status,
+                    consultation.AdminRemark,
+                    consultation.AuditLogJson,
+                    consultation.CreatedAt
+                }
             });
         }
 
@@ -198,6 +245,9 @@ namespace CoreApi.Controllers
             AppendAuditLog(consultation, $"Status updated from '{previousStatus}' to '{dto.Status}'");
 
             await _context.SaveChangesAsync();
+
+            // Invalidate server-side metrics cache
+            _cache.Remove("ConsultationMetricsSummary");
 
             return Ok(new { success = true, message = "Status updated.", status = dto.Status });
         }
@@ -218,6 +268,10 @@ namespace CoreApi.Controllers
             }
 
             await _context.SaveChangesAsync();
+
+            // Invalidate server-side metrics cache
+            _cache.Remove("ConsultationMetricsSummary");
+
             return Ok(new { success = true, message = $"Bulk status updated for {items.Count} consultation(s)." });
         }
 

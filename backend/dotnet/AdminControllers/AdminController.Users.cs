@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
@@ -6,6 +7,7 @@ using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 
 namespace CoreApi.Controllers
@@ -66,16 +68,26 @@ namespace CoreApi.Controllers
                 _ => isAsc ? query.OrderBy(u => u.CreatedAt) : query.OrderByDescending(u => u.CreatedAt)
             };
 
-            // Single grouped SQL query for global metrics to avoid N+1 count queries
-            var roleCounts = await _context.Users.AsNoTracking()
-                .GroupBy(u => u.Role)
-                .Select(g => new { Role = g.Key, Count = g.Count() })
-                .ToListAsync();
+            if (!_cache.TryGetValue("UserRoleMetricsSummary", out (int totalAdmins, int totalLawyers, int totalClients, int total2Fa) metrics))
+            {
+                var roleCounts = await _context.Users.AsNoTracking()
+                    .GroupBy(u => u.Role)
+                    .Select(g => new { Role = g.Key, Count = g.Count() })
+                    .ToListAsync();
 
-            var totalAdmins = roleCounts.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0;
-            var totalLawyers = roleCounts.FirstOrDefault(r => r.Role == "Lawyer")?.Count ?? 0;
-            var totalClients = roleCounts.FirstOrDefault(r => r.Role == "Client")?.Count ?? 0;
-            var total2Fa = await _context.Users.AsNoTracking().CountAsync(u => u.IsTwoFactorEnabled);
+                var admins = roleCounts.FirstOrDefault(r => r.Role == "Admin")?.Count ?? 0;
+                var lawyers = roleCounts.FirstOrDefault(r => r.Role == "Lawyer")?.Count ?? 0;
+                var clients = roleCounts.FirstOrDefault(r => r.Role == "Client")?.Count ?? 0;
+                var t2Fa = await _context.Users.AsNoTracking().CountAsync(u => u.IsTwoFactorEnabled);
+
+                metrics = (admins, lawyers, clients, t2Fa);
+                _cache.Set("UserRoleMetricsSummary", metrics, TimeSpan.FromSeconds(30));
+            }
+
+            var totalAdmins = metrics.totalAdmins;
+            var totalLawyers = metrics.totalLawyers;
+            var totalClients = metrics.totalClients;
+            var total2Fa = metrics.total2Fa;
 
             var users = await query
                 .Skip((page - 1) * limit)
@@ -349,6 +361,8 @@ namespace CoreApi.Controllers
             var oldRole = user.Role;
             user.Role = dto.Role;
             await _context.SaveChangesAsync();
+
+            _cache.Remove("UserRoleMetricsSummary");
 
             _logger.LogWarning("[Security Audit] Admin (Id: {AdminId}) updated role for user (Target UserId: {TargetUserId}) from {OldRole} to {NewRole}", currentUserId, id, oldRole, dto.Role);
 

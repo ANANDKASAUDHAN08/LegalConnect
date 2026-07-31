@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 
 namespace CoreApi.Controllers
@@ -25,6 +26,7 @@ namespace CoreApi.Controllers
         private readonly ILawyerSyncService _syncService;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<AdminController> _logger;
+        private readonly IMemoryCache _cache;
 
         public AdminController(
             AppDbContext context,
@@ -32,7 +34,8 @@ namespace CoreApi.Controllers
             IWebHostEnvironment env,
             ILawyerSyncService syncService,
             IHttpClientFactory httpClientFactory,
-            ILogger<AdminController> logger)
+            ILogger<AdminController> logger,
+            IMemoryCache cache)
         {
             _context = context;
             _configuration = configuration;
@@ -40,6 +43,7 @@ namespace CoreApi.Controllers
             _syncService = syncService;
             _httpClientFactory = httpClientFactory;
             _logger = logger;
+            _cache = cache;
         }
 
         // ═══════════════════════════════════════════════════════════════
