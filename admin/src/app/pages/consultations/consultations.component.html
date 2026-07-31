@@ -117,11 +117,11 @@
 
   <!-- ─── 1. Filter & Search Toolbar Container ─── -->
   <div
-    class="glass-card page-filters p-1 rounded-2xl border border-slate-800/80 shadow-xl overflow-visible relative z-20 flex flex-col gap-1">
+    class="glass-card page-filters p-2 rounded-2xl border border-slate-800/80 shadow-xl overflow-visible relative z-20 flex flex-col gap-1">
     <!-- Header Toolbar: 1-Line Responsive Toolbar -->
     <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible">
       <!-- Search Input (Far Left) -->
-      <div class="search-box flex-1 min-w-[200px] max-w-[280px] lg:max-w-xs relative shrink-0">
+      <div class="search-box flex-1 min-w-[200px] !max-w-[400px] lg:max-w-xs relative shrink-0">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
           class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
           <circle cx="11" cy="11" r="8"></circle>
@@ -414,7 +414,7 @@
         }
 
         @if (isFilterActive) {
-        <button (click)="resetFilters()"
+        <button (click)="resetFilters()" {{ ... }}
           class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2">
           {{ selectedIds.size > 0 && hasQueryFilter ? 'Clear Selection & Filters' : (selectedIds.size > 0 ? 'Clear
           Selection' : 'Clear Filter Criteria') }}
@@ -426,12 +426,45 @@
 
   <!-- ─── 2. Data Table Container ─── -->
   <div class="glass-card rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden relative z-10">
-    <div class="data-table-wrapper overflow-x-auto min-h-[360px]">
+    <div class="data-table-wrapper overflow-x-auto min-h-[350px]">
       @if (!isInitialLoad && isLoading) {
       <div
         class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 animate-pulse w-full">
       </div>
       }
+
+      @if (!isLoading && consultations.length === 0) {
+      <!-- Full-Size Unified Empty State (No Header Line Divider) -->
+      <div
+        class="empty-state-full-wrapper min-h-[380px] py-16 px-4 flex flex-col items-center justify-center text-center my-auto">
+        <div
+          class="w-16 h-16 rounded-2xl bg-gradient-to-b from-indigo-500/15 to-slate-800/40 border border-indigo-500/25 text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/5 group hover:scale-105 transition-all duration-300 mb-3">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+            <path d="M9 13h6m-6 4h4" stroke-linecap="round"></path>
+          </svg>
+        </div>
+        <div class="flex flex-col gap-1 max-w-md">
+          <h3 class="text-base font-extrabold text-slate-100 tracking-tight">No Consultation Inquiries Found</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            No consultation requests match your active search or filter criteria. Try adjusting your search query or
+            reset your filters.
+          </p>
+        </div>
+        @if (isFilterActive) {
+        <button (click)="resetFilters()"
+          class="mt-4 btn inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 hover:border-indigo-500/50 transition-all shadow-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reset Filter Criteria</span>
+        </button>
+        }
+      </div>
+      } @else {
       <table class="data-table w-full text-left border-collapse min-w-[900px]"
         [class.table-refreshing]="!isInitialLoad && isLoading">
         @if (!isNoColumnsVisible) {
@@ -602,56 +635,56 @@
         }
         <tbody class="divide-y text-xs">
           @if (isInitialLoad && isLoading) {
-          @for (item of [1,2,3,4,5,6]; track $index) {
-          <tr class="table-row-skeleton">
-            <td class="p-3.5 pl-5"><admin-skeleton width="18px" height="18px" borderRadius="4px" /></td>
+          @for (item of [1,2,3,4,5,6,7,8]; track $index) {
+          <tr class="table-row-skeleton border-b border-slate-800/60">
+            <td class="p-3.5 pl-5"><admin-skeleton width="16px" height="16px" borderRadius="4px" /></td>
 
             @if (columnVisibility.client) {
             <td class="p-3.5">
-              <div class="user-cell flex items-center gap-2.5">
-                <admin-skeleton width="36px" height="36px" borderRadius="50%" />
-                <div>
-                  <admin-skeleton width="130px" height="14px" borderRadius="4px" />
-                  <admin-skeleton width="145px" height="11px" borderRadius="4px" class="mt-1.5" />
+              <div class="user-cell flex items-center gap-3">
+                <admin-skeleton width="36px" height="36px" borderRadius="50%" class="shrink-0" />
+                <div class="flex flex-col gap-1.5 min-w-0">
+                  <admin-skeleton width="120px" height="13px" borderRadius="4px" />
+                  <admin-skeleton width="140px" height="11px" borderRadius="4px" />
                 </div>
               </div>
             </td>
             }
 
             @if (columnVisibility.phone) {
-            <td class="p-3.5"><admin-skeleton width="110px" height="22px" borderRadius="8px" /></td>
+            <td class="p-3.5"><admin-skeleton width="95px" height="16px" borderRadius="6px" /></td>
             }
 
             @if (columnVisibility.lawyer) {
             <td class="p-3.5">
-              <div class="user-cell flex items-center gap-2.5">
-                <admin-skeleton width="36px" height="36px" borderRadius="50%" />
-                <div>
-                  <admin-skeleton width="125px" height="14px" borderRadius="4px" />
-                  <admin-skeleton width="140px" height="11px" borderRadius="4px" class="mt-1.5" />
+              <div class="user-cell flex items-center gap-3">
+                <admin-skeleton width="36px" height="36px" borderRadius="50%" class="shrink-0" />
+                <div class="flex flex-col gap-1.5 min-w-0">
+                  <admin-skeleton width="115px" height="13px" borderRadius="4px" />
+                  <admin-skeleton width="135px" height="11px" borderRadius="4px" />
                 </div>
               </div>
             </td>
             }
 
             @if (columnVisibility.sla) {
-            <td class="p-3.5"><admin-skeleton width="95px" height="22px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="80px" height="18px" borderRadius="9999px" /></td>
             }
 
             @if (columnVisibility.message) {
-            <td class="p-3.5"><admin-skeleton width="200px" height="14px" borderRadius="4px" /></td>
+            <td class="p-3.5"><admin-skeleton width="180px" height="13px" borderRadius="4px" /></td>
             }
 
             @if (columnVisibility.status) {
-            <td class="p-3.5"><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="70px" height="18px" borderRadius="9999px" /></td>
             }
 
             @if (columnVisibility.createdAt) {
-            <td class="p-3.5 min-w-[145px] pr-4"><admin-skeleton width="120px" height="14px" borderRadius="4px" /></td>
+            <td class="p-3.5 min-w-[145px] pr-4"><admin-skeleton width="100px" height="13px" borderRadius="4px" /></td>
             }
 
             <td class="p-3.5 text-center min-w-[80px] w-[80px] sticky right-0 z-10 actions-sticky-cell">
-              <div class="flex justify-center"><admin-skeleton width="32px" height="32px" borderRadius="8px" /></div>
+              <div class="flex justify-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></div>
             </td>
           </tr>
           }
@@ -720,7 +753,7 @@
                   (click)="$event.stopPropagation()" [adminTooltip]="'Click to call client phone number'">
                   <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z">
                     </path>
                   </svg>
                   <span>{{ item.clientPhone }}</span>
@@ -818,26 +851,11 @@
                 </button>
               </div>
             </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="9" class="empty-state py-12 text-center text-slate-400 text-sm">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  class="text-slate-500">
-                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                </svg>
-                <span class="font-bold text-slate-300">No consultation requests match your current filters.</span>
-                <span class="text-xs text-slate-500">Try adjusting your search query, SLA filter, or status
-                  filter.</span>
-              </div>
-            </td>
-          </tr>
-          }
-          }
+            }
+            }
         </tbody>
       </table>
+      }
     </div>
 
     <!-- ─── 4. Table Pagination Footer with Page Size Selector ─── -->

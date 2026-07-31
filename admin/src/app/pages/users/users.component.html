@@ -109,9 +109,9 @@
 
   <!-- ─── 1. Filter & Search Bar ─── -->
   <div
-    class="glass-card page-filters p-2.5 px-3.5 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md animate-in">
+    class="glass-card page-filters p-2 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md animate-in">
     <!-- Top Controls Row: 1-Line Responsive Toolbar (Zero Box Fatigue) -->
-    <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible py-1">
+    <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible py-1.5">
       <!-- Search Input (Far Left) -->
       <div class="search-box flex-1 min-w-[200px] !max-w-[350px] lg:max-w-xs relative shrink-0">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -120,10 +120,16 @@
           <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
         <input type="text"
-          class="form-input w-full !pl-9 bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-xl text-xs py-2 transition-all focus:border-indigo-500/50"
-          placeholder="Search users by name or email..." [value]="search"
-          (input)="onSearchInput($any($event.target).value)"
+          class="form-input w-full !pl-9 pr-8 bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-xl text-xs py-2 transition-all focus:border-indigo-500/50"
+          placeholder="Search users by name or email..." [(ngModel)]="search" (ngModelChange)="onSearchInput($event)"
           [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
+        @if (search) {
+        <button
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors text-sm font-bold p-1 leading-none"
+          (click)="search = ''; onSearchInput('');" [adminTooltip]="'Clear search query'">
+          &times;
+        </button>
+        }
       </div>
 
       <!-- Center & Right Controls (Single Unified Segmented Toolbar) -->
@@ -323,7 +329,7 @@
     </div>
 
     <!-- Dynamic Combined Filter & Selection Context Bar -->
-    <div class="w-full flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs text-slate-400">
+    <div class="w-full flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs text-slate-400">
       <div class="flex items-center gap-2 flex-wrap">
         <!-- Filter Active Badge -->
         @if (hasQueryFilter) {
@@ -398,12 +404,46 @@
   <!-- ─── Main User Data Table ─── -->
   <div
     class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
-    <div class="data-table-wrapper overflow-x-auto min-h-[360px]">
+    <div class="data-table-wrapper overflow-x-auto min-h-[380px]">
       @if (!isInitialLoad && isLoading) {
       <div
         class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 animate-pulse w-full">
       </div>
       }
+
+      @if (!isLoading && users.length === 0) {
+      <!-- Full-Size Unified Empty State (No Header Line Divider) -->
+      <div
+        class="empty-state-full-wrapper min-h-[380px] py-16 px-4 flex flex-col items-center justify-center text-center my-auto">
+        <div
+          class="w-16 h-16 rounded-2xl bg-gradient-to-b from-sky-500/15 to-slate-800/40 border border-sky-500/25 text-sky-400 flex items-center justify-center shadow-lg shadow-sky-500/5 group hover:scale-105 transition-all duration-300 mb-3">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+            <line x1="17" y1="9" x2="21" y2="13"></line>
+            <line x1="21" y1="9" x2="17" y2="13"></line>
+          </svg>
+        </div>
+        <div class="flex flex-col gap-1 max-w-md">
+          <h3 class="text-base font-extrabold text-slate-100 tracking-tight">No User Accounts Found</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            No user profiles match your active search or role criteria. Try refining your search query or reset your
+            filters.
+          </p>
+        </div>
+        @if (isFilterActive) {
+        <button (click)="resetFilters()"
+          class="mt-4 btn inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 hover:border-sky-500/50 transition-all shadow-sm">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          <span>Reset Directory Filters</span>
+        </button>
+        }
+      </div>
+      } @else {
       <table class="data-table w-full min-w-[1080px] text-left border-collapse"
         [class.table-refreshing]="!isInitialLoad && isLoading">
         @if (!isNoColumnsVisible) {
@@ -544,44 +584,44 @@
 
         <tbody class="text-xs">
           @if (isInitialLoad && isLoading) {
-          @for (item of [1,2,3,4,5,6]; track $index) {
-          <tr class="hover:bg-slate-800/30">
-            <td class="p-3.5 text-center"><admin-skeleton width="20px" height="16px" /></td>
+          @for (item of [1,2,3,4,5,6,7,8]; track $index) {
+          <tr class="table-row-skeleton border-b border-slate-800/60">
+            <td class="p-3.5 text-center"><admin-skeleton width="16px" height="16px" borderRadius="4px" /></td>
 
             @if (columnVisibility.profile) {
             <td class="p-3.5">
               <div class="flex items-center gap-3">
-                <admin-skeleton width="36px" height="36px" borderRadius="50%" />
-                <div class="flex flex-col gap-1">
-                  <admin-skeleton width="120px" height="14px" />
-                  <admin-skeleton width="140px" height="10px" />
+                <admin-skeleton width="36px" height="36px" borderRadius="50%" class="shrink-0" />
+                <div class="flex flex-col gap-1.5 min-w-0">
+                  <admin-skeleton width="115px" height="13px" borderRadius="4px" />
+                  <admin-skeleton width="135px" height="11px" borderRadius="4px" />
                 </div>
               </div>
             </td>
             }
 
             @if (columnVisibility.role) {
-            <td class="p-3.5"><admin-skeleton width="80px" height="20px" borderRadius="10px" /></td>
+            <td class="p-3.5"><admin-skeleton width="70px" height="18px" borderRadius="9999px" /></td>
             }
 
             @if (columnVisibility.security) {
-            <td class="p-3.5"><admin-skeleton width="90px" height="18px" /></td>
+            <td class="p-3.5"><admin-skeleton width="80px" height="18px" borderRadius="6px" /></td>
             }
 
             @if (columnVisibility.auth) {
-            <td class="p-3.5"><admin-skeleton width="70px" height="18px" /></td>
+            <td class="p-3.5"><admin-skeleton width="65px" height="14px" borderRadius="4px" /></td>
             }
 
             @if (columnVisibility.lastActive) {
-            <td class="p-3.5"><admin-skeleton width="110px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="100px" height="13px" borderRadius="4px" /></td>
             }
 
             @if (columnVisibility.status) {
-            <td class="p-3.5"><admin-skeleton width="60px" height="20px" borderRadius="10px" /></td>
+            <td class="p-3.5"><admin-skeleton width="65px" height="18px" borderRadius="9999px" /></td>
             }
 
             <td class="p-3.5 text-center w-20">
-              <div class="flex justify-center"><admin-skeleton width="32px" height="32px" borderRadius="8px" /></div>
+              <div class="flex justify-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></div>
             </td>
           </tr>
           }
@@ -710,26 +750,11 @@
                 </button>
               </div>
             </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td [attr.colspan]="visibleColumnCount" class="empty-state py-12 text-center text-slate-400 text-sm">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  class="text-slate-500">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                  <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-                <span class="font-bold text-slate-300">No user accounts match your current filters.</span>
-                <span class="text-xs text-slate-500">Try adjusting your search query, role filter, or status
-                  filter.</span>
-              </div>
-            </td>
-          </tr>
-          }
-          }
+            }
+            }
         </tbody>
       </table>
+      }
     </div>
 
     <!-- Pagination Footer Bar with Rows Per Page Selector -->
