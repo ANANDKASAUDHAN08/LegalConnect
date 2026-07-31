@@ -1,231 +1,837 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="consultations-page px-3 pt-6 w-full flex flex-col gap-4 relative">
 
-  <!-- ─── 0. Header Banner ─── -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl">
-    <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-300 w-fit">
-        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
-        <span>Consultation Queue Roster</span>
+  <!-- ─── 0. Header Banner + Minimalist Stat Pills ─── -->
+  <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col md:flex-row md:items-start justify-between gap-2">
+      <div class="flex flex-col gap-1">
+        <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-100 tracking-tight">Client Legal Consultations Desk
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Monitor client legal consultation requests, review assigned advocate responses, access verified contacts,
+          maintain SLA compliance, and manage bulk desk operations.
+        </p>
       </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Client Legal Consultations Desk</h1>
-      <p class="text-xs text-slate-400">
-        Track initial client consultation requests, assign active advocate contacts, and audit resolution workflows.
-      </p>
+    </div>
+
+    <!-- Elegant Accent Gradient Divider Line -->
+    <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-indigo-500/40 to-transparent mt-0 mb-1"></div>
+
+    <!-- Frameless Stat Pills (No Heavy Card Box Borders) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-1">
+      <!-- Pill 1: Total Inquiries -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-indigo-500/30"
+        [class.active-pill]="selectedStatus === ''" (click)="toggleStatusFilter('')"
+        [adminTooltip]="'Click to show all consultation requests'" tooltipPosition="top">
+        <div
+          class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold flex-shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          @if (isInitialLoad && isLoading) {
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
+          } @else {
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-slate-100">{{ totalCount }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Total Inquiries</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Pill 2: Pending Action -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-amber-500/30"
+        [class.active-pill]="selectedStatus === 'Pending'" (click)="toggleStatusFilter('Pending')"
+        [adminTooltip]="'Click to filter pending consultation requests'" tooltipPosition="top">
+        <div
+          class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold flex-shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          @if (isInitialLoad && isLoading) {
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
+          } @else {
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-amber-400">{{ pendingCount }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Pending Action</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Pill 3: Lawyer Contacted -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-sky-500/30"
+        [class.active-pill]="selectedStatus === 'Contacted'" (click)="toggleStatusFilter('Contacted')"
+        [adminTooltip]="'Click to filter contacted inquiries'" tooltipPosition="top">
+        <div
+          class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold flex-shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          @if (isInitialLoad && isLoading) {
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
+          } @else {
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-sky-400">{{ contactedCount }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Lawyer Contacted</span>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Pill 4: Closed & Resolved -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-emerald-500/30"
+        [class.active-pill]="selectedStatus === 'Closed'" (click)="toggleStatusFilter('Closed')"
+        [adminTooltip]="'Click to filter completed consultations'" tooltipPosition="top">
+        <div
+          class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold flex-shrink-0">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          @if (isInitialLoad && isLoading) {
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
+          } @else {
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-emerald-400">{{ closedCount }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Closed & Resolved</span>
+          </div>
+          }
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- ─── 1. Summary Metric Cards Grid ─── -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
-    <!-- Card 1: Total Inquiries -->
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-indigo-500/30 transition-all" [adminTooltip]="'Total client consultation requests registered'"
-      tooltipPosition="top">
-      <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-          <line x1="9" y1="12" x2="15" y2="12"></line>
-          <line x1="9" y1="16" x2="13" y2="16"></line>
+  <!-- ─── 1. Filter & Search Toolbar Container ─── -->
+  <div
+    class="glass-card page-filters p-1 rounded-2xl border border-slate-800/80 shadow-xl overflow-visible relative z-20 flex flex-col gap-1">
+    <!-- Header Toolbar: 1-Line Responsive Toolbar -->
+    <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible">
+      <!-- Search Input (Far Left) -->
+      <div class="search-box flex-1 min-w-[200px] max-w-[280px] lg:max-w-xs relative shrink-0">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
-        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
-        } @else {
-        <span class="text-xl font-extrabold text-slate-100">{{ pagination.total || consultations.length }}</span>
-        <span class="text-xs text-slate-400 font-medium">Total Inquiries</span>
+        <input type="text"
+          class="form-input w-full !pl-9 pr-8 py-1.5 rounded-xl text-xs font-medium transition-all bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400"
+          placeholder="Search client, email, phone, lawyer or inquiry..." [(ngModel)]="searchQuery"
+          (ngModelChange)="onSearchChange($event)"
+          [adminTooltip]="'Type to search across clients, phones, advocates & message content'" tooltipPosition="top" />
+        @if (searchQuery) {
+        <button
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors text-sm font-bold"
+          (click)="searchQuery = ''; onSearchChange('');">
+          &times;
+        </button>
         }
+      </div>
+
+      <!-- Center & Right Controls (Single Unified Segmented Toolbar) -->
+      <div class="filter-group flex items-center gap-2 shrink-0">
+        <!-- Segment 1: Filters Segmented Bar -->
+        <admin-select [options]="statusOptions" [value]="selectedStatus" icon="shield"
+          (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="135px"
+          [adminTooltip]="'Filter consultations by resolution status'" tooltipPosition="top">
+        </admin-select>
+
+        <admin-select [options]="slaOptions" [value]="slaFilter" icon="zap"
+          (valueChange)="slaFilter = $event; onFilterChange();" minWidth="135px"
+          [adminTooltip]="'Filter consultations by Service Level Agreement urgency'" tooltipPosition="top">
+        </admin-select>
+
+        <!-- Segment 2: View & Tools Segmented Bar -->
+        <div class="flex items-center gap-1 bg-slate-800/40 p-0.5 rounded-xl border border-slate-800/80">
+          <!-- Column Customizer Dropdown Toggle -->
+          <div class="relative column-customizer-container">
+            <button
+              class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-700/60 text-slate-300 hover:text-white transition-all"
+              [class.text-indigo-300]="isColumnMenuOpen" (click)="isColumnMenuOpen = !isColumnMenuOpen"
+              [adminTooltip]="'Customize visible table columns'" tooltipPosition="bottom">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="text-indigo-400">
+                <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18">
+                </path>
+              </svg>
+              <span>Columns</span>
+            </button>
+            @if (isColumnMenuOpen) {
+            <div
+              class="absolute right-0 top-full mt-2 w-52 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl z-30 flex flex-col gap-2 text-xs">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 select-none">
+                <span class="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Visible Columns</span>
+                <button (click)="toggleAllColumns()"
+                  class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">
+                  {{ areAllColumnsVisible ? 'Deselect All' : 'Select All' }}
+                </button>
+              </div>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.client" (change)="toggleColumnVisibility('client')"
+                  class="rounded border-slate-700 bg-slate-800" />
+                <span>Client Applicant</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.phone" (change)="toggleColumnVisibility('phone')"
+                  class="rounded border-slate-700 bg-slate-800" />
+                <span>Client Phone</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.lawyer" (change)="toggleColumnVisibility('lawyer')"
+                  class="rounded border-slate-700 bg-slate-800" />
+                <span>Target Lawyer</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.sla" (change)="toggleColumnVisibility('sla')"
+                  class="rounded border-slate-700 bg-slate-800" />
+                <span>SLA / Urgency</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.message" (change)="toggleColumnVisibility('message')"
+                  class="rounded border-slate-700 bg-slate-800" />
+                <span>Message Inquiry</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.status" (change)="toggleColumnVisibility('status')"
+                  class="rounded border-slate-700 bg-slate-800" />
+                <span>Status</span>
+              </label>
+              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
+                <input type="checkbox" [checked]="columnVisibility.createdAt"
+                  (change)="toggleColumnVisibility('createdAt')" class="rounded border-slate-700 bg-slate-800" />
+                <span>Requested Date</span>
+              </label>
+            </div>
+            }
+          </div>
+
+          <!-- Custom Date Range Dropdown Popover Toggle -->
+          <div class="relative date-picker-container">
+            <button class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
+              [ngClass]="startDate || endDate ? 'bg-indigo-500/15 text-indigo-300 border border-indigo-500/35 shadow-[0_0_12px_rgba(99,102,241,0.18)]' : 'hover:bg-slate-700/60 text-slate-300 hover:text-white'"
+              (click)="isCustomDateModalOpen = !isCustomDateModalOpen"
+              [adminTooltip]="'Filter by custom date range bounds'" tooltipPosition="bottom">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="text-amber-400" [class.text-indigo-400]="startDate || endDate">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span>{{ startDate || endDate ? (startDate + ' – ' + endDate) : 'Dates' }}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                class="transition-transform duration-200" [class.rotate-180]="isCustomDateModalOpen">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            </button>
+
+            @if (isCustomDateModalOpen) {
+            <div
+              class="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl z-30 flex flex-col gap-3 text-xs animate-in">
+              <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-slate-200">
+                <span class="font-bold flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="text-indigo-400">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                  Date Filter
+                </span>
+                <button (click)="isCustomDateModalOpen = false"
+                  class="text-slate-400 hover:text-white transition-colors">✕</button>
+              </div>
+
+              <!-- Quick Presets -->
+              <div class="flex flex-col gap-1.5">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Presets</span>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button (click)="selectDatePreset('today')"
+                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">Today</button>
+                  <button (click)="selectDatePreset('7days')"
+                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">Last
+                    7 Days</button>
+                  <button (click)="selectDatePreset('30days')"
+                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">Last
+                    30 Days</button>
+                  <button (click)="selectDatePreset('thisMonth')"
+                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">This
+                    Month</button>
+                </div>
+              </div>
+
+              <!-- Custom Date Range -->
+              <div class="flex flex-col gap-2 pt-1 border-t border-slate-800/80">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Range</span>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-semibold text-slate-400">From</label>
+                    <input #startInput type="date" [value]="startDate"
+                      class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500" />
+                  </div>
+                  <div class="flex flex-col gap-1">
+                    <label class="text-[10px] font-semibold text-slate-400">To</label>
+                    <input #endInput type="date" [value]="endDate"
+                      class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500" />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Footer Actions -->
+              <div class="flex items-center justify-between border-t border-slate-800 pt-2 mt-0.5">
+                <button (click)="clearCustomDateRange()"
+                  class="px-2.5 py-1 text-slate-400 hover:text-white font-medium transition-colors">Clear</button>
+                <button (click)="applyCustomDateRange(startInput.value, endInput.value)"
+                  class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-lg shadow-md transition-all">Apply</button>
+              </div>
+            </div>
+            }
+          </div>
+
+          <!-- Refresh Button -->
+          <button
+            class="btn flex items-center justify-center p-2 text-xs font-semibold rounded-lg hover:bg-slate-700/60 text-slate-300 hover:text-white transition-all"
+            (click)="refreshData()" [adminTooltip]="'Refresh consultation records from backend'"
+            tooltipPosition="bottom">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              [class.animate-spin]="isLoading">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
+              <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
+            </svg>
+          </button>
+        </div>
+
+        <!-- Full Dataset CSV Export (Far Right) -->
+        <button
+          class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
+          (click)="exportToCsv()" [disabled]="isExporting"
+          [adminTooltip]="'Export ALL matching consultation records to CSV'" tooltipPosition="bottom">
+          @if (isExporting) {
+          <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
+          </svg>
+          <span>Exporting...</span>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export CSV</span>
+          }
+        </button>
       </div>
     </div>
 
-    <!-- Card 2: Pending Action -->
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/30 transition-all" [adminTooltip]="'Inquiries awaiting lawyer response or assignment'"
-      tooltipPosition="top">
-      <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
-        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
+    <!-- Dynamic Combined Filter & Selection Context Bar -->
+    <div class="w-full flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs text-slate-400">
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Filter Active Badge -->
+        @if (hasQueryFilter) {
+        <span
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          Filtered View Active
+        </span>
+        }
+
+        <!-- Selection Active Badge -->
+        @if (selectedIds.size > 0) {
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold shadow-sm">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            class="text-indigo-400">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span><strong class="text-white">{{ selectedIds.size }}</strong> selected</span>
+        </span>
+        }
+
+        <!-- Result Count Message -->
+        @if (hasQueryFilter) {
+        <span class="text-slate-300 font-medium">
+          Showing <strong>{{ pagination.total || consultations.length }}</strong> matching result(s) (filtered from
+          <strong>{{
+            totalCount }}</strong> total)
+        </span>
         } @else {
-        <span class="text-xl font-extrabold text-amber-400">{{ pendingCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Pending Action</span>
+        <span class="text-slate-400 font-medium">
+          Showing all <strong>{{ totalCount }}</strong> consultation inquiries
+        </span>
         }
       </div>
-    </div>
 
-    <!-- Card 3: Lawyer Contacted -->
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-sky-500/30 transition-all" [adminTooltip]="'Consultations where lawyer has initiated contact'"
-      tooltipPosition="top">
-      <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
-        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
-        } @else {
-        <span class="text-xl font-extrabold text-sky-400">{{ contactedCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Lawyer Contacted</span>
+      <!-- Right Action Area (Bulk Buttons + Clear Link) -->
+      <div class="flex items-center gap-2">
+        @if (selectedIds.size > 0) {
+        <button
+          class="btn flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 font-semibold border-0 transition-all shadow-sm"
+          (click)="bulkUpdateStatus('Contacted')" [adminTooltip]="'Mark all selected as Contacted'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path
+              d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 1 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 1 2.81.7A2 2 0 0 1 22 16.92z">
+            </path>
+          </svg>
+          <span>Mark Contacted</span>
+        </button>
+        <button
+          class="btn flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-semibold border-0 transition-all shadow-sm"
+          (click)="bulkUpdateStatus('Closed')" [adminTooltip]="'Mark all selected as Closed'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>Mark Closed</span>
+        </button>
+        <button
+          class="btn flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 font-semibold border-0 transition-all shadow-sm"
+          (click)="exportSelectedToCsv()" [adminTooltip]="'Export selected items to CSV'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export Selected CSV</span>
+        </button>
+        <div class="w-px h-4 bg-slate-700/60 mx-1"></div>
         }
-      </div>
-    </div>
 
-    <!-- Card 4: Closed & Resolved -->
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/30 transition-all" [adminTooltip]="'Successfully completed and closed consultations'"
-      tooltipPosition="top">
-      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="45px" height="24px" borderRadius="4px" />
-        <admin-skeleton width="85px" height="12px" borderRadius="4px" class="mt-1" />
-        } @else {
-        <span class="text-xl font-extrabold text-emerald-400">{{ closedCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Closed & Resolved</span>
+        @if (isFilterActive) {
+        <button (click)="resetFilters()"
+          class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2">
+          {{ selectedIds.size > 0 && hasQueryFilter ? 'Clear Selection & Filters' : (selectedIds.size > 0 ? 'Clear
+          Selection' : 'Clear Filter Criteria') }}
+        </button>
         }
       </div>
     </div>
   </div>
 
-  <!-- ─── 2. Filter & Header Bar ─── -->
-  <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
-    <div class="search-box flex-1 min-w-[280px]">
-      <input type="text" class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-sm" placeholder="Search by client, lawyer name or message..."
-        [(ngModel)]="searchQuery" [adminTooltip]="'Type query to filter table'" tooltipPosition="top" />
-    </div>
-
-    <div class="filter-group flex items-center gap-2.5 flex-wrap">
-      <admin-select [options]="statusOptions" [value]="selectedStatus"
-        (valueChange)="selectedStatus = $event; fetchConsultations();" minWidth="180px"
-        [adminTooltip]="'Filter consultations by status'" tooltipPosition="top">
-      </admin-select>
-
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="fetchConsultations()" [adminTooltip]="'Refresh consultation directory'"
-        tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
-        <span>Refresh</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- ─── 3. Consultations Data Table ─── -->
-  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
-    <div class="data-table-wrapper overflow-x-auto">
-      <table class="data-table w-full text-left border-collapse">
+  <!-- ─── 2. Data Table Container ─── -->
+  <div class="glass-card rounded-2xl border border-slate-800/80 shadow-2xl overflow-hidden relative z-10">
+    <div class="data-table-wrapper overflow-x-auto min-h-[360px]">
+      @if (!isInitialLoad && isLoading) {
+      <div
+        class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 animate-pulse w-full">
+      </div>
+      }
+      <table class="data-table w-full text-left border-collapse min-w-[900px]"
+        [class.table-refreshing]="!isInitialLoad && isLoading">
+        @if (!isNoColumnsVisible) {
         <thead>
-          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-            <th class="p-3.5">Client Applicant</th>
-            <th class="p-3.5">Target Lawyer</th>
-            <th class="p-3.5">Consultation Message</th>
-            <th class="p-3.5">Status</th>
-            <th class="p-3.5">Requested Date</th>
-            <th class="p-3.5 text-right">Actions</th>
+          <tr class="table-header-row text-xs uppercase tracking-wider font-semibold border-b">
+            <!-- Master Checkbox -->
+            <th class="p-3.5 pl-5 w-10">
+              <input type="checkbox" [checked]="isAllSelected()" [indeterminate]="isSomeSelected()"
+                (change)="toggleSelectAll()"
+                class="form-checkbox rounded border-slate-700 bg-slate-900 text-indigo-500 cursor-pointer"
+                [adminTooltip]="'Select / deselect all rows on page'" />
+            </th>
+
+            <!-- Sortable Header: Client Applicant -->
+            @if (columnVisibility.client) {
+            <th class="p-3.5 cursor-pointer group hover:text-indigo-300 transition-colors select-none"
+              (click)="toggleSort('clientName')" [adminTooltip]="'Click to sort by client name'">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-indigo-400]="sortBy === 'clientName'">Client Applicant</span>
+                @if (sortBy === 'clientName') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-indigo-400/70 transition-colors flex-shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility.phone) {
+            <th class="p-3.5">Client Phone</th>
+            }
+
+            <!-- Sortable Header: Target Lawyer -->
+            @if (columnVisibility.lawyer) {
+            <th class="p-3.5 cursor-pointer group hover:text-indigo-300 transition-colors select-none"
+              (click)="toggleSort('lawyerName')" [adminTooltip]="'Click to sort by advocate name'">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-indigo-400]="sortBy === 'lawyerName'">Target Lawyer</span>
+                @if (sortBy === 'lawyerName') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-indigo-400/70 transition-colors flex-shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
+            <!-- Sortable Header: SLA / Age -->
+            @if (columnVisibility.sla) {
+            <th class="p-3.5 cursor-pointer group hover:text-indigo-300 transition-colors select-none"
+              (click)="toggleSort('sla')" [adminTooltip]="'Click to sort by SLA urgency (Overdue & Oldest first)'">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-indigo-400]="sortBy === 'sla'">SLA / Age</span>
+                @if (sortBy === 'sla') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-indigo-400/70 transition-colors flex-shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility.message) {
+            <th class="p-3.5">Message Inquiry</th>
+            }
+
+            <!-- Sortable Header: Status -->
+            @if (columnVisibility.status) {
+            <th class="p-3.5 cursor-pointer group hover:text-indigo-300 transition-colors select-none"
+              (click)="toggleSort('status')" [adminTooltip]="'Click to sort by status'">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-indigo-400]="sortBy === 'status'">Status</span>
+                @if (sortBy === 'status') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-indigo-400/70 transition-colors flex-shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
+            <!-- Sortable Header: Requested Date -->
+            @if (columnVisibility.createdAt) {
+            <th
+              class="p-3.5 min-w-[145px] pr-4 cursor-pointer group hover:text-indigo-300 transition-colors select-none"
+              (click)="toggleSort('createdAt')" [adminTooltip]="'Click to sort by requested date'">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-indigo-400]="sortBy === 'createdAt'">Requested Date</span>
+                @if (sortBy === 'createdAt') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-indigo-400 flex-shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-indigo-400/70 transition-colors flex-shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
+            <th class="p-3.5 text-center min-w-[80px] w-[80px] sticky right-0 z-10 actions-sticky-cell">
+              <span class="text-slate-300 font-semibold">Actions</span>
+            </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-slate-800/60 text-xs">
-          @if (isLoading) {
-          @for (item of [1,2,3,4,5]; track $index) {
-          <tr class="hover:bg-slate-800/30">
+        }
+        <tbody class="divide-y text-xs">
+          @if (isInitialLoad && isLoading) {
+          @for (item of [1,2,3,4,5,6]; track $index) {
+          <tr class="table-row-skeleton">
+            <td class="p-3.5 pl-5"><admin-skeleton width="18px" height="18px" borderRadius="4px" /></td>
+
+            @if (columnVisibility.client) {
             <td class="p-3.5">
               <div class="user-cell flex items-center gap-2.5">
-                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <admin-skeleton width="36px" height="36px" borderRadius="50%" />
                 <div>
-                  <admin-skeleton width="120px" height="14px" />
-                  <admin-skeleton width="140px" height="11px" class="mt-1" />
+                  <admin-skeleton width="130px" height="14px" borderRadius="4px" />
+                  <admin-skeleton width="145px" height="11px" borderRadius="4px" class="mt-1.5" />
                 </div>
               </div>
             </td>
+            }
+
+            @if (columnVisibility.phone) {
+            <td class="p-3.5"><admin-skeleton width="110px" height="22px" borderRadius="8px" /></td>
+            }
+
+            @if (columnVisibility.lawyer) {
             <td class="p-3.5">
               <div class="user-cell flex items-center gap-2.5">
-                <admin-skeleton width="32px" height="32px" borderRadius="50%" />
+                <admin-skeleton width="36px" height="36px" borderRadius="50%" />
                 <div>
-                  <admin-skeleton width="120px" height="14px" />
-                  <admin-skeleton width="140px" height="11px" class="mt-1" />
+                  <admin-skeleton width="125px" height="14px" borderRadius="4px" />
+                  <admin-skeleton width="140px" height="11px" borderRadius="4px" class="mt-1.5" />
                 </div>
               </div>
             </td>
-            <td class="p-3.5"><admin-skeleton width="180px" height="14px" /></td>
-            <td class="p-3.5"><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
-            <td class="p-3.5"><admin-skeleton width="90px" height="14px" /></td>
-            <td class="p-3.5 text-right"><admin-skeleton width="120px" height="28px" borderRadius="6px" /></td>
+            }
+
+            @if (columnVisibility.sla) {
+            <td class="p-3.5"><admin-skeleton width="95px" height="22px" borderRadius="12px" /></td>
+            }
+
+            @if (columnVisibility.message) {
+            <td class="p-3.5"><admin-skeleton width="200px" height="14px" borderRadius="4px" /></td>
+            }
+
+            @if (columnVisibility.status) {
+            <td class="p-3.5"><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
+            }
+
+            @if (columnVisibility.createdAt) {
+            <td class="p-3.5 min-w-[145px] pr-4"><admin-skeleton width="120px" height="14px" borderRadius="4px" /></td>
+            }
+
+            <td class="p-3.5 text-center min-w-[80px] w-[80px] sticky right-0 z-10 actions-sticky-cell">
+              <div class="flex justify-center"><admin-skeleton width="32px" height="32px" borderRadius="8px" /></div>
+            </td>
           </tr>
           }
+          } @else if (isNoColumnsVisible) {
+          <tr>
+            <td colspan="100" class="py-12 text-center text-slate-400 text-xs">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-500">
+                  <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18">
+                  </path>
+                </svg>
+                <span class="font-semibold text-slate-300">All data columns are currently hidden</span>
+                <button (click)="toggleAllColumns(true)"
+                  class="btn btn-xs bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-lg shadow-md transition-all">
+                  Show All Columns
+                </button>
+              </div>
+            </td>
+          </tr>
           } @else {
-          @for (item of filteredConsultations; track item.id) {
-          <tr class="hover:bg-slate-800/40 transition-colors">
+          @for (item of consultations; track item.id; let i = $index) {
+          <tr class="table-data-row transition-colors cursor-pointer"
+            [ngClass]="{ 'bg-indigo-500/10': selectedIds.has(item.id), 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
+            (dblclick)="openDetailModal(item)"
+            [adminTooltip]="'Double-click row (or press j/k + Enter) to inspect case details & notes'"
+            tooltipPosition="top">
+            <!-- Row Checkbox -->
+            <td class="p-3.5 pl-5">
+              <input type="checkbox" [checked]="selectedIds.has(item.id)" (change)="toggleSelectRow(item.id, $event)"
+                class="form-checkbox rounded border-slate-700 bg-slate-900 text-indigo-500 cursor-pointer" />
+            </td>
+
+            <!-- Client Applicant -->
+            @if (columnVisibility.client) {
             <td class="p-3.5">
-              <div class="user-cell flex items-center gap-2.5">
-                <div class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-bold text-xs shadow-md">
-                  {{ (item.clientName || 'C').charAt(0).toUpperCase() }}
+              <div class="user-cell flex items-center gap-3">
+                <div
+                  class="user-avatar w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md flex-shrink-0">
+                  {{ (item.clientName || item.clientUser || 'C').charAt(0).toUpperCase() }}
                 </div>
-                <div class="flex flex-col">
-                  <div class="user-name font-bold text-slate-200">{{ item.clientName || item.clientUser || 'Anonymous Client' }}</div>
-                  <div class="text-slate-400 text-[11px]">{{ item.clientEmail || 'N/A' }}</div>
+                <div class="flex flex-col min-w-0">
+                  <div class="user-name font-bold text-slate-100 truncate"
+                    [adminTooltip]="item.clientName || item.clientUser || 'Anonymous Client'">
+                    {{ item.clientName || item.clientUser || 'Anonymous Client' }}
+                  </div>
+                  <div class="text-slate-400 text-[11px] truncate flex items-center gap-1">
+                    <a [href]="'mailto:' + item.clientEmail" class="hover:text-indigo-400 transition-colors"
+                      (click)="$event.stopPropagation()"
+                      [adminTooltip]="'Send email to ' + (item.clientEmail || 'client')" tooltipPosition="top">
+                      {{ item.clientEmail || 'No Email' }}
+                    </a>
+                  </div>
                 </div>
               </div>
             </td>
+            }
+
+            <!-- Client Phone -->
+            @if (columnVisibility.phone) {
             <td class="p-3.5">
-              <div class="user-cell flex items-center gap-2.5">
-                <div class="user-avatar blue w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-bold text-xs shadow-md">
+              @if (item.clientPhone) {
+              <div class="flex items-center gap-1.5 font-mono text-[11px]">
+                <a [href]="'tel:' + item.clientPhone"
+                  class="phone-chip inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:border-emerald-500/40 transition-all"
+                  (click)="$event.stopPropagation()" [adminTooltip]="'Click to call client phone number'">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                    </path>
+                  </svg>
+                  <span>{{ item.clientPhone }}</span>
+                </a>
+              </div>
+              } @else {
+              <span class="text-slate-500 text-[11px] italic">Not provided</span>
+              }
+            </td>
+            }
+
+            <!-- Target Lawyer -->
+            @if (columnVisibility.lawyer) {
+            <td class="p-3.5">
+              <div class="user-cell flex items-center gap-3">
+                <div
+                  class="user-avatar blue w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md flex-shrink-0">
                   {{ (item.lawyerName || 'L').charAt(0).toUpperCase() }}
                 </div>
-                <div class="flex flex-col">
-                  <div class="user-name font-bold text-slate-200">{{ item.lawyerName }}</div>
-                  <div class="text-slate-400 text-[11px]">{{ item.lawyerEmail || 'Bar Verified' }}</div>
+                <div class="flex flex-col min-w-0">
+                  <div class="user-name font-bold text-slate-100 truncate" [adminTooltip]="item.lawyerName">{{
+                    item.lawyerName }}</div>
+                  <div class="text-slate-400 text-[11px] truncate"
+                    [adminTooltip]="item.lawyerEmail || 'Bar Verified Advocate'">
+                    {{ item.lawyerEmail || 'Bar Verified Advocate' }}
+                  </div>
                 </div>
               </div>
             </td>
-            <td class="p-3.5 max-w-xs truncate text-xs text-slate-300">{{ item.message }}</td>
+            }
+
+            <!-- SLA / Age Indicator -->
+            @if (columnVisibility.sla) {
             <td class="p-3.5">
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border"
-                [ngClass]="{
+              <span
+                class="px-2.5 py-1 rounded-full text-[10px] font-semibold border inline-flex items-center gap-1.5 cursor-help"
+                [ngClass]="getSlaStatus(item.createdAt).class"
+                [adminTooltip]="'Service Level Urgency: ' + getSlaStatus(item.createdAt).label" tooltipPosition="top">
+                @if (getSlaStatus(item.createdAt).urgent) {
+                <span class="w-1.5 h-1.5 rounded-full bg-current animate-ping"></span>
+                }
+                <span>{{ getSlaStatus(item.createdAt).label }}</span>
+              </span>
+            </td>
+            }
+
+            <!-- Consultation Message Snippet -->
+            @if (columnVisibility.message) {
+            <td class="p-3.5 max-w-xs truncate text-xs text-slate-300 font-sans"
+              [adminTooltip]="'Inquiry: ' + item.message" tooltipPosition="top">
+              {{ item.message }}
+            </td>
+            }
+
+            <!-- Status Pill -->
+            @if (columnVisibility.status) {
+            <td class="p-3.5">
+              <span
+                class="px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 cursor-help"
+                [adminTooltip]="'Current status: ' + item.status" tooltipPosition="top" [ngClass]="{
                   'bg-amber-500/10 text-amber-400 border-amber-500/30': item.status === 'Pending',
                   'bg-sky-500/10 text-sky-400 border-sky-500/30': item.status === 'Contacted',
                   'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': item.status === 'Closed'
                 }">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="{
+                    'bg-amber-400': item.status === 'Pending',
+                    'bg-sky-400': item.status === 'Contacted',
+                    'bg-emerald-400': item.status === 'Closed'
+                  }"></span>
                 {{ item.status }}
               </span>
             </td>
-            <td class="p-3.5 text-slate-400 text-[11px]">{{ item.createdAt | date:'medium' }}</td>
-            <td class="p-3.5 text-right">
-              <div class="action-buttons flex items-center justify-end gap-1.5">
-                <button class="btn btn-secondary btn-sm text-xs px-2.5 py-1" (click)="selectedConsultation = item"
-                  [adminTooltip]="'View full consultation request message'" tooltipPosition="left">
-                  View
+            }
+
+            <!-- Requested Date -->
+            @if (columnVisibility.createdAt) {
+            <td class="p-3.5 text-slate-400 text-[11px] font-mono min-w-[145px] pr-4 whitespace-nowrap"
+              [adminTooltip]="'Requested on ' + (item.createdAt | date:'medium')" tooltipPosition="top">
+              {{ item.createdAt | date:'short' }}
+            </td>
+            }
+
+            <!-- Actions (Kebab Menu) -->
+            <td class="p-3.5 text-center w-20">
+              <div class="flex items-center justify-center w-full">
+                <button #kebabBtn
+                  class="kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 bg-slate-800/40 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
+                  [class.active]="openActionMenuId === item.id" (click)="toggleActionMenu(item.id, kebabBtn, $event)"
+                  [adminTooltip]="'Actions'" tooltipPosition="left">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2.2"></circle>
+                    <circle cx="12" cy="12" r="2.2"></circle>
+                    <circle cx="12" cy="19" r="2.2"></circle>
+                  </svg>
                 </button>
-                @if (item.status === 'Pending') {
-                <button class="btn btn-primary btn-sm text-xs px-2.5 py-1" (click)="updateStatus(item, 'Contacted')"
-                  [adminTooltip]="'Mark as Contacted by Lawyer'" tooltipPosition="left">
-                  Contacted
-                </button>
-                }
-                @if (item.status !== 'Closed') {
-                <button class="btn btn-success btn-sm text-xs px-2.5 py-1" (click)="updateStatus(item, 'Closed')"
-                  [adminTooltip]="'Mark consultation as Closed / Resolved'" tooltipPosition="left">
-                  Close
-                </button>
-                }
               </div>
             </td>
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="empty-state py-8 text-center text-slate-400 text-sm">
-              <div>No consultation requests found.</div>
+            <td colspan="9" class="empty-state py-12 text-center text-slate-400 text-sm">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  class="text-slate-500">
+                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+                </svg>
+                <span class="font-bold text-slate-300">No consultation requests match your current filters.</span>
+                <span class="text-xs text-slate-500">Try adjusting your search query, SLA filter, or status
+                  filter.</span>
+              </div>
             </td>
           </tr>
           }
@@ -233,32 +839,336 @@
         </tbody>
       </table>
     </div>
+
+    <!-- ─── 4. Table Pagination Footer with Page Size Selector ─── -->
+    <div
+      class="pagination p-4 border-t border-slate-800 bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
+      <div class="flex flex-wrap items-center gap-3">
+        <div class="flex items-center gap-2">
+          <span class="text-slate-300 font-semibold text-xs">Rows per page:</span>
+          <admin-select [options]="pageLimitOptions" [value]="pagination.limit + ''"
+            (valueChange)="onLimitChange($event)" minWidth="140px" dropPosition="auto"
+            [adminTooltip]="'Select number of rows per page'" tooltipPosition="top">
+          </admin-select>
+        </div>
+        <span class="hidden md:inline text-slate-700">|</span>
+        <div class="page-info text-slate-300 font-medium">
+          Showing <strong class="text-white">{{ startRecord }}</strong> to <strong class="text-white">{{ endRecord
+            }}</strong> of <strong class="text-white">{{ pagination.total }}</strong> records
+        </div>
+      </div>
+
+      <div class="pagination-controls flex items-center gap-3">
+        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5 rounded-xl font-semibold"
+          [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
+          [adminTooltip]="'Previous page results'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          <span>Previous</span>
+        </button>
+
+        <span class="page-indicator font-medium text-slate-300">
+          Page <strong class="text-white">{{ pagination.page }}</strong> of <strong class="text-white">{{
+            pagination.pages }}</strong>
+        </span>
+
+        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5 rounded-xl font-semibold"
+          [disabled]="pagination.page >= pagination.pages" (click)="changePage(pagination.page + 1)"
+          [adminTooltip]="'Next page results'">
+          <span>Next</span>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- ─── 4. Detail Modal ─── -->
+  <!-- ─── 5. Floating Action Dropdown Menu ─── -->
+  @if (openActionMenuId !== null && getOpenActionItem()) {
+  <div class="action-menu-backdrop" (click)="openActionMenuId = null"></div>
+  <div class="action-dropdown" [ngStyle]="{ top: actionMenuPosition.top + 'px', left: actionMenuPosition.left + 'px' }"
+    (click)="$event.stopPropagation()">
+    <div class="dropdown-header">
+      <span class="dropdown-header-label">Quick Actions</span>
+    </div>
+
+    <!-- Inspect -->
+    <button class="dropdown-item" (click)="openDetailModal(getOpenActionItem()!)">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-indigo-400">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+        <circle cx="12" cy="12" r="3"></circle>
+      </svg>
+      <span>Inspect Details</span>
+      <span class="dropdown-item-shortcut">View</span>
+    </button>
+
+    @if (getOpenActionItem()!.status !== 'Pending') {
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item" (click)="updateStatus(getOpenActionItem()!, 'Pending'); openActionMenuId = null">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-amber-400">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      <span>Re-open Pending</span>
+      <span class="dropdown-item-shortcut">Reset</span>
+    </button>
+    }
+
+    @if (getOpenActionItem()!.status === 'Pending') {
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item" (click)="updateStatus(getOpenActionItem()!, 'Contacted'); openActionMenuId = null">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-sky-400">
+        <path
+          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z">
+        </path>
+      </svg>
+      <span>Mark Contacted</span>
+      <span class="dropdown-item-shortcut">Status</span>
+    </button>
+    }
+
+    @if (getOpenActionItem()!.status !== 'Closed') {
+    <div class="dropdown-divider"></div>
+    <button class="dropdown-item" (click)="updateStatus(getOpenActionItem()!, 'Closed'); openActionMenuId = null">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-emerald-400">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>Close &amp; Resolve</span>
+      <span class="dropdown-item-shortcut">Done</span>
+    </button>
+    }
+  </div>
+  }
+
+  <!-- ─── 6. Enhanced Consultation Side Drawer (With 3 Tabs) ─── -->
   @if (selectedConsultation) {
-  <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in" (click)="selectedConsultation = null">
-    <div class="glass-card max-w-lg w-full rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4" (click)="$event.stopPropagation()">
-      <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
-        <div>
-          <h3 class="text-lg font-bold text-slate-100">Consultation Request Details</h3>
-          <p class="text-xs text-slate-400 mt-0.5">Client: <strong class="text-slate-200">{{ selectedConsultation.clientName }}</strong> → Lawyer: <strong class="text-indigo-300">{{ selectedConsultation.lawyerName }}</strong></p>
+  <div
+    class="drawer-backdrop fixed inset-0 z-[1000] bg-slate-950/70 backdrop-blur-xs flex justify-end animate-in fade-in duration-200"
+    (click)="selectedConsultation = null">
+    <div
+      class="drawer-panel glass-card w-full max-w-xl h-full !rounded-l-2xl !rounded-r-none border-l border-white/10 shadow-2xl p-6 flex flex-col justify-between overflow-y-auto animate-in slide-in-from-right duration-300"
+      (click)="$event.stopPropagation()">
+
+      <div class="flex flex-col gap-5">
+        <!-- Drawer Header -->
+        <div class="drawer-header flex items-start justify-between pb-3 border-b border-slate-800">
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border" [ngClass]="{
+                  'bg-amber-500/10 text-amber-400 border-amber-500/30': selectedConsultation.status === 'Pending',
+                  'bg-sky-500/10 text-sky-400 border-sky-500/30': selectedConsultation.status === 'Contacted',
+                  'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': selectedConsultation.status === 'Closed'
+                }">
+                {{ selectedConsultation.status }} Status
+              </span>
+              <span class="text-xs text-slate-400 font-mono">• Inquiry #{{ selectedConsultation.id }}</span>
+            </div>
+            <h3 class="text-xl font-extrabold text-slate-100 mt-0.5">Legal Intake Workspace</h3>
+          </div>
+          <button
+            class="text-slate-400 hover:text-slate-100 transition-colors text-2xl font-bold p-1 leading-none rounded-lg hover:bg-slate-800/50"
+            (click)="selectedConsultation = null" [adminTooltip]="'Close Drawer'"
+            tooltipPosition="left">&times;</button>
         </div>
-        <button class="text-slate-400 hover:text-slate-200 transition-colors text-xl font-bold p-1" (click)="selectedConsultation = null">&times;</button>
-      </div>
-      <div class="modal-body flex flex-col gap-3 text-xs">
-        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">
-          {{ selectedConsultation.message }}
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center gap-2 border-b border-slate-800/80 pb-2">
+          <button class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            [ngClass]="{ 'bg-indigo-500/20 text-indigo-300': activeDrawerTab === 'details', 'text-slate-400': activeDrawerTab !== 'details' }"
+            (click)="activeDrawerTab = 'details'">
+            Overview &amp; Notes
+          </button>
+          <button class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            [ngClass]="{ 'bg-indigo-500/20 text-indigo-300': activeDrawerTab === 'audit', 'text-slate-400': activeDrawerTab !== 'audit' }"
+            (click)="activeDrawerTab = 'audit'">
+            Audit Log Timeline
+          </button>
+          <button class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+            [ngClass]="{ 'bg-indigo-500/20 text-indigo-300': activeDrawerTab === 'dispatch', 'text-slate-400': activeDrawerTab !== 'dispatch' }"
+            (click)="activeDrawerTab = 'dispatch'">
+            Quick Dispatch Reply
+          </button>
         </div>
-      </div>
-      <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-        @if (selectedConsultation.status !== 'Closed') {
-        <button class="btn btn-success px-4 py-2 text-xs font-semibold"
-          (click)="updateStatus(selectedConsultation, 'Closed'); selectedConsultation = null;">
-          Mark as Closed
-        </button>
+
+        <!-- TAB 1: OVERVIEW & PERSISTED NOTES -->
+        @if (activeDrawerTab === 'details') {
+        <div class="flex flex-col gap-4">
+          <!-- Client & Lawyer Cards -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- Client Box -->
+            <div class="contact-box p-3.5 rounded-xl border flex flex-col gap-2 shadow-sm">
+              <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Client Applicant</div>
+              <div class="font-bold text-sm text-slate-100">{{ selectedConsultation.clientName ||
+                selectedConsultation.clientUser || 'Anonymous Client' }}</div>
+              <div class="text-xs text-slate-300 truncate">
+                <a [href]="'mailto:' + selectedConsultation.clientEmail"
+                  class="hover:text-indigo-400 transition-colors font-sans">
+                  {{ selectedConsultation.clientEmail || 'No email' }}
+                </a>
+              </div>
+              @if (selectedConsultation.clientPhone) {
+              <div
+                class="text-xs text-emerald-400 font-mono font-semibold pt-1 border-t border-dashed border-slate-700/60 flex items-center justify-between">
+                <span>{{ selectedConsultation.clientPhone }}</span>
+                <button class="text-slate-400 hover:text-emerald-300 p-0.5"
+                  (click)="copyToClipboard(selectedConsultation.clientPhone, 'Client Phone')">
+                  Copy
+                </button>
+              </div>
+              }
+            </div>
+
+            <!-- Lawyer Box -->
+            <div class="contact-box p-3.5 rounded-xl border flex flex-col gap-2 shadow-sm">
+              <div class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Assigned Advocate</div>
+              <div class="font-bold text-sm text-indigo-300">{{ selectedConsultation.lawyerName }}</div>
+              <div class="text-xs text-slate-300 truncate">
+                <a [href]="'mailto:' + selectedConsultation.lawyerEmail"
+                  class="hover:text-indigo-400 transition-colors">
+                  {{ selectedConsultation.lawyerEmail || 'Bar Verified Advocate' }}
+                </a>
+              </div>
+              <div
+                class="text-[11px] text-slate-400 pt-1 border-t border-dashed border-slate-700/60 flex items-center justify-between">
+                <span>SLA State:</span>
+                <span class="font-semibold text-slate-200">{{ getSlaStatus(selectedConsultation.createdAt).label
+                  }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Message Content Box -->
+          <div class="flex flex-col gap-1.5">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-slate-300 uppercase tracking-wider">Client Inquiry Message</label>
+              <button class="btn btn-secondary btn-sm text-[11px] px-2.5 py-1 rounded-lg flex items-center gap-1.5"
+                (click)="copyToClipboard(selectedConsultation.message, 'Consultation Message')">
+                Copy Message
+              </button>
+            </div>
+            <div
+              class="message-content-box p-3.5 rounded-xl border text-xs text-slate-200 leading-relaxed font-sans whitespace-pre-wrap max-h-44 overflow-y-auto shadow-inner">
+              {{ selectedConsultation.message }}
+            </div>
+          </div>
+
+          <!-- Persisted Admin Notes Section (NEW) -->
+          <div class="flex flex-col gap-2 pt-2 border-t border-slate-800">
+            <div class="flex items-center justify-between">
+              <label class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <span>Persisted Internal Staff Notes</span>
+              </label>
+              <button class="btn btn-primary text-xs px-3 py-1.5 rounded-lg flex items-center gap-1"
+                [disabled]="isSavingNotes" (click)="saveAdminRemark()">
+                <span>{{ isSavingNotes ? 'Saving...' : 'Save Note' }}</span>
+              </button>
+            </div>
+            <textarea [(ngModel)]="adminRemarkInput" rows="3"
+              class="form-input w-full p-3 rounded-xl text-xs text-slate-100 bg-slate-900 border border-slate-700/80 focus:border-amber-500/60 transition-all placeholder:text-slate-500"
+              placeholder="Record internal admin phone notes, case escalation context, or advocate responses here..."></textarea>
+          </div>
+        </div>
         }
-        <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="selectedConsultation = null">Close</button>
+
+        <!-- TAB 2: AUDIT LOG TIMELINE (NEW) -->
+        @if (activeDrawerTab === 'audit') {
+        <div class="flex flex-col gap-4 max-h-[420px] overflow-y-auto pr-1">
+          <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Chronological Intake Timeline</div>
+          <div class="relative pl-6 border-l-2 border-slate-700/60 flex flex-col gap-4">
+            @for (entry of getAuditTrail(selectedConsultation); track $index) {
+            <div class="relative flex flex-col gap-1">
+              <div
+                class="absolute -left-[31px] top-0.5 w-3.5 h-3.5 rounded-full bg-indigo-500 border-2 border-slate-950">
+              </div>
+              <div class="text-[11px] font-mono text-slate-400">{{ entry.timestamp | date:'medium' }}</div>
+              <div class="text-xs font-semibold text-slate-200 leading-snug">{{ entry.action }}</div>
+            </div>
+            }
+          </div>
+        </div>
+        }
+
+        <!-- TAB 3: QUICK RESPONSE DISPATCH (NEW) -->
+        @if (activeDrawerTab === 'dispatch') {
+        <div class="flex flex-col gap-4">
+          <div class="text-xs font-bold text-slate-300 uppercase tracking-wider">Quick Response Dispatcher</div>
+
+          <div class="flex flex-col gap-1.5 text-xs">
+            <label class="text-slate-400 font-medium">Select Recipient:</label>
+            <div class="flex items-center gap-3">
+              <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-200 font-semibold">
+                <input type="radio" name="recipient" value="client" [(ngModel)]="recipientTarget" />
+                <span>Client ({{ selectedConsultation.clientEmail || 'N/A' }})</span>
+              </label>
+              <label class="inline-flex items-center gap-1.5 cursor-pointer text-slate-200 font-semibold">
+                <input type="radio" name="recipient" value="lawyer" [(ngModel)]="recipientTarget" />
+                <span>Advocate ({{ selectedConsultation.lawyerEmail || 'N/A' }})</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-1.5 text-xs">
+            <label class="text-slate-400 font-medium">Select Template:</label>
+            <admin-select [options]="templateOptions" [value]="emailTemplate" (valueChange)="emailTemplate = $event"
+              width="100%" minWidth="100%" [adminTooltip]="'Choose response email dispatch template'"
+              tooltipPosition="top">
+            </admin-select>
+          </div>
+
+          <div class="flex flex-col gap-1.5 text-xs">
+            <label class="text-slate-400 font-medium">Custom Response Message (Optional):</label>
+            <textarea [(ngModel)]="customEmailMessage" rows="4"
+              class="form-input w-full p-3 rounded-xl text-xs text-slate-100 bg-slate-900 border border-slate-700"
+              placeholder="Add tailored instructions or notes to include in the response dispatch..."></textarea>
+          </div>
+
+          <button
+            class="btn btn-primary text-xs py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 mt-2"
+            [disabled]="isDispatchingEmail" (click)="dispatchQuickEmail()">
+            <span>{{ isDispatchingEmail ? 'Dispatching...' : 'Dispatch Quick Response' }}</span>
+          </button>
+        </div>
+        }
+      </div>
+
+      <!-- Drawer Footer Workflow Actions -->
+      <div class="drawer-footer flex items-center justify-between pt-4 border-t border-slate-800 gap-3 mt-4 flex-wrap">
+        <div class="flex items-center gap-2">
+          @if (selectedConsultation.status !== 'Pending') {
+          <button class="btn btn-secondary px-3 py-1.5 text-xs font-semibold rounded-xl text-amber-400"
+            (click)="updateStatus(selectedConsultation, 'Pending')"
+            [adminTooltip]="'Re-open consultation back to pending status'">
+            Re-open Pending
+          </button>
+          }
+          @if (selectedConsultation.status === 'Pending') {
+          <button class="btn btn-primary px-3 py-1.5 text-xs font-semibold rounded-xl"
+            (click)="updateStatus(selectedConsultation, 'Contacted')" [adminTooltip]="'Mark consultation as contacted'">
+            Mark Contacted
+          </button>
+          }
+          @if (selectedConsultation.status !== 'Closed') {
+          <button class="btn btn-success px-3.5 py-1.5 text-xs font-semibold rounded-xl"
+            (click)="updateStatus(selectedConsultation, 'Closed')" [adminTooltip]="'Mark consultation as closed'">
+            Mark Closed &amp; Resolved
+          </button>
+          }
+        </div>
+
+        <button class="btn btn-secondary px-3.5 py-1.5 text-xs font-semibold rounded-xl"
+          (click)="selectedConsultation = null">
+          Close Drawer
+        </button>
       </div>
     </div>
   </div>

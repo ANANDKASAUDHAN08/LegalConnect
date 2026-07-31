@@ -1,0 +1,1361 @@
+<div class="account-page-container px-2 pt-4 w-full flex flex-col gap-4">
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  0. HERO HEADER & SECURITY HEALTH BANNER                    -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div
+    class="account-hero-banner relative overflow-hidden p-4 rounded-3xl flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+
+    <!-- Ambient background glow spots for visual depth -->
+    <div class="absolute -top-16 -left-16 w-56 h-56 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-16 right-10 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl pointer-events-none">
+    </div>
+
+    <!-- Profile & Title section -->
+    <div class="relative z-10 flex items-center gap-5">
+      <!-- Gradient Avatar with Glow Halo & Online Pulse Indicator -->
+      <div class="relative shrink-0 group">
+        <div
+          class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-indigo-400 text-white font-black text-2xl flex items-center justify-center shadow-xl shadow-indigo-500/30 ring-4 ring-indigo-500/20 group-hover:scale-105 transition-transform duration-300">
+          {{ profile?.fullName?.charAt(0) || 'A' }}
+        </div>
+        <div
+          class="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 ring-4 hero-online-ring shadow-md shadow-emerald-500/50 flex items-center justify-center"
+          [adminTooltip]="'Account Active'" tooltipPosition="top">
+          <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+        </div>
+      </div>
+
+      <!-- Info Details -->
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center gap-3 flex-wrap">
+          <h1 class="hero-title text-2xl font-black tracking-tight drop-shadow-sm">
+            {{ profile?.fullName || 'Administrator' }}
+          </h1>
+          <span
+            class="hero-badge-admin px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm flex items-center gap-1.5">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            {{ profile?.role || 'Admin' }}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-4 flex-wrap text-xs font-medium">
+          <!-- Email Chip -->
+          <div class="flex items-center gap-1.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-indigo-500">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+            <span class="hero-meta-text font-mono">{{ profile?.email }}</span>
+          </div>
+
+          <span class="hero-meta-bullet">•</span>
+
+          <!-- Timezone Chip -->
+          <div class="flex items-center gap-1.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-purple-500">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+            <span class="hero-meta-text">Timezone: <strong class="hero-title">{{ profile?.preferredTimezone ||
+                'Asia/Kolkata' }}</strong></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Account Security Health Score Meter (Border-less Open Layout) -->
+    <div class="relative z-10 flex flex-col gap-2.5 min-w-[290px] xl:w-90">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <div class="p-1.5 text-indigo-500">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <span class="security-title text-xs font-extrabold uppercase tracking-wider">Security Score</span>
+        </div>
+
+        <span class="text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md shadow-sm border"
+          [ngClass]="securityScore.colorClass">
+          {{ securityScore.score }}% — {{ securityScore.label }}
+        </span>
+      </div>
+
+      <!-- Glowing Animated Progress bar -->
+      <div
+        class="progress-track relative w-full h-3.5 rounded-full p-0.5 shadow-inner backdrop-blur-md overflow-hidden">
+        <div
+          class="h-full rounded-full transition-all duration-700 relative overflow-hidden flex items-center justify-end"
+          [style.width.%]="securityScore.score" [ngClass]="{
+            'bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-300 shadow-[0_0_12px_rgba(16,185,129,0.8)]': securityScore.score >= 85,
+            'bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-300 shadow-[0_0_12px_rgba(99,102,241,0.8)]': securityScore.score >= 60 && securityScore.score < 85,
+            'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.8)]': securityScore.score >= 40 && securityScore.score < 60,
+            'bg-gradient-to-r from-red-500 via-rose-500 to-pink-400 shadow-[0_0_12px_rgba(239,68,68,0.8)]': securityScore.score < 40
+          }">
+          <!-- Subtle Shimmer Stream Animation Overlay -->
+          <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/35 to-transparent animate-shimmer">
+          </div>
+          <!-- Glowing leading tip dot -->
+          @if (securityScore.score > 5) {
+          <span class="w-2 h-2 rounded-full bg-white shadow-[0_0_6px_#ffffff] mr-0.5 shrink-0 z-10"></span>
+          }
+        </div>
+      </div>
+
+      <!-- Recommendation pill action -->
+      @if (securityScore.recommendations.length > 0) {
+      <div class="recommendation-pill flex items-center gap-1 p-2 px-3 text-[11px] font-medium">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          class="recommendation-icon shrink-0">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span class="truncate">{{ securityScore.recommendations[0] }}</span>
+      </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB NAVIGATION BAR                                         -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <div class="account-tab-bar flex items-center gap-2 overflow-x-auto p-1.5 rounded-2xl shadow-md">
+    <button
+      class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+      [ngClass]="activeTab === 'info' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
+      (click)="switchTab('info')" [adminTooltip]="'View & edit profile information'" tooltipPosition="top">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      <span>Profile & Details</span>
+    </button>
+
+    <button
+      class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+      [ngClass]="activeTab === 'password' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
+      (click)="switchTab('password')" [adminTooltip]="'Change password'" tooltipPosition="top">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+      </svg>
+      <span>Password</span>
+    </button>
+
+    <button
+      class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+      [ngClass]="activeTab === '2fa' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
+      (click)="switchTab('2fa')" [adminTooltip]="'Manage Two-Factor Authentication'" tooltipPosition="top">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+      <span>Two-Factor (2FA)</span>
+      @if (is2FAEnabled) {
+      <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400"></span>
+      }
+    </button>
+
+    <button
+      class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+      [ngClass]="activeTab === 'sessions' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
+      (click)="switchTab('sessions')" [adminTooltip]="'View and manage active sessions'" tooltipPosition="top">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+        <line x1="8" y1="21" x2="16" y2="21"></line>
+        <line x1="12" y1="17" x2="12" y2="21"></line>
+      </svg>
+      <span>Active Sessions</span>
+      @if (sessions.length > 0) {
+      <span class="session-count-badge px-1.5 py-0.5 rounded-full text-[10px] font-extrabold">{{
+        sessions.length }}</span>
+      }
+    </button>
+
+    <button
+      class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
+      [ngClass]="activeTab === 'audit' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
+      (click)="switchTab('audit')" [adminTooltip]="'Security activity history'" tooltipPosition="top">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="12 8 12 12 14 14"></polyline>
+        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
+      </svg>
+      <span>Security Activity Log</span>
+    </button>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB 1: ACCOUNT INFO & EDITABLE PROFILE                     -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'info') {
+  <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+
+    <div class="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
+      <div>
+        <h2 class="text-base font-extrabold text-[var(--text-primary)]">Account Profile & Preferences</h2>
+        <p class="text-xs text-[var(--text-secondary)] mt-0.5">Manage your personal information, contact details, and
+          notification preferences.</p>
+      </div>
+      <button class="btn btn-secondary text-xs px-3.5 py-2 font-bold rounded-xl flex items-center gap-2"
+        (click)="toggleProfileEdit()">
+        @if (isEditingProfile) {
+        <span>Cancel Editing</span>
+        } @else {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span>Edit Profile</span>
+        }
+      </button>
+    </div>
+
+    @if (isLoadingProfile) {
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      @for (item of [1,2,3,4,5,6]; track $index) {
+      <div class="flex flex-col gap-2">
+        <admin-skeleton width="80px" height="12px" />
+        <admin-skeleton width="200px" height="18px" />
+      </div>
+      }
+    </div>
+    } @else if (isEditingProfile) {
+
+    <!-- Editable Profile Form -->
+    <form (ngSubmit)="saveProfile()" class="flex flex-col gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+        <div class="form-group">
+          <label class="form-label" for="editName">Full Name</label>
+          <input id="editName" type="text" class="form-input w-full" [(ngModel)]="editForm.fullName" name="fullName"
+            required placeholder="Enter full name" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Email Address (Primary)</label>
+          <input type="email" class="form-input w-full opacity-60 cursor-not-allowed" [value]="profile?.email" disabled
+            [adminTooltip]="'Email address cannot be changed directly'" tooltipPosition="top" />
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="editPhone">Phone Number</label>
+          <input id="editPhone" type="text" class="form-input w-full" [(ngModel)]="editForm.phone" name="phone"
+            placeholder="+91 98765 43210" />
+        </div>
+
+        <!-- Custom Glassmorphic Timezone Selector -->
+        <div #tzContainer class="form-group relative">
+          <label class="form-label">Preferred Timezone</label>
+
+          <!-- Custom Trigger Button -->
+          <button type="button"
+            class="w-full flex items-center justify-between p-3.5 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] hover:border-indigo-500/50 transition-all text-left shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 cursor-pointer"
+            (click)="toggleTimezoneDropdown($event)">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="text-base shrink-0">{{ selectedTimezoneObj.flag }}</span>
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-extrabold text-[var(--text-primary)] truncate">{{ selectedTimezoneObj.label
+                  }}</span>
+                <span class="text-[10px] text-[var(--text-tertiary)] font-medium truncate">{{ selectedTimezoneObj.tz
+                  }}</span>
+              </div>
+            </div>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              class="text-indigo-400 shrink-0 transition-transform duration-200"
+              [class.rotate-180]="isTimezoneDropdownOpen">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </button>
+
+          <!-- Floating Glass Options Panel -->
+          @if (isTimezoneDropdownOpen) {
+          <div
+            class="absolute left-0 right-0 top-full mt-2 tz-dropdown-panel rounded-2xl p-2 shadow-2xl backdrop-blur-xl z-50 flex flex-col gap-1 max-h-60 overflow-y-auto animate-in">
+            @for (tz of timezoneOptions; track tz.value) {
+            <button type="button"
+              class="flex items-center justify-between p-3 rounded-xl transition-all text-left w-full cursor-pointer"
+              [ngClass]="editForm.preferredTimezone === tz.value ? 'bg-indigo-600/20 text-indigo-500 font-bold border border-indigo-500/30' : 'hover:bg-slate-500/10 text-[var(--text-primary)]'"
+              (click)="selectTimezone(tz.value, $event)">
+              <div class="flex items-center gap-3 min-w-0">
+                <span class="text-base shrink-0">{{ tz.flag }}</span>
+                <div class="flex flex-col min-w-0">
+                  <span class="text-xs font-bold truncate">{{ tz.label }}</span>
+                  <span class="text-[10px] text-[var(--text-tertiary)] truncate">{{ tz.tz }}</span>
+                </div>
+              </div>
+              @if (editForm.preferredTimezone === tz.value) {
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
+                class="text-indigo-400 shrink-0">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              }
+            </button>
+            }
+          </div>
+          }
+        </div>
+
+        <div class="form-group md:col-span-2">
+          <label class="form-label" for="editBio">Department / Admin Bio</label>
+          <textarea id="editBio" rows="3" class="form-input w-full" [(ngModel)]="editForm.clientBio" name="clientBio"
+            placeholder="Brief notes or department details..."></textarea>
+        </div>
+
+      </div>
+
+      <!-- Notification Toggles -->
+      <div class="flex flex-col gap-3 pt-4 border-t border-[var(--border-subtle)]">
+        <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Notification
+          Preferences</span>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] cursor-pointer hover:border-indigo-500/50 transition-colors">
+            <input type="checkbox" [(ngModel)]="editForm.notifyLawAmendments" name="notifyLawAmendments"
+              class="rounded border-[var(--border-light)] text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">Legal Amendments</span>
+              <span class="text-[11px] text-[var(--text-tertiary)]">Instant alerts on bare act updates</span>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] cursor-pointer hover:border-indigo-500/50 transition-colors">
+            <input type="checkbox" [(ngModel)]="editForm.notifyEmailDigest" name="notifyEmailDigest"
+              class="rounded border-[var(--border-light)] text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">Weekly Digest</span>
+              <span class="text-[11px] text-[var(--text-tertiary)]">Summary of platform stats & activity</span>
+            </div>
+          </label>
+
+          <label
+            class="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] cursor-pointer hover:border-indigo-500/50 transition-colors">
+            <input type="checkbox" [(ngModel)]="editForm.notifyPushEnabled" name="notifyPushEnabled"
+              class="rounded border-[var(--border-light)] text-indigo-600 focus:ring-indigo-500 w-4 h-4" />
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">Security Push Alerts</span>
+              <span class="text-[11px] text-[var(--text-tertiary)]">Immediate push for unrecognized logins</span>
+            </div>
+          </label>
+
+        </div>
+      </div>
+
+      <div class="flex items-center gap-3 justify-end pt-2">
+        <button type="button" class="btn btn-secondary text-xs px-4 py-2.5 font-bold rounded-xl"
+          (click)="toggleProfileEdit()">Cancel</button>
+        <button type="submit"
+          class="btn btn-primary text-xs px-6 py-2.5 font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-600/20"
+          [disabled]="isSavingProfile">
+          @if (isSavingProfile) {
+          <span>Saving Changes…</span>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save Profile Changes</span>
+          }
+        </button>
+      </div>
+
+    </form>
+
+    } @else {
+
+    <!-- Read-Only Profile View -->
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Full Name</span>
+        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.fullName || '—' }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Email
+          Address</span>
+        <span class="text-sm font-bold text-[var(--text-primary)] font-mono">{{ profile?.email || '—' }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Phone Number</span>
+        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.phone || 'Not specified' }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Account Role</span>
+        <span class="text-sm font-bold text-indigo-400">{{ profile?.role || 'Admin' }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Account
+          Created</span>
+        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.createdAt | date:'mediumDate' }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">2FA Status</span>
+        <div class="flex items-center gap-2">
+          @if (is2FAEnabled) {
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span class="text-sm font-bold text-emerald-400">Active & Protected</span>
+          } @else {
+          <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+          <span class="text-sm font-bold text-amber-400">Not Enabled</span>
+          }
+        </div>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Last Login
+          IP</span>
+        <span class="text-sm font-bold text-[var(--text-primary)] font-mono">{{ profile?.lastIpAddress || 'Not recorded'
+          }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Last Login
+          Time</span>
+        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.lastLoginAt ? (profile.lastLoginAt |
+          date:'medium') : 'Not recorded' }}</span>
+      </div>
+
+      <div
+        class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+        <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Preferred
+          Timezone</span>
+        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.preferredTimezone || 'Asia/Kolkata'
+          }}</span>
+      </div>
+
+    </div>
+
+    @if (profile?.clientBio) {
+    <div class="p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] flex flex-col gap-1">
+      <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Department / Admin
+        Bio</span>
+      <p class="text-xs text-[var(--text-secondary)] leading-relaxed">{{ profile.clientBio }}</p>
+    </div>
+    }
+
+    }
+  </div>
+  }
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB 2: CHANGE PASSWORD (REVAMPED 2-COLUMN LAYOUT)         -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'password') {
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full animate-in">
+
+    <!-- Left Column: Password Update Form -->
+    <div class="lg:col-span-7 glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+
+      <div class="flex items-center gap-3 pb-4 border-b border-[var(--border-subtle)]">
+        <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 shrink-0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+        </div>
+        <div>
+          <h2 class="text-base font-extrabold text-[var(--text-primary)]">Update Admin Password</h2>
+          <p class="text-xs text-[var(--text-secondary)]">Set a strong, unique password to safeguard your admin
+            privileges.</p>
+        </div>
+      </div>
+
+      <form (ngSubmit)="changePassword()" class="flex flex-col gap-5">
+
+        <!-- Current Password -->
+        <div class="flex flex-col gap-1.5">
+          <label class="form-label" for="currentPwd">Current Password</label>
+          <div class="relative">
+            <input id="currentPwd" [type]="showCurrentPassword ? 'text' : 'password'"
+              class="form-input p-3 pr-16 text-sm w-full transition-all focus:ring-2 focus:ring-indigo-500/20"
+              [(ngModel)]="currentPassword" name="currentPwd" placeholder="Enter current password" required
+              autocomplete="current-password" />
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+              @if (currentPassword) {
+              <button type="button"
+                class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                (click)="currentPassword = ''" [adminTooltip]="'Clear input'" tooltipPosition="top">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+              }
+              <button type="button"
+                class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                (click)="showCurrentPassword = !showCurrentPassword"
+                [adminTooltip]="showCurrentPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
+                @if (showCurrentPassword) {
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                  </path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                } @else {
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- New Password -->
+        <div class="flex flex-col gap-1.5">
+          <label class="form-label" for="newPwd">New Password</label>
+          <div class="relative">
+            <input id="newPwd" [type]="showNewPassword ? 'text' : 'password'"
+              class="form-input p-3 pr-16 text-sm w-full transition-all focus:ring-2 focus:ring-indigo-500/20"
+              [(ngModel)]="newPassword" name="newPwd" placeholder="Enter new strong password" required
+              autocomplete="new-password" />
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+              @if (newPassword) {
+              <button type="button"
+                class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                (click)="newPassword = ''" [adminTooltip]="'Clear input'" tooltipPosition="top">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+              }
+              <button type="button"
+                class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                (click)="showNewPassword = !showNewPassword"
+                [adminTooltip]="showNewPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
+                @if (showNewPassword) {
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                  </path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                } @else {
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Confirm Password -->
+        <div class="flex flex-col gap-1.5">
+          <label class="form-label" for="confirmPwd">Confirm New Password</label>
+          <div class="relative">
+            <input id="confirmPwd" [type]="showConfirmPassword ? 'text' : 'password'"
+              class="form-input p-3 pr-16 text-sm w-full transition-all focus:ring-2 focus:ring-indigo-500/20"
+              [(ngModel)]="confirmPassword" name="confirmPwd" placeholder="Re-enter new password" required
+              autocomplete="new-password" />
+            <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+              @if (confirmPassword) {
+              <button type="button"
+                class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                (click)="confirmPassword = ''" [adminTooltip]="'Clear input'" tooltipPosition="top">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+              }
+              <button type="button"
+                class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                (click)="showConfirmPassword = !showConfirmPassword"
+                [adminTooltip]="showConfirmPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
+                @if (showConfirmPassword) {
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path
+                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                  </path>
+                  <line x1="1" y1="1" x2="23" y2="23"></line>
+                </svg>
+                } @else {
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit"
+          class="btn btn-primary w-full py-3.5 px-4 text-xs font-extrabold rounded-xl flex items-center justify-center gap-2 mt-3 shadow-lg shadow-indigo-600/25 disabled:opacity-40 transition-all hover:scale-[1.01]"
+          [disabled]="!canSubmitPassword">
+          @if (isChangingPassword) {
+          <span>Updating Password…</span>
+          } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
+          <span>Update Password</span>
+          }
+        </button>
+
+      </form>
+    </div>
+
+    <!-- Right Column: Interactive Password Requirements & Security Assistant -->
+    <div class="lg:col-span-5 flex flex-col gap-5">
+
+      <!-- Password Strength Meter & Live Checklist Card -->
+      <div class="glass-card rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-tertiary)]">Password Strength</span>
+          @if (newPassword) {
+          <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full" [ngClass]="{
+              'text-red-400 bg-red-500/10 border border-red-500/20': passwordStrength.score <= 1,
+              'text-orange-400 bg-orange-500/10 border border-orange-500/20': passwordStrength.score === 2,
+              'text-yellow-400 bg-yellow-500/10 border border-yellow-500/20': passwordStrength.score === 3,
+              'text-emerald-400 bg-emerald-500/10 border border-emerald-500/20': passwordStrength.score >= 4
+            }">{{ passwordStrength.label }}</span>
+          } @else {
+          <span class="text-xs text-[var(--text-tertiary)] font-medium">Enter new password</span>
+          }
+        </div>
+
+        <!-- Segmented Strength Meter -->
+        <div class="grid grid-cols-5 gap-1.5 h-2 w-full">
+          @for (bar of [1,2,3,4,5]; track bar) {
+          <div class="h-full rounded-full transition-all duration-300" [ngClass]="{
+                'strength-bar-empty': passwordStrength.score < bar,
+                'bg-red-500': passwordStrength.score >= bar && passwordStrength.score <= 1,
+                'bg-orange-500': passwordStrength.score >= bar && passwordStrength.score === 2,
+                'bg-yellow-500': passwordStrength.score >= bar && passwordStrength.score === 3,
+                'bg-emerald-500': passwordStrength.score >= bar && passwordStrength.score >= 4
+              }"></div>
+          }
+        </div>
+
+        <!-- Interactive Requirements Checklist -->
+        <div class="flex flex-col gap-2.5 pt-3 border-t border-[var(--border-subtle)]">
+          <span class="text-[11px] font-semibold text-[var(--text-secondary)]">Requirements Checklist:</span>
+
+          <div class="flex flex-col gap-2">
+
+            <!-- Requirement 1: 8+ Chars -->
+            <div class="flex items-center gap-2.5 text-xs transition-colors" [class.text-emerald-400]="hasMinLength"
+              [class.text-[var(--text-tertiary)]]="!hasMinLength">
+              <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
+                [ngClass]="hasMinLength ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
+                @if (hasMinLength) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                }
+              </div>
+              <span class="font-medium">At least 8 characters long</span>
+            </div>
+
+            <!-- Requirement 2: Upper & Lower -->
+            <div class="flex items-center gap-2.5 text-xs transition-colors"
+              [class.text-emerald-400]="hasUpper && hasLower"
+              [class.text-[var(--text-tertiary)]]="!(hasUpper && hasLower)">
+              <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
+                [ngClass]="(hasUpper && hasLower) ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
+                @if (hasUpper && hasLower) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                }
+              </div>
+              <span class="font-medium">Uppercase & lowercase letters (A-Z, a-z)</span>
+            </div>
+
+            <!-- Requirement 3: Number -->
+            <div class="flex items-center gap-2.5 text-xs transition-colors" [class.text-emerald-400]="hasNumber"
+              [class.text-[var(--text-tertiary)]]="!hasNumber">
+              <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
+                [ngClass]="hasNumber ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
+                @if (hasNumber) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                }
+              </div>
+              <span class="font-medium">At least one digit (0-9)</span>
+            </div>
+
+            <!-- Requirement 4: Special Char -->
+            <div class="flex items-center gap-2.5 text-xs transition-colors" [class.text-emerald-400]="hasSpecial"
+              [class.text-[var(--text-tertiary)]]="!hasSpecial">
+              <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
+                [ngClass]="hasSpecial ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
+                @if (hasSpecial) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                }
+              </div>
+              <span class="font-medium">Special character (!&#64;#$%^&*)</span>
+            </div>
+
+            <!-- Requirement 5: Passwords Match -->
+            <div class="flex items-center gap-2.5 text-xs transition-colors" [class.text-emerald-400]="passwordsMatch"
+              [class.text-[var(--text-tertiary)]]="!passwordsMatch">
+              <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
+                [ngClass]="passwordsMatch ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
+                @if (passwordsMatch) {
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                }
+              </div>
+              <span class="font-medium">Passwords match</span>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- Security Best Practice Card -->
+      <div class="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col gap-2">
+        <div class="flex items-center gap-2">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-indigo-400 shrink-0">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span class="text-xs font-bold text-indigo-400">Admin Password Hygiene</span>
+        </div>
+        <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+          Never reuse passwords across personal or third-party services. Store your admin credentials in an encrypted
+          password manager (1Password, Bitwarden) for ultimate protection.
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+  }
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB 3: TWO-FACTOR AUTHENTICATION (BEAUTIFUL VISUAL REVAMP)-->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB 3: TWO-FACTOR AUTHENTICATION (SIDE-BY-SIDE GRID)      -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === '2fa') {
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full animate-in">
+
+    <!-- Left Column (Sidebar): Compatible Authenticator Apps & Security Info (lg:col-span-4) -->
+    <div class="lg:col-span-4 flex flex-col gap-5">
+
+      <!-- Compatible Apps Card -->
+      <div class="glass-card rounded-2xl p-5 shadow-xl flex flex-col gap-4">
+        <div class="flex items-center gap-2.5 pb-3 border-b border-[var(--border-subtle)]">
+          <div class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+              <line x1="12" y1="18" x2="12.01" y2="18"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Authenticator Apps
+            </h3>
+            <p class="text-[11px] text-[var(--text-tertiary)]">Supported smartphone apps</p>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2.5">
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-indigo-500/20 bg-indigo-500/5">
+            <div
+              class="w-8 h-8 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-xs shrink-0">
+              GA</div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">Google Authenticator</span>
+              <span class="text-[10px] text-[var(--text-tertiary)]">iOS & Android</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-blue-500/20 bg-blue-500/5">
+            <div
+              class="w-8 h-8 rounded-lg bg-blue-500/20 text-blue-400 flex items-center justify-center font-bold text-xs shrink-0">
+              MS</div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">Microsoft Authenticator</span>
+              <span class="text-[10px] text-[var(--text-tertiary)]">iOS & Android</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-purple-500/20 bg-purple-500/5">
+            <div
+              class="w-8 h-8 rounded-lg bg-purple-500/20 text-purple-400 flex items-center justify-center font-bold text-xs shrink-0">
+              1P</div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">1Password / Bitwarden</span>
+              <span class="text-[10px] text-[var(--text-tertiary)]">Desktop & Mobile</span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 p-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5">
+            <div
+              class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs shrink-0">
+              AU</div>
+            <div class="flex flex-col">
+              <span class="text-xs font-bold text-[var(--text-primary)]">Authy Authenticator</span>
+              <span class="text-[10px] text-[var(--text-tertiary)]">Multi-device sync</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Security Tips -->
+      <div class="p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] flex flex-col gap-2">
+        <span class="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-amber-400">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          How TOTP 2FA Works
+        </span>
+        <ul class="text-[11px] text-[var(--text-secondary)] space-y-1.5 list-disc list-inside leading-relaxed">
+          <li>Codes refresh automatically every 30 seconds.</li>
+          <li>No cellular signal or internet is needed on your phone to generate codes.</li>
+          <li>Backup codes allow emergency access if you lose your phone.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Main 2FA Setup & Status Shield (lg:col-span-8) -->
+    <div class="lg:col-span-8 flex flex-col gap-6">
+
+      <!-- Stepper Navigation Banner (If setting up 2FA) -->
+      @if (!is2FAEnabled && setupStep !== 'idle') {
+      <div
+        class="glass-card p-4 rounded-2xl shadow-lg flex items-center justify-around gap-2 border border-[var(--border-subtle)] overflow-x-auto">
+
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all"
+          [ngClass]="setupStep === 'qr' ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-[var(--text-tertiary)]'">
+          <span class="w-5 h-5 rounded-full bg-white/20 text-xs flex items-center justify-center font-bold">1</span>
+          <span class="text-xs">Scan QR Code</span>
+        </div>
+
+        <div class="h-0.5 w-12 bg-[var(--border-subtle)]"></div>
+
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all"
+          [ngClass]="setupStep === 'verify' ? 'bg-indigo-600 text-white font-bold shadow-md' : 'text-[var(--text-tertiary)]'">
+          <span class="w-5 h-5 rounded-full bg-white/20 text-xs flex items-center justify-center font-bold">2</span>
+          <span class="text-xs">Verify Code</span>
+        </div>
+
+        <div class="h-0.5 w-12 bg-[var(--border-subtle)]"></div>
+
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl transition-all"
+          [ngClass]="setupStep === 'done' ? 'bg-emerald-600 text-white font-bold shadow-md' : 'text-[var(--text-tertiary)]'">
+          <span class="w-5 h-5 rounded-full bg-white/20 text-xs flex items-center justify-center font-bold">3</span>
+          <span class="text-xs">Activated</span>
+        </div>
+
+      </div>
+      }
+
+      <!-- Main 2FA Card Container -->
+      <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-6">
+
+        <div class="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)] flex-wrap gap-3">
+          <div class="flex items-center gap-3">
+            <div class="p-3 rounded-2xl border text-xl shrink-0 shadow-inner"
+              [ngClass]="is2FAEnabled ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 class="text-base font-extrabold text-[var(--text-primary)]">Two-Factor Security Shield (TOTP)</h2>
+              <p class="text-xs text-[var(--text-secondary)]">
+                @if (is2FAEnabled) { Your account is locked with <strong class="text-emerald-400">TOTP Authenticator
+                  Protection</strong>. }
+                @else { 2FA is <strong class="text-amber-400">Disabled</strong>. Add a 2nd layer of defense to prevent
+                unauthorized logins. }
+              </p>
+            </div>
+          </div>
+
+          @if (is2FAEnabled) {
+          <span
+            class="px-3.5 py-1.5 rounded-full text-xs font-extrabold border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 flex items-center gap-2 shadow-sm shrink-0">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+            <span>Shield Active</span>
+          </span>
+          }
+        </div>
+
+        <!-- ── 2FA DISABLED: Enable Flow ── -->
+        @if (!is2FAEnabled) {
+
+        @if (setupStep === 'idle') {
+        <div
+          class="p-8 rounded-2xl border border-dashed border-indigo-500/30 bg-indigo-500/5 flex flex-col items-center gap-4 text-center">
+          <div
+            class="w-16 h-16 rounded-2xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/10">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="text-base font-extrabold text-[var(--text-primary)]">Activate Two-Factor Authentication</p>
+            <p class="text-xs text-[var(--text-secondary)] mt-1 max-w-md">Every sign-in will require a 6-digit TOTP
+              verification code from your smartphone app, ensuring your admin access is safe even if your password is
+              leaked.</p>
+          </div>
+          <button
+            class="btn btn-primary px-8 py-3 text-xs font-extrabold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-600/25 hover:scale-[1.02] transition-transform"
+            (click)="initiate2FASetup()" [disabled]="is2FALoading">
+            @if (is2FALoading) { <span>Generating Key…</span> }
+            @else {
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            </svg>
+            <span>Enable 2FA Protection</span>
+            }
+          </button>
+        </div>
+        }
+
+        @if (setupStep === 'qr') {
+        <div class="flex flex-col gap-6">
+
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+
+            <!-- QR Frame -->
+            <div
+              class="md:col-span-5 flex flex-col items-center gap-3 p-5 rounded-2xl bg-white border-2 border-indigo-500/40 shadow-xl">
+              <img [src]="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=' + qrUri" alt="2FA QR Code"
+                class="w-48 h-48 rounded-lg" />
+              <span class="text-[11px] font-bold text-slate-600">Scan with Authenticator App</span>
+            </div>
+
+            <!-- Instructions & Manual Key -->
+            <div class="md:col-span-7 flex flex-col gap-4">
+              <div class="p-4 rounded-xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col gap-1">
+                <span class="text-xs font-bold text-indigo-400">Step 1 of 2: Scan or Enter Secret Key</span>
+                <p class="text-xs text-[var(--text-secondary)]">Open Google Authenticator or 1Password, tap "+ Add
+                  Account", and scan the QR code.</p>
+              </div>
+
+              <!-- Manual Secret Key Box -->
+              <div class="flex flex-col gap-2 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
+                <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Manual
+                  Entry Setup Key</span>
+                <div class="flex items-center gap-2">
+                  <code
+                    class="totp-secret-code text-xs font-mono font-bold px-3.5 py-2.5 rounded-xl flex-1 break-all select-all">{{ totpSecret }}</code>
+                  <button class="btn btn-secondary text-xs px-3.5 py-2.5 font-bold rounded-xl shrink-0"
+                    (click)="copyToClipboard(totpSecret)" [adminTooltip]="'Copy secret key to clipboard'"
+                    tooltipPosition="top">
+                    Copy Key
+                  </button>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- Backup Codes Box -->
+          @if (backupCodes.length > 0) {
+          <div class="flex flex-col gap-4 p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 shadow-lg">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-amber-400">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                  </path>
+                </svg>
+                <span class="backup-codes-title text-xs font-extrabold uppercase tracking-wider">Emergency Backup
+                  Recovery
+                  Codes</span>
+              </div>
+
+              <!-- Export Actions -->
+              <div class="flex items-center gap-2">
+                <button
+                  class="text-xs font-bold text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 transition-all"
+                  (click)="downloadBackupCodesTxt()">
+                  Download (.txt)
+                </button>
+                <button
+                  class="text-xs font-bold text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 transition-all"
+                  (click)="printBackupCodes()">
+                  Print Codes
+                </button>
+                <button
+                  class="text-xs font-bold text-indigo-400 hover:text-indigo-300 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 transition-all"
+                  (click)="copyAllBackupCodes()">
+                  Copy All
+                </button>
+              </div>
+            </div>
+
+            <p class="text-xs text-[var(--text-secondary)]">Save these codes in a password manager. If you lose your
+              smartphone, each 8-character backup code can bypass 2FA exactly <strong>once</strong>.</p>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              @for (code of backupCodes; track code) {
+              <code
+                class="backup-code-item text-xs font-mono font-bold px-3.5 py-2.5 rounded-xl text-center select-all shadow-inner">
+                    {{ code }}
+                  </code>
+              }
+            </div>
+          </div>
+          }
+
+          <button
+            class="btn btn-primary w-full py-3.5 text-xs font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25"
+            (click)="proceedToVerify()">
+            <span>I Have Saved My Backup Codes — Continue to Verification</span>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+        }
+
+        @if (setupStep === 'verify') {
+        <div class="flex flex-col gap-6 max-w-lg mx-auto w-full">
+          <div class="p-4 rounded-xl border border-emerald-500/20 bg-emerald-500/5 text-center">
+            <p class="text-xs font-bold text-emerald-400 mb-1">Step 2 of 2: Confirm Authenticator Code</p>
+            <p class="text-xs text-[var(--text-secondary)]">Enter the 6-digit code currently generated by your
+              authenticator app.</p>
+          </div>
+
+          <div class="flex flex-col gap-2">
+            <label class="form-label text-center" for="verifyCode">Enter 6-Digit TOTP Code</label>
+            <input id="verifyCode" type="text"
+              class="form-input font-mono tracking-[0.4em] text-center text-2xl rounded-2xl p-4 w-full font-bold text-amber-400 focus:border-amber-500 shadow-xl transition-all"
+              [(ngModel)]="verifyCode" name="verifyCode" placeholder="000000" maxlength="6"
+              autocomplete="one-time-code" />
+          </div>
+
+          <div class="flex gap-3">
+            <button class="btn btn-secondary flex-1 py-3 text-xs font-bold rounded-xl" (click)="setupStep = 'qr'">
+              Back
+            </button>
+            <button
+              class="btn btn-primary flex-1 py-3 text-xs font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25"
+              (click)="verify2FACode()" [disabled]="isVerifying || verifyCode.length !== 6">
+              @if (isVerifying) { <span>Verifying…</span> }
+              @else { <span>Activate 2FA Protection</span> }
+            </button>
+          </div>
+        </div>
+        }
+
+        @if (setupStep === 'done') {
+        <div
+          class="p-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col items-center gap-3 text-center shadow-xl">
+          <div
+            class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </div>
+          <p class="text-base font-extrabold text-emerald-500">Two-Factor Authentication Active!</p>
+          <p class="text-xs text-[var(--text-secondary)]">Your admin account is now protected with TOTP. Every login
+            will require a 6-digit verification code.</p>
+        </div>
+        }
+
+        }
+
+        <!-- ── 2FA ENABLED: Active View & Options ── -->
+        @if (is2FAEnabled && setupStep !== 'done') {
+        <div class="flex flex-col gap-6">
+
+          <div class="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center gap-4 shadow-lg">
+            <div
+              class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+            </div>
+            <div class="flex flex-col">
+              <p class="text-sm font-extrabold text-emerald-400">2FA Security Shield Active</p>
+              <p class="text-xs text-[var(--text-secondary)] mt-0.5">Your admin account requires a 6-digit TOTP code
+                from your authenticator app at every sign-in.</p>
+            </div>
+          </div>
+
+          <!-- Disable 2FA Panel -->
+          <div class="p-5 rounded-2xl border border-red-500/20 bg-red-500/5 flex flex-col gap-3">
+            <p class="text-xs font-bold text-red-400 uppercase tracking-wider">Disable Two-Factor Authentication</p>
+            <p class="text-xs text-[var(--text-secondary)]">Disabling 2FA exposes your account to password compromise.
+              Enter your current password to confirm disablement.</p>
+
+            <div class="flex flex-col gap-3 mt-1">
+              <div class="relative">
+                <input [type]="showDisablePassword ? 'text' : 'password'"
+                  class="form-input p-3 pr-16 text-sm w-full focus:border-red-500" [(ngModel)]="disablePassword"
+                  name="disablePwd" placeholder="Enter your current password to confirm"
+                  autocomplete="current-password" />
+                <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+                  <button type="button"
+                    class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
+                    (click)="showDisablePassword = !showDisablePassword"
+                    [adminTooltip]="showDisablePassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
+                    @if (showDisablePassword) {
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                      </path>
+                      <line x1="1" y1="1" x2="23" y2="23"></line>
+                    </svg>
+                    } @else {
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                    }
+                  </button>
+                </div>
+              </div>
+
+              <button
+                class="btn btn-danger w-full py-3 text-xs font-bold rounded-xl flex items-center justify-center gap-2"
+                (click)="submitDisable2FA()" [disabled]="isDisabling || !disablePassword">
+                @if (isDisabling) { <span>Disabling 2FA…</span> }
+                @else {
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+                </svg>
+                <span>Confirm & Disable 2FA</span>
+                }
+              </button>
+            </div>
+          </div>
+        </div>
+        }
+
+      </div>
+
+    </div>
+
+  </div>
+  }
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB 4: YOUR SESSIONS                                     -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'sessions') {
+  <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-5">
+
+    <div class="flex items-center justify-between flex-wrap gap-4 pb-4 border-b border-[var(--border-subtle)]">
+      <div>
+        <h2 class="text-base font-extrabold text-[var(--text-primary)]">Active Admin Sessions</h2>
+        <p class="text-xs text-[var(--text-secondary)]">Review devices logged into your admin account. Terminate any
+          unrecognized sessions.</p>
+      </div>
+
+      <button class="btn btn-danger text-xs px-3.5 py-2 font-bold rounded-xl flex items-center gap-2"
+        (click)="revokeAllOtherSessions()" [disabled]="isRevokingOthers || sessions.length <= 1"
+        [adminTooltip]="'Log out of all other devices'" tooltipPosition="top">
+        @if (isRevokingOthers) { <span>Terminating…</span> }
+        @else {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
+          <line x1="12" y1="2" x2="12" y2="12"></line>
+        </svg>
+        <span>Revoke All Other Sessions</span>
+        }
+      </button>
+    </div>
+
+    <div class="data-table-wrapper overflow-x-auto rounded-xl border border-[var(--border-subtle)]">
+      <table class="data-table w-full text-left border-collapse">
+        <thead>
+          <tr>
+            <th class="p-3.5">Device & OS</th>
+            <th class="p-3.5">IP Address</th>
+            <th class="p-3.5">Created Date</th>
+            <th class="p-3.5">Last Active</th>
+            <th class="p-3.5 text-right">Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (isLoadingSessions) {
+          @for (item of [1,2,3]; track $index) {
+          <tr>
+            <td class="p-3.5"><admin-skeleton width="140px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="100px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="120px" height="14px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="14px" /></td>
+            <td class="p-3.5 text-right"><admin-skeleton width="80px" height="28px" borderRadius="6px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (sess of sessions; track sess.id) {
+          <tr class="transition-colors hover:bg-[var(--bg-glass-hover)]">
+            <td class="p-3.5">
+              <div class="flex items-center gap-3">
+                <div
+                  class="p-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-glass)] text-indigo-400 shrink-0">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                  </svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="font-bold text-[var(--text-primary)]">
+                    {{ parseUserAgent(sess.userAgent).browser }} ({{ parseUserAgent(sess.userAgent).os }})
+                  </span>
+                  @if (sess.isCurrent) {
+                  <span class="text-[10px] font-bold text-emerald-400 flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Current Device
+                  </span>
+                  }
+                </div>
+              </div>
+            </td>
+
+            <td class="p-3.5">
+              <code
+                class="font-mono text-xs text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded border border-indigo-500/20">
+                    {{ sess.ipAddress }}
+                  </code>
+            </td>
+
+            <td class="p-3.5 text-[var(--text-secondary)] text-xs">
+              {{ sess.createdAt | date:'medium' }}
+            </td>
+
+            <td class="p-3.5 text-[var(--text-secondary)] text-xs">
+              {{ sess.lastActive | date:'medium' }}
+            </td>
+
+            <td class="p-3.5 text-right">
+              @if (sess.isCurrent) {
+              <span class="text-[11px] text-[var(--text-tertiary)] font-semibold px-2.5 py-1">Current Active</span>
+              } @else {
+              <button class="btn btn-danger btn-sm text-xs px-3 py-1 font-bold" (click)="revokeSession(sess)"
+                [adminTooltip]="'Revoke session on this device'" tooltipPosition="left">
+                Revoke
+              </button>
+              }
+            </td>
+          </tr>
+          } @empty {
+          <tr>
+            <td colspan="5" class="py-8 text-center text-[var(--text-tertiary)] text-xs">
+              No active sessions found.
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+  }
+
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!--  TAB 5: SECURITY ACTIVITY LOG                               -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  @if (activeTab === 'audit') {
+  <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-5">
+
+    <div class="flex items-center justify-between pb-4 border-b border-[var(--border-subtle)]">
+      <div>
+        <h2 class="text-base font-extrabold text-[var(--text-primary)]">Security Activity Audit Trail</h2>
+        <p class="text-xs text-[var(--text-secondary)]">Recent login history and security events associated with your
+          admin account.</p>
+      </div>
+      <button class="btn btn-secondary text-xs px-3 py-1.5 font-bold" (click)="fetchAuditLogs()">
+        Refresh Log
+      </button>
+    </div>
+
+    @if (isLoadingAuditLogs) {
+    <div class="flex flex-col gap-3">
+      @for (item of [1,2,3,4]; track $index) {
+      <admin-skeleton width="100%" height="40px" borderRadius="10px" />
+      }
+    </div>
+    } @else {
+    <div class="flex flex-col gap-3">
+      @for (log of auditLogs; track log.id) {
+      <div
+        class="p-3.5 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] flex items-center justify-between gap-4">
+
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+            [ngClass]="log.status === 'Success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'">
+            @if (log.status === 'Success') {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            } @else {
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            }
+          </div>
+
+          <div class="flex flex-col">
+            <span class="text-xs font-bold text-[var(--text-primary)]">
+              Login {{ log.status }}
+            </span>
+            <span class="text-[11px] text-[var(--text-tertiary)] font-mono">
+              IP: {{ log.ipAddress }} — {{ parseUserAgent(log.userAgent).browser }} ({{ parseUserAgent(log.userAgent).os
+              }})
+            </span>
+          </div>
+        </div>
+
+        <span class="text-[11px] text-[var(--text-secondary)] font-medium shrink-0">
+          {{ log.loginTime | date:'medium' }}
+        </span>
+
+      </div>
+      } @empty {
+      <div class="py-8 text-center text-[var(--text-tertiary)] text-xs">
+        No security audit history recorded yet.
+      </div>
+      }
+    </div>
+    }
+
+  </div>
+  }
+
+</div>

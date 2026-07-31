@@ -15,6 +15,7 @@ import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 export class LoginComponent {
   email = '';
   password = '';
+  showPassword = false;
   twoFactorCode = '';
   requires2FA = false;
   isLoading = false;
