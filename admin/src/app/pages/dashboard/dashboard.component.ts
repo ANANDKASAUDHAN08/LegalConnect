@@ -248,27 +248,39 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Silent or Full Fetch Overview
   fetchOverview(isSilent = false): void {
-    if (isSilent) {
-      this.api.getOverview().subscribe({
-        next: (data) => {
-          this.overview = data;
-          this.lastRefreshed = new Date();
-        },
-        error: (err) => console.error('Silent telemetry sync error', err)
-      });
-    } else {
-      this.api.getOverview().pipe(smartLoading(l => this.isLoading = l)).subscribe({
-        next: (data) => {
-          this.overview = data;
-          this.lastRefreshed = new Date();
-          setTimeout(() => this.loadChartData(), 100);
-        },
-        error: (err) => {
-          console.error('Failed to load overview from API', err);
-          setTimeout(() => this.loadChartData(), 100);
-        }
-      });
+    const cached = this.api.stats.getCachedOverview();
+    if (cached) {
+      this.overview = cached;
+      this.isLoading = false;
     }
+
+    const cachedSec = this.api.stats.getCachedSecondaryStats();
+    if (cachedSec) {
+      this.templateStats = cachedSec.templates;
+      this.bookmarkStats = cachedSec.bookmarks;
+      this.reviewStatsData = cachedSec.reviews;
+      this.specializations = cachedSec.specializations;
+    }
+
+    const cachedCharts = this.api.stats.getCachedChartData();
+    if (cachedCharts) {
+      this.regTrendData = cachedCharts.reg;
+      this.loginTrendData = cachedCharts.logins;
+      this.cityTrendData = cachedCharts.cities;
+      this.consultationTrendData = cachedCharts.consultations;
+      this.consentTrendData = cachedCharts.consent;
+      this.isChartLoading = false;
+    }
+
+    const showLoader = !cached && !isSilent;
+
+    this.api.getOverview().pipe(smartLoading(l => this.isLoading = l, showLoader)).subscribe({
+      next: (data) => {
+        this.overview = data;
+        this.lastRefreshed = new Date();
+      },
+      error: (err) => console.error('Failed to load overview from API', err)
+    });
   }
 
   fetchSecondaryStats(): void {
@@ -282,11 +294,21 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.bookmarkStats = bookmarks;
       this.reviewStatsData = reviews;
       this.specializations = specializations?.specCounts || [];
+      this.api.stats.setCachedSecondaryStats({
+        templates,
+        bookmarks,
+        reviews,
+        specializations: this.specializations
+      });
     });
   }
 
   loadChartData(): void {
-    this.isChartLoading = true;
+    const cachedCharts = this.api.stats.getCachedChartData();
+    if (!cachedCharts) {
+      this.isChartLoading = true;
+    }
+
     forkJoin({
       reg: this.api.getRegistrationTrends().pipe(catchError(err => { console.error('Reg trends error', err); return of(null); })),
       logins: this.api.getLoginTrends().pipe(catchError(err => { console.error('Login trends error', err); return of(null); })),
@@ -300,6 +322,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
       this.consultationTrendData = consultations;
       this.consentTrendData = consent;
       this.isChartLoading = false;
+      this.api.stats.setCachedChartData({ reg, logins, cities, consultations, consent });
     });
   }
 

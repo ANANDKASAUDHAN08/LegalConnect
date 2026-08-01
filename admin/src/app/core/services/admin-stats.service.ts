@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, tap } from 'rxjs';
 import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
@@ -9,14 +9,42 @@ export class AdminStatsService {
   private readonly API = environment.apiUrl;
   private readonly NODE_API = environment.nodeUrl;
 
+  private overviewCache: any = null;
+  private secondaryStatsCache: any = null;
+  private chartDataCache: any = null;
+
   private consentStatsCache$?: Observable<any>;
   private templateStatsCache$?: Observable<any>;
   private bookmarkStatsCache$?: Observable<any>;
 
   constructor(private http: HttpClient) { }
 
+  getCachedOverview(): any | null {
+    return this.overviewCache;
+  }
+
+  getCachedSecondaryStats(): any | null {
+    return this.secondaryStatsCache;
+  }
+
+  setCachedSecondaryStats(data: any): void {
+    this.secondaryStatsCache = data;
+  }
+
+  getCachedChartData(): any | null {
+    return this.chartDataCache;
+  }
+
+  setCachedChartData(data: any): void {
+    this.chartDataCache = data;
+  }
+
   getOverview(): Observable<any> {
-    return this.http.get(`${this.API}/stats/overview`);
+    return this.http.get<any>(`${this.API}/stats/overview`).pipe(
+      tap(res => {
+        if (res) this.overviewCache = res;
+      })
+    );
   }
 
   getHealth(): Observable<any> {
