@@ -11,7 +11,7 @@ export class AdminContentService {
 
   constructor(private http: HttpClient) { }
 
-  // ── Legal Content (Bare Acts & Sections) ──
+  // -- Legal Content (Bare Acts & Sections) --
   getActs(): Observable<any> {
     return this.http.get(`${this.NODE_API}/acts?refresh=true`);
   }
@@ -24,7 +24,7 @@ export class AdminContentService {
     return this.http.put(`${this.NODE_API}/legal/admin/sections/${sectionId}`, { shortName, ...data });
   }
 
-  // ── Legal Resources ──
+  // -- Legal Resources --
   getResources(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -47,7 +47,7 @@ export class AdminContentService {
     return this.http.delete(`${this.NODE_API}/admin/resources/${id}`);
   }
 
-  // ── Helplines & Emergency Directories ──
+  // -- Helplines & Emergency Directories --
   getHelplines(): Observable<any> {
     if (!this.helplinesCache$) {
       this.helplinesCache$ = this.http.get(`${this.NODE_API}/admin/helplines`).pipe(
@@ -72,7 +72,7 @@ export class AdminContentService {
     return this.http.delete(`${this.NODE_API}/admin/helplines/${id}`);
   }
 
-  // ── Template & Draft Catalog ──
+  // -- Template & Draft Catalog --
   getTemplates(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {

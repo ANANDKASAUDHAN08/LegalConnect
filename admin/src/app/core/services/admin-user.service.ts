@@ -38,7 +38,7 @@ export class AdminUserService {
     this.lastConsultationsCacheKey = null;
   }
 
-  // ── User Management ──
+  // -- User Management --
   getUsers(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -101,7 +101,7 @@ export class AdminUserService {
     return this.http.post(`${this.API}/users/${id}/impersonate`, {});
   }
 
-  // ── Lawyer Management & Verification Queue ──
+  // -- Lawyer Management & Verification Queue --
   getLawyers(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -128,7 +128,19 @@ export class AdminUserService {
     return this.http.post(`${this.API}/lawyers/bulk-verify`, { lawyerIds, isVerified });
   }
 
-  // ── Sessions ──
+  verifyBarRegistry(id: number): Observable<any> {
+    return this.http.post(`${this.API}/lawyers/${id}/verify-bar-registry`, {});
+  }
+
+  getLawyerAuditLogs(id: number): Observable<any> {
+    return this.http.get(`${this.API}/lawyers/${id}/audit-logs`);
+  }
+
+  dispatchCopRenewalNotice(id: number): Observable<any> {
+    return this.http.post(`${this.API}/lawyers/${id}/dispatch-cop-renewal`, {});
+  }
+
+  // -- Sessions --
   getActiveSessions(page = 1): Observable<any> {
     return this.http.get(`${this.API}/sessions`, { params: { page, limit: 20 } });
   }
@@ -137,7 +149,7 @@ export class AdminUserService {
     return this.http.delete(`${this.API}/sessions/${sessionId}`);
   }
 
-  // ── Login History ──
+  // -- Login History --
   getLoginHistory(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -148,7 +160,7 @@ export class AdminUserService {
     return this.http.get(`${this.API}/login-history`, { params: httpParams });
   }
 
-  // ── Reviews ──
+  // -- Reviews --
   getReviews(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -163,7 +175,7 @@ export class AdminUserService {
     return this.http.delete(`${this.API}/reviews/${id}`);
   }
 
-  // ── Consultations ──
+  // -- Consultations --
   getConsultations(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -200,7 +212,7 @@ export class AdminUserService {
     return this.http.post(`${this.API}/consultations/${id}/dispatch-email`, data);
   }
 
-  // ── Announcements ──
+  // -- Announcements --
   getAnnouncements(): Observable<any> {
     return this.http.get(`${this.API}/announcements`);
   }
@@ -217,7 +229,7 @@ export class AdminUserService {
     return this.http.delete(`${this.API}/announcements/${id}`);
   }
 
-  // ── Contacts ──
+  // -- Contacts --
   getContacts(params: any = {}): Observable<any> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
@@ -232,7 +244,7 @@ export class AdminUserService {
     return this.http.put(`${this.API}/contacts/${id}/status`, { status });
   }
 
-  // ── Admin Account Self-Service ──
+  // -- Admin Account Self-Service --
   changeOwnPassword(data: { currentPassword: string; newPassword: string }): Observable<any> {
     return this.http.put(`${this.API}/account/password`, data);
   }

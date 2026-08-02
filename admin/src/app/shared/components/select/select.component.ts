@@ -1,10 +1,12 @@
-import { Component, Input, Output, EventEmitter, HostListener, ElementRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface SelectOption {
   label: string;
   value: any;
   icon?: string;
+  color?: string;
+  count?: number;
 }
 
 @Component({
@@ -14,7 +16,7 @@ export interface SelectOption {
   templateUrl: './select.component.html',
   styleUrl: './select.component.scss'
 })
-export class SelectComponent {
+export class SelectComponent implements OnInit, OnDestroy {
   @Input() options: SelectOption[] = [];
   @Input() value: any = '';
   @Input() placeholder: string = 'Select Option';
@@ -28,7 +30,47 @@ export class SelectComponent {
   isOpen = false;
   dropUp = false;
 
-  constructor(private elementRef: ElementRef) { }
+  private clickListener: ((event: MouseEvent) => void) | null = null;
+
+  constructor(private elementRef: ElementRef, private cdr: ChangeDetectorRef) { }
+
+  ngOnInit(): void {
+    // Capture-phase global click listener (bypasses any parent stopPropagation calls)
+    this.clickListener = (event: MouseEvent) => {
+      if (!this.isOpen) return;
+      const target = event.target as Node;
+      if (target && !this.elementRef.nativeElement.contains(target)) {
+        this.isOpen = false;
+        this.cdr.markForCheck();
+      }
+    };
+    window.addEventListener('click', this.clickListener, true);
+  }
+
+  ngOnDestroy(): void {
+    if (this.clickListener) {
+      window.removeEventListener('click', this.clickListener, true);
+    }
+  }
+
+  @Input() showCheckmark: boolean = true;
+  @Input() searchable: boolean = false;
+  @Input() searchPlaceholder: string = 'Search...';
+
+  searchTerm = '';
+
+  get filteredOptions(): SelectOption[] {
+    if (!this.searchable || !this.searchTerm.trim()) {
+      return this.options;
+    }
+    const term = this.searchTerm.toLowerCase().trim();
+    return this.options.filter(o => o.label.toLowerCase().includes(term));
+  }
+
+  onSearchInput(val: string): void {
+    this.searchTerm = val;
+    this.cdr.markForCheck();
+  }
 
   get selectedOption(): SelectOption | undefined {
     return this.options.find(o => String(o.value ?? '') === String(this.value ?? ''));
@@ -41,6 +83,7 @@ export class SelectComponent {
   toggleOpen(): void {
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
+      this.searchTerm = '';
       if (this.dropPosition === 'up') {
         this.dropUp = true;
       } else if (this.dropPosition === 'down') {
@@ -52,6 +95,7 @@ export class SelectComponent {
         this.dropUp = spaceBelow < 220;
       }
     }
+    this.cdr.markForCheck();
   }
 
   selectOption(option: SelectOption, event: MouseEvent): void {
@@ -59,12 +103,7 @@ export class SelectComponent {
     this.value = option.value;
     this.valueChange.emit(option.value);
     this.isOpen = false;
-  }
-
-  @HostListener('document:click', ['$event'])
-  onClickOutside(event: MouseEvent): void {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      this.isOpen = false;
-    }
+    this.searchTerm = '';
+    this.cdr.markForCheck();
   }
 }

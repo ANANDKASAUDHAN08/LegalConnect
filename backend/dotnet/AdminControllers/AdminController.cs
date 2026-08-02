@@ -152,6 +152,7 @@ namespace CoreApi.Controllers
     public class AdminVerifyLawyerDto
     {
         public bool IsVerified { get; set; }
+        public string? Remarks { get; set; }
     }
 
     public class AdminUpdateLawyerProfileDto
@@ -164,6 +165,8 @@ namespace CoreApi.Controllers
         public decimal? InPersonFee { get; set; }
         public string? OfficeAddress { get; set; }
         public string? Bio { get; set; }
+        public string? ActiveCourts { get; set; }
+        public string? VerificationRemarks { get; set; }
         public bool? IsAvailable { get; set; }
         public bool? IsVerified { get; set; }
     }

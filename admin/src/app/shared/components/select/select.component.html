@@ -1,9 +1,11 @@
-<div class="custom-select-container" [style.width]="width" [style.min-width]="minWidth" [class.is-open]="isOpen" [class.drop-up]="dropUp">
+<div class="custom-select-container" [style.width]="width" [style.min-width]="minWidth" [class.is-open]="isOpen"
+  [class.drop-up]="dropUp">
   <!-- Trigger Button -->
-  <div class="custom-select-trigger" [class.is-active]="(value !== '' && value !== null && value !== undefined)" (click)="toggleOpen()">
+  <div class="custom-select-trigger" [class.is-active]="(value !== '' && value !== null && value !== undefined)"
+    (click)="toggleOpen()">
     <div class="trigger-label">
       @if (selectedOption?.icon || icon) {
-      <span class="option-icon-wrapper">
+      <span class="option-icon-wrapper" [style.color]="selectedOption?.color || ''">
         @switch (selectedOption?.icon || icon) {
         @case ('user') {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -83,6 +85,26 @@
           <line x1="10" y1="12" x2="14" y2="12"></line>
         </svg>
         }
+        @case ('award') {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="8" r="7"></circle>
+          <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+        </svg>
+        }
+        @case ('file-text') {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        }
+        @case ('briefcase') {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+        </svg>
+        }
         @default {
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
@@ -104,12 +126,29 @@
   <!-- Floating Menu -->
   @if (isOpen) {
   <div class="custom-select-menu animate-in">
+    @if (searchable) {
+    <div class="p-2 border-b border-slate-700/60 sticky top-0 bg-slate-900/95 backdrop-blur-md z-10">
+      <div class="relative flex items-center">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="absolute left-2.5 text-slate-400 pointer-events-none">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text"
+          class="w-full bg-slate-800/90 border border-slate-700/80 rounded-lg pl-8 pr-2 py-1 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500/60"
+          [placeholder]="searchPlaceholder"
+          [value]="searchTerm"
+          (input)="onSearchInput($any($event.target).value)"
+          (click)="$event.stopPropagation()" />
+      </div>
+    </div>
+    }
     <div class="options-list">
-      @for (opt of options; track opt.value) {
+      @for (opt of filteredOptions; track opt.value) {
       <div class="option-item" [class.selected]="isSelected(opt.value)" (click)="selectOption(opt, $event)">
         <div class="option-left">
           @if (opt.icon) {
-          <span class="opt-icon-wrapper">
+          <span class="opt-icon-wrapper" [style.color]="opt.color || ''">
             @switch (opt.icon) {
             @case ('user') {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -189,6 +228,26 @@
               <line x1="10" y1="12" x2="14" y2="12"></line>
             </svg>
             }
+            @case ('award') {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="8" r="7"></circle>
+              <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline>
+            </svg>
+            }
+            @case ('file-text') {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            }
+            @case ('briefcase') {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+            }
             @default {
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <circle cx="12" cy="12" r="3"></circle>
@@ -199,14 +258,22 @@
           }
           <span class="opt-label">{{ opt.label }}</span>
         </div>
-        @if (isSelected(opt.value)) {
-        <span class="checkmark">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-        </span>
-        }
+        <div class="flex items-center gap-1.5 ml-auto shrink-0">
+          @if (opt.count !== undefined && opt.count !== null) {
+          <span
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-800 text-indigo-300 border border-slate-700/60 shadow-inner">
+            {{ opt.count }}
+          </span>
+          }
+          @if (showCheckmark && isSelected(opt.value)) {
+          <span class="checkmark">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="3"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </span>
+          }
+        </div>
       </div>
       }
     </div>

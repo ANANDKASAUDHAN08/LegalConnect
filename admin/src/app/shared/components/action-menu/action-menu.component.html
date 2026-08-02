@@ -1,0 +1,14 @@
+@if (isOpen) {
+<div class="action-dropdown"
+    [ngStyle]="{ top: position.top + 'px', left: position.left + 'px', width: dropdownWidth + 'px', 'min-width': dropdownWidth + 'px' }"
+    (click)="$event.stopPropagation()">
+    <!-- Header -->
+    @if (headerLabel) {
+    <div class="dropdown-header">
+        <span class="dropdown-header-label">{{ headerLabel }}</span>
+    </div>
+    }
+    <!-- Projected Menu Content -->
+    <ng-content></ng-content>
+</div>
+}

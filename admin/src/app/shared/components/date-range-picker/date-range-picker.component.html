@@ -1,0 +1,86 @@
+<div class="relative date-picker-container inline-block">
+  <button class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
+    [ngClass]="startDate || endDate || isOpen ? 'bg-[#0e2640] text-sky-300 border border-sky-500/45 shadow-[0_0_12px_rgba(14,165,233,0.2)]' : 'bg-slate-800/80 border border-slate-700/80 hover:bg-slate-700/60 text-slate-300 hover:text-white'"
+    (click)="togglePopover()" [adminTooltip]="tooltip" tooltipPosition="top">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+      class="text-amber-400" [class.text-sky-400]="startDate || endDate || isOpen">
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+      <line x1="16" y1="2" x2="16" y2="6"></line>
+      <line x1="8" y1="2" x2="8" y2="6"></line>
+      <line x1="3" y1="10" x2="21" y2="10"></line>
+    </svg>
+    <span class="max-w-[140px] truncate">{{ displayLabel }}</span>
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+      class="transition-transform duration-200" [class.rotate-180]="isOpen">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+  </button>
+
+  @if (isOpen) {
+  <div
+    class="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl z-40 flex flex-col gap-3 text-xs animate-in">
+    <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-slate-200">
+      <span class="font-bold flex items-center gap-1.5">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [ngClass]="activeColorClass">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        Date Filter
+      </span>
+      <button (click)="closePopover()"
+        class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+        [adminTooltip]="'Close date filter popover'" tooltipPosition="left">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Quick Presets -->
+    <div class="flex flex-col gap-1.5">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Presets</span>
+      <div class="grid grid-cols-2 gap-1.5">
+        <button (click)="selectPreset('today')"
+          class="px-2.5 py-1 rounded-lg text-left font-medium transition-all"
+          [ngClass]="selectedPresetLabel === 'Today' ? 'bg-[#0e2640] text-sky-300 border border-sky-500/45' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white'">Today</button>
+        <button (click)="selectPreset('7days')"
+          class="px-2.5 py-1 rounded-lg text-left font-medium transition-all"
+          [ngClass]="selectedPresetLabel === 'Last 7 Days' ? 'bg-[#0e2640] text-sky-300 border border-sky-500/45' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white'">Last 7 Days</button>
+        <button (click)="selectPreset('30days')"
+          class="px-2.5 py-1 rounded-lg text-left font-medium transition-all"
+          [ngClass]="selectedPresetLabel === 'Last 30 Days' ? 'bg-[#0e2640] text-sky-300 border border-sky-500/45' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white'">Last 30 Days</button>
+        <button (click)="selectPreset('thisMonth')"
+          class="px-2.5 py-1 rounded-lg text-left font-medium transition-all"
+          [ngClass]="selectedPresetLabel === 'This Month' ? 'bg-[#0e2640] text-sky-300 border border-sky-500/45' : 'bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white'">This Month</button>
+      </div>
+    </div>
+
+    <!-- Custom Date Range -->
+    <div class="flex flex-col gap-2 pt-1 border-t border-slate-800/80">
+      <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Range</span>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="flex flex-col gap-1">
+          <label class="text-[10px] font-semibold text-slate-400">From</label>
+          <input #startInput type="date" [value]="startDate"
+            class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500" />
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[10px] font-semibold text-slate-400">To</label>
+          <input #endInput type="date" [value]="endDate"
+            class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-indigo-500" />
+        </div>
+      </div>
+      <div class="flex items-center justify-between gap-2 mt-1">
+        <button (click)="clearRange()" class="text-slate-400 hover:text-slate-200 text-[11px]">Clear</button>
+        <button (click)="applyCustomRange(startInput.value, endInput.value)"
+          class="px-3 py-1 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] shadow">Apply
+          Range</button>
+      </div>
+    </div>
+  </div>
+  }
+</div>

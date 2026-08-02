@@ -35,13 +35,15 @@ namespace CoreApi.Data
 
         public static void Seed(AppDbContext context, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
-            // Auto-migrate missing columns in MySQL Users & Consultations tables safely if they don't exist yet
+            // Auto-migrate missing columns in MySQL Users, Consultations & LawyerProfiles tables safely if they don't exist yet
             EnsureColumnExists(context, "Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'");
             EnsureColumnExists(context, "Users", "LastLoginAt", "DATETIME NULL");
             EnsureColumnExists(context, "Users", "LastIpAddress", "VARCHAR(50) NULL");
             EnsureColumnExists(context, "Users", "TwoFactorBackupCodes", "varchar(2000) NULL");
             EnsureColumnExists(context, "Consultations", "AdminRemark", "TEXT NULL");
             EnsureColumnExists(context, "Consultations", "AuditLogJson", "LONGTEXT NULL");
+            EnsureColumnExists(context, "LawyerProfiles", "VerificationRemarks", "TEXT NULL");
+            EnsureColumnExists(context, "LawyerProfiles", "CopExpiryDate", "DATETIME NULL");
 
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();

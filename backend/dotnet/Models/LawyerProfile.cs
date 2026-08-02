@@ -75,6 +75,10 @@ namespace CoreApi.Models
 
         public string SocialLinksJson { get; set; } = "{}";
 
+        public string? VerificationRemarks { get; set; }
+
+        public DateTime? CopExpiryDate { get; set; }
+
         public string? BannerUrl { get; set; }
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;

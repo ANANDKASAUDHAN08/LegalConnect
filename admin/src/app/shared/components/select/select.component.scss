@@ -48,9 +48,11 @@
       gap: 8px;
       overflow: hidden;
 
-      .option-icon {
-        font-size: 0.95rem;
-        line-height: 1;
+      .option-icon-wrapper {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
       }
 
       .label-text {
@@ -96,20 +98,17 @@
     overflow: hidden;
 
     .options-list {
-      max-height: 240px;
+      max-height: 360px;
       overflow-y: auto;
       padding: 4px;
       display: flex;
       flex-direction: column;
       gap: 2px;
+      scrollbar-width: none;
+      -ms-overflow-style: none;
 
       &::-webkit-scrollbar {
-        width: 4px;
-      }
-
-      &::-webkit-scrollbar-thumb {
-        background: var(--text-muted, #475569);
-        border-radius: 4px;
+        display: none;
       }
 
       .option-item {
@@ -131,8 +130,10 @@
           gap: 8px;
           white-space: nowrap;
 
-          .opt-icon {
-            font-size: 0.95rem;
+          .opt-icon-wrapper {
+            display: flex;
+            align-items: center;
+            justify-content: center;
           }
 
           .opt-label {
@@ -145,6 +146,10 @@
           color: var(--accent-success, #10b981);
           font-weight: bold;
           font-size: 0.85rem;
+
+          svg {
+            stroke: #10b981;
+          }
         }
 
         &:hover {

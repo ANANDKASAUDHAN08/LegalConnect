@@ -1,0 +1,174 @@
+@if (isOpen) {
+<div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4"
+    (click)="close()">
+    <div class="w-full max-w-2xl bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl overflow-hidden animate-modal-in"
+        (click)="$event.stopPropagation()">
+
+        <!-- Header -->
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div
+                    class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 text-white flex items-center justify-center shadow-md">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                </div>
+                <div>
+                    <h3 class="text-base font-extrabold text-white">Export Data</h3>
+                    <p class="text-xs text-slate-400">Configure export scope, target fields, and output format</p>
+                </div>
+            </div>
+            <button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                (click)="close()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 flex flex-col gap-6">
+
+            <!-- Scope (Radio Cards Grid) -->
+            <div class="flex flex-col gap-2.5">
+                <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Export Scope</label>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- Scope 1: All Records -->
+                    <label
+                        class="flex items-start gap-3 p-3.5 rounded-xl cursor-pointer hover:bg-slate-800/60 transition-all border border-slate-800 bg-slate-950/40"
+                        [ngClass]="{'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50': exportScope === 'all'}">
+                        <input type="radio" name="scope" value="all" [(ngModel)]="exportScope"
+                            class="mt-1 text-indigo-500 accent-indigo-500" />
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-slate-100">All records</span>
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 font-mono">{{ totalRecords | number }} total</span>
+                        </div>
+                    </label>
+
+                    <!-- Scope 2: Filtered Query -->
+                    @if (isFilterActive) {
+                    <label
+                        class="flex items-start gap-3 p-3.5 rounded-xl cursor-pointer hover:bg-slate-800/60 transition-all border border-slate-800 bg-slate-950/40"
+                        [ngClass]="{'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50': exportScope === 'filtered'}">
+                        <input type="radio" name="scope" value="filtered" [(ngModel)]="exportScope"
+                            class="mt-1 text-indigo-500 accent-indigo-500" />
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-slate-100">Filtered query</span>
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 font-mono">{{ (filteredCount || totalRecords) | number }} record(s)</span>
+                        </div>
+                    </label>
+                    }
+
+                    <!-- Scope 3: Selected Rows -->
+                    @if (selectedCount > 0) {
+                    <label
+                        class="flex items-start gap-3 p-3.5 rounded-xl cursor-pointer hover:bg-slate-800/60 transition-all border border-slate-800 bg-slate-950/40"
+                        [ngClass]="{'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50': exportScope === 'selected'}">
+                        <input type="radio" name="scope" value="selected" [(ngModel)]="exportScope"
+                            class="mt-1 text-indigo-500 accent-indigo-500" />
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-xs font-bold text-slate-100">Selected rows</span>
+                            <span class="text-[10.5px] text-emerald-400 font-mono font-bold mt-0.5">{{ selectedCount }} checked</span>
+                        </div>
+                    </label>
+                    }
+                </div>
+            </div>
+
+            <!-- Columns Selection Grid -->
+            <div class="flex flex-col gap-2.5">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Columns to Export</label>
+                        <span class="px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold font-mono">
+                            {{ selectedColumnCount }} / {{ exportColumns.length }} Selected
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button (click)="selectAllColumns(true)"
+                            class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Select All</button>
+                        <span class="text-slate-700">|</span>
+                        <button (click)="selectAllColumns(false)"
+                            class="text-[11px] font-bold text-slate-400 hover:text-slate-200 transition-colors">Deselect All</button>
+                    </div>
+                </div>
+                <div
+                    class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 max-h-56 overflow-y-auto pr-1.5 p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/90 shadow-inner">
+                    @for (col of exportColumns; track col.key) {
+                    <label
+                        class="flex items-center gap-2.5 text-xs text-slate-300 cursor-pointer py-2 px-2.5 rounded-xl border transition-all select-none"
+                        [ngClass]="col.selected ? 'bg-slate-900 border-indigo-500/40 text-slate-100 shadow-sm' : 'bg-slate-900/30 border-slate-800/60 text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'">
+                        <input type="checkbox" [(ngModel)]="col.selected"
+                            class="rounded border-slate-700 bg-slate-800 text-indigo-500 accent-indigo-500 shrink-0" />
+                        <span class="truncate font-semibold text-[11px]">{{ col.label }}</span>
+                    </label>
+                    }
+                </div>
+            </div>
+
+            <!-- Format Selector (Enterprise Radio Cards) -->
+            <div class="flex flex-col gap-2.5">
+                <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Format</label>
+                <div class="grid grid-cols-2 gap-3">
+                    <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+                        [ngClass]="exportFormat === 'csv' ? 'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40'">
+                        <input type="radio" name="format" value="csv" [(ngModel)]="exportFormat"
+                            class="accent-indigo-500" />
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-slate-200">CSV (.csv)</span>
+                            <span class="text-[10px] text-slate-400">Comma-separated raw dataset</span>
+                        </div>
+                    </label>
+                    <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+                        [ngClass]="exportFormat === 'xlsx' ? 'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40'">
+                        <input type="radio" name="format" value="xlsx" [(ngModel)]="exportFormat"
+                            class="accent-indigo-500" />
+                        <div class="flex flex-col">
+                            <span class="text-xs font-bold text-slate-200">Excel (.xlsx)</span>
+                            <span class="text-[10px] text-slate-400">Formatted spreadsheet workbook</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3 backdrop-blur-md">
+            <div class="text-xs text-slate-400 flex items-center gap-1">
+                <span class="text-indigo-400 font-bold font-mono text-xs">{{ exportRowCount | number }}</span> rows &times;
+                <span class="text-indigo-400 font-bold font-mono text-xs">{{ selectedColumnCount }}</span> columns
+                <span class="text-slate-500 text-[11px] font-mono">({{ (exportRowCount * selectedColumnCount) | number }} data points)</span>
+            </div>
+            <div class="flex items-center gap-2.5">
+                <button
+                    class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white rounded-xl transition-colors"
+                    (click)="close()">
+                    Cancel
+                </button>
+                <button
+                    class="px-5 py-2.5 text-xs font-extrabold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 disabled:opacity-50"
+                    [disabled]="isExporting || selectedColumnCount === 0" (click)="doExport()">
+                    @if (isExporting) {
+                    <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
+                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
+                    </svg>
+                    <span>Exporting...</span>
+                    } @else {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    <span>Export {{ exportRowCount | number }} {{ exportScope === 'selected' ? 'Selected' : '' }} Rows (.{{ exportFormat }})</span>
+                    }
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}
