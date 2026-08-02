@@ -113,8 +113,8 @@ export class ActDetailComponent implements OnInit, OnDestroy {
   getCleanTitle(sec: any): string {
     const raw = sec.clean_title || sec.title || '';
     if (!raw) return 'Section ' + (sec.section_number || sec.sectionNumber || '');
-    if (raw.includes('.—')) {
-      const titlePart = raw.split('.—')[0];
+    if (raw.includes('.-')) {
+      const titlePart = raw.split('.-')[0];
       return titlePart.replace(/^Sec(tion)?\s*\d+[\s:.\-]*/i, '').trim();
     }
     return raw.replace(/^Sec(tion)?\s*\d+[\s:.\-]*/i, '').trim();
@@ -127,10 +127,10 @@ export class ActDetailComponent implements OnInit, OnDestroy {
       return cleaned || fullContent.trim();
     }
     const raw = sec.title || '';
-    if (raw.includes('.—')) {
-      const parts = raw.split('.—');
+    if (raw.includes('.-')) {
+      const parts = raw.split('.-');
       if (parts.length > 1) {
-        return parts.slice(1).join('.—').trim();
+        return parts.slice(1).join('.-').trim();
       }
     }
     return fullContent || raw || 'Statutory provision text registered in database.';

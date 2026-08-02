@@ -103,7 +103,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.stopAutoSyncTimer();
   }
 
-  // ── Greeting & Timestamp ──
+  // -- Greeting & Timestamp --
 
   getGreeting(): string {
     const hour = new Date().getHours();
@@ -112,7 +112,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     return 'Good Evening';
   }
 
-  // ── System Health ──
+  // -- System Health --
 
   getHealthColor(service: 'node' | 'dotnet' | 'db'): string {
     if (service === 'node') {
@@ -135,7 +135,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   getHealthStatus(): string {
     const allHealthy = this.systemHealth.nodeApi && this.systemHealth.dotnetApi && this.systemHealth.database;
     if (allHealthy && this.nodeLatency < 500 && this.dotnetLatency < 500) return 'All Systems Operational';
-    if (allHealthy) return 'Systems Operational — High Latency';
+    if (allHealthy) return 'Systems Operational - High Latency';
     return 'Service Degradation Detected';
   }
 
@@ -164,7 +164,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     this.pingSystemHealth();
   }
 
-  // ── KPI Card Helpers ──
+  // -- KPI Card Helpers --
 
   get consultationCompletionRate(): number {
     const total = this.overview?.totalConsultations || 0;

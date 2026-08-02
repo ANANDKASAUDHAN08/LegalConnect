@@ -80,7 +80,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     this.renderRatingChart();
   }
 
-  // ── Shared chart styling ──
+  // -- Shared chart styling --
 
   private darkGridOptions(stacked = false): any {
     return {
@@ -115,7 +115,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     }
   }
 
-  // ── 1. Registration Trend (Line - 30 days) ──
+  // -- 1. Registration Trend (Line - 30 days) --
 
   private renderRegistrationChart(): void {
     if (!this.registrationCanvas?.nativeElement) return;
@@ -157,7 +157,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  // ── 2. Consultation Status (Donut) ──
+  // -- 2. Consultation Status (Donut) --
 
   private renderConsultationDonut(): void {
     if (!this.consultationDonutCanvas?.nativeElement) return;
@@ -217,7 +217,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  // ── 3. Login Security (Stacked Bar - Success vs Failed) ──
+  // -- 3. Login Security (Stacked Bar - Success vs Failed) --
 
   private renderLoginSecurityChart(): void {
     if (!this.loginSecurityCanvas?.nativeElement) return;
@@ -269,7 +269,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  // ── 4. Top Specializations (Horizontal Bar) ──
+  // -- 4. Top Specializations (Horizontal Bar) --
 
   private renderSpecializationChart(): void {
     if (!this.specializationCanvas?.nativeElement) return;
@@ -319,7 +319,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  // ── 5. City Distribution (Grouped Bar) ──
+  // -- 5. City Distribution (Grouped Bar) --
 
   private renderCityChart(): void {
     if (!this.cityCanvas?.nativeElement) return;
@@ -370,7 +370,7 @@ export class DashboardChartsComponent implements AfterViewInit, OnChanges {
     });
   }
 
-  // ── 6. Rating Breakdown (Horizontal Bar - Star Distribution) ──
+  // -- 6. Rating Breakdown (Horizontal Bar - Star Distribution) --
 
   private renderRatingChart(): void {
     if (!this.ratingCanvas?.nativeElement) return;

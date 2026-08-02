@@ -29,7 +29,7 @@ export class AccountComponent implements OnInit {
 
   activeTab: 'info' | 'password' | '2fa' | 'sessions' | 'audit' = 'info';
 
-  // ── Account Info & Profile Edit ──
+  // -- Account Info & Profile Edit --
   profile: any = null;
   isLoadingProfile = true;
   isEditingProfile = false;
@@ -81,7 +81,7 @@ export class AccountComponent implements OnInit {
     }
   }
 
-  // ── Change Password ──
+  // -- Change Password --
   currentPassword = '';
   newPassword = '';
   confirmPassword = '';
@@ -90,7 +90,7 @@ export class AccountComponent implements OnInit {
   showConfirmPassword = false;
   isChangingPassword = false;
 
-  // ── 2FA Management ──
+  // -- 2FA Management --
   is2FAEnabled = false;
   is2FALoading = false;
 
@@ -107,12 +107,12 @@ export class AccountComponent implements OnInit {
   showDisablePassword = false;
   isDisabling = false;
 
-  // ── Sessions ──
+  // -- Sessions --
   sessions: any[] = [];
   isLoadingSessions = false;
   isRevokingOthers = false;
 
-  // ── Security Activity Audit Log ──
+  // -- Security Activity Audit Log --
   auditLogs: AccountAuditLog[] = [];
   isLoadingAuditLogs = false;
 
@@ -129,7 +129,7 @@ export class AccountComponent implements OnInit {
     this.fetchProfile();
   }
 
-  // ── Account Security Health Score Calculation ────────────────
+  // -- Account Security Health Score Calculation ----------------
 
   get securityScore(): { score: number; label: string; colorClass: string; recommendations: string[] } {
     let score = 0;
@@ -186,7 +186,7 @@ export class AccountComponent implements OnInit {
     return { score, label, colorClass, recommendations };
   }
 
-  // ── Account Info & Profile Management ────────────────────────
+  // -- Account Info & Profile Management ------------------------
 
   fetchProfile(): void {
     this.isLoadingProfile = true;
@@ -263,7 +263,7 @@ export class AccountComponent implements OnInit {
     });
   }
 
-  // ── Password Strength ────────────────────────────────────────
+  // -- Password Strength ----------------------------------------
 
   get passwordStrength(): { score: number; label: string; color: string } {
     const p = this.newPassword;
@@ -333,7 +333,7 @@ export class AccountComponent implements OnInit {
     });
   }
 
-  // ── 2FA Management ───────────────────────────────────────────
+  // -- 2FA Management -------------------------------------------
 
   initiate2FASetup(): void {
     this.is2FALoading = true;
@@ -471,7 +471,7 @@ export class AccountComponent implements OnInit {
     printWindow.print();
   }
 
-  // ── Sessions Management ──────────────────────────────────────
+  // -- Sessions Management --------------------------------------
 
   fetchSessions(): void {
     this.isLoadingSessions = true;
@@ -537,7 +537,7 @@ export class AccountComponent implements OnInit {
     });
   }
 
-  // ── Security Activity Audit Logs ─────────────────────────────
+  // -- Security Activity Audit Logs -----------------------------
 
   fetchAuditLogs(): void {
     this.isLoadingAuditLogs = true;

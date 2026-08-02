@@ -1,6 +1,6 @@
-<div class="px-3 pt-6 w-full flex flex-col gap-2">
+<div class="px-3 py-4 w-full flex flex-col gap-2">
 
-  <!-- ─── 0. Open Hero Header & Unified Stats Bar ─── -->
+  <!-- --- 0. Open Hero Header & Unified Stats Bar --- -->
   <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-6 relative">
     <div class="flex flex-col gap-0 max-w-2xl">
       <h1 class="text-3xl font-black text-white tracking-tight">User Directory <span
@@ -107,190 +107,41 @@
     </div>
   </div>
 
-  <!-- ─── 1. Filter & Search Bar ─── -->
+  <!-- --- 1. Filter & Search Bar --- -->
   <div
-    class="glass-card page-filters p-2 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md animate-in">
+    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-col gap-2.5 animate-in">
     <!-- Top Controls Row: 1-Line Responsive Toolbar (Zero Box Fatigue) -->
-    <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible py-1.5">
+    <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
       <!-- Search Input (Far Left) -->
-      <div class="search-box flex-1 min-w-[200px] !max-w-[350px] lg:max-w-xs relative shrink-0">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="absolute left-3 top-1/2 -translate-y-1/2 text-sky-400/80 pointer-events-none">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input type="text"
-          class="form-input w-full !pl-9 pr-8 bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-xl text-xs py-2 transition-all focus:border-indigo-500/50"
-          placeholder="Search users by name or email..." [(ngModel)]="search" (ngModelChange)="onSearchInput($event)"
-          [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
-        @if (search) {
-        <button
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors text-sm font-bold p-1 leading-none"
-          (click)="search = ''; onSearchInput('');" [adminTooltip]="'Clear search query'">
-          &times;
-        </button>
-        }
-      </div>
+      <admin-search-input [value]="search" placeholder="Search users by name or email..."
+        tooltip="Type query to auto-debounce search by 300ms" (searchChange)="onSearchChange($event)">
+      </admin-search-input>
 
       <!-- Center & Right Controls (Single Unified Segmented Toolbar) -->
-      <div class="filter-group flex items-center gap-2 shrink-0">
-        <!-- Segment 1: Filters Segmented Bar -->
+      <div
+        class="filter-group flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink min-w-0 max-w-full overflow-visible">
+        <!-- Segment 1: Inline Filter Dropdowns -->
         <admin-select [options]="roleOptions" [value]="selectedRole" icon="user"
-          (valueChange)="selectedRole = $event; onFilterChange();" minWidth="135px"
+          (valueChange)="selectedRole = $event; onFilterChange();" minWidth="110px"
           [adminTooltip]="'Filter by user role permission'" tooltipPosition="top">
         </admin-select>
 
         <admin-select [options]="statusOptions" [value]="selectedStatus" icon="shield"
-          (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="130px"
+          (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="105px"
           [adminTooltip]="'Filter by active or suspended status'" tooltipPosition="top">
         </admin-select>
 
-        <admin-select [options]="sortOptions" [value]="sortBy" icon="clock" (valueChange)="onSortDropdownChange($event)"
-          minWidth="135px" [adminTooltip]="'Select table sort ordering'" tooltipPosition="top">
-        </admin-select>
-
         <!-- Segment 2: View & Tools Segmented Bar -->
-        <div class="flex items-center gap-1 bg-slate-800/40 p-0.5 rounded-xl border border-slate-800/80">
+        <div class="flex items-center gap-1 bg-slate-800/40 p-0.5 rounded-xl border border-slate-800/80 shrink-0">
           <!-- Column Customizer Dropdown Toggle -->
-          <div class="relative column-customizer-container">
-            <button
-              class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg hover:bg-slate-700/60 text-slate-300 hover:text-white transition-all"
-              [class.text-indigo-300]="isColumnMenuOpen" (click)="isColumnMenuOpen = !isColumnMenuOpen"
-              [adminTooltip]="'Customize visible table columns'" tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-indigo-400">
-                <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18">
-                </path>
-              </svg>
-              <span>Columns</span>
-            </button>
-            @if (isColumnMenuOpen) {
-            <div
-              class="absolute right-0 top-full mt-2 w-52 bg-slate-900 border border-slate-700 rounded-xl p-2.5 shadow-2xl z-30 flex flex-col gap-2 text-xs">
-              <div class="flex items-center justify-between border-b border-slate-800 pb-1.5 select-none">
-                <span class="font-bold text-slate-400 text-[10px] uppercase tracking-wider">Visible Columns</span>
-                <button (click)="toggleAllColumns()"
-                  class="text-[10px] font-bold text-sky-400 hover:text-sky-300 transition-colors">
-                  {{ areAllColumnsVisible ? 'Deselect All' : 'Select All' }}
-                </button>
-              </div>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
-                <input type="checkbox" [checked]="columnVisibility.profile" (change)="toggleColumnVisibility('profile')"
-                  class="rounded border-slate-700 bg-slate-800" />
-                <span>User Profile</span>
-              </label>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
-                <input type="checkbox" [checked]="columnVisibility.role" (change)="toggleColumnVisibility('role')"
-                  class="rounded border-slate-700 bg-slate-800" />
-                <span>Role / Privilege</span>
-              </label>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
-                <input type="checkbox" [checked]="columnVisibility.security"
-                  (change)="toggleColumnVisibility('security')" class="rounded border-slate-700 bg-slate-800" />
-                <span>2FA &amp; Security</span>
-              </label>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
-                <input type="checkbox" [checked]="columnVisibility.auth" (change)="toggleColumnVisibility('auth')"
-                  class="rounded border-slate-700 bg-slate-800" />
-                <span>Auth Provider</span>
-              </label>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
-                <input type="checkbox" [checked]="columnVisibility.lastActive"
-                  (change)="toggleColumnVisibility('lastActive')" class="rounded border-slate-700 bg-slate-800" />
-                <span>Last Active / Joined</span>
-              </label>
-              <label class="flex items-center gap-2 text-slate-300 cursor-pointer hover:text-white">
-                <input type="checkbox" [checked]="columnVisibility.status" (change)="toggleColumnVisibility('status')"
-                  class="rounded border-slate-700 bg-slate-800" />
-                <span>Account Status</span>
-              </label>
-            </div>
-            }
-          </div>
+          <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
+            (visibilityChange)="onColumnVisibilityChange($event)">
+          </admin-column-customizer>
 
           <!-- Custom Date Range Dropdown Popover Toggle -->
-          <div class="relative date-picker-container">
-            <button class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
-              [ngClass]="startDate || endDate ? 'bg-sky-500/15 text-sky-300 border border-sky-500/35 shadow-[0_0_12px_rgba(56,189,248,0.18)]' : 'hover:bg-slate-700/60 text-slate-300 hover:text-white'"
-              (click)="isCustomDateModalOpen = !isCustomDateModalOpen"
-              [adminTooltip]="'Filter by custom date range bounds'" tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-amber-400" [class.text-sky-400]="startDate || endDate">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
-              <span>{{ startDate || endDate ? (startDate + ' – ' + endDate) : 'Dates' }}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                class="transition-transform duration-200" [class.rotate-180]="isCustomDateModalOpen">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
-            </button>
-
-            @if (isCustomDateModalOpen) {
-            <div
-              class="absolute right-0 top-full mt-2 w-72 bg-slate-900 border border-slate-700/80 rounded-2xl p-4 shadow-2xl z-30 flex flex-col gap-3 text-xs animate-in">
-              <div class="flex items-center justify-between border-b border-slate-800 pb-2 text-slate-200">
-                <span class="font-bold flex items-center gap-1.5">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="text-sky-400">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  Date Filter
-                </span>
-                <button (click)="isCustomDateModalOpen = false"
-                  class="text-slate-400 hover:text-white transition-colors">✕</button>
-              </div>
-
-              <!-- Quick Presets -->
-              <div class="flex flex-col gap-1.5">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Quick Presets</span>
-                <div class="grid grid-cols-2 gap-1.5">
-                  <button (click)="selectDatePreset('today')"
-                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">Today</button>
-                  <button (click)="selectDatePreset('7days')"
-                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">Last
-                    7 Days</button>
-                  <button (click)="selectDatePreset('30days')"
-                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">Last
-                    30 Days</button>
-                  <button (click)="selectDatePreset('thisMonth')"
-                    class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white text-left font-medium transition-all">This
-                    Month</button>
-                </div>
-              </div>
-
-              <!-- Custom Date Range -->
-              <div class="flex flex-col gap-2 pt-1 border-t border-slate-800/80">
-                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Custom Range</span>
-                <div class="grid grid-cols-2 gap-2">
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-semibold text-slate-400">From</label>
-                    <input #startInput type="date" [value]="startDate"
-                      class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-sky-500" />
-                  </div>
-                  <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-semibold text-slate-400">To</label>
-                    <input #endInput type="date" [value]="endDate"
-                      class="bg-slate-800/90 border border-slate-700/80 rounded-lg px-2 py-1 text-slate-200 text-xs focus:outline-none focus:border-sky-500" />
-                  </div>
-                </div>
-              </div>
-
-              <!-- Footer Actions -->
-              <div class="flex items-center justify-between border-t border-slate-800 pt-2 mt-0.5">
-                <button (click)="clearCustomDateRange()"
-                  class="px-2.5 py-1 text-slate-400 hover:text-white font-medium transition-colors">Clear</button>
-                <button (click)="applyCustomDateRange(startInput.value, endInput.value)"
-                  class="px-3.5 py-1.5 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-lg shadow-md transition-all">Apply</button>
-              </div>
-            </div>
-            }
-          </div>
+          <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-sky-400"
+            tooltip="Filter users by date bounds" (rangeChange)="onDateRangeChange($event)">
+          </admin-date-range-picker>
 
           <!-- Refresh Button -->
           <button
@@ -307,23 +158,14 @@
         <!-- Export CSV Button (Far Right) -->
         <button
           class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
-          (click)="exportToCsv()" [disabled]="isExporting"
-          [adminTooltip]="'Export filtered users directory to CSV spreadsheet'" tooltipPosition="top">
-          @if (isExporting) {
-          <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
-          </svg>
-          <span>Exporting...</span>
-          } @else {
+          (click)="openExportModal()" [adminTooltip]="'Export filtered users directory to CSV spreadsheet'"
+          tooltipPosition="top">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
           <span>Export CSV</span>
-          }
         </button>
       </div>
     </div>
@@ -341,7 +183,7 @@
         }
 
         <!-- Selection Active Badge -->
-        @if (selectedUserIds.size > 0) {
+        @if (selection.size > 0) {
         <span
           class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold shadow-sm">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -349,7 +191,7 @@
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
-          <span><strong class="text-white">{{ selectedUserIds.size }}</strong> selected</span>
+          <span><strong class="text-white">{{ selection.size }}</strong> selected</span>
         </span>
         }
 
@@ -368,40 +210,41 @@
 
       <!-- Right Action Area (Bulk Buttons + Clear Link) -->
       <div class="flex items-center gap-2">
-        @if (selectedUserIds.size > 0) {
+        @if (selection.size > 0) {
         <button
-          class="btn flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 font-semibold border-0 transition-all shadow-sm"
-          (click)="bulkUpdateStatus(true)" [adminTooltip]="'Activate all selected user accounts'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+          (click)="bulkUpdateStatus(true)" [adminTooltip]="'Bulk activate selected user accounts'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Bulk Activate</span>
         </button>
+
         <button
-          class="btn flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 font-semibold border-0 transition-all shadow-sm"
-          (click)="bulkUpdateStatus(false)" [adminTooltip]="'Suspend all selected user accounts'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          class="px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+          (click)="bulkUpdateStatus(false)" [adminTooltip]="'Bulk suspend selected user accounts'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
           </svg>
           <span>Bulk Suspend</span>
         </button>
-        <div class="w-px h-4 bg-slate-700/60 mx-1"></div>
-        }
 
-        @if (isFilterActive) {
+        <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
+          (click)="selection.clear()">
+          Cancel
+        </button>
+        } @else if (isFilterActive) {
         <button (click)="resetFilters()"
           class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2">
-          {{ selectedUserIds.size > 0 && hasQueryFilter ? 'Clear Selection & Filters' : (selectedUserIds.size > 0 ?
-          'Clear Selection' : 'Clear Filter Criteria') }}
+          Clear Filter Criteria
         </button>
         }
       </div>
     </div>
   </div>
 
-  <!-- ─── Main User Data Table ─── -->
+  <!-- --- Main User Data Table --- -->
   <div
     class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
     <div class="data-table-wrapper overflow-x-auto min-h-[380px]">
@@ -411,48 +254,31 @@
       </div>
       }
 
-      @if (!isLoading && users.length === 0) {
-      <!-- Full-Size Unified Empty State (No Header Line Divider) -->
-      <div
-        class="empty-state-full-wrapper min-h-[380px] py-16 px-4 flex flex-col items-center justify-center text-center my-auto">
-        <div
-          class="w-16 h-16 rounded-2xl bg-gradient-to-b from-sky-500/15 to-slate-800/40 border border-sky-500/25 text-sky-400 flex items-center justify-center shadow-lg shadow-sky-500/5 group hover:scale-105 transition-all duration-300 mb-3">
-          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-            <line x1="17" y1="9" x2="21" y2="13"></line>
-            <line x1="21" y1="9" x2="17" y2="13"></line>
-          </svg>
-        </div>
-        <div class="flex flex-col gap-1 max-w-md">
-          <h3 class="text-base font-extrabold text-slate-100 tracking-tight">No User Accounts Found</h3>
-          <p class="text-xs text-slate-400 leading-relaxed">
-            No user profiles match your active search or role criteria. Try refining your search query or reset your
-            filters.
-          </p>
-        </div>
-        @if (isFilterActive) {
-        <button (click)="resetFilters()"
-          class="mt-4 btn inline-flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 border border-sky-500/30 hover:border-sky-500/50 transition-all shadow-sm">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-          </svg>
-          <span>Reset Directory Filters</span>
-        </button>
-        }
-      </div>
+      @if (isNoColumnsVisible) {
+      <!-- Full-Size Unified Columns Hidden Empty State -->
+      <admin-empty-state title="All Data Columns Currently Hidden"
+        message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display directory records."
+        [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
+        (action)="onColumnVisibilityChange({ profile: true, role: true, security: true, auth: true, lastActive: true, status: true })">
+        <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
+        </svg>
+      </admin-empty-state>
+      } @else if (!isLoading && users.length === 0) {
+      <!-- Full-Size Unified Empty State -->
+      <admin-empty-state title="No User Accounts Found"
+        message="No user profiles match your active search or role criteria. Try refining your search query or reset your filters."
+        [showAction]="isFilterActive" actionLabel="Reset Directory Filters" (action)="resetFilters()">
+      </admin-empty-state>
       } @else {
       <table class="data-table w-full min-w-[1080px] text-left border-collapse"
         [class.table-refreshing]="!isInitialLoad && isLoading">
-        @if (!isNoColumnsVisible) {
         <thead>
           <tr
             class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-            <th class="p-3.5 text-center" width="35px">
+            <th class="p-3 text-center" width="35px">
               <input type="checkbox" class="rounded border-slate-700 bg-slate-800" [checked]="isAllSelected()"
-                (change)="toggleSelectAll($event)" [adminTooltip]="'Select all rows'" tooltipPosition="top" />
+                (change)="toggleSelectAll()" [adminTooltip]="'Select all rows'" tooltipPosition="top" />
             </th>
             <!-- User Profile (Sortable) -->
             @if (columnVisibility.profile) {
@@ -580,7 +406,6 @@
             </th>
           </tr>
         </thead>
-        }
 
         <tbody class="text-xs">
           @if (isInitialLoad && isLoading) {
@@ -625,32 +450,15 @@
             </td>
           </tr>
           }
-          } @else if (isNoColumnsVisible) {
-          <tr>
-            <td colspan="100" class="py-12 text-center text-slate-400 text-xs">
-              <div class="flex flex-col items-center justify-center gap-2">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-500">
-                  <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18">
-                  </path>
-                </svg>
-                <span class="font-semibold text-slate-300">All data columns are currently hidden</span>
-                <button (click)="toggleAllColumns(true)"
-                  class="btn btn-xs bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-[11px] px-3.5 py-1.5 rounded-lg shadow-md transition-all">
-                  Show All Columns
-                </button>
-              </div>
-            </td>
-          </tr>
           } @else {
           @for (u of users; track u.id; let i = $index) {
           <tr class="table-data-row transition-colors cursor-pointer"
-            [ngClass]="{ 'bg-indigo-500/10': selectedUserIds.has(u.id), 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
-            (dblclick)="openAuditDrawer(u)"
+            [ngClass]="{ 'bg-indigo-950/40 selected-row': selection.isSelected(u.id), 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
+            (click)="selection.toggle(u.id)" (dblclick)="openAuditDrawer(u)"
             [adminTooltip]="'Double-click row (or press j/k + Enter) to open Security Drawer'" tooltipPosition="top">
-            <td class="p-3.5 text-center">
-              <input type="checkbox" class="rounded border-slate-700 bg-slate-800" [checked]="selectedUserIds.has(u.id)"
-                (change)="toggleSelectUser(u.id)" />
+            <td class="p-3.5 text-center" (click)="$event.stopPropagation()">
+              <input type="checkbox" class="rounded border-slate-700 bg-slate-800 cursor-pointer"
+                [checked]="selection.isSelected(u.id)" (change)="selection.toggle(u.id)" />
             </td>
             <!-- User Profile -->
             @if (columnVisibility.profile) {
@@ -662,8 +470,7 @@
                 </div>
                 <div class="flex flex-col min-w-0">
                   <div class="flex items-center gap-1.5">
-                    <span class="font-bold text-slate-100 truncate hover:text-sky-300 transition-colors cursor-pointer"
-                      (click)="openAuditDrawer(u)">{{ u.fullName }}</span>
+                    <span class="font-bold text-slate-100 truncate">{{ u.fullName }}</span>
                     @if (u.isEmailVerified) {
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"
                       [adminTooltip]="'Email address verified'" tooltipPosition="top">
@@ -716,7 +523,7 @@
                 tooltipPosition="top">
                 <span class="text-slate-200 font-medium text-[11px]">{{ u.lastLoginAt ? (u.lastLoginAt | date:'short') :
                   'Active' }}</span>
-                <span class="text-slate-400 text-[10px] font-mono">{{ u.lastIpAddress || '—' }}</span>
+                <span class="text-slate-400 text-[10px] font-mono">{{ u.lastIpAddress || '-' }}</span>
               </div>
             </td>
             }
@@ -736,10 +543,10 @@
             }
 
             <!-- Action Controls (Kebab Menu) -->
-            <td class="p-3.5 text-center w-20">
+            <td class="p-3.5 text-center w-20" (click)="$event.stopPropagation()">
               <div class="flex items-center justify-center w-full">
                 <button #kebabBtn
-                  class="kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 bg-slate-800/40 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
+                  class="action-menu-btn kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 bg-slate-800/40 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
                   [class.active]="openActionMenuId === u.id" (click)="toggleActionMenu(u.id, kebabBtn, $event)"
                   [adminTooltip]="'Account Actions'" tooltipPosition="left">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -750,72 +557,29 @@
                 </button>
               </div>
             </td>
-            }
-            }
+          </tr>
+          }
+          }
         </tbody>
       </table>
       }
     </div>
 
-    <!-- Pagination Footer Bar with Rows Per Page Selector -->
-    <div
-      class="pagination p-4 border-t border-slate-800 bg-slate-900/60 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400">
-      <div class="flex flex-wrap items-center gap-3">
-        <div class="flex items-center gap-2">
-          <span class="text-slate-300 font-semibold text-xs">Rows per page:</span>
-          <admin-select [options]="limitOptions" [value]="pagination.limit + ''" (valueChange)="onLimitChange($event)"
-            minWidth="140px" dropPosition="auto" [adminTooltip]="'Select number of rows per page'"
-            tooltipPosition="top">
-          </admin-select>
-        </div>
-        <span class="hidden md:inline text-slate-700">|</span>
-        <div class="page-info text-slate-300 font-medium">
-          Showing <strong class="text-white">{{ startRecord }}</strong> to <strong class="text-white">{{ endRecord
-            }}</strong> of <strong class="text-white">{{ pagination.total }}</strong> records
-        </div>
-      </div>
-
-      <div class="pagination-controls flex items-center gap-3">
-        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5 rounded-xl font-semibold"
-          [disabled]="pagination.page <= 1" (click)="changePage(pagination.page - 1)"
-          [adminTooltip]="'Previous page results'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          <span>Previous</span>
-        </button>
-
-        <span class="page-indicator font-medium text-slate-300">
-          Page <strong class="text-white">{{ pagination.page }}</strong> of <strong class="text-white">{{
-            pagination.pages }}</strong>
-        </span>
-
-        <button class="btn btn-secondary btn-sm flex items-center gap-1 px-3 py-1.5 rounded-xl font-semibold"
-          [disabled]="pagination.page >= pagination.pages" (click)="changePage(pagination.page + 1)"
-          [adminTooltip]="'Next page results'">
-          <span>Next</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
-    </div>
+    <!-- Pagination Footer Bar -->
+    <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
+      [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onLimitChange($event)">
+    </admin-pagination>
 
   </div>
 </div>
 
-<!-- ─── FLOATING ACTION DROPDOWN ─── -->
-@if (openActionMenuId !== null && getOpenActionUser()) {
-<div class="action-menu-backdrop" (click)="openActionMenuId = null"></div>
-<div class="action-dropdown" [ngStyle]="{ top: actionMenuPosition.top + 'px', left: actionMenuPosition.left + 'px' }"
-  (click)="$event.stopPropagation()">
-  <!-- Header -->
-  <div class="dropdown-header">
-    <span class="dropdown-header-label">User Security &amp; Actions</span>
-  </div>
+<!-- --- FLOATING ACTION DROPDOWN --- -->
+<admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionUser()"
+  headerLabel="User Security & Actions" (closed)="closeActionMenu()">
 
+  @if (getOpenActionUser()) {
   <!-- View Audit Trail & Telemetry -->
-  <button class="dropdown-item" (click)="openAuditDrawer(getOpenActionUser()!); openActionMenuId = null">
+  <button class="dropdown-item" (click)="openAuditDrawer(getOpenActionUser()!); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       class="text-sky-400">
       <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
@@ -828,7 +592,7 @@
   </button>
 
   <!-- Force Password Reset -->
-  <button class="dropdown-item" (click)="sendForcePasswordReset(getOpenActionUser()!); openActionMenuId = null">
+  <button class="dropdown-item" (click)="sendForcePasswordReset(getOpenActionUser()!); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       class="text-purple-400">
       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
@@ -853,7 +617,7 @@
   }
 
   <!-- Revoke Active Session (Logout) -->
-  <button class="dropdown-item" (click)="revokeActiveSessions(getOpenActionUser()!); openActionMenuId = null">
+  <button class="dropdown-item" (click)="revokeActiveSessions(getOpenActionUser()!); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       class="text-amber-400">
       <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
@@ -865,7 +629,7 @@
 
   <!-- Manual Email Verification Override -->
   @if (!getOpenActionUser()!.isEmailVerified) {
-  <button class="dropdown-item" (click)="verifyEmailManually(getOpenActionUser()!); openActionMenuId = null">
+  <button class="dropdown-item" (click)="verifyEmailManually(getOpenActionUser()!); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
       <polyline points="20 6 9 17 4 12"></polyline>
     </svg>
@@ -878,7 +642,7 @@
   @if (getOpenActionUser()!.role !== 'Admin') {
   <div class="dropdown-divider"></div>
   @if (getOpenActionUser()!.role !== 'Lawyer') {
-  <button class="dropdown-item" (click)="changeUserRole(getOpenActionUser()!, 'Lawyer'); openActionMenuId = null">
+  <button class="dropdown-item" (click)="changeUserRole(getOpenActionUser()!, 'Lawyer'); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       class="text-indigo-400">
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
@@ -887,7 +651,7 @@
   </button>
   }
   @if (getOpenActionUser()!.role !== 'Client') {
-  <button class="dropdown-item" (click)="changeUserRole(getOpenActionUser()!, 'Client'); openActionMenuId = null">
+  <button class="dropdown-item" (click)="changeUserRole(getOpenActionUser()!, 'Client'); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
       class="text-sky-400">
       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
@@ -906,7 +670,7 @@
     System Admins cannot be suspended
   </div>
   } @else {
-  <button class="dropdown-item danger" (click)="toggleActive(getOpenActionUser()!); openActionMenuId = null">
+  <button class="dropdown-item danger" (click)="toggleActive(getOpenActionUser()!); closeActionMenu()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <circle cx="12" cy="12" r="10"></circle>
       <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
@@ -914,12 +678,20 @@
     <span>{{ getOpenActionUser()!.isActive ? 'Suspend Account' : 'Activate Account' }}</span>
   </button>
   }
-</div>
+  }
+</admin-action-menu>
+
+<!-- --- EXPORT MODAL --- -->
+@defer (when isExportModalOpen) {
+<admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="pagination.total"
+  [selectedCount]="selection.size" [isFilterActive]="isFilterActive" [columns]="exportColumns"
+  [visibleColumnKeys]="visibleColumnKeys" (exportRequest)="handleExport($event)" (closed)="closeExportModal()">
+</admin-export-modal>
 }
 
-<!-- ─── 3-TAB SLIDE-OUT SECURITY & AUDIT DRAWER ─── -->
+<!-- --- 3-TAB SLIDE-OUT SECURITY & AUDIT DRAWER --- -->
 @if (isAuditDrawerOpen && selectedUserForAudit) {
-<div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-sm flex justify-end" (click)="closeAuditDrawer()">
+<div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex justify-end" (click)="closeAuditDrawer()">
   <div
     class="w-full max-w-2xl h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
     (click)="$event.stopPropagation()">
@@ -1082,7 +854,7 @@
           </div>
           <div class="mt-2">
             <span class="text-slate-400 block text-[11px]">Last Recorded IP</span>
-            <span class="text-sky-300 font-mono font-bold">{{ selectedUserForAudit.lastIpAddress || '—' }}</span>
+            <span class="text-sky-300 font-mono font-bold">{{ selectedUserForAudit.lastIpAddress || '-' }}</span>
           </div>
         </div>
 

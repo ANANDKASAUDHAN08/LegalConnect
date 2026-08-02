@@ -1,6 +1,6 @@
 <div class="p-2 w-full flex flex-col gap-4">
 
-  <!-- ─── 0. Top Workspace Header ─── -->
+  <!-- --- 0. Top Workspace Header --- -->
   <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl shadow-xl animate-in">
     <div class="flex items-center gap-4">
       <a routerLink="/legal-content" class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
@@ -13,7 +13,7 @@
       </a>
       <div class="flex flex-col">
         <h1 class="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">{{ act?.actName || shortName }} ({{ shortName }})</h1>
-        <span class="text-xs text-[var(--text-secondary)]">Year {{ act?.year }} — Enacted Statutory Legal Code</span>
+        <span class="text-xs text-[var(--text-secondary)]">Year {{ act?.year }} - Enacted Statutory Legal Code</span>
       </div>
     </div>
 
@@ -54,7 +54,7 @@
     </div>
   </div>
 
-  <!-- ─── 1. Main Two-Column Reader Workspace ─── -->
+  <!-- --- 1. Main Two-Column Reader Workspace --- -->
   @if (isLoading) {
   <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 animate-in">
     <div class="glass-card p-6 rounded-2xl">
@@ -69,7 +69,7 @@
   } @else {
   <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 animate-in">
     <!-- Left Column: Chapter & Section Navigation Index -->
-    <aside class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-4 max-h-[calc(100vh-140px)] overflow-hidden" [adminTooltip]="'Statutory Table of Contents — Click to jump'"
+    <aside class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-4 max-h-[calc(100vh-140px)] overflow-hidden" [adminTooltip]="'Statutory Table of Contents - Click to jump'"
       tooltipPosition="right">
       <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
         <h4 class="font-bold text-[var(--text-primary)] text-xs uppercase tracking-wider">Table of Contents</h4>
@@ -218,7 +218,7 @@
       <div class="modal-header flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
         <div>
           <h3 class="text-lg font-bold text-[var(--text-primary)]">Edit Section {{ editForm.section_number }}</h3>
-          <p class="text-xs text-[var(--text-secondary)]">{{ shortName }} — Statutory Text Amendment</p>
+          <p class="text-xs text-[var(--text-secondary)]">{{ shortName }} - Statutory Text Amendment</p>
         </div>
         <button class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1" (click)="editingSection = null" [adminTooltip]="'Close edit modal'"
           tooltipPosition="left">&times;</button>

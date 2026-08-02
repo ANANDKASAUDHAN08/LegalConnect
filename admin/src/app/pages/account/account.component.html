@@ -1,8 +1,8 @@
 <div class="account-page-container px-2 pt-4 w-full flex flex-col gap-4">
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  0. HERO HEADER & SECURITY HEALTH BANNER                    -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <div
     class="account-hero-banner relative overflow-hidden p-4 rounded-3xl flex flex-col xl:flex-row xl:items-center justify-between gap-6">
 
@@ -82,7 +82,7 @@
 
         <span class="text-xs font-bold px-3 py-1 rounded-full backdrop-blur-md shadow-sm border"
           [ngClass]="securityScore.colorClass">
-          {{ securityScore.score }}% — {{ securityScore.label }}
+          {{ securityScore.score }}% - {{ securityScore.label }}
         </span>
       </div>
 
@@ -123,9 +123,9 @@
 
   </div>
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB NAVIGATION BAR                                         -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <div class="account-tab-bar flex items-center gap-2 overflow-x-auto p-1.5 rounded-2xl shadow-md">
     <button
       class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
@@ -191,9 +191,9 @@
   </div>
 
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB 1: ACCOUNT INFO & EDITABLE PROFILE                     -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   @if (activeTab === 'info') {
   <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-6">
 
@@ -378,14 +378,14 @@
       <div
         class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
         <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Full Name</span>
-        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.fullName || '—' }}</span>
+        <span class="text-sm font-bold text-[var(--text-primary)]">{{ profile?.fullName || '-' }}</span>
       </div>
 
       <div
         class="info-card flex flex-col gap-1 p-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-glass)]">
         <span class="text-[11px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">Email
           Address</span>
-        <span class="text-sm font-bold text-[var(--text-primary)] font-mono">{{ profile?.email || '—' }}</span>
+        <span class="text-sm font-bold text-[var(--text-primary)] font-mono">{{ profile?.email || '-' }}</span>
       </div>
 
       <div
@@ -460,9 +460,9 @@
   }
 
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB 2: CHANGE PASSWORD (REVAMPED 2-COLUMN LAYOUT)         -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   @if (activeTab === 'password') {
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full animate-in">
 
@@ -759,12 +759,12 @@
   }
 
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB 3: TWO-FACTOR AUTHENTICATION (BEAUTIFUL VISUAL REVAMP)-->
-  <!-- ═══════════════════════════════════════════════════════════ -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB 3: TWO-FACTOR AUTHENTICATION (SIDE-BY-SIDE GRID)      -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   @if (activeTab === '2fa') {
   <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full animate-in">
 
@@ -912,7 +912,7 @@
           }
         </div>
 
-        <!-- ── 2FA DISABLED: Enable Flow ── -->
+        <!-- -- 2FA DISABLED: Enable Flow -- -->
         @if (!is2FAEnabled) {
 
         @if (setupStep === 'idle') {
@@ -1036,7 +1036,7 @@
           <button
             class="btn btn-primary w-full py-3.5 text-xs font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25"
             (click)="proceedToVerify()">
-            <span>I Have Saved My Backup Codes — Continue to Verification</span>
+            <span>I Have Saved My Backup Codes - Continue to Verification</span>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="5" y1="12" x2="19" y2="12"></line>
               <polyline points="12 5 19 12 12 19"></polyline>
@@ -1092,7 +1092,7 @@
 
         }
 
-        <!-- ── 2FA ENABLED: Active View & Options ── -->
+        <!-- -- 2FA ENABLED: Active View & Options -- -->
         @if (is2FAEnabled && setupStep !== 'done') {
         <div class="flex flex-col gap-6">
 
@@ -1169,9 +1169,9 @@
   }
 
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB 4: YOUR SESSIONS                                     -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   @if (activeTab === 'sessions') {
   <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-5">
 
@@ -1287,9 +1287,9 @@
   }
 
 
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   <!--  TAB 5: SECURITY ACTIVITY LOG                               -->
-  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ----------------------------------------------------------- -->
   @if (activeTab === 'audit') {
   <div class="glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-5">
 
@@ -1336,7 +1336,7 @@
               Login {{ log.status }}
             </span>
             <span class="text-[11px] text-[var(--text-tertiary)] font-mono">
-              IP: {{ log.ipAddress }} — {{ parseUserAgent(log.userAgent).browser }} ({{ parseUserAgent(log.userAgent).os
+              IP: {{ log.ipAddress }} - {{ parseUserAgent(log.userAgent).browser }} ({{ parseUserAgent(log.userAgent).os
               }})
             </span>
           </div>

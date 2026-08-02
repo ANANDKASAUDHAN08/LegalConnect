@@ -6,6 +6,7 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
+import { CsvExporter } from '../../core/utils/csv-exporter';
 
 @Component({
   selector: 'admin-helplines',
@@ -221,21 +222,18 @@ export class HelplinesComponent implements OnInit {
 
     const headers = ['Name', 'Number', 'Category', 'Description', 'Status'];
     const rows = this.filteredHelplines.map(h => [
-      `"${(h.name || h.title || '').replace(/"/g, '""')}"`,
-      `"${(h.number || h.phone || '').replace(/"/g, '""')}"`,
-      `"${(h.category || '').replace(/"/g, '""')}"`,
-      `"${(h.description || '').replace(/"/g, '""')}"`,
+      h.name || h.title || '',
+      h.number || h.phone || '',
+      h.category || '',
+      h.description || '',
       h.isActive !== false ? 'Active' : 'Offline'
     ]);
 
-    const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `helplines_directory_${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-    this.toast.success('Helpline directory exported to CSV.');
+    try {
+      CsvExporter.export('helplines_directory', headers, rows);
+      this.toast.success('Helpline directory exported to CSV.');
+    } catch (err: any) {
+      this.toast.error(err.message || 'Export failed.');
+    }
   }
 }

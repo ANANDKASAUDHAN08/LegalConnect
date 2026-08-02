@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, ElementRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
@@ -13,13 +13,21 @@ import { AdminThemeService } from '../../core/services/admin-theme.service';
 import { ActivatedRoute, Router } from '@angular/router';
 import { smartLoading } from '../../core/utils/smart-loading.operator';
 import { CsvExporter } from '../../core/utils/csv-exporter';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { ActionMenuComponent } from '../../shared/components/action-menu/action-menu.component';
+import { ColumnCustomizerComponent, ColumnDef } from '../../shared/components/column-customizer/column-customizer.component';
+import { AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent } from '../../shared/components/data-table/data-table-helpers.component';
+import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
+import { DateRangePickerComponent, DateRangeEvent } from '../../shared/components/date-range-picker/date-range-picker.component';
+import { TableSelection } from '../../core/utils/table.utils';
 
 @Component({
   selector: 'admin-consultations',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent],
   templateUrl: './consultations.component.html',
-  styleUrl: './consultations.component.scss'
+  styleUrl: './consultations.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit {
   consultations: any[] = [];
@@ -30,12 +38,21 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   searchQuery = '';
   slaFilter = '';
   dateRangeFilter = '';
+
   sortBy = 'createdAt';
   sortOrder: 'asc' | 'desc' = 'desc';
   presetTab: 'all' | 'overdue' | 'pending' | 'contacted' | 'closed' = 'all';
   focusedRowIndex = -1;
-  isColumnMenuOpen = false;
-  columnVisibility = {
+  columnDefs: ColumnDef[] = [
+    { key: 'client', label: 'Client Details' },
+    { key: 'phone', label: 'Phone Number' },
+    { key: 'lawyer', label: 'Assigned Advocate' },
+    { key: 'sla', label: 'Urgency SLA' },
+    { key: 'message', label: 'Inquiry Summary' },
+    { key: 'status', label: 'Status' },
+    { key: 'createdAt', label: 'Submission Date' }
+  ];
+  columnVisibility: any = {
     client: true,
     phone: true,
     lawyer: true,
@@ -47,7 +64,46 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   private routeSubscription?: Subscription;
 
   // Multi-select state
-  selectedIds = new Set<number>();
+  selection = new TableSelection<number>();
+
+  get consultationIds(): number[] {
+    return this.consultations.map(c => c.id);
+  }
+
+  isAllSelected(): boolean {
+    return this.selection.isAllSelected(this.consultationIds);
+  }
+
+  toggleSelectAll(): void {
+    this.selection.toggleAll(this.consultationIds);
+  }
+
+  get visibleColumnKeys(): string[] {
+    return Object.entries(this.columnVisibility).filter(([, v]) => v).map(([k]) => k);
+  }
+
+  get isNoColumnsVisible(): boolean {
+    return Object.values(this.columnVisibility).every(v => !v);
+  }
+
+  onColumnVisibilityChange(updated: Record<string, boolean>): void {
+    this.columnVisibility = updated;
+  }
+
+  // Export Modal State
+  isExportModalOpen = false;
+  exportColumns = [
+    { key: 'id', label: 'ID' },
+    { key: 'clientName', label: 'Client Name' },
+    { key: 'clientEmail', label: 'Client Email' },
+    { key: 'clientPhone', label: 'Client Phone' },
+    { key: 'lawyerName', label: 'Target Lawyer' },
+    { key: 'lawyerEmail', label: 'Lawyer Email' },
+    { key: 'status', label: 'Status' },
+    { key: 'adminRemark', label: 'Admin Note' },
+    { key: 'message', label: 'Message' },
+    { key: 'createdAt', label: 'Requested Date' }
+  ];
 
   selectedConsultation: any = null;
   adminRemarkInput = '';
@@ -63,7 +119,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   isDispatchingEmail = false;
 
   openActionMenuId: string | null = null;
-  actionMenuPosition = { top: 0, left: 0 };
+  @ViewChild('actionMenu') actionMenuRef!: ActionMenuComponent;
 
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
@@ -84,11 +140,36 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
 
   slaOptions: SelectOption[] = [
     { label: 'All Urgency SLA', value: '' },
-    { label: 'Overdue (3d+)', value: 'overdue', icon: 'warning' },
-    { label: 'Pending (1d-3d)', value: 'pending', icon: 'clock' },
-    { label: 'Notice (6h-24h)', value: 'notice', icon: 'info' },
-    { label: 'Recent (<6h)', value: 'recent', icon: 'zap' }
+    { label: 'Overdue (3d+)', value: 'overdue', icon: 'warning', color: '#f43f5e' },
+    { label: 'Pending (1d-3d)', value: 'pending', icon: 'clock', color: '#f59e0b' },
+    { label: 'Notice (6h-24h)', value: 'notice', icon: 'info', color: '#38bdf8' },
+    { label: 'Recent (<6h)', value: 'recent', icon: 'zap', color: '#10b981' }
   ];
+
+  sortOptions: SelectOption[] = [
+    { label: 'Newest First', value: 'createdAt', icon: 'clock' },
+    { label: 'Oldest First', value: 'oldest', icon: 'clock' },
+    { label: 'Client Name (A-Z)', value: 'clientName', icon: 'user' },
+    { label: 'Status Order', value: 'status', icon: 'shield' }
+  ];
+
+  onSortDropdownChange(val: string): void {
+    if (val === 'clientName') {
+      this.sortBy = 'clientName';
+      this.sortOrder = 'asc';
+    } else if (val === 'status') {
+      this.sortBy = 'status';
+      this.sortOrder = 'asc';
+    } else if (val === 'oldest') {
+      this.sortBy = 'oldest';
+      this.sortOrder = 'asc';
+    } else {
+      this.sortBy = 'createdAt';
+      this.sortOrder = 'desc';
+    }
+    this.pagination.page = 1;
+    this.fetchConsultations();
+  }
 
   dateRangeOptions: SelectOption[] = [
     { label: 'All Time', value: '' },
@@ -103,17 +184,8 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     { label: 'Follow-up & Case Document Request', value: 'followup', icon: 'mail' }
   ];
 
-  pageLimitOptions: SelectOption[] = [
-    { label: '10 per page', value: '10' },
-    { label: '25 per page', value: '25' },
-    { label: '50 per page', value: '50' },
-    { label: '100 per page', value: '100' }
-  ];
-
   startDate = '';
   endDate = '';
-  isCustomDateModalOpen = false;
-
   Math = Math;
 
   pagination = {
@@ -123,17 +195,8 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     pages: 1
   };
 
-  get startRecord(): number {
-    if (this.pagination.total === 0) return 0;
-    return (this.pagination.page - 1) * this.pagination.limit + 1;
-  }
-
-  get endRecord(): number {
-    return Math.min(this.pagination.page * this.pagination.limit, this.pagination.total);
-  }
-
-  onLimitChange(limitStr: string): void {
-    this.pagination.limit = parseInt(limitStr, 10) || 10;
+  onLimitChange(limitVal: number | string): void {
+    this.pagination.limit = typeof limitVal === 'number' ? limitVal : (parseInt(limitVal, 10) || 10);
     this.pagination.page = 1;
     this.fetchConsultations();
   }
@@ -147,7 +210,8 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     public themeService: AdminThemeService,
     private elRef: ElementRef,
     private route: ActivatedRoute,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
@@ -218,88 +282,23 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     } else if (event.key === 'Escape') {
       this.selectedConsultation = null;
       this.openActionMenuId = null;
-      this.isColumnMenuOpen = false;
     }
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.column-customizer-container')) {
-      this.isColumnMenuOpen = false;
-    }
-    if (this.isCustomDateModalOpen && !target.closest('.date-picker-container')) {
-      this.isCustomDateModalOpen = false;
-    }
-  }
-
-  toggleColumnVisibility(columnKey: 'client' | 'phone' | 'lawyer' | 'sla' | 'message' | 'status' | 'createdAt'): void {
-    this.columnVisibility[columnKey] = !this.columnVisibility[columnKey];
-  }
-
-  get areAllColumnsVisible(): boolean {
-    return Object.values(this.columnVisibility).every(v => v);
-  }
-
-  get isNoColumnsVisible(): boolean {
-    return Object.values(this.columnVisibility).every(v => !v);
-  }
-
-  toggleAllColumns(forceState?: boolean): void {
-    const targetState = forceState !== undefined ? forceState : !this.areAllColumnsVisible;
-    this.columnVisibility = {
-      client: targetState,
-      phone: targetState,
-      lawyer: targetState,
-      sla: targetState,
-      message: targetState,
-      status: targetState,
-      createdAt: targetState
-    };
-  }
-
-  selectDatePreset(preset: 'today' | '7days' | '30days' | 'thisMonth'): void {
-    const today = new Date();
-    const endDateStr = today.toISOString().split('T')[0];
-    let startDateStr = '';
-
-    if (preset === 'today') {
-      startDateStr = endDateStr;
-    } else if (preset === '7days') {
-      const d = new Date();
-      d.setDate(d.getDate() - 7);
-      startDateStr = d.toISOString().split('T')[0];
-    } else if (preset === '30days') {
-      const d = new Date();
-      d.setDate(d.getDate() - 30);
-      startDateStr = d.toISOString().split('T')[0];
-    } else if (preset === 'thisMonth') {
-      const d = new Date(today.getFullYear(), today.getMonth(), 1);
-      startDateStr = d.toISOString().split('T')[0];
-    }
-
-    this.applyCustomDateRange(startDateStr, endDateStr);
-  }
-
-  applyCustomDateRange(start: string, end: string): void {
-    this.startDate = start;
-    this.endDate = end;
-    this.isCustomDateModalOpen = false;
-    this.pagination.page = 1;
-    this.updateUrlParams();
-    this.fetchConsultations();
-  }
-
-  clearCustomDateRange(): void {
-    this.startDate = '';
-    this.endDate = '';
-    this.isCustomDateModalOpen = false;
+  onDateRangeChange(event: DateRangeEvent): void {
+    this.startDate = event.startDate;
+    this.endDate = event.endDate;
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
   }
 
   onSearchChange(query: string): void {
+    this.searchQuery = query;
+    this.selection.clear();
+    this.pagination.page = 1;
+    this.updateUrlParams();
     this.searchSubject.next(query);
   }
 
@@ -316,6 +315,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   onFilterChange(): void {
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -330,7 +330,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   get isFilterActive(): boolean {
-    return this.hasQueryFilter || this.selectedIds.size > 0;
+    return this.hasQueryFilter || !this.selection.isEmpty;
   }
 
   private updateUrlParams(): void {
@@ -361,7 +361,15 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.endDate = '';
     this.sortBy = 'createdAt';
     this.sortOrder = 'desc';
-    this.selectedIds.clear();
+    this.selection.clear();
+    this.pagination.page = 1;
+    this.updateUrlParams();
+    this.fetchConsultations();
+  }
+
+  onPresetTabChange(tab: 'all' | 'overdue' | 'pending' | 'contacted' | 'closed'): void {
+    this.presetTab = tab;
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -378,6 +386,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     } else {
       this.selectedStatus = status;
     }
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -408,11 +417,12 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
       this.pagination.pages = Math.max(1, Math.ceil(totalRecs / this.pagination.limit));
       this.isLoading = false;
       this.isInitialLoad = false;
+      this.cdr.markForCheck();
     }
 
     const showLoader = this.isInitialLoad && !cached;
 
-    this.api.getConsultations(params).pipe(smartLoading(l => this.isLoading = l, showLoader)).subscribe({
+    this.api.getConsultations(params).pipe(smartLoading(l => { this.isLoading = l; this.cdr.markForCheck(); }, showLoader)).subscribe({
       next: (res: any) => {
         this.isInitialLoad = false;
         if (res.metrics) {
@@ -424,76 +434,63 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
           const totalRecs = res.pagination?.total ?? this.consultations.length;
           this.pagination.pages = Math.max(1, Math.ceil(totalRecs / this.pagination.limit));
         }
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         this.isInitialLoad = false;
         if (!cached) {
           this.toast.error(err?.error?.message || 'Failed to fetch consultation records.');
         }
+        this.cdr.markForCheck();
       }
     });
   }
 
-  // ── Multi-Select Checkboxes ──
-  isAllSelected(): boolean {
-    if (!this.consultations || this.consultations.length === 0) return false;
-    return this.consultations.every(item => this.selectedIds.has(item.id));
-  }
-
   isSomeSelected(): boolean {
     if (!this.consultations || this.consultations.length === 0) return false;
-    return this.consultations.some(item => this.selectedIds.has(item.id)) && !this.isAllSelected();
+    return this.consultations.some(item => this.selection.isSelected(item.id)) && !this.isAllSelected();
   }
 
-  toggleSelectAll(): void {
-    if (this.isAllSelected()) {
-      this.selectedIds.clear();
-    } else {
-      this.consultations.forEach(item => this.selectedIds.add(item.id));
-    }
-  }
-
-  toggleSelectRow(id: number, event: Event): void {
-    event.stopPropagation();
-    if (this.selectedIds.has(id)) {
-      this.selectedIds.delete(id);
-    } else {
-      this.selectedIds.add(id);
-    }
+  toggleSelectRow(id: number | string, event?: Event): void {
+    if (event) event.stopPropagation();
+    this.selection.toggle(Number(id));
   }
 
   clearSelection(): void {
-    this.selectedIds.clear();
+    this.selection.clear();
   }
 
   async bulkUpdateStatus(newStatus: string): Promise<void> {
-    if (this.selectedIds.size === 0) return;
-    const idsArray = Array.from(this.selectedIds);
-
+    if (this.selection.isEmpty) return;
+    const ids = this.selection.toArray();
     const confirmed = await this.dialog.confirm({
-      title: `Bulk ${newStatus === 'Closed' ? 'Close & Resolve' : 'Status Update'}`,
-      message: `Are you sure you want to mark ${idsArray.length} consultation(s) as "${newStatus}"?${newStatus === 'Closed' ? ' Closed consultations are considered resolved.' : ''}`,
-      type: newStatus === 'Closed' ? 'danger' : 'warning',
-      confirmText: `Mark ${idsArray.length} as ${newStatus}`
+      title: `Bulk Update to ${newStatus}`,
+      message: `Are you sure you want to mark ${ids.length} selected consultation(s) as "${newStatus}"?`,
+      type: newStatus === 'Closed' ? 'warning' : 'info',
+      confirmText: `Bulk ${newStatus}`
     });
 
     if (!confirmed) return;
-    this.isLoading = true;
 
-    this.api.bulkUpdateConsultationStatus(idsArray, newStatus).subscribe({
-      next: (res: any) => {
-        this.toast.success(res.message || `Bulk updated ${idsArray.length} consultation(s) to ${newStatus}.`);
-        this.selectedIds.clear();
+    this.isLoading = true;
+    this.cdr.markForCheck();
+    this.api.bulkUpdateConsultationStatus(ids, newStatus).subscribe({
+      next: () => {
+        this.isLoading = false;
+        this.selection.clear();
+        this.toast.success(`${ids.length} consultation(s) updated to "${newStatus}".`);
+        this.cdr.markForCheck();
         this.fetchConsultations();
       },
       error: (err: any) => {
         this.isLoading = false;
         this.toast.error(err?.error?.message || 'Failed to bulk update consultations.');
+        this.cdr.markForCheck();
       }
     });
   }
 
-  // ── Interactive Header Sorting ──
+  // -- Interactive Header Sorting --
   toggleSort(column: string): void {
     if (this.sortBy === column) {
       this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
@@ -505,7 +502,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.fetchConsultations();
   }
 
-  changePage(newPage: number): void {
+  onPageChange(newPage: number): void {
     if (newPage < 1 || newPage > this.pagination.pages || newPage === this.pagination.page) return;
     this.pagination.page = newPage;
     this.updateUrlParams();
@@ -537,10 +534,12 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
           actionText: 'Undo',
           onAction: () => this.revertStatus(item.id, previousStatus)
         });
+        this.cdr.markForCheck();
       },
       error: (err: any) => {
         item.status = previousStatus;
         this.toast.error(err?.error?.message || 'Failed to update status.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -549,9 +548,10 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.api.updateConsultationStatus(itemId, previousStatus).subscribe({
       next: () => {
         this.toast.success(`Status reverted to ${previousStatus}.`);
+        this.cdr.markForCheck();
         this.fetchConsultations();
       },
-      error: (err: any) => this.toast.error(err?.error?.message || 'Failed to revert status.')
+      error: (err: any) => { this.toast.error(err?.error?.message || 'Failed to revert status.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -567,16 +567,19 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   saveAdminRemark(): void {
     if (!this.selectedConsultation) return;
     this.isSavingNotes = true;
+    this.cdr.markForCheck();
     this.api.updateConsultationNotes(this.selectedConsultation.id, this.adminRemarkInput).subscribe({
       next: (res: any) => {
         this.isSavingNotes = false;
         this.selectedConsultation.adminRemark = this.adminRemarkInput;
         this.toast.success('Internal admin notes saved successfully.');
+        this.cdr.markForCheck();
         this.fetchConsultations();
       },
       error: (err: any) => {
         this.isSavingNotes = false;
         this.toast.error(err?.error?.message || 'Failed to save admin notes.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -584,6 +587,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   dispatchQuickEmail(): void {
     if (!this.selectedConsultation) return;
     this.isDispatchingEmail = true;
+    this.cdr.markForCheck();
     const recipient = this.recipientTarget === 'client' ? this.selectedConsultation.clientEmail : this.selectedConsultation.lawyerEmail;
 
     this.api.dispatchConsultationEmail(this.selectedConsultation.id, {
@@ -595,11 +599,13 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         this.isDispatchingEmail = false;
         this.toast.success(`Quick response dispatched to ${recipient}.`);
         this.customEmailMessage = '';
+        this.cdr.markForCheck();
         this.fetchConsultations();
       },
       error: (err: any) => {
         this.isDispatchingEmail = false;
         this.toast.error(err?.error?.message || 'Failed to dispatch email.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -621,29 +627,19 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   toggleActionMenu(id: string, buttonEl: HTMLElement, event: Event): void {
+    event.stopPropagation();
     if (this.openActionMenuId === id) {
       this.openActionMenuId = null;
       return;
     }
-    if (buttonEl) {
-      const rect = buttonEl.getBoundingClientRect();
-      const dropdownWidth = 185;
-      const dropdownHeight = 130;
-      let top = rect.bottom + 6;
-      let left = rect.left + (rect.width / 2) - (dropdownWidth / 2);
-
-      if (top + dropdownHeight > window.innerHeight - 16) {
-        top = Math.max(10, rect.top - dropdownHeight - 6);
-      }
-      if (left + dropdownWidth > window.innerWidth - 16) {
-        left = window.innerWidth - dropdownWidth - 16;
-      }
-      if (left < 16) {
-        left = 16;
-      }
-      this.actionMenuPosition = { top, left };
-    }
     this.openActionMenuId = id;
+    if (this.actionMenuRef) {
+      this.actionMenuRef.openAt(buttonEl);
+    }
+  }
+
+  closeActionMenu(): void {
+    this.openActionMenuId = null;
   }
 
   @HostListener('document:keydown.escape')
@@ -684,10 +680,25 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     }
   }
 
-  // ── Full Dataset Server-Side Export ──
-  exportToCsv(): void {
+  // -- Unified Export Handler --
+  openExportModal(): void {
+    this.isExportModalOpen = true;
+  }
+
+  closeExportModal(): void {
+    this.isExportModalOpen = false;
+  }
+
+  handleExport(config: ExportConfig): void {
     if (this.isExporting) return;
     this.isExporting = true;
+
+    if (config.scope === 'selected') {
+      const selectedItems = this.consultations.filter(c => this.selection.isSelected(c.id));
+      this.exportConsultationData(selectedItems, config.columns);
+      return;
+    }
+
     const params: any = {
       exportAll: true,
       limit: 5000,
@@ -699,69 +710,51 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     if (this.slaFilter) params.sla = this.slaFilter;
     if (this.dateRangeFilter) params.dateRange = this.dateRangeFilter;
 
-    this.toast.info('Fetching consultation records for CSV export...');
-
     this.api.getConsultations(params).subscribe({
       next: (res: any) => {
-        this.isExporting = false;
         const dataset = (res.success && res.data) ? res.data : (Array.isArray(res) ? res : this.consultations);
         if (!dataset || dataset.length === 0) {
+          this.isExporting = false;
           this.toast.warning('No consultation records to export.');
+          this.cdr.markForCheck();
           return;
         }
-
-        const headers = ['ID', 'Client Name', 'Client Email', 'Client Phone', 'Target Lawyer', 'Lawyer Email', 'Status', 'Admin Note', 'Message', 'Requested Date'];
-        const rows = dataset.map((c: any) => [
-          c.id,
-          c.clientName || c.clientUser || '',
-          c.clientEmail || '',
-          c.clientPhone || '',
-          c.lawyerName || '',
-          c.lawyerEmail || '',
-          c.status || '',
-          c.adminRemark || '',
-          c.message || '',
-          c.createdAt ? new Date(c.createdAt).toLocaleString() : ''
-        ]);
-
-        try {
-          CsvExporter.export('legal_consultations_roster', headers, rows);
-          this.toast.success(`Exported complete dataset (${dataset.length} records) to CSV.`);
-        } catch (err: any) {
-          this.toast.error(err.message || 'Export failed.');
-        }
+        this.exportConsultationData(dataset, config.columns);
       },
       error: () => {
         this.isExporting = false;
         this.toast.error('Failed to export dataset.');
+        this.cdr.markForCheck();
       }
     });
   }
 
-  exportSelectedToCsv(): void {
-    if (this.selectedIds.size === 0) return;
-    const selectedItems = this.consultations.filter(c => this.selectedIds.has(c.id));
-    if (selectedItems.length === 0) return;
+  private exportConsultationData(dataset: any[], columnKeys: string[]): void {
+    const columnMap: Record<string, { header: string; extract: (c: any) => any }> = {
+      id: { header: 'ID', extract: c => c.id },
+      clientName: { header: 'Client Name', extract: c => c.clientName || c.clientUser || '' },
+      clientEmail: { header: 'Client Email', extract: c => c.clientEmail || '' },
+      clientPhone: { header: 'Client Phone', extract: c => c.clientPhone || '' },
+      lawyerName: { header: 'Target Lawyer', extract: c => c.lawyerName || '' },
+      lawyerEmail: { header: 'Lawyer Email', extract: c => c.lawyerEmail || '' },
+      status: { header: 'Status', extract: c => c.status || '' },
+      adminRemark: { header: 'Admin Note', extract: c => c.adminRemark || '' },
+      message: { header: 'Message', extract: c => c.message || '' },
+      createdAt: { header: 'Requested Date', extract: c => c.createdAt ? new Date(c.createdAt).toLocaleString() : '' }
+    };
 
-    const headers = ['ID', 'Client Name', 'Client Email', 'Client Phone', 'Target Lawyer', 'Lawyer Email', 'Status', 'Admin Note', 'Message', 'Requested Date'];
-    const rows = selectedItems.map(c => [
-      c.id,
-      c.clientName || c.clientUser || '',
-      c.clientEmail || '',
-      c.clientPhone || '',
-      c.lawyerName || '',
-      c.lawyerEmail || '',
-      c.status || '',
-      c.adminRemark || '',
-      c.message || '',
-      c.createdAt ? new Date(c.createdAt).toLocaleString() : ''
-    ]);
+    const activeCols = columnKeys.map(k => columnMap[k]).filter(Boolean);
+    const headers = activeCols.map(c => c.header);
+    const rows = dataset.map(c => activeCols.map(col => col.extract(c)));
 
     try {
-      CsvExporter.export(`legal_consultations_selected_${this.selectedIds.size}_records`, headers, rows);
-      this.toast.success(`Exported ${selectedItems.length} selected records to CSV.`);
+      CsvExporter.export('legal_consultations_roster', headers, rows);
+      this.toast.success(`Exported ${dataset.length} consultation records (${headers.length} columns) to CSV.`);
     } catch (err: any) {
       this.toast.error(err.message || 'Export failed.');
     }
+    this.isExporting = false;
+    this.isExportModalOpen = false;
+    this.cdr.markForCheck();
   }
 }

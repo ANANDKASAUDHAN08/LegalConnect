@@ -1,6 +1,6 @@
 <div class="px-0 py-2 w-full flex flex-col gap-4">
 
-  <!-- ─── 0. Emergency System Alert Banner ─── -->
+  <!-- --- 0. Emergency System Alert Banner --- -->
   @if (!isLoading && (overview?.pendingLawyers > 0 || overview?.newContacts > 0)) {
   <div
     class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-red-500/30 bg-gradient-to-r from-red-500/10 to-amber-500/10 backdrop-blur-md shadow-lg transition-all">
@@ -52,7 +52,7 @@
   </div>
   }
 
-  <!-- ─── 1. Dashboard Header & System Status ─── -->
+  <!-- --- 1. Dashboard Header & System Status --- -->
   <div
     class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl">
 
@@ -161,7 +161,7 @@
     </div>
   </div>
 
-  <!-- ─── 1.5. Quick Executive Action Dock ─── -->
+  <!-- --- 1.5. Quick Executive Action Dock --- -->
   <div
     class="glass-card p-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur-md flex flex-wrap items-center justify-between gap-2 shadow-md">
     <div class="flex items-center gap-2 text-xs text-slate-300 font-semibold px-2">
@@ -221,7 +221,7 @@
     </div>
   </div>
 
-  <!-- ─── 2. KPI Stat Cards Grid ─── -->
+  <!-- --- 2. KPI Stat Cards Grid --- -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
     <!-- Card 1: Registered Citizens Intelligence -->
@@ -501,26 +501,26 @@
 
   </div>
 
-  <!-- ─── 3. Analytics Charts Grid (3×2) ─── -->
+  <!-- --- 3. Analytics Charts Grid (3×2) --- -->
   <app-dashboard-charts [selectedTimeframe]="selectedTimeframe" [isChartLoading]="isChartLoading"
     [specializations]="specializations" [regTrendData]="regTrendData" [loginTrendData]="loginTrendData"
     [cityTrendData]="cityTrendData" [reviewStatsData]="reviewStatsData" [consultationTrendData]="consultationTrendData"
     [overview]="overview">
   </app-dashboard-charts>
 
-  <!-- ─── 4. Real-Time Audit & Activity Stream Widget ─── -->
+  <!-- --- 4. Real-Time Audit & Activity Stream Widget --- -->
   <app-dashboard-activity-feed [activeActivityFilter]="activeActivityFilter" [activityFeed]="activityStream.events()"
     (filterChange)="activeActivityFilter = $event" (openVerifyModal)="openQuickVerifyModal()"
     (navigateSupport)="navigateTo('/support', $event)">
   </app-dashboard-activity-feed>
 
-  <!-- ─── 5. Quick Verification Modal Dialog ─── -->
+  <!-- --- 5. Quick Verification Modal Dialog --- -->
   <app-quick-verify-modal [isOpen]="isQuickVerifyModalOpen" [pendingLawyersList]="pendingLawyers"
     [isSubmitting]="isSubmittingVerify" (close)="closeQuickVerifyModal()" (verifyLawyer)="approveLawyerLicense($event)"
     (rejectLawyer)="rejectLawyerLicense($event)">
   </app-quick-verify-modal>
 
-  <!-- ─── 6. Quick Broadcast Dispatch Modal Dialog ─── -->
+  <!-- --- 6. Quick Broadcast Dispatch Modal Dialog --- -->
   <app-quick-broadcast-modal [isOpen]="isQuickBroadcastModalOpen" [broadcastData]="broadcastData"
     [isSubmitting]="isSubmittingBroadcast" (close)="closeQuickBroadcastModal()" (submitBroadcast)="submitBroadcast()">
   </app-quick-broadcast-modal>

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/admin-api.service';
@@ -13,15 +13,23 @@ import { smartLoading } from '../../core/utils/smart-loading.operator';
 import { Subject, Subscription } from 'rxjs';
 import { CsvExporter } from '../../core/utils/csv-exporter';
 import { AvatarService } from '../../shared/services/avatar.service';
+import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
+import { ActionMenuComponent } from '../../shared/components/action-menu/action-menu.component';
+import { ColumnCustomizerComponent, ColumnDef } from '../../shared/components/column-customizer/column-customizer.component';
+import { AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent } from '../../shared/components/data-table/data-table-helpers.component';
+import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
+import { DateRangePickerComponent, DateRangeEvent } from '../../shared/components/date-range-picker/date-range-picker.component';
+import { TableSelection } from '../../core/utils/table.utils';
 
 @Component({
   selector: 'admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent],
   templateUrl: './users.component.html',
-  styleUrl: './users.component.scss'
+  styleUrl: './users.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UsersComponent implements OnInit, OnDestroy {
+export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   users: any[] = [];
   isLoading = false;
   isInitialLoad = true;
@@ -39,15 +47,15 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   roleOptions: SelectOption[] = [
     { label: 'All User Roles', value: '' },
-    { label: 'Client Accounts', value: 'Client', icon: 'user' },
-    { label: 'Lawyer Accounts', value: 'Lawyer', icon: 'shield' },
-    { label: 'Administrator Accounts', value: 'Admin', icon: 'key' }
+    { label: 'Client Accounts', value: 'Client', icon: 'user', color: '#38bdf8' },
+    { label: 'Lawyer Accounts', value: 'Lawyer', icon: 'shield', color: '#818cf8' },
+    { label: 'Administrator Accounts', value: 'Admin', icon: 'key', color: '#c084fc' }
   ];
 
   statusOptions: SelectOption[] = [
     { label: 'All Statuses', value: '' },
-    { label: 'Active Accounts', value: 'true', icon: 'check' },
-    { label: 'Suspended Accounts', value: 'false', icon: 'warning' }
+    { label: 'Active Accounts', value: 'true', icon: 'check', color: '#10b981' },
+    { label: 'Suspended Accounts', value: 'false', icon: 'warning', color: '#f59e0b' }
   ];
 
   sortOptions: SelectOption[] = [
@@ -57,13 +65,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     { label: 'Name (Z-A)', value: 'name_desc', icon: 'user' }
   ];
 
-  limitOptions: SelectOption[] = [
-    { label: '10 per page', value: '10' },
-    { label: '25 per page', value: '25' },
-    { label: '50 per page', value: '50' },
-    { label: '100 per page', value: '100' }
-  ];
-
   pagination = {
     page: 1,
     limit: 10,
@@ -71,18 +72,9 @@ export class UsersComponent implements OnInit, OnDestroy {
     pages: 1
   };
 
-  get startRecord(): number {
-    if (this.pagination.total === 0) return 0;
-    return (this.pagination.page - 1) * this.pagination.limit + 1;
-  }
-
-  get endRecord(): number {
-    return Math.min(this.pagination.page * this.pagination.limit, this.pagination.total);
-  }
-
-  // ── Superpower Security & IAM State ──
+  // -- Superpower Security & IAM State --
   openActionMenuId: string | number | null = null;
-  actionMenuPosition = { top: 0, left: 0 };
+  @ViewChild('actionMenu') actionMenuRef!: ActionMenuComponent;
 
   isAuditDrawerOpen = false;
   selectedUserForAudit: any = null;
@@ -92,11 +84,17 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   startDate = '';
   endDate = '';
-  isCustomDateModalOpen = false;
 
   focusedRowIndex = -1;
-  isColumnMenuOpen = false;
-  columnVisibility = {
+  columnDefs: ColumnDef[] = [
+    { key: 'profile', label: 'User Profile' },
+    { key: 'role', label: 'Role & Permissions' },
+    { key: 'security', label: 'Security' },
+    { key: 'auth', label: 'Auth Details' },
+    { key: 'lastActive', label: 'Last Active' },
+    { key: 'status', label: 'Account Status' }
+  ];
+  columnVisibility: any = {
     profile: true,
     role: true,
     security: true,
@@ -105,16 +103,31 @@ export class UsersComponent implements OnInit, OnDestroy {
     status: true
   };
 
-  get visibleColumnCount(): number {
-    let count = 2; // Static columns: Checkbox + Actions
-    if (this.columnVisibility.profile) count++;
-    if (this.columnVisibility.role) count++;
-    if (this.columnVisibility.security) count++;
-    if (this.columnVisibility.auth) count++;
-    if (this.columnVisibility.lastActive) count++;
-    if (this.columnVisibility.status) count++;
-    return count;
+  get isNoColumnsVisible(): boolean {
+    return Object.values(this.columnVisibility).every(v => !v);
   }
+
+  get visibleColumnKeys(): string[] {
+    return Object.entries(this.columnVisibility).filter(([, v]) => v).map(([k]) => k);
+  }
+
+  onColumnVisibilityChange(updated: Record<string, boolean>): void {
+    this.columnVisibility = updated;
+  }
+
+  // Export Modal State
+  isExportModalOpen = false;
+  exportColumns = [
+    { key: 'id', label: 'ID' },
+    { key: 'fullName', label: 'Full Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'role', label: 'Role' },
+    { key: 'city', label: 'City' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'emailVerified', label: 'Email Verified' },
+    { key: 'activeStatus', label: 'Active Status' },
+    { key: 'createdAt', label: 'Created At' }
+  ];
 
   constructor(
     private api: AdminApiService,
@@ -122,7 +135,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     private dialog: DialogService,
     private route: ActivatedRoute,
     private router: Router,
-    public avatar: AvatarService
+    public avatar: AvatarService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   // Global System Telemetry Header Metrics (Dynamic Source of Truth)
@@ -137,7 +151,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   get isFilterActive(): boolean {
-    return this.hasQueryFilter || this.selectedUserIds.size > 0;
+    return this.hasQueryFilter || this.selection.size > 0;
   }
 
   filterByRoleMetric(roleStr: string): void {
@@ -191,11 +205,13 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ── Security Drawer & Quick Actions ──
+  // -- Security Drawer & Quick Actions --
   openAuditDrawer(user: any): void {
     this.selectedUserForAudit = user;
     this.activeDrawerTab = 'profile';
     this.isAuditDrawerOpen = true;
+    this.openActionMenuId = null;
+    document.body.style.overflow = 'hidden';
     this.fetchUserAuditLog(user.id);
   }
 
@@ -204,6 +220,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.selectedUserForAudit = null;
     this.activeDrawerTab = 'profile';
     this.userAuditLogs = [];
+    document.body.style.overflow = '';
   }
 
   @HostListener('window:keydown', ['$event'])
@@ -233,7 +250,6 @@ export class UsersComponent implements OnInit, OnDestroy {
     } else if (event.key === 'Escape') {
       this.closeAuditDrawer();
       this.openActionMenuId = null;
-      this.isColumnMenuOpen = false;
     }
   }
 
@@ -246,77 +262,10 @@ export class UsersComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    const target = event.target as HTMLElement;
-    if (!target.closest('.column-customizer-container')) {
-      this.isColumnMenuOpen = false;
-    }
-    if (this.isCustomDateModalOpen && !target.closest('.date-picker-container')) {
-      this.isCustomDateModalOpen = false;
-    }
-  }
-
-  toggleColumnVisibility(columnKey: 'profile' | 'role' | 'security' | 'auth' | 'lastActive' | 'status'): void {
-    this.columnVisibility[columnKey] = !this.columnVisibility[columnKey];
-  }
-
-  get areAllColumnsVisible(): boolean {
-    return Object.values(this.columnVisibility).every(v => v);
-  }
-
-  get isNoColumnsVisible(): boolean {
-    return Object.values(this.columnVisibility).every(v => !v);
-  }
-
-  toggleAllColumns(forceState?: boolean): void {
-    const targetState = forceState !== undefined ? forceState : !this.areAllColumnsVisible;
-    this.columnVisibility = {
-      profile: targetState,
-      role: targetState,
-      security: targetState,
-      auth: targetState,
-      lastActive: targetState,
-      status: targetState
-    };
-  }
-
-  selectDatePreset(preset: 'today' | '7days' | '30days' | 'thisMonth'): void {
-    const today = new Date();
-    const endDateStr = today.toISOString().split('T')[0];
-    let startDateStr = '';
-
-    if (preset === 'today') {
-      startDateStr = endDateStr;
-    } else if (preset === '7days') {
-      const d = new Date();
-      d.setDate(d.getDate() - 7);
-      startDateStr = d.toISOString().split('T')[0];
-    } else if (preset === '30days') {
-      const d = new Date();
-      d.setDate(d.getDate() - 30);
-      startDateStr = d.toISOString().split('T')[0];
-    } else if (preset === 'thisMonth') {
-      const d = new Date(today.getFullYear(), today.getMonth(), 1);
-      startDateStr = d.toISOString().split('T')[0];
-    }
-
-    this.applyCustomDateRange(startDateStr, endDateStr);
-  }
-
-  applyCustomDateRange(start: string, end: string): void {
-    this.startDate = start;
-    this.endDate = end;
-    this.isCustomDateModalOpen = false;
-    this.pagination.page = 1;
-    this.updateUrlParams();
-    this.fetchUsers();
-  }
-
-  clearCustomDateRange(): void {
-    this.startDate = '';
-    this.endDate = '';
-    this.isCustomDateModalOpen = false;
+  onDateRangeChange(event: DateRangeEvent): void {
+    this.startDate = event.startDate;
+    this.endDate = event.endDate;
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchUsers();
@@ -373,16 +322,19 @@ export class UsersComponent implements OnInit, OnDestroy {
         } else if (redirectWin) {
           redirectWin.close();
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         if (redirectWin) redirectWin.close();
         this.toast.error(err?.error?.message || 'Failed to initiate impersonation session.');
+        this.cdr.markForCheck();
       }
     });
   }
 
   fetchUserAuditLog(userId: number): void {
     this.isLoadingAuditLogs = true;
+    this.cdr.markForCheck();
     this.api.getUserAuditLog(userId).subscribe({
       next: (res: any) => {
         this.isLoadingAuditLogs = false;
@@ -391,10 +343,12 @@ export class UsersComponent implements OnInit, OnDestroy {
         } else {
           this.userAuditLogs = [];
         }
+        this.cdr.markForCheck();
       },
       error: () => {
         this.isLoadingAuditLogs = false;
         this.userAuditLogs = [];
+        this.cdr.markForCheck();
       }
     });
   }
@@ -403,8 +357,9 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.api.resetUserPassword(user.id).subscribe({
       next: (res) => {
         this.toast.success(`Force Password Reset Email sent to ${user.email}. Temp Key: ${res.tempPassword || 'SEC-89214'}`);
+        this.cdr.markForCheck();
       },
-      error: () => this.toast.error('Password reset dispatch failed.')
+      error: () => { this.toast.error('Password reset dispatch failed.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -415,8 +370,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     );
     if (confirmed) {
       this.api.revokeUserSessions(user.id).subscribe({
-        next: () => this.toast.success(`All active authentication tokens for "${user.fullName}" revoked.`),
-        error: (err) => this.toast.error(err?.error?.message || 'Failed to revoke active sessions.')
+        next: () => { this.toast.success(`All active authentication tokens for "${user.fullName}" revoked.`); this.cdr.markForCheck(); },
+        error: (err) => { this.toast.error(err?.error?.message || 'Failed to revoke active sessions.'); this.cdr.markForCheck(); }
       });
     }
   }
@@ -426,8 +381,9 @@ export class UsersComponent implements OnInit, OnDestroy {
       next: () => {
         user.isEmailVerified = true;
         this.toast.success(`Email address for ${user.fullName} manually verified.`);
+        this.cdr.markForCheck();
       },
-      error: (err) => this.toast.error(err?.error?.message || 'Failed to verify email.')
+      error: (err) => { this.toast.error(err?.error?.message || 'Failed to verify email.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -445,10 +401,11 @@ export class UsersComponent implements OnInit, OnDestroy {
     const oldRole = user.role;
     user.role = newRole;
     this.api.updateUserRole(user.id, newRole).subscribe({
-      next: () => this.toast.success(`Role for ${user.fullName} changed to ${newRole}.`),
+      next: () => { this.toast.success(`Role for ${user.fullName} changed to ${newRole}.`); this.cdr.markForCheck(); },
       error: (err) => {
         user.role = oldRole;
         this.toast.error(err?.error?.message || 'Failed to update user role.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -494,7 +451,16 @@ export class UsersComponent implements OnInit, OnDestroy {
     });
   }
 
+  private closeMenuOnScroll = (): void => {
+    // Now managed by ActionMenuComponent
+  };
+
+  ngAfterViewInit(): void {
+    // Scroll-close managed by ActionMenuComponent
+  }
+
   ngOnDestroy(): void {
+    document.body.style.overflow = '';
     this.searchSub?.unsubscribe();
     this.routeSub?.unsubscribe();
     this.fetchSub?.unsubscribe();
@@ -503,6 +469,13 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   onSearchInput(val: string): void {
     this.searchSubject$.next(val);
+  }
+
+  onSearchChange(query: string): void {
+    this.search = query;
+    this.selection.clear();
+    this.pagination.page = 1;
+    this.updateUrlParams();
   }
 
   fetchUsers(): void {
@@ -531,13 +504,14 @@ export class UsersComponent implements OnInit, OnDestroy {
       }
       this.isLoading = false;
       this.isInitialLoad = false;
+      this.cdr.markForCheck();
     }
 
     const showLoader = this.isInitialLoad && !cached;
 
     this.fetchSub?.unsubscribe();
 
-    this.fetchSub = this.api.getUsers(params).pipe(smartLoading(l => this.isLoading = l, showLoader)).subscribe({
+    this.fetchSub = this.api.getUsers(params).pipe(smartLoading(l => { this.isLoading = l; this.cdr.markForCheck(); }, showLoader)).subscribe({
       next: (res) => {
         this.isInitialLoad = false;
         if (res.success) {
@@ -552,22 +526,26 @@ export class UsersComponent implements OnInit, OnDestroy {
             this.globalTwoFactorPct = res.summary.twoFactorPct;
           }
         }
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.isInitialLoad = false;
         if (!cached) {
           this.toast.error(err?.error?.message || 'Failed to load users.');
         }
+        this.cdr.markForCheck();
       }
     });
   }
 
   onSearch(): void {
+    this.selection.clear();
     this.pagination.page = 1;
     this.fetchUsers();
   }
 
   onFilterChange(): void {
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchUsers();
@@ -586,13 +564,13 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.endDate = '';
     this.sortBy = 'newest';
     this.sortOrder = 'desc';
-    this.selectedUserIds.clear();
+    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchUsers();
   }
 
-  changePage(newPage: number): void {
+  onPageChange(newPage: number): void {
     if (newPage >= 1 && newPage <= this.pagination.pages) {
       this.pagination.page = newPage;
       this.updateUrlParams();
@@ -600,8 +578,8 @@ export class UsersComponent implements OnInit, OnDestroy {
     }
   }
 
-  onLimitChange(limitVal: any): void {
-    this.pagination.limit = Number(limitVal) || 10;
+  onLimitChange(newLimit: number | any): void {
+    this.pagination.limit = Number(newLimit) || 10;
     this.pagination.page = 1;
     this.fetchUsers();
   }
@@ -623,63 +601,59 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.api.updateUser(user.id, { isActive: user.isActive }).subscribe({
         next: () => {
           this.toast.success(`Account for ${user.fullName} is now ${user.isActive ? 'Active' : 'Deactivated'}.`);
+          this.cdr.markForCheck();
         },
         error: (err) => {
           user.isActive = prevStatus;
           this.toast.error(err?.error?.message || 'Status update failed on server.');
+          this.cdr.markForCheck();
         }
       });
     }
   }
 
-  // ── Bulk Actions & CSV Export ──
-  selectedUserIds: Set<number> = new Set();
+  // -- Bulk Actions & CSV Export --
+  selection = new TableSelection<number>();
 
-  toggleSelectAll(event: any): void {
-    if (event.target.checked) {
-      this.users.forEach(u => this.selectedUserIds.add(u.id));
-    } else {
-      this.selectedUserIds.clear();
-    }
-  }
-
-  toggleSelectUser(id: number): void {
-    if (this.selectedUserIds.has(id)) {
-      this.selectedUserIds.delete(id);
-    } else {
-      this.selectedUserIds.add(id);
-    }
+  get userIds(): number[] {
+    return this.users.map(u => u.id);
   }
 
   isAllSelected(): boolean {
-    return this.users.length > 0 && this.users.every(u => this.selectedUserIds.has(u.id));
+    return this.selection.isAllSelected(this.userIds);
+  }
+
+  toggleSelectAll(): void {
+    this.selection.toggleAll(this.userIds);
   }
 
   async bulkUpdateStatus(active: boolean): Promise<void> {
-    if (this.selectedUserIds.size === 0) return;
+    if (this.selection.isEmpty) return;
     const action = active ? 'activate' : 'suspend';
     const confirmed = await this.dialog.confirm({
       title: `Bulk Account ${active ? 'Activation' : 'Suspension'}`,
-      message: `Are you sure you want to ${action} ${this.selectedUserIds.size} selected user account(s)?`,
+      message: `Are you sure you want to ${action} ${this.selection.size} selected user account(s)?`,
       type: active ? 'success' : 'danger',
       confirmText: active ? 'Bulk Activate' : 'Bulk Suspend'
     });
 
     if (confirmed) {
-      const ids = Array.from(this.selectedUserIds);
+      const ids = this.selection.toArray();
       this.users.forEach(u => {
-        if (this.selectedUserIds.has(u.id)) {
+        if (this.selection.isSelected(u.id)) {
           u.isActive = active;
         }
       });
       this.api.bulkUpdateUserStatus(ids, active).subscribe({
         next: () => {
           this.toast.success(`Bulk ${action} applied to ${ids.length} selected accounts.`);
-          this.selectedUserIds.clear();
+          this.selection.clear();
+          this.cdr.markForCheck();
           this.fetchUsers();
         },
         error: (err) => {
           this.toast.error(err?.error?.message || 'Bulk status update failed.');
+          this.cdr.markForCheck();
           this.fetchUsers();
         }
       });
@@ -688,9 +662,24 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   isExporting = false;
 
-  exportToCsv(): void {
+  openExportModal(): void {
+    this.isExportModalOpen = true;
+  }
+
+  closeExportModal(): void {
+    this.isExportModalOpen = false;
+  }
+
+  handleExport(config: ExportConfig): void {
     if (this.isExporting) return;
     this.isExporting = true;
+
+    if (config.scope === 'selected') {
+      const selectedUsers = this.users.filter(u => this.selection.isSelected(u.id));
+      this.exportUserData(selectedUsers, config.columns);
+      return;
+    }
+
     this.api.getUsers({
       search: this.search || undefined,
       role: this.selectedRole || undefined,
@@ -699,37 +688,49 @@ export class UsersComponent implements OnInit, OnDestroy {
       limit: 5000
     }).subscribe({
       next: (res: any) => {
-        this.isExporting = false;
         const fullList = res.data || res.users || res || [];
         if (!fullList.length) {
+          this.isExporting = false;
           this.toast.warning('No user records available to export.');
+          this.cdr.markForCheck();
           return;
         }
-        const headers = ['ID', 'Full Name', 'Email', 'Role', 'City', 'Phone', 'Email Verified', 'Active Status', 'Created At'];
-        const rows = fullList.map((u: any) => [
-          u.id,
-          u.fullName || '',
-          u.email || '',
-          u.role || '',
-          u.clientCity || '',
-          u.phone || '',
-          u.isEmailVerified ? 'Yes' : 'No',
-          u.isActive ? 'Active' : 'Suspended',
-          u.createdAt || ''
-        ]);
-
-        try {
-          CsvExporter.export('legalconnect_user_directory_audit', headers, rows);
-          this.toast.success(`Exported all ${fullList.length} user records to CSV.`);
-        } catch (err: any) {
-          this.toast.error(err.message || 'Export failed.');
-        }
+        this.exportUserData(fullList, config.columns);
       },
       error: () => {
         this.isExporting = false;
         this.toast.error('Failed to fetch complete user records for export.');
+        this.cdr.markForCheck();
       }
     });
+  }
+
+  private exportUserData(data: any[], columnKeys: string[]): void {
+    const columnMap: Record<string, { header: string; extract: (u: any) => any }> = {
+      id: { header: 'ID', extract: u => u.id },
+      fullName: { header: 'Full Name', extract: u => u.fullName || '' },
+      email: { header: 'Email', extract: u => u.email || '' },
+      role: { header: 'Role', extract: u => u.role || '' },
+      city: { header: 'City', extract: u => u.clientCity || '' },
+      phone: { header: 'Phone', extract: u => u.phone || '' },
+      emailVerified: { header: 'Email Verified', extract: u => u.isEmailVerified ? 'Yes' : 'No' },
+      activeStatus: { header: 'Active Status', extract: u => u.isActive ? 'Active' : 'Suspended' },
+      createdAt: { header: 'Created At', extract: u => u.createdAt || '' }
+    };
+
+    const activeCols = columnKeys.map(k => columnMap[k]).filter(Boolean);
+    const headers = activeCols.map(c => c.header);
+    const rows = data.map(u => activeCols.map(c => c.extract(u)));
+
+    try {
+      CsvExporter.export('legalconnect_user_directory_audit', headers, rows);
+      this.toast.success(`Exported ${data.length} user records (${headers.length} columns) to CSV.`);
+    } catch (err: any) {
+      this.toast.error(err.message || 'Export failed.');
+    }
+    this.isExporting = false;
+    this.isExportModalOpen = false;
+    this.cdr.markForCheck();
   }
 
   getOpenActionUser(): any | null {
@@ -738,40 +739,18 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   toggleActionMenu(id: string | number, buttonEl: HTMLElement, event: Event): void {
+    event.stopPropagation();
     if (this.openActionMenuId === id) {
       this.openActionMenuId = null;
       return;
     }
-    if (buttonEl) {
-      const rect = buttonEl.getBoundingClientRect();
-      const dropdownWidth = 220;
-      const dropdownHeight = 175;
-      let top = rect.bottom + 6;
-      let left = rect.left + (rect.width / 2) - (dropdownWidth / 2);
-
-      // Flip up if near the bottom edge
-      if (top + dropdownHeight > window.innerHeight - 16) {
-        top = Math.max(10, rect.top - dropdownHeight - 6);
-      }
-      // Keep within left/right viewport bounds
-      if (left + dropdownWidth > window.innerWidth - 16) {
-        left = window.innerWidth - dropdownWidth - 16;
-      }
-      if (left < 16) {
-        left = 16;
-      }
-      this.actionMenuPosition = { top, left };
-    }
     this.openActionMenuId = id;
+    if (this.actionMenuRef) {
+      this.actionMenuRef.openAt(buttonEl);
+    }
   }
 
-  @HostListener('document:keydown.escape')
-  onEscapePress(): void {
-    this.openActionMenuId = null;
-  }
-
-  @HostListener('window:resize')
-  onWindowResize(): void {
+  closeActionMenu(): void {
     this.openActionMenuId = null;
   }
 }
