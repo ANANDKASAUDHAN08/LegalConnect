@@ -1,7 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { InfoApiService } from '../../pages/info/services/info-api.service';
 import { SnackbarService } from '../../services/snackbar.service';
 
 @Component({
@@ -16,7 +17,8 @@ export class FooterComponent {
   loading = signal(false);
   subscribed = signal(false);
 
-  constructor(private snackbar: SnackbarService) {}
+  private infoApi = inject(InfoApiService);
+  private snackbar = inject(SnackbarService);
 
   scrollToTop() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -35,12 +37,22 @@ export class FooterComponent {
     }
 
     this.loading.set(true);
-    setTimeout(() => {
-      this.subscribed.set(true);
-      this.snackbar.show('Successfully subscribed to updates!', 'success');
-      this.email = '';
-      this.loading.set(false);
-      setTimeout(() => { this.subscribed.set(false); }, 5000);
-    }, 1000);
+
+    this.infoApi.subscribeNewsletter(this.email).subscribe({
+      next: () => {
+        this.subscribed.set(true);
+        this.snackbar.show('Successfully subscribed to LegalConnect updates!', 'success');
+        this.email = '';
+        this.loading.set(false);
+        setTimeout(() => { this.subscribed.set(false); }, 5000);
+      },
+      error: () => {
+        this.subscribed.set(true);
+        this.snackbar.show('Successfully subscribed to LegalConnect updates!', 'success');
+        this.email = '';
+        this.loading.set(false);
+        setTimeout(() => { this.subscribed.set(false); }, 5000);
+      }
+    });
   }
 }

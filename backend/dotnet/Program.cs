@@ -9,10 +9,14 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.AspNetCore.ResponseCompression;
-
 using LegalConnect.Middleware;
+using CoreApi.Hubs.Admin;
+using CoreApi.Services.Admin;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Load optional local configuration (git ignored for private keys)
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 // Add services to the container.
 builder.Services.AddHealthChecks();
@@ -33,6 +37,9 @@ builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<ProfileSyncWorker>();
+builder.Services.AddHostedService<AdminNotificationDigestService>();
+builder.Services.AddHostedService<AdminNotificationSyncWorker>();
+builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -171,6 +178,8 @@ app.UseResponseCompression();
 
 app.MapHealthChecks("/api/health");
 app.MapControllers();
+app.MapHub<AdminNotificationHub>("/hubs/notifications");
+app.MapHub<AdminNotificationHub>("/hubs/admin/notifications");
 
 app.Run();
 

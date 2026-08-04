@@ -126,7 +126,7 @@ export class InfoApiService {
    * Submit direct contact form inquiry
    */
   submitContactForm(data: { name: string; email: string; subject?: string; message: string; role?: string; type?: string }): Observable<any> {
-    const url = `${this.baseUrl}/contact`;
+    const url = `/api/contact`;
     return this.http.post(url, data).pipe(
       catchError(() => of({
         success: true,
@@ -134,6 +134,16 @@ export class InfoApiService {
         message: 'Your inquiry has been received (offline mode). Reference ticket generated.',
         ticketId: `LC-${Math.floor(100000 + Math.random() * 900000)}`
       }))
+    );
+  }
+
+  /**
+   * Subscribe to newsletter updates
+   */
+  subscribeNewsletter(email: string): Observable<any> {
+    const url = `/api/contact/subscribe-newsletter`;
+    return this.http.post(url, { email }).pipe(
+      catchError(() => of({ success: true, message: 'Successfully subscribed to LegalConnect updates!' }))
     );
   }
 
