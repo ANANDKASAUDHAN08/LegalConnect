@@ -155,19 +155,31 @@
 
         <!-- Unverified state (OTP verification inputs) -->
         <div *ngIf="showPhoneOtp && !profile.isPhoneVerified"
-          class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full sm:w-auto animate-[fadeIn_0.2s_ease-out]">
-          <input type="text" [(ngModel)]="phoneOtpCode" placeholder="Enter verification code"
-            class="w-full sm:w-56 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-xs text-center font-mono tracking-wider text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-500 dark:placeholder:text-slate-400 hover:border-slate-400 dark:hover:border-slate-700" />
-          <div class="flex items-center gap-2.5 w-full sm:w-auto">
-            <button (click)="cancelPhoneVerification()" type="button"
-              class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center">
-              Cancel
-            </button>
-            <button (click)="verifyPhoneOtp()" [disabled]="otpLoading"
-              class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50 flex items-center justify-center shadow-md shadow-emerald-500/15">
-              Confirm
-            </button>
+          class="flex flex-col gap-2.5 w-full sm:w-auto animate-[fadeIn_0.2s_ease-out]">
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5">
+            <input type="text" [(ngModel)]="phoneOtpCode" placeholder="Enter 6-digit code" maxlength="6"
+              class="w-full sm:w-56 px-3.5 py-2.5 sm:py-2 rounded-xl bg-white dark:bg-slate-950/40 border border-slate-300 dark:border-amber-500/20 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none text-sm text-center font-mono tracking-[0.3em] text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-500 dark:placeholder:text-slate-400 placeholder:tracking-normal hover:border-slate-400 dark:hover:border-slate-700" />
+            <div class="flex items-center gap-2 w-full sm:w-auto">
+              <button (click)="cancelPhoneVerification()" type="button"
+                class="w-full sm:w-auto px-4 py-2.5 sm:py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 transition-all border border-slate-200 dark:border-slate-700 flex items-center justify-center">
+                Cancel
+              </button>
+              <button (click)="verifyPhoneOtp()" [disabled]="otpLoading || phoneOtpCode.length < 6"
+                class="w-full sm:w-auto px-5 py-2.5 sm:py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-1.5 shadow-md shadow-emerald-500/15">
+                <svg *ngIf="otpLoading" class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                {{ otpLoading ? 'Verifying...' : 'Confirm' }}
+              </button>
+            </div>
           </div>
+          <!-- Resend link -->
+          <button (click)="resendPhoneOtp()" [disabled]="resendCooldown > 0 || otpLoading" type="button"
+            class="self-start text-[11px] font-bold transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            [class]="resendCooldown > 0 ? 'text-slate-400 dark:text-slate-500' : 'text-amber-600 dark:text-amber-400 hover:underline'">
+            {{ resendCooldown > 0 ? 'Resend in ' + resendCooldown + 's' : 'Resend Code' }}
+          </button>
         </div>
       </div>
     </div>

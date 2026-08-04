@@ -12,8 +12,14 @@ export class GlobalErrorHandler implements ErrorHandler {
     // Log complete stack trace in dev console for debugging
     console.error('[GlobalErrorHandler Caught Exception]:', error);
 
-    // Filter out minor chunk load errors or browser aborts
-    if (message.includes('Loading chunk') || message.includes('Script error')) {
+    // Filter out minor chunk load errors, browser aborts, or third-party script DOM noise
+    if (
+      message.includes('Loading chunk') ||
+      message.includes('Script error') ||
+      message.includes("reading 'style'") ||
+      message.includes('recaptcha') ||
+      message.includes('element has been removed')
+    ) {
       return;
     }
 

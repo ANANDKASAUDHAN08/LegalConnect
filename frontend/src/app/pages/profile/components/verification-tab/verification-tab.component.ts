@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../services/auth.service';
+import { PhoneAuthService } from '../../../../services/phone-auth.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { COUNTRIES } from '../../../../constants/countries.constant';
 
@@ -11,7 +12,7 @@ import { COUNTRIES } from '../../../../constants/countries.constant';
   imports: [CommonModule, FormsModule],
   templateUrl: './verification-tab.component.html'
 })
-export class VerificationTabComponent implements OnInit {
+export class VerificationTabComponent implements OnInit, OnDestroy {
   @Input() profile!: UserProfile;
   @Output() profileUpdated = new EventEmitter<Partial<UserProfile>>();
 
@@ -20,6 +21,8 @@ export class VerificationTabComponent implements OnInit {
   showPhoneOtp = false;
   phoneOtpCode = '';
   phoneToVerify = '';
+  resendCooldown = 0;
+  private _cooldownInterval: ReturnType<typeof setInterval> | null = null;
 
   // Identity simulation
   identityStatus: 'Not Started' | 'Pending' | 'Verified' = 'Not Started';
@@ -104,6 +107,7 @@ export class VerificationTabComponent implements OnInit {
 
   constructor(
     private auth: AuthService,
+    private phoneAuth: PhoneAuthService,
     private snackbar: SnackbarService
   ) { }
 
@@ -138,42 +142,118 @@ export class VerificationTabComponent implements OnInit {
         this.snackbar.show('Phone number must be exactly 10 digits.', 'warning');
         return;
       }
-
-      num = `${this.selectedCountry.code} ${this.phoneBody}`.trim();
+      num = `${this.selectedCountry.code}${this.phoneBody}`.trim();
     } else {
-      num = this.profile.phone || '';
+      num = (this.profile.phone || '').replace(/\s+/g, '');
     }
 
     if (!num) {
       this.snackbar.show('Please enter a phone number to verify.', 'warning');
       return;
     }
+
+    // Rate limit check
+    if (!this.phoneAuth.canSendOtp) {
+      const remaining = this.phoneAuth.cooldownRemaining;
+      this.snackbar.show(`Please wait ${remaining}s before requesting another OTP.`, 'warning');
+      return;
+    }
+
     this.phoneToVerify = num;
-    this.showPhoneOtp = true;
-    this.snackbar.show('Verification code sent! Enter code 123456.', 'success');
+    this.otpLoading = true;
+    this.phoneAuth.sendSmsOtp(num).subscribe({
+      next: () => {
+        this.otpLoading = false;
+        this.showPhoneOtp = true;
+        this.startResendCooldown();
+        this.snackbar.show(`OTP sent to ${num}! Enter the 6-digit code.`, 'success');
+      },
+      error: (err: any) => {
+        this.otpLoading = false;
+        this.showPhoneOtp = false;
+        console.error('\ud83d\udcf1 Firebase Phone Auth error:', err);
+        this.snackbar.show(err.message || 'Failed to send OTP. Please try again.', 'error');
+      }
+    });
   }
 
   verifyPhoneOtp() {
-    if (!this.phoneOtpCode.trim()) return;
+    if (!this.phoneOtpCode.trim()) {
+      this.snackbar.show('Please enter the 6-digit OTP code.', 'warning');
+      return;
+    }
+    if (this.phoneOtpCode.trim().length !== 6) {
+      this.snackbar.show('OTP code must be exactly 6 digits.', 'warning');
+      return;
+    }
+
     this.otpLoading = true;
-    this.auth.verifyPhone(this.phoneOtpCode).subscribe({
-      next: () => {
-        this.otpLoading = false;
-        this.showPhoneOtp = false;
-        this.phoneOtpCode = '';
-        this.snackbar.show('Phone number verified successfully!', 'success');
-        this.profileUpdated.emit({ isPhoneVerified: true, phone: this.phoneToVerify || this.profile.phone });
+    this.phoneAuth.verifySmsOtp(this.phoneOtpCode).subscribe({
+      next: (res) => {
+        // Send Firebase ID token to backend for server-side validation
+        this.phoneAuth.saveVerifiedPhoneToBackend(
+          this.phoneToVerify || this.profile.phone || '',
+          res.idToken
+        ).subscribe({
+          next: () => {
+            this.otpLoading = false;
+            this.showPhoneOtp = false;
+            this.phoneOtpCode = '';
+            this.clearCooldownTimer();
+            this.snackbar.show('Phone number verified successfully!', 'success');
+            this.profileUpdated.emit({ isPhoneVerified: true, phone: this.phoneToVerify || this.profile.phone });
+          },
+          error: (backendErr: any) => {
+            this.otpLoading = false;
+            this.snackbar.show(
+              backendErr.error?.message || 'Failed to save verification. Please try again.',
+              'error'
+            );
+          }
+        });
       },
-      error: (err) => {
+      error: (err: any) => {
         this.otpLoading = false;
-        this.snackbar.show(err.error || 'Invalid OTP code.', 'error');
+        this.snackbar.show(err.message || 'Invalid OTP code. Please try again.', 'error');
       }
     });
+  }
+
+  /** Resend the OTP (respects cooldown) */
+  resendPhoneOtp() {
+    if (this.resendCooldown > 0) {
+      this.snackbar.show(`Please wait ${this.resendCooldown}s before resending.`, 'warning');
+      return;
+    }
+    this.phoneOtpCode = '';
+    this.sendPhoneOtp();
   }
 
   cancelPhoneVerification() {
     this.showPhoneOtp = false;
     this.phoneOtpCode = '';
+    this.clearCooldownTimer();
+    this.phoneAuth.resetOtpSession();
+  }
+
+  /** Start a 60-second cooldown for the resend button */
+  private startResendCooldown() {
+    this.clearCooldownTimer();
+    this.resendCooldown = 60;
+    this._cooldownInterval = setInterval(() => {
+      this.resendCooldown--;
+      if (this.resendCooldown <= 0) {
+        this.clearCooldownTimer();
+      }
+    }, 1000);
+  }
+
+  private clearCooldownTimer() {
+    if (this._cooldownInterval) {
+      clearInterval(this._cooldownInterval);
+      this._cooldownInterval = null;
+    }
+    this.resendCooldown = 0;
   }
 
   onIdFileSelected(event: any) {
@@ -297,5 +377,10 @@ export class VerificationTabComponent implements OnInit {
         this.snackbar.show(err.error?.message || err.error || 'Bar Council Card submission failed.', 'error');
       }
     });
+  }
+
+  ngOnDestroy() {
+    this.clearCooldownTimer();
+    this.phoneAuth.resetOtpSession();
   }
 }
