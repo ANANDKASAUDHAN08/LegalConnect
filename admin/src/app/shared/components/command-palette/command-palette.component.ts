@@ -82,6 +82,14 @@ export class CommandPaletteComponent {
       action: () => this.router.navigate(['/security'])
     },
     {
+      id: 'cmd-notifications',
+      category: 'Navigation',
+      title: 'Notifications & Telemetry Hub',
+      description: 'Real-time alert stream, severity matrix & broadcast dispatcher',
+      icon: 'bell',
+      action: () => this.router.navigate(['/notifications'])
+    },
+    {
       id: 'cmd-acts',
       category: 'Navigation',
       title: 'Statutory Bare Acts',

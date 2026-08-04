@@ -16,7 +16,20 @@
                     </svg>
                 </div>
                 <div>
-                    <h3 class="text-base font-extrabold text-white">Export Data</h3>
+                    <div class="flex items-center gap-2">
+                        <h3 class="text-base font-extrabold text-white">Export Data</h3>
+                        <span
+                            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[10.5px] font-mono font-bold">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.2" class="text-indigo-400 shrink-0">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                <line x1="16" y1="2" x2="16" y2="6"></line>
+                                <line x1="8" y1="2" x2="8" y2="6"></line>
+                                <line x1="3" y1="10" x2="21" y2="10"></line>
+                            </svg>
+                            <span>{{ computedDateRangeLabel || 'All Time' }}</span>
+                        </span>
+                    </div>
                     <p class="text-xs text-slate-400">Configure export scope, target fields, and output format</p>
                 </div>
             </div>
@@ -44,7 +57,8 @@
                             class="mt-1 text-indigo-500 accent-indigo-500" />
                         <div class="flex flex-col min-w-0">
                             <span class="text-xs font-bold text-slate-100">All records</span>
-                            <span class="text-[10.5px] text-slate-400 mt-0.5 font-mono">{{ totalRecords | number }} total</span>
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 font-mono">{{ totalRecords | number }}
+                                total</span>
                         </div>
                     </label>
 
@@ -57,7 +71,8 @@
                             class="mt-1 text-indigo-500 accent-indigo-500" />
                         <div class="flex flex-col min-w-0">
                             <span class="text-xs font-bold text-slate-100">Filtered query</span>
-                            <span class="text-[10.5px] text-slate-400 mt-0.5 font-mono">{{ (filteredCount || totalRecords) | number }} record(s)</span>
+                            <span class="text-[10.5px] text-slate-400 mt-0.5 font-mono">{{ (filteredCount ||
+                                totalRecords) | number }} record(s)</span>
                         </div>
                     </label>
                     }
@@ -71,7 +86,8 @@
                             class="mt-1 text-indigo-500 accent-indigo-500" />
                         <div class="flex flex-col min-w-0">
                             <span class="text-xs font-bold text-slate-100">Selected rows</span>
-                            <span class="text-[10.5px] text-emerald-400 font-mono font-bold mt-0.5">{{ selectedCount }} checked</span>
+                            <span class="text-[10.5px] text-emerald-400 font-mono font-bold mt-0.5">{{ selectedCount }}
+                                checked</span>
                         </div>
                     </label>
                     }
@@ -82,17 +98,21 @@
             <div class="flex flex-col gap-2.5">
                 <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                        <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Columns to Export</label>
-                        <span class="px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold font-mono">
+                        <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Columns to
+                            Export</label>
+                        <span
+                            class="px-2 py-0.5 rounded-full bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-[10px] font-bold font-mono">
                             {{ selectedColumnCount }} / {{ exportColumns.length }} Selected
                         </span>
                     </div>
                     <div class="flex items-center gap-3">
                         <button (click)="selectAllColumns(true)"
-                            class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Select All</button>
+                            class="text-[11px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors">Select
+                            All</button>
                         <span class="text-slate-700">|</span>
                         <button (click)="selectAllColumns(false)"
-                            class="text-[11px] font-bold text-slate-400 hover:text-slate-200 transition-colors">Deselect All</button>
+                            class="text-[11px] font-bold text-slate-400 hover:text-slate-200 transition-colors">Deselect
+                            All</button>
                     </div>
                 </div>
                 <div
@@ -112,23 +132,61 @@
             <!-- Format Selector (Enterprise Radio Cards) -->
             <div class="flex flex-col gap-2.5">
                 <label class="text-[11px] font-extrabold text-slate-300 uppercase tracking-wider">Format</label>
-                <div class="grid grid-cols-2 gap-3">
-                    <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <!-- CSV Card -->
+                    <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
                         [ngClass]="exportFormat === 'csv' ? 'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40'">
                         <input type="radio" name="format" value="csv" [(ngModel)]="exportFormat"
-                            class="accent-indigo-500" />
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-slate-200">CSV (.csv)</span>
-                            <span class="text-[10px] text-slate-400">Comma-separated raw dataset</span>
+                            class="mt-1 accent-indigo-500" />
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" class="text-indigo-400 shrink-0">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                </svg>
+                                <span class="text-xs font-bold text-slate-200">CSV (.csv)</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Comma-separated</span>
                         </div>
                     </label>
-                    <label class="flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all"
-                        [ngClass]="exportFormat === 'xlsx' ? 'bg-indigo-950/50 border-indigo-500/60 ring-1 ring-indigo-500/50' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40'">
+
+                    <!-- Excel Card -->
+                    <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+                        [ngClass]="exportFormat === 'xlsx' ? 'bg-emerald-950/40 border-emerald-500/60 ring-1 ring-emerald-500/50' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40'">
                         <input type="radio" name="format" value="xlsx" [(ngModel)]="exportFormat"
-                            class="accent-indigo-500" />
-                        <div class="flex flex-col">
-                            <span class="text-xs font-bold text-slate-200">Excel (.xlsx)</span>
-                            <span class="text-[10px] text-slate-400">Formatted spreadsheet workbook</span>
+                            class="mt-1 accent-emerald-500" />
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" class="text-emerald-400 shrink-0">
+                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="3" y1="9" x2="21" y2="9"></line>
+                                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                                    <line x1="9" y1="3" x2="9" y2="21"></line>
+                                    <line x1="15" y1="3" x2="15" y2="21"></line>
+                                </svg>
+                                <span class="text-xs font-bold text-slate-200">Excel (.xlsx)</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Excel workbook</span>
+                        </div>
+                    </label>
+
+                    <!-- JSON Card -->
+                    <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+                        [ngClass]="exportFormat === 'json' ? 'bg-amber-950/40 border-amber-500/60 ring-1 ring-amber-500/50' : 'bg-slate-950/40 border-slate-800 hover:bg-slate-800/40'">
+                        <input type="radio" name="format" value="json" [(ngModel)]="exportFormat"
+                            class="mt-1 accent-amber-500" />
+                        <div class="flex flex-col min-w-0">
+                            <div class="flex items-center gap-1.5">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" class="text-amber-400 shrink-0">
+                                    <polyline points="16 18 22 12 16 6"></polyline>
+                                    <polyline points="8 6 2 12 8 18"></polyline>
+                                </svg>
+                                <span class="text-xs font-bold text-slate-200">JSON (.json)</span>
+                            </div>
+                            <span class="text-[10px] text-slate-400 mt-0.5">Structured payload</span>
                         </div>
                     </label>
                 </div>
@@ -136,15 +194,17 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3 backdrop-blur-md">
+        <div
+            class="px-6 py-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3 backdrop-blur-md">
             <div class="text-xs text-slate-400 flex items-center gap-1">
-                <span class="text-indigo-400 font-bold font-mono text-xs">{{ exportRowCount | number }}</span> rows &times;
+                <span class="text-indigo-400 font-bold font-mono text-xs">{{ exportRowCount | number }}</span> rows
+                &times;
                 <span class="text-indigo-400 font-bold font-mono text-xs">{{ selectedColumnCount }}</span> columns
-                <span class="text-slate-500 text-[11px] font-mono">({{ (exportRowCount * selectedColumnCount) | number }} data points)</span>
+                <span class="text-slate-500 text-[11px] font-mono">({{ (exportRowCount * selectedColumnCount) | number
+                    }} data points)</span>
             </div>
             <div class="flex items-center gap-2.5">
-                <button
-                    class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white rounded-xl transition-colors"
+                <button class="px-4 py-2 text-xs font-bold text-slate-400 hover:text-white rounded-xl transition-colors"
                     (click)="close()">
                     Cancel
                 </button>
@@ -159,12 +219,14 @@
                     </svg>
                     <span>Exporting...</span>
                     } @else {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
                         <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                         <polyline points="7 10 12 15 17 10"></polyline>
                         <line x1="12" y1="15" x2="12" y2="3"></line>
                     </svg>
-                    <span>Export {{ exportRowCount | number }} {{ exportScope === 'selected' ? 'Selected' : '' }} Rows (.{{ exportFormat }})</span>
+                    <span>Export {{ exportRowCount | number }} {{ exportScope === 'selected' ? 'Selected' : '' }} Rows
+                        (.{{ exportFormat }})</span>
                     }
                 </button>
             </div>

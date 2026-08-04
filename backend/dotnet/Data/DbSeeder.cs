@@ -4,6 +4,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text.Json;
 using CoreApi.Models;
+using CoreApi.Models.Admin;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.Data
@@ -35,7 +36,9 @@ namespace CoreApi.Data
 
         public static void Seed(AppDbContext context, Microsoft.Extensions.Configuration.IConfiguration configuration)
         {
-            // Auto-migrate missing columns in MySQL Users, Consultations & LawyerProfiles tables safely if they don't exist yet
+            // Auto-create missing MySQL tables and columns if they don't exist yet
+            EnsureAdminNotificationsTableExists(context);
+            EnsureSecurityAuditLogsTableExists(context);
             EnsureColumnExists(context, "Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'");
             EnsureColumnExists(context, "Users", "LastLoginAt", "DATETIME NULL");
             EnsureColumnExists(context, "Users", "LastIpAddress", "VARCHAR(50) NULL");
@@ -337,6 +340,230 @@ namespace CoreApi.Data
                 context.SystemAnnouncements.AddRange(announcements);
                 context.SaveChanges();
                 Console.WriteLine("SystemAnnouncements table seeded with 1.2.0 release notes.");
+            }
+
+            // Seed AdminNotifications if none exist
+            try
+            {
+                if (!context.AdminNotifications.Any())
+                {
+                    var adminNotifications = new[]
+                    {
+                        new AdminNotification
+                        {
+                            TargetRole = "All",
+                            Type = "security_alert",
+                            Severity = "critical",
+                            Category = "security",
+                            Title = "Elevated Brute-Force Activity Detected",
+                            Message = "7 consecutive failed login attempts from IP 103.92.41.xx targeting admin@legalconnect.com within 3 minutes.",
+                            DetailsMarkdown = "### Security Incident Report\n\n- **IP Address:** 103.92.41.xx\n- **Target Account:** admin@legalconnect.com\n- **Attempts:** 7 in 3 minutes\n- **Status:** IP temporarily rate-limited\n- **Recommendation:** Review IP in firewall rules and enable Geo-fencing.",
+                            CreatedAt = DateTime.UtcNow.AddMinutes(-45),
+                            ActionUrl = "/security",
+                            ActionLabel = "Review Security Logs",
+                            Source = "Security Monitor"
+                        },
+                        new AdminNotification
+                        {
+                            TargetRole = "All",
+                            Type = "security_alert",
+                            Severity = "warning",
+                            Category = "security",
+                            Title = "Two-Factor Authentication Disabled",
+                            Message = "User rajesh.kumar@email.com (ID: 14) disabled 2FA on their account.",
+                            CreatedAt = DateTime.UtcNow.AddHours(-2),
+                            ActionUrl = "/users",
+                            ActionLabel = "Review User",
+                            Source = "Security Monitor"
+                        },
+                        new AdminNotification
+                        {
+                            TargetRole = "VerificationOfficer",
+                            Type = "verification_req",
+                            Severity = "warning",
+                            Category = "verification",
+                            Title = "Bar Credential Audit Pending",
+                            Message = "Adv. Meera Nair submitted license (BCI/KER/2024/1892) under Kerala Bar Council.",
+                            CreatedAt = DateTime.UtcNow.AddHours(-1),
+                            ActionUrl = "/lawyers",
+                            ActionLabel = "Audit License",
+                            Source = "Lawyer Verification",
+                            RelatedEntityType = "LawyerProfile"
+                        },
+                        new AdminNotification
+                        {
+                            TargetRole = "SupportDesk",
+                            Type = "urgent_ticket",
+                            Severity = "warning",
+                            Category = "support",
+                            Title = "Grievance Ticket #1023: Lawyer Misconduct Report",
+                            Message = "Submitted by Anita Desai: I was charged ₹15,000 for a consultation that was supposed to be free under the pro-bono scheme.",
+                            CreatedAt = DateTime.UtcNow.AddHours(-3),
+                            ActionUrl = "/support",
+                            ActionLabel = "Open Grievance Desk",
+                            Source = "Support Desk",
+                            RelatedEntityType = "ContactSubmission"
+                        },
+                        new AdminNotification
+                        {
+                            TargetRole = "All",
+                            Type = "consultation_alert",
+                            Severity = "info",
+                            Category = "consultation",
+                            Title = "Consultation #78 - Confirmed",
+                            Message = "Client Vikram Singh booked session with Adv. Priya Sharma for Property Dispute.",
+                            CreatedAt = DateTime.UtcNow.AddHours(-5),
+                            IsRead = true,
+                            ActionUrl = "/consultations",
+                            ActionLabel = "Track Booking",
+                            Source = "Consultation System",
+                            RelatedEntityType = "Consultation"
+                        },
+                        new AdminNotification
+                        {
+                            TargetRole = "All",
+                            Type = "announcement",
+                            Severity = "success",
+                            Category = "announcement",
+                            Title = "Platform Milestone: 500 Active Users",
+                            Message = "LegalConnect has crossed 500 registered active users. Lawyer onboarding rate has increased 23% this month.",
+                            CreatedAt = DateTime.UtcNow.AddDays(-1),
+                            IsRead = true,
+                            ActionUrl = "/dashboard",
+                            ActionLabel = "View Dashboard",
+                            Source = "System Analytics"
+                        },
+                        new AdminNotification
+                        {
+                            TargetRole = "All",
+                            Type = "security_alert",
+                            Severity = "info",
+                            Category = "security",
+                            Title = "Daily Security Audit Summary",
+                            Message = "24h Summary: 0 critical events, 2 failed logins (within threshold), all API endpoints healthy.",
+                            CreatedAt = DateTime.UtcNow.AddDays(-1),
+                            IsRead = true,
+                            ActionUrl = "/notifications",
+                            ActionLabel = "View Full Report",
+                            Source = "Security Monitor"
+                        }
+                    };
+
+                    context.AdminNotifications.AddRange(adminNotifications);
+                    context.SaveChanges();
+                    Console.WriteLine("✅ AdminNotifications table seeded with 7 realistic entries.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Seeder Warning: Could not seed AdminNotifications: {ex.Message}");
+            }
+
+            // Seed SecurityAuditLogs if none exist
+            try
+            {
+                if (!context.SecurityAuditLogs.Any())
+                {
+                    var securityLogs = new[]
+                    {
+                        new SecurityAuditLog
+                        {
+                            EventType = "failed_login_burst",
+                            Severity = "critical",
+                            Description = "7 consecutive failed login attempts from IP 103.92.41.xx targeting admin@legalconnect.com.",
+                            IpAddress = "103.92.41.xx",
+                            UserAgent = "Mozilla/5.0 (Windows NT 10.0; rv:109.0) Gecko/20100101 Firefox/115.0",
+                            Metadata = "{\"targetEmail\":\"admin@legalconnect.com\",\"attempts\":7,\"windowMinutes\":3}",
+                            CreatedAt = DateTime.UtcNow.AddMinutes(-45)
+                        },
+                        new SecurityAuditLog
+                        {
+                            EventType = "2fa_disabled",
+                            Severity = "warning",
+                            Description = "User rajesh.kumar@email.com disabled Two-Factor Authentication.",
+                            IpAddress = "192.168.1.105",
+                            Metadata = "{\"userId\":14,\"email\":\"rajesh.kumar@email.com\"}",
+                            CreatedAt = DateTime.UtcNow.AddHours(-2)
+                        },
+                        new SecurityAuditLog
+                        {
+                            EventType = "failed_login",
+                            Severity = "info",
+                            Description = "Failed login attempt for user test@example.com.",
+                            IpAddress = "10.0.0.22",
+                            CreatedAt = DateTime.UtcNow.AddHours(-8)
+                        }
+                    };
+
+                    context.SecurityAuditLogs.AddRange(securityLogs);
+                    context.SaveChanges();
+                    Console.WriteLine("✅ SecurityAuditLogs table seeded with 3 entries.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Seeder Warning: Could not seed SecurityAuditLogs: {ex.Message}");
+            }
+        }
+
+        private static void EnsureAdminNotificationsTableExists(AppDbContext context)
+        {
+            try
+            {
+                var sql = @"
+                    CREATE TABLE IF NOT EXISTS `AdminNotifications` (
+                        `Id` int NOT NULL AUTO_INCREMENT,
+                        `RecipientUserId` int NULL,
+                        `TargetRole` varchar(50) NOT NULL DEFAULT 'All',
+                        `Type` varchar(50) NOT NULL DEFAULT 'announcement',
+                        `Severity` varchar(20) NOT NULL DEFAULT 'info',
+                        `Category` varchar(50) NOT NULL DEFAULT 'announcement',
+                        `Title` varchar(300) NOT NULL,
+                        `Message` varchar(2000) NOT NULL,
+                        `DetailsMarkdown` longtext NULL,
+                        `CreatedAt` datetime(6) NOT NULL,
+                        `IsRead` tinyint(1) NOT NULL DEFAULT 0,
+                        `IsStarred` tinyint(1) NOT NULL DEFAULT 0,
+                        `IsArchived` tinyint(1) NOT NULL DEFAULT 0,
+                        `ActionUrl` varchar(500) NULL,
+                        `ActionLabel` varchar(100) NULL,
+                        `Source` varchar(100) NULL,
+                        `RelatedEntityType` varchar(100) NULL,
+                        `RelatedEntityId` int NULL,
+                        `ReadAt` datetime(6) NULL,
+                        `ReadByUserId` int NULL,
+                        PRIMARY KEY (`Id`)
+                    );";
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Seeder Notice: Could not ensure AdminNotifications table: {ex.Message}");
+            }
+        }
+
+        private static void EnsureSecurityAuditLogsTableExists(AppDbContext context)
+        {
+            try
+            {
+                var sql = @"
+                    CREATE TABLE IF NOT EXISTS `SecurityAuditLogs` (
+                        `Id` int NOT NULL AUTO_INCREMENT,
+                        `UserId` int NULL,
+                        `EventType` varchar(50) NOT NULL,
+                        `Severity` varchar(20) NOT NULL DEFAULT 'info',
+                        `Description` varchar(1000) NOT NULL,
+                        `IpAddress` varchar(50) NULL,
+                        `UserAgent` varchar(500) NULL,
+                        `Metadata` longtext NULL,
+                        `CreatedAt` datetime(6) NOT NULL,
+                        PRIMARY KEY (`Id`)
+                    );";
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Seeder Notice: Could not ensure SecurityAuditLogs table: {ex.Message}");
             }
         }
 

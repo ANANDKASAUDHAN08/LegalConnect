@@ -1,6 +1,7 @@
-import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, ChangeDetectionStrategy, ChangeDetectorRef, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 export interface ExportColumnDef {
   key: string;
@@ -11,7 +12,62 @@ export interface ExportColumnDef {
 export interface ExportConfig {
   scope: 'all' | 'filtered' | 'selected';
   columns: string[];
-  format: 'csv' | 'xlsx';
+  format: 'csv' | 'json' | 'xlsx';
+}
+
+export function formatDateRange(start?: string | null, end?: string | null): string {
+  if (!start && !end) return '';
+
+  const parseDate = (s?: string | null) => {
+    if (!s) return null;
+    const d = new Date(s.includes('T') ? s : s + 'T00:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  const dStart = parseDate(start);
+  const dEnd = parseDate(end);
+
+  if (dStart && dEnd) {
+    const sIso = dStart.toISOString().slice(0, 10);
+    const eIso = dEnd.toISOString().slice(0, 10);
+
+    // Exact same date
+    if (sIso === eIso) {
+      const todayStr = new Date().toISOString().slice(0, 10);
+      if (sIso === todayStr) {
+        return `Today (${dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })})`;
+      }
+      return dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+
+    // Same month & year: "Aug 1 – 4, 2026"
+    if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
+      const month = dStart.toLocaleDateString('en-US', { month: 'short' });
+      return `${month} ${dStart.getDate()} – ${dEnd.getDate()}, ${dStart.getFullYear()}`;
+    }
+
+    // Same year, different month: "Jul 28 – Aug 4, 2026"
+    if (dStart.getFullYear() === dEnd.getFullYear()) {
+      const startStr = dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      const endStr = dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      return `${startStr} – ${endStr}, ${dStart.getFullYear()}`;
+    }
+
+    // Different years: "Dec 28, 2025 – Jan 4, 2026"
+    const startStr = dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const endStr = dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${startStr} – ${endStr}`;
+  }
+
+  if (dStart) {
+    return `From ${dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  }
+
+  if (dEnd) {
+    return `Until ${dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+  }
+
+  return '';
 }
 
 @Component({
@@ -23,6 +79,8 @@ export interface ExportConfig {
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ExportModalComponent {
+  private route = inject(ActivatedRoute, { optional: true });
+
   private _isOpen = false;
   @Input() set isOpen(val: boolean) {
     this._isOpen = val;
@@ -47,6 +105,14 @@ export class ExportModalComponent {
   @Input() filteredCount = 0;
   @Input() selectedCount = 0;
   @Input() isFilterActive = false;
+  @Input() dateRangeLabel = '';
+
+  get computedDateRangeLabel(): string {
+    if (this.dateRangeLabel) return this.dateRangeLabel;
+
+    const params = this.route?.snapshot?.queryParams;
+    return formatDateRange(params?.['startDate'], params?.['endDate']);
+  }
 
   @Input() set columns(val: { key: string; label: string }[]) {
     this._allColumns = val || [];
@@ -63,14 +129,21 @@ export class ExportModalComponent {
   @Output() closed = new EventEmitter<void>();
 
   exportScope: 'all' | 'filtered' | 'selected' = 'all';
-  exportFormat: 'csv' | 'xlsx' = 'csv';
+  exportFormat: 'csv' | 'json' | 'xlsx' = 'csv';
   columnMode: 'all' | 'visible' = 'all';
   exportColumns: ExportColumnDef[] = [];
 
   private _allColumns: { key: string; label: string }[] = [];
   private _visibleKeys = new Set<string>();
 
-  constructor(private cdr: ChangeDetectorRef) {}
+  constructor(private cdr: ChangeDetectorRef) {
+    try {
+      const savedFormat = localStorage.getItem('lc_export_format') as any;
+      if (savedFormat && ['csv', 'json', 'xlsx'].includes(savedFormat)) {
+        this.exportFormat = savedFormat;
+      }
+    } catch { }
+  }
 
   get selectedColumnCount(): number {
     return this.exportColumns.filter(c => c.selected).length;
@@ -107,6 +180,10 @@ export class ExportModalComponent {
 
   doExport(): void {
     if (this.isExporting || this.selectedColumnCount === 0) return;
+    try {
+      localStorage.setItem('lc_export_format', this.exportFormat);
+    } catch { }
+
     const selectedCols = this.exportColumns.filter(c => c.selected).map(c => c.key);
     this.exportRequest.emit({
       scope: this.exportScope,

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using CoreApi.Models;
+using CoreApi.Models.Admin;
 
 namespace CoreApi.Data
 {
@@ -28,6 +29,8 @@ namespace CoreApi.Data
         public DbSet<ContactSubmission> ContactSubmissions { get; set; }
         public DbSet<ProfileView> ProfileViews { get; set; }
         public DbSet<PolicyFeedback> PolicyFeedbacks { get; set; }
+        public DbSet<AdminNotification> AdminNotifications { get; set; }
+        public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -153,6 +156,41 @@ namespace CoreApi.Data
             modelBuilder.Entity<FavouriteHelpline>()
                 .HasIndex(f => new { f.ClientId, f.HelplineId })
                 .IsUnique();
+
+            // Configure AdminNotification relationships & indexes
+            modelBuilder.Entity<AdminNotification>()
+                .HasOne(n => n.RecipientUser)
+                .WithMany()
+                .HasForeignKey(n => n.RecipientUserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<AdminNotification>()
+                .HasIndex(n => new { n.IsArchived, n.CreatedAt });
+
+            modelBuilder.Entity<AdminNotification>()
+                .HasIndex(n => n.IsRead);
+
+            modelBuilder.Entity<AdminNotification>()
+                .HasIndex(n => n.Severity);
+
+            modelBuilder.Entity<AdminNotification>()
+                .HasIndex(n => n.Category);
+
+            modelBuilder.Entity<AdminNotification>()
+                .HasIndex(n => n.TargetRole);
+
+            // Configure SecurityAuditLog relationships & indexes
+            modelBuilder.Entity<SecurityAuditLog>()
+                .HasOne(s => s.User)
+                .WithMany()
+                .HasForeignKey(s => s.UserId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<SecurityAuditLog>()
+                .HasIndex(s => new { s.EventType, s.CreatedAt });
+
+            modelBuilder.Entity<SecurityAuditLog>()
+                .HasIndex(s => s.Severity);
         }
     }
 }

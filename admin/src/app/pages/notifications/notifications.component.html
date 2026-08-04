@@ -1,0 +1,1166 @@
+<div class="notifications-page w-full flex flex-col gap-4 pt-4 animate-fade-in text-slate-100">
+
+  <!-- --- Ultra-Compact Full-Bleed Enterprise Banner --- -->
+  <header
+    class="relative -mx-4 -mt-4 py-5 bg-gradient-to-r from-slate-900/95 via-indigo-950/70 to-slate-900/95 backdrop-blur-xl border-b border-white/10 shadow-xl overflow-hidden group transition-all duration-300">
+
+    <!-- Ambient Glow Lights -->
+    <div
+      class="absolute -top-20 -left-20 w-64 h-64 bg-indigo-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-indigo-500/25 transition-all duration-700">
+    </div>
+    <div
+      class="absolute -bottom-20 -right-20 w-64 h-64 bg-purple-500/15 rounded-full blur-2xl pointer-events-none group-hover:bg-purple-500/25 transition-all duration-700">
+    </div>
+
+    <!-- Inner Container: Aligned & Padded -->
+    <div class="px-6 flex flex-col md:flex-row md:items-center justify-between gap-4 relative z-10">
+
+      <!-- Header Left: Title & Status -->
+      <div class="header-left flex items-center gap-3.5">
+        <div
+          class="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/25 via-purple-500/20 to-sky-500/20 border border-indigo-400/30 text-indigo-300 shadow-md shadow-indigo-500/20 flex-shrink-0"
+          [adminTooltip]="'Centralized Telemetry Hub'" tooltipPosition="right">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            class="drop-shadow">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+        </div>
+
+        <div class="flex flex-col gap-0.5">
+          <div class="flex flex-wrap items-center gap-2.5">
+            <h1 class="text-base sm:text-lg font-black tracking-tight text-white flex items-center gap-2">
+              <span
+                class="bg-gradient-to-r from-white via-indigo-100 to-indigo-200 bg-clip-text text-transparent">Notifications
+                & Telemetry</span>
+            </h1>
+
+            <span
+              class="text-[9px] px-2 py-0.5 rounded-md bg-indigo-500/20 border border-indigo-400/30 font-black text-indigo-300 tracking-wider uppercase">
+              Command Center
+            </span>
+
+            @if (isLiveStreaming()) {
+            <span
+              class="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-black tracking-wider uppercase shadow-sm transition-all"
+              [ngClass]="signalRConnected() ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-300' : 'bg-amber-500/20 border border-amber-400/40 text-amber-300'"
+              [adminTooltip]="signalRConnected() ? 'SignalR WebSocket Connected' : 'Polling Fallback Mode (15s)'"
+              tooltipPosition="top">
+              <span class="relative flex h-1.5 w-1.5">
+                <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                  [ngClass]="signalRConnected() ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+                <span class="relative inline-flex rounded-full h-1.5 w-1.5"
+                  [ngClass]="signalRConnected() ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+              </span>
+              {{ signalRConnected() ? 'WEBSOCKET LIVE' : 'POLLING FALLBACK' }}
+            </span>
+            } @else {
+            <span
+              class="px-2.5 py-0.5 rounded-full bg-amber-500/20 border border-amber-400/40 text-[9px] font-black text-amber-300 tracking-wider uppercase">
+              PAUSED
+            </span>
+            }
+          </div>
+          <p class="text-[11px] text-slate-400 font-medium">
+            Real-time enterprise audit telemetry stream, security threshold alerts, and broadcast dispatcher.
+          </p>
+        </div>
+      </div>
+
+      <!-- Header Right: View Switcher & Compact Button Bar -->
+      <div class="header-right flex flex-wrap items-center gap-2.5">
+        <!-- View Mode Segmented Control (Pill Switcher) -->
+        <div class="flex items-center p-1 rounded-xl bg-slate-950/80 border border-slate-800 shadow-inner">
+          <button (click)="setViewMode('inbox')"
+            class="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            [ngClass]="viewMode() === 'inbox' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            [adminTooltip]="'View actionable items requiring human decision'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
+              <path
+                d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
+              </path>
+            </svg>
+            <span>Inbox</span>
+          </button>
+
+          <button (click)="setViewMode('telemetry')"
+            class="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            [ngClass]="viewMode() === 'telemetry' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            [adminTooltip]="'View real-time security & system telemetry stream'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            <span>Telemetry Log</span>
+          </button>
+
+          <button (click)="setViewMode('all')"
+            class="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
+            [ngClass]="viewMode() === 'all' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
+            [adminTooltip]="'View all stream events'">
+            <span>All</span>
+          </button>
+        </div>
+
+        <div class="h-5 w-px bg-slate-800 hidden sm:block"></div>
+
+        <!-- Sidebar Collapse Toggle Button -->
+        <button (click)="toggleSidebar()"
+          class="p-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
+          [adminTooltip]="isSidebarCollapsed() ? 'Show telemetry stats sidebar' : 'Hide sidebar for widescreen feed'"
+          tooltipPosition="bottom">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="9" y1="3" x2="9" y2="21"></line>
+          </svg>
+        </button>
+
+        <!-- Live Stream Toggle -->
+        <button (click)="toggleLiveStream()"
+          class="px-3 py-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
+          [adminTooltip]="isLiveStreaming() ? 'Pause live telemetry stream' : 'Resume live stream'"
+          tooltipPosition="bottom">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ isLiveStreaming() ? 'Pause Stream' : 'Resume' }}</span>
+        </button>
+
+        <!-- Audio Chime Toggle -->
+        <button (click)="toggleSound()"
+          class="p-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
+          [adminTooltip]="soundEnabled() ? 'Mute audio alerts' : 'Enable audio chime'" tooltipPosition="bottom">
+          @if (soundEnabled()) {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <line x1="23" y1="9" x2="17" y2="15"></line>
+            <line x1="17" y1="9" x2="23" y2="15"></line>
+          </svg>
+          }
+        </button>
+
+        <!-- Export Logs Modal Button -->
+        <button (click)="openExportModal()"
+          class="px-3 py-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
+          [adminTooltip]="'Export telemetry dialog (CSV, JSON, XLSX)'" tooltipPosition="bottom">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export</span>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- --- Main Padded Content Area --- -->
+  <div class="px-4 flex flex-col gap-6">
+
+    <!-- --- Enterprise Dual-Pane Grid Layout --- -->
+    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
+
+      <!-- --- LEFT MAIN STREAM COLUMN (75% or 100% Width) --- -->
+      <main [ngClass]="isSidebarCollapsed() ? 'xl:col-span-12 2xl:col-span-12' : 'xl:col-span-8 2xl:col-span-9'"
+        class="flex flex-col gap-4 min-w-0 transition-all duration-300">
+
+        <!-- --- Sleek Glass Metric Cards Row --- -->
+        <section class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <!-- Metric 1: Total Events -->
+          <div (click)="setTab('all')"
+            class="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl hover:border-indigo-500/40 hover:bg-slate-900/70 transition-all cursor-pointer group shadow-lg flex items-center justify-between relative overflow-hidden"
+            [adminTooltip]="'Total telemetry events recorded in database stream'">
+            <div
+              class="absolute -right-6 -bottom-6 w-20 h-20 bg-indigo-500/10 rounded-full blur-xl group-hover:bg-indigo-500/20 transition-all pointer-events-none">
+            </div>
+            <div class="flex flex-col gap-1 relative z-10">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Telemetry</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-white tracking-tight">{{ stats().totalEvents }}</span>
+                <span class="text-[10px] text-slate-500 font-medium">100% Feed</span>
+              </div>
+            </div>
+            <div
+              class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
+                <path d="M3 9h18"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Metric 2: Unread Alerts -->
+          <div (click)="setTab('unread')"
+            class="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl hover:border-rose-500/40 hover:bg-slate-900/70 transition-all cursor-pointer group shadow-lg flex items-center justify-between relative overflow-hidden"
+            [adminTooltip]="'Unread notifications requiring review'">
+            <div
+              class="absolute -right-6 -bottom-6 w-20 h-20 bg-rose-500/10 rounded-full blur-xl group-hover:bg-rose-500/20 transition-all pointer-events-none">
+            </div>
+            <div class="flex flex-col gap-1 relative z-10">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Unread Action</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-rose-400 tracking-tight">{{ stats().unreadCount
+                  }}</span>
+                @if (stats().unreadCount > 0) {
+                <span
+                  class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 animate-pulse">Required</span>
+                } @else {
+                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300">All
+                  Read</span>
+                }
+              </div>
+            </div>
+            <div
+              class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Metric 3: Critical Security Threats -->
+          <div (click)="setSeverity('critical')"
+            class="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl hover:border-amber-500/40 hover:bg-slate-900/70 transition-all cursor-pointer group shadow-lg flex items-center justify-between relative overflow-hidden"
+            [adminTooltip]="'High priority security warnings'">
+            <div
+              class="absolute -right-6 -bottom-6 w-20 h-20 bg-amber-500/10 rounded-full blur-xl group-hover:bg-amber-500/20 transition-all pointer-events-none">
+            </div>
+            <div class="flex flex-col gap-1 relative z-10">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Critical Threats</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-amber-400 tracking-tight">{{ stats().criticalCount
+                  }}</span>
+                <span class="text-[10px] text-slate-500 font-medium">Tier 1</span>
+              </div>
+            </div>
+            <div
+              class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                </path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Metric 4: Starred Alerts -->
+          <div (click)="setTab('starred')"
+            class="p-4 rounded-2xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl hover:border-emerald-500/40 hover:bg-slate-900/70 transition-all cursor-pointer group shadow-lg flex items-center justify-between relative overflow-hidden"
+            [adminTooltip]="'Starred notifications'">
+            <div
+              class="absolute -right-6 -bottom-6 w-20 h-20 bg-emerald-500/10 rounded-full blur-xl group-hover:bg-emerald-500/20 transition-all pointer-events-none">
+            </div>
+            <div class="flex flex-col gap-1 relative z-10">
+              <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Starred Items</span>
+              <div class="flex items-baseline gap-2">
+                <span class="text-2xl sm:text-3xl font-black text-emerald-400 tracking-tight">{{ stats().starredCount
+                  }}</span>
+                <span class="text-[10px] text-slate-500 font-medium">Pinned</span>
+              </div>
+            </div>
+            <div
+              class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon
+                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                </polygon>
+              </svg>
+            </div>
+          </div>
+        </section>
+
+        <!-- --- Unified Glass Control Console (Tabs + Search + Filters Sticky Pinned) --- -->
+        <div class="rounded-xl border border-slate-800/90 bg-slate-900 p-3.5 flex flex-col gap-2 sticky top-0 z-30">
+
+          <!-- Top Row: Tabs + Search + Action -->
+          <div
+            class="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-2 border-b border-slate-800/80">
+            <!-- Modern Unified Segmented Control Tabs -->
+            <div
+              class="flex items-center gap-1.5 p-1.5 rounded-2xl bg-slate-950/90 border border-slate-800/90 overflow-x-auto custom-scrollbar shadow-inner">
+              <!-- All Stream (Indigo Theme) -->
+              <button (click)="setTab('all')"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                [ngClass]="selectedTab() === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30 border border-indigo-400/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
+                [adminTooltip]="'View all notification streams'">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  [ngClass]="selectedTab() === 'all' ? 'text-white' : 'text-indigo-400'">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+                </svg>
+                <span>All Stream</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
+                  [ngClass]="selectedTab() === 'all' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'">{{
+                  stats().totalEvents }}</span>
+              </button>
+
+              <!-- Unread (Rose Red Theme) -->
+              <button (click)="setTab('unread')"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                [ngClass]="selectedTab() === 'unread' ? 'bg-rose-600 text-white shadow-md shadow-rose-500/30 border border-rose-400/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
+                [adminTooltip]="'View unread notifications'">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  [ngClass]="selectedTab() === 'unread' ? 'text-white' : 'text-rose-400'">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+                <span>Unread</span>
+                @if (stats().unreadCount > 0) {
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
+                  [ngClass]="selectedTab() === 'unread' ? 'bg-white/20 text-white' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'">{{
+                  stats().unreadCount }}</span>
+                }
+              </button>
+
+              <!-- Starred (Amber Gold Theme with White Text) -->
+              <button (click)="setTab('starred')"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                [ngClass]="selectedTab() === 'starred' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/30 border border-amber-400/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
+                [adminTooltip]="'View starred notifications'">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  [ngClass]="selectedTab() === 'starred' ? 'text-white' : 'text-amber-400'">
+                  <polygon
+                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                  </polygon>
+                </svg>
+                <span>Starred</span>
+                <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
+                  [ngClass]="selectedTab() === 'starred' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'">{{
+                  stats().starredCount }}</span>
+              </button>
+
+              <!-- Archived (Slate Gray Theme) -->
+              <button (click)="setTab('archived')"
+                class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
+                [ngClass]="selectedTab() === 'archived' ? 'bg-slate-700 text-white shadow-md shadow-slate-500/30 border border-slate-500/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
+                [adminTooltip]="'View archived notifications'">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  [ngClass]="selectedTab() === 'archived' ? 'text-white' : 'text-slate-400'">
+                  <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                  <rect x="1" y="3" width="22" height="5"></rect>
+                  <line x1="10" y1="12" x2="14" y2="12"></line>
+                </svg>
+                <span>Archived</span>
+              </button>
+            </div>
+
+            <!-- Search & Mark All Read Button -->
+            <div class="flex items-center gap-2">
+              <admin-search-input placeholder="Search alerts by title, keyword..." [value]="searchQuery()"
+                (searchChange)="onSearchChange($event)" minWidth="220px">
+              </admin-search-input>
+
+              @if (undoCountdown() > 0 && lastMarkedReadIds().length > 0) {
+              <button (click)="undoMarkAllAsRead()"
+                class="px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-300 hover:text-amber-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 animate-pulse">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M3 7v6h6"></path>
+                  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
+                </svg>
+                <span>Undo ({{ undoCountdown() }}s)</span>
+              </button>
+              } @else {
+              <button (click)="markAllAsRead()"
+                class="h-8 px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
+                [adminTooltip]="'Mark all notifications as read'" tooltipPosition="top">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+                <span>Mark All Read</span>
+              </button>
+              }
+            </div>
+          </div>
+
+          <!-- Bottom Row: Inline Dropdown Filters Toolbar -->
+          <div class="flex flex-wrap items-center justify-between gap-2 z-20">
+            <div class="flex flex-wrap items-center gap-2">
+              <admin-select [options]="severitySelectOptions" [value]="selectedSeverity()"
+                (valueChange)="setSeverity($event)" placeholder="Severity" minWidth="130px">
+              </admin-select>
+
+              <admin-select [options]="categorySelectOptions" [value]="selectedCategory()"
+                (valueChange)="setCategory($event)" placeholder="Domain" minWidth="135px">
+              </admin-select>
+
+              <admin-select [options]="roleSelectOptions" [value]="selectedRole()" (valueChange)="setRole($event)"
+                placeholder="Role" minWidth="130px">
+              </admin-select>
+
+              <admin-date-range-picker [startDate]="startDate()" [endDate]="endDate()"
+                (rangeChange)="onDateRangeChange($event)" tooltip="Filter by timestamp">
+              </admin-date-range-picker>
+
+              <admin-select [options]="sortSelectOptions" [value]="sortBy()" (valueChange)="onSortChange($event)"
+                minWidth="150px">
+              </admin-select>
+            </div>
+
+            <!-- Active Filter Removable Chips Tray (Horizontal Scrollable with Edge Fade) -->
+            @if (activeFilterCount() > 0) {
+            <div
+              class="w-full flex items-center justify-between gap-3 pt-2.5 border-t border-slate-800/70 animate-fade-in">
+              <!-- Left Side: Fixed Label + Scrollable Chips Container -->
+              <div class="flex items-center gap-2.5 min-w-0 flex-1 relative overflow-hidden">
+                <!-- Active Filters Label -->
+                <span
+                  class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 shrink-0 select-none">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-indigo-400">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                  </svg>
+                  <span>Active Filters ({{ activeFilterCount() }}):</span>
+                </span>
+
+                <!-- Scrollable Chips Container -->
+                <div
+                  class="flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap py-1 pr-6 flex-1 scroll-smooth">
+                  @if (selectedCategory()) {
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-500/20 border border-indigo-400/50 text-indigo-100 text-xs font-semibold shadow-sm backdrop-blur-md shrink-0">
+                    <span>Domain: {{ selectedCategoryLabel() }}</span>
+                    <button (click)="clearCategory()"
+                      class="w-4 h-4 rounded-full bg-indigo-400/30 hover:bg-rose-500 text-indigo-100 hover:text-white flex items-center justify-center text-[10px] transition-all cursor-pointer font-bold">✕</button>
+                  </span>
+                  }
+
+                  @if (selectedSeverity()) {
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/20 border border-rose-400/50 text-rose-100 text-xs font-semibold shadow-sm backdrop-blur-md shrink-0">
+                    <span>Severity: {{ selectedSeverityLabel() }}</span>
+                    <button (click)="clearSeverity()"
+                      class="w-4 h-4 rounded-full bg-rose-400/30 hover:bg-rose-500 text-rose-100 hover:text-white flex items-center justify-center text-[10px] transition-all cursor-pointer font-bold">✕</button>
+                  </span>
+                  }
+
+                  @if (selectedRole()) {
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-purple-500/20 border border-purple-400/50 text-purple-100 text-xs font-semibold shadow-sm backdrop-blur-md shrink-0">
+                    <span>Role: {{ selectedRoleLabel() }}</span>
+                    <button (click)="clearRole()"
+                      class="w-4 h-4 rounded-full bg-purple-400/30 hover:bg-rose-500 text-purple-100 hover:text-white flex items-center justify-center text-[10px] transition-all cursor-pointer font-bold">✕</button>
+                  </span>
+                  }
+
+                  @if (startDate() || endDate()) {
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-400/50 text-amber-100 text-xs font-semibold shadow-sm backdrop-blur-md shrink-0">
+                    <span>Date: {{ dateRangeLabel() }}</span>
+                    <button (click)="clearDateRange()"
+                      class="w-4 h-4 rounded-full bg-amber-400/30 hover:bg-rose-500 text-amber-100 hover:text-white flex items-center justify-center text-[10px] transition-all cursor-pointer font-bold">✕</button>
+                  </span>
+                  }
+
+                  @if (searchQuery()) {
+                  <span
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/20 border border-sky-400/50 text-sky-100 text-xs font-semibold shadow-sm backdrop-blur-md shrink-0">
+                    <span>"{{ searchQuery() }}"</span>
+                    <button (click)="clearSearch()"
+                      class="w-4 h-4 rounded-full bg-sky-400/30 hover:bg-rose-500 text-sky-100 hover:text-white flex items-center justify-center text-[10px] transition-all cursor-pointer font-bold">✕</button>
+                  </span>
+                  }
+                </div>
+
+                <!-- Right Fade-out gradient edge hint -->
+                <div
+                  class="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-slate-900 via-slate-900/80 to-transparent pointer-events-none z-10">
+                </div>
+              </div>
+
+              <!-- Right Side: Reset All Pill Button (Fixed at right edge) -->
+              <button (click)="resetAllFilters()"
+                class="shrink-0 px-3.5 py-1 rounded-full bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/50 text-rose-200 hover:text-white text-xs font-extrabold transition-all shadow-md shadow-rose-500/10 flex items-center gap-1.5 cursor-pointer active:scale-95 z-20">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                  <path d="M3 3v5h5"></path>
+                </svg>
+                <span>Reset All ({{ activeFilterCount() }})</span>
+              </button>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- --- Dynamic Floating Bulk Action Dock --- -->
+        @if (selectedIds().size > 0) {
+        <div
+          class="bulk-toolbar sticky top-22 z-40 flex items-center justify-between px-4 py-2.5 rounded-2xl bg-slate-900/95 border border-indigo-500/40 backdrop-blur-2xl shadow-2xl shadow-indigo-950/80 animate-slide-down">
+
+          <!-- Left Side: Checkbox + Glowing Selection Counter Badge -->
+          <div class="flex items-center gap-3">
+            <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
+              class="rounded-md border-slate-700 bg-slate-950 text-indigo-500 focus:ring-0 w-4 h-4 cursor-pointer transition-transform active:scale-95"
+              [adminTooltip]="'Toggle select all filtered notifications'" tooltipPosition="right" />
+
+            <div
+              class="flex items-center gap-2 px-2.5 py-1 rounded-xl bg-indigo-500/15 border border-indigo-400/30 text-indigo-200 text-xs font-bold shadow-xs">
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-400"></span>
+              </span>
+              <span>{{ selectedIds().size }} {{ selectedIds().size === 1 ? 'notification' : 'notifications' }}
+                selected</span>
+            </div>
+          </div>
+
+          <!-- Right Side: Sleek Glass Action Buttons -->
+          <div class="flex items-center gap-2">
+
+            <!-- Mark Read Button -->
+            <button (click)="bulkMarkRead()"
+              class="h-8 px-3.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 hover:text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer flex items-center gap-1.5 active:scale-95"
+              [adminTooltip]="'Mark selected items as read'" tooltipPosition="top">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              <span>Mark Read</span>
+            </button>
+
+            <!-- Archive Button -->
+            <button (click)="bulkArchive()"
+              class="h-8 px-3.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/35 border border-indigo-400/40 text-indigo-300 hover:text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/10 cursor-pointer flex items-center gap-1.5 active:scale-95"
+              [adminTooltip]="'Archive selected items'" tooltipPosition="top">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                <rect x="1" y="3" width="22" height="5"></rect>
+                <line x1="12" y1="11" x2="12" y2="17"></line>
+                <polyline points="9 14 12 17 15 14"></polyline>
+              </svg>
+              <span>Archive</span>
+            </button>
+
+            <!-- Delete Button -->
+            <button (click)="bulkDelete()"
+              class="h-8 px-3.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-rose-300 hover:text-white text-xs font-bold transition-all shadow-md shadow-rose-500/10 cursor-pointer flex items-center gap-1.5 active:scale-95"
+              [adminTooltip]="'Permanently delete selected items'" tooltipPosition="top">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span>Delete</span>
+            </button>
+
+            <!-- Cancel Button -->
+            <button (click)="clearSelection()"
+              class="h-8 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 active:scale-95"
+              [adminTooltip]="'Clear selection'" tooltipPosition="top">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+              <span>Cancel</span>
+            </button>
+          </div>
+        </div>
+        }
+
+        <!-- --- Grouped Notifications Stream List --- -->
+        <section class="notification-stream-list flex flex-col gap-5">
+
+          @if (isLoading()) {
+          <div
+            class="rounded-2xl border border-slate-800/90 bg-slate-900/40 backdrop-blur-xl overflow-hidden divide-y divide-slate-800/60 shadow-xl animate-pulse">
+            @for (i of [1, 2, 3, 4]; track i) {
+            <div class="px-4 py-3 sm:px-5 flex flex-col gap-2 relative">
+              <!-- Accent Bar Skeleton -->
+              <div class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-r-full bg-slate-800"></div>
+
+              <!-- Tier 1 Skeleton Header -->
+              <div class="flex items-center justify-between gap-3 pl-1">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                  <div class="h-4 w-4 rounded-md bg-slate-800/80 shrink-0"></div>
+                  <div class="h-7 w-7 rounded-xl bg-slate-800/80 shrink-0"></div>
+                  <div class="flex items-center gap-2 flex-1">
+                    <div class="h-4 w-52 sm:w-72 bg-slate-800/80 rounded-md"></div>
+                    <div class="h-4 w-16 bg-slate-800/60 rounded-full"></div>
+                  </div>
+                </div>
+                <div class="h-7.5 w-28 bg-slate-800/80 rounded-xl shrink-0"></div>
+              </div>
+
+              <!-- Tier 2 Skeleton Message -->
+              <div class="pl-11 pr-1">
+                <div class="h-3.5 w-5/6 bg-slate-800/60 rounded-md"></div>
+              </div>
+
+              <!-- Tier 3 Skeleton Footer -->
+              <div class="flex items-center justify-between gap-3 pl-11 pr-1 pt-0.5">
+                <div class="flex items-center gap-2">
+                  <div class="h-5 w-16 bg-slate-800/60 rounded-md"></div>
+                  <div class="h-5 w-28 bg-slate-800/60 rounded-md"></div>
+                </div>
+                <div class="h-7 w-20 bg-slate-800/80 rounded-xl ml-auto"></div>
+              </div>
+            </div>
+            }
+          </div>
+          } @else if (groupedEvents().length > 0) {
+
+          @for (group of groupedEvents(); track group.label) {
+          <div class="date-group flex flex-col gap-2.5">
+            <!-- Modern Sleek Gradient Date Header (No box/borders around label) -->
+            <div class="flex items-center justify-between gap-3 pt-3.5 pb-1 px-1 select-none">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-5 h-5 rounded-md bg-indigo-500/15 text-indigo-400 flex items-center justify-center shadow-sm">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                  </svg>
+                </div>
+                <h2
+                  class="text-xs font-black uppercase tracking-widest bg-gradient-to-r from-indigo-200 via-slate-200 to-slate-400 bg-clip-text text-transparent">
+                  {{ group.label }}
+                </h2>
+                <span
+                  class="px-2 py-0.5 rounded-full bg-slate-900/80 text-indigo-300 text-[10px] font-mono font-extrabold shadow-inner">
+                  {{ group.items.length }} {{ group.items.length === 1 ? 'event' : 'events' }}
+                </span>
+              </div>
+              <!-- Subtle Gradient Separator Line -->
+              <div class="flex-1 h-px bg-gradient-to-r from-slate-800/80 via-indigo-500/20 to-transparent ml-2"></div>
+            </div>
+
+            <!-- Single Unified Glass List Container for Group Items -->
+            <div
+              class="rounded-2xl border border-slate-800/90 bg-slate-900/40 backdrop-blur-xl overflow-hidden divide-y divide-slate-800/60 shadow-xl">
+              @for (ev of group.items; track ev.id; let idx = $index) {
+              <div [id]="'notif-card-' + idx"
+                class="notification-row group px-4 py-3 transition-all duration-200 relative flex flex-col gap-1.5 hover:bg-slate-800/60"
+                [ngClass]="{
+                  'bg-indigo-950/30': !ev.read,
+                  'bg-slate-950/70': ev.read,
+                  'ring-1 ring-indigo-500/80 bg-indigo-950/40': focusedIndex() === idx
+                }">
+
+                <!-- Left Edge Severity Accent Glow Bar (Single crisp line with elegant vertical inset gap) -->
+                <div class="absolute left-0 top-2.5 bottom-2.5 w-1 rounded-full transition-all" [ngClass]="{
+                    'bg-rose-500 shadow-md shadow-rose-500/50': ev.severity === 'critical',
+                    'bg-amber-500 shadow-md shadow-amber-500/50': ev.severity === 'warning',
+                    'bg-indigo-500 shadow-md shadow-indigo-500/50': ev.severity === 'info',
+                    'bg-emerald-500 shadow-md shadow-emerald-500/50': ev.severity === 'success'
+                  }"></div>
+
+                <!-- TIER 1: Top Header (Checkbox + Icon + Title + Category Badge + Navigation Link / Quick Tools) -->
+                <div class="flex items-center justify-between gap-3 min-w-0 pl-1">
+
+                  <!-- Left Group: Checkbox + Icon + Title + Badges (No line-breaks) -->
+                  <div class="flex items-center gap-2.5 min-w-0 flex-1 flex-nowrap">
+                    <!-- Checkbox -->
+                    <input type="checkbox" [checked]="selectedIds().has(ev.id)"
+                      (click)="toggleSelectItem(ev.id, $event)"
+                      class="rounded-md border-slate-700 bg-slate-950 text-indigo-500 focus:ring-0 w-4 h-4 cursor-pointer flex-shrink-0 transition-transform active:scale-95"
+                      [adminTooltip]="'Select for bulk operations'" tooltipPosition="right" />
+
+                    <!-- Compact Severity Icon Badge (28px) -->
+                    <div class="w-7 h-7 rounded-xl border flex items-center justify-center flex-shrink-0 shadow-sm"
+                      [ngClass]="{
+                        'bg-rose-500/15 border-rose-500/30 text-rose-400': ev.severity === 'critical',
+                        'bg-amber-500/15 border-amber-500/30 text-amber-400': ev.severity === 'warning',
+                        'bg-indigo-500/15 border-indigo-500/30 text-indigo-400': ev.severity === 'info',
+                        'bg-emerald-500/15 border-emerald-500/30 text-emerald-400': ev.severity === 'success'
+                      }">
+                      @if (ev.severity === 'critical') {
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path
+                          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+                        </path>
+                        <line x1="12" y1="9" x2="12" y2="13"></line>
+                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                      </svg>
+                      } @else if (ev.severity === 'warning') {
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      } @else if (ev.severity === 'success') {
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                      </svg>
+                      } @else {
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="16" x2="12" y2="12"></line>
+                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                      </svg>
+                      }
+                    </div>
+
+                    <!-- Title (Truncated with tooltip) + NEW Tag + Category Badge (Strictly inline, no wrap) -->
+                    <div class="flex items-center gap-2 min-w-0 flex-1 flex-nowrap overflow-hidden">
+                      <h3 class="text-xs sm:text-sm font-extrabold text-white tracking-tight truncate shrink min-w-0"
+                        [adminTooltip]="ev.title" tooltipPosition="top">
+                        {{ ev.title }}
+                      </h3>
+
+                      @if (!ev.read) {
+                      <span
+                        class="px-1.5 py-0.3 text-[8px] font-black rounded-md bg-rose-500/20 text-rose-300 border border-rose-500/40 uppercase tracking-widest animate-pulse shrink-0">
+                        NEW
+                      </span>
+                      }
+
+                      <!-- Category Badge Pill -->
+                      <span
+                        class="px-2 py-0.3 text-[9px] font-extrabold rounded-full uppercase tracking-wider backdrop-blur-md shrink-0 whitespace-nowrap"
+                        [ngClass]="{
+                          'bg-rose-500/15 text-rose-300 border border-rose-500/30': ev.category === 'security',
+                          'bg-amber-500/15 text-amber-300 border border-amber-500/30': ev.category === 'verification',
+                          'bg-purple-500/15 text-purple-300 border border-purple-500/30': ev.category === 'support',
+                          'bg-blue-500/15 text-blue-300 border border-blue-500/30': ev.category === 'consultation',
+                          'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30': ev.category === 'announcement'
+                        }">
+                        {{ ev.category }}
+                      </span>
+                    </div>
+                  </div>
+
+                  <!-- Right Top Corner: Quick Tools (Left) + Purple Navigation Pill (Right) -->
+                  <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
+
+                    <!-- Quick Utility Action Icons (Reveals smoothly on hover) -->
+                    <div
+                      class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all duration-200 bg-slate-900/90 border border-slate-800 p-1 rounded-xl shadow-lg backdrop-blur-md">
+
+                      <!-- Star / Unstar -->
+                      <button (click)="toggleStar(ev, $event)"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer active:scale-95"
+                        [ngClass]="{ 'text-amber-400 bg-amber-500/20 border border-amber-500/30': ev.starred }"
+                        [adminTooltip]="ev.starred ? 'Unstar notification' : 'Star notification'" tooltipPosition="top">
+                        <svg width="13" height="13" viewBox="0 0 24 24" [attr.fill]="ev.starred ? '#f59e0b' : 'none'"
+                          stroke="currentColor" stroke-width="2">
+                          <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                          </polygon>
+                        </svg>
+                      </button>
+
+                      <!-- Mark Read / Mark Unread -->
+                      <button (click)="toggleRead(ev)"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-300 hover:bg-emerald-500/20 transition-all cursor-pointer active:scale-95"
+                        [ngClass]="{ 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30': !ev.read }"
+                        [adminTooltip]="ev.read ? 'Mark as unread' : 'Mark as read'" tooltipPosition="top">
+                        @if (ev.read) {
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                          <polyline points="22 6 12 13 2 6"></polyline>
+                        </svg>
+                        } @else {
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        }
+                      </button>
+
+                      <!-- Archive / Unarchive -->
+                      <button (click)="archiveSingle(ev, $event)"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/20 transition-all cursor-pointer active:scale-95"
+                        [ngClass]="{ 'text-indigo-400 bg-indigo-500/20 border border-indigo-500/30': ev.archived || selectedTab() === 'archived' }"
+                        [adminTooltip]="(ev.archived || selectedTab() === 'archived') ? 'Restore to inbox' : 'Archive notification'"
+                        tooltipPosition="top">
+                        @if (ev.archived || selectedTab() === 'archived') {
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                          <rect x="1" y="3" width="22" height="5"></rect>
+                          <line x1="12" y1="17" x2="12" y2="11"></line>
+                          <polyline points="9 13 12 10 15 13"></polyline>
+                        </svg>
+                        } @else {
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <polyline points="21 8 21 21 3 21 3 8"></polyline>
+                          <rect x="1" y="3" width="22" height="5"></rect>
+                          <line x1="12" y1="11" x2="12" y2="17"></line>
+                          <polyline points="9 14 12 17 15 14"></polyline>
+                        </svg>
+                        }
+                      </button>
+
+                      <!-- Delete Single -->
+                      <button (click)="deleteSingle(ev, $event)"
+                        class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer active:scale-95"
+                        [adminTooltip]="'Delete permanently'" tooltipPosition="top">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2">
+                          <polyline points="3 6 5 6 21 6"></polyline>
+                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
+                          </path>
+                          <line x1="10" y1="11" x2="10" y2="17"></line>
+                          <line x1="14" y1="11" x2="14" y2="17"></line>
+                        </svg>
+                      </button>
+                    </div>
+
+                    <!-- Purple Navigation Link Pill (Fixed on far right with forced white text) -->
+                    @if (ev.link) {
+                    <a [routerLink]="ev.link"
+                      class="h-8 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 !text-white hover:!text-white text-xs font-bold shadow-md shadow-indigo-500/20 border border-indigo-400/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
+                      [adminTooltip]="'Navigate to detail page'" tooltipPosition="top">
+                      <span class="!text-white">{{ ev.actionLabel || 'View Details' }}</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5" class="!text-white">
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                        <polyline points="12 5 19 12 12 19"></polyline>
+                      </svg>
+                    </a>
+                    }
+                  </div>
+                </div>
+
+                <!-- TIER 2: Full Readable Message Body -->
+                <div class="pl-11 pr-1 text-xs text-slate-200 font-medium leading-relaxed break-words">
+                  {{ ev.message }}
+                </div>
+
+                <!-- TIER 3: Bottom Footer Metadata Line + Decision Buttons -->
+                <div class="flex items-center justify-between gap-3 pl-11 pr-1 pt-1">
+
+                  <!-- Metadata Tags: Smart Micro-Pills (Timestamp • Source • Details Toggle) -->
+                  <div class="flex flex-wrap items-center gap-1.5 text-[10px] text-slate-400">
+
+                    <!-- Timestamp Micro Pill -->
+                    <span
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-slate-300 font-medium whitespace-nowrap shadow-xs"
+                      [adminTooltip]="(ev.timestamp | date:'medium') || ''">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        class="text-slate-400">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      {{ ev.timestamp | relativeTime }}
+                    </span>
+
+                    <!-- Source Service Micro Pill -->
+                    <span
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-800/40 border border-slate-700/50 text-slate-300 font-medium whitespace-nowrap shadow-xs">
+                      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="{
+                          'bg-emerald-400': (ev.source || '').includes('Consultation') || (ev.source || '').includes('Analytics'),
+                          'bg-indigo-400': (ev.source || '').includes('Support'),
+                          'bg-amber-400': (ev.source || '').includes('Verification') || (ev.source || '').includes('Lawyer'),
+                          'bg-rose-400': (ev.source || '').includes('Security'),
+                          'bg-blue-400': !ev.source
+                        }"></span>
+                      {{ ev.source || 'Telemetry' }}
+                    </span>
+
+                    <!-- Expand Details Toggle Button -->
+                    @if (ev.detailsMarkdown) {
+                    <button (click)="toggleExpand(ev.id, $event)"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold transition-all cursor-pointer active:scale-95 text-[10px]">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                      </svg>
+                      <span>{{ expandedId() === ev.id ? 'Hide Details' : 'Details' }}</span>
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        class="transition-transform duration-200" [class.rotate-180]="expandedId() === ev.id">
+                        <polyline points="6 9 12 15 18 9"></polyline>
+                      </svg>
+                    </button>
+                    }
+                  </div>
+
+                  <!-- Decision Action Buttons (Approve, Reject, Resolve) on Footer Right Side -->
+                  @if ((ev.type === 'verification_req' && ev.relatedEntityType === 'LawyerProfile') || (ev.type ===
+                  'urgent_ticket' && ev.relatedEntityType === 'ContactSubmission')) {
+                  <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
+                    @if (ev.type === 'verification_req' && ev.relatedEntityType === 'LawyerProfile') {
+                    <button (click)="approveLawyer(ev, $event)"
+                      class="h-7 px-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 !text-white hover:!text-white text-[11px] font-bold transition-all shadow-md shadow-emerald-500/20 border border-emerald-400/30 flex items-center gap-1 cursor-pointer active:scale-95"
+                      [disabled]="quickActionLoading() === ev.id" [adminTooltip]="'Approve lawyer bar license'"
+                      tooltipPosition="top">
+                      @if (quickActionLoading() === ev.id) {
+                      <svg class="animate-spin text-white" width="11" height="11" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
+                        </path>
+                      </svg>
+                      } @else {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      }
+                      <span class="!text-white">Approve</span>
+                    </button>
+
+                    <button (click)="rejectLawyer(ev, $event)"
+                      class="h-7 px-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 !text-rose-200 hover:!text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
+                      [disabled]="quickActionLoading() === ev.id" [adminTooltip]="'Reject lawyer verification request'"
+                      tooltipPosition="top">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                      </svg>
+                      <span>Reject</span>
+                    </button>
+                    }
+
+                    @if (ev.type === 'urgent_ticket' && ev.relatedEntityType === 'ContactSubmission') {
+                    <button (click)="resolveTicket(ev, $event)"
+                      class="h-7 px-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 !text-white hover:!text-white text-[11px] font-bold transition-all shadow-md shadow-emerald-500/20 border border-emerald-400/30 flex items-center gap-1 cursor-pointer active:scale-95"
+                      [disabled]="quickActionLoading() === ev.id" [adminTooltip]="'Mark support ticket as resolved'"
+                      tooltipPosition="top">
+                      @if (quickActionLoading() === ev.id) {
+                      <svg class="animate-spin text-white" width="11" height="11" viewBox="0 0 24 24" fill="none">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+                        </circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
+                        </path>
+                      </svg>
+                      } @else {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                      }
+                      <span class="!text-white">Resolve</span>
+                    </button>
+                    }
+                  </div>
+                  }
+                </div>
+
+                <!-- Expandable Details Code Drawer -->
+                @if (expandedId() === ev.id && ev.detailsMarkdown) {
+                <div
+                  class="ml-11 mt-1 p-3 rounded-xl bg-slate-950/90 border border-slate-800 text-xs text-slate-300 font-mono space-y-1.5 leading-relaxed shadow-inner animate-slide-down">
+                  <div
+                    class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5 text-[11px] text-slate-400">
+                    <span class="font-bold text-indigo-400 flex items-center gap-1.5">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <polyline points="16 18 22 12 16 6"></polyline>
+                        <polyline points="8 6 2 12 8 18"></polyline>
+                      </svg>
+                      Telemetry Event Details
+                    </span>
+                    <span>ID: {{ ev.id }}</span>
+                  </div>
+                  <p class="whitespace-pre-wrap leading-relaxed text-slate-300 text-[11px]">{{ ev.detailsMarkdown }}</p>
+                </div>
+                }
+              </div>
+              }
+            </div>
+          </div>
+          }
+
+          <!-- Server-side Pagination Component -->
+          <admin-pagination [page]="pagination().page" [limit]="pagination().limit" [total]="pagination().total"
+            [pages]="pagination().pages" [standalone]="true" (pageChange)="onPageChange($event)"
+            (limitChange)="onLimitChange($event)">
+          </admin-pagination>
+
+          } @else {
+          <!-- Shared Empty State Component -->
+          <admin-empty-state icon="bell"
+            [title]="(selectedCategory() || selectedSeverity() || selectedRole() || searchQuery()) ? 'No Matching Notifications Found' : 'No Telemetry Events or Notifications Available'"
+            [message]="(selectedCategory() || selectedSeverity() || selectedRole() || searchQuery()) ? ('No notifications match your active filter criteria. ' + (stats().unreadCount > 0 ? ('There are ' + stats().unreadCount + ' unread notifications in other filter views.') : '')) : 'No real-time database events found. You can dispatch a targeted broadcast notification using the Broadcaster tool or reset active filters.'"
+            actionText="Reset All Filters" (action)="resetAllFilters()">
+          </admin-empty-state>
+          }
+        </section>
+      </main>
+
+      <!-- --- RIGHT TELEMETRY & SYSTEM HEALTH SIDEBAR (25% Width - Sticky Pinned) --- -->
+      @if (!isSidebarCollapsed()) {
+      <aside
+        class="xl:col-span-4 2xl:col-span-3 flex flex-col gap-4 min-w-0 transition-all duration-300 sticky top-4 self-start max-h-[calc(100vh-2rem)] overflow-y-auto custom-scrollbar">
+        <!-- Real Backend Channel Health & Latency Monitor -->
+        <div
+          class="p-4 rounded-xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl shadow-md flex flex-col gap-3.5">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              <div class="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+                </svg>
+              </div>
+              <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Channel Status</h3>
+            </div>
+            <span
+              class="px-2 py-0.5 text-[9px] font-semibold rounded bg-emerald-500/15 text-emerald-300 border border-emerald-500/20">100%
+              Operational</span>
+          </div>
+
+          <div class="flex flex-col gap-2.5 divide-y divide-slate-800/50">
+            <div class="flex items-center justify-between pt-1">
+              <div class="flex items-center gap-2 text-xs font-medium text-slate-300">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>SQL Database Stream</span>
+              </div>
+              <span
+                class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">{{
+                apiLatency() }}ms</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-2.5">
+              <div class="flex items-center gap-2 text-xs font-medium text-slate-300">
+                <span class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="signalRConnected() ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+                <span>WebSocket Hub</span>
+              </div>
+              <span class="text-[10px] font-mono px-1.5 py-0.5 rounded border"
+                [ngClass]="signalRConnected() ? 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' : 'text-amber-400 bg-amber-500/10 border-amber-500/20'">
+                {{ signalRConnected() ? 'Connected' : 'Polling' }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between pt-2.5">
+              <div class="flex items-center gap-2 text-xs font-medium text-slate-300">
+                <span class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="securityHealth().totalSecurityEvents > 0 ? 'bg-emerald-400' : 'bg-slate-500'"></span>
+                <span>Security Logger</span>
+              </div>
+              <span
+                class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+                {{ securityHealth().totalSecurityEvents }} Events
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real Severity Distribution Ratio -->
+        <div
+          class="p-4 rounded-xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl shadow-md flex flex-col gap-3">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <div class="flex items-center gap-2">
+              <div class="p-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="20" x2="18" y2="10"></line>
+                  <line x1="12" y1="20" x2="12" y2="4"></line>
+                  <line x1="6" y1="20" x2="6" y2="14"></line>
+                </svg>
+              </div>
+              <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Severity Matrix</h3>
+            </div>
+          </div>
+
+          <div class="flex flex-col gap-2.5">
+            <!-- Critical -->
+            <div class="flex flex-col gap-1">
+              <div class="flex justify-between text-[11px] font-medium">
+                <span class="text-rose-400 flex items-center gap-1.5"><span
+                    class="w-1.5 h-1.5 rounded-full bg-rose-500"></span> Critical Threats</span>
+                <span class="text-slate-400 font-mono">{{ severityStats().critical }} ({{ severityStats().criticalPct
+                  }}%)</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-rose-500 transition-all duration-500"
+                  [style.width.%]="severityStats().criticalPct">
+                </div>
+              </div>
+            </div>
+
+            <!-- Warning -->
+            <div class="flex flex-col gap-1">
+              <div class="flex justify-between text-[11px] font-medium">
+                <span class="text-amber-400 flex items-center gap-1.5"><span
+                    class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Warning / Audits</span>
+                <span class="text-slate-400 font-mono">{{ severityStats().warning }} ({{ severityStats().warningPct
+                  }}%)</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-amber-500 transition-all duration-500"
+                  [style.width.%]="severityStats().warningPct">
+                </div>
+              </div>
+            </div>
+
+            <!-- Info -->
+            <div class="flex flex-col gap-1">
+              <div class="flex justify-between text-[11px] font-medium">
+                <span class="text-indigo-400 flex items-center gap-1.5"><span
+                    class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Informational</span>
+                <span class="text-slate-400 font-mono">{{ severityStats().info }} ({{ severityStats().infoPct
+                  }}%)</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-indigo-500 transition-all duration-500" [style.width.%]="severityStats().infoPct">
+                </div>
+              </div>
+            </div>
+
+            <!-- Success -->
+            <div class="flex flex-col gap-1">
+              <div class="flex justify-between text-[11px] font-medium">
+                <span class="text-emerald-400 flex items-center gap-1.5"><span
+                    class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Release / Success</span>
+                <span class="text-slate-400 font-mono">{{ severityStats().success }} ({{ severityStats().successPct
+                  }}%)</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                <div class="h-full bg-emerald-500 transition-all duration-500"
+                  [style.width.%]="severityStats().successPct"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Operational Actions Box -->
+        <div
+          class="p-4 rounded-xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl shadow-md flex flex-col gap-2.5">
+          <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider border-b border-slate-800 pb-2.5">Quick
+            Actions</h3>
+
+          <button (click)="openExportModal()"
+            class="w-full py-2 px-3 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs font-medium flex items-center justify-between transition-all cursor-pointer">
+            <span class="flex items-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+              </svg>
+              Export Security Telemetry
+            </span>
+            <span>CSV/JSON/XLSX</span>
+          </button>
+
+          <button (click)="markAllAsRead()"
+            class="w-full py-2 px-3 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs font-medium flex items-center justify-between transition-all cursor-pointer">
+            <span class="flex items-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+              Clear All Unread
+            </span>
+            <span>✓</span>
+          </button>
+        </div>
+      </aside>
+      }
+    </div>
+  </div>
+</div>
+
+<!-- --- Shared Export Modal --- -->
+<admin-export-modal [isOpen]="isExportModalOpen()" [isExporting]="isExporting()" [totalRecords]="stats().totalEvents"
+  [filteredCount]="pagination().total" [selectedCount]="selectedIds().size" [isFilterActive]="activeFilterCount() > 0"
+  [columns]="exportColumnDefs" (exportRequest)="onExportRequest($event)" (closed)="closeExportModal()">
+</admin-export-modal>

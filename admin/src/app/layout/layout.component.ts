@@ -68,9 +68,18 @@ export class LayoutComponent {
       event.stopPropagation();
     }
     this.showActivityDropdown = !this.showActivityDropdown;
-    if (this.showActivityDropdown) {
-      this.activityService.markAllAsRead();
+  }
+
+  markItemRead(ev: any): void {
+    if (ev && !ev.read) {
+      this.activityService.markAsRead(ev.id);
     }
+    this.showActivityDropdown = false;
+  }
+
+  markAllDropdownRead(event: MouseEvent): void {
+    event.stopPropagation();
+    this.activityService.markAllAsRead().subscribe();
   }
 
   logout(): void {

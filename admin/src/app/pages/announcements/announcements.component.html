@@ -1,99 +1,263 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="p-2 w-full flex flex-col gap-4 text-slate-100">
 
-  <!-- --- 0. Header Banner --- -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
+  <!-- --- 0. Header Hero Banner --- -->
+  <div
+    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-gradient-to-r from-slate-900/95 via-indigo-950/40 to-slate-900/95 backdrop-blur-xl shadow-xl animate-in">
     <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-semibold text-sky-300 w-fit">
+      <div
+        class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-semibold text-sky-300 w-fit">
         <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
-        <span>Platform Release Broadcasts</span>
+        <span>Centralized Broadcaster Hub</span>
       </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Broadcast Management</h1>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Broadcast & Release Management</h1>
       <p class="text-xs text-slate-400">
-        Publish platform update notes, maintenance alerts, and legal release announcements.
+        Dispatch platform updates, security alerts, release notes, and targeted broadcast announcements to user cohorts.
       </p>
     </div>
 
-    <button class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="openCreateModal()" [adminTooltip]="'Create a new live announcement release'" tooltipPosition="left">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <line x1="12" y1="5" x2="12" y2="19"></line>
-        <line x1="5" y1="12" x2="19" y2="12"></line>
+    <button
+      class="btn-broadcast flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-500/30 border border-indigo-400/40 transition-all hover:scale-[1.02] cursor-pointer"
+      (click)="openCreateModal()" [adminTooltip]="'Dispatch a new targeted broadcast announcement'"
+      tooltipPosition="left">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <path d="M22 2L11 13"></path>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
       </svg>
-      <span>New Broadcast Announcement</span>
+      <span>Compose New Broadcast</span>
     </button>
   </div>
 
   <!-- --- 1. Main Announcements Grid --- -->
   @if (isLoading) {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
-      @for (item of [1,2,3]; track $index) {
-        <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 flex flex-col gap-3">
-          <div class="flex justify-between items-center">
-            <admin-skeleton width="60px" height="20px" borderRadius="12px" />
-            <admin-skeleton width="70px" height="26px" borderRadius="6px" />
-          </div>
-          <admin-skeleton width="70%" height="20px" />
-          <admin-skeleton width="100%" height="40px" />
-        </div>
-      }
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
+    @for (item of [1,2,3]; track $index) {
+    <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 flex flex-col gap-3">
+      <div class="flex justify-between items-center">
+        <admin-skeleton width="60px" height="20px" borderRadius="12px" />
+        <admin-skeleton width="70px" height="26px" borderRadius="6px" />
+      </div>
+      <admin-skeleton width="70%" height="20px" />
+      <admin-skeleton width="100%" height="40px" />
     </div>
+    }
+  </div>
   } @else {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
-      @for (item of announcements; track item.id || $index) {
-        <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl hover:border-sky-500/30 transition-all flex flex-col justify-between gap-4">
-          <div class="flex items-center justify-between">
-            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-sky-500/10 text-sky-300 border-sky-500/30">v{{ item.version }}</span>
-            <button class="btn btn-danger btn-sm text-xs p-1.5" (click)="deleteAnnouncement(item.id)" [adminTooltip]="'Delete this announcement release'" tooltipPosition="left">
-              Delete
-            </button>
-          </div>
-          <div class="flex flex-col gap-1.5">
-            <h3 class="text-base font-bold text-slate-100">{{ item.title }}</h3>
-            <p class="text-xs text-slate-400 leading-relaxed">{{ item.summary }}</p>
-          </div>
-          <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
-            <span class="text-slate-400">Published: {{ item.publishedAt | date:'mediumDate' }}</span>
-            <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex items-center gap-1.5"
-              [ngClass]="item.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700/50'">
-              <span class="w-1.5 h-1.5 rounded-full" [ngClass]="item.isActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'"></span>
-              <span>{{ item.isActive ? 'Active Broadcast' : 'Draft' }}</span>
-            </span>
-          </div>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
+    @for (item of announcements; track item.id || $index) {
+    <div
+      class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl hover:border-indigo-500/40 transition-all flex flex-col justify-between gap-4 group">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span
+            class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-sky-500/10 text-sky-300 border-sky-500/30">v{{
+            item.version || '1.2.0' }}</span>
+          <span
+            class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider border bg-purple-500/10 text-purple-300 border-purple-500/30">
+            {{ item.type || 'Broadcast' }}
+          </span>
         </div>
-      } @empty {
-        <div class="col-span-full glass-card rounded-2xl border border-white/10 bg-slate-900/70 p-12 text-center text-slate-400 text-sm">
-          <div>No system announcements published yet.</div>
-        </div>
-      }
-    </div>
-  }
+        <button
+          class="text-rose-400 hover:text-rose-300 p-1.5 rounded-lg hover:bg-rose-500/10 transition-colors text-xs font-bold cursor-pointer"
+          (click)="deleteAnnouncement(item.id)" [adminTooltip]="'Delete this broadcast announcement'"
+          tooltipPosition="left">
+          Delete
+        </button>
+      </div>
 
-  <!-- --- 2. Create Modal --- -->
-  @if (showModal) {
-    <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in" (click)="showModal = false">
-      <div class="glass-card max-w-md w-full rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4" (click)="$event.stopPropagation()">
-        <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
-          <h3 class="text-lg font-bold text-slate-100">Publish New System Announcement</h3>
-          <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="showModal = false">&times;</button>
+      <div class="flex flex-col gap-1.5">
+        <h3 class="text-base font-bold text-slate-100 group-hover:text-indigo-300 transition-colors">{{ item.title }}
+        </h3>
+        <p class="text-xs text-slate-400 leading-relaxed">{{ item.summary }}</p>
+
+        @if (item.detailsMarkdown) {
+        <button (click)="toggleExpand(item.id, $event)"
+          class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold flex items-center gap-1 mt-1 cursor-pointer w-fit">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+          <span>{{ expandedId === item.id ? 'Hide Markdown' : 'View Markdown Preview' }}</span>
+        </button>
+
+        @if (expandedId === item.id) {
+        <div
+          class="mt-2 p-3 rounded-xl border border-indigo-500/30 bg-slate-950/80 font-mono text-[11px] text-indigo-200 animate-slide-down whitespace-pre-wrap leading-relaxed">
+          {{ item.detailsMarkdown }}
         </div>
-        <div class="modal-body flex flex-col gap-3 text-xs">
-          <div class="flex flex-col gap-1">
-            <label class="font-semibold text-slate-300">Release Version</label>
-            <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 font-mono rounded-lg p-2" [(ngModel)]="form.version" placeholder="e.g. 1.3.0" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="font-semibold text-slate-300">Announcement Title</label>
-            <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="form.title" placeholder="Enter concise release title" />
-          </div>
-          <div class="flex flex-col gap-1">
-            <label class="font-semibold text-slate-300">Summary Notes</label>
-            <textarea class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2 text-xs" style="height: 100px; resize: none;" [(ngModel)]="form.summary" placeholder="Provide release details or maintenance notes..."></textarea>
-          </div>
-        </div>
-        <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-          <button class="btn btn-primary px-4 py-2 text-xs font-semibold" (click)="saveAnnouncement()">Publish Broadcast</button>
-          <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="showModal = false">Cancel</button>
-        </div>
+        }
+        }
+      </div>
+
+      <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 text-xs">
+        <span class="text-slate-400 text-[11px]">Published: {{ (item.publishedAt || item.createdAt) | date:'mediumDate'
+          }}</span>
+        <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold border flex items-center gap-1.5"
+          [ngClass]="item.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-slate-800 text-slate-400 border-slate-700/50'">
+          <span class="w-1.5 h-1.5 rounded-full"
+            [ngClass]="item.isActive ? 'bg-emerald-400 animate-ping' : 'bg-slate-500'"></span>
+          <span>{{ item.isActive ? 'Active Broadcast' : 'Draft' }}</span>
+        </span>
       </div>
     </div>
+    } @empty {
+    <div
+      class="col-span-full glass-card rounded-2xl border border-white/10 bg-slate-900/70 p-12 text-center text-slate-400 text-sm">
+      <div>No broadcast announcements published yet. Click "Compose New Broadcast" to dispatch one.</div>
+    </div>
+    }
+  </div>
+  }
+
+  <!-- --- 2. Rich Enterprise Broadcaster Modal --- -->
+  @if (showModal) {
+  <div class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in"
+    (click)="closeModal()">
+    <div
+      class="glass-card max-w-xl w-full rounded-3xl border border-white/15 bg-slate-900/95 backdrop-blur-2xl shadow-2xl overflow-hidden flex flex-col divide-y divide-white/10"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="p-5 flex items-center justify-between bg-slate-950/60">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13"></path>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-extrabold text-white">Super Admin Notification Broadcaster</h2>
+            <p class="text-xs text-slate-400">Dispatch targeted alerts & system announcements directly to user cohorts.
+            </p>
+          </div>
+        </div>
+        <button
+          class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 text-sm font-bold cursor-pointer"
+          (click)="closeModal()" [adminTooltip]="'Close broadcaster modal'" tooltipPosition="left">✕</button>
+      </div>
+
+      <!-- Modal Body Form -->
+      <div class="p-5 flex flex-col gap-4 max-h-[70vh] overflow-y-auto custom-scrollbar text-xs">
+
+        <!-- Target Cohort Selector -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-300">Target User Cohort *</label>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <button (click)="form.targetCohort = 'all'" type="button"
+              class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              [ngClass]="form.targetCohort === 'all' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+              </svg>
+              <span>All Users</span>
+            </button>
+            <button (click)="form.targetCohort = 'lawyers'" type="button"
+              class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              [ngClass]="form.targetCohort === 'lawyers' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 3v18M3 9l9-6 9 6M3 9h18"></path>
+              </svg>
+              <span>Lawyers</span>
+            </button>
+            <button (click)="form.targetCohort = 'citizens'" type="button"
+              class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              [ngClass]="form.targetCohort === 'citizens' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+              </svg>
+              <span>Citizens</span>
+            </button>
+            <button (click)="form.targetCohort = 'admins'" type="button"
+              class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+              [ngClass]="form.targetCohort === 'admins' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>Admin Team</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Severity & Category Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-slate-300">Severity Tier *</label>
+            <select [(ngModel)]="form.severity"
+              class="px-3 py-2 rounded-xl border border-white/10 bg-slate-950 text-white text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
+              <option value="info">Info / Low Priority</option>
+              <option value="warning">Warning / Medium Priority</option>
+              <option value="critical">Critical Security Alert</option>
+              <option value="success">Success / Major Release</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-slate-300">Domain Category *</label>
+            <select [(ngModel)]="form.category"
+              class="px-3 py-2 rounded-xl border border-white/10 bg-slate-950 text-white text-xs font-semibold focus:outline-none focus:border-indigo-500 cursor-pointer">
+              <option value="announcement">Announcements</option>
+              <option value="security">Security & Audit</option>
+              <option value="verification">Lawyer Verification</option>
+              <option value="support">Support Desk</option>
+              <option value="consultation">Consultations</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Title -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-300">Broadcast Title *</label>
+          <input type="text" [(ngModel)]="form.title" placeholder="e.g. LegalConnect Platform Scheduled Maintenance"
+            class="px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-950 text-white text-xs font-semibold focus:outline-none focus:border-indigo-500" />
+        </div>
+
+        <!-- Summary -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-300">Summary Message *</label>
+          <textarea [(ngModel)]="form.summary" rows="2"
+            placeholder="Brief description shown in bell dropdown and push alerts..."
+            class="px-3.5 py-2 rounded-xl border border-white/10 bg-slate-950 text-white text-xs font-medium focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <!-- Details Markdown -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-300">Details Markdown (Optional)</label>
+          <textarea [(ngModel)]="form.detailsMarkdown" rows="3"
+            placeholder="Full Markdown release notes or instructions..."
+            class="px-3.5 py-2 rounded-xl border border-white/10 bg-slate-950 text-white text-xs font-mono focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+
+        <!-- Checkbox Options -->
+        <div class="flex items-center gap-2 pt-1">
+          <input type="checkbox" id="modalTriggerAnn" [(ngModel)]="form.isModalTrigger"
+            class="rounded border-white/20 bg-slate-900 text-indigo-600 focus:ring-0 w-4 h-4 cursor-pointer" />
+          <label for="modalTriggerAnn" class="text-xs font-semibold text-slate-300 cursor-pointer">
+            Trigger "What's New" modal dialog for users upon login
+          </label>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="p-4 flex items-center justify-end gap-2 bg-slate-950/60">
+        <button (click)="closeModal()"
+          class="px-4 py-2 rounded-xl border border-white/10 text-slate-300 hover:text-white text-xs font-bold hover:bg-white/5 transition-all cursor-pointer">
+          Cancel
+        </button>
+        <button (click)="saveAnnouncement()" [disabled]="isDispatching"
+          class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-all disabled:opacity-50 cursor-pointer">
+          @if (isDispatching) {
+          <span class="animate-spin text-xs">⏳</span> Dispatching...
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 2L11 13"></path>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
+          <span>Dispatch Notification</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
   }
 </div>

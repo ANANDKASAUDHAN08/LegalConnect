@@ -40,6 +40,11 @@ export const routes: Routes = [
         title: 'Announcements Broadcast | LegalConnect Admin'
       },
       {
+        path: 'notifications',
+        loadComponent: () => import('./pages/notifications/notifications.component').then(m => m.NotificationsComponent),
+        title: 'Notifications & Telemetry Hub | LegalConnect Admin'
+      },
+      {
         path: 'security',
         loadComponent: () => import('./pages/security/security.component').then(m => m.SecurityComponent),
         title: 'Security & Sessions | LegalConnect Admin'
