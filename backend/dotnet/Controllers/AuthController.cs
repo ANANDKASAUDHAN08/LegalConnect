@@ -666,22 +666,75 @@ namespace CoreApi.Controllers
         }
 
         [Authorize]
+        [HttpPost("verify-phone")]
         [HttpPost("phone/verify")]
         public async Task<IActionResult> VerifyPhone([FromBody] VerifyPhoneDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
+            {
+                return Unauthorized("User ID claim not found or invalid.");
+            }
+
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return NotFound("User not found.");
 
-            if (request.Code != "123456")
+            // Validate the Firebase ID token to ensure the phone was actually verified
+            if (!string.IsNullOrWhiteSpace(request?.FirebaseToken))
             {
-                return BadRequest("Invalid OTP verification code. Please try again with code 123456.");
+                try
+                {
+                    using var httpClient = new HttpClient();
+                    // Verify the Firebase ID token via Google's secure token endpoint
+                    var firebaseApiKey = _configuration["Firebase:ApiKey"] ?? _configuration["firebase:apiKey"] ?? "";
+                    var verifyUrl = $"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={firebaseApiKey}";
+
+                    var verifyResponse = await httpClient.PostAsJsonAsync(verifyUrl, new { idToken = request.FirebaseToken });
+
+                    if (!verifyResponse.IsSuccessStatusCode)
+                    {
+                        _logger.LogWarning("⚠️ Firebase token verification failed for UserId: {UserId}", userId);
+                        return BadRequest(new { message = "Phone verification failed. Invalid or expired verification token." });
+                    }
+
+                    // Token is valid — extract the phone number from Firebase's response
+                    var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<FirebaseLookupResponse>();
+                    var firebasePhone = verifyResult?.Users?.FirstOrDefault()?.PhoneNumber;
+
+                    // If Firebase confirmed a phone number, use it; otherwise use the one from the request
+                    if (!string.IsNullOrWhiteSpace(firebasePhone))
+                    {
+                        user.Phone = firebasePhone;
+                    }
+                    else if (!string.IsNullOrWhiteSpace(request?.Phone))
+                    {
+                        user.Phone = request.Phone.Trim();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error verifying Firebase token for UserId: {UserId}", userId);
+                    return BadRequest(new { message = "Phone verification failed. Please try again." });
+                }
+            }
+            else
+            {
+                // No Firebase token provided — reject the request
+                _logger.LogWarning("⚠️ Phone verification attempted without Firebase token for UserId: {UserId}", userId);
+                return BadRequest(new { message = "Phone verification requires a valid Firebase verification token." });
             }
 
             user.IsPhoneVerified = true;
             await _context.SaveChangesAsync();
 
-            return Ok(new { isPhoneVerified = user.IsPhoneVerified, message = "Phone number verified successfully!" });
+            _logger.LogInformation("✅ Phone number verified for UserId: {UserId}, Phone: {Phone}", user.Id, user.Phone);
+
+            return Ok(new
+            {
+                isPhoneVerified = true,
+                phone = user.Phone,
+                message = "Phone number verified successfully!"
+            });
         }
 
         [Authorize]
@@ -1164,5 +1217,29 @@ namespace CoreApi.Controllers
                 return base64Data;
             }
         }
+    }
+
+    public class VerifyPhoneDto
+    {
+        public string? Code { get; set; }
+        public string? Phone { get; set; }
+        public string? FirebaseToken { get; set; }
+    }
+
+    /// <summary>
+    /// Response model for Google Identity Toolkit accounts:lookup API.
+    /// Used to validate Firebase ID tokens and extract phone numbers.
+    /// </summary>
+    public class FirebaseLookupResponse
+    {
+        public List<FirebaseLookupUser>? Users { get; set; }
+    }
+
+    public class FirebaseLookupUser
+    {
+        public string? LocalId { get; set; }
+        public string? PhoneNumber { get; set; }
+        public string? Email { get; set; }
+        public bool EmailVerified { get; set; }
     }
 }

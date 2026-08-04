@@ -98,6 +98,8 @@ namespace CoreApi.Models
     public class VerifyPhoneDto
     {
         public string Code { get; set; } = string.Empty;
+        public string? Phone { get; set; }
+        public string? FirebaseToken { get; set; }
     }
 
     public class VerifyIdentityDto
