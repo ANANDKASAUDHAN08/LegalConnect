@@ -75,17 +75,33 @@ builder.Services.AddRateLimiter(options =>
     });
 });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? builder.Configuration["ConnectionStrings__DefaultConnection"];
+
+if (string.IsNullOrEmpty(connectionString))
+{
+    throw new InvalidOperationException("Required configuration 'ConnectionStrings:DefaultConnection' is missing.");
+}
+
+var serverVersion = new MySqlServerVersion(new Version(8, 0, 31));
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    options.UseMySql(connectionString, serverVersion));
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
     {
+        var jwtKey = builder.Configuration["Jwt:Key"]
+            ?? builder.Configuration["Jwt__Key"];
+
+        if (string.IsNullOrEmpty(jwtKey))
+        {
+            throw new InvalidOperationException("Required configuration 'Jwt:Key' is missing.");
+        }
+
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
             ValidateIssuer = false,
             ValidateAudience = false
         };
@@ -132,19 +148,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 var app = builder.Build();
 
-// Seed & migrate data
-using (var scope = app.Services.CreateScope())
+// Seed & migrate data (safely wrapped so startup succeeds even if DB is unavailable)
+try
 {
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // 1. Seed data & auto-migrate missing columns in MySQL tables (Users, Consultations)
-    DbSeeder.Seed(context, app.Configuration);
+    using (var scope = app.Services.CreateScope())
+    {
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        
+        // 1. Seed data & auto-migrate missing columns in MySQL tables (Users, Consultations)
+        DbSeeder.Seed(context, app.Configuration);
 
-    // 2. Production-grade migration sync: reconcile EF migration history with existing MySQL schema
-    DbSeeder.SynchronizeEFMigrationsHistory(context);
+        // 2. Production-grade migration sync: reconcile EF migration history with existing MySQL schema
+        DbSeeder.SynchronizeEFMigrationsHistory(context);
 
-    // 3. Apply any remaining EF migrations automatically
-    try { context.Database.Migrate(); } catch { }
+        // 3. Apply any remaining EF migrations automatically
+        try { context.Database.Migrate(); } catch { }
+    }
+}
+catch (Exception ex)
+{
+    Console.WriteLine($"⚠️ Database seeding/migration skipped on startup: {ex.Message}");
 }
 
 app.UseMiddleware<GlobalExceptionMiddleware>();

@@ -105,8 +105,18 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        this.error.set(err.error || 'Invalid credentials.');
-        this.snackbar.show(this.error()!, 'error');
+        let msg = 'Invalid credentials.';
+        if (typeof err?.error === 'string') {
+          msg = err.error;
+        } else if (err?.error?.message && typeof err.error.message === 'string') {
+          msg = err.error.message;
+        } else if (err?.error?.title && typeof err.error.title === 'string') {
+          msg = err.error.title;
+        } else if (err?.message && typeof err.message === 'string') {
+          msg = err.message;
+        }
+        this.error.set(msg);
+        this.snackbar.show(msg, 'error');
         this.loading.set(false);
       }
     });
