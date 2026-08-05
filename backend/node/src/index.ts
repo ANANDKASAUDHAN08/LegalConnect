@@ -35,13 +35,13 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'Node.js API is running cleanly! 🚀' });
 });
 
-// Role-Separated Router Gateway (Production Grade)
+// Role-Separated Router Gateway with Inter-Service Backwards Compatibility
 app.use('/api/admin', adminRoutes);
 app.use('/api/legal/admin', adminRoutes);
 app.use('/api/legal/contact', adminRoutes);
+app.use('/api/lawyers', lawyerRoutes);
 app.use('/api/legal', publicRoutes);
 app.use('/api', publicRoutes);
-app.use('/api/lawyers', lawyerRoutes);
 
 // Global Error & Unmatched Route Middleware (Industry Standard)
 app.use(notFoundHandler);

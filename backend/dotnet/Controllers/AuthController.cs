@@ -1,27 +1,13 @@
 using System;
-using System.Collections.Generic;
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 using System.Threading.Tasks;
-using CoreApi.Data;
 using CoreApi.Models;
 using CoreApi.Services;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using System.IO;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.IdentityModel.Tokens;
-using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Json;
-using System.Security.Cryptography;
-
-using Microsoft.Extensions.Logging;
 
 namespace CoreApi.Controllers
 {
@@ -29,230 +15,131 @@ namespace CoreApi.Controllers
     [ApiController]
     public class AuthController : ControllerBase
     {
-        private readonly AppDbContext _context;
-        private readonly IConfiguration _configuration;
-        private readonly IEmailService _emailService;
-        private readonly IWebHostEnvironment _env;
-        private readonly ILawyerSyncService _syncService;
-        private readonly ILogger<AuthController> _logger;
+        private readonly IAuthService _authService;
+        private readonly ITokenService _tokenService;
+        private readonly IUserProfileService _profileService;
 
-        public AuthController(AppDbContext context, IConfiguration configuration, IEmailService emailService, IWebHostEnvironment env, ILawyerSyncService syncService, ILogger<AuthController> logger)
+        public AuthController(
+            IAuthService authService,
+            ITokenService tokenService,
+            IUserProfileService profileService)
         {
-            _context = context;
-            _configuration = configuration;
-            _emailService = emailService;
-            _env = env;
-            _syncService = syncService;
-            _logger = logger;
+            _authService = authService;
+            _tokenService = tokenService;
+            _profileService = profileService;
         }
 
         [HttpPost("register")]
-        public async Task<IActionResult> Register(RegisterDto request)
+        public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            var result = await _authService.RegisterAsync(request, ip);
+            if (!result.isSuccess)
             {
-                _logger.LogWarning("[Security Audit] Registration failed: Email already exists. Email: {Email}, IP: {IP}", request.Email, ip);
-                return BadRequest("User with this email already exists.");
+                return BadRequest(result.message);
             }
-
-            var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
-            var emailToken = Guid.NewGuid().ToString("N");
-
-            var user = new User
-            {
-                FullName = request.FullName,
-                Email = request.Email,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
-                Role = request.Role,
-                CreatedAt = DateTime.UtcNow,
-                IsEmailVerified = !requireVerification,
-                EmailVerificationToken = requireVerification ? emailToken : null
-            };
-
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("[Security Audit] User registered successfully. UserId: {UserId}, Email: {Email}, Role: {Role}, IP: {IP}", user.Id, user.Email, user.Role, ip);
-
-            if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
-            {
-                var lawyerProfile = new LawyerProfile
-                {
-                    UserId = user.Id,
-                    BarCouncilNumber = "PENDING",
-                    Specialization = "General Practice",
-                    ExperienceYears = 0,
-                    IsVerified = true,
-                    UpdatedAt = DateTime.UtcNow
-                };
-                _context.LawyerProfiles.Add(lawyerProfile);
-                await _context.SaveChangesAsync();
-            }
-
-            if (requireVerification)
-            {
-                await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
-                return Ok(new { message = "User registered successfully! Please check your email to verify your account." });
-            }
-
-            return Ok(new { message = "User registered successfully! You can now sign in." });
+            return Ok(new { message = result.message });
         }
 
         [HttpPost("login")]
-        public async Task<IActionResult> Login(LoginDto request)
+        public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            
-            bool isPasswordValid = false;
-            if (user != null)
+            var result = await _authService.LoginAsync(request, ip, userAgent);
+            if (!result.isSuccess)
             {
-                if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$")) 
+                if (result.requires2fa)
                 {
-                    isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+                    return Ok(new { requires2fa = true, message = result.message });
                 }
-                else 
-                {
-                    isPasswordValid = (user.PasswordHash == request.Password);
-                }
+                return Unauthorized(result.message);
             }
 
-            if (user == null || !isPasswordValid)
+            var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
+            var (rawRefresh, _) = _tokenService.GenerateRefreshToken(result.user!.Id, result.sessionId!);
+
+            _tokenService.SetAuthCookies(Response, token, rawRefresh);
+
+            var user = result.user!;
+            return Ok(new
             {
-                _logger.LogWarning("[Security Audit] Failed login attempt for Email: {Email}, IP: {IP}, UserAgent: {UserAgent}", request.Email, ip, userAgent);
-                if (user != null)
+                token,
+                message = result.message,
+                user = new
                 {
-                    var failHistory = new LoginHistory
-                    {
-                        UserId = user.Id,
-                        IpAddress = ip,
-                        UserAgent = userAgent,
-                        LoginTime = DateTime.UtcNow,
-                        Status = "Failed"
-                    };
-                    _context.LoginHistories.Add(failHistory);
-                    await _context.SaveChangesAsync();
+                    id = user.Id,
+                    fullName = user.FullName,
+                    email = user.Email,
+                    role = user.Role,
+                    createdAt = user.CreatedAt,
+                    phone = user.Phone,
+                    isPhoneVerified = user.IsPhoneVerified,
+                    isEmailVerified = user.IsEmailVerified,
+                    isTwoFactorEnabled = user.IsTwoFactorEnabled,
+                    clientLanguage = user.ClientLanguage,
+                    clientCity = user.ClientCity,
+                    clientInterest = user.ClientInterest,
+                    avatarUrl = user.AvatarUrl,
+                    identityStatus = user.IdentityStatus
                 }
-                return Unauthorized("Invalid credentials.");
-            }
-
-            if (user.IsTwoFactorEnabled)
-            {
-                if (string.IsNullOrEmpty(request.TwoFactorCode))
-                {
-                    return Ok(new { requires2fa = true, message = "2FA verification required." });
-                }
-                if (string.IsNullOrEmpty(user.TwoFactorSecret) || !TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode))
-                {
-                    _logger.LogWarning("[Security Audit] Failed 2FA verification attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ip);
-                    var failHistory = new LoginHistory
-                    {
-                        UserId = user.Id,
-                        IpAddress = ip,
-                        UserAgent = userAgent,
-                        LoginTime = DateTime.UtcNow,
-                        Status = "Failed"
-                    };
-                    _context.LoginHistories.Add(failHistory);
-                    await _context.SaveChangesAsync();
-                    return BadRequest("Invalid 2FA verification code.");
-                }
-            }
-
-            var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
-            if (requireVerification && !user.IsEmailVerified)
-            {
-                _logger.LogWarning("[Security Audit] Login blocked for unverified email. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
-                return BadRequest("Please verify your email address before signing in.");
-            }
-
-            // Create unique SessionId
-            var sessionId = Guid.NewGuid().ToString("N");
-
-            // Register session
-            var session = new ActiveSession
-            {
-                UserId = user.Id,
-                TokenId = sessionId,
-                IpAddress = ip,
-                UserAgent = userAgent,
-                CreatedAt = DateTime.UtcNow,
-                LastActive = DateTime.UtcNow
-            };
-            _context.ActiveSessions.Add(session);
-
-            // Register success login history
-            var successHistory = new LoginHistory
-            {
-                UserId = user.Id,
-                IpAddress = ip,
-                UserAgent = userAgent,
-                LoginTime = DateTime.UtcNow,
-                Status = "Success"
-            };
-            _context.LoginHistories.Add(successHistory);
-
-            await _context.SaveChangesAsync();
-
-            var token = CreateToken(user, sessionId);
-            var (rawRefresh, refreshEntity) = GenerateRefreshToken(user.Id, sessionId);
-            _context.RefreshTokens.Add(refreshEntity);
-            await _context.SaveChangesAsync();
-
-            SetTokenCookie(token);
-            SetRefreshTokenCookie(rawRefresh);
-
-            _logger.LogInformation("[Security Audit] Successful login. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}, IP: {IP}", user.Id, user.Email, sessionId, ip);
-            return Ok(new { token, message = "Logged in successfully!" });
+            });
         }
 
+        [HttpPost("google")]
+        public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto request)
+        {
+            var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
+
+            var result = await _authService.GoogleLoginAsync(request, ip, userAgent);
+            if (!result.isSuccess)
+            {
+                return BadRequest(result.message);
+            }
+
+            var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
+            var (rawRefresh, _) = _tokenService.GenerateRefreshToken(result.user!.Id, result.sessionId!);
+
+            _tokenService.SetAuthCookies(Response, token, rawRefresh);
+
+            var user = result.user!;
+            return Ok(new
+            {
+                token,
+                message = result.message,
+                user = new
+                {
+                    id = user.Id,
+                    fullName = user.FullName,
+                    email = user.Email,
+                    role = user.Role,
+                    createdAt = user.CreatedAt,
+                    phone = user.Phone,
+                    isPhoneVerified = user.IsPhoneVerified,
+                    isEmailVerified = user.IsEmailVerified,
+                    isTwoFactorEnabled = user.IsTwoFactorEnabled,
+                    clientLanguage = user.ClientLanguage,
+                    clientCity = user.ClientCity,
+                    clientInterest = user.ClientInterest,
+                    avatarUrl = user.AvatarUrl,
+                    identityStatus = user.IdentityStatus
+                }
+            });
+        }
+
+        [Authorize]
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
             var sessionIdClaim = User.FindFirst("SessionId")?.Value;
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            if (!string.IsNullOrEmpty(sessionIdClaim))
-            {
-                var session = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == sessionIdClaim);
-                if (session != null)
-                {
-                    _context.ActiveSessions.Remove(session);
-                }
+            await _authService.LogoutAsync(sessionIdClaim, userIdClaim, ip);
+            _tokenService.ClearAuthCookies(Response);
 
-                // Revoke all refresh tokens for this session
-                var refreshTokens = await _context.RefreshTokens
-                    .Where(r => r.SessionId == sessionIdClaim && r.RevokedAt == null)
-                    .ToListAsync();
-                foreach (var rt in refreshTokens)
-                {
-                    rt.RevokedAt = DateTime.UtcNow;
-                    rt.RevokedByIp = ip;
-                }
-                await _context.SaveChangesAsync();
-            }
-
-            Response.Cookies.Delete("lc_token", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = SameSiteMode.Lax
-            });
-
-            Response.Cookies.Delete("__session", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
-                Path = "/"
-            });
-
-            _logger.LogInformation("[Security Audit] User logged out. UserId: {UserId}, SessionId: {SessionId}, IP: {IP}", userIdClaim ?? "Unknown", sessionIdClaim ?? "N/A", ip);
             return Ok(new { message = "Logged out successfully." });
         }
 
@@ -260,145 +147,26 @@ namespace CoreApi.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RefreshToken()
         {
-            Console.WriteLine("[DEBUG AUTH] RefreshToken endpoint hit.");
             var rawRefreshToken = Request.Cookies["__session"];
-            if (string.IsNullOrEmpty(rawRefreshToken))
-            {
-                Console.WriteLine("[DEBUG AUTH] No lc_refresh cookie found in request.");
-                return Unauthorized(new { message = "No refresh token provided." });
-            }
-
-            string hashedToken;
-            try
-            {
-                hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawRefreshToken)));
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[DEBUG AUTH] Error hashing token: {ex.Message}");
-                return Unauthorized(new { message = "Invalid refresh token format." });
-            }
-
-            var storedToken = await _context.RefreshTokens
-                .Include(r => r.User)
-                .FirstOrDefaultAsync(r => r.Token == hashedToken);
-
-            if (storedToken == null)
-            {
-                Console.WriteLine("[DEBUG AUTH] Refresh token hash not found in database.");
-                return Unauthorized(new { message = "Invalid refresh token." });
-            }
-
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
+            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
 
-            // Detect token reuse (replay attack)
-            if (storedToken.RevokedAt != null)
+            var result = await _authService.RefreshTokenAsync(rawRefreshToken ?? "", ip, userAgent);
+            if (!result.isSuccess)
             {
-                // Allow a grace period of 30 seconds for concurrent requests / multiple tabs
-                if (storedToken.RevokedAt.Value.AddSeconds(30) > DateTime.UtcNow)
-                {
-                    Console.WriteLine($"[DEBUG AUTH] Revoked token used within 30s grace period. Granting normal token rotation.");
-                    // Fall through to rotation logic as normal, instead of revoking all sessions!
-                }
-                else
-                {
-                    Console.WriteLine($"[DEBUG AUTH] Revoked token used! Replay attack detected. Token ID: {storedToken.Id}");
-                    // Someone is using a revoked token — revoke ALL tokens for this user
-                    await RevokeAllUserRefreshTokens(storedToken.UserId, $"REPLAY:{ip}");
-                    return Unauthorized(new { message = "Token reuse detected. All sessions revoked." });
-                }
+                return Unauthorized(new { message = result.message });
             }
 
-            if (storedToken.ExpiresAt <= DateTime.UtcNow)
-            {
-                Console.WriteLine($"[DEBUG AUTH] Token expired. ExpiresAt: {storedToken.ExpiresAt}, UtcNow: {DateTime.UtcNow}");
-                return Unauthorized(new { message = "Refresh token expired. Please log in again." });
-            }
+            _tokenService.SetAuthCookies(Response, result.accessToken!, result.newRawRefreshToken!);
 
-            var user = storedToken.User;
-            if (user == null)
-            {
-                Console.WriteLine("[DEBUG AUTH] User associated with token not found.");
-                return Unauthorized(new { message = "User not found." });
-            }
-
-            Console.WriteLine($"[DEBUG AUTH] Refresh token valid. Rotating token for User: {user.Email}");
-
-            // Rotate: revoke old, issue new
-            storedToken.RevokedAt = DateTime.UtcNow;
-            storedToken.RevokedByIp = ip;
-
-            var (newRawRefresh, newRefreshEntity) = GenerateRefreshToken(user.Id, storedToken.SessionId);
-            storedToken.ReplacedByToken = newRefreshEntity.Token;
-
-            _context.RefreshTokens.Add(newRefreshEntity);
-
-            // Update or re-register active session
-            var session = await _context.ActiveSessions
-                .FirstOrDefaultAsync(s => s.TokenId == storedToken.SessionId);
-            if (session != null)
-            {
-                session.LastActive = DateTime.UtcNow;
-                session.IpAddress = ip;
-            }
-            else
-            {
-                var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Mobile Device";
-                _context.ActiveSessions.Add(new ActiveSession
-                {
-                    UserId = user.Id,
-                    TokenId = storedToken.SessionId,
-                    IpAddress = ip,
-                    UserAgent = userAgent,
-                    CreatedAt = DateTime.UtcNow,
-                    LastActive = DateTime.UtcNow
-                });
-            }
-
-            await _context.SaveChangesAsync();
-
-            // Issue new access token
-            var newAccessToken = CreateToken(user, storedToken.SessionId);
-            SetTokenCookie(newAccessToken);
-            SetRefreshTokenCookie(newRawRefresh);
-
-            return Ok(new { token = newAccessToken, message = "Token refreshed successfully!" });
-        }
-
-        [HttpGet("verify-email")]
-        public async Task<IActionResult> VerifyEmail(string token, string email)
-        {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.EmailVerificationToken == token);
-            if (user == null)
-            {
-                return BadRequest("Invalid or expired email verification link.");
-            }
-
-            user.IsEmailVerified = true;
-            user.EmailVerificationToken = null;
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Email verified successfully! You can now log in." });
+            return Ok(new { token = result.accessToken, message = result.message });
         }
 
         [HttpPost("forgot-password")]
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
-            if (user == null)
-            {
-                // To prevent email enumeration, return a success message regardless of existence.
-                return Ok(new { message = "If the email exists, a password reset link has been sent." });
-            }
-
-            var resetToken = Guid.NewGuid().ToString("N");
-            user.PasswordResetToken = resetToken;
-            user.PasswordResetTokenExpires = DateTime.UtcNow.AddHours(1);
-            await _context.SaveChangesAsync();
-
-            await _emailService.SendPasswordResetEmailAsync(user.Email, resetToken);
-
+            await _authService.ForgotPasswordAsync(request);
             return Ok(new { message = "If the email exists, a password reset link has been sent." });
         }
 
@@ -406,840 +174,12 @@ namespace CoreApi.Controllers
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
         {
-            var user = await _context.Users.FirstOrDefaultAsync(u => 
-                u.Email == request.Email && 
-                u.PasswordResetToken == request.Token && 
-                u.PasswordResetTokenExpires > DateTime.UtcNow);
-
-            if (user == null)
+            var result = await _authService.ResetPasswordAsync(request);
+            if (!result.isSuccess)
             {
-                return BadRequest("Invalid or expired password reset link.");
+                return BadRequest(result.message);
             }
-
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password);
-            user.PasswordResetToken = null;
-            user.PasswordResetTokenExpires = null;
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Password has been reset successfully! You can now log in." });
+            return Ok(new { message = result.message });
         }
-
-        [HttpGet("me")]
-        public async Task<IActionResult> GetProfile()
-        {
-            var isAuthenticated = User.Identity?.IsAuthenticated ?? false;
-            if (!isAuthenticated)
-            {
-                // Check if the client attempted to authenticate (sent a token in header or cookie)
-                var authHeader = Request.Headers["Authorization"].ToString();
-                var hasTokenCookie = Request.Cookies.ContainsKey("lc_token") || Request.Cookies.ContainsKey("__session");
-                if (!string.IsNullOrEmpty(authHeader) || hasTokenCookie)
-                {
-                    // Client tried to authenticate but failed (e.g. token expired)
-                    // Return 401 Unauthorized so the interceptor can refresh the token!
-                    return Unauthorized(new { message = "Session expired or invalid token." });
-                }
-                return Ok(new { isAuthenticated = false });
-            }
-
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Ok(new { isAuthenticated = false });
-            }
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return Ok(new { isAuthenticated = false });
-
-            // Auto-sync or register active session for this device (mobile / laptop / tablet)
-            var sessionIdClaim = User.FindFirst("SessionId")?.Value;
-            if (!string.IsNullOrEmpty(sessionIdClaim))
-            {
-                var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-                var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : "Mobile Device";
-
-                var session = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == sessionIdClaim);
-                if (session != null)
-                {
-                    session.LastActive = DateTime.UtcNow;
-                    session.IpAddress = ip;
-                }
-                else
-                {
-                    _context.ActiveSessions.Add(new ActiveSession
-                    {
-                        UserId = user.Id,
-                        TokenId = sessionIdClaim,
-                        IpAddress = ip,
-                        UserAgent = userAgent,
-                        CreatedAt = DateTime.UtcNow,
-                        LastActive = DateTime.UtcNow
-                    });
-                }
-                await _context.SaveChangesAsync();
-            }
-
-            // Extract the token from Request
-            string? token = Request.Cookies["lc_token"];
-            if (string.IsNullOrEmpty(token))
-            {
-                var authHeader = Request.Headers["Authorization"].ToString();
-                if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                {
-                    token = authHeader.Substring(7);
-                }
-            }
-
-            return Ok(new
-            {
-                isAuthenticated = true,
-                token = token,
-                id = user.Id,
-                fullName = user.FullName,
-                email = user.Email,
-                role = user.Role,
-                createdAt = user.CreatedAt,
-                phone = user.Phone,
-                isPhoneVerified = user.IsPhoneVerified,
-                isEmailVerified = user.IsEmailVerified,
-                isTwoFactorEnabled = user.IsTwoFactorEnabled,
-                clientLanguage = user.ClientLanguage,
-                clientCity = user.ClientCity,
-                clientInterest = user.ClientInterest,
-                dateOfBirth = user.DateOfBirth,
-                gender = user.Gender,
-                addressLine1 = user.AddressLine1,
-                clientState = user.ClientState,
-                clientZip = user.ClientZip,
-                clientBio = user.ClientBio,
-                avatarUrl = user.AvatarUrl,
-                identityStatus = user.IdentityStatus,
-                identityDocumentUrl = user.IdentityDocumentUrl
-            });
-        }
-
-        [Authorize]
-        [HttpPut("me")]
-        public async Task<IActionResult> UpdateProfile(UpdateProfileDto request)
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound();
-
-            if (request.FullName != null) user.FullName = request.FullName;
-            if (request.Phone != null) user.Phone = request.Phone;
-            if (request.ClientLanguage != null) user.ClientLanguage = request.ClientLanguage;
-            if (request.ClientCity != null) user.ClientCity = request.ClientCity;
-            if (request.ClientInterest != null) user.ClientInterest = request.ClientInterest;
-            if (request.DateOfBirth != null) user.DateOfBirth = request.DateOfBirth;
-            if (request.Gender != null) user.Gender = request.Gender;
-            if (request.AddressLine1 != null) user.AddressLine1 = request.AddressLine1;
-            if (request.ClientState != null) user.ClientState = request.ClientState;
-            if (request.ClientZip != null) user.ClientZip = request.ClientZip;
-            if (request.ClientBio != null) user.ClientBio = request.ClientBio;
-            if (request.AvatarUrl != null) user.AvatarUrl = SaveBase64File(request.AvatarUrl, "avatars", $"user_{userId}");
-
-            await _context.SaveChangesAsync();
-
-            if (user.Role != null && user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
-            {
-                await _syncService.SyncProfileToMongoAsync(user.Id);
-            }
-
-            return Ok(new { message = "Profile updated successfully!", fullName = user.FullName });
-        }
-
-        [Authorize]
-        [HttpPut("change-password")]
-        public async Task<IActionResult> ChangePassword(ChangePasswordDto request)
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound();
-
-            bool isCurrentValid = BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash);
-            if (!isCurrentValid) return BadRequest("Current password is incorrect.");
-
-            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Password changed successfully!" });
-        }
-
-        [Authorize]
-        [HttpDelete("me")]
-        public async Task<IActionResult> DeleteAccount()
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            _context.Users.Remove(user);
-            await _context.SaveChangesAsync();
-
-            Response.Cookies.Delete("lc_token", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax
-            });
-
-            if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
-            {
-                try
-                {
-                    using var httpClient = new System.Net.Http.HttpClient();
-                    var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? "http://localhost:5000";
-                    var nodeUrl = $"{nodeBaseUrl}/api/lawyers/sync/{user.Email}";
-                    var response = await httpClient.DeleteAsync(nodeUrl);
-                    if (!response.IsSuccessStatusCode)
-                    {
-                        Console.WriteLine($"Sync Delete Warning: Node.js responded with {response.StatusCode}");
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"Sync Delete Error: {ex.Message}");
-                }
-            }
-
-            return Ok(new { message = "Account deleted successfully." });
-        }
-
-        [Authorize]
-        [HttpGet("2fa/setup")]
-        public async Task<IActionResult> Get2FaSetup()
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            // Generate secret if not exists
-            var secret = user.TwoFactorSecret;
-            if (string.IsNullOrEmpty(secret))
-            {
-                secret = TotpHelper.GenerateSecretKey();
-                user.TwoFactorSecret = secret;
-                await _context.SaveChangesAsync();
-            }
-
-            var issuer = Uri.EscapeDataString("LegalConnect");
-            var email = Uri.EscapeDataString(user.Email);
-            var totpUri = $"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}";
-            var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(totpUri)}";
-
-            return Ok(new
-            {
-                secret,
-                qrCodeUrl
-            });
-        }
-
-        [Authorize]
-        [HttpPost("2fa/toggle")]
-        public async Task<IActionResult> Toggle2Fa([FromBody] Toggle2FaDto request)
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            if (request.Enable)
-            {
-                if (string.IsNullOrEmpty(user.TwoFactorSecret))
-                {
-                    return BadRequest("2FA setup has not been initialized.");
-                }
-                if (!TotpHelper.ValidateCode(user.TwoFactorSecret, request.Code))
-                {
-                    return BadRequest("Invalid verification code. Please check your authenticator app.");
-                }
-                user.IsTwoFactorEnabled = true;
-            }
-            else
-            {
-                user.IsTwoFactorEnabled = false;
-                user.TwoFactorSecret = null;
-            }
-
-            await _context.SaveChangesAsync();
-            return Ok(new { isTwoFactorEnabled = user.IsTwoFactorEnabled, message = user.IsTwoFactorEnabled ? "2FA activated successfully!" : "2FA deactivated successfully!" });
-        }
-
-        [Authorize]
-        [HttpPost("verify-phone")]
-        [HttpPost("phone/verify")]
-        public async Task<IActionResult> VerifyPhone([FromBody] VerifyPhoneDto request)
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized("User ID claim not found or invalid.");
-            }
-
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            // Validate the Firebase ID token to ensure the phone was actually verified
-            if (!string.IsNullOrWhiteSpace(request?.FirebaseToken))
-            {
-                try
-                {
-                    using var httpClient = new HttpClient();
-                    // Verify the Firebase ID token via Google's secure token endpoint
-                    var firebaseApiKey = _configuration["Firebase:ApiKey"] ?? _configuration["firebase:apiKey"] ?? "";
-                    var verifyUrl = $"https://identitytoolkit.googleapis.com/v1/accounts:lookup?key={firebaseApiKey}";
-
-                    var verifyResponse = await httpClient.PostAsJsonAsync(verifyUrl, new { idToken = request.FirebaseToken });
-
-                    if (!verifyResponse.IsSuccessStatusCode)
-                    {
-                        _logger.LogWarning("⚠️ Firebase token verification failed for UserId: {UserId}", userId);
-                        return BadRequest(new { message = "Phone verification failed. Invalid or expired verification token." });
-                    }
-
-                    // Token is valid — extract the phone number from Firebase's response
-                    var verifyResult = await verifyResponse.Content.ReadFromJsonAsync<FirebaseLookupResponse>();
-                    var firebasePhone = verifyResult?.Users?.FirstOrDefault()?.PhoneNumber;
-
-                    // If Firebase confirmed a phone number, use it; otherwise use the one from the request
-                    if (!string.IsNullOrWhiteSpace(firebasePhone))
-                    {
-                        user.Phone = firebasePhone;
-                    }
-                    else if (!string.IsNullOrWhiteSpace(request?.Phone))
-                    {
-                        user.Phone = request.Phone.Trim();
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error verifying Firebase token for UserId: {UserId}", userId);
-                    return BadRequest(new { message = "Phone verification failed. Please try again." });
-                }
-            }
-            else
-            {
-                // No Firebase token provided — reject the request
-                _logger.LogWarning("⚠️ Phone verification attempted without Firebase token for UserId: {UserId}", userId);
-                return BadRequest(new { message = "Phone verification requires a valid Firebase verification token." });
-            }
-
-            user.IsPhoneVerified = true;
-            await _context.SaveChangesAsync();
-
-            _logger.LogInformation("✅ Phone number verified for UserId: {UserId}, Phone: {Phone}", user.Id, user.Phone);
-
-            return Ok(new
-            {
-                isPhoneVerified = true,
-                phone = user.Phone,
-                message = "Phone number verified successfully!"
-            });
-        }
-
-        [Authorize]
-        [HttpPost("verify-identity")]
-        public async Task<IActionResult> VerifyIdentity([FromBody] VerifyIdentityDto request)
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            var fileUrl = SaveBase64File(request.DocumentFile, "documents", $"identity_user_{userId}");
-            if (string.IsNullOrEmpty(fileUrl))
-            {
-                return BadRequest("Invalid document file.");
-            }
-
-            user.IdentityStatus = "Verified";
-            user.IdentityDocumentUrl = fileUrl;
-            await _context.SaveChangesAsync();
-
-            return Ok(new 
-            { 
-                message = "Identity document uploaded and verified successfully!", 
-                identityStatus = user.IdentityStatus,
-                identityDocumentUrl = user.IdentityDocumentUrl
-            });
-        }
-
-        [Authorize]
-        [HttpGet("export-data")]
-        public async Task<IActionResult> ExportData()
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            var bookmarks = await _context.Bookmarks
-                .Where(b => b.ClientId == userId)
-                .ToListAsync();
-
-            var consultations = await _context.Consultations
-                .Where(c => c.ClientId == userId || c.LawyerId == userId)
-                .ToListAsync();
-
-            var reviews = await _context.Reviews
-                .Where(r => r.UserId == userId)
-                .ToListAsync();
-
-            LawyerProfile? lawyerProfile = null;
-            if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
-            {
-                lawyerProfile = await _context.LawyerProfiles.FirstOrDefaultAsync(lp => lp.UserId == userId);
-                if (lawyerProfile == null)
-                {
-                    lawyerProfile = new LawyerProfile
-                    {
-                        UserId = userId,
-                        BarCouncilNumber = "PENDING",
-                        Specialization = "General Practice",
-                        ExperienceYears = 0,
-                        IsVerified = true,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    _context.LawyerProfiles.Add(lawyerProfile);
-                    await _context.SaveChangesAsync();
-                }
-            }
-
-            var dataExport = new
-            {
-                exportedAt = DateTime.UtcNow,
-                lawyerProfile = lawyerProfile == null ? null : new
-                {
-                    lawyerProfile.Id,
-                    lawyerProfile.BarCouncilNumber,
-                    lawyerProfile.Specialization,
-                    lawyerProfile.ExperienceYears,
-                    lawyerProfile.IsVerified,
-                    lawyerProfile.City,
-                    lawyerProfile.Bio,
-                    lawyerProfile.Phone,
-                    lawyerProfile.ConsultationFee,
-                    lawyerProfile.OfficeAddress,
-                    lawyerProfile.Education,
-                    lawyerProfile.LanguagesSpoken,
-                    lawyerProfile.IsAvailable,
-                    lawyerProfile.UpdatedAt
-                },
-                profile = new
-                {
-                    user.Id,
-                    user.FullName,
-                    user.Email,
-                    user.Role,
-                    user.CreatedAt,
-                    user.Phone,
-                    user.IsPhoneVerified,
-                    user.IsEmailVerified,
-                    user.IsTwoFactorEnabled,
-                    user.ClientLanguage,
-                    user.ClientCity,
-                    user.ClientInterest,
-                    user.DateOfBirth,
-                    user.Gender,
-                    user.AddressLine1,
-                    user.ClientState,
-                    user.ClientZip,
-                    user.ClientBio,
-                    user.AvatarUrl,
-                    user.IdentityStatus,
-                    user.IdentityDocumentUrl
-                },
-                bookmarks = bookmarks.Select(b => new
-                {
-                    b.ActShortName,
-                    b.ChapterNumber,
-                    b.SectionNumber,
-                    b.SectionTitle,
-                    b.SectionContent,
-                    b.SavedAt
-                }),
-                consultations = consultations.Select(c => new
-                {
-                    c.Id,
-                    c.ClientName,
-                    c.ClientEmail,
-                    c.Message,
-                    c.Status,
-                    c.CreatedAt
-                }),
-                reviews = reviews.Select(r => new
-                {
-                    r.Id,
-                    r.Rating,
-                    r.Content,
-                    r.TargetName,
-                    r.CreatedAt
-                })
-            };
-
-            var jsonString = System.Text.Json.JsonSerializer.Serialize(dataExport, new System.Text.Json.JsonSerializerOptions
-            {
-                WriteIndented = true,
-                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase
-            });
-
-            var bytes = System.Text.Encoding.UTF8.GetBytes(jsonString);
-            return File(bytes, "application/json", "legalconnect_user_data_export.json");
-        }
-
-        [Authorize]
-        [HttpPost("email/resend-verification")]
-        public async Task<IActionResult> ResendEmailVerification()
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            if (user.IsEmailVerified)
-            {
-                return BadRequest("Email is already verified.");
-            }
-
-            var emailToken = Guid.NewGuid().ToString("N");
-            user.EmailVerificationToken = emailToken;
-            await _context.SaveChangesAsync();
-
-            await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
-            return Ok(new { message = "Verification email resent successfully! Please check your inbox." });
-        }
-
-        [Authorize]
-        [HttpGet("sessions")]
-        public async Task<IActionResult> GetSessions()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized("User ID claim not found or invalid.");
-            }
-
-            var currentSessionId = User.FindFirst("SessionId")?.Value;
-
-            var sessions = await _context.ActiveSessions
-                .Where(s => s.UserId == userId)
-                .OrderByDescending(s => s.LastActive)
-                .ToListAsync();
-
-            var sessionDtos = new List<object>();
-            foreach (var s in sessions)
-            {
-                sessionDtos.Add(new
-                {
-                    id = s.Id,
-                    ipAddress = s.IpAddress,
-                    userAgent = s.UserAgent,
-                    deviceType = ParseDeviceFromUserAgent(s.UserAgent),
-                    browser = ParseBrowserFromUserAgent(s.UserAgent),
-                    location = GetLocationFromIp(s.IpAddress),
-                    createdAt = s.CreatedAt,
-                    lastActive = s.LastActive,
-                    isCurrent = s.TokenId == currentSessionId
-                });
-            }
-
-            return Ok(sessionDtos);
-        }
-
-        [Authorize]
-        [HttpDelete("sessions/{id}")]
-        public async Task<IActionResult> RevokeSession(int id)
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized("User ID claim not found or invalid.");
-            }
-
-            var session = await _context.ActiveSessions
-                .FirstOrDefaultAsync(s => s.Id == id && s.UserId == userId);
-
-            if (session == null)
-            {
-                return NotFound("Session not found or does not belong to you.");
-            }
-
-            _context.ActiveSessions.Remove(session);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Session revoked successfully." });
-        }
-
-        [Authorize]
-        [HttpGet("login-history")]
-        public async Task<IActionResult> GetLoginHistory()
-        {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized("User ID claim not found or invalid.");
-            }
-
-            var historyList = await _context.LoginHistories
-                .Where(h => h.UserId == userId)
-                .OrderByDescending(h => h.LoginTime)
-                .Take(20)
-                .ToListAsync();
-
-            var historyDtos = new List<object>();
-            foreach (var h in historyList)
-            {
-                historyDtos.Add(new
-                {
-                    id = h.Id,
-                    ipAddress = h.IpAddress,
-                    userAgent = h.UserAgent,
-                    deviceType = ParseDeviceFromUserAgent(h.UserAgent),
-                    browser = ParseBrowserFromUserAgent(h.UserAgent),
-                    location = GetLocationFromIp(h.IpAddress),
-                    loginTime = h.LoginTime,
-                    status = h.Status
-                });
-            }
-
-            return Ok(historyDtos);
-        }
-
-        // ── Settings Endpoints ──────────────────────────────────────────────
-
-        [Authorize]
-        [HttpGet("settings")]
-        public async Task<IActionResult> GetSettings()
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            return Ok(new UserSettingsDto
-            {
-                ClientLanguage      = user.ClientLanguage ?? "English",
-                PreferredTimezone   = user.PreferredTimezone ?? "Asia/Kolkata",
-                DateFormat          = user.DateFormat ?? "DD/MM/YYYY",
-                NotifyLawAmendments = user.NotifyLawAmendments,
-                NotifyEmailDigest   = user.NotifyEmailDigest,
-                NotifyPushEnabled   = user.NotifyPushEnabled
-            });
-        }
-
-        [Authorize]
-        [HttpPut("settings")]
-        public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsDto request)
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var user = await _context.Users.FindAsync(userId);
-            if (user == null) return NotFound("User not found.");
-
-            if (request.ClientLanguage    != null) user.ClientLanguage    = request.ClientLanguage;
-            if (request.PreferredTimezone != null) user.PreferredTimezone = request.PreferredTimezone;
-            if (request.DateFormat        != null) user.DateFormat        = request.DateFormat;
-            if (request.NotifyLawAmendments.HasValue) user.NotifyLawAmendments = request.NotifyLawAmendments.Value;
-            if (request.NotifyEmailDigest.HasValue)   user.NotifyEmailDigest   = request.NotifyEmailDigest.Value;
-            if (request.NotifyPushEnabled.HasValue)   user.NotifyPushEnabled   = request.NotifyPushEnabled.Value;
-
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = "Settings saved successfully!" });
-        }
-
-        [Authorize]
-        [HttpDelete("sessions/all")]
-        public async Task<IActionResult> RevokeAllOtherSessions()
-        {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var currentSessionId = User.FindFirst("SessionId")?.Value;
-
-            var otherSessions = await _context.ActiveSessions
-                .Where(s => s.UserId == userId && s.TokenId != currentSessionId)
-                .ToListAsync();
-
-            _context.ActiveSessions.RemoveRange(otherSessions);
-            await _context.SaveChangesAsync();
-
-            return Ok(new { message = $"{otherSessions.Count} other session(s) signed out successfully." });
-        }
-
-        private string ParseDeviceFromUserAgent(string? userAgent)
-        {
-            if (string.IsNullOrEmpty(userAgent)) return "Unknown Device";
-            if (userAgent.Contains("iPhone", StringComparison.OrdinalIgnoreCase)) return "Apple iPhone";
-            if (userAgent.Contains("iPad", StringComparison.OrdinalIgnoreCase)) return "Apple iPad";
-            if (userAgent.Contains("Android", StringComparison.OrdinalIgnoreCase)) return "Android Device";
-            if (userAgent.Contains("Windows", StringComparison.OrdinalIgnoreCase)) return "Windows PC";
-            if (userAgent.Contains("Macintosh", StringComparison.OrdinalIgnoreCase) || userAgent.Contains("Mac OS", StringComparison.OrdinalIgnoreCase)) return "Mac";
-            if (userAgent.Contains("Linux", StringComparison.OrdinalIgnoreCase)) return "Linux PC";
-            return "Web Browser";
-        }
-
-        private string ParseBrowserFromUserAgent(string? userAgent)
-        {
-            if (string.IsNullOrEmpty(userAgent)) return "Unknown Browser";
-            if (userAgent.Contains("Edg/", StringComparison.OrdinalIgnoreCase)) return "Microsoft Edge";
-            if (userAgent.Contains("Chrome", StringComparison.OrdinalIgnoreCase)) return "Google Chrome";
-            if (userAgent.Contains("Safari", StringComparison.OrdinalIgnoreCase)) return "Safari";
-            if (userAgent.Contains("Firefox", StringComparison.OrdinalIgnoreCase)) return "Mozilla Firefox";
-            return "Browser";
-        }
-
-        private string? GetLocationFromIp(string? ipAddress)
-        {
-            return null; // Geolocation service (MaxMind / IP2Location) not configured
-        }
-
-        private void SetTokenCookie(string token)
-        {
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddMinutes(15),
-                Path = "/"
-            };
-            Response.Cookies.Append("lc_token", token, cookieOptions);
-        }
-
-        private void SetRefreshTokenCookie(string refreshToken)
-        {
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
-            var cookieOptions = new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddDays(30),
-                Path = "/"
-            };
-            Response.Cookies.Append("__session", refreshToken, cookieOptions);
-        }
-
-        private (string rawToken, RefreshToken entity) GenerateRefreshToken(int userId, string sessionId)
-        {
-            var rawToken = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
-            var hashedToken = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(rawToken)));
-
-            var entity = new RefreshToken
-            {
-                Token = hashedToken,
-                UserId = userId,
-                SessionId = sessionId,
-                CreatedAt = DateTime.UtcNow,
-                ExpiresAt = DateTime.UtcNow.AddDays(30)
-            };
-
-            return (rawToken, entity);
-        }
-
-        private async Task RevokeAllUserRefreshTokens(int userId, string reason)
-        {
-            var tokens = await _context.RefreshTokens
-                .Where(r => r.UserId == userId && r.RevokedAt == null)
-                .ToListAsync();
-            foreach (var t in tokens)
-            {
-                t.RevokedAt = DateTime.UtcNow;
-                t.RevokedByIp = reason;
-            }
-            await _context.SaveChangesAsync();
-        }
-
-        private string CreateToken(User user, string sessionId)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Role, user.Role),
-                new Claim(ClaimTypes.Name, user.FullName),
-                new Claim("SessionId", sessionId)
-            };
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration.GetSection("Jwt:Key").Value!));
-
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
-
-            var token = new JwtSecurityToken(
-                claims: claims,
-                expires: DateTime.UtcNow.AddMinutes(15),
-                signingCredentials: creds
-            );
-
-            var jwt = new JwtSecurityTokenHandler().WriteToken(token);
-
-            return jwt;
-        }
-
-        private string? SaveBase64File(string? base64Data, string subfolder, string fileNamePrefix)
-        {
-            if (string.IsNullOrEmpty(base64Data))
-            {
-                return null;
-            }
-
-            if (base64Data.StartsWith("/") || base64Data.StartsWith("http") || !base64Data.Contains("base64,"))
-            {
-                return base64Data;
-            }
-
-            try
-            {
-                var parts = base64Data.Split("base64,");
-                if (parts.Length < 2) return base64Data;
-
-                var base64Content = parts[1];
-                var bytes = Convert.FromBase64String(base64Content);
-
-                var extension = ".jpg";
-                var prefix = parts[0];
-                if (prefix.Contains("image/png")) extension = ".png";
-                else if (prefix.Contains("image/gif")) extension = ".gif";
-                else if (prefix.Contains("image/webp")) extension = ".webp";
-                else if (prefix.Contains("pdf")) extension = ".pdf";
-
-                var uploadsFolder = Path.Combine(_env.ContentRootPath, "uploads", subfolder);
-                if (!Directory.Exists(uploadsFolder))
-                {
-                    Directory.CreateDirectory(uploadsFolder);
-                }
-
-                var fileName = $"{fileNamePrefix}_{DateTime.UtcNow.Ticks}{extension}";
-                var filePath = Path.Combine(uploadsFolder, fileName);
-                System.IO.File.WriteAllBytes(filePath, bytes);
-
-                return $"/uploads/{subfolder}/{fileName}";
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error decoding base64 file: {ex.Message}");
-                return base64Data;
-            }
-        }
-    }
-
-    public class VerifyPhoneDto
-    {
-        public string? Code { get; set; }
-        public string? Phone { get; set; }
-        public string? FirebaseToken { get; set; }
-    }
-
-    /// <summary>
-    /// Response model for Google Identity Toolkit accounts:lookup API.
-    /// Used to validate Firebase ID tokens and extract phone numbers.
-    /// </summary>
-    public class FirebaseLookupResponse
-    {
-        public List<FirebaseLookupUser>? Users { get; set; }
-    }
-
-    public class FirebaseLookupUser
-    {
-        public string? LocalId { get; set; }
-        public string? PhoneNumber { get; set; }
-        public string? Email { get; set; }
-        public bool EmailVerified { get; set; }
     }
 }

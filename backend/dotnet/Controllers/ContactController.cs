@@ -92,7 +92,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("subscribe-newsletter")]
-        public async Task<IActionResult> SubscribeNewsletter([FromBody] SubscribeNewsletterDto request)
+        public IActionResult SubscribeNewsletter([FromBody] SubscribeNewsletterDto request)
         {
             if (string.IsNullOrWhiteSpace(request?.Email))
             {
