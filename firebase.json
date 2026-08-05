@@ -8,7 +8,39 @@
         "**/.*",
         "**/node_modules/**"
       ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            }
+          ]
+        }
+      ],
       "rewrites": [
+        {
+          "source": "/api/verification{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/health{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/profile{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
         {
           "source": "/api/admin{,/**}",
           "run": {
@@ -212,7 +244,39 @@
         "**/.*",
         "**/node_modules/**"
       ],
+      "headers": [
+        {
+          "source": "**",
+          "headers": [
+            {
+              "key": "Cross-Origin-Opener-Policy",
+              "value": "same-origin-allow-popups"
+            }
+          ]
+        }
+      ],
       "rewrites": [
+        {
+          "source": "/api/verification{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/health{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/profile{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
         {
           "source": "/api/admin{,/**}",
           "run": {

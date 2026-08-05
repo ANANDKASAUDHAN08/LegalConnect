@@ -529,9 +529,8 @@ export class ProfileComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.auth.logout().subscribe({
-      next: () => this.snackbar.show('Sign out successful.', 'info')
-    });
+    this.snackbar.show('Sign out successful.', 'info');
+    this.auth.logout().subscribe();
   }
 
   // ─── Tab Definitions ─────────────────────────────────────────
