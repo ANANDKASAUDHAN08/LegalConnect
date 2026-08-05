@@ -193,15 +193,17 @@ export class SettingsService {
   fetchDbSettings(): Observable<UserSettings> {
     return this.http.get<UserSettings>(this.apiUrl, { withCredentials: true }).pipe(
       tap(settings => {
-        this.clientLanguage.set(settings.clientLanguage || 'English');
-        this.preferredTimezone.set(settings.preferredTimezone || 'Asia/Kolkata');
-        this.dateFormat.set(settings.dateFormat || 'DD/MM/YYYY');
-        this.notifyLawAmendments.set(settings.notifyLawAmendments);
-        this.notifyEmailDigest.set(settings.notifyEmailDigest);
-        this.notifyPushEnabled.set(settings.notifyPushEnabled);
+        if (settings && typeof settings === 'object') {
+          this.clientLanguage.set(settings.clientLanguage || 'English');
+          this.preferredTimezone.set(settings.preferredTimezone || 'Asia/Kolkata');
+          this.dateFormat.set(settings.dateFormat || 'DD/MM/YYYY');
+          if (settings.notifyLawAmendments !== undefined) this.notifyLawAmendments.set(settings.notifyLawAmendments);
+          if (settings.notifyEmailDigest !== undefined) this.notifyEmailDigest.set(settings.notifyEmailDigest);
+          if (settings.notifyPushEnabled !== undefined) this.notifyPushEnabled.set(settings.notifyPushEnabled);
+        }
       }),
-      catchError(err => {
-        console.error('Error fetching settings from backend:', err);
+      catchError(_err => {
+        // Fallback gracefully to local default settings if backend endpoint returns non-JSON/HTML/404
         return of({
           clientLanguage: this.clientLanguage(),
           preferredTimezone: this.preferredTimezone(),

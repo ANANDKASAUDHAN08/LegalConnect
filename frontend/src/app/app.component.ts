@@ -10,6 +10,7 @@ import { PwaInstallBannerComponent } from './components/pwa-install-banner/pwa-i
 import { ConsentBannerComponent } from './components/consent-banner/consent-banner.component';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
+import { SeoService } from './services/seo.service';
 
 @Component({
   selector: 'app-root',
@@ -32,6 +33,7 @@ export class AppComponent {
   title = 'LegalConnect';
   constructor(
     private themeService: ThemeService,
-    private settingsService: SettingsService
+    private settingsService: SettingsService,
+    private seoService: SeoService
   ) { }
 }
