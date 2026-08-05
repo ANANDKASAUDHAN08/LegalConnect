@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { normalizeMediaUrl, normalizeObjectMediaUrls } from '../core/utils/url-utils';
 
 export interface Lawyer {
   _id: string;
@@ -101,6 +102,10 @@ export class LawyerService {
 
   constructor(private http: HttpClient) {}
 
+  private transformLawyerUrls(lawyer: Lawyer): Lawyer {
+    return normalizeObjectMediaUrls(lawyer, ['avatarUrl', 'bannerUrl']);
+  }
+
   getLawyers(filters?: { specialization?: string; city?: string; q?: string }): Observable<LawyerApiResponse<Lawyer[]>> {
     const params: any = {};
     if (filters?.specialization) params.specialization = filters.specialization;
@@ -108,15 +113,8 @@ export class LawyerService {
     if (filters?.q) params.q = filters.q;
     return this.http.get<LawyerApiResponse<Lawyer[]>>(this.apiUrl, { params }).pipe(
       map(res => {
-        if (res.success && res.data) {
-          res.data.forEach(lawyer => {
-            if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
-              lawyer.avatarUrl = lawyer.avatarUrl;
-            }
-            if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
-              lawyer.bannerUrl = lawyer.bannerUrl;
-            }
-          });
+        if (res.success && Array.isArray(res.data)) {
+          res.data.forEach(lawyer => this.transformLawyerUrls(lawyer));
         }
         return res;
       })
@@ -127,13 +125,7 @@ export class LawyerService {
     return this.http.get<LawyerApiResponse<Lawyer>>(`${this.apiUrl}/${id}`).pipe(
       map(res => {
         if (res.success && res.data) {
-          const lawyer = res.data;
-          if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
-            lawyer.avatarUrl = lawyer.avatarUrl;
-          }
-          if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
-            lawyer.bannerUrl = lawyer.bannerUrl;
-          }
+          this.transformLawyerUrls(res.data);
         }
         return res;
       })
@@ -146,15 +138,8 @@ export class LawyerService {
     }
     return this.http.post<LawyerApiResponse<Lawyer[]>>(`${this.apiUrl}/batch`, { ids }).pipe(
       map(res => {
-        if (res.success && res.data) {
-          res.data.forEach(lawyer => {
-            if (lawyer.avatarUrl && lawyer.avatarUrl.startsWith('/')) {
-              lawyer.avatarUrl = lawyer.avatarUrl;
-            }
-            if (lawyer.bannerUrl && lawyer.bannerUrl.startsWith('/')) {
-              lawyer.bannerUrl = lawyer.bannerUrl;
-            }
-          });
+        if (res.success && Array.isArray(res.data)) {
+          res.data.forEach(lawyer => this.transformLawyerUrls(lawyer));
         }
         return res;
       })
@@ -169,10 +154,8 @@ export class LawyerService {
   getProfile(): Observable<LawyerProfileData> {
     return this.http.get<LawyerProfileData>(`${this.lawyerApiUrl}/profile`, { withCredentials: true }).pipe(
       map(profile => {
-        if (profile) {
-          if (profile.bannerUrl && profile.bannerUrl.startsWith('/')) {
-            profile.bannerUrl = profile.bannerUrl;
-          }
+        if (profile?.bannerUrl) {
+          profile.bannerUrl = normalizeMediaUrl(profile.bannerUrl);
         }
         return profile;
       })

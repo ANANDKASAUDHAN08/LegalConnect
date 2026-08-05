@@ -17,7 +17,7 @@ export interface UserSettings {
   providedIn: 'root'
 })
 export class SettingsService {
-  private apiUrl = '/api/auth/settings';
+  private apiUrl = '/api/profile/settings';
   private http = inject(HttpClient);
   private authService = inject(AuthService);
 
@@ -54,11 +54,13 @@ export class SettingsService {
     this.applyLocalSettings();
 
     // Re-apply system theme if OS preference changes and theme is 'system'
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
-      if (this.theme() === 'system') {
-        this.applyTheme();
-      }
-    });
+    if (typeof window !== 'undefined') {
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => {
+        if (this.theme() === 'system') {
+          this.applyTheme();
+        }
+      });
+    }
 
     // Fetch DB settings when user is logged in
     this.authService.isLoggedIn$.subscribe(loggedIn => {

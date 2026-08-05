@@ -106,14 +106,11 @@ export class SavedItemsService {
   }
 
   isSavedHelpline(helplineId: string): boolean {
-    // Correct helper to check helplineIds set
-    const ids = new Set(this.savedHelplines().map(h => h.helplineId));
-    return ids.has(helplineId);
+    return this.savedHelplineIds().has(helplineId);
   }
 
   isSavedResource(resourceId: string): boolean {
-    const ids = new Set(this.savedResources().map(r => r.resourceId));
-    return ids.has(resourceId);
+    return this.savedResourceIds().has(resourceId);
   }
 
   // ─── TOGGLE LAWYER ─────────────────────────────────────────────────────────

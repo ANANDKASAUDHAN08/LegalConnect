@@ -13,7 +13,7 @@ const OTP_SEND_COOLDOWN_MS = 60_000;
 })
 export class PhoneAuthService implements OnDestroy {
   private http = inject(HttpClient);
-  private apiUrl = '/api/auth';
+  private apiUrl = '/api/verification';
 
   private recaptchaVerifier: RecaptchaVerifier | null = null;
   private confirmationResult: ConfirmationResult | null = null;
@@ -200,7 +200,7 @@ export class PhoneAuthService implements OnDestroy {
    * so it can validate the token and set User.IsPhoneVerified = true.
    */
   saveVerifiedPhoneToBackend(phone: string, firebaseToken: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/verify-phone`, {
+    return this.http.post(`${this.apiUrl}/phone/verify`, {
       phone: this.normalizePhone(phone),
       firebaseToken
     });

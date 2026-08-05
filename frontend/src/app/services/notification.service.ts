@@ -21,8 +21,13 @@ export class NotificationService {
   private loadFromStorage() {
     const data = localStorage.getItem(this.followedKey);
     if (data) {
-      this.followedActs = JSON.parse(data);
-      this.followedCount.set(this.followedActs.length);
+      try {
+        this.followedActs = JSON.parse(data);
+        this.followedCount.set(this.followedActs.length);
+      } catch {
+        this.followedActs = [];
+        this.followedCount.set(0);
+      }
     }
   }
 
