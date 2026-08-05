@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../services/auth.service';
+import { UserProfileService } from '../../../../services/user-profile.service';
+import { VerificationService } from '../../../../services/verification.service';
 import { PhoneAuthService } from '../../../../services/phone-auth.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { COUNTRIES } from '../../../../constants/countries.constant';
@@ -107,6 +109,8 @@ export class VerificationTabComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
+    private userProfileService: UserProfileService,
+    private verificationService: VerificationService,
     private phoneAuth: PhoneAuthService,
     private snackbar: SnackbarService
   ) { }
@@ -123,7 +127,7 @@ export class VerificationTabComponent implements OnInit, OnDestroy {
 
   resendEmailVerification() {
     this.resendLoading = true;
-    this.auth.resendEmailVerification().subscribe({
+    this.verificationService.resendEmailVerification(this.profile?.email || '').subscribe({
       next: () => {
         this.resendLoading = false;
         this.snackbar.show('Verification email sent! Check your inbox.', 'success');
@@ -280,7 +284,7 @@ export class VerificationTabComponent implements OnInit, OnDestroy {
     }
     this.identityOtpLoading = true;
     const mockBase64Pdf = 'data:application/pdf;base64,JVBERi0xLjQKJdPpNDcKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nCiAgICAgL1BhZ2VzIDIgMCBSCiAgPj4KZW5kb2JqCjIgMCBvYmoKICA8PCAvVHlwZSAvUGFnZXMKICAgICAvS2lkcyBbIDMgMCBSIF0KICAgICAvQ291bnQgMQogID4+CmVuZG9iagozIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2UKICAgICAvUGFyZW50IDIgMCBSCiAgICAgL01lZGlhQm94IFsgMCAwIDU5NSA4NDIgXQogICAgIC9SZXNvdXJjZXMgPDwgL0ZvbnQgPDwgL0YxIDQgMCBSID4+ID4+CiAgICAgL0NvbnRlbnRzIDUgMCBSCiAgPj4KZW5kb2JqCjQgMCBvYmoKICA8PCAvVHlwZSAvRm9udAogICAgIC9TdWJ0eXBlIC9UeXBlMQogICAgIC9CYXNlRm9udCAvSGVsdmV0aWNhCiAgPj4KZW5kb2JqCjUgMCBvYmoKICA8PCAvTGVuZ3RoIDQ0ID4+CnN0cmVhbQpCVAovRjEgMjQgVGYKMTAwIDcwMCBUZCAoTGVnYWxDb25uZWN0IElkZW50aXR5IERvY3VtZW50KSBUagogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA3MCAwMDAwMCBuIAowMDAwMDAwMTMwIDAwMDAwIGggCjAwMDAwMDAyNzAgMDAwMDAgbiAKMDAwMDAwMDM0MCAwMDAwMCBuIAp0cmFpbGVyCiAgPDwgL1NpemUgNgogICAgIC9Sb290IDEgMCBSCiAgPj4Kc3RhcnR4cmVmCjQzNQolJUVPRgo=';
-    this.auth.verifyIdentity('Aadhaar OTP', mockBase64Pdf).subscribe({
+    this.userProfileService.verifyIdentity('Aadhaar OTP', mockBase64Pdf).subscribe({
       next: (res) => {
         this.identityOtpLoading = false;
         this.showIdentityOtp = false;
@@ -308,7 +312,7 @@ export class VerificationTabComponent implements OnInit, OnDestroy {
     }
     this.uploadingId = true;
     const mockBase64Pdf = 'data:application/pdf;base64,JVBERi0xLjQKJdPpNDcKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nCiAgICAgL1BhZ2VzIDIgMCBSCiAgPj4KZW5kb2JqCjIgMCBvYmoKICA8PCAvVHlwZSAvUGFnZXMKICAgICAvS2lkcyBbIDMgMCBSIF0KICAgICAvQ291bnQgMQogID4+CmVuZG9iagozIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2UKICAgICAvUGFyZW50IDIgMCBSCiAgICAgL01lZGlhQm94IFsgMCAwIDU5NSA4NDIgXQogICAgIC9SZXNvdXJjZXMgPDwgL0ZvbnQgPDwgL0YxIDQgMCBSID4+ID4+CiAgICAgL0NvbnRlbnRzIDUgMCBSCiAgPj4KZW5kb2JqCjQgMCBvYmoKICA8PCAvVHlwZSAvRm9udAogICAgIC9TdWJ0eXBlIC9UeXBlMQogICAgIC9CYXNlRm9udCAvSGVsdmV0aWNhCiAgPj4KZW5kb2JqCjUgMCBvYmoKICA8PCAvTGVuZ3RoIDQ0ID4+CnN0cmVhbQpCVAovRjEgMjQgVGYKMTAwIDcwMCBUZCAoTGVnYWxDb25uZWN0IElkZW50aXR5IERvY3VtZW50KSBUagogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA3MCAwMDAwMCBuIAowMDAwMDAwMTMwIDAwMDAwIGggCjAwMDAwMDAyNzAgMDAwMDAgbiAKMDAwMDAwMDM0MCAwMDAwMCBuIAp0cmFpbGVyCiAgPDwgL1NpemUgNgogICAgIC9Sb290IDEgMCBSCiAgPj4Kc3RhcnR4cmVmCjQzNQolJUVPRgo=';
-    this.auth.verifyIdentity('PAN Card', mockBase64Pdf).subscribe({
+    this.userProfileService.verifyIdentity('PAN Card', mockBase64Pdf).subscribe({
       next: (res) => {
         this.uploadingId = false;
         this.identityStatus = res.identityStatus;
@@ -334,7 +338,7 @@ export class VerificationTabComponent implements OnInit, OnDestroy {
     }
     this.uploadingId = true;
     const mockBase64Pdf = 'data:application/pdf;base64,JVBERi0xLjQKJdPpNDcKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nCiAgICAgL1BhZ2VzIDIgMCBSCiAgPj4KZW5kb2JqCjIgMCBvYmoKICA8PCAvVHlwZSAvUGFnZXMKICAgICAvS2lkcyBbIDMgMCBSIF0KICAgICAvQ291bnQgMQogID4+CmVuZG9iagozIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2UKICAgICAvUGFyZW50IDIgMCBSCiAgICAgL01lZGlhQm94IFsgMCAwIDU5NSA4NDIgXQogICAgIC9SZXNvdXJjZXMgPDwgL0ZvbnQgPDwgL0YxIDQgMCBSID4+ID4+CiAgICAgL0NvbnRlbnRzIDUgMCBSCiAgPj4KZW5kb2JqCjQgMCBvYmoKICA8PCAvVHlwZSAvRm9udAogICAgIC9TdWJ0eXBlIC9UeXBlMQogICAgIC9CYXNlRm9udCAvSGVsdmV0aWNhCiAgPj4KZW5kb2JqCjUgMCBvYmoKICA8PCAvTGVuZ3RoIDQ0ID4+CnN0cmVhbQpCVAovRjEgMjQgVGYKMTAwIDcwMCBUZCAoTGVnYWxDb25uZWN0IElkZW50aXR5IERvY3VtZW50KSBUagogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA3MCAwMDAwMCBuIAowMDAwMDAwMTMwIDAwMDAwIGggCjAwMDAwMDAyNzAgMDAwMDAgbiAKMDAwMDAwMDM0MCAwMDAwMCBuIAp0cmFpbGVyCiAgPDwgL1NpemUgNgogICAgIC9Sb290IDEgMCBSCiAgPj4Kc3RhcnR4cmVmCjQzNQolJUVPRgo=';
-    this.auth.verifyIdentity(this.indianIdType, mockBase64Pdf).subscribe({
+    this.userProfileService.verifyIdentity(this.indianIdType, mockBase64Pdf).subscribe({
       next: (res) => {
         this.uploadingId = false;
         this.identityStatus = res.identityStatus;
@@ -360,7 +364,7 @@ export class VerificationTabComponent implements OnInit, OnDestroy {
     }
     this.uploadingId = true;
     const mockBase64Pdf = 'data:application/pdf;base64,JVBERi0xLjQKJdPpNDcKMSAwIG9iagogIDw8IC9UeXBlIC9DYXRhbG9nCiAgICAgL1BhZ2VzIDIgMCBSCiAgPj4KZW5kb2JqCjIgMCBvYmoKICA8PCAvVHlwZSAvUGFnZXMKICAgICAvS2lkcyBbIDMgMCBSIF0KICAgICAvQ291bnQgMQogID4+CmVuZG9iagozIDAgb2JqCiAgPDwgL1R5cGUgL1BhZ2UKICAgICAvUGFyZW50IDIgMCBSCiAgICAgL01lZGlhQm94IFsgMCAwIDU5NSA4NDIgXQogICAgIC9SZXNvdXJjZXMgPDwgL0ZvbnQgPDwgL0YxIDQgMCBSID4+ID4+CiAgICAgL0NvbnRlbnRzIDUgMCBSCiAgPj4KZW5kb2JqCjQgMCBvYmoKICA8PCAvVHlwZSAvRm9udAogICAgIC9TdWJ0eXBlIC9UeXBlMQogICAgIC9CYXNlRm9udCAvSGVsdmV0aWNhCiAgPj4KZW5kb2JqCjUgMCBvYmoKICA8PCAvTGVuZ3RoIDQ0ID4+CnN0cmVhbQpCVAovRjEgMjQgVGYKMTAwIDcwMCBUZCAoTGVnYWxDb25uZWN0IElkZW50aXR5IERvY3VtZW50KSBUagogRVQKZW5kc3RyZWFtCmVuZG9iagp4cmVmCjAgNgowMDAwMDAwMDAwIDY1NTM1IGYgCjAwMDAwMDAwMTUgMDAwMDAgbiAKMDAwMDAwMDA3MCAwMDAwMCBuIAowMDAwMDAwMTMwIDAwMDAwIGggCjAwMDAwMDAyNzAgMDAwMDAgbiAKMDAwMDAwMDM0MCAwMDAwMCBuIAp0cmFpbGVyCiAgPDwgL1NpemUgNgogICAgIC9Sb290IDEgMCBSCiAgPj4Kc3RhcnR4cmVmCjQzNQolJUVPRgo=';
-    this.auth.verifyIdentity('Bar Council Card', mockBase64Pdf).subscribe({
+    this.userProfileService.verifyIdentity('Bar Council Card', mockBase64Pdf).subscribe({
       next: (res) => {
         this.uploadingId = false;
         this.identityStatus = res.identityStatus;

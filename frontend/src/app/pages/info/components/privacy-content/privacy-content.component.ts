@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { AuthService } from '../../../../services/auth.service';
+import { UserProfileService } from '../../../../services/user-profile.service';
 import { FeedbackService } from '../../../../services/feedback.service';
 
 @Component({
@@ -24,6 +25,7 @@ export class PrivacyContentComponent implements OnInit {
   constructor(
     private snackbar: SnackbarService,
     private authService: AuthService,
+    private userProfileService: UserProfileService,
     private feedbackService: FeedbackService
   ) { }
 
@@ -95,7 +97,7 @@ export class PrivacyContentComponent implements OnInit {
   }
 
   requestDataDossier() {
-    this.authService.downloadDataDossier().subscribe({
+    this.userProfileService.downloadDataDossier().subscribe({
       next: (blob) => {
         this.dossierRequested = true;
         

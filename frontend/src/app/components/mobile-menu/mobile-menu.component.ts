@@ -95,8 +95,9 @@ export class MobileMenuComponent implements OnDestroy {
   }
 
   logout() {
-    this.auth.logout().subscribe();
-    this.snackbar.show('Logged out successfully. See you soon!', 'info');
-    this.onClose();
+    this.auth.logout().subscribe(() => {
+      this.snackbar.show('Logged out successfully. See you soon!', 'info');
+      this.onClose();
+    });
   }
 }

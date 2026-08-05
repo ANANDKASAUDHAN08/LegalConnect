@@ -378,9 +378,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   logout() {
-    this.auth.logout().subscribe();
-    this.snackbar.show('Logged out successfully. See you soon!', 'info');
-    this.menuOpen = false;
-    this.cdr.markForCheck();
+    this.auth.logout().subscribe(() => {
+      this.snackbar.show('Logged out successfully. See you soon!', 'info');
+      this.menuOpen = false;
+      this.cdr.markForCheck();
+    });
   }
 }

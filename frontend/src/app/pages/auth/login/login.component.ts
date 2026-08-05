@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
+import { GoogleAuthService } from '../../../services/google-auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { ForgotPasswordComponent } from '../../forgot-password/forgot-password.component';
 
@@ -16,6 +17,7 @@ import { ForgotPasswordComponent } from '../../forgot-password/forgot-password.c
 export class LoginComponent implements OnInit, OnDestroy {
   showPassword = signal(false);
   loading = signal(false);
+  googleLoading = signal(false);
   error = signal<string | null>(null);
   requires2fa = signal(false);
 
@@ -28,6 +30,7 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
+    private googleAuth: GoogleAuthService,
     private router: Router,
     private route: ActivatedRoute,
     private snackbar: SnackbarService
@@ -59,23 +62,83 @@ export class LoginComponent implements OnInit, OnDestroy {
     document.body.style.overflow = '';
   }
 
+  // Touched state signals for real-world field validation
+  emailTouched = signal(false);
+  passwordTouched = signal(false);
+  codeTouched = signal(false);
+  formSubmitted = signal(false);
+
+  emailError(): string | null {
+    if (!this.emailTouched() && !this.formSubmitted()) return null;
+    const val = (this.loginData.email || '').trim();
+    if (!val) return 'Email address is required.';
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(val)) return 'Please enter a valid email address.';
+    return null;
+  }
+
+  passwordError(): string | null {
+    if (!this.passwordTouched() && !this.formSubmitted()) return null;
+    const val = this.loginData.password || '';
+    if (!val) return 'Password is required.';
+    return null;
+  }
+
+  codeError(): string | null {
+    if (!this.requires2fa()) return null;
+    if (!this.codeTouched() && !this.formSubmitted()) return null;
+    const val = (this.twoFactorCode || '').trim();
+    if (!val) return 'Verification code is required.';
+    if (val.length < 6) return 'Verification code must be 6 digits.';
+    return null;
+  }
+
+  markTouched(field: 'email' | 'password' | 'code') {
+    if (field === 'email') this.emailTouched.set(true);
+    if (field === 'password') this.passwordTouched.set(true);
+    if (field === 'code') this.codeTouched.set(true);
+  }
+
+  onInputChange(field?: 'email' | 'password' | 'code') {
+    if (field === 'email') this.emailTouched.set(true);
+    if (field === 'password') this.passwordTouched.set(true);
+    if (field === 'code') this.codeTouched.set(true);
+
+    if (this.error()) {
+      this.error.set(null);
+    }
+  }
+
   onLogin() {
+    this.formSubmitted.set(true);
     this.error.set(null);
+
+    const emailErr = this.emailError();
+    const passErr = this.passwordError();
+    const codeErr = this.codeError();
+
+    if (emailErr || passErr || codeErr) {
+      return;
+    }
+
+    const email = (this.loginData.email || '').trim();
+    const password = this.loginData.password || '';
+
     this.loading.set(true);
 
     if (this.rememberMe()) {
-      localStorage.setItem('lc_remembered_email', this.loginData.email);
+      localStorage.setItem('lc_remembered_email', email);
     } else {
       localStorage.removeItem('lc_remembered_email');
     }
 
     const loginPayload: { email: string; password: string; twoFactorCode?: string } = {
-      email: this.loginData.email,
-      password: this.loginData.password
+      email,
+      password
     };
 
     if (this.requires2fa() && this.twoFactorCode) {
-      loginPayload.twoFactorCode = this.twoFactorCode;
+      loginPayload.twoFactorCode = this.twoFactorCode.trim();
     }
 
     this.auth.login(loginPayload).subscribe({
@@ -94,8 +157,9 @@ export class LoginComponent implements OnInit, OnDestroy {
               const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
               this.router.navigateByUrl(returnUrl);
             } else {
-              this.error.set('Session initialization failed.');
-              this.snackbar.show('Failed to complete session setup.', 'error');
+              const msg = 'Session initialization failed. Please try again.';
+              this.error.set(msg);
+              this.snackbar.show(msg, 'error');
               this.loading.set(false);
             }
           },
@@ -105,24 +169,68 @@ export class LoginComponent implements OnInit, OnDestroy {
         });
       },
       error: (err) => {
-        let msg = 'Invalid credentials.';
+        let rawMsg = '';
         if (typeof err?.error === 'string') {
-          msg = err.error;
+          rawMsg = err.error;
         } else if (err?.error?.message && typeof err.error.message === 'string') {
-          msg = err.error.message;
+          rawMsg = err.error.message;
         } else if (err?.error?.title && typeof err.error.title === 'string') {
-          msg = err.error.title;
+          rawMsg = err.error.title;
         } else if (err?.message && typeof err.message === 'string') {
-          msg = err.message;
+          rawMsg = err.message;
         }
-        this.error.set(msg);
-        this.snackbar.show(msg, 'error');
+
+        let userMsg = 'Invalid email address or password. Please double-check your credentials and try again.';
+        if (rawMsg && !rawMsg.toLowerCase().includes('invalid credential')) {
+          userMsg = rawMsg;
+        }
+
+        this.error.set(userMsg);
         this.loading.set(false);
       }
     });
   }
 
   loginWithGoogle() {
-    this.snackbar.show('Google login coming soon!', 'info');
+    this.error.set(null);
+    this.googleLoading.set(true);
+
+    this.googleAuth.signInWithGoogle().subscribe({
+      next: (credential) => {
+        this.auth.loginWithGoogle(credential).subscribe({
+          next: () => {
+            this.auth.completeLogin().subscribe({
+              next: (isLoggedIn) => {
+                if (isLoggedIn) {
+                  this.snackbar.show('Signed in with Google successfully!', 'success');
+                  const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+                  this.router.navigateByUrl(returnUrl);
+                } else {
+                  this.error.set('Failed to initialize session with Google.');
+                  this.snackbar.show('Session setup failed.', 'error');
+                  this.googleLoading.set(false);
+                }
+              },
+              error: () => this.googleLoading.set(false)
+            });
+          },
+          error: (err) => {
+            const msg = typeof err?.error === 'string' ? err.error : (err?.error?.message || 'Google authentication failed.');
+            this.error.set(msg);
+            this.snackbar.show(msg, 'error');
+            this.googleLoading.set(false);
+          }
+        });
+      },
+      error: (err) => {
+        const silentCodes = ['auth/popup-closed-by-user', 'auth/user-cancelled', 'auth/cancelled-popup-request'];
+        if (!silentCodes.includes(err?.code)) {
+          const msg = err?.message || 'Google Sign-In failed or popup was closed.';
+          this.error.set(msg);
+          this.snackbar.show(msg, 'error');
+        }
+        this.googleLoading.set(false);
+      }
+    });
   }
 }

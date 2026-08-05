@@ -2,6 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit, OnChanges, OnDestroy, S
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../services/auth.service';
+import { UserProfileService } from '../../../../services/user-profile.service';
+import { VerificationService } from '../../../../services/verification.service';
 import { PhoneAuthService } from '../../../../services/phone-auth.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { COUNTRIES } from '../../../../constants/countries.constant';
@@ -217,6 +219,8 @@ export class PersonalInfoTabComponent implements OnInit, OnChanges, OnDestroy {
 
   constructor(
     private auth: AuthService,
+    private userProfileService: UserProfileService,
+    private verificationService: VerificationService,
     private phoneAuth: PhoneAuthService,
     private snackbar: SnackbarService
   ) { }
@@ -286,7 +290,7 @@ export class PersonalInfoTabComponent implements OnInit, OnChanges, OnDestroy {
 
     this.editFullName = `${this.editFirstName} ${this.editLastName}`.trim();
     this.editPhone = this.phoneBody ? `${this.selectedCountry.code} ${this.phoneBody}`.trim() : '';
-    this.auth.updateProfile({
+    this.userProfileService.updateProfile({
       fullName: this.editFullName,
       phone: this.editPhone,
       clientLanguage: this.editLanguage,
@@ -436,7 +440,7 @@ export class PersonalInfoTabComponent implements OnInit, OnChanges, OnDestroy {
 
   resendEmailVerification() {
     this.resendLoading = true;
-    this.auth.resendEmailVerification().subscribe({
+    this.verificationService.resendEmailVerification(this.profile?.email || '').subscribe({
       next: () => {
         this.resendLoading = false;
         this.snackbar.show('Verification email sent! Check your inbox.', 'success');

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { AuthService, UserProfile } from '../../services/auth.service';
+import { UserProfileService } from '../../services/user-profile.service';
 import { LawyerService, LawyerProfileData } from '../../services/lawyer.service';
 import { SnackbarService } from '../../services/snackbar.service';
 
@@ -232,7 +233,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
       const croppedBase64 = canvas.toDataURL('image/jpeg', 0.85);
 
-      this.auth.updateProfile({ avatarUrl: croppedBase64 }).subscribe({
+      this.userProfileService.updateProfile({ avatarUrl: croppedBase64 }).subscribe({
         next: () => {
           this.isSavingAvatar = false;
           this.closeCropModal();
@@ -259,7 +260,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
       'Are you sure you want to remove your profile picture? This will revert it to the default initials placeholder.',
       'danger',
       () => {
-        this.auth.updateProfile({ avatarUrl: '' }).subscribe({
+        this.userProfileService.updateProfile({ avatarUrl: '' }).subscribe({
           next: () => {
             this.closeAvatarMenu();
             this.snackbar.show('Profile picture removed successfully!', 'success');
@@ -278,6 +279,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
+    private userProfileService: UserProfileService,
     private lawyerService: LawyerService,
     private snackbar: SnackbarService,
     private route: ActivatedRoute
@@ -307,7 +309,7 @@ export class ProfileComponent implements OnInit, OnDestroy {
   // ─── Data Loading ───────────────────────────────────────────
   loadProfile() {
     this.loading = true;
-    this.auth.getProfile().subscribe({
+    this.userProfileService.getProfile().subscribe({
       next: (res) => {
         this.profile = res;
         // Set default tab per role

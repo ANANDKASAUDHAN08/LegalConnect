@@ -1,7 +1,8 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../../../services/auth.service';
+import { UserProfileService } from '../../../../services/user-profile.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { ConfirmDialogComponent } from '../../../../components/confirm-dialog/confirm-dialog.component';
 
@@ -75,12 +76,13 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
 
   constructor(
     private auth: AuthService,
+    private userProfileService: UserProfileService,
     private snackbar: SnackbarService
-  ) {}
+  ) { }
 
   loadActiveSessions() {
     this.sessionsLoading = true;
-    this.auth.getActiveSessions().subscribe({
+    this.userProfileService.getActiveSessions().subscribe({
       next: (sessions) => {
         this.activeSessions = sessions;
         this.sessionsLoading = false;
@@ -93,7 +95,7 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
 
   loadLoginHistory() {
     this.historyLoading = true;
-    this.auth.getLoginHistory().subscribe({
+    this.userProfileService.getLoginHistory().subscribe({
       next: (history) => {
         this.loginHistory = history;
         this.historyLoading = false;
@@ -110,7 +112,7 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
       'Are you sure you want to revoke this session? Any unsaved changes on that device will be lost.',
       'danger',
       () => {
-        this.auth.revokeSession(id).subscribe({
+        this.userProfileService.revokeSession(id).subscribe({
           next: () => {
             this.snackbar.show('Session revoked successfully.', 'success');
             const session = this.activeSessions.find(s => s.id === id);
@@ -143,7 +145,7 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
     }
 
     this.pwdLoading = true;
-    this.auth.changePassword(this.currentPassword, this.newPassword).subscribe({
+    this.userProfileService.changePassword(this.currentPassword, this.newPassword).subscribe({
       next: () => {
         this.pwdLoading = false;
         this.currentPassword = '';
@@ -185,7 +187,7 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
   toggle2FA() {
     if (!this.twoFaEnabled) {
       this.twoFaLoading = true;
-      this.auth.get2FASetup().subscribe({
+      this.userProfileService.get2FASetup().subscribe({
         next: (res) => {
           this.twoFaLoading = false;
           this.qrCodeUrl = res.qrCodeUrl;
@@ -207,7 +209,7 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
     this.twoFaLoading = true;
     this.showDisableConfirmModal = false;
     this.updateScroll();
-    this.auth.toggle2FA(false, '').subscribe({
+    this.userProfileService.toggle2FA(false, '').subscribe({
       next: () => {
         this.twoFaLoading = false;
         this.twoFaEnabled = false;
@@ -228,7 +230,7 @@ export class SecuritySettingsTabComponent implements OnInit, OnDestroy {
       return;
     }
     this.twoFaLoading = true;
-    this.auth.toggle2FA(true, this.twoFaCode).subscribe({
+    this.userProfileService.toggle2FA(true, this.twoFaCode).subscribe({
       next: () => {
         this.twoFaLoading = false;
         this.twoFaEnabled = true;

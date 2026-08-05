@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, NgZone } from '@angular/core';
+import { Component, OnInit, OnDestroy, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Title, Meta } from '@angular/platform-browser';
@@ -11,6 +11,7 @@ import { HelpContentComponent } from './components/help-content/help-content.com
 import { ScrollService } from '../../services/scroll.service';
 import { FeedbackService } from '../../services/feedback.service';
 import { AuthService } from '../../services/auth.service';
+import { UserProfileService } from '../../services/user-profile.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -110,86 +111,88 @@ export class InfoPageComponent implements OnInit, OnDestroy {
   };
 
   // Unified sidebar widget data model — drives the entire sidebar via *ngFor (DRY)
-  sidebarWidgets: { [key: string]: {
-    title: string;
-    description: string;
-    ctaLabel: string;
-    ctaLink: string;
-    ctaIcon: string;
-    color: string;        // e.g. 'blue', 'emerald', 'indigo', 'rose'
-    darkColor: string;    // dark mode override e.g. 'amber' for privacy
-    extraTitle: string;
-    extraType: 'badges' | 'key-value' | 'stats';
-    extraItems: { icon?: string; label: string; value?: string; highlight?: boolean }[];
-  }} = {
-    privacy: {
-      title: 'DPDP Consent Manager',
-      description: 'In compliance with India\'s DPDP Act 2023, you can query or withdraw data consent directly via our Data Protection Officer.',
-      ctaLabel: 'Contact Privacy DPO',
-      ctaLink: '/contact',
-      ctaIcon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
-      color: 'blue',
-      darkColor: 'amber',
-      extraTitle: 'Compliance',
-      extraType: 'badges',
-      extraItems: [
-        { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'DPDP Act 2023' },
-        { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', label: 'SSL/TLS Encrypted' },
-        { icon: 'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z', label: 'GCP & Firebase Hosted' },
-        { icon: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636', label: 'Zero Data Sale Policy' }
-      ]
-    },
-    terms: {
-      title: 'Verified Workstation',
-      description: 'All advocates registered on LegalConnect are validated under State Bar Councils before database seed indexation.',
-      ctaLabel: 'Report Non-Compliance',
-      ctaLink: '/contact',
-      ctaIcon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
-      color: 'emerald',
-      darkColor: 'emerald',
-      extraTitle: 'Jurisdiction',
-      extraType: 'key-value',
-      extraItems: [
-        { icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Governing Law', value: 'Republic of India' },
-        { icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', label: 'Statute', value: 'IT Act, 2000' },
-        { icon: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3', label: 'Dispute Forum', value: 'Lucknow High Court' }
-      ]
-    },
-    about: {
-      title: 'Platform Index',
-      description: 'LegalConnect provides open reference access to 850+ Central Bare Acts and legal guidelines across India.',
-      ctaLabel: 'Browse Acts Library',
-      ctaLink: '/browse-laws',
-      ctaIcon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
-      color: 'indigo',
-      darkColor: 'indigo',
-      extraTitle: 'Platform Stats',
-      extraType: 'stats',
-      extraItems: [
-        { label: 'Acts Indexed', value: '850+' },
-        { label: 'Cities', value: '35+' },
-        { label: 'Advocates', value: '2K+' },
-        { label: 'Access', value: '24/7' }
-      ]
-    },
-    help: {
-      title: 'Indian Grievance Desk',
-      description: 'In compliance with Intermediary Guidelines, reach our designated Grievance DPO officer directly.',
-      ctaLabel: 'Contact Support DPO',
-      ctaLink: '/contact',
-      ctaIcon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
-      color: 'rose',
-      darkColor: 'rose',
-      extraTitle: 'Support',
-      extraType: 'key-value',
-      extraItems: [
-        { label: 'Avg. Response', value: '< 24 hrs', highlight: true },
-        { label: 'Desk Hours', value: 'Mon–Sat' },
-        { label: 'Priority', value: 'Email & Form' },
-        { label: 'Language', value: 'EN · HI' }
-      ]
+  sidebarWidgets: {
+    [key: string]: {
+      title: string;
+      description: string;
+      ctaLabel: string;
+      ctaLink: string;
+      ctaIcon: string;
+      color: string;        // e.g. 'blue', 'emerald', 'indigo', 'rose'
+      darkColor: string;    // dark mode override e.g. 'amber' for privacy
+      extraTitle: string;
+      extraType: 'badges' | 'key-value' | 'stats';
+      extraItems: { icon?: string; label: string; value?: string; highlight?: boolean }[];
     }
-  };
+  } = {
+      privacy: {
+        title: 'DPDP Consent Manager',
+        description: 'In compliance with India\'s DPDP Act 2023, you can query or withdraw data consent directly via our Data Protection Officer.',
+        ctaLabel: 'Contact Privacy DPO',
+        ctaLink: '/contact',
+        ctaIcon: 'M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z',
+        color: 'blue',
+        darkColor: 'amber',
+        extraTitle: 'Compliance',
+        extraType: 'badges',
+        extraItems: [
+          { icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', label: 'DPDP Act 2023' },
+          { icon: 'M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z', label: 'SSL/TLS Encrypted' },
+          { icon: 'M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z', label: 'GCP & Firebase Hosted' },
+          { icon: 'M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636', label: 'Zero Data Sale Policy' }
+        ]
+      },
+      terms: {
+        title: 'Verified Workstation',
+        description: 'All advocates registered on LegalConnect are validated under State Bar Councils before database seed indexation.',
+        ctaLabel: 'Report Non-Compliance',
+        ctaLink: '/contact',
+        ctaIcon: 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+        color: 'emerald',
+        darkColor: 'emerald',
+        extraTitle: 'Jurisdiction',
+        extraType: 'key-value',
+        extraItems: [
+          { icon: 'M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Governing Law', value: 'Republic of India' },
+          { icon: 'M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4', label: 'Statute', value: 'IT Act, 2000' },
+          { icon: 'M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3', label: 'Dispute Forum', value: 'Lucknow High Court' }
+        ]
+      },
+      about: {
+        title: 'Platform Index',
+        description: 'LegalConnect provides open reference access to 850+ Central Bare Acts and legal guidelines across India.',
+        ctaLabel: 'Browse Acts Library',
+        ctaLink: '/browse-laws',
+        ctaIcon: 'M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z',
+        color: 'indigo',
+        darkColor: 'indigo',
+        extraTitle: 'Platform Stats',
+        extraType: 'stats',
+        extraItems: [
+          { label: 'Acts Indexed', value: '850+' },
+          { label: 'Cities', value: '35+' },
+          { label: 'Advocates', value: '2K+' },
+          { label: 'Access', value: '24/7' }
+        ]
+      },
+      help: {
+        title: 'Indian Grievance Desk',
+        description: 'In compliance with Intermediary Guidelines, reach our designated Grievance DPO officer directly.',
+        ctaLabel: 'Contact Support DPO',
+        ctaLink: '/contact',
+        ctaIcon: 'M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z',
+        color: 'rose',
+        darkColor: 'rose',
+        extraTitle: 'Support',
+        extraType: 'key-value',
+        extraItems: [
+          { label: 'Avg. Response', value: '< 24 hrs', highlight: true },
+          { label: 'Desk Hours', value: 'Mon–Sat' },
+          { label: 'Priority', value: 'Email & Form' },
+          { label: 'Language', value: 'EN · HI' }
+        ]
+      }
+    };
 
   pageBadges: { [key: string]: string } = {
     about: 'About LegalConnect',
@@ -223,6 +226,7 @@ export class InfoPageComponent implements OnInit, OnDestroy {
     private scrollService: ScrollService,
     private feedbackService: FeedbackService,
     private authService: AuthService,
+    private userProfileService: UserProfileService,
     private ngZone: NgZone,
     private titleService: Title,
     private metaService: Meta
@@ -482,7 +486,7 @@ export class InfoPageComponent implements OnInit, OnDestroy {
   }
 
   downloadDossier() {
-    this.authService.downloadDataDossier().subscribe({
+    this.userProfileService.downloadDataDossier().subscribe({
       next: (blob) => {
         if (typeof window !== 'undefined') {
           const url = window.URL.createObjectURL(blob);

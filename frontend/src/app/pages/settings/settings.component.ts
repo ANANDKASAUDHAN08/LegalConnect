@@ -2,8 +2,9 @@ import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { SettingsService, UserSettings } from '../../services/settings.service';
+import { SettingsService } from '../../services/settings.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
+import { UserProfileService } from '../../services/user-profile.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
@@ -51,6 +52,7 @@ export class SettingsComponent implements OnInit {
 
   public settingsService = inject(SettingsService);
   private authService = inject(AuthService);
+  private userProfileService = inject(UserProfileService);
   private snackbar = inject(SnackbarService);
   private router = inject(Router);
 
@@ -313,7 +315,7 @@ export class SettingsComponent implements OnInit {
   // --- Sessions and security actions ---
   loadSessions() {
     this.isLoadingSessions = true;
-    this.authService.getActiveSessions().subscribe({
+    this.userProfileService.getActiveSessions().subscribe({
       next: (data) => {
         this.sessions = data;
         this.isLoadingSessions = false;
@@ -326,7 +328,7 @@ export class SettingsComponent implements OnInit {
 
   loadLoginHistory() {
     this.isLoadingHistory = true;
-    this.authService.getLoginHistory().subscribe({
+    this.userProfileService.getLoginHistory().subscribe({
       next: (data) => {
         this.loginHistory = data;
         this.isLoadingHistory = false;
@@ -343,7 +345,7 @@ export class SettingsComponent implements OnInit {
       'Are you sure you want to log out this device? Any unsaved changes on that device will be lost.',
       'danger',
       () => {
-        this.authService.revokeSession(id).subscribe({
+        this.userProfileService.revokeSession(id).subscribe({
           next: () => {
             this.snackbar.show('Device session revoked.', 'success');
             this.loadSessions();
@@ -362,7 +364,7 @@ export class SettingsComponent implements OnInit {
       'This will log you out from all other active devices. Proceed?',
       'danger',
       () => {
-        this.authService.revokeAllOtherSessions().subscribe({
+        this.userProfileService.revokeAllOtherSessions().subscribe({
           next: () => {
             this.snackbar.show('Logged out from all other devices.', 'success');
             this.loadSessions();
@@ -378,9 +380,8 @@ export class SettingsComponent implements OnInit {
   // --- Export Data ---
   exportMyData() {
     this.snackbar.show('Preparing your data export. Download will start shortly...', 'info');
-    this.authService.getExportData().subscribe({
-      next: (data) => {
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    this.userProfileService.downloadDataDossier().subscribe({
+      next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -412,7 +413,7 @@ export class SettingsComponent implements OnInit {
       return;
     }
 
-    this.authService.deleteAccount().subscribe({
+    this.userProfileService.deleteAccount().subscribe({
       next: () => {
         this.snackbar.show('Your account has been deleted. We are sorry to see you go.', 'info');
         this.closeDeleteModal();

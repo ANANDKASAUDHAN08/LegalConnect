@@ -165,13 +165,23 @@
         <!-- Error Alert -->
         @if (error()) {
         <div
-          class="p-2.5 bg-red-50 dark:bg-red-950/30 border border-red-200/50 dark:border-red-900/50 text-red-600 dark:text-red-400 rounded-xl text-xs flex items-start gap-2.5">
-          <svg class="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
-          <span>{{ error() }}</span>
+          class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-start justify-between gap-3 animate-[fadeIn_0.2s_ease-out] shadow-sm">
+          <div class="flex items-start gap-2.5">
+            <svg class="w-4 h-4 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+              stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div class="space-y-1">
+              <span class="font-medium leading-relaxed block">{{ error() }}</span>
+            </div>
+          </div>
+          <button type="button" (click)="error.set(null)"
+            class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 transition-colors p-0.5 rounded-lg">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
         }
 
@@ -186,10 +196,11 @@
               </svg>
             </span>
             <input type="text" id="fullName" name="fullName" required [(ngModel)]="registerData.fullName"
-              placeholder="John Doe"
+              (input)="onInputChange('fullName')" (blur)="markTouched('fullName')" placeholder="John Doe"
+              [class.border-rose-500]="fullNameError()"
               class="w-full pl-11 pr-10 py-2 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
             @if (registerData.fullName) {
-            <button type="button" (click)="registerData.fullName = ''"
+            <button type="button" (click)="registerData.fullName = ''; onInputChange('fullName')"
               class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               aria-label="Clear full name">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -198,6 +209,16 @@
             </button>
             }
           </div>
+          @if (fullNameError()) {
+          <p
+            class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+            <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{{ fullNameError() }}</span>
+          </p>
+          }
         </div>
 
         <!-- Email Address -->
@@ -211,10 +232,11 @@
               </svg>
             </span>
             <input type="email" id="email" name="email" required [(ngModel)]="registerData.email"
-              placeholder="name@example.com"
+              (input)="onInputChange('email')" (blur)="markTouched('email')" placeholder="name@example.com"
+              [class.border-rose-500]="emailError()"
               class="w-full pl-11 pr-10 py-2 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
             @if (registerData.email) {
-            <button type="button" (click)="registerData.email = ''"
+            <button type="button" (click)="registerData.email = ''; onInputChange('email')"
               class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               aria-label="Clear email">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -223,6 +245,16 @@
             </button>
             }
           </div>
+          @if (emailError()) {
+          <p
+            class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+            <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{{ emailError() }}</span>
+          </p>
+          }
         </div>
 
         <!-- Password Input -->
@@ -236,11 +268,13 @@
               </svg>
             </span>
             <input [type]="showPassword() ? 'text' : 'password'" id="password" name="password" required
-              [(ngModel)]="registerData.password" (focus)="showStrengthPopup = true" (blur)="onPasswordBlur()"
-              (ngModelChange)="evaluatePasswordStrength($event)" placeholder="••••••••"
+              [(ngModel)]="registerData.password" (focus)="showStrengthPopup = true"
+              (blur)="onPasswordBlur(); markTouched('password')" (ngModelChange)="evaluatePasswordStrength($event)"
+              (input)="onInputChange('password')" placeholder="••••••••" [class.border-rose-500]="passwordError()"
               class="w-full pl-11 pr-16 py-2 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
             @if (registerData.password) {
-            <button type="button" (click)="registerData.password = ''; evaluatePasswordStrength('')"
+            <button type="button"
+              (click)="registerData.password = ''; evaluatePasswordStrength(''); onInputChange('password')"
               class="absolute inset-y-0 right-7 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
               aria-label="Clear password">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -335,6 +369,16 @@
             </div>
             }
           </div>
+          @if (passwordError()) {
+          <p
+            class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+            <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>{{ passwordError() }}</span>
+          </p>
+          }
         </div>
 
         <!-- Agreement Checkbox -->
@@ -345,9 +389,11 @@
           <label for="agreeToTerms"
             class="ml-2.5 text-xs font-medium text-slate-600 dark:text-slate-400 leading-normal select-none">
             I agree to the
-            <a href="#" class="font-bold text-amber-600 hover:text-amber-500 transition-colors">Terms</a>
+            <a routerLink="/terms" target="_blank" rel="noopener noreferrer"
+              class="font-bold text-amber-600 hover:text-amber-500 transition-colors">Terms</a>
             and
-            <a href="#" class="font-bold text-amber-600 hover:text-amber-500 transition-colors">Privacy</a>.
+            <a routerLink="/privacy" target="_blank" rel="noopener noreferrer"
+              class="font-bold text-amber-600 hover:text-amber-500 transition-colors">Privacy</a>.
           </label>
         </div>
 
@@ -379,9 +425,19 @@
       </div>
 
       <!-- Google Register Button -->
-      <button type="button" (click)="loginWithGoogle()"
-        class="w-full py-2 px-4 bg-slate-50 hover:bg-slate-100/80 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200/80 dark:border-white/10 rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-3">
-        <svg class="w-5 h-5" viewBox="0 0 24 24">
+      <button type="button" (click)="loginWithGoogle()" [disabled]="googleLoading() || loading()"
+        class="w-full py-2.5 px-4 bg-slate-50 hover:bg-slate-100/90 dark:bg-white/5 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 font-semibold border border-slate-200/80 dark:border-white/10 rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-3 shadow-sm hover:shadow active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed">
+        @if (googleLoading()) {
+        <svg class="animate-spin h-5 w-5 text-amber-600 dark:text-amber-400" xmlns="http://www.w3.org/2000/svg"
+          fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+        <span>Registering with Google...</span>
+        } @else {
+        <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24">
           <path fill="#EA4335"
             d="M12 5.04c1.67 0 3.19.57 4.37 1.7l3.27-3.27C17.66 1.6 15.01 1 12 1 7.37 1 3.4 3.63 1.42 7.45l3.86 3A6.99 6.99 0 0112 5.04z" />
           <path fill="#4285F4"
@@ -389,9 +445,10 @@
           <path fill="#FBBC05"
             d="M5.28 14.55A6.97 6.97 0 014.96 12c0-.89.15-1.74.43-2.55l-3.86-3a11.95 11.95 0 000 11.1l3.75-2.9z" />
           <path fill="#34A853"
-            d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.12.75-2.54 1.2-4.23 1.2-3.23 0-5.96-2.18-6.94-5.11l-3.86 3a11.97 11.97 0 0012 23z" />
+            d="M12 23c3.24 0 5.97-1.07 7.96-2.91l-3.73-2.89c-1.12.75-2.54 1.2-4.23 1.2-3.23 0-5.96-2.18-6.94-5.11l-3.86 3A11.97 11.97 0 0012 23z" />
         </svg>
         <span>Continue with Google</span>
+        }
       </button>
 
       <!-- Footer Info -->
