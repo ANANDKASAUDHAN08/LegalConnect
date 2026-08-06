@@ -76,17 +76,24 @@ export interface DashboardOverview {
 export type AdminDashboardOverview = DashboardOverview;
 
 export interface ContactSubmissionItem {
-  id: number;
+  id: number | string;
   fullName: string;
   email: string;
   phone?: string;
   subject: string;
   userEmail?: string;
   message: string;
-  status: 'New' | 'Read' | 'Replied' | 'Archived' | 'open' | 'in_progress' | 'resolved' | string;
+  status: 'New' | 'Read' | 'In Progress' | 'Escalated to DPO' | 'Resolved' | 'Archived' | string;
+  priority?: 'Urgent' | 'High' | 'Normal' | 'Low' | string;
+  category?: 'General' | 'Lawyer Verification' | 'Billing' | 'Technical Bug' | 'DPDP Grievance' | string;
+  assignedAgent?: string;
+  slaDueDate?: string;
+  slaTarget?: string;
   createdAt: string;
   source?: string;
   resolutionNote?: string;
+  internalNotesJson?: string;
+  internalNotes?: Array<{ text: string; date: string; author: string }>;
 }
 
 export type SupportTicketItem = ContactSubmissionItem;
@@ -135,12 +142,21 @@ export interface LoginHistoryItem {
 
 export interface AdminReviewItem {
   id: number;
+  targetId?: number;
+  targetName?: string;
+  targetType?: string;
   lawyerId?: number;
-  lawyerName: string;
+  lawyerName?: string;
   userName: string;
   userRole?: string;
   rating: number;
-  comment: string;
+  comment?: string;
+  content?: string;
+  moderationStatus?: 'Approved' | 'Pending' | 'Flagged' | 'Hidden' | string;
+  flagReason?: string;
+  advocateReply?: string;
+  advocateReplyStatus?: string;
+  isVerifiedClient?: boolean;
   isApproved?: boolean;
   createdAt: string;
 }

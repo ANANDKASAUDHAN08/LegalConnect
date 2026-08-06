@@ -51,6 +51,20 @@ export class TableSelection<T = number> {
   delete(id: T): void {
     this.selectedIds.delete(id);
   }
+
+  /**
+   * Retains only IDs that are present in visibleIds array.
+   * Eliminates (unselects) any IDs that have been filtered out or hidden.
+   * Type-safe with String() coercion to handle numeric vs string ID types seamlessly.
+   */
+  retainOnly(visibleIds: T[]): void {
+    const visibleSet = new Set(visibleIds.map(id => String(id)));
+    for (const id of Array.from(this.selectedIds)) {
+      if (!visibleSet.has(String(id))) {
+        this.selectedIds.delete(id);
+      }
+    }
+  }
 }
 
 // --- Date Preset Range Helper --------------------------------------------
@@ -123,4 +137,57 @@ export function handleTableKeyboardNav(event: KeyboardEvent, config: KeyboardNav
   } else if (event.key === 'Escape') {
     config.onEscape?.();
   }
+}
+
+// --- Universal Sort Comparator Helper ------------------------------------
+export function sortByField<T>(
+  list: T[],
+  sortBy: string,
+  sortOrder: 'asc' | 'desc',
+  customAccessors?: Record<string, (item: T) => any>
+): T[] {
+  if (!list || list.length === 0) return [];
+  return [...list].sort((a: any, b: any) => {
+    let valA: any = '';
+    let valB: any = '';
+
+    if (customAccessors && customAccessors[sortBy]) {
+      valA = customAccessors[sortBy](a);
+      valB = customAccessors[sortBy](b);
+    } else if (sortBy === 'createdAt' || sortBy === 'submitted' || sortBy === 'newest' || sortBy === 'oldest') {
+      valA = new Date(a.createdAt || a.createdAtFormatted || 0).getTime();
+      valB = new Date(b.createdAt || b.createdAtFormatted || 0).getTime();
+    } else {
+      valA = a[sortBy] ?? '';
+      valB = b[sortBy] ?? '';
+    }
+
+    if (typeof valA === 'string') {
+      valA = (valA || '').toLowerCase();
+      valB = (valB || '').toString().toLowerCase();
+    }
+
+    if (valA < valB) return sortOrder === 'asc' ? -1 : 1;
+    if (valA > valB) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+}
+
+// --- Universal Query Params Builder Helper --------------------------------
+export function buildQueryParams(
+  state: Record<string, any>,
+  defaults: Record<string, any> = {}
+): Record<string, any> {
+  const queryParams: Record<string, any> = {};
+
+  Object.keys(state).forEach(key => {
+    const val = state[key];
+    const defaultVal = defaults[key];
+
+    if (val !== undefined && val !== null && val !== '' && val !== defaultVal) {
+      queryParams[key] = val;
+    }
+  });
+
+  return queryParams;
 }

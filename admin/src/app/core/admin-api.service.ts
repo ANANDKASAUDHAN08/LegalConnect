@@ -58,6 +58,7 @@ export class AdminApiService {
 
   // -- Reviews & Consultations Delegates --
   getReviews(params: any = {}): Observable<any> { return this.user.getReviews(params); }
+  updateReviewModeration(id: number, data: any): Observable<any> { return this.user.updateReviewModeration(id, data); }
   deleteReview(id: number): Observable<any> { return this.user.deleteReview(id); }
   getConsultations(params: any = {}): Observable<any> { return this.user.getConsultations(params); }
   updateConsultationStatus(id: number, status: string): Observable<any> { return this.user.updateConsultationStatus(id, status); }
@@ -73,7 +74,8 @@ export class AdminApiService {
 
   // -- Contacts / Support Delegates --
   getContacts(params: any = {}): Observable<any> { return this.user.getContacts(params); }
-  updateContactStatus(id: number, status: string): Observable<any> { return this.user.updateContactStatus(id, status); }
+  updateContactStatus(id: number | string, status: string): Observable<any> { return this.user.updateContactStatus(id, status); }
+  updateContactTicket(id: number | string, data: any): Observable<any> { return this.user.updateContactTicket(id, data); }
 
   // -- Bare Acts Delegates --
   getActs(): Observable<any> { return this.content.getActs(); }

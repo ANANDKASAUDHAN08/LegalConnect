@@ -37,11 +37,38 @@ export class AdminAuthService {
     this.restoreSession();
   }
 
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payloadBase64 = token.split('.')[1];
+      if (!payloadBase64) return false;
+      const decodedJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
+      const payload = JSON.parse(decodedJson);
+      if (payload && payload.exp) {
+        const nowSec = Math.floor(Date.now() / 1000);
+        return payload.exp < nowSec;
+      }
+      return false;
+    } catch {
+      return false;
+    }
+  }
+
   private restoreSession(): void {
-    const token = localStorage.getItem('lc_admin_token');
-    const savedUser = localStorage.getItem('lc_admin_user');
+    // Purge legacy localStorage entries to ensure security hardening
+    localStorage.removeItem('lc_admin_token');
+    localStorage.removeItem('lc_admin_user');
+
+    const token = sessionStorage.getItem('lc_admin_token');
+    const savedUser = sessionStorage.getItem('lc_admin_user');
 
     if (token && savedUser) {
+      if (this.isTokenExpired(token)) {
+        console.warn('[AdminAuthService] Stored admin JWT token is expired. Clearing session...');
+        this.clearSession();
+        this.loadedSubject.next(true);
+        return;
+      }
+
       try {
         const userObj = JSON.parse(savedUser);
         this.tokenSubject.next(token);
@@ -53,12 +80,12 @@ export class AdminAuthService {
         this.http.get<any>(`${this.API_URL}/me`).subscribe({
           next: (res: any) => {
             this.userSubject.next(res);
-            localStorage.setItem('lc_admin_user', JSON.stringify(res));
+            sessionStorage.setItem('lc_admin_user', JSON.stringify(res));
           },
           error: (err: any) => {
             // ONLY log out if the backend explicitly returned a 401 Unauthorized status
-            if (err.status === 401) {
-              console.warn('Admin token expired or invalid (401). Clearing session...');
+            if (err.status === 401 || err.status === 403) {
+              console.warn('Admin token expired or invalid (401/403). Clearing session...');
               this.clearSession();
               this.router.navigate(['/login']);
             }
@@ -81,9 +108,9 @@ export class AdminAuthService {
     }, { withCredentials: true }).pipe(
       tap((res: any) => {
         if (res.token) {
-          localStorage.setItem('lc_admin_token', res.token);
+          sessionStorage.setItem('lc_admin_token', res.token);
           if (res.user) {
-            localStorage.setItem('lc_admin_user', JSON.stringify(res.user));
+            sessionStorage.setItem('lc_admin_user', JSON.stringify(res.user));
             this.userSubject.next(res.user);
           }
           this.tokenSubject.next(res.token);
@@ -109,6 +136,8 @@ export class AdminAuthService {
   }
 
   private clearSession(): void {
+    sessionStorage.removeItem('lc_admin_token');
+    sessionStorage.removeItem('lc_admin_user');
     localStorage.removeItem('lc_admin_token');
     localStorage.removeItem('lc_admin_user');
     this.tokenSubject.next(null);

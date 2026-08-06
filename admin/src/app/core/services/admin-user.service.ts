@@ -2,40 +2,31 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { SwrCacheService } from './admin-swr-cache.service';
 
 @Injectable({ providedIn: 'root' })
 export class AdminUserService {
   private readonly API = environment.apiUrl;
 
-  private usersCache = new Map<string, any>();
-  private consultationsCache = new Map<string, any>();
-  private lastUsersCacheKey: string | null = null;
-  private lastConsultationsCacheKey: string | null = null;
-
-  constructor(private http: HttpClient) { }
-
-  private getParamKey(params: any): string {
-    return JSON.stringify(params || {});
-  }
+  constructor(
+    private http: HttpClient,
+    public swrCache: SwrCacheService
+  ) { }
 
   getCachedUsers(params: any = {}): any | null {
-    const key = this.getParamKey(params);
-    return this.usersCache.get(key) || (this.lastUsersCacheKey ? this.usersCache.get(this.lastUsersCacheKey) : null);
+    return this.swrCache.get('users', params);
   }
 
   clearUsersCache(): void {
-    this.usersCache.clear();
-    this.lastUsersCacheKey = null;
+    this.swrCache.invalidate('users');
   }
 
   getCachedConsultations(params: any = {}): any | null {
-    const key = this.getParamKey(params);
-    return this.consultationsCache.get(key) || (this.lastConsultationsCacheKey ? this.consultationsCache.get(this.lastConsultationsCacheKey) : null);
+    return this.swrCache.get('consultations', params);
   }
 
   clearConsultationsCache(): void {
-    this.consultationsCache.clear();
-    this.lastConsultationsCacheKey = null;
+    this.swrCache.invalidate('consultations');
   }
 
   // -- User Management --
@@ -49,9 +40,7 @@ export class AdminUserService {
     return this.http.get<any>(`${this.API}/users`, { params: httpParams }).pipe(
       tap((res: any) => {
         if (res && res.success) {
-          const key = this.getParamKey(params);
-          this.usersCache.set(key, res);
-          this.lastUsersCacheKey = key;
+          this.swrCache.set('users', params, res);
         }
       })
     );
@@ -171,6 +160,10 @@ export class AdminUserService {
     return this.http.get(`${this.API}/reviews`, { params: httpParams });
   }
 
+  updateReviewModeration(id: number, data: { moderationStatus?: string; flagReason?: string; advocateReply?: string; advocateReplyStatus?: string }): Observable<any> {
+    return this.http.put(`${this.API}/reviews/${id}/moderation`, data);
+  }
+
   deleteReview(id: number): Observable<any> {
     return this.http.delete(`${this.API}/reviews/${id}`);
   }
@@ -186,9 +179,7 @@ export class AdminUserService {
     return this.http.get<any>(`${this.API}/consultations`, { params: httpParams }).pipe(
       tap((res: any) => {
         if (res && res.success) {
-          const key = this.getParamKey(params);
-          this.consultationsCache.set(key, res);
-          this.lastConsultationsCacheKey = key;
+          this.swrCache.set('consultations', params, res);
         }
       })
     );
@@ -240,8 +231,12 @@ export class AdminUserService {
     return this.http.get(`${this.API}/contacts`, { params: httpParams });
   }
 
-  updateContactStatus(id: number, status: string): Observable<any> {
+  updateContactStatus(id: number | string, status: string): Observable<any> {
     return this.http.put(`${this.API}/contacts/${id}/status`, { status });
+  }
+
+  updateContactTicket(id: number | string, data: { status?: string; priority?: string; category?: string; assignedAgent?: string; resolutionNote?: string; internalNotesJson?: string }): Observable<any> {
+    return this.http.put(`${this.API}/contacts/${id}/status`, data);
   }
 
   // -- Admin Account Self-Service --

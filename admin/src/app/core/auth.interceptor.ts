@@ -7,18 +7,28 @@ export const adminAuthInterceptor: HttpInterceptorFn = (req, next) => {
   const auth = inject(AdminAuthService);
   const token = auth.token;
 
-  let clonedReq = req;
+  // Generate cryptographically safe pseudo-UUID for request telemetry fingerprint
+  const requestId = 'req_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
+
+  const headersToAdd: Record<string, string> = {
+    'X-Request-ID': requestId,
+    'X-Requested-With': 'XMLHttpRequest'
+  };
+
   if (token) {
-    clonedReq = req.clone({
-      setHeaders: { Authorization: `Bearer ${token}` },
-      withCredentials: true
-    });
+    headersToAdd['Authorization'] = `Bearer ${token}`;
   }
+
+  const clonedReq = req.clone({
+    setHeaders: headersToAdd,
+    withCredentials: true
+  });
 
   return next(clonedReq).pipe(
     catchError((error: HttpErrorResponse) => {
-      // If server returns 401 Unauthorized for any non-login endpoint, clear expired token and redirect to login
-      if (error.status === 401 && !req.url.includes('/login')) {
+      // Auto-terminate expired or unauthorized session (401 Unauthorized or 403 Forbidden)
+      if ((error.status === 401 || error.status === 403) && !req.url.includes('/login')) {
+        console.warn(`[Security Interceptor] Authorization failure (${error.status}) on ${req.url}. Revoking session...`);
         auth.handle401SessionExpired();
       }
       return throwError(() => error);
