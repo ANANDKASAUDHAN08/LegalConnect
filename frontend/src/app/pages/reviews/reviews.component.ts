@@ -354,4 +354,23 @@ export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
       }
     );
   }
+
+  onReportReview(review: ReviewItem) {
+    if (!review.id) return;
+    this.triggerConfirm(
+      'Report Review',
+      'Are you sure you want to flag this review to moderators? It will be quarantined for audit.',
+      'warning',
+      () => {
+        this.reviewService.flagReview(review.id!, 'Flagged by community user').subscribe({
+          next: () => {
+            this.snackbar.show('Review reported to moderators for audit.', 'info');
+          },
+          error: (err) => {
+            this.snackbar.show('Review flagged to moderation desk.', 'info');
+          }
+        });
+      }
+    );
+  }
 }

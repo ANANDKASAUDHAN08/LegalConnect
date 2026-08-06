@@ -12,6 +12,10 @@ export interface ReviewItem {
   content: string;
   createdAt: string;
   likes?: number;
+  advocateReply?: string;
+  advocateReplyStatus?: string;
+  isVerifiedClient?: boolean;
+  moderationStatus?: string;
 }
 
 @Injectable({
@@ -55,5 +59,9 @@ export class ReviewService {
 
   unlikeReview(id: number): Observable<ReviewItem> {
     return this.http.post<ReviewItem>(`${this.apiUrl}/${id}/unlike`, {});
+  }
+
+  flagReview(id: number, reason: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/${id}/flag`, { reason });
   }
 }

@@ -56,6 +56,7 @@ export class ReviewCardComponent implements OnInit {
   @Output() delete = new EventEmitter<any>();
   @Output() like = new EventEmitter<any>();
   @Output() readMore = new EventEmitter<any>();
+  @Output() report = new EventEmitter<any>();
 
   hasLiked = false;
 

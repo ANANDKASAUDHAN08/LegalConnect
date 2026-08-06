@@ -48,6 +48,7 @@ export class ContactComponent implements OnInit, OnDestroy {
   callbackRequested = false;
   isDropdownOpen = false;
   isRoleDropdownOpen = false;
+  isLoggedInUser = false;
 
   @ViewChild('roleDropdownRef') roleDropdownRef?: ElementRef;
   @ViewChild('subjectDropdownRef') subjectDropdownRef?: ElementRef;
@@ -247,6 +248,7 @@ export class ContactComponent implements OnInit, OnDestroy {
   }
 
   toggleRoleDropdown() {
+    if (this.isLoggedInUser) return;
     this.isRoleDropdownOpen = !this.isRoleDropdownOpen;
     if (this.isRoleDropdownOpen) {
       this.isDropdownOpen = false;
@@ -254,6 +256,7 @@ export class ContactComponent implements OnInit, OnDestroy {
   }
 
   selectRole(value: 'client' | 'advocate') {
+    if (this.isLoggedInUser) return;
     this.form.role = value;
     this.isRoleDropdownOpen = false;
   }
@@ -340,9 +343,22 @@ export class ContactComponent implements OnInit, OnDestroy {
   faqItems: FaqItem[] = [
     { question: 'How do I verify my Bar Council license on the platform?', routerLink: '/help' },
     { question: 'How do I reset my account password?', routerLink: '/help' },
-    { question: 'Where can I download my personal data dossier?', routerLink: '/privacy' },
+    { question: 'Where can I download my personal data dossier under DPDP Act?', routerLink: '/privacy' },
     { question: 'Does LegalConnect charge advocates any commission?', routerLink: '/help' }
   ];
+
+  get matchedFaqs(): FaqItem[] {
+    const text = (this.form.subject + ' ' + this.form.message).toLowerCase();
+    if (!text.trim() || text.length < 4) return [];
+    return this.faqItems.filter(item => {
+      const q = item.question.toLowerCase();
+      if (text.includes('bar') || text.includes('license') || text.includes('verify')) return q.includes('bar council');
+      if (text.includes('pass') || text.includes('reset') || text.includes('login') || text.includes('account')) return q.includes('password');
+      if (text.includes('privacy') || text.includes('data') || text.includes('dpo') || text.includes('delete')) return q.includes('personal data');
+      if (text.includes('fee') || text.includes('commission') || text.includes('charge') || text.includes('cost')) return q.includes('commission');
+      return false;
+    });
+  }
 
   get currentSubjects() {
     return this.subjectsByAction[this.selectedAction || 'ticket'] || this.subjectsByAction['ticket'];
@@ -370,12 +386,24 @@ export class ContactComponent implements OnInit, OnDestroy {
 
     this.auth.currentUser$.subscribe(user => {
       if (user) {
+        this.isLoggedInUser = true;
         this.form.fullName = user.fullName;
         this.form.email = user.email;
+
+        // Auto-assign authenticated user role
+        const r = (user.role || '').toLowerCase();
+        if (r.includes('lawyer') || r.includes('advocate')) {
+          this.form.role = 'advocate';
+        } else {
+          this.form.role = 'client';
+        }
+
         if (!this.trackQuery) {
           this.trackQuery = user.email;
         }
         this.autoFetchUserHistory(user.email);
+      } else {
+        this.isLoggedInUser = false;
       }
     });
 

@@ -24,7 +24,9 @@ namespace CoreApi.Controllers
             [FromQuery] int page = 1,
             [FromQuery] int limit = 15,
             [FromQuery] int? rating = null,
-            [FromQuery] string? role = null)
+            [FromQuery] string? role = null,
+            [FromQuery] string? moderationStatus = null,
+            [FromQuery] string? search = null)
         {
             var query = _context.Reviews.AsQueryable();
 
@@ -32,6 +34,13 @@ namespace CoreApi.Controllers
                 query = query.Where(r => r.Rating == rating.Value);
             if (!string.IsNullOrEmpty(role))
                 query = query.Where(r => r.UserRole == role);
+            if (!string.IsNullOrEmpty(moderationStatus))
+                query = query.Where(r => r.ModerationStatus == moderationStatus);
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var s = search.Trim().ToLower();
+                query = query.Where(r => r.AuthorName.ToLower().Contains(s) || r.TargetName.ToLower().Contains(s) || r.Content.ToLower().Contains(s));
+            }
 
             var total = await query.CountAsync();
             var reviews = await query
@@ -41,6 +50,26 @@ namespace CoreApi.Controllers
                 .ToListAsync();
 
             return Ok(new { success = true, data = reviews, pagination = new { total, page, limit } });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("reviews/{id}/moderation")]
+        public async Task<IActionResult> UpdateReviewModeration(int id, [FromBody] AdminReviewModerationDto dto)
+        {
+            var review = await _context.Reviews.FindAsync(id);
+            if (review == null) return NotFound(new { message = "Review not found." });
+
+            if (!string.IsNullOrEmpty(dto.ModerationStatus))
+                review.ModerationStatus = dto.ModerationStatus;
+            if (dto.FlagReason != null)
+                review.FlagReason = dto.FlagReason;
+            if (dto.AdvocateReply != null)
+                review.AdvocateReply = dto.AdvocateReply;
+            if (!string.IsNullOrEmpty(dto.AdvocateReplyStatus))
+                review.AdvocateReplyStatus = dto.AdvocateReplyStatus;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Review moderation status updated successfully.", data = review });
         }
 
         [Authorize(Roles = "Admin")]
@@ -431,8 +460,12 @@ namespace CoreApi.Controllers
         [HttpGet("contacts")]
         public async Task<IActionResult> GetContactSubmissions(
             [FromQuery] int page = 1,
-            [FromQuery] int limit = 15,
-            [FromQuery] string? status = null)
+            [FromQuery] int limit = 20,
+            [FromQuery] string? status = null,
+            [FromQuery] string? priority = null,
+            [FromQuery] string? category = null,
+            [FromQuery] string? assignedAgent = null,
+            [FromQuery] string? search = null)
         {
             var contactsList = new List<object>();
 
@@ -454,14 +487,39 @@ namespace CoreApi.Controllers
                             if (!string.IsNullOrEmpty(status) && !tStatus.Equals(status, StringComparison.OrdinalIgnoreCase))
                                 continue;
 
+                            var tPriority = t.TryGetProperty("priority", out var pr) ? pr.GetString() ?? "Normal" : "Normal";
+                            if (!string.IsNullOrEmpty(priority) && !tPriority.Equals(priority, StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            var tCategory = t.TryGetProperty("category", out var cat) ? cat.GetString() ?? "General" : "General";
+                            if (!string.IsNullOrEmpty(category) && !tCategory.Equals(category, StringComparison.OrdinalIgnoreCase))
+                                continue;
+
+                            var tName = t.TryGetProperty("name", out var n) ? n.GetString() ?? "User" : "User";
+                            var tEmail = t.TryGetProperty("email", out var e) ? e.GetString() ?? "" : "";
+                            var tSubject = t.TryGetProperty("subject", out var s) ? s.GetString() ?? "Inquiry" : "Inquiry";
+                            var tMsg = t.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
+
+                            if (!string.IsNullOrWhiteSpace(search))
+                            {
+                                var q = search.Trim().ToLower();
+                                if (!tName.ToLower().Contains(q) && !tEmail.ToLower().Contains(q) && !tSubject.ToLower().Contains(q) && !tMsg.ToLower().Contains(q))
+                                    continue;
+                            }
+
                             contactsList.Add(new
                             {
                                 id = t.TryGetProperty("ticketId", out var tid) ? tid.GetString() : Guid.NewGuid().ToString("N"),
-                                fullName = t.TryGetProperty("name", out var n) ? n.GetString() : "User",
-                                email = t.TryGetProperty("email", out var e) ? e.GetString() : "",
-                                subject = t.TryGetProperty("subject", out var s) ? s.GetString() : "Inquiry",
-                                message = t.TryGetProperty("message", out var m) ? m.GetString() : "",
+                                fullName = tName,
+                                email = tEmail,
+                                subject = tSubject,
+                                message = tMsg,
                                 status = tStatus,
+                                priority = tPriority,
+                                category = tCategory,
+                                source = "MongoDB Desk",
+                                assignedAgent = t.TryGetProperty("assignedAgent", out var ag) ? ag.GetString() : "",
+                                slaTarget = t.TryGetProperty("slaTarget", out var sla) ? sla.GetString() : "24 Hours",
                                 createdAt = t.TryGetProperty("timestamp", out var ts) ? ts.GetString() : DateTime.UtcNow.ToString("o")
                             });
                         }
@@ -474,6 +532,17 @@ namespace CoreApi.Controllers
             var query = _context.ContactSubmissions.AsQueryable();
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(c => c.Status == status);
+            if (!string.IsNullOrEmpty(priority))
+                query = query.Where(c => c.Priority == priority);
+            if (!string.IsNullOrEmpty(category))
+                query = query.Where(c => c.Category == category);
+            if (!string.IsNullOrEmpty(assignedAgent))
+                query = query.Where(c => c.AssignedAgent == assignedAgent);
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var q = search.Trim().ToLower();
+                query = query.Where(c => c.FullName.ToLower().Contains(q) || c.Email.ToLower().Contains(q) || c.Subject.ToLower().Contains(q) || c.Message.ToLower().Contains(q));
+            }
 
             var sqlContacts = await query
                 .OrderByDescending(c => c.CreatedAt)
@@ -485,6 +554,13 @@ namespace CoreApi.Controllers
                     subject = c.Subject,
                     message = c.Message,
                     status = c.Status,
+                    priority = c.Priority ?? "Normal",
+                    category = c.Category ?? "General",
+                    source = "SQL Contact Desk",
+                    assignedAgent = c.AssignedAgent ?? "",
+                    slaDueDate = c.SlaDueDate.HasValue ? c.SlaDueDate.Value.ToString("o") : null,
+                    resolutionNote = c.ResolutionNote ?? "",
+                    internalNotesJson = c.InternalNotesJson ?? "[]",
                     createdAt = c.CreatedAt.ToString("o")
                 })
                 .ToListAsync();
@@ -499,16 +575,46 @@ namespace CoreApi.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("contacts/{id}/status")]
-        public async Task<IActionResult> UpdateContactStatus(int id, [FromBody] AdminUpdateStatusDto dto)
+        public async Task<IActionResult> UpdateContactStatus(int id, [FromBody] AdminUpdateTicketDto dto)
         {
             var contact = await _context.ContactSubmissions.FindAsync(id);
-            if (contact == null) return NotFound(new { message = "Contact not found." });
+            if (contact == null) return NotFound(new { message = "Contact submission not found." });
 
-            contact.Status = dto.Status;
+            if (!string.IsNullOrEmpty(dto.Status))
+                contact.Status = dto.Status;
+            if (!string.IsNullOrEmpty(dto.Priority))
+                contact.Priority = dto.Priority;
+            if (!string.IsNullOrEmpty(dto.Category))
+                contact.Category = dto.Category;
+            if (dto.AssignedAgent != null)
+                contact.AssignedAgent = dto.AssignedAgent;
+            if (dto.ResolutionNote != null)
+                contact.ResolutionNote = dto.ResolutionNote;
+            if (dto.InternalNotesJson != null)
+                contact.InternalNotesJson = dto.InternalNotesJson;
+
             await _context.SaveChangesAsync();
 
-            return Ok(new { success = true, message = "Status updated." });
+            return Ok(new { success = true, message = "Contact ticket updated successfully.", data = contact });
         }
+    }
+
+    public class AdminUpdateTicketDto
+    {
+        public string? Status { get; set; }
+        public string? Priority { get; set; }
+        public string? Category { get; set; }
+        public string? AssignedAgent { get; set; }
+        public string? ResolutionNote { get; set; }
+        public string? InternalNotesJson { get; set; }
+    }
+
+    public class AdminReviewModerationDto
+    {
+        public string? ModerationStatus { get; set; }
+        public string? FlagReason { get; set; }
+        public string? AdvocateReply { get; set; }
+        public string? AdvocateReplyStatus { get; set; }
     }
 
     public class AdminBulkConsultationStatusDto

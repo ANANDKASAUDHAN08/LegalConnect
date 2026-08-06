@@ -28,6 +28,25 @@ namespace CoreApi.Models
         [MaxLength(2000)]
         public string Content { get; set; } = string.Empty;
 
+        public int? TargetId { get; set; }
+
+        [MaxLength(50)]
+        public string TargetType { get; set; } = "Platform"; // Platform, Lawyer
+
+        [MaxLength(30)]
+        public string ModerationStatus { get; set; } = "Approved"; // Approved, Pending, Flagged, Hidden
+
+        [MaxLength(250)]
+        public string? FlagReason { get; set; }
+
+        [MaxLength(2000)]
+        public string? AdvocateReply { get; set; }
+
+        [MaxLength(30)]
+        public string? AdvocateReplyStatus { get; set; } // Pending, Approved
+
+        public bool IsVerifiedClient { get; set; } = false;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public int? UserId { get; set; }
