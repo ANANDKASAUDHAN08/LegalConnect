@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, AfterViewInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/admin-api.service';
@@ -6,13 +6,12 @@ import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.com
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Subject } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { smartLoading } from '../../core/utils/smart-loading.operator';
 import { CsvExporter } from '../../core/utils/csv-exporter';
-import { TwoFactorEnforcerService } from '../../shared/services/two-factor-enforcer.service';
 import { AvatarService } from '../../shared/services/avatar.service';
 import { PaginationComponent } from '../../shared/components/pagination/pagination.component';
 import { ActionMenuComponent } from '../../shared/components/action-menu/action-menu.component';
@@ -20,7 +19,9 @@ import { ColumnCustomizerComponent, ColumnDef } from '../../shared/components/co
 import { AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent } from '../../shared/components/data-table/data-table-helpers.component';
 import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
 import { DateRangePickerComponent, DateRangeEvent } from '../../shared/components/date-range-picker/date-range-picker.component';
-import { TableSelection } from '../../core/utils/table.utils';
+import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
+import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
+import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
 
 @Component({
   selector: 'admin-lawyers',
@@ -30,7 +31,23 @@ import { TableSelection } from '../../core/utils/table.utils';
   styleUrl: './lawyers.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
+export class LawyersComponent implements OnInit, OnDestroy {
+  maskPhone = maskPhone;
+  maskEmail = maskEmail;
+  piiState = new PiiMaskState();
+
+  toggleUnmaskPii(id: string | number, field: string = 'email', event?: Event): void {
+    this.piiState.toggle(id, field, event);
+  }
+
+  isPiiUnmasked(id: string | number, field: string = 'email'): boolean {
+    return this.piiState.isUnmasked(id, field);
+  }
+
+  toggleAllPii(event?: Event): void {
+    this.piiState.toggleAll(event);
+  }
+
   lawyers: any[] = [];
   isLoading = false;
   isInitialLoad = true;
@@ -64,17 +81,14 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
   openActionMenuId: number | null = null;
   @ViewChild('actionMenu') actionMenuRef!: ActionMenuComponent;
 
-  // In-memory SWR cache map
-  private swrCacheMap = new Map<string, { data: any[]; summary: any; pagination: any }>();
-
   verificationOptions: SelectOption[] = [
-    { label: 'All Verification States', value: '' },
-    { label: 'Pending Verification Queue', value: 'false', icon: 'warning' },
-    { label: 'Verified Lawyers Only', value: 'true', icon: 'check' }
+    { label: 'All Verification States', value: '', icon: 'info', color: '#818cf8' },
+    { label: 'Pending Verification Queue', value: 'false', icon: 'clock', color: '#f59e0b' },
+    { label: 'Verified Lawyers Only', value: 'true', icon: 'check', color: '#10b981' }
   ];
 
   cityOptions: SelectOption[] = [
-    { label: 'All Cities', value: '' }
+    { label: 'All Cities', value: '', icon: 'map-pin', color: '#818cf8' }
   ];
 
   private masterCitySet = new Set<string>([
@@ -132,13 +146,13 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
       .filter(opt => opt.count > 0);
 
     this.cityOptions = [
-      { label: 'All Cities', value: '', count: totalCount },
+      { label: 'All Cities', value: '', icon: 'map-pin', color: '#818cf8', count: totalCount },
       ...activeCitiesWithOptions
     ];
   }
 
   courtOptions: SelectOption[] = [
-    { label: 'All Court Tiers', value: '' },
+    { label: 'All Court Tiers', value: '', icon: 'info', color: '#818cf8' },
     { label: 'Supreme Court of India', value: 'Supreme Court', icon: 'award', color: '#f59e0b' },
     { label: 'High Court', value: 'High Court', icon: 'file-text', color: '#38bdf8' },
     { label: 'District & Sessions Court', value: 'District', icon: 'shield', color: '#818cf8' },
@@ -146,10 +160,10 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
   ];
 
   sortOptions: SelectOption[] = [
-    { label: 'Newest First', value: 'createdAt', icon: 'clock' },
-    { label: 'Oldest First', value: 'oldest', icon: 'clock' },
-    { label: 'Name (A-Z)', value: 'name', icon: 'user' },
-    { label: 'Name (Z-A)', value: 'name_desc', icon: 'user' }
+    { label: 'Newest First', value: 'createdAt', icon: 'clock', color: '#38bdf8' },
+    { label: 'Oldest First', value: 'oldest', icon: 'clock', color: '#f59e0b' },
+    { label: 'Name (A-Z)', value: 'name', icon: 'user', color: '#10b981' },
+    { label: 'Name (Z-A)', value: 'name_desc', icon: 'user', color: '#a855f7' }
   ];
 
   onSortDropdownChange(val: string): void {
@@ -252,6 +266,26 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     { key: 'verificationRemarks', label: 'Verification Remarks' }
   ];
 
+  get isPiiColumnVisible(): boolean {
+    return !!(this.columnVisibility['profile'] || this.columnVisibility['barCouncil']);
+  }
+
+  get isAnyColumnHidden(): boolean {
+    return Object.values(this.columnVisibility).some(v => !v);
+  }
+
+  get isFilterActive(): boolean {
+    return !!(this.search || this.verificationFilter || this.selectedCity || this.selectedCourtCategory || this.startDate || this.endDate || this.dateFrom || this.dateTo || this.isAnyColumnHidden);
+  }
+
+  resetColumnVisibility(): void {
+    const keys = Object.keys(this.columnVisibility);
+    const reset: Record<string, boolean> = {};
+    keys.forEach(k => reset[k] = true);
+    this.columnVisibility = reset;
+    this.cdr.markForCheck();
+  }
+
   get visibleColumnKeys(): string[] {
     return Object.entries(this.columnVisibility).filter(([, v]) => v).map(([k]) => k);
   }
@@ -262,18 +296,6 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   onColumnVisibilityChange(updated: Record<string, boolean>): void {
     this.columnVisibility = updated;
-  }
-
-  toggleSort(columnKey: string): void {
-    if (this.sortBy === columnKey) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = columnKey;
-      this.sortOrder = 'desc';
-    }
-    this.pagination.page = 1;
-    this.swrCacheMap.clear();
-    this.fetchLawyers();
   }
 
   toggleActionMenu(id: number, buttonEl: HTMLElement, event: Event): void {
@@ -300,21 +322,8 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     return this.lawyers.find(l => l.id === this.openActionMenuId) || null;
   }
 
-  // Document click handling now managed by ActionMenuComponent and ColumnCustomizerComponent
-
-  @HostListener('document:keydown', ['$event'])
-  handleKeyboardShortcuts(event: KeyboardEvent): void {
-    const activeEl = event.target as HTMLElement;
-    const isInput = activeEl.tagName === 'INPUT' || activeEl.tagName === 'TEXTAREA' || activeEl.tagName === 'SELECT';
-
-    if (event.key === '/' && !isInput) {
-      event.preventDefault();
-      const searchInput = document.querySelector('.filter-group input') as HTMLInputElement;
-      if (searchInput) searchInput.focus();
-    } else if (event.key === 'Escape') {
-      this.closeDocumentDrawer();
-      this.openActionMenuId = null;
-    }
+  getOpenActionItem(): any | null {
+    return this.getOpenActionLawyer();
   }
 
   constructor(
@@ -322,8 +331,9 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     private toast: ToastService,
     private dialog: DialogService,
     private route: ActivatedRoute,
-    private twoFactor: TwoFactorEnforcerService,
+    private router: Router,
     public avatar: AvatarService,
+    public swrCache: SwrCacheService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -339,16 +349,34 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
   dateFrom = '';
   dateTo = '';
 
-  get isFilterActive(): boolean {
-    return !!(this.search || this.verificationFilter || this.selectedCity || this.selectedCourtCategory || this.startDate || this.endDate || this.dateFrom || this.dateTo);
-  }
-
   onDateRangeChange(event: DateRangeEvent): void {
     this.startDate = event.startDate;
     this.endDate = event.endDate;
     this.dateFrom = event.startDate;
     this.dateTo = event.endDate;
     this.onFilterChange();
+  }
+
+  sortData(list: any[]): any[] {
+    return sortByField(list, this.sortBy, this.sortOrder, {
+      barCouncil: (l: any) => l.profile?.barCouncilLicenseNumber || l.profile?.barCouncilNumber || '',
+      profile: (l: any) => l.fullName || '',
+      cityExp: (l: any) => l.profile?.experienceYears || 0,
+      performanceFee: (l: any) => l.profile?.consultationFee || 0,
+      status: (l: any) => l.profile?.isVerified ? 1 : 0
+    });
+  }
+  onSortChange(event: { key: string; order: 'asc' | 'desc' }): void {
+    this.sortBy = event.key;
+    this.sortOrder = event.order;
+    this.pagination.page = 1;
+    this.swrCache.invalidate('lawyers');
+    this.updateUrlParams();
+  }
+
+  toggleSort(column: string): void {
+    const newOrder = this.sortBy === column ? (this.sortOrder === 'asc' ? 'desc' : 'asc') : 'asc';
+    this.onSortChange({ key: column, order: newOrder });
   }
 
   filterByHeaderMetric(type: string): void {
@@ -360,6 +388,27 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.verificationFilter = '';
     }
     this.onFilterChange();
+  }
+
+  private rowClickTimeout: any = null;
+
+  onRowClick(id: any): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+    }
+    this.rowClickTimeout = setTimeout(() => {
+      this.selection.toggle(id);
+      this.rowClickTimeout = null;
+      this.cdr.markForCheck();
+    }, 250);
+  }
+
+  onRowDblClick(lawyer: any): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+      this.rowClickTimeout = null;
+    }
+    this.openDocumentDrawer(lawyer);
   }
 
   // Document Viewer & Enterprise Feature Helpers
@@ -461,7 +510,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeDocumentDrawer();
 
     this.api.verifyLawyer(l.id, { isVerified: true, remarks: 'Verified & Approved by Bar Council Audit' }).subscribe({
-      next: () => { this.swrCacheMap.clear(); this.cdr.markForCheck(); },
+      next: () => { this.swrCache.invalidate('lawyers'); this.cdr.markForCheck(); },
       error: () => this.cdr.markForCheck()
     });
   }
@@ -486,7 +535,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.closeDocumentDrawer();
 
     this.api.verifyLawyer(l.id, { isVerified: false, remarks: this.rejectionReason }).subscribe({
-      next: () => { this.swrCacheMap.clear(); this.cdr.markForCheck(); },
+      next: () => { this.swrCache.invalidate('lawyers'); this.cdr.markForCheck(); },
       error: () => this.cdr.markForCheck()
     });
   }
@@ -511,7 +560,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.api.verifyLawyer(lawyer.id, { isVerified: nextState }).subscribe({
       next: () => {
-        this.swrCacheMap.clear();
+        this.swrCache.invalidate('lawyers');
         this.toast.success(`Verification status updated for "${lawyer.fullName}".`);
         this.cdr.markForCheck();
         this.fetchLawyers();
@@ -534,7 +583,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.api.deleteUser(id).subscribe({
       next: () => {
-        this.swrCacheMap.clear();
+        this.swrCache.invalidate('lawyers');
         this.lawyers = this.lawyers.filter(l => l.id !== id);
         this.selection.delete(id);
         this.toast.success(`Advocate profile for "${name}" deleted.`);
@@ -588,7 +637,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
 
     this.api.bulkVerifyLawyers(ids, targetStatus).subscribe({
       next: (res: any) => {
-        this.swrCacheMap.clear();
+        this.swrCache.invalidate('lawyers');
         this.toast.success(res.message || `Bulk ${action} applied to ${ids.length} selected lawyer profiles.`);
         this.selection.clear();
         this.cdr.markForCheck();
@@ -676,14 +725,36 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  // Scroll-close now managed by ActionMenuComponent
-
-  ngAfterViewInit(): void {
-    // Scroll-close managed by ActionMenuComponent
+  ngOnDestroy(): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+    }
+    document.body.style.overflow = '';
   }
 
-  ngOnDestroy(): void {
-    document.body.style.overflow = '';
+  private updateUrlParams(): void {
+    const queryParams: any = {};
+    if (this.search) queryParams.search = this.search;
+    if (this.verificationFilter) queryParams.isVerified = this.verificationFilter;
+    if (this.selectedCity) queryParams.city = this.selectedCity;
+    if (this.selectedCourtCategory) queryParams.courtCategory = this.selectedCourtCategory;
+    if (this.startDate) queryParams.startDate = this.startDate;
+    if (this.endDate) queryParams.endDate = this.endDate;
+    if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
+    if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
+    if (this.pagination.page > 1) queryParams.page = this.pagination.page;
+
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true
+    });
+  }
+
+  refreshData(): void {
+    this.toast.info('Refreshing advocate directory records...');
+    this.swrCache.invalidate('lawyers');
+    this.fetchLawyers();
   }
 
   ngOnInit(): void {
@@ -695,17 +766,21 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     ).subscribe(query => {
       this.search = query;
       this.pagination.page = 1;
-      this.fetchLawyers();
+      this.updateUrlParams();
     });
 
     this.route.queryParams.subscribe(params => {
-      if (params['city']) {
-        this.search = params['city'];
-        this.selectedCity = params['city'];
-      }
-      if (params['search']) {
-        this.search = params['search'];
-      }
+      this.search = params['search'] || params['city'] || '';
+      this.verificationFilter = params['isVerified'] || '';
+      this.selectedCity = params['city'] || '';
+      this.selectedCourtCategory = params['courtCategory'] || '';
+      this.startDate = params['startDate'] || '';
+      this.endDate = params['endDate'] || '';
+      this.dateFrom = params['startDate'] || '';
+      this.dateTo = params['endDate'] || '';
+      this.sortBy = params['sort'] || 'createdAt';
+      this.sortOrder = params['sortOrder'] || 'desc';
+      this.pagination.page = parseInt(params['page'], 10) || 1;
       this.fetchLawyers();
     });
   }
@@ -716,12 +791,24 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
 
   fetchLawyers(): void {
     const isFirstTime = this.isInitialLoad;
-    const cacheKey = `${this.search}_${this.verificationFilter}_${this.selectedCity}_${this.selectedCourtCategory}_${this.sortBy}_${this.sortOrder}_${this.pagination.page}_${this.pagination.limit}`;
+    const params = {
+      search: this.search || undefined,
+      isVerified: this.verificationFilter || undefined,
+      city: this.selectedCity || undefined,
+      courtCategory: this.selectedCourtCategory || undefined,
+      dateFrom: this.dateFrom || undefined,
+      dateTo: this.dateTo || undefined,
+      sort: this.sortBy,
+      sortOrder: this.sortOrder,
+      page: this.pagination.page,
+      limit: this.pagination.limit
+    };
 
     // SWR Cache Hydration (0ms Instant Render)
-    if (this.swrCacheMap.has(cacheKey)) {
-      const cached = this.swrCacheMap.get(cacheKey)!;
-      this.lawyers = cached.data;
+    const cached = this.swrCache.get<any>('lawyers', params);
+    if (cached) {
+      this.lawyers = this.sortData(cached.data);
+      this.selection.retainOnly(this.lawyers.map(l => l.id));
       this.buildDynamicCityOptions(cached.data, cached.summary);
       this.pagination = { ...cached.pagination };
       if (cached.summary) {
@@ -734,18 +821,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
       this.cdr.markForCheck();
     }
 
-    this.api.getLawyers({
-      search: this.search || undefined,
-      isVerified: this.verificationFilter || undefined,
-      city: this.selectedCity || undefined,
-      courtCategory: this.selectedCourtCategory || undefined,
-      dateFrom: this.dateFrom || undefined,
-      dateTo: this.dateTo || undefined,
-      sort: this.sortBy,
-      sortOrder: this.sortOrder,
-      page: this.pagination.page,
-      limit: this.pagination.limit
-    }).pipe(smartLoading(l => { this.isLoading = l; this.cdr.markForCheck(); }, isFirstTime && !this.swrCacheMap.has(cacheKey))).subscribe({
+    this.api.getLawyers(params).pipe(smartLoading(l => { this.isLoading = l; this.cdr.markForCheck(); }, isFirstTime && !cached)).subscribe({
       next: (res: any) => {
         this.isInitialLoad = false;
         let fetchedData = res.data || res.lawyers || res || [];
@@ -774,7 +850,8 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
           pages: 1
         };
 
-        this.lawyers = fetchedData;
+        this.lawyers = this.sortData(fetchedData);
+        this.selection.retainOnly(this.lawyers.map(l => l.id));
         this.buildDynamicCityOptions(fetchedData, res.summary);
         this.pagination = fetchedPagination;
 
@@ -791,7 +868,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
         }
 
         // Store SWR Cache snapshot
-        this.swrCacheMap.set(cacheKey, {
+        this.swrCache.set('lawyers', params, {
           data: fetchedData,
           summary: res.summary,
           pagination: fetchedPagination
@@ -807,30 +884,19 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   onSearch(): void {
-    this.selection.clear();
     this.pagination.page = 1;
     this.fetchLawyers();
   }
 
   onSearchChange(query: string): void {
     this.search = query;
-    this.selection.clear();
     this.pagination.page = 1;
-    this.fetchLawyers();
-  }
-
-  onSortChange(event: { key: string; order: 'asc' | 'desc' }): void {
-    this.sortBy = event.key;
-    this.sortOrder = event.order;
-    this.pagination.page = 1;
-    this.swrCacheMap.clear();
-    this.fetchLawyers();
+    this.updateUrlParams();
   }
 
   onFilterChange(): void {
-    this.selection.clear();
     this.pagination.page = 1;
-    this.fetchLawyers();
+    this.updateUrlParams();
   }
 
   resetFilters(): void {
@@ -842,20 +908,21 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     this.endDate = '';
     this.dateFrom = '';
     this.dateTo = '';
+    this.resetColumnVisibility();
     this.selection.clear();
     this.pagination.page = 1;
-    this.fetchLawyers();
+    this.updateUrlParams();
   }
 
   onPageChange(newPage: number): void {
     this.pagination.page = newPage;
-    this.fetchLawyers();
+    this.updateUrlParams();
   }
 
   onLimitChange(newLimit: number): void {
     this.pagination.limit = newLimit;
     this.pagination.page = 1;
-    this.fetchLawyers();
+    this.updateUrlParams();
   }
 
   viewLawyer(id: number): void {
@@ -910,7 +977,7 @@ export class LawyersComponent implements OnInit, AfterViewInit, OnDestroy {
     if (!this.editingLawyer) return;
     this.api.updateLawyerProfile(this.editingLawyer.id, this.editForm).subscribe({
       next: () => {
-        this.swrCacheMap.clear();
+        this.swrCache.invalidate('lawyers');
         this.toast.success(`Lawyer profile for "${this.editingLawyer.fullName}" updated & synced across MySQL and MongoDB.`);
         this.closeEditModal();
         this.fetchLawyers();

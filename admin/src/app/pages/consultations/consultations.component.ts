@@ -19,7 +19,9 @@ import { ColumnCustomizerComponent, ColumnDef } from '../../shared/components/co
 import { AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent } from '../../shared/components/data-table/data-table-helpers.component';
 import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
 import { DateRangePickerComponent, DateRangeEvent } from '../../shared/components/date-range-picker/date-range-picker.component';
-import { TableSelection } from '../../core/utils/table.utils';
+import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
+import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
+import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
 
 @Component({
   selector: 'admin-consultations',
@@ -30,6 +32,22 @@ import { TableSelection } from '../../core/utils/table.utils';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit {
+  maskPhone = maskPhone;
+  maskEmail = maskEmail;
+  piiState = new PiiMaskState();
+
+  toggleUnmaskPii(id: string | number, field: string = 'default', event?: Event): void {
+    this.piiState.toggle(id, field, event);
+  }
+
+  isPiiUnmasked(id: string | number, field: string = 'default'): boolean {
+    return this.piiState.isUnmasked(id, field);
+  }
+
+  toggleAllPii(event?: Event): void {
+    this.piiState.toggleAll(event);
+  }
+
   consultations: any[] = [];
   isLoading = false;
   isInitialLoad = true;
@@ -43,16 +61,20 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   sortOrder: 'asc' | 'desc' = 'desc';
   presetTab: 'all' | 'overdue' | 'pending' | 'contacted' | 'closed' = 'all';
   focusedRowIndex = -1;
+
   columnDefs: ColumnDef[] = [
-    { key: 'client', label: 'Client Details' },
-    { key: 'phone', label: 'Phone Number' },
-    { key: 'lawyer', label: 'Assigned Advocate' },
-    { key: 'sla', label: 'Urgency SLA' },
-    { key: 'message', label: 'Inquiry Summary' },
+    { key: 'id', label: '#' },
+    { key: 'client', label: 'Client' },
+    { key: 'phone', label: 'Phone' },
+    { key: 'lawyer', label: 'Advocate' },
+    { key: 'sla', label: 'SLA' },
+    { key: 'message', label: 'Inquiry' },
     { key: 'status', label: 'Status' },
-    { key: 'createdAt', label: 'Submission Date' }
+    { key: 'createdAt', label: 'Requested' }
   ];
+
   columnVisibility: any = {
+    id: true,
     client: true,
     phone: true,
     lawyer: true,
@@ -76,6 +98,22 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
 
   toggleSelectAll(): void {
     this.selection.toggleAll(this.consultationIds);
+  }
+
+  get isPiiColumnVisible(): boolean {
+    return !!(this.columnVisibility['client'] || this.columnVisibility['phone'] || this.columnVisibility['lawyer']);
+  }
+
+  get isAnyColumnHidden(): boolean {
+    return Object.values(this.columnVisibility).some(v => !v);
+  }
+
+  resetColumnVisibility(): void {
+    const keys = Object.keys(this.columnVisibility);
+    const reset: Record<string, boolean> = {};
+    keys.forEach(k => reset[k] = true);
+    this.columnVisibility = reset;
+    this.cdr.markForCheck();
   }
 
   get visibleColumnKeys(): string[] {
@@ -132,14 +170,14 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   };
 
   statusOptions: SelectOption[] = [
-    { label: 'All Statuses', value: '' },
-    { label: 'Pending Response', value: 'Pending', icon: 'clock' },
-    { label: 'Lawyer Contacted', value: 'Contacted', icon: 'mail' },
-    { label: 'Closed / Completed', value: 'Closed', icon: 'check' }
+    { label: 'All Statuses', value: '', icon: 'info', color: '#38bdf8' },
+    { label: 'Pending Response', value: 'Pending', icon: 'clock', color: '#f59e0b' },
+    { label: 'Lawyer Contacted', value: 'Contacted', icon: 'mail', color: '#38bdf8' },
+    { label: 'Closed / Completed', value: 'Closed', icon: 'check', color: '#10b981' }
   ];
 
   slaOptions: SelectOption[] = [
-    { label: 'All Urgency SLA', value: '' },
+    { label: 'All Urgency SLA', value: '', icon: 'info', color: '#38bdf8' },
     { label: 'Overdue (3d+)', value: 'overdue', icon: 'warning', color: '#f43f5e' },
     { label: 'Pending (1d-3d)', value: 'pending', icon: 'clock', color: '#f59e0b' },
     { label: 'Notice (6h-24h)', value: 'notice', icon: 'info', color: '#38bdf8' },
@@ -147,28 +185,38 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   ];
 
   sortOptions: SelectOption[] = [
-    { label: 'Newest First', value: 'createdAt', icon: 'clock' },
-    { label: 'Oldest First', value: 'oldest', icon: 'clock' },
-    { label: 'Client Name (A-Z)', value: 'clientName', icon: 'user' },
-    { label: 'Status Order', value: 'status', icon: 'shield' }
+    { label: 'Newest First', value: 'createdAt', icon: 'clock', color: '#38bdf8' },
+    { label: 'Oldest First', value: 'oldest', icon: 'clock', color: '#f59e0b' },
+    { label: 'Client Name (A-Z)', value: 'clientName', icon: 'user', color: '#10b981' },
+    { label: 'Status Order', value: 'status', icon: 'shield', color: '#a855f7' }
   ];
+
+  onSortChange(event: { key: string; order: 'asc' | 'desc' }): void {
+    this.sortBy = event.key;
+    this.sortOrder = event.order;
+    this.pagination.page = 1;
+    this.swrCache.invalidate('consultations');
+    this.updateUrlParams();
+    this.fetchConsultations();
+  }
+
+  sortData(list: any[]): any[] {
+    return sortByField(list, this.sortBy, this.sortOrder, {
+      client: (c: any) => c.clientName || '',
+      lawyer: (c: any) => c.lawyerName || ''
+    });
+  }
 
   onSortDropdownChange(val: string): void {
     if (val === 'clientName') {
-      this.sortBy = 'clientName';
-      this.sortOrder = 'asc';
+      this.onSortChange({ key: 'clientName', order: 'asc' });
     } else if (val === 'status') {
-      this.sortBy = 'status';
-      this.sortOrder = 'asc';
+      this.onSortChange({ key: 'status', order: 'asc' });
     } else if (val === 'oldest') {
-      this.sortBy = 'oldest';
-      this.sortOrder = 'asc';
+      this.onSortChange({ key: 'createdAt', order: 'asc' });
     } else {
-      this.sortBy = 'createdAt';
-      this.sortOrder = 'desc';
+      this.onSortChange({ key: 'createdAt', order: 'desc' });
     }
-    this.pagination.page = 1;
-    this.fetchConsultations();
   }
 
   dateRangeOptions: SelectOption[] = [
@@ -211,6 +259,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     private elRef: ElementRef,
     private route: ActivatedRoute,
     private router: Router,
+    public swrCache: SwrCacheService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -249,6 +298,9 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   ngOnDestroy(): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+    }
     this.searchSubscription?.unsubscribe();
     this.routeSubscription?.unsubscribe();
     if (this.scrollListener) {
@@ -259,36 +311,18 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent): void {
-    const target = event.target as HTMLElement;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
-      return;
-    }
-
-    if (event.key === 'j' || event.key === 'ArrowDown') {
-      event.preventDefault();
-      if (this.consultations.length > 0) {
-        this.focusedRowIndex = Math.min(this.focusedRowIndex + 1, this.consultations.length - 1);
-      }
-    } else if (event.key === 'k' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (this.consultations.length > 0) {
-        this.focusedRowIndex = Math.max(this.focusedRowIndex - 1, 0);
-      }
-    } else if (event.key === 'Enter') {
-      if (this.focusedRowIndex >= 0 && this.focusedRowIndex < this.consultations.length) {
-        event.preventDefault();
-        this.openDetailModal(this.consultations[this.focusedRowIndex]);
-      }
-    } else if (event.key === 'Escape') {
-      this.selectedConsultation = null;
-      this.openActionMenuId = null;
-    }
+    handleTableKeyboardNav(event, {
+      getListLength: () => this.consultations.length,
+      getFocusedIndex: () => this.focusedRowIndex,
+      setFocusedIndex: (idx) => { this.focusedRowIndex = idx; this.cdr.markForCheck(); },
+      onEnter: (idx) => { if (this.consultations[idx]) this.openDetailModal(this.consultations[idx]); },
+      onEscape: () => { this.selectedConsultation = null; this.openActionMenuId = null; this.cdr.markForCheck(); }
+    });
   }
 
   onDateRangeChange(event: DateRangeEvent): void {
     this.startDate = event.startDate;
     this.endDate = event.endDate;
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -296,7 +330,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
 
   onSearchChange(query: string): void {
     this.searchQuery = query;
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.searchSubject.next(query);
@@ -315,7 +348,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   onFilterChange(): void {
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -326,7 +358,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   get hasQueryFilter(): boolean {
-    return !!(this.searchQuery || this.selectedStatus || this.slaFilter || this.dateRangeFilter || this.startDate || this.endDate);
+    return !!(this.searchQuery || this.selectedStatus || this.slaFilter || this.dateRangeFilter || this.startDate || this.endDate || this.isAnyColumnHidden);
   }
 
   get isFilterActive(): boolean {
@@ -361,6 +393,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.endDate = '';
     this.sortBy = 'createdAt';
     this.sortOrder = 'desc';
+    this.resetColumnVisibility();
     this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
@@ -369,7 +402,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
 
   onPresetTabChange(tab: 'all' | 'overdue' | 'pending' | 'contacted' | 'closed'): void {
     this.presetTab = tab;
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -386,7 +418,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     } else {
       this.selectedStatus = status;
     }
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchConsultations();
@@ -409,6 +440,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     const cached = this.api.user.getCachedConsultations(params);
     if (cached && cached.success) {
       this.consultations = cached.data || [];
+      this.selection.retainOnly(this.consultations.map(c => c.id));
       this.pagination = cached.pagination || this.pagination;
       if (cached.metrics) {
         this.summaryMetrics = cached.metrics;
@@ -430,6 +462,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         }
         if (res.success) {
           this.consultations = res.data || [];
+          this.selection.retainOnly(this.consultations.map(c => c.id));
           this.pagination = res.pagination || this.pagination;
           const totalRecs = res.pagination?.total ?? this.consultations.length;
           this.pagination.pages = Math.max(1, Math.ceil(totalRecs / this.pagination.limit));
@@ -553,6 +586,27 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
       },
       error: (err: any) => { this.toast.error(err?.error?.message || 'Failed to revert status.'); this.cdr.markForCheck(); }
     });
+  }
+
+  private rowClickTimeout: any = null;
+
+  onRowClick(id: number): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+    }
+    this.rowClickTimeout = setTimeout(() => {
+      this.selection.toggle(id);
+      this.rowClickTimeout = null;
+      this.cdr.markForCheck();
+    }, 250);
+  }
+
+  onRowDblClick(item: any): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+      this.rowClickTimeout = null;
+    }
+    this.openDetailModal(item);
   }
 
   openDetailModal(item: any): void {

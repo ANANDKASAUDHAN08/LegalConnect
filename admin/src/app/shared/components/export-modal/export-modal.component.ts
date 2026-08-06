@@ -31,7 +31,6 @@ export function formatDateRange(start?: string | null, end?: string | null): str
     const sIso = dStart.toISOString().slice(0, 10);
     const eIso = dEnd.toISOString().slice(0, 10);
 
-    // Exact same date
     if (sIso === eIso) {
       const todayStr = new Date().toISOString().slice(0, 10);
       if (sIso === todayStr) {
@@ -40,20 +39,17 @@ export function formatDateRange(start?: string | null, end?: string | null): str
       return dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     }
 
-    // Same month & year: "Aug 1 – 4, 2026"
     if (dStart.getMonth() === dEnd.getMonth() && dStart.getFullYear() === dEnd.getFullYear()) {
       const month = dStart.toLocaleDateString('en-US', { month: 'short' });
       return `${month} ${dStart.getDate()} – ${dEnd.getDate()}, ${dStart.getFullYear()}`;
     }
 
-    // Same year, different month: "Jul 28 – Aug 4, 2026"
     if (dStart.getFullYear() === dEnd.getFullYear()) {
       const startStr = dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       const endStr = dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
       return `${startStr} – ${endStr}, ${dStart.getFullYear()}`;
     }
 
-    // Different years: "Dec 28, 2025 – Jan 4, 2026"
     const startStr = dStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const endStr = dEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     return `${startStr} – ${endStr}`;
@@ -126,6 +122,7 @@ export class ExportModalComponent {
   }
 
   @Output() exportRequest = new EventEmitter<ExportConfig>();
+  @Output() exportConfirm = new EventEmitter<ExportConfig>();
   @Output() closed = new EventEmitter<void>();
 
   exportScope: 'all' | 'filtered' | 'selected' = 'all';
@@ -173,7 +170,7 @@ export class ExportModalComponent {
     this.cdr.markForCheck();
   }
 
-  close(): void {
+  closeModal(): void {
     this.closed.emit();
     this.cdr.markForCheck();
   }
@@ -185,18 +182,20 @@ export class ExportModalComponent {
     } catch { }
 
     const selectedCols = this.exportColumns.filter(c => c.selected).map(c => c.key);
-    this.exportRequest.emit({
+    const config: ExportConfig = {
       scope: this.exportScope,
       columns: selectedCols,
       format: this.exportFormat
-    });
+    };
+    this.exportRequest.emit(config);
+    this.exportConfirm.emit(config);
     this.cdr.markForCheck();
   }
 
   @HostListener('document:keydown.escape')
   onEscape(): void {
     if (this.isOpen) {
-      this.close();
+      this.closeModal();
     }
   }
 

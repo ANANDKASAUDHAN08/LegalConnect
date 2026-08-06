@@ -1,5 +1,4 @@
-<div
-    class="pagination px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400"
+<div class="pagination px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-400"
     [ngClass]="standalone ? 'rounded-xl border border-slate-800/80 bg-slate-900/40 backdrop-blur-xl shadow-md' : 'border-t border-slate-800/80 bg-slate-900/60'">
     <div class="flex flex-wrap items-center gap-3">
         <div class="flex items-center gap-2">
@@ -11,12 +10,15 @@
         </div>
         <span class="hidden md:inline text-slate-700">•</span>
         <div class="page-info text-slate-400 font-normal">
-            Showing <strong class="text-slate-200 font-semibold">{{ startRecord }}</strong> to <strong class="text-slate-200 font-semibold">{{ endRecord }}</strong> of <strong class="text-slate-200 font-semibold">{{ total }}</strong> records
+            Showing <strong class="text-slate-200 font-semibold">{{ startRecord }}</strong> to <strong
+                class="text-slate-200 font-semibold">{{ endRecord }}</strong> of <strong
+                class="text-slate-200 font-semibold">{{ total }}</strong> records
         </div>
     </div>
 
     <div class="pagination-controls flex items-center gap-2.5">
-        <button class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5 shadow-sm"
+        <button
+            class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5 shadow-sm"
             [disabled]="page <= 1" (click)="changePage(page - 1)" [adminTooltip]="'Previous page results'">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="15 18 9 12 15 6"></polyline>
@@ -25,11 +27,13 @@
         </button>
 
         <span class="page-indicator font-medium text-slate-400 px-1 text-xs">
-            Page <strong class="text-slate-100 font-semibold">{{ page }}</strong> of <strong class="text-slate-100 font-semibold">{{ pages }}</strong>
+            Page <strong class="text-slate-100 font-semibold">{{ page }}</strong> of <strong
+                class="text-slate-100 font-semibold">{{ totalPages }}</strong>
         </span>
 
-        <button class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5 shadow-sm"
-            [disabled]="page >= pages" (click)="changePage(page + 1)" [adminTooltip]="'Next page results'">
+        <button
+            class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5 shadow-sm"
+            [disabled]="page >= totalPages" (click)="changePage(page + 1)" [adminTooltip]="'Next page results'">
             <span>Next</span>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <polyline points="9 18 15 12 9 6"></polyline>

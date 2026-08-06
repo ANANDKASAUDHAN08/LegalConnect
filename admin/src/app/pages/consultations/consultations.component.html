@@ -117,7 +117,7 @@
 
   <!-- ----- 1. Filter & Search Toolbar Container ----- -->
   <div
-    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-col gap-2.5 animate-in">
+    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
     <!-- Header Toolbar: 1-Line Responsive Toolbar -->
     <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
       <!-- Search Input (Far Left) -->
@@ -195,9 +195,9 @@
         <!-- Selection Active Badge -->
         @if (selection.size > 0) {
         <span
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold shadow-sm">
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-sky-500/15 border border-sky-500/30 text-sky-300 text-xs font-bold shadow-sm">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            class="text-indigo-400">
+            class="text-sky-400">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
@@ -240,13 +240,37 @@
           <span>Close &amp; Resolve</span>
         </button>
         <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
-          (click)="selection.clear()">
-          Cancel
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          Deselect All
         </button>
-        } @else if (isFilterActive) {
-        <button (click)="resetFilters()"
-          class="text-[11px] text-indigo-400 hover:text-sky-300 font-semibold underline underline-offset-2">
-          Clear Filter Criteria
+        }
+        @if (isPiiColumnVisible) {
+        <button (click)="toggleAllPii($event)"
+          class="btn flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
+          [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
+          tooltipPosition="top">
+          @if (piiState.isAllUnmasked) {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+            </path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+          <span>Mask All Details</span>
+          } @else {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span>Reveal All Details</span>
+          }
+        </button>
+        }
+        @if (hasQueryFilter) {
+        <button (click)="resetFilters(); selection.clear();"
+          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
+          [adminTooltip]="'Clear search query, status & date filters'">
+          Clear Filters
         </button>
         }
       </div>
@@ -267,7 +291,7 @@
       <admin-empty-state title="All Data Columns Currently Hidden"
         message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display consultation records."
         [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
-        (action)="onColumnVisibilityChange({ client: true, phone: true, lawyer: true, sla: true, message: true, status: true, createdAt: true })">
+        (action)="onColumnVisibilityChange({ id: true, client: true, phone: true, lawyer: true, sla: true, message: true, status: true, createdAt: true })">
         <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
         </svg>
@@ -278,24 +302,54 @@
         [showAction]="isFilterActive" actionLabel="Reset Filter Criteria" (action)="resetFilters()">
       </admin-empty-state>
       } @else {
-      <table class="data-table w-full text-left border-collapse min-w-[900px]"
+      <table class="data-table table-fixed w-full text-left border-collapse min-w-[1050px]"
         [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead>
           <tr
             class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold select-none">
             <!-- Master Checkbox -->
-            <th class="p-3 text-center" width="35px">
+            <th class="p-3 text-center w-[30px] min-w-[30px]">
               <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
                 class="rounded border-slate-700 bg-slate-800 cursor-pointer"
                 [adminTooltip]="'Select / deselect all rows on page'" />
             </th>
 
+            <!-- Sortable Header: Inquiry ID -->
+            @if (columnVisibility.id) {
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[50px] min-w-[50px]"
+              (click)="toggleSort('id')" [adminTooltip]="'Click to sort by Inquiry ID #'">
+              <div class="flex items-center gap-1">
+                <span [class.text-sky-400]="sortBy === 'id'">#</span>
+                @if (sortBy === 'id') {
+                @if (sortOrder === 'asc') {
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-sky-400 flex-shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-sky-400 flex-shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+
             <!-- Sortable Header: Client Applicant -->
             @if (columnVisibility.client) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[200px] min-w-[190px]"
               (click)="toggleSort('clientName')" [adminTooltip]="'Click to sort by client name'">
               <div class="flex items-center gap-1.5">
-                <span [class.text-sky-400]="sortBy === 'clientName'">Client Applicant</span>
+                <span [class.text-sky-400]="sortBy === 'clientName'">Client</span>
                 @if (sortBy === 'clientName') {
                 @if (sortOrder === 'asc') {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -319,15 +373,16 @@
             }
 
             @if (columnVisibility.phone) {
-            <th class="p-3.5">Client Phone</th>
+            <th class="p-3.5 w-[140px] min-w-[140px]">Phone</th>
             }
 
             <!-- Sortable Header: Target Lawyer -->
             @if (columnVisibility.lawyer) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[200px] min-w-[190px]"
               (click)="toggleSort('lawyerName')" [adminTooltip]="'Click to sort by advocate name'">
               <div class="flex items-center gap-1.5">
-                <span [class.text-sky-400]="sortBy === 'lawyerName'">Target Lawyer</span>
+                <span [class.text-sky-400]="sortBy === 'lawyerName'">Advocate</span>
                 @if (sortBy === 'lawyerName') {
                 @if (sortOrder === 'asc') {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -352,10 +407,11 @@
 
             <!-- Sortable Header: SLA / Age -->
             @if (columnVisibility.sla) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[120px] min-w-[120px]"
               (click)="toggleSort('sla')" [adminTooltip]="'Click to sort by SLA urgency (Overdue & Oldest first)'">
               <div class="flex items-center gap-1.5">
-                <span [class.text-sky-400]="sortBy === 'sla'">SLA / Age</span>
+                <span [class.text-sky-400]="sortBy === 'sla'">SLA</span>
                 @if (sortBy === 'sla') {
                 @if (sortOrder === 'asc') {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -379,12 +435,13 @@
             }
 
             @if (columnVisibility.message) {
-            <th class="p-3.5">Message Inquiry</th>
+            <th class="p-3.5 w-[150px] min-w-[130px]">Inquiry</th>
             }
 
             <!-- Sortable Header: Status -->
             @if (columnVisibility.status) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[90px] min-w-[90px]"
               (click)="toggleSort('status')" [adminTooltip]="'Click to sort by status'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Status</span>
@@ -412,10 +469,11 @@
 
             <!-- Sortable Header: Requested Date -->
             @if (columnVisibility.createdAt) {
-            <th class="p-3.5 min-w-[145px] pr-4 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 w-[115px] min-w-[115px] pr-2 cursor-pointer group hover:text-sky-300 transition-colors select-none"
               (click)="toggleSort('createdAt')" [adminTooltip]="'Click to sort by requested date'">
               <div class="flex items-center gap-1.5">
-                <span [class.text-sky-400]="sortBy === 'createdAt'">Requested Date</span>
+                <span [class.text-sky-400]="sortBy === 'createdAt'">Requested</span>
                 @if (sortBy === 'createdAt') {
                 @if (sortOrder === 'asc') {
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -438,7 +496,7 @@
             </th>
             }
 
-            <th class="p-3.5 text-center min-w-[80px] w-[80px] sticky right-0 z-10 actions-sticky-cell">
+            <th class="p-3.5 text-center min-w-[65px] w-[65px] sticky right-0 z-10 actions-sticky-cell">
               <span class="text-slate-300 font-semibold">Actions</span>
             </th>
           </tr>
@@ -447,53 +505,64 @@
           @if (isInitialLoad && isLoading) {
           @for (item of [1,2,3,4,5,6,7,8]; track $index) {
           <tr class="table-row-skeleton border-b border-slate-800/60">
-            <td class="p-3.5 pl-5"><admin-skeleton width="16px" height="16px" borderRadius="4px" /></td>
+            <td class="p-3.5 pl-5 w-[40px] min-w-[40px]"><admin-skeleton width="16px" height="16px"
+                borderRadius="4px" /></td>
+
+            @if (columnVisibility.id) {
+            <td class="p-3.5 w-[50px] min-w-[50px]"><admin-skeleton width="30px" height="14px" borderRadius="4px" />
+            </td>
+            }
 
             @if (columnVisibility.client) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[200px] min-w-[190px]">
               <div class="user-cell flex items-center gap-3">
                 <admin-skeleton width="36px" height="36px" borderRadius="50%" class="shrink-0" />
                 <div class="flex flex-col gap-1.5 min-w-0">
-                  <admin-skeleton width="120px" height="13px" borderRadius="4px" />
-                  <admin-skeleton width="140px" height="11px" borderRadius="4px" />
+                  <admin-skeleton width="100px" height="13px" borderRadius="4px" />
+                  <admin-skeleton width="120px" height="11px" borderRadius="4px" />
                 </div>
               </div>
             </td>
             }
 
             @if (columnVisibility.phone) {
-            <td class="p-3.5"><admin-skeleton width="95px" height="16px" borderRadius="6px" /></td>
+            <td class="p-3.5 w-[130px] min-w-[130px]"><admin-skeleton width="85px" height="16px" borderRadius="6px" />
+            </td>
             }
 
             @if (columnVisibility.lawyer) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[200px] min-w-[190px]">
               <div class="user-cell flex items-center gap-3">
                 <admin-skeleton width="36px" height="36px" borderRadius="50%" class="shrink-0" />
                 <div class="flex flex-col gap-1.5 min-w-0">
-                  <admin-skeleton width="115px" height="13px" borderRadius="4px" />
-                  <admin-skeleton width="135px" height="11px" borderRadius="4px" />
+                  <admin-skeleton width="100px" height="13px" borderRadius="4px" />
+                  <admin-skeleton width="120px" height="11px" borderRadius="4px" />
                 </div>
               </div>
             </td>
             }
 
             @if (columnVisibility.sla) {
-            <td class="p-3.5"><admin-skeleton width="80px" height="18px" borderRadius="9999px" /></td>
+            <td class="p-3.5 w-[110px] min-w-[110px]"><admin-skeleton width="75px" height="18px"
+                borderRadius="9999px" /></td>
             }
 
             @if (columnVisibility.message) {
-            <td class="p-3.5"><admin-skeleton width="180px" height="13px" borderRadius="4px" /></td>
+            <td class="p-3.5 w-[150px] min-w-[130px]"><admin-skeleton width="120px" height="13px" borderRadius="4px" />
+            </td>
             }
 
             @if (columnVisibility.status) {
-            <td class="p-3.5"><admin-skeleton width="70px" height="18px" borderRadius="9999px" /></td>
+            <td class="p-3.5 w-[100px] min-w-[100px]"><admin-skeleton width="65px" height="18px"
+                borderRadius="9999px" /></td>
             }
 
             @if (columnVisibility.createdAt) {
-            <td class="p-3.5 min-w-[145px] pr-4"><admin-skeleton width="100px" height="13px" borderRadius="4px" /></td>
+            <td class="p-3.5 w-[115px] min-w-[115px] pr-2"><admin-skeleton width="85px" height="13px"
+                borderRadius="4px" /></td>
             }
 
-            <td class="p-3.5 text-center min-w-[80px] w-[80px] sticky right-0 z-10 actions-sticky-cell">
+            <td class="p-3.5 text-center min-w-[65px] w-[65px] sticky right-0 z-10 actions-sticky-cell">
               <div class="flex justify-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></div>
             </td>
           </tr>
@@ -501,56 +570,102 @@
           } @else {
           @for (item of consultations; track item.id; let i = $index) {
           <tr class="table-data-row transition-colors cursor-pointer"
-            [ngClass]="{ 'bg-indigo-950/40 selected-row': selection.isSelected(item.id), 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
-            (click)="selection.toggle(item.id)" (dblclick)="openDetailModal(item)"
+            [ngClass]="{ 'bg-sky-500/10 selected-row': selection.isSelected(item.id), 'ring-2 ring-sky-500/50 bg-slate-800/80': focusedRowIndex === i }"
+            (click)="onRowClick(item.id)" (dblclick)="onRowDblClick(item)"
             [adminTooltip]="'Double-click row (or press j/k + Enter) to inspect case details & notes'"
             tooltipPosition="top">
             <!-- Row Checkbox -->
-            <td class="p-3.5 pl-5" (click)="$event.stopPropagation()">
+            <td class="p-3.5 pl-5 w-[40px] min-w-[40px]" (click)="$event.stopPropagation()">
               <input type="checkbox" [checked]="selection.isSelected(item.id)" (change)="selection.toggle(item.id)"
-                class="form-checkbox rounded border-slate-700 bg-slate-900 text-indigo-500 cursor-pointer" />
+                class="form-checkbox rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500/40 cursor-pointer" />
             </td>
+
+            <!-- Inquiry ID -->
+            @if (columnVisibility.id) {
+            <td class="p-3.5 font-mono text-[11px] text-indigo-400 font-bold w-[50px] min-w-[50px]"
+              [adminTooltip]="'Inquiry Reference #' + item.id" tooltipPosition="top">
+              #{{ item.id }}
+            </td>
+            }
 
             <!-- Client Applicant -->
             @if (columnVisibility.client) {
-            <td class="p-3.5">
-              <div class="user-cell flex items-center gap-3">
+            <td class="p-3.5 w-[200px] min-w-[190px]">
+              <div class="user-cell flex items-center gap-2.5 max-w-[190px]">
                 <div
-                  class="user-avatar w-9 h-9 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md flex-shrink-0">
+                  class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-600 to-teal-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md flex-shrink-0">
                   {{ (item.clientName || item.clientUser || 'C').charAt(0).toUpperCase() }}
                 </div>
-                <div class="flex flex-col min-w-0">
+                <div class="flex flex-col min-w-0 overflow-hidden">
                   <div class="user-name font-bold text-slate-100 truncate"
                     [adminTooltip]="item.clientName || item.clientUser || 'Anonymous Client'">
                     {{ item.clientName || item.clientUser || 'Anonymous Client' }}
                   </div>
                   <div class="text-slate-400 text-[11px] truncate flex items-center gap-1">
-                    <a [href]="'mailto:' + item.clientEmail" class="hover:text-indigo-400 transition-colors"
-                      (click)="$event.stopPropagation()"
-                      [adminTooltip]="'Send email to ' + (item.clientEmail || 'client')" tooltipPosition="top">
-                      {{ item.clientEmail || 'No Email' }}
-                    </a>
+                    <span class="font-mono text-slate-300 truncate max-w-[135px]" [adminTooltip]="item.clientEmail">{{
+                      isPiiUnmasked(item.id, 'clientEmail') ? (item.clientEmail
+                      || 'No Email') : maskEmail(item.clientEmail) }}</span>
+                    @if (item.clientEmail) {
+                    <button (click)="toggleUnmaskPii(item.id, 'clientEmail', $event)"
+                      class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
+                      [adminTooltip]="isPiiUnmasked(item.id, 'clientEmail') ? 'Click to Mask Email' : 'Click to Reveal Email'"
+                      tooltipPosition="top">
+                      @if (isPiiUnmasked(item.id, 'clientEmail')) {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                        </path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                      } @else {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      }
+                    </button>
+                    }
                   </div>
                 </div>
               </div>
             </td>
             }
 
-            <!-- Client Phone -->
             @if (columnVisibility.phone) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[130px] min-w-[130px]">
               @if (item.clientPhone) {
-              <div class="flex items-center gap-1.5 font-mono text-[11px]">
-                <a [href]="'tel:' + item.clientPhone"
-                  class="phone-chip inline-flex items-center gap-1 px-2 py-0.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:border-emerald-500/40 transition-all"
-                  (click)="$event.stopPropagation()" [adminTooltip]="'Click to call client phone number'">
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+              <div class="flex items-center gap-1 font-mono text-[11px]">
+                <span
+                  class="phone-chip inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <path
                       d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z">
                     </path>
                   </svg>
-                  <span>{{ item.clientPhone }}</span>
-                </a>
+                  <span class="truncate max-w-[85px]" [adminTooltip]="item.clientPhone">{{ isPiiUnmasked(item.id,
+                    'clientPhone') ? item.clientPhone : maskPhone(item.clientPhone)
+                    }}</span>
+                </span>
+                <button (click)="toggleUnmaskPii(item.id, 'clientPhone', $event)"
+                  class="text-slate-500 hover:text-emerald-400 transition-colors p-0.5 shrink-0"
+                  [adminTooltip]="isPiiUnmasked(item.id, 'clientPhone') ? 'Click to Mask Phone' : 'Click to Reveal Phone'"
+                  tooltipPosition="top">
+                  @if (isPiiUnmasked(item.id, 'clientPhone')) {
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                    </path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                  </svg>
+                  } @else {
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                  }
+                </button>
               </div>
               } @else {
               <span class="text-slate-500 text-[11px] italic">Not provided</span>
@@ -560,18 +675,41 @@
 
             <!-- Target Lawyer -->
             @if (columnVisibility.lawyer) {
-            <td class="p-3.5">
-              <div class="user-cell flex items-center gap-3">
+            <td class="p-3.5 w-[200px] min-w-[190px]">
+              <div class="user-cell flex items-center gap-2.5 max-w-[190px]">
                 <div
-                  class="user-avatar blue w-9 h-9 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md flex-shrink-0">
+                  class="user-avatar blue w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-cyan-500 text-white flex items-center justify-center font-extrabold text-xs shadow-md flex-shrink-0">
                   {{ (item.lawyerName || 'L').charAt(0).toUpperCase() }}
                 </div>
-                <div class="flex flex-col min-w-0">
+                <div class="flex flex-col min-w-0 overflow-hidden">
                   <div class="user-name font-bold text-slate-100 truncate" [adminTooltip]="item.lawyerName">{{
                     item.lawyerName }}</div>
-                  <div class="text-slate-400 text-[11px] truncate"
-                    [adminTooltip]="item.lawyerEmail || 'Bar Verified Advocate'">
-                    {{ item.lawyerEmail || 'Bar Verified Advocate' }}
+                  <div class="text-slate-400 text-[11px] truncate flex items-center gap-1">
+                    <span class="truncate max-w-[135px]" [adminTooltip]="item.lawyerEmail">{{ isPiiUnmasked(item.id,
+                      'lawyerEmail') ? (item.lawyerEmail || 'Bar Verified Advocate') :
+                      maskEmail(item.lawyerEmail) }}</span>
+                    @if (item.lawyerEmail) {
+                    <button (click)="toggleUnmaskPii(item.id, 'lawyerEmail', $event)"
+                      class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
+                      [adminTooltip]="isPiiUnmasked(item.id, 'lawyerEmail') ? 'Click to Mask Email' : 'Click to Reveal Email'"
+                      tooltipPosition="top">
+                      @if (isPiiUnmasked(item.id, 'lawyerEmail')) {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                        </path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                      } @else {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      }
+                    </button>
+                    }
                   </div>
                 </div>
               </div>
@@ -580,9 +718,9 @@
 
             <!-- SLA / Age Indicator -->
             @if (columnVisibility.sla) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[110px] min-w-[110px]">
               <span
-                class="px-2.5 py-1 rounded-full text-[10px] font-semibold border inline-flex items-center gap-1.5 cursor-help"
+                class="px-2 py-0.5 rounded-full text-[10px] font-semibold border inline-flex items-center gap-1 cursor-help"
                 [ngClass]="getSlaStatus(item.createdAt).class"
                 [adminTooltip]="'Service Level Urgency: ' + getSlaStatus(item.createdAt).label" tooltipPosition="top">
                 @if (getSlaStatus(item.createdAt).urgent) {
@@ -595,7 +733,7 @@
 
             <!-- Consultation Message Snippet -->
             @if (columnVisibility.message) {
-            <td class="p-3.5 max-w-xs truncate text-xs text-slate-300 font-sans"
+            <td class="p-3.5 w-[150px] min-w-[130px] truncate text-xs text-slate-300 font-sans"
               [adminTooltip]="'Inquiry: ' + item.message" tooltipPosition="top">
               {{ item.message }}
             </td>
@@ -603,9 +741,9 @@
 
             <!-- Status Pill -->
             @if (columnVisibility.status) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[100px] min-w-[100px]">
               <span
-                class="px-2.5 py-1 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 cursor-help"
+                class="px-2 py-0.5 rounded-full text-[11px] font-bold border inline-flex items-center gap-1 cursor-help"
                 [adminTooltip]="'Current status: ' + item.status" tooltipPosition="top" [ngClass]="{
                   'bg-amber-500/10 text-amber-400 border-amber-500/30': item.status === 'Pending',
                   'bg-sky-500/10 text-sky-400 border-sky-500/30': item.status === 'Contacted',
@@ -623,14 +761,17 @@
 
             <!-- Requested Date -->
             @if (columnVisibility.createdAt) {
-            <td class="p-3.5 text-slate-400 text-[11px] font-mono min-w-[145px] pr-4 whitespace-nowrap"
+            <td class="p-3.5 text-[11px] font-mono w-[115px] min-w-[115px] pr-2 whitespace-nowrap"
               [adminTooltip]="'Requested on ' + (item.createdAt | date:'medium')" tooltipPosition="top">
-              {{ item.createdAt | date:'short' }}
+              <div class="flex flex-col leading-tight">
+                <span class="text-slate-200 font-semibold text-[11px]">{{ item.createdAt | date:'shortTime' }}</span>
+                <span class="text-slate-400 text-[10px]">{{ item.createdAt | date:'shortDate' }}</span>
+              </div>
             </td>
             }
 
             <!-- Actions (Kebab Menu) -->
-            <td class="p-3.5 text-center w-20 sticky right-0 z-10 actions-sticky-cell"
+            <td class="p-3.5 text-center min-w-[65px] w-[65px] sticky right-0 z-10 actions-sticky-cell"
               (click)="$event.stopPropagation()">
               <div class="flex items-center justify-center w-full">
                 <button #kebabBtn

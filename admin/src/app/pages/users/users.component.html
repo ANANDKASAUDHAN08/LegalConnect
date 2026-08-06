@@ -109,7 +109,7 @@
 
   <!-- --- 1. Filter & Search Bar --- -->
   <div
-    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-col gap-2.5 animate-in">
+    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
     <!-- Top Controls Row: 1-Line Responsive Toolbar (Zero Box Fatigue) -->
     <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
       <!-- Search Input (Far Left) -->
@@ -231,13 +231,37 @@
         </button>
 
         <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
-          (click)="selection.clear()">
-          Cancel
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          Deselect All
         </button>
-        } @else if (isFilterActive) {
-        <button (click)="resetFilters()"
-          class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2">
-          Clear Filter Criteria
+        }
+        @if (isPiiColumnVisible) {
+        <button (click)="toggleAllPii($event)"
+          class="btn flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
+          [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
+          tooltipPosition="top">
+          @if (piiState.isAllUnmasked) {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+            </path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+          <span>Mask All Details</span>
+          } @else {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span>Reveal All Details</span>
+          }
+        </button>
+        }
+        @if (hasQueryFilter) {
+        <button (click)="resetFilters(); selection.clear();"
+          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
+          [adminTooltip]="'Clear search query, role & status filters'">
+          Clear Filters
         </button>
         }
       </div>
@@ -271,18 +295,19 @@
         [showAction]="isFilterActive" actionLabel="Reset Directory Filters" (action)="resetFilters()">
       </admin-empty-state>
       } @else {
-      <table class="data-table w-full min-w-[1080px] text-left border-collapse"
+      <table class="data-table table-fixed w-full min-w-[1080px] text-left border-collapse"
         [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead>
           <tr
             class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-            <th class="p-3 text-center" width="35px">
+            <th class="p-3 text-center w-[40px] min-w-[40px]">
               <input type="checkbox" class="rounded border-slate-700 bg-slate-800" [checked]="isAllSelected()"
                 (change)="toggleSelectAll()" [adminTooltip]="'Select all rows'" tooltipPosition="top" />
             </th>
             <!-- User Profile (Sortable) -->
             @if (columnVisibility.profile) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[280px] min-w-[280px]"
               (click)="toggleSort('name')" [adminTooltip]="'Click to sort by user full name'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'name'">User Profile</span>
@@ -310,7 +335,8 @@
 
             <!-- Role (Sortable) -->
             @if (columnVisibility.role) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[130px] min-w-[130px]"
               (click)="toggleSort('role')" [adminTooltip]="'Click to sort by account role'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'role'">Role / Privilege</span>
@@ -337,15 +363,16 @@
             }
 
             @if (columnVisibility.security) {
-            <th class="p-3.5">2FA &amp; Security</th>
+            <th class="p-3.5 w-[120px] min-w-[120px]">2FA &amp; Security</th>
             }
             @if (columnVisibility.auth) {
-            <th class="p-3.5">Auth Provider</th>
+            <th class="p-3.5 w-[130px] min-w-[130px]">Auth Provider</th>
             }
 
             <!-- Last Active / Joined (Sortable) -->
             @if (columnVisibility.lastActive) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[160px] min-w-[160px]"
               (click)="toggleSort('createdAt')" [adminTooltip]="'Click to sort by registration date'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'createdAt' || sortBy === 'newest' || sortBy === 'oldest'">Last
@@ -374,7 +401,8 @@
 
             <!-- Status (Sortable) -->
             @if (columnVisibility.status) {
-            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[120px] min-w-[120px]"
               (click)="toggleSort('status')" [adminTooltip]="'Click to sort by active or suspended status'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Status</span>
@@ -401,7 +429,7 @@
             }
 
             <!-- Actions Header -->
-            <th class="p-3.5 text-center w-20">
+            <th class="p-3.5 text-center w-[80px] min-w-[80px]">
               <span class="text-slate-300 font-semibold">Actions</span>
             </th>
           </tr>
@@ -411,10 +439,11 @@
           @if (isInitialLoad && isLoading) {
           @for (item of [1,2,3,4,5,6,7,8]; track $index) {
           <tr class="table-row-skeleton border-b border-slate-800/60">
-            <td class="p-3.5 text-center"><admin-skeleton width="16px" height="16px" borderRadius="4px" /></td>
+            <td class="p-3.5 text-center w-[40px] min-w-[40px]"><admin-skeleton width="16px" height="16px"
+                borderRadius="4px" /></td>
 
             @if (columnVisibility.profile) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[250px] min-w-[250px]">
               <div class="flex items-center gap-3">
                 <admin-skeleton width="36px" height="36px" borderRadius="50%" class="shrink-0" />
                 <div class="flex flex-col gap-1.5 min-w-0">
@@ -426,26 +455,31 @@
             }
 
             @if (columnVisibility.role) {
-            <td class="p-3.5"><admin-skeleton width="70px" height="18px" borderRadius="9999px" /></td>
+            <td class="p-3.5 w-[140px] min-w-[140px]"><admin-skeleton width="70px" height="18px"
+                borderRadius="9999px" /></td>
             }
 
             @if (columnVisibility.security) {
-            <td class="p-3.5"><admin-skeleton width="80px" height="18px" borderRadius="6px" /></td>
+            <td class="p-3.5 w-[160px] min-w-[160px]"><admin-skeleton width="80px" height="18px" borderRadius="6px" />
+            </td>
             }
 
             @if (columnVisibility.auth) {
-            <td class="p-3.5"><admin-skeleton width="65px" height="14px" borderRadius="4px" /></td>
+            <td class="p-3.5 w-[130px] min-w-[130px]"><admin-skeleton width="65px" height="14px" borderRadius="4px" />
+            </td>
             }
 
             @if (columnVisibility.lastActive) {
-            <td class="p-3.5"><admin-skeleton width="100px" height="13px" borderRadius="4px" /></td>
+            <td class="p-3.5 w-[160px] min-w-[160px]"><admin-skeleton width="100px" height="13px" borderRadius="4px" />
+            </td>
             }
 
             @if (columnVisibility.status) {
-            <td class="p-3.5"><admin-skeleton width="65px" height="18px" borderRadius="9999px" /></td>
+            <td class="p-3.5 w-[120px] min-w-[120px]"><admin-skeleton width="65px" height="18px"
+                borderRadius="9999px" /></td>
             }
 
-            <td class="p-3.5 text-center w-20">
+            <td class="p-3.5 text-center w-[80px] min-w-[80px]">
               <div class="flex justify-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></div>
             </td>
           </tr>
@@ -454,21 +488,21 @@
           @for (u of users; track u.id; let i = $index) {
           <tr class="table-data-row transition-colors cursor-pointer"
             [ngClass]="{ 'bg-indigo-950/40 selected-row': selection.isSelected(u.id), 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
-            (click)="selection.toggle(u.id)" (dblclick)="openAuditDrawer(u)"
+            (click)="onRowClick(u.id)" (dblclick)="onRowDblClick(u)"
             [adminTooltip]="'Double-click row (or press j/k + Enter) to open Security Drawer'" tooltipPosition="top">
-            <td class="p-3.5 text-center" (click)="$event.stopPropagation()">
+            <td class="p-3.5 text-center w-[40px] min-w-[40px]" (click)="$event.stopPropagation()">
               <input type="checkbox" class="rounded border-slate-700 bg-slate-800 cursor-pointer"
                 [checked]="selection.isSelected(u.id)" (change)="selection.toggle(u.id)" />
             </td>
             <!-- User Profile -->
             @if (columnVisibility.profile) {
-            <td class="p-3.5">
+            <td class="p-3.5 w-[280px] min-w-[280px]">
               <div class="flex items-center gap-3">
                 <div
                   class="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shadow shrink-0">
                   {{ u.fullName?.charAt(0) || 'U' }}
                 </div>
-                <div class="flex flex-col min-w-0">
+                <div class="flex flex-col min-w-0 overflow-hidden">
                   <div class="flex items-center gap-1.5">
                     <span class="font-bold text-slate-100 truncate">{{ u.fullName }}</span>
                     @if (u.isEmailVerified) {
@@ -478,7 +512,31 @@
                     </svg>
                     }
                   </div>
-                  <span class="text-slate-400 text-[11px] truncate font-mono">{{ u.email }}</span>
+                  <div class="flex items-center gap-1">
+                    <span class="text-slate-400 text-[11px] truncate font-mono max-w-[160px]"
+                      [adminTooltip]="u.email">{{ isPiiUnmasked(u.id, 'email') ?
+                      u.email : maskEmail(u.email) }}</span>
+                    <button (click)="toggleUnmaskPii(u.id, 'email', $event)"
+                      class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
+                      [adminTooltip]="isPiiUnmasked(u.id, 'email') ? 'Click to Mask Email' : 'Click to Reveal Email'"
+                      tooltipPosition="top">
+                      @if (isPiiUnmasked(u.id, 'email')) {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                        </path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                      } @else {
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      }
+                    </button>
+                  </div>
                 </div>
               </div>
             </td>
@@ -693,7 +751,7 @@
 @if (isAuditDrawerOpen && selectedUserForAudit) {
 <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex justify-end" (click)="closeAuditDrawer()">
   <div
-    class="w-full max-w-2xl h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
+    class="w-full max-w-2xl h-full bg-slate-900 !rounded-l-2xl !rounded-r-none border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
     (click)="$event.stopPropagation()">
 
     <!-- Drawer Header -->

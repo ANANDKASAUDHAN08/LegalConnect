@@ -1,52 +1,435 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="p-2 w-full flex flex-col gap-5">
 
-  <!-- --- 0. Header Banner --- -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
-    <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 w-fit">
+  <!-- --- 0. Header & Moderation Desk Banner --- -->
+  <div
+    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-6 gap-6 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-xl">
+    <div class="flex flex-col gap-1.5">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 w-fit"
+        [adminTooltip]="'Moderation desk for auditing public client feedback and advocate responses'"
+        tooltipPosition="right">
         <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
         <span>Review Moderation Desk</span>
       </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Client Reviews & Rating Audit</h1>
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Client Reviews & Rating Audit Desk</h1>
       <p class="text-xs text-slate-400">
-        Audit and moderate public lawyer reviews & ratings across LegalConnect.
+        Audit public advocate feedback, moderate flagged reviews, approve lawyer responses, and prevent fraudulent
+        ratings.
       </p>
     </div>
 
-    <div class="filter-group flex items-center gap-2.5 flex-wrap">
-      <admin-select [options]="ratingOptions" [value]="ratingFilter"
-        (valueChange)="ratingFilter = $event; fetchReviews();" minWidth="180px"
-        [adminTooltip]="'Filter reviews by star rating'" tooltipPosition="top">
-      </admin-select>
+    <!-- Quick Refresh Button -->
+    <button class="btn btn-secondary flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl"
+      (click)="fetchReviews()" [adminTooltip]="'Refresh review directory from database'" tooltipPosition="top">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="1 4 1 10 7 10"></polyline>
+        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+      </svg>
+      <span>Refresh Reviews</span>
+    </button>
+  </div>
 
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="fetchReviews()" [adminTooltip]="'Refresh client review directory'"
-        tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
-        <span>Refresh Reviews</span>
-      </button>
+  <!-- --- 1. Rating Analytics & Distribution Banner with Skeleton Loaders --- -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Overall Platform Score Card -->
+    <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 flex items-center gap-6"
+      [adminTooltip]="'Platform-wide client rating performance summary'" tooltipPosition="top">
+
+      @if (isLoading) {
+      <div class="flex items-center gap-6 w-full">
+        <admin-skeleton width="110px" height="110px" borderRadius="16px" />
+        <div class="flex flex-col gap-3 flex-1">
+          <admin-skeleton width="100%" height="16px" />
+          <admin-skeleton width="100%" height="16px" />
+          <admin-skeleton width="100%" height="16px" />
+          <admin-skeleton width="100%" height="16px" />
+        </div>
+      </div>
+      } @else {
+      <div
+        class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-indigo-600/20 border border-amber-500/30 min-w-[110px]">
+        <span class="text-3xl font-black text-amber-300">{{ averageRating }}</span>
+        <div class="flex items-center gap-0.5 text-amber-400 text-xs mt-1">
+          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
+            <polygon
+              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+            </polygon>
+          </svg>
+        </div>
+        <span class="text-[10px] text-slate-400 mt-1 font-medium">Out of 5.0 Stars</span>
+      </div>
+
+      <div class="flex flex-col gap-2 flex-1">
+        <div
+          class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded-lg transition-all hover:bg-slate-800/60"
+          [ngClass]="{'ring-1 ring-sky-500/50 bg-sky-950/30': activeMetricCard === 'all'}"
+          (click)="toggleMetricFilter('all')" [adminTooltip]="'Show all review records (Click to reset)'"
+          tooltipPosition="right">
+          <span class="text-slate-400 font-medium">Total Reviews:</span>
+          <span class="font-bold text-slate-200">{{ totalReviewsCount }}</span>
+        </div>
+        <div
+          class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded-lg transition-all hover:bg-amber-950/40"
+          [ngClass]="{'ring-1 ring-amber-500/50 bg-amber-950/30': activeMetricCard === 'pending'}"
+          (click)="toggleMetricFilter('pending')" [adminTooltip]="'Filter pending audit queue reviews'"
+          tooltipPosition="right">
+          <span class="text-amber-400 font-medium">Pending Audit Queue:</span>
+          <span class="font-bold text-amber-300">{{ pendingAuditCount }}</span>
+        </div>
+        <div
+          class="flex items-center justify-between text-xs cursor-pointer p-1.5 rounded-lg transition-all hover:bg-rose-950/40"
+          [ngClass]="{'ring-1 ring-rose-500/50 bg-rose-950/30': activeMetricCard === 'flagged'}"
+          (click)="toggleMetricFilter('flagged')" [adminTooltip]="'Filter flagged / quarantined reviews'"
+          tooltipPosition="right">
+          <span class="text-rose-400 font-medium">Flagged / Quarantined:</span>
+          <span class="font-bold text-rose-300">{{ flaggedCount }}</span>
+        </div>
+        <div class="flex items-center justify-between text-xs p-1.5 rounded-lg"
+          [adminTooltip]="'Reviews backed by verified legal consultation records'" tooltipPosition="right">
+          <span class="text-emerald-400 font-medium">Verified Consultations:</span>
+          <span class="font-bold text-emerald-300">{{ verifiedClientCount }}</span>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- Rating Distribution Progress Bars (5 Stars to 1 Star) -->
+    <div
+      class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 lg:col-span-2 flex flex-col justify-between gap-2"
+      [adminTooltip]="'Percentage distribution across rating tiers'" tooltipPosition="top">
+      <span class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-1">Star Rating Breakdown
+        Distribution</span>
+
+      @if (isLoading) {
+      @for (item of [1,2,3,4,5]; track $index) {
+      <div class="flex items-center gap-3">
+        <admin-skeleton width="40px" height="12px" />
+        <admin-skeleton width="100%" height="10px" borderRadius="10px" />
+        <admin-skeleton width="60px" height="12px" />
+      </div>
+      }
+      } @else {
+      @for (star of [5, 4, 3, 2, 1]; track star) {
+      <div class="flex items-center gap-3 text-xs">
+        <span class="w-12 font-semibold text-slate-300 text-right flex items-center justify-end gap-1">
+          <span>{{ star }}</span>
+          <span class="text-amber-400">★</span>
+        </span>
+        <div class="flex-1 h-2.5 rounded-full bg-slate-800 overflow-hidden">
+          <div class="h-full rounded-full bg-gradient-to-r transition-all duration-500" [ngClass]="{
+                'from-emerald-500 to-teal-400': star >= 4,
+                'from-amber-500 to-yellow-400': star === 3,
+                'from-rose-500 to-red-400': star <= 2
+              }" [style.width.%]="getRatingPercentage(star)"></div>
+        </div>
+        <span class="w-14 text-slate-400 font-mono text-[11px] text-right">{{ getRatingCount(star) }} ({{
+          getRatingPercentage(star) }}%)</span>
+      </div>
+      }
+      }
+    </div>
+  </div> <!-- --- 2. Advanced Search & Filter Bar (Matching Users/Lawyers Page) --- -->
+  <div
+    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
+    <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
+      <!-- Search Input (Far Left) -->
+      <admin-search-input [value]="search" placeholder="Search reviews by reviewer name, comment text, or advocate..."
+        tooltip="Type query to auto-debounce search by 300ms" (searchChange)="onSearchChange($event)">
+      </admin-search-input>
+
+      <!-- Center & Right Controls -->
+      <div
+        class="filter-group flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink min-w-0 max-w-full overflow-visible">
+        <admin-select [options]="ratingOptions" [value]="ratingFilter" icon="star"
+          (valueChange)="ratingFilter = $event; onFilterChange();" minWidth="120px"
+          [adminTooltip]="'Filter by rating tier'" tooltipPosition="top">
+        </admin-select>
+
+        <admin-select [options]="moderationOptions" [value]="moderationFilter" icon="shield"
+          (valueChange)="moderationFilter = $event; onFilterChange();" minWidth="135px"
+          [adminTooltip]="'Filter by moderation audit state'" tooltipPosition="top">
+        </admin-select>
+
+        <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
+          (visibilityChange)="onColumnVisibilityChange($event)">
+        </admin-column-customizer>
+
+        <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-amber-400"
+          tooltip="Filter reviews by date bounds" (rangeChange)="onDateRangeChange($event)">
+        </admin-date-range-picker>
+      </div>
+    </div>
+
+    <!-- Active Filters & Selection Bar (Matching Users/Lawyers Page) -->
+    <div class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 flex-wrap">
+      <div class="flex items-center gap-2 flex-wrap">
+        <!-- Filter Active Badge -->
+        @if (hasQueryFilter) {
+        <span
+          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          <span>Filter Active</span>
+          <button (click)="resetFilters()" class="hover:text-white ml-0.5 text-xs font-bold"
+            [adminTooltip]="'Clear all active filters'">✕</button>
+        </span>
+        }
+        @if (selection.size > 0) {
+        <span
+          class="px-2.5 py-1 bg-indigo-500/20 text-indigo-300 font-bold rounded-lg border border-indigo-500/30 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selection.size }} review(s) selected</span>
+        </span>
+        }
+        <span class="text-slate-300 font-medium">
+          Showing <strong>{{ reviews.length }}</strong> matching result(s) (filtered from <strong>{{ totalReviewsCount
+            }}</strong> total)
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        @if (selection.size > 0) {
+        <button
+          class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+          (click)="bulkUpdateModeration('Approved')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Bulk Approve &amp; Publish</span>
+        </button>
+
+        <button
+          class="px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
+          (click)="bulkUpdateModeration('Hidden')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Bulk Hide</span>
+        </button>
+
+        <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          Deselect All
+        </button>
+        }
+        @if (hasQueryFilter) {
+        <button (click)="resetFilters(); selection.clear();"
+          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
+          [adminTooltip]="'Clear search query, rating & moderation filters'">
+          Clear Filters
+        </button>
+        }
+      </div>
     </div>
   </div>
 
-  <!-- --- 1. Main Reviews Table --- -->
-  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
-    <div class="data-table-wrapper overflow-x-auto min-h-[360px]">
+  <!-- --- 4. Main Reviews Moderation Data Table --- -->
+  <div
+    class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in relative z-10">
+    <div class="data-table-wrapper overflow-x-auto min-h-[380px]">
+      @if (isLoading) {
+      <div
+        class="table-loading-bar h-0.5 bg-gradient-to-r from-amber-500 via-orange-500 to-rose-500 animate-pulse w-full">
+      </div>
+      }
+
+      @if (isNoColumnsVisible) {
+      <!-- Full-Size Unified Columns Hidden Empty State -->
+      <admin-empty-state icon="eye-off" title="All Data Columns Currently Hidden"
+        message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display review moderation data."
+        [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true" (action)="resetColumnVisibility()">
+        <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
+        </svg>
+      </admin-empty-state>
+      } @else if (!isLoading && reviews.length === 0) {
+      <!-- Full-Size Unified Empty State -->
+      <admin-empty-state title="No Client Reviews Found"
+        message="No reviews match your active search or filter criteria. Try refining your search query or reset filters."
+        [showAction]="isFilterActive" actionLabel="Reset Filters" (action)="resetFilters()">
+      </admin-empty-state>
+      } @else {
       <table class="data-table w-full text-left border-collapse">
         <thead>
-          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-            <th class="p-3.5">Reviewer</th>
-            <th class="p-3.5">Rating</th>
-            <th class="p-3.5">Review Comment</th>
-            <th class="p-3.5">Submitted At</th>
-            <th class="p-3.5 text-right">Moderation</th>
+          <tr
+            class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5 w-10 text-center">
+              <input type="checkbox"
+                class="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500/40 cursor-pointer"
+                (change)="toggleSelectAll($event)" [adminTooltip]="'Select or unselect all reviews'"
+                tooltipPosition="right" />
+            </th>
+            @if (columnVisibility['reviewer']) {
+            <th class="p-3.5 cursor-pointer group hover:text-amber-300 transition-colors select-none"
+              (click)="onSortChange({ key: 'userName', order: sortBy === 'userName' && sortOrder === 'asc' ? 'desc' : 'asc' })"
+              [adminTooltip]="'Click to sort by reviewer name'" tooltipPosition="top">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-amber-400]="sortBy === 'userName'">Reviewer</span>
+                @if (sortBy === 'userName') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+            @if (columnVisibility['target']) {
+            <th class="p-3.5 cursor-pointer group hover:text-amber-300 transition-colors select-none"
+              (click)="onSortChange({ key: 'lawyerName', order: sortBy === 'lawyerName' && sortOrder === 'asc' ? 'desc' : 'asc' })"
+              [adminTooltip]="'Click to sort by target advocate name'" tooltipPosition="top">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-amber-400]="sortBy === 'lawyerName'">Target Advocate / Entity</span>
+                @if (sortBy === 'lawyerName') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+            @if (columnVisibility['rating']) {
+            <th class="p-3.5 cursor-pointer group hover:text-amber-300 transition-colors select-none"
+              (click)="onSortChange({ key: 'rating', order: sortBy === 'rating' && sortOrder === 'asc' ? 'desc' : 'asc' })"
+              [adminTooltip]="'Click to sort by star rating'" tooltipPosition="top">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-amber-400]="sortBy === 'rating'">Rating</span>
+                @if (sortBy === 'rating') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+            @if (columnVisibility['comment']) {
+            <th class="p-3.5" [adminTooltip]="'Review text and sentiment alert tags'" tooltipPosition="top">Review
+              Feedback & Sentiment</th>
+            }
+            @if (columnVisibility['status']) {
+            <th class="p-3.5 cursor-pointer group hover:text-amber-300 transition-colors select-none"
+              (click)="onSortChange({ key: 'moderationStatus', order: sortBy === 'moderationStatus' && sortOrder === 'asc' ? 'desc' : 'asc' })"
+              [adminTooltip]="'Click to sort by moderation status'" tooltipPosition="top">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-amber-400]="sortBy === 'moderationStatus'">Moderation State</span>
+                @if (sortBy === 'moderationStatus') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+            @if (columnVisibility['submitted']) {
+            <th class="p-3.5 cursor-pointer group hover:text-amber-300 transition-colors select-none"
+              (click)="onSortChange({ key: 'createdAt', order: sortBy === 'createdAt' && sortOrder === 'asc' ? 'desc' : 'asc' })"
+              [adminTooltip]="'Click to sort by submission date'" tooltipPosition="top">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-amber-400]="sortBy === 'createdAt'">Submitted At</span>
+                @if (sortBy === 'createdAt') {
+                @if (sortOrder === 'asc') {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 19V5M5 12l7-7 7 7"></path>
+                </svg>
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                  class="text-amber-400 shrink-0">
+                  <path d="M12 5v14M5 12l7 7 7-7"></path>
+                </svg>
+                }
+                } @else {
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
+                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                </svg>
+                }
+              </div>
+            </th>
+            }
+            <th class="p-3.5 text-center w-20" [adminTooltip]="'Moderation action controls'" tooltipPosition="left">
+              Actions
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800/60 text-xs">
           @if (isLoading) {
           @for (item of [1,2,3,4,5]; track $index) {
           <tr class="hover:bg-slate-800/30">
+            <td class="p-3.5 text-center"><admin-skeleton width="16px" height="16px" /></td>
+            @if (columnVisibility['reviewer']) {
             <td class="p-3.5">
               <div class="user-cell flex items-center gap-2.5">
                 <admin-skeleton width="32px" height="32px" borderRadius="50%" />
@@ -56,29 +439,91 @@
                 </div>
               </div>
             </td>
+            }
+            @if (columnVisibility['target']) {
+            <td class="p-3.5"><admin-skeleton width="130px" height="14px" /></td>
+            }
+            @if (columnVisibility['rating']) {
             <td class="p-3.5"><admin-skeleton width="70px" height="20px" borderRadius="12px" /></td>
+            }
+            @if (columnVisibility['comment']) {
             <td class="p-3.5"><admin-skeleton width="220px" height="14px" /></td>
+            }
+            @if (columnVisibility['status']) {
+            <td class="p-3.5"><admin-skeleton width="90px" height="20px" borderRadius="12px" /></td>
+            }
+            @if (columnVisibility['submitted']) {
             <td class="p-3.5"><admin-skeleton width="90px" height="14px" /></td>
-            <td class="p-3.5 text-right"><admin-skeleton width="100px" height="28px" borderRadius="6px" /></td>
+            }
+            <td class="p-3.5 text-right"><admin-skeleton width="30px" height="28px" borderRadius="6px" /></td>
           </tr>
           }
           } @else {
           @for (rev of reviews; track rev.id) {
-          <tr class="hover:bg-slate-800/40 transition-colors">
+          <tr (click)="onRowClick(rev.id)" (dblclick)="onRowDblClick(rev)"
+            class="hover:bg-slate-800/50 transition-colors cursor-pointer select-none"
+            [ngClass]="{ 'bg-amber-500/10': isReviewSelected(rev.id) }">
+            <td class="p-3.5 text-center" (click)="$event.stopPropagation()">
+              <input type="checkbox"
+                class="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500/40 cursor-pointer"
+                [checked]="isReviewSelected(rev.id)" (change)="toggleReviewSelection(rev.id)" />
+            </td>
+
+            <!-- Reviewer Column -->
+            @if (columnVisibility['reviewer']) {
             <td class="p-3.5">
               <div class="user-cell flex items-center gap-2.5">
-                <div class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md">
-                  {{ (rev.userName || 'A').charAt(0).toUpperCase() }}
+                <div
+                  class="user-avatar w-8 h-8 rounded-full bg-gradient-to-tr from-amber-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xs shadow-md shrink-0">
+                  {{ getReviewerInitial(rev) }}
                 </div>
-                <div class="flex flex-col">
-                  <div class="user-name font-bold text-slate-200">{{ rev.userName || 'Anonymous Client' }}</div>
-                  <div class="text-slate-400 text-[11px]">{{ rev.userRole || 'Client' }}</div>
+                <div class="flex flex-col min-w-0">
+                  <div class="user-name font-bold text-slate-200 flex items-center gap-1.5 truncate"
+                    [adminTooltip]="'Author: ' + getReviewerName(rev)" tooltipPosition="top">
+                    <span class="truncate">{{ getReviewerName(rev) }}</span>
+                    @if (rev.isVerifiedClient !== false) {
+                    <span class="inline-flex items-center text-emerald-400 shrink-0"
+                      [adminTooltip]="'Verified consultation client'" tooltipPosition="top">
+                      <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" stroke-width="3"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                    </span>
+                    }
+                  </div>
+                  <div class="text-slate-400 text-[11px] truncate">{{ rev.userRole || 'Client' }}</div>
                 </div>
               </div>
             </td>
+            }
+
+            <!-- Target Advocate / Entity Column -->
+            @if (columnVisibility['target']) {
             <td class="p-3.5">
-              <span class="rating-stars inline-flex items-center gap-1 font-extrabold text-amber-400">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+              <div class="flex items-center gap-2">
+                <div
+                  class="w-6 h-6 rounded-full bg-slate-800 text-sky-400 flex items-center justify-center border border-slate-700 shrink-0">
+                  <svg class="w-3 h-3 text-sky-400" fill="none" stroke="currentColor" stroke-width="2"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-9-6l9 6 9-6M3 9l9-6 9 6" />
+                  </svg>
+                </div>
+                <span class="font-bold text-sky-300 text-xs truncate"
+                  [adminTooltip]="'Target advocate profile: ' + (rev.targetName || rev.lawyerName || 'Platform')"
+                  tooltipPosition="top">
+                  {{ rev.targetName || rev.lawyerName || 'LegalConnect Platform' }}
+                </span>
+              </div>
+            </td>
+            }
+
+            <!-- Rating Column -->
+            @if (columnVisibility['rating']) {
+            <td class="p-3.5">
+              <span
+                class="rating-stars inline-flex items-center gap-1 font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full text-xs"
+                [adminTooltip]="'Rating score: ' + rev.rating + ' out of 5 stars'" tooltipPosition="top">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
                   <polygon
                     points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
                   </polygon>
@@ -86,25 +531,239 @@
                 <span>{{ rev.rating }}/5</span>
               </span>
             </td>
-            <td class="p-3.5 max-w-md text-xs text-slate-300 leading-relaxed">{{ rev.comment }}</td>
-            <td class="p-3.5 text-slate-400 text-[11px]">{{ rev.createdAt | date:'mediumDate' }}</td>
-            <td class="p-3.5 text-right">
-              <button class="btn btn-danger btn-sm text-xs px-2.5 py-1" (click)="deleteReview(rev.id)"
-                [adminTooltip]="'Permanently delete this flaggable client review'" tooltipPosition="left">
-                Delete Review
-              </button>
+            }
+
+            <!-- Comment & Flag Tag Column -->
+            @if (columnVisibility['comment']) {
+            <td class="p-3.5 max-w-sm text-xs text-slate-300 leading-relaxed">
+              <div class="line-clamp-2">{{ rev.comment || rev.content }}</div>
+              @if (rev.rating <= 2) { <span
+                class="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 mt-1"
+                [adminTooltip]="'Low rating feedback requires moderator verification'" tooltipPosition="top">
+                <svg class="w-3 h-3 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.5"
+                  viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                </svg>
+                <span>Low Rating Alert</span>
+                </span>
+                }
+                @if (rev.advocateReply) {
+                <div class="text-[10px] text-sky-400 mt-1 font-medium flex items-center gap-1">
+                  <span>Advocate Replied:</span>
+                  @if (rev.advocateReplyStatus === 'Approved') {
+                  <span class="text-emerald-400 font-bold">(Approved)</span>
+                  } @else {
+                  <span class="text-amber-400 font-bold">(Pending Audit)</span>
+                  }
+                </div>
+                }
             </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="5" class="empty-state py-8 text-center text-slate-400 text-sm">
-              <div>No client reviews submitted.</div>
+            }
+
+            <!-- Moderation Status Badge Column -->
+            @if (columnVisibility['status']) {
+            <td class="p-3.5">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                [adminTooltip]="'Moderation audit state: ' + (rev.moderationStatus || 'Approved')" tooltipPosition="top"
+                [ngClass]="{
+                  'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': rev.moderationStatus === 'Approved' || !rev.moderationStatus,
+                  'bg-amber-500/10 text-amber-400 border-amber-500/30': rev.moderationStatus === 'Pending',
+                  'bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse': rev.moderationStatus === 'Flagged',
+                  'bg-slate-700/40 text-slate-400 border-slate-700/50': rev.moderationStatus === 'Hidden'
+                }">
+                {{ rev.moderationStatus || 'Approved' }}
+              </span>
+            </td>
+            }
+
+            <!-- Submitted Date Column -->
+            @if (columnVisibility['submitted']) {
+            <td class="p-3.5 text-slate-400 text-[11px]">{{ rev.createdAt | date:'mediumDate' }}</td>
+            }
+
+            <!-- Action Controls matching Users/Lawyers Page -->
+            <td class="p-3.5 text-center w-20" (click)="$event.stopPropagation()">
+              <div class="flex items-center justify-center w-full">
+                <button #kebabBtn
+                  class="action-menu-btn kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
+                  [class.active]="openActionMenuId === rev.id" (click)="toggleActionMenu(rev.id, kebabBtn, $event)"
+                  [adminTooltip]="'Review Audit Actions'" tooltipPosition="left">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="5" r="2.2"></circle>
+                    <circle cx="12" cy="12" r="2.2"></circle>
+                    <circle cx="12" cy="19" r="2.2"></circle>
+                  </svg>
+                </button>
+              </div>
             </td>
           </tr>
           }
           }
         </tbody>
       </table>
+      }
+    </div>
+
+    <!-- Pagination Footer Bar matching Users/Lawyers Page -->
+    <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
+      [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onLimitChange($event)">
+    </admin-pagination>
+  </div>
+
+  <!-- --- 5. Review Inspection & Moderation Modal --- -->
+  @if (selectedReview) {
+  <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in"
+    (click)="closeInspectModal()">
+    <div
+      class="glass-card max-w-xl w-full rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-5"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
+        <div>
+          <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <span>Review Inspection Desk</span>
+            <span class="text-amber-400 font-extrabold text-sm">★ {{ selectedReview.rating }}/5</span>
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">
+            By <strong class="text-slate-200">{{ getReviewerName(selectedReview) }}</strong> for <strong
+              class="text-sky-300">{{ selectedReview.targetName || selectedReview.lawyerName || 'Platform' }}</strong>
+          </p>
+        </div>
+        <button class="text-slate-400 hover:text-slate-200 text-xl font-bold p-1 cursor-pointer"
+          (click)="closeInspectModal()" [adminTooltip]="'Close inspection modal'"
+          tooltipPosition="left">&times;</button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body flex flex-col gap-4 text-xs">
+
+        <!-- Client Feedback Text -->
+        <div class="flex flex-col gap-1.5">
+          <span class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Client Feedback Text</span>
+          <div
+            class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 leading-relaxed font-sans whitespace-pre-wrap text-xs">
+            {{ selectedReview.comment || selectedReview.content }}
+          </div>
+        </div>
+
+        <!-- Advocate Public Response (If advocate replied) -->
+        @if (selectedReview.advocateReply) {
+        <div class="p-4 rounded-xl bg-sky-950/40 border border-sky-500/30 text-sky-200 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <strong class="font-bold text-sky-300">Advocate Public Response:</strong>
+            @if (selectedReview.advocateReplyStatus !== 'Approved') {
+            <button class="btn btn-success btn-sm text-[10px] px-2.5 py-1 font-bold rounded-lg"
+              (click)="approveAdvocateReply(selectedReview)"
+              [adminTooltip]="'Approve advocate public response for display'" tooltipPosition="top">
+              Approve Advocate Response
+            </button>
+            } @else {
+            <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
+              <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+              </svg>
+              <span>Response Approved</span>
+            </span>
+            }
+          </div>
+          <p class="text-slate-200 leading-relaxed font-sans whitespace-pre-wrap">{{ selectedReview.advocateReply }}</p>
+        </div>
+        }
+
+        <!-- Moderation Audit Reason Input -->
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Moderation Audit Reason /
+            Notes</label>
+          <input type="text"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-xl p-2.5 text-xs"
+            placeholder="Reason for flagging or hiding this review (e.g. Unverified consultation, Profanity, Spam)..."
+            [(ngModel)]="flagReasonInput" />
+        </div>
+
+      </div>
+
+      <!-- Modal Footer Action Controls -->
+      <div class="modal-footer flex items-center justify-between pt-3 border-t border-slate-800">
+        <button class="btn btn-danger text-xs px-3.5 py-2 font-semibold rounded-xl"
+          (click)="deleteReview(selectedReview.id)" [adminTooltip]="'Permanently delete review from system'"
+          tooltipPosition="top">
+          Delete Permanently
+        </button>
+
+        <div class="flex items-center gap-2">
+          <button class="btn btn-secondary text-xs px-3.5 py-2 font-semibold rounded-xl"
+            (click)="updateModeration(selectedReview, 'Hidden', flagReasonInput); closeInspectModal();"
+            [adminTooltip]="'Hide review from public profile'" tooltipPosition="top">
+            Hide Review
+          </button>
+          <button class="btn btn-warning text-xs px-3.5 py-2 font-semibold rounded-xl"
+            (click)="updateModeration(selectedReview, 'Flagged', flagReasonInput); closeInspectModal();"
+            [adminTooltip]="'Quarantine review for moderator audit'" tooltipPosition="top">
+            Flag / Quarantine
+          </button>
+          <button class="btn btn-success text-xs px-3.5 py-2 font-semibold rounded-xl"
+            (click)="updateModeration(selectedReview, 'Approved', flagReasonInput); closeInspectModal();"
+            [adminTooltip]="'Approve & publish review to public profile'" tooltipPosition="top">
+            Approve & Publish
+          </button>
+        </div>
+      </div>
     </div>
   </div>
+  }
+
+  <!-- --- FLOATING ACTION DROPDOWN matching Users/Lawyers Page --- -->
+  <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionReview()"
+    headerLabel="Review Audit Actions" [dropdownWidth]="190" (closed)="closeActionMenu()">
+    @if (getOpenActionReview()) {
+    <button class="dropdown-item" (click)="openInspectModal(getOpenActionReview()!); closeActionMenu()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-sky-400">
+        <path
+          d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+      <span>Inspect Review</span>
+      <span class="dropdown-item-shortcut">INSPECT</span>
+    </button>
+
+    @if (getOpenActionReview()!.moderationStatus !== 'Approved') {
+    <button class="dropdown-item" (click)="updateModeration(getOpenActionReview()!, 'Approved'); closeActionMenu()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-emerald-400">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span>Approve & Publish</span>
+      <span class="dropdown-item-shortcut">APPROVE</span>
+    </button>
+    }
+
+    @if (getOpenActionReview()!.moderationStatus !== 'Hidden') {
+    <button class="dropdown-item"
+      (click)="updateModeration(getOpenActionReview()!, 'Hidden', 'Quarantined by Moderator'); closeActionMenu()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-amber-400">
+        <path
+          d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
+      </svg>
+      <span>Hide Review</span>
+      <span class="dropdown-item-shortcut">HIDE</span>
+    </button>
+    }
+
+    <button class="dropdown-item danger" (click)="deleteReview(getOpenActionReview()!.id); closeActionMenu()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-rose-400">
+        <path
+          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
+      </svg>
+      <span class="text-rose-400 font-semibold">Delete Permanently</span>
+      <span class="dropdown-item-shortcut">DELETE</span>
+    </button>
+    }
+  </admin-action-menu>
+
 </div>

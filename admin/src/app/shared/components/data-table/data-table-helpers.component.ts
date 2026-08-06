@@ -8,9 +8,10 @@ import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { sanitizeSearchInput } from '../../../core/utils/security-utils';
 
 // ---------------------------------------------------------------
-// 1. SEARCH INPUT - Debounced search with built-in icon
+// 1. SEARCH INPUT - Debounced search with built-in icon & XSS protection
 // ---------------------------------------------------------------
 @Component({
   selector: 'admin-search-input',
@@ -50,7 +51,8 @@ export class AdminSearchInputComponent implements OnInit, OnDestroy {
       debounceTime(this.debounceMs),
       distinctUntilChanged()
     ).subscribe(query => {
-      this.searchChange.emit(query);
+      const sanitized = sanitizeSearchInput(query);
+      this.searchChange.emit(sanitized);
     });
   }
 

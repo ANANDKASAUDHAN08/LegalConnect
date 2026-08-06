@@ -34,8 +34,18 @@ export class PaginationComponent {
     return Math.min(this.page * this.limit, this.total);
   }
 
+  get totalPages(): number {
+    if (typeof this.pages === 'number' && !isNaN(this.pages) && this.pages > 0) {
+      return this.pages;
+    }
+    if (this.limit > 0 && typeof this.total === 'number' && !isNaN(this.total) && this.total >= 0) {
+      return Math.ceil(this.total / this.limit) || 1;
+    }
+    return 1;
+  }
+
   changePage(newPage: number): void {
-    if (newPage >= 1 && newPage <= this.pages) {
+    if (newPage >= 1 && newPage <= this.totalPages) {
       this.pageChange.emit(newPage);
     }
   }

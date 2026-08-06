@@ -1,3 +1,5 @@
+@import '../../../styles/admin-table';
+
 :host {
   display: block;
   width: 100%;
@@ -25,10 +27,18 @@
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.2);
   }
 
+  .actions-sticky-cell {
+    background-color: #0f172a;
+  }
+
   .table-header-row {
     background: #0f172a;
     border-bottom: 1px solid rgba(51, 65, 85, 0.6);
     color: #cbd5e1;
+
+    th.actions-sticky-cell {
+      background-color: #0f172a !important;
+    }
   }
 
   .table-data-row {
@@ -41,17 +51,36 @@
 
     &:hover {
       background: #1e293b;
+
+      td.actions-sticky-cell {
+        background-color: #1e293b !important;
+      }
     }
 
+    &.selected-row,
+    &.bg-sky-500\/10,
     &.bg-indigo-500\/10 {
-      background: #19203a;
+      background-color: #0e263e !important;
 
       td {
-        border-bottom: 1px solid rgba(99, 102, 241, 0.4) !important;
+        background-color: #0e263e !important;
+        border-bottom: 1px solid rgba(14, 165, 233, 0.4) !important;
+      }
+
+      td.actions-sticky-cell {
+        background-color: #0e263e !important;
       }
 
       &:hover {
-        background: #222949;
+        background-color: #143250 !important;
+
+        td {
+          background-color: #143250 !important;
+        }
+
+        td.actions-sticky-cell {
+          background-color: #143250 !important;
+        }
       }
     }
   }
@@ -454,11 +483,11 @@
   }
 }
 
-/* Selected Row Highlight (Matched with Lawyers Management) */
+/* Selected Row Highlight - High Contrast Subtle Sky Tint */
 tr.selected-row {
-  background-color: rgba(49, 46, 129, 0.45) !important;
+  background-color: rgba(56, 189, 248, 0.12) !important;
 
   td {
-    background-color: rgba(49, 46, 129, 0.45) !important;
+    background-color: rgba(56, 189, 248, 0.12) !important;
   }
 }

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, HostListener, AfterViewInit, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/admin-api.service';
@@ -19,7 +19,9 @@ import { ColumnCustomizerComponent, ColumnDef } from '../../shared/components/co
 import { AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent } from '../../shared/components/data-table/data-table-helpers.component';
 import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
 import { DateRangePickerComponent, DateRangeEvent } from '../../shared/components/date-range-picker/date-range-picker.component';
-import { TableSelection } from '../../core/utils/table.utils';
+import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
+import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
+import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
 
 @Component({
   selector: 'admin-users',
@@ -29,7 +31,23 @@ import { TableSelection } from '../../core/utils/table.utils';
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
+export class UsersComponent implements OnInit, OnDestroy {
+  maskPhone = maskPhone;
+  maskEmail = maskEmail;
+  piiState = new PiiMaskState();
+
+  toggleUnmaskPii(id: string | number, field: string = 'email', event?: Event): void {
+    this.piiState.toggle(id, field, event);
+  }
+
+  isPiiUnmasked(id: string | number, field: string = 'email'): boolean {
+    return this.piiState.isUnmasked(id, field);
+  }
+
+  toggleAllPii(event?: Event): void {
+    this.piiState.toggleAll(event);
+  }
+
   users: any[] = [];
   isLoading = false;
   isInitialLoad = true;
@@ -46,23 +64,23 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   activeDrawerTab: 'profile' | 'security' | 'audit' = 'profile';
 
   roleOptions: SelectOption[] = [
-    { label: 'All User Roles', value: '' },
+    { label: 'All User Roles', value: '', icon: 'info', color: '#818cf8' },
     { label: 'Client Accounts', value: 'Client', icon: 'user', color: '#38bdf8' },
-    { label: 'Lawyer Accounts', value: 'Lawyer', icon: 'shield', color: '#818cf8' },
+    { label: 'Lawyer Accounts', value: 'Lawyer', icon: 'award', color: '#818cf8' },
     { label: 'Administrator Accounts', value: 'Admin', icon: 'key', color: '#c084fc' }
   ];
 
   statusOptions: SelectOption[] = [
-    { label: 'All Statuses', value: '' },
+    { label: 'All Statuses', value: '', icon: 'info', color: '#818cf8' },
     { label: 'Active Accounts', value: 'true', icon: 'check', color: '#10b981' },
-    { label: 'Suspended Accounts', value: 'false', icon: 'warning', color: '#f59e0b' }
+    { label: 'Suspended Accounts', value: 'false', icon: 'shield', color: '#f43f5e' }
   ];
 
   sortOptions: SelectOption[] = [
-    { label: 'Newest First', value: 'newest', icon: 'clock' },
-    { label: 'Oldest First', value: 'oldest', icon: 'clock' },
-    { label: 'Name (A-Z)', value: 'name', icon: 'user' },
-    { label: 'Name (Z-A)', value: 'name_desc', icon: 'user' }
+    { label: 'Newest First', value: 'newest', icon: 'clock', color: '#38bdf8' },
+    { label: 'Oldest First', value: 'oldest', icon: 'clock', color: '#f59e0b' },
+    { label: 'Name (A-Z)', value: 'name', icon: 'user', color: '#10b981' },
+    { label: 'Name (Z-A)', value: 'name_desc', icon: 'user', color: '#a855f7' }
   ];
 
   pagination = {
@@ -103,8 +121,28 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     status: true
   };
 
+  get isPiiColumnVisible(): boolean {
+    return !!(this.columnVisibility['profile'] || this.columnVisibility['email'] || this.columnVisibility['phone']);
+  }
+
   get isNoColumnsVisible(): boolean {
     return Object.values(this.columnVisibility).every(v => !v);
+  }
+
+  get isAnyColumnHidden(): boolean {
+    return Object.values(this.columnVisibility).some(v => !v);
+  }
+
+  get hasQueryFilter(): boolean {
+    return !!(this.search || this.selectedRole || this.selectedStatus || this.startDate || this.endDate || this.isAnyColumnHidden);
+  }
+
+  resetColumnVisibility(): void {
+    const keys = Object.keys(this.columnVisibility);
+    const reset: Record<string, boolean> = {};
+    keys.forEach(k => reset[k] = true);
+    this.columnVisibility = reset;
+    this.cdr.markForCheck();
   }
 
   get visibleColumnKeys(): string[] {
@@ -136,6 +174,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     private route: ActivatedRoute,
     private router: Router,
     public avatar: AvatarService,
+    public swrCache: SwrCacheService,
     private cdr: ChangeDetectorRef
   ) { }
 
@@ -145,10 +184,6 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   globalLawyerCount = 0;
   globalClientCount = 0;
   globalTwoFactorPct = 0;
-
-  get hasQueryFilter(): boolean {
-    return !!(this.search || this.selectedRole || this.selectedStatus || this.startDate || this.endDate);
-  }
 
   get isFilterActive(): boolean {
     return this.hasQueryFilter || this.selection.size > 0;
@@ -163,32 +198,37 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.onFilterChange();
   }
 
+  sortData(list: any[]): any[] {
+    return sortByField(list, this.sortBy, this.sortOrder, {
+      name: (u: any) => u.fullName || u.name || '',
+      fullName: (u: any) => u.fullName || u.name || '',
+      status: (u: any) => u.isActive ? 1 : 0
+    });
+  }
+
+  onSortChange(event: { key: string; order: 'asc' | 'desc' }): void {
+    this.sortBy = event.key;
+    this.sortOrder = event.order;
+    this.pagination.page = 1;
+    this.swrCache.invalidate('users');
+    this.updateUrlParams();
+  }
+
   toggleSort(column: string): void {
-    if (this.sortBy === column) {
-      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = column;
-      this.sortOrder = 'asc';
-    }
-    this.fetchUsers();
+    const newOrder = this.sortBy === column ? (this.sortOrder === 'asc' ? 'desc' : 'asc') : 'asc';
+    this.onSortChange({ key: column, order: newOrder });
   }
 
   onSortDropdownChange(val: string): void {
     if (val === 'name') {
-      this.sortBy = 'name';
-      this.sortOrder = 'asc';
+      this.onSortChange({ key: 'name', order: 'asc' });
     } else if (val === 'name_desc') {
-      this.sortBy = 'name';
-      this.sortOrder = 'desc';
+      this.onSortChange({ key: 'name', order: 'desc' });
     } else if (val === 'oldest') {
-      this.sortBy = 'oldest';
-      this.sortOrder = 'asc';
+      this.onSortChange({ key: 'createdAt', order: 'asc' });
     } else {
-      this.sortBy = 'newest';
-      this.sortOrder = 'desc';
+      this.onSortChange({ key: 'createdAt', order: 'desc' });
     }
-    this.pagination.page = 1;
-    this.fetchUsers();
   }
 
   @HostListener('document:keydown', ['$event'])
@@ -203,6 +243,27 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     } else if (event.key === 'Escape') {
       this.closeAuditDrawer();
     }
+  }
+
+  private rowClickTimeout: any = null;
+
+  onRowClick(id: any): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+    }
+    this.rowClickTimeout = setTimeout(() => {
+      this.selection.toggle(id);
+      this.rowClickTimeout = null;
+      this.cdr.markForCheck();
+    }, 250);
+  }
+
+  onRowDblClick(user: any): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+      this.rowClickTimeout = null;
+    }
+    this.openAuditDrawer(user);
   }
 
   // -- Security Drawer & Quick Actions --
@@ -225,32 +286,14 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent): void {
-    const target = event.target as HTMLElement;
-    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT')) {
-      return;
-    }
-
-    if (event.key === 'j' || event.key === 'ArrowDown') {
-      event.preventDefault();
-      if (this.users.length > 0) {
-        this.focusedRowIndex = Math.min(this.focusedRowIndex + 1, this.users.length - 1);
-        this.scrollToFocusedRow();
-      }
-    } else if (event.key === 'k' || event.key === 'ArrowUp') {
-      event.preventDefault();
-      if (this.users.length > 0) {
-        this.focusedRowIndex = Math.max(this.focusedRowIndex - 1, 0);
-        this.scrollToFocusedRow();
-      }
-    } else if (event.key === 'Enter') {
-      if (this.focusedRowIndex >= 0 && this.focusedRowIndex < this.users.length) {
-        event.preventDefault();
-        this.openAuditDrawer(this.users[this.focusedRowIndex]);
-      }
-    } else if (event.key === 'Escape') {
-      this.closeAuditDrawer();
-      this.openActionMenuId = null;
-    }
+    handleTableKeyboardNav(event, {
+      getListLength: () => this.users.length,
+      getFocusedIndex: () => this.focusedRowIndex,
+      setFocusedIndex: (idx) => { this.focusedRowIndex = idx; this.cdr.markForCheck(); },
+      onEnter: (idx) => { if (this.users[idx]) this.openAuditDrawer(this.users[idx]); },
+      onEscape: () => { this.closeAuditDrawer(); this.openActionMenuId = null; this.cdr.markForCheck(); },
+      scrollToRow: () => this.scrollToFocusedRow()
+    });
   }
 
   private scrollToFocusedRow(): void {
@@ -265,7 +308,6 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   onDateRangeChange(event: DateRangeEvent): void {
     this.startDate = event.startDate;
     this.endDate = event.endDate;
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchUsers();
@@ -451,15 +493,10 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  private closeMenuOnScroll = (): void => {
-    // Now managed by ActionMenuComponent
-  };
-
-  ngAfterViewInit(): void {
-    // Scroll-close managed by ActionMenuComponent
-  }
-
   ngOnDestroy(): void {
+    if (this.rowClickTimeout) {
+      clearTimeout(this.rowClickTimeout);
+    }
     document.body.style.overflow = '';
     this.searchSub?.unsubscribe();
     this.routeSub?.unsubscribe();
@@ -473,7 +510,6 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   onSearchChange(query: string): void {
     this.search = query;
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
   }
@@ -491,9 +527,10 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.startDate) params.startDate = this.startDate;
     if (this.endDate) params.endDate = this.endDate;
 
-    const cached = this.api.user.getCachedUsers(params);
+    const cached = this.swrCache.get<any>('users', params);
     if (cached && cached.success) {
       this.users = cached.data || [];
+      this.selection.retainOnly(this.users.map(u => u.id));
       this.pagination = cached.pagination || this.pagination;
       if (cached.summary) {
         this.globalTotalUsers = cached.summary.totalUsers;
@@ -515,7 +552,8 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
       next: (res) => {
         this.isInitialLoad = false;
         if (res.success) {
-          this.users = res.data;
+          this.users = this.sortData(res.data || []);
+          this.selection.retainOnly(this.users.map(u => u.id));
           this.pagination = res.pagination;
 
           if (res.summary) {
@@ -525,6 +563,8 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
             this.globalClientCount = res.summary.totalClients;
             this.globalTwoFactorPct = res.summary.twoFactorPct;
           }
+
+          this.swrCache.set('users', params, res);
         }
         this.cdr.markForCheck();
       },
@@ -539,13 +579,11 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onSearch(): void {
-    this.selection.clear();
     this.pagination.page = 1;
     this.fetchUsers();
   }
 
   onFilterChange(): void {
-    this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
     this.fetchUsers();
@@ -564,6 +602,7 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.endDate = '';
     this.sortBy = 'newest';
     this.sortOrder = 'desc';
+    this.resetColumnVisibility();
     this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
@@ -736,6 +775,10 @@ export class UsersComponent implements OnInit, OnDestroy, AfterViewInit {
   getOpenActionUser(): any | null {
     if (!this.openActionMenuId) return null;
     return this.users.find(u => u.id === this.openActionMenuId) || null;
+  }
+
+  getOpenActionItem(): any | null {
+    return this.getOpenActionUser();
   }
 
   toggleActionMenu(id: string | number, buttonEl: HTMLElement, event: Event): void {

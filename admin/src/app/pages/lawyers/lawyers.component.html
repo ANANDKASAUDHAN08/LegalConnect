@@ -119,7 +119,7 @@
 
   <!-- --- 1. Filter & Search Bar --- -->
   <div
-    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-col gap-2.5 animate-in">
+    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
     <!-- Top Controls Row -->
     <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
       <admin-search-input [value]="search" placeholder="Search lawyers by name, email, or Bar Council number..."
@@ -136,9 +136,9 @@
         </admin-select>
 
         <admin-select [options]="cityOptions" [value]="selectedCity"
-          (valueChange)="selectedCity = $event; onFilterChange();" minWidth="120px"
-          [showCheckmark]="false" [searchable]="true" searchPlaceholder="Search cities..."
-          [adminTooltip]="'Filter by city location'" tooltipPosition="top">
+          (valueChange)="selectedCity = $event; onFilterChange();" minWidth="120px" [showCheckmark]="false"
+          [searchable]="true" searchPlaceholder="Search cities..." [adminTooltip]="'Filter by city location'"
+          tooltipPosition="top">
         </admin-select>
 
         <admin-select [options]="courtOptions" [value]="selectedCourtCategory"
@@ -243,13 +243,37 @@
         </button>
 
         <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
-          (click)="selection.clear()">
-          Cancel
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          Deselect All
         </button>
-        } @else if (isFilterActive) {
-        <button (click)="resetFilters()"
-          class="text-[11px] text-indigo-400 hover:text-indigo-300 font-semibold underline underline-offset-2">
-          Clear Filter Criteria
+        }
+        @if (isPiiColumnVisible) {
+        <button (click)="toggleAllPii($event)"
+          class="btn flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
+          [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
+          tooltipPosition="top">
+          @if (piiState.isAllUnmasked) {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path
+              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+            </path>
+            <line x1="1" y1="1" x2="23" y2="23"></line>
+          </svg>
+          <span>Mask All Details</span>
+          } @else {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span>Reveal All Details</span>
+          }
+        </button>
+        }
+        @if (isFilterActive) {
+        <button (click)="resetFilters(); selection.clear();"
+          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
+          [adminTooltip]="'Clear search query, city & verification filters'">
+          Clear Filters
         </button>
         }
       </div>
@@ -283,17 +307,20 @@
         [showAction]="isFilterActive" actionLabel="Reset Filter Criteria" (action)="resetFilters()">
       </admin-empty-state>
       } @else {
-      <table class="data-table w-full text-left border-collapse" [class.table-refreshing]="!isInitialLoad && isLoading">
+      <table class="data-table table-fixed w-full text-left border-collapse min-w-[1100px]"
+        [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead>
           <tr
             class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold select-none">
-            <th class="p-3 text-center" width="35px">
-              <input type="checkbox" class="rounded border-slate-700 bg-slate-800" [checked]="isAllSelected()"
-                (change)="toggleSelectAll()" [adminTooltip]="'Select all rows'" tooltipPosition="top" />
+            <th class="p-2.5 text-center w-[40px] min-w-[40px]">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
+                class="rounded border-slate-700 bg-slate-800 cursor-pointer"
+                [adminTooltip]="'Select / deselect all advocates'" />
             </th>
 
             @if (columnVisibility.barCouncil) {
-            <th class="p-3.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-3.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none w-[130px] min-w-[130px]"
               (click)="toggleSort('barCouncil')" [adminTooltip]="'Click to sort by Bar Council ID'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'barCouncil'">Bar Council #</span>
@@ -320,7 +347,8 @@
             }
 
             @if (columnVisibility.profile) {
-            <th class="p-2.5 cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-2.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[260px] min-w-[250px]"
               (click)="toggleSort('name')" [adminTooltip]="'Click to sort by advocate full name'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'name'">Lawyer Profile</span>
@@ -347,11 +375,12 @@
             }
 
             @if (columnVisibility.specialization) {
-            <th class="p-2.5">Specializations</th>
+            <th class="p-2.5 w-[200px] min-w-[150px]">Specializations</th>
             }
 
             @if (columnVisibility.cityExp) {
-            <th class="p-2.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-2.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none w-[100px] min-w-[100px]"
               (click)="toggleSort('city')" [adminTooltip]="'Click to sort by city location'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'city'">City &amp; Exp</span>
@@ -378,7 +407,8 @@
             }
 
             @if (columnVisibility.performanceFee) {
-            <th class="p-2.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-2.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none w-[145px] min-w-[145px]"
               (click)="toggleSort('fee')" [adminTooltip]="'Click to sort by consultation fee rate'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'fee'">Performance &amp; Fee</span>
@@ -405,7 +435,8 @@
             }
 
             @if (columnVisibility.status) {
-            <th class="p-2.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none"
+            <th
+              class="p-2.5 whitespace-nowrap cursor-pointer group hover:text-sky-300 transition-colors select-none w-[115px] min-w-[115px]"
               (click)="toggleSort('status')" [adminTooltip]="'Click to sort by verification status'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Verification</span>
@@ -429,10 +460,10 @@
                 }
               </div>
             </th>
-            <th class="p-2.5 whitespace-nowrap">Payout Status</th>
+            <th class="p-2.5 whitespace-nowrap w-[115px] min-w-[115px]">Payout Status</th>
             }
 
-            <th class="p-2.5 text-center whitespace-nowrap w-16">Actions</th>
+            <th class="p-2.5 text-center whitespace-nowrap w-[75px] min-w-[75px]">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800/60 text-xs">
@@ -470,7 +501,7 @@
           @for (l of lawyers; track l.id) {
           <tr class="table-data-row transition-colors cursor-pointer" [ngClass]="{
               'bg-indigo-950/40 selected-row': selection.isSelected(l.id)
-            }" (click)="selection.toggle(l.id)" (dblclick)="openDocumentDrawer(l)">
+            }" (click)="onRowClick(l.id)" (dblclick)="onRowDblClick(l)">
             <td class="p-3 text-center" (click)="$event.stopPropagation()">
               <input type="checkbox" class="rounded border-slate-700 bg-slate-800"
                 [checked]="selection.isSelected(l.id)" (change)="selection.toggle(l.id)" />
@@ -486,8 +517,8 @@
 
             <!-- Profile & Email -->
             @if (columnVisibility.profile) {
-            <td class="p-2.5">
-              <div class="user-cell flex items-center gap-2">
+            <td class="p-2.5 w-[260px] min-w-[260px]">
+              <div class="user-cell flex items-center gap-2 max-w-[230px]">
                 <div class="relative shrink-0">
                   <div
                     class="user-avatar w-7 h-7 rounded-full flex items-center justify-center font-bold text-[11px] shadow-md text-white shrink-0"
@@ -499,11 +530,35 @@
                     [adminTooltip]="l.profile?.isAvailable ? 'Online & Available' : 'Offline'" tooltipPosition="top">
                   </span>
                 </div>
-                <div class="flex flex-col min-w-0">
+                <div class="flex flex-col min-w-0 overflow-hidden">
                   <span
                     class="user-name font-bold text-slate-200 group-hover:text-indigo-300 transition-colors text-xs truncate">{{
                     l.fullName }}</span>
-                  <span class="text-slate-400 text-[10px] truncate">{{ l.email }}</span>
+                  <div class="flex items-center gap-1">
+                    <span class="text-slate-400 text-[10px] truncate max-w-[155px]" [adminTooltip]="l.email">{{
+                      isPiiUnmasked(l.id, 'email') ? l.email :
+                      maskEmail(l.email) }}</span>
+                    <button (click)="toggleUnmaskPii(l.id, 'email', $event)"
+                      class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
+                      [adminTooltip]="isPiiUnmasked(l.id, 'email') ? 'Click to Mask Email' : 'Click to Reveal Email'"
+                      tooltipPosition="top">
+                      @if (isPiiUnmasked(l.id, 'email')) {
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path
+                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
+                        </path>
+                        <line x1="1" y1="1" x2="23" y2="23"></line>
+                      </svg>
+                      } @else {
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                      }
+                    </button>
+                  </div>
                 </div>
               </div>
             </td>
@@ -637,7 +692,7 @@
 @if (isPreviewDrawerOpen && selectedLawyerForReview) {
 <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex justify-end" (click)="closeDocumentDrawer()">
   <div
-    class="w-full max-w-4xl h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
+    class="w-full max-w-4xl h-full bg-slate-900 !rounded-l-2xl !rounded-r-none border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
     (click)="$event.stopPropagation()">
 
     <!-- Drawer Header -->
@@ -1054,7 +1109,7 @@
 @if (selectedLawyerDetail) {
 <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex justify-end" (click)="closeViewModal()">
   <div
-    class="w-full max-w-xl h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
+    class="w-full max-w-xl h-full bg-slate-900 !rounded-l-2xl !rounded-r-none border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
     (click)="$event.stopPropagation()">
 
     <!-- Drawer Header -->
@@ -1282,7 +1337,7 @@
 @if (editingLawyer) {
 <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex justify-end" (click)="closeEditModal()">
   <div
-    class="w-full max-w-xl h-full bg-slate-900 border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
+    class="w-full max-w-xl h-full bg-slate-900 !rounded-l-2xl !rounded-r-none border-l border-white/10 shadow-2xl flex flex-col animate-in-right overflow-hidden"
     (click)="$event.stopPropagation()">
 
     <!-- Drawer Header -->
