@@ -47,6 +47,12 @@ namespace CoreApi.Data
             EnsureColumnExists(context, "Consultations", "AuditLogJson", "LONGTEXT NULL");
             EnsureColumnExists(context, "LawyerProfiles", "VerificationRemarks", "TEXT NULL");
             EnsureColumnExists(context, "LawyerProfiles", "CopExpiryDate", "DATETIME NULL");
+            EnsureColumnExists(context, "ContactSubmissions", "Priority", "VARCHAR(20) NOT NULL DEFAULT 'Normal'");
+            EnsureColumnExists(context, "ContactSubmissions", "Category", "VARCHAR(50) NOT NULL DEFAULT 'General'");
+            EnsureColumnExists(context, "ContactSubmissions", "AssignedAgent", "VARCHAR(100) NULL");
+            EnsureColumnExists(context, "ContactSubmissions", "SlaDueDate", "DATETIME NULL");
+            EnsureColumnExists(context, "ContactSubmissions", "InternalNotesJson", "VARCHAR(4000) NULL");
+            EnsureColumnExists(context, "ContactSubmissions", "ResolutionNote", "VARCHAR(2000) NULL");
 
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
@@ -625,12 +631,9 @@ namespace CoreApi.Data
                 checkCmd.CommandText = "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'Users' AND column_name = 'AuthProvider'";
                 var colCount = Convert.ToInt32(checkCmd.ExecuteScalar());
 
-                if (colCount > 0)
-                {
-                    using var markCmd = conn.CreateCommand();
-                    markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4');";
-                    markCmd.ExecuteNonQuery();
-                }
+                using var markCmd = conn.CreateCommand();
+                markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4'), ('20260807055827_AddContactSubmissionExtendedFields', '8.0.4');";
+                markCmd.ExecuteNonQuery();
 
                 if (!wasOpen) conn.Close();
             }
