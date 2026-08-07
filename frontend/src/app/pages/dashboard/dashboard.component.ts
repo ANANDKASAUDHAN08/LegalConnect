@@ -21,8 +21,6 @@ export class DashboardComponent implements OnInit {
       if (user) {
         if (user.role === 'Lawyer') {
           this.router.navigate(['/lawyer/workstation']);
-        } else if (user.role === 'Admin') {
-          this.router.navigate(['/admin/resources']);
         } else {
           this.router.navigate(['/client/portal']);
         }

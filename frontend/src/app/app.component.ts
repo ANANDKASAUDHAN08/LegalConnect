@@ -10,6 +10,8 @@ import { PwaInstallBannerComponent } from './components/pwa-install-banner/pwa-i
 import { ConsentBannerComponent } from './components/consent-banner/consent-banner.component';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
+import { AuthService } from './services/auth.service';
+import { GoogleAuthService } from './services/google-auth.service';
 import { SeoService } from './services/seo.service';
 
 @Component({
@@ -34,6 +36,10 @@ export class AppComponent {
   constructor(
     private themeService: ThemeService,
     private settingsService: SettingsService,
-    private seoService: SeoService
-  ) { }
+    private seoService: SeoService,
+    private authService: AuthService,
+    private googleAuthService: GoogleAuthService
+  ) {
+    this.authService.initGlobalOAuthRedirectListener(this.googleAuthService);
+  }
 }

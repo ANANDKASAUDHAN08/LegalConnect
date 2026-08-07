@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { GoogleAuthService } from '../../../services/google-auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { ForgotPasswordComponent } from '../../forgot-password/forgot-password.component';
+import { extractErrorMessage } from '../../../core/utils/error-utils';
 
 @Component({
   selector: 'app-login',
@@ -149,42 +150,12 @@ export class LoginComponent implements OnInit, OnDestroy {
           return;
         }
 
-        // Complete session if token was received
-        this.auth.completeLogin().subscribe({
-          next: (isLoggedIn) => {
-            if (isLoggedIn) {
-              this.snackbar.show('Welcome back! Signed in successfully.', 'success');
-              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-              this.router.navigateByUrl(returnUrl);
-            } else {
-              const msg = 'Session initialization failed. Please try again.';
-              this.error.set(msg);
-              this.snackbar.show(msg, 'error');
-              this.loading.set(false);
-            }
-          },
-          error: () => {
-            this.loading.set(false);
-          }
-        });
+        this.snackbar.show('Welcome back! Signed in successfully.', 'success');
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+        this.router.navigateByUrl(returnUrl);
       },
       error: (err) => {
-        let rawMsg = '';
-        if (typeof err?.error === 'string') {
-          rawMsg = err.error;
-        } else if (err?.error?.message && typeof err.error.message === 'string') {
-          rawMsg = err.error.message;
-        } else if (err?.error?.title && typeof err.error.title === 'string') {
-          rawMsg = err.error.title;
-        } else if (err?.message && typeof err.message === 'string') {
-          rawMsg = err.message;
-        }
-
-        let userMsg = 'Invalid email address or password. Please double-check your credentials and try again.';
-        if (rawMsg && !rawMsg.toLowerCase().includes('invalid credential')) {
-          userMsg = rawMsg;
-        }
-
+        const userMsg = extractErrorMessage(err, 'Invalid email address or password. Please double-check your credentials and try again.');
         this.error.set(userMsg);
         this.loading.set(false);
       }
@@ -197,25 +168,21 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     this.googleAuth.signInWithGoogle().subscribe({
       next: (credential) => {
+        if (!credential) return;
+
         this.auth.loginWithGoogle(credential).subscribe({
-          next: () => {
-            this.auth.completeLogin().subscribe({
-              next: (isLoggedIn) => {
-                if (isLoggedIn) {
-                  this.snackbar.show('Signed in with Google successfully!', 'success');
-                  const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-                  this.router.navigateByUrl(returnUrl);
-                } else {
-                  this.error.set('Failed to initialize session with Google.');
-                  this.snackbar.show('Session setup failed.', 'error');
-                  this.googleLoading.set(false);
-                }
-              },
-              error: () => this.googleLoading.set(false)
-            });
+          next: (isLoggedIn) => {
+            if (isLoggedIn) {
+              this.snackbar.show('Signed in with Google successfully!', 'success');
+              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+              this.router.navigateByUrl(returnUrl);
+            } else {
+              this.error.set('Failed to initialize session with Google.');
+              this.googleLoading.set(false);
+            }
           },
           error: (err) => {
-            const msg = typeof err?.error === 'string' ? err.error : (err?.error?.message || 'Google authentication failed.');
+            const msg = extractErrorMessage(err, 'Google authentication failed.');
             this.error.set(msg);
             this.snackbar.show(msg, 'error');
             this.googleLoading.set(false);
@@ -225,7 +192,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       error: (err) => {
         const silentCodes = ['auth/popup-closed-by-user', 'auth/user-cancelled', 'auth/cancelled-popup-request'];
         if (!silentCodes.includes(err?.code)) {
-          const msg = err?.message || 'Google Sign-In failed or popup was closed.';
+          const msg = err?.message || 'Google Sign-In failed.';
           this.error.set(msg);
           this.snackbar.show(msg, 'error');
         }

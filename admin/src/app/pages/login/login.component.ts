@@ -44,7 +44,17 @@ export class LoginComponent {
       },
       error: (err) => {
         this.isLoading = false;
-        this.errorMessage = err?.error?.message || 'Invalid email or password or unauthorized.';
+        if (err?.status === 0) {
+          this.errorMessage = 'Unable to reach backend server. Please check your network connection.';
+        } else if (err?.status === 429) {
+          this.errorMessage = 'Too many login attempts. Please wait a minute before trying again.';
+        } else if (err?.status >= 500) {
+          this.errorMessage = 'Server error occurred. Please try again shortly.';
+        } else if (typeof err?.error === 'string' && err.error.trim()) {
+          this.errorMessage = err.error;
+        } else {
+          this.errorMessage = err?.error?.message || 'Invalid email or password credentials.';
+        }
       }
     });
   }

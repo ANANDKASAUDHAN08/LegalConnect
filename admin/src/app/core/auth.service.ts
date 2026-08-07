@@ -33,8 +33,39 @@ export class AdminAuthService {
   get user(): AdminUser | null { return this.userSubject.value; }
   get isAuthenticated(): boolean { return !!this.token && !!this.user; }
 
+  private adminChannel: BroadcastChannel | null = null;
+
   constructor(private http: HttpClient, private router: Router) {
+    this.initMultiTabSync();
     this.restoreSession();
+  }
+
+  private initMultiTabSync(): void {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        this.adminChannel = new BroadcastChannel('lc_admin_auth_sync');
+        this.adminChannel.onmessage = (event) => {
+          if (event.data?.type === 'LOGOUT') {
+            this.clearSession(false);
+            this.router.navigate(['/login']);
+          } else if (event.data?.type === 'LOGIN') {
+            this.restoreSession();
+          }
+        };
+      } catch {
+        // Fallback
+      }
+    }
+  }
+
+  private broadcastAuthEvent(type: 'LOGIN' | 'LOGOUT'): void {
+    if (this.adminChannel) {
+      try {
+        this.adminChannel.postMessage({ type });
+      } catch {
+        // Ignore
+      }
+    }
   }
 
   private isTokenExpired(token: string): boolean {
@@ -115,6 +146,7 @@ export class AdminAuthService {
           }
           this.tokenSubject.next(res.token);
           this.loadedSubject.next(true);
+          this.broadcastAuthEvent('LOGIN');
         }
       })
     );
@@ -135,7 +167,10 @@ export class AdminAuthService {
     this.router.navigate(['/login']);
   }
 
-  private clearSession(): void {
+  private clearSession(shouldBroadcast = true): void {
+    if (shouldBroadcast) {
+      this.broadcastAuthEvent('LOGOUT');
+    }
     sessionStorage.removeItem('lc_admin_token');
     sessionStorage.removeItem('lc_admin_user');
     localStorage.removeItem('lc_admin_token');

@@ -151,13 +151,6 @@ export const routes: Routes = [
     title: 'Client Portal | LegalConnect'
   },
   {
-    path: 'admin/resources',
-    loadComponent: () => import('./pages/admin-resources/admin-resources.component').then(m => m.AdminResourcesComponent),
-    canActivate: [authGuard, roleGuard],
-    data: { expectedRoles: ['Admin', 'Lawyer', 'Client'] },
-    title: 'Manage Resources | LegalConnect'
-  },
-  {
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard],

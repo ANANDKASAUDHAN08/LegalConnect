@@ -6,6 +6,7 @@ import { AuthService } from '../../../services/auth.service';
 import { GoogleAuthService } from '../../../services/google-auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { extractErrorMessage } from '../../../core/utils/error-utils';
 
 @Component({
   selector: 'app-register',
@@ -233,12 +234,18 @@ export class RegisterComponent implements OnInit {
       role: this.registerData.role
     }).subscribe({
       next: (res) => {
-        const msg = res?.message || 'Account created successfully! You can now sign in.';
-        this.snackbar.show(msg, 'success');
-        this.router.navigate(['/login']);
+        if (res?.token && res?.user) {
+          this.snackbar.show('Account created successfully! Welcome to LegalConnect.', 'success');
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          this.router.navigateByUrl(returnUrl);
+        } else {
+          const msg = res?.message || 'Account created successfully! You can now sign in.';
+          this.snackbar.show(msg, 'success');
+          this.router.navigate(['/login']);
+        }
       },
       error: (err) => {
-        const rawMsg = typeof err?.error === 'string' ? err.error : (err?.error?.message || 'Registration failed.');
+        const rawMsg = extractErrorMessage(err, 'Registration failed. Please try again.');
         this.error.set(rawMsg);
         this.loading.set(false);
       }
@@ -249,27 +256,23 @@ export class RegisterComponent implements OnInit {
     this.error.set(null);
     this.googleLoading.set(true);
 
-    this.googleAuth.signInWithGoogle().subscribe({
+    this.googleAuth.signInWithGoogle(this.registerData.role).subscribe({
       next: (credential) => {
+        if (!credential) return;
+
         this.auth.loginWithGoogle(credential, this.registerData.role).subscribe({
-          next: () => {
-            this.auth.completeLogin().subscribe({
-              next: (isLoggedIn) => {
-                if (isLoggedIn) {
-                  this.snackbar.show('Signed in with Google successfully!', 'success');
-                  const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-                  this.router.navigateByUrl(returnUrl);
-                } else {
-                  this.error.set('Failed to initialize session with Google.');
-                  this.snackbar.show('Session setup failed.', 'error');
-                  this.googleLoading.set(false);
-                }
-              },
-              error: () => this.googleLoading.set(false)
-            });
+          next: (isLoggedIn) => {
+            if (isLoggedIn) {
+              this.snackbar.show('Signed in with Google successfully!', 'success');
+              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+              this.router.navigateByUrl(returnUrl);
+            } else {
+              this.error.set('Failed to initialize session with Google.');
+              this.googleLoading.set(false);
+            }
           },
           error: (err) => {
-            const msg = typeof err?.error === 'string' ? err.error : (err?.error?.message || 'Google registration failed.');
+            const msg = extractErrorMessage(err, 'Google registration failed.');
             this.error.set(msg);
             this.snackbar.show(msg, 'error');
             this.googleLoading.set(false);
@@ -279,7 +282,7 @@ export class RegisterComponent implements OnInit {
       error: (err) => {
         const silentCodes = ['auth/popup-closed-by-user', 'auth/user-cancelled', 'auth/cancelled-popup-request'];
         if (!silentCodes.includes(err?.code)) {
-          const msg = err?.message || 'Google Sign-In failed or popup was closed.';
+          const msg = err?.message || 'Google Sign-In failed.';
           this.error.set(msg);
           this.snackbar.show(msg, 'error');
         }
