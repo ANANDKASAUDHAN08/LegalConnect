@@ -447,27 +447,6 @@ export class LegalService {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/suggest-resource`, resource);
   }
 
-  getAdminResources(filters: any): Observable<ApiResponse<any>> {
-    let params = `?page=${filters.page || 1}&limit=${filters.limit || 10}`;
-    if (filters.status) params += `&status=${encodeURIComponent(filters.status)}`;
-    if (filters.city) params += `&city=${encodeURIComponent(filters.city)}`;
-    if (filters.type) params += `&type=${encodeURIComponent(filters.type)}`;
-    if (filters.search) params += `&search=${encodeURIComponent(filters.search)}`;
-    return this.http.get<ApiResponse<any>>(`${this.apiUrl}/admin/resources${params}`);
-  }
-
-  createAdminResource(resource: any): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/admin/resources`, resource);
-  }
-
-  updateAdminResource(id: string, resource: any): Observable<ApiResponse<any>> {
-    return this.http.put<ApiResponse<any>>(`${this.apiUrl}/admin/resources/${id}`, resource);
-  }
-
-  deleteAdminResource(id: string): Observable<ApiResponse<any>> {
-    return this.http.delete<ApiResponse<any>>(`${this.apiUrl}/admin/resources/${id}`);
-  }
-
   // AI Scenario Solver — calls Gemini to parse natural-language legal situations
   solveAiScenario(description: string): Observable<{
     success: boolean;

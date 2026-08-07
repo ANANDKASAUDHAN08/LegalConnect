@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, tap, catchError, of, map, Observable, timer } from 'rxjs';
+import { BehaviorSubject, tap, catchError, of, map, Observable, timer, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenStorageService } from './token-storage.service';
 import { UserProfileService } from './user-profile.service';
+import { GoogleAuthService } from './google-auth.service';
 import { normalizeMediaUrl } from '../core/utils/url-utils';
 
 export interface UserProfile {
@@ -56,6 +57,7 @@ export class AuthService {
   private _proactiveRefreshRetries = 0;
   private readonly MAX_REFRESH_RETRIES = 2;
   private readonly RETRY_DELAY_MS = 3000;
+  private authChannel: BroadcastChannel | null = null;
 
   private httpOptions = {
     withCredentials: true
@@ -67,29 +69,73 @@ export class AuthService {
     private tokenStorage: TokenStorageService,
     private userProfileService: UserProfileService
   ) {
-    if (typeof window !== 'undefined') {
-      window.addEventListener('storage', (event) => {
-        if (event.key === 'lc_token') {
-          const newToken = event.newValue;
-          if (newToken) {
-            this.checkSession().subscribe();
-          } else {
-            this.handleSessionExpired();
+    this.initMultiTabSync();
+  }
+
+  /**
+   * Initializes Web BroadcastChannel to synchronize authentication state
+   * (Logins, Logouts) across all open browser tabs in real time.
+   */
+  private initMultiTabSync(): void {
+    if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+      try {
+        this.authChannel = new BroadcastChannel('lc_public_auth_sync');
+        this.authChannel.onmessage = (event) => {
+          if (event.data?.type === 'LOGOUT') {
+            this.clearSessionState(false);
+            this.router.navigate(['/login']);
+          } else if (event.data?.type === 'LOGIN') {
+            this.refreshToken().pipe(
+              switchMap(() => this.checkSession()),
+              catchError(() => of(false))
+            ).subscribe();
           }
-        }
-      });
+        };
+      } catch {
+        // Fallback for restricted environments
+      }
     }
+  }
+
+  private broadcastAuthEvent(type: 'LOGIN' | 'LOGOUT'): void {
+    if (this.authChannel) {
+      try {
+        this.authChannel.postMessage({ type });
+      } catch {
+        // Ignore broadcast failure
+      }
+    }
+  }
+
+  /**
+   * Global listener for Google OAuth mobile/PWA redirects.
+   * Runs on app startup to catch returning OAuth credentials regardless of the current URL.
+   */
+  initGlobalOAuthRedirectListener(googleAuth: GoogleAuthService): void {
+    googleAuth.handleRedirectResult().subscribe((res) => {
+      if (res?.idToken) {
+        this.loginWithGoogle(res.idToken, res.role).subscribe({
+          next: (isLoggedIn) => {
+            if (isLoggedIn) {
+              const currentUrl = this.router.url.split('?')[0];
+              if (currentUrl === '/login' || currentUrl === '/register') {
+                this.router.navigateByUrl('/dashboard');
+              }
+            }
+          }
+        });
+      }
+    });
   }
 
   getToken(): string | null {
     return this.tokenStorage.getToken();
   }
 
-  register(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/register`, data, this.httpOptions);
-  }
-
   private handleLoginSuccess(res: any): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('lc_has_session', 'true');
+    }
     if (res.token) {
       this.tokenStorage.setToken(res.token);
       this.scheduleProactiveRefresh(res.token);
@@ -106,15 +152,35 @@ export class AuthService {
     }
   }
 
-  login(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/login`, data, this.httpOptions).pipe(
-      tap(res => this.handleLoginSuccess(res))
+  register(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, data, this.httpOptions).pipe(
+      tap(res => {
+        if (res?.token || res?.user) {
+          this.handleLoginSuccess(res);
+          this.broadcastAuthEvent('LOGIN');
+        }
+      })
     );
   }
 
-  loginWithGoogle(credential: string, role?: string): Observable<any> {
+  login(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/login`, data, this.httpOptions).pipe(
+      tap(res => {
+        if (res?.token || res?.user) {
+          this.handleLoginSuccess(res);
+          this.broadcastAuthEvent('LOGIN');
+        }
+      })
+    );
+  }
+
+  loginWithGoogle(credential: string, role?: string): Observable<boolean> {
     return this.http.post<any>(`${this.apiUrl}/google`, { credential, role: role || 'Client' }, this.httpOptions).pipe(
-      tap(res => this.handleLoginSuccess(res))
+      tap(res => {
+        this.handleLoginSuccess(res);
+        this.broadcastAuthEvent('LOGIN');
+      }),
+      switchMap(() => this.completeLogin())
     );
   }
 
@@ -126,18 +192,58 @@ export class AuthService {
   }
 
   logout(): Observable<any> {
-    // 0ms Optimistic UI Logout: Immediately clear session state & navigate to /login
+    this.broadcastAuthEvent('LOGOUT');
     this.clearSessionState();
     this.router.navigate(['/login']);
 
-    // Dispatch backend logout & cookie clearance request in background
     return this.http.post<any>(`${this.apiUrl}/logout`, {}, this.httpOptions).pipe(
       catchError(() => of(null))
     );
   }
 
+  /**
+   * Enterprise Session Hydration:
+   * Uses an un-sensitive session indicator hint (lc_has_session) to skip network requests
+   * for guest users, avoiding unnecessary 401 console errors. If a session is expected,
+   * silently recovers the access token via HttpOnly __session refresh cookie.
+   */
   checkSession(): Observable<boolean> {
-    return this.userProfileService.getProfile().pipe(
+    const currentToken = this.getToken();
+
+    if (currentToken) {
+      return this.userProfileService.getProfile().pipe(
+        map((res: any) => {
+          this._isSessionLoaded.next(true);
+          if (res && res.isAuthenticated) {
+            const userObj = { ...res, isAuthenticated: true };
+            this._currentUser.next(userObj);
+            this.tokenStorage.setCachedUser(userObj);
+            this._isLoggedIn.next(true);
+            if (typeof window !== 'undefined') localStorage.setItem('lc_has_session', 'true');
+            return true;
+          } else {
+            this.clearSessionState();
+            return false;
+          }
+        }),
+        catchError(() => {
+          this._isSessionLoaded.next(true);
+          this.clearSessionState();
+          return of(false);
+        })
+      );
+    }
+
+    const hasSessionHint = typeof window !== 'undefined' && localStorage.getItem('lc_has_session') === 'true';
+
+    if (!hasSessionHint) {
+      this._isSessionLoaded.next(true);
+      this.clearSessionState(false);
+      return of(false);
+    }
+
+    return this.refreshToken().pipe(
+      switchMap(() => this.userProfileService.getProfile()),
       map((res: any) => {
         this._isSessionLoaded.next(true);
         if (res && res.isAuthenticated) {
@@ -145,9 +251,11 @@ export class AuthService {
             this.tokenStorage.setToken(res.token);
             this.scheduleProactiveRefresh(res.token);
           }
-          this._currentUser.next(res);
-          this.tokenStorage.setCachedUser(res);
+          const userObj = { ...res, isAuthenticated: true };
+          this._currentUser.next(userObj);
+          this.tokenStorage.setCachedUser(userObj);
           this._isLoggedIn.next(true);
+          if (typeof window !== 'undefined') localStorage.setItem('lc_has_session', 'true');
           return true;
         } else {
           this.clearSessionState();
@@ -169,6 +277,7 @@ export class AuthService {
           this.tokenStorage.setToken(res.token);
           this._proactiveRefreshRetries = 0;
           this.scheduleProactiveRefresh(res.token);
+          if (typeof window !== 'undefined') localStorage.setItem('lc_has_session', 'true');
         }
       })
     );
@@ -195,7 +304,13 @@ export class AuthService {
     }
   }
 
-  private clearSessionState(): void {
+  private clearSessionState(shouldBroadcast = true): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('lc_has_session');
+    }
+    if (shouldBroadcast) {
+      this.broadcastAuthEvent('LOGOUT');
+    }
     this.cancelProactiveRefresh();
     this.tokenStorage.removeToken();
     this._currentUser.next(null);
@@ -219,23 +334,20 @@ export class AuthService {
         return;
       }
 
-      // Dynamic refresh calculation:
-      // If token duration > 5 mins (standard 15m/1h production token), refresh 2 mins before expiry.
-      // If short testing token (e.g. 30s), refresh at 80% of total lifetime.
       const bufferMs = totalDurationMs > 300000 ? (2 * 60 * 1000) : (totalDurationMs * 0.2);
       const delayMs = Math.max(1000, (expiresAtMs - bufferMs) - nowMs);
 
       this._logoutTimerId = setTimeout(() => {
         this.executeProactiveRefresh();
       }, delayMs);
-    } catch (e) {
+    } catch {
       // Ignore token parse error
     }
   }
 
   private executeProactiveRefresh(): void {
     this.refreshToken().pipe(
-      catchError(err => {
+      catchError(() => {
         if (this._proactiveRefreshRetries < this.MAX_REFRESH_RETRIES) {
           this._proactiveRefreshRetries++;
           timer(this.RETRY_DELAY_MS).subscribe(() => this.executeProactiveRefresh());

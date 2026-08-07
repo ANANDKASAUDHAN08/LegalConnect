@@ -1,42 +1,39 @@
 import { Injectable } from '@angular/core';
 
+/**
+ * Enterprise In-Memory Security Model:
+ * Access tokens and user profile state are kept strictly IN-MEMORY.
+ * They are NEVER written to localStorage to protect against XSS token harvesting.
+ * Sessions are restored securely on load via HttpOnly refresh cookies (__session).
+ */
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
-  private readonly TOKEN_KEY = 'lc_token';
-  private readonly USER_KEY = 'lc_user_profile';
+  private inMemoryToken: string | null = null;
+  private inMemoryUser: any | null = null;
 
   getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem(this.TOKEN_KEY);
+    return this.inMemoryToken;
   }
 
   setToken(token: string): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(this.TOKEN_KEY, token);
-    }
+    this.inMemoryToken = token;
   }
 
   removeToken(): void {
+    this.inMemoryToken = null;
+    this.inMemoryUser = null;
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
+      // Clear legacy storage keys if present
+      localStorage.removeItem('lc_token');
+      localStorage.removeItem('lc_user_profile');
     }
   }
 
   getCachedUser(): any | null {
-    if (typeof window === 'undefined') return null;
-    const data = localStorage.getItem(this.USER_KEY);
-    if (!data) return null;
-    try {
-      return JSON.parse(data);
-    } catch {
-      return null;
-    }
+    return this.inMemoryUser;
   }
 
   setCachedUser(user: any): void {
-    if (typeof window !== 'undefined' && user) {
-      localStorage.setItem(this.USER_KEY, JSON.stringify(user));
-    }
+    this.inMemoryUser = user;
   }
 }
