@@ -30,18 +30,55 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("register")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
-            var result = await _authService.RegisterAsync(request, ip);
+            var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
+
+            var result = await _authService.RegisterAndLoginAsync(request, ip, userAgent);
             if (!result.isSuccess)
             {
-                return BadRequest(result.message);
+                return BadRequest(new { message = result.message });
             }
+
+            var user = result.user;
+            if (user != null && result.sessionId != null)
+            {
+                var token = _tokenService.CreateAccessToken(user, result.sessionId);
+                var (rawRefresh, _) = _tokenService.GenerateRefreshToken(user.Id, result.sessionId);
+
+                _tokenService.SetAuthCookies(Response, token, rawRefresh);
+
+                return Ok(new
+                {
+                    token,
+                    message = result.message,
+                    user = new
+                    {
+                        id = user.Id,
+                        fullName = user.FullName,
+                        email = user.Email,
+                        role = user.Role,
+                        createdAt = user.CreatedAt,
+                        phone = user.Phone,
+                        isPhoneVerified = user.IsPhoneVerified,
+                        isEmailVerified = user.IsEmailVerified,
+                        isTwoFactorEnabled = user.IsTwoFactorEnabled,
+                        clientLanguage = user.ClientLanguage,
+                        clientCity = user.ClientCity,
+                        clientInterest = user.ClientInterest,
+                        avatarUrl = user.AvatarUrl,
+                        identityStatus = user.IdentityStatus
+                    }
+                });
+            }
+
             return Ok(new { message = result.message });
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -54,7 +91,7 @@ namespace CoreApi.Controllers
                 {
                     return Ok(new { requires2fa = true, message = result.message });
                 }
-                return Unauthorized(result.message);
+                return Unauthorized(new { message = result.message });
             }
 
             var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
@@ -88,6 +125,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("google")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto request)
         {
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
@@ -96,7 +134,7 @@ namespace CoreApi.Controllers
             var result = await _authService.GoogleLoginAsync(request, ip, userAgent);
             if (!result.isSuccess)
             {
-                return BadRequest(result.message);
+                return BadRequest(new { message = result.message });
             }
 
             var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
@@ -131,6 +169,7 @@ namespace CoreApi.Controllers
 
         [Authorize]
         [HttpPost("logout")]
+        [EnableRateLimiting("AuthSessionPolicy")]
         public async Task<IActionResult> Logout()
         {
             var sessionIdClaim = User.FindFirst("SessionId")?.Value;
@@ -145,6 +184,7 @@ namespace CoreApi.Controllers
 
         [HttpPost("refresh")]
         [AllowAnonymous]
+        [EnableRateLimiting("AuthSessionPolicy")]
         public async Task<IActionResult> RefreshToken()
         {
             var rawRefreshToken = Request.Cookies["__session"];
@@ -177,7 +217,7 @@ namespace CoreApi.Controllers
             var result = await _authService.ResetPasswordAsync(request);
             if (!result.isSuccess)
             {
-                return BadRequest(result.message);
+                return BadRequest(new { message = result.message });
             }
             return Ok(new { message = result.message });
         }

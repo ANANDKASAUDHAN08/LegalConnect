@@ -35,7 +35,13 @@ namespace CoreApi.Services
                 new Claim("SessionId", sessionId)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration.GetSection("Jwt:Key").Value!));
+            var jwtKey = _configuration["Jwt:Key"] ?? _configuration["Jwt__Key"];
+            if (string.IsNullOrEmpty(jwtKey))
+            {
+                throw new InvalidOperationException("Required configuration 'Jwt:Key' is missing.");
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
             var token = new JwtSecurityToken(

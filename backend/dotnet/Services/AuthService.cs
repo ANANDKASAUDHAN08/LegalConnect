@@ -84,6 +84,81 @@ namespace CoreApi.Services
             return (true, "User registered successfully! You can now sign in.", user);
         }
 
+        public async Task<(bool isSuccess, string message, User? user, string? sessionId)> RegisterAndLoginAsync(RegisterDto request, string? ipAddress, string? userAgent)
+        {
+            if (await _context.Users.AnyAsync(u => u.Email == request.Email))
+            {
+                _logger.LogWarning("[Security Audit] Registration failed: Email already exists. Email: {Email}, IP: {IP}", request.Email, ipAddress);
+                return (false, "User with this email already exists.", null, null);
+            }
+
+            var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
+            var emailToken = Guid.NewGuid().ToString("N");
+
+            var user = new User
+            {
+                FullName = request.FullName,
+                Email = request.Email,
+                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password),
+                Role = request.Role,
+                CreatedAt = DateTime.UtcNow,
+                IsEmailVerified = !requireVerification,
+                EmailVerificationToken = requireVerification ? emailToken : null
+            };
+
+            _context.Users.Add(user);
+            await _context.SaveChangesAsync();
+
+            if (user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
+            {
+                var lawyerProfile = new LawyerProfile
+                {
+                    UserId = user.Id,
+                    BarCouncilNumber = "PENDING",
+                    Specialization = "General Practice",
+                    ExperienceYears = 0,
+                    IsVerified = false,
+                    UpdatedAt = DateTime.UtcNow
+                };
+                _context.LawyerProfiles.Add(lawyerProfile);
+            }
+
+            if (requireVerification)
+            {
+                await _context.SaveChangesAsync();
+                await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
+                return (true, "User registered successfully! Please check your email to verify your account.", user, null);
+            }
+
+            var sessionId = Guid.NewGuid().ToString("N");
+            _context.ActiveSessions.Add(new ActiveSession
+            {
+                UserId = user.Id,
+                TokenId = sessionId,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                CreatedAt = DateTime.UtcNow,
+                LastActive = DateTime.UtcNow
+            });
+
+            _context.LoginHistories.Add(new LoginHistory
+            {
+                UserId = user.Id,
+                IpAddress = ipAddress,
+                UserAgent = userAgent,
+                LoginTime = DateTime.UtcNow,
+                Status = "Success"
+            });
+
+            var (_, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
+            _context.RefreshTokens.Add(refreshEntity);
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation("[Security Audit] Atomic registration & session creation succeeded. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}", user.Id, user.Email, sessionId);
+            return (true, "Registered and authenticated successfully!", user, sessionId);
+        }
+
         public async Task<(bool isSuccess, string message, bool requires2fa, User? user, string? sessionId)> LoginAsync(LoginDto request, string? ipAddress, string? userAgent)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);

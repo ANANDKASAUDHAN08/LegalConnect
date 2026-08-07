@@ -36,6 +36,11 @@ namespace LegalConnect.Middleware
             }
         }
 
+        private static readonly JsonSerializerOptions StandardJsonOptions = new JsonSerializerOptions 
+        { 
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+        };
+
         private Task HandleExceptionAsync(HttpContext context, Exception exception, string errorId)
         {
             context.Response.ContentType = "application/json";
@@ -49,8 +54,7 @@ namespace LegalConnect.Middleware
                 timestamp = DateTime.UtcNow
             };
 
-            var jsonOptions = new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase };
-            return context.Response.WriteAsync(JsonSerializer.Serialize(response, jsonOptions));
+            return context.Response.WriteAsync(JsonSerializer.Serialize(response, StandardJsonOptions));
         }
     }
 }
