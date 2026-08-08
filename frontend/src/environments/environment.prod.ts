@@ -2,7 +2,7 @@ export const environment = {
   production: true,
   firebase: {
     apiKey: "AIzaSyAbT7gkJLThxS6OwKp7X98E5ehfpQnBRPY",
-    authDomain: "legalconnect-501109.firebaseapp.com",
+    authDomain: "legalconnect-501109.web.app",
     projectId: "legalconnect-501109",
     storageBucket: "legalconnect-501109.firebasestorage.app",
     messagingSenderId: "14034347861",

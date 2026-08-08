@@ -258,7 +258,10 @@ export class RegisterComponent implements OnInit {
 
     this.googleAuth.signInWithGoogle(this.registerData.role).subscribe({
       next: (credential) => {
-        if (!credential) return;
+        if (!credential) {
+          this.googleLoading.set(false);
+          return;
+        }
 
         this.auth.loginWithGoogle(credential, this.registerData.role).subscribe({
           next: (isLoggedIn) => {
@@ -280,6 +283,10 @@ export class RegisterComponent implements OnInit {
         });
       },
       error: (err) => {
+        // If user double-clicked while popup is still open, keep loading state
+        if (err?.code === 'auth/popup-already-open') {
+          return;
+        }
         const silentCodes = ['auth/popup-closed-by-user', 'auth/user-cancelled', 'auth/cancelled-popup-request'];
         if (!silentCodes.includes(err?.code)) {
           const msg = err?.message || 'Google Sign-In failed.';

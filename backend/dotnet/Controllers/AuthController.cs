@@ -53,6 +53,7 @@ namespace CoreApi.Controllers
                 return Ok(new
                 {
                     token,
+                    refreshToken = rawRefresh,
                     message = result.message,
                     user = new
                     {
@@ -103,6 +104,7 @@ namespace CoreApi.Controllers
             return Ok(new
             {
                 token,
+                refreshToken = rawRefresh,
                 message = result.message,
                 user = new
                 {
@@ -146,6 +148,7 @@ namespace CoreApi.Controllers
             return Ok(new
             {
                 token,
+                refreshToken = rawRefresh,
                 message = result.message,
                 user = new
                 {
@@ -167,16 +170,21 @@ namespace CoreApi.Controllers
             });
         }
 
-        [Authorize]
+        [AllowAnonymous]
         [HttpPost("logout")]
         [EnableRateLimiting("AuthSessionPolicy")]
         public async Task<IActionResult> Logout()
         {
-            var sessionIdClaim = User.FindFirst("SessionId")?.Value;
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            // Allow logout even when access token is expired/missing.
+            // This prevents ghost sessions where cookies persist but the frontend already cleared state.
+            var sessionIdClaim = User?.FindFirst("SessionId")?.Value;
+            var userIdClaim = User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
 
-            await _authService.LogoutAsync(sessionIdClaim, userIdClaim, ip);
+            if (!string.IsNullOrEmpty(sessionIdClaim) || !string.IsNullOrEmpty(userIdClaim))
+            {
+                await _authService.LogoutAsync(sessionIdClaim, userIdClaim, ip);
+            }
             _tokenService.ClearAuthCookies(Response);
 
             return Ok(new { message = "Logged out successfully." });
@@ -185,9 +193,14 @@ namespace CoreApi.Controllers
         [HttpPost("refresh")]
         [AllowAnonymous]
         [EnableRateLimiting("AuthSessionPolicy")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshRequestDto? bodyPayload = null)
         {
             var rawRefreshToken = Request.Cookies["__session"];
+            if (string.IsNullOrWhiteSpace(rawRefreshToken) && bodyPayload != null && !string.IsNullOrWhiteSpace(bodyPayload.RefreshToken))
+            {
+                rawRefreshToken = bodyPayload.RefreshToken;
+            }
+
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
             var userAgent = Request.Headers.ContainsKey("User-Agent") ? Request.Headers["User-Agent"].ToString() : null;
 
@@ -199,7 +212,7 @@ namespace CoreApi.Controllers
 
             _tokenService.SetAuthCookies(Response, result.accessToken!, result.newRawRefreshToken!);
 
-            return Ok(new { token = result.accessToken, message = result.message });
+            return Ok(new { token = result.accessToken, refreshToken = result.newRawRefreshToken, message = result.message });
         }
 
         [HttpPost("forgot-password")]

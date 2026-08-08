@@ -140,4 +140,9 @@ namespace CoreApi.Models
         public bool? NotifyEmailDigest { get; set; }
         public bool? NotifyPushEnabled { get; set; }
     }
+
+    public class RefreshRequestDto
+    {
+        public string? RefreshToken { get; set; }
+    }
 }

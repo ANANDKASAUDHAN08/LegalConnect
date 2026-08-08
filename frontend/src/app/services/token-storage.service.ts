@@ -1,31 +1,80 @@
 import { Injectable } from '@angular/core';
 
 /**
- * Enterprise In-Memory Security Model:
- * Access tokens and user profile state are kept strictly IN-MEMORY.
- * They are NEVER written to localStorage to protect against XSS token harvesting.
- * Sessions are restored securely on load via HttpOnly refresh cookies (__session).
+ * Hybrid Token Persistence Strategy:
+ *
+ * Access tokens (short-lived, 15 min) are stored in BOTH in-memory and localStorage.
+ * - In-memory for fast access during the session
+ * - localStorage for persistence across page refreshes/PWA restarts
+ *
+ * Refresh tokens are stored in localStorage (lc_refresh_hint) as the
+ * reliable persistence mechanism. HttpOnly __session cookies are a secondary
+ * channel but are NOT relied upon due to Firebase Hosting cookie stripping
+ * and PWA cookie partitioning issues.
+ *
+ * This is the same approach used by Notion, Linear, Vercel, Supabase, etc.
  */
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
+  private static readonly ACCESS_TOKEN_KEY = 'lc_access_token';
+  private static readonly REFRESH_TOKEN_KEY = 'lc_refresh_hint';
+
   private inMemoryToken: string | null = null;
   private inMemoryUser: any | null = null;
 
+  constructor() {
+    // Hydrate in-memory token from localStorage on service init (page refresh)
+    if (typeof window !== 'undefined') {
+      this.inMemoryToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_KEY);
+    }
+  }
+
   getToken(): string | null {
-    return this.inMemoryToken;
+    // In-memory is always the freshest copy
+    if (this.inMemoryToken) {
+      return this.inMemoryToken;
+    }
+    // Fallback to localStorage (for page refresh scenarios before constructor runs)
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_KEY);
+      if (stored) {
+        this.inMemoryToken = stored;
+      }
+      return stored;
+    }
+    return null;
   }
 
   setToken(token: string): void {
     this.inMemoryToken = token;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TokenStorageService.ACCESS_TOKEN_KEY, token);
+    }
+  }
+
+  getFallbackRefreshToken(): string | null {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(TokenStorageService.REFRESH_TOKEN_KEY);
+    }
+    return null;
+  }
+
+  setFallbackRefreshToken(refreshToken: string): void {
+    if (typeof window !== 'undefined' && refreshToken) {
+      localStorage.setItem(TokenStorageService.REFRESH_TOKEN_KEY, refreshToken);
+    }
   }
 
   removeToken(): void {
     this.inMemoryToken = null;
     this.inMemoryUser = null;
     if (typeof window !== 'undefined') {
-      // Clear legacy storage keys if present
+      localStorage.removeItem(TokenStorageService.ACCESS_TOKEN_KEY);
+      localStorage.removeItem(TokenStorageService.REFRESH_TOKEN_KEY);
+      // Clean up legacy keys
       localStorage.removeItem('lc_token');
       localStorage.removeItem('lc_user_profile');
+      localStorage.removeItem('lc_has_session');
     }
   }
 

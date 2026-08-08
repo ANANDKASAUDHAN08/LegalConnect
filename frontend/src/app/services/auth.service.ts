@@ -1,10 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, tap, catchError, of, map, Observable, timer, switchMap } from 'rxjs';
+import { BehaviorSubject, tap, catchError, of, map, Observable, timer, switchMap, share, finalize } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenStorageService } from './token-storage.service';
 import { UserProfileService } from './user-profile.service';
-import { GoogleAuthService } from './google-auth.service';
 import { normalizeMediaUrl } from '../core/utils/url-utils';
 
 export interface UserProfile {
@@ -58,6 +57,7 @@ export class AuthService {
   private readonly MAX_REFRESH_RETRIES = 2;
   private readonly RETRY_DELAY_MS = 3000;
   private authChannel: BroadcastChannel | null = null;
+  private refreshObservable$: Observable<any> | null = null;
 
   private httpOptions = {
     withCredentials: true
@@ -70,6 +70,46 @@ export class AuthService {
     private userProfileService: UserProfileService
   ) {
     this.initMultiTabSync();
+    this.initResumeListener();
+  }
+
+  /**
+   * Device Resume & Tab Focus Listener:
+   * Proactively checks and refreshes tokens when waking from laptop sleep or returning to PWA.
+   */
+  private initResumeListener(): void {
+    if (typeof window !== 'undefined') {
+      const checkResumeSession = () => {
+        if (this._isLoggedIn.value) {
+          const token = this.getToken();
+          if (token) {
+            try {
+              const parts = token.split('.');
+              if (parts.length >= 2) {
+                const payload = JSON.parse(atob(parts[1]));
+                const expMs = payload.exp * 1000;
+                // If token expires within 2 minutes or has already expired, refresh proactively
+                if (Date.now() + 120000 >= expMs) {
+                  this.executeProactiveRefresh();
+                }
+              }
+            } catch {
+              this.executeProactiveRefresh();
+            }
+          } else {
+            // Logged in but no token — try to refresh
+            this.executeProactiveRefresh();
+          }
+        }
+      };
+
+      window.addEventListener('focus', checkResumeSession);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+          checkResumeSession();
+        }
+      });
+    }
   }
 
   /**
@@ -86,7 +126,7 @@ export class AuthService {
             this.router.navigate(['/login']);
           } else if (event.data?.type === 'LOGIN') {
             this.refreshToken().pipe(
-              switchMap(() => this.checkSession()),
+              switchMap(() => this.fetchAndSetProfile()),
               catchError(() => of(false))
             ).subscribe();
           }
@@ -107,38 +147,17 @@ export class AuthService {
     }
   }
 
-  /**
-   * Global listener for Google OAuth mobile/PWA redirects.
-   * Runs on app startup to catch returning OAuth credentials regardless of the current URL.
-   */
-  initGlobalOAuthRedirectListener(googleAuth: GoogleAuthService): void {
-    googleAuth.handleRedirectResult().subscribe((res) => {
-      if (res?.idToken) {
-        this.loginWithGoogle(res.idToken, res.role).subscribe({
-          next: (isLoggedIn) => {
-            if (isLoggedIn) {
-              const currentUrl = this.router.url.split('?')[0];
-              if (currentUrl === '/login' || currentUrl === '/register') {
-                this.router.navigateByUrl('/dashboard');
-              }
-            }
-          }
-        });
-      }
-    });
-  }
-
   getToken(): string | null {
     return this.tokenStorage.getToken();
   }
 
   private handleLoginSuccess(res: any): void {
-    if (typeof window !== 'undefined') {
-      localStorage.setItem('lc_has_session', 'true');
-    }
     if (res.token) {
       this.tokenStorage.setToken(res.token);
       this.scheduleProactiveRefresh(res.token);
+    }
+    if (res.refreshToken) {
+      this.tokenStorage.setFallbackRefreshToken(res.refreshToken);
     }
     if (res.user) {
       if (res.user.avatarUrl) {
@@ -202,48 +221,54 @@ export class AuthService {
   }
 
   /**
-   * Enterprise Session Hydration:
-   * Uses an un-sensitive session indicator hint (lc_has_session) to skip network requests
-   * for guest users, avoiding unnecessary 401 console errors. If a session is expected,
-   * silently recovers the access token via HttpOnly __session refresh cookie.
+   * Session Hydration on App Startup:
+   *
+   * Flow:
+   * 1. Check if we have an access token in localStorage (survives page refresh)
+   * 2. If yes → validate it by fetching /api/profile/me
+   *    - If 200 → we're authenticated, set up state
+   *    - If 401 → the auth interceptor will attempt token refresh automatically
+   * 3. If no token → check for a refresh token in localStorage
+   *    - If yes → try to refresh and get a new access token
+   *    - If no → user is genuinely not logged in
+   *
+   * This eliminates the fragile lc_has_session hint system entirely.
    */
   checkSession(): Observable<boolean> {
     const currentToken = this.getToken();
 
     if (currentToken) {
-      return this.userProfileService.getProfile().pipe(
-        map((res: any) => {
-          this._isSessionLoaded.next(true);
-          if (res && res.isAuthenticated) {
-            const userObj = { ...res, isAuthenticated: true };
-            this._currentUser.next(userObj);
-            this.tokenStorage.setCachedUser(userObj);
-            this._isLoggedIn.next(true);
-            if (typeof window !== 'undefined') localStorage.setItem('lc_has_session', 'true');
-            return true;
-          } else {
-            this.clearSessionState();
-            return false;
-          }
-        }),
-        catchError(() => {
-          this._isSessionLoaded.next(true);
-          this.clearSessionState();
-          return of(false);
-        })
-      );
+      // We have a token — validate it by fetching profile
+      // If it's expired, the auth interceptor will handle the 401 → refresh → retry automatically
+      return this.fetchAndSetProfile();
     }
 
-    const hasSessionHint = typeof window !== 'undefined' && localStorage.getItem('lc_has_session') === 'true';
-
-    if (!hasSessionHint) {
+    // No access token — check if we have a refresh token to try
+    const refreshToken = this.tokenStorage.getFallbackRefreshToken();
+    if (!refreshToken) {
+      // No tokens at all — user is not logged in
       this._isSessionLoaded.next(true);
       this.clearSessionState(false);
       return of(false);
     }
 
+    // Have a refresh token — try to get a new access token
     return this.refreshToken().pipe(
-      switchMap(() => this.userProfileService.getProfile()),
+      switchMap(() => this.fetchAndSetProfile()),
+      catchError(() => {
+        this._isSessionLoaded.next(true);
+        this.clearSessionState(false);
+        return of(false);
+      })
+    );
+  }
+
+  /**
+   * Fetches user profile and sets auth state.
+   * Used by checkSession and multi-tab sync.
+   */
+  private fetchAndSetProfile(): Observable<boolean> {
+    return this.userProfileService.getProfile().pipe(
       map((res: any) => {
         this._isSessionLoaded.next(true);
         if (res && res.isAuthenticated) {
@@ -255,32 +280,52 @@ export class AuthService {
           this._currentUser.next(userObj);
           this.tokenStorage.setCachedUser(userObj);
           this._isLoggedIn.next(true);
-          if (typeof window !== 'undefined') localStorage.setItem('lc_has_session', 'true');
           return true;
         } else {
-          this.clearSessionState();
+          this.clearSessionState(false);
           return false;
         }
       }),
       catchError(() => {
         this._isSessionLoaded.next(true);
-        this.clearSessionState();
+        this.clearSessionState(false);
         return of(false);
       })
     );
   }
 
+  /**
+   * RxJS Deduplication Mutex for Token Refresh:
+   * Shares a single in-flight HTTP request across concurrent callers.
+   * Always sends the refresh token in the request body as the primary mechanism.
+   * The __session cookie is a secondary/bonus channel.
+   */
   refreshToken(): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/refresh`, {}, this.httpOptions).pipe(
+    if (this.refreshObservable$) {
+      return this.refreshObservable$;
+    }
+
+    const fallbackToken = this.tokenStorage.getFallbackRefreshToken();
+    const payload = fallbackToken ? { refreshToken: fallbackToken } : {};
+
+    this.refreshObservable$ = this.http.post<any>(`${this.apiUrl}/refresh`, payload, this.httpOptions).pipe(
       tap((res) => {
         if (res.token) {
           this.tokenStorage.setToken(res.token);
           this._proactiveRefreshRetries = 0;
           this.scheduleProactiveRefresh(res.token);
-          if (typeof window !== 'undefined') localStorage.setItem('lc_has_session', 'true');
         }
+        if (res.refreshToken) {
+          this.tokenStorage.setFallbackRefreshToken(res.refreshToken);
+        }
+      }),
+      share(),
+      finalize(() => {
+        this.refreshObservable$ = null;
       })
     );
+
+    return this.refreshObservable$;
   }
 
   forgotPassword(email: string): Observable<any> {
@@ -305,9 +350,6 @@ export class AuthService {
   }
 
   private clearSessionState(shouldBroadcast = true): void {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('lc_has_session');
-    }
     if (shouldBroadcast) {
       this.broadcastAuthEvent('LOGOUT');
     }

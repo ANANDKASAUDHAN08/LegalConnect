@@ -11,7 +11,6 @@ import { ConsentBannerComponent } from './components/consent-banner/consent-bann
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 import { AuthService } from './services/auth.service';
-import { GoogleAuthService } from './services/google-auth.service';
 import { SeoService } from './services/seo.service';
 
 @Component({
@@ -37,9 +36,9 @@ export class AppComponent {
     private themeService: ThemeService,
     private settingsService: SettingsService,
     private seoService: SeoService,
-    private authService: AuthService,
-    private googleAuthService: GoogleAuthService
+    private authService: AuthService
   ) {
-    this.authService.initGlobalOAuthRedirectListener(this.googleAuthService);
+    // Auth session is hydrated by APP_INITIALIZER (checkSession)
+    // Google OAuth uses popup-only flow — no redirect listener needed
   }
 }

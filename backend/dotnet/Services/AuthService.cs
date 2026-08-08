@@ -409,15 +409,26 @@ namespace CoreApi.Services
 
             if (storedToken.RevokedAt != null)
             {
-                if (storedToken.RevokedAt.Value.AddSeconds(30) > DateTime.UtcNow)
+                // Grace Period (45s): Handle network retry or concurrent request cleanly
+                if (storedToken.RevokedAt.Value.AddSeconds(45) > DateTime.UtcNow)
                 {
-                    // Grace period
+                    var existingSession = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == storedToken.SessionId);
+                    var activeUser = storedToken.User;
+                    if (existingSession != null && activeUser != null)
+                    {
+                        // Generate a fresh access token & fresh refresh token pair for the existing valid session
+                        var (graceRawRefresh, graceRefreshEntity) = _tokenService.GenerateRefreshToken(activeUser.Id, storedToken.SessionId);
+                        _context.RefreshTokens.Add(graceRefreshEntity);
+                        await _context.SaveChangesAsync();
+
+                        var graceAccessToken = _tokenService.CreateAccessToken(activeUser, storedToken.SessionId);
+                        return (true, "Token refreshed successfully!", graceAccessToken, graceRawRefresh);
+                    }
                 }
-                else
-                {
-                    await RevokeAllUserRefreshTokensAsync(storedToken.UserId, $"REPLAY:{ipAddress}");
-                    return (false, "Token reuse detected. All sessions revoked.", null, null);
-                }
+
+                _logger.LogWarning("[Security Audit] Token replay attack detected for UserId: {UserId}, IP: {IP}", storedToken.UserId, ipAddress);
+                await RevokeAllUserRefreshTokensAsync(storedToken.UserId, $"REPLAY:{ipAddress}");
+                return (false, "Token reuse detected. All sessions revoked.", null, null);
             }
 
             if (storedToken.ExpiresAt <= DateTime.UtcNow)

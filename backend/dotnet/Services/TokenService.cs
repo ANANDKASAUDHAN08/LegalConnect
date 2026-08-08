@@ -73,12 +73,16 @@ namespace CoreApi.Services
         public void SetAuthCookies(HttpResponse response, string accessToken, string refreshToken)
         {
             var isSecure = !_env.IsDevelopment();
+            // Use SameSite=None in production for Firebase Hosting → Cloud Run proxy compatibility.
+            // Lax blocks cookies on some mobile/PWA scenarios where the proxy hop is treated as cross-site.
+            // In development (localhost), use Lax since None requires Secure which requires HTTPS.
+            var sameSiteMode = isSecure ? SameSiteMode.None : SameSiteMode.Lax;
             
             var tokenCookieOptions = new CookieOptions
             {
                 HttpOnly = true,
                 Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
+                SameSite = sameSiteMode,
                 Expires = DateTime.UtcNow.AddMinutes(15),
                 Path = "/"
             };
@@ -88,7 +92,7 @@ namespace CoreApi.Services
             {
                 HttpOnly = true,
                 Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
+                SameSite = sameSiteMode,
                 Expires = DateTime.UtcNow.AddDays(30),
                 Path = "/"
             };
@@ -98,12 +102,13 @@ namespace CoreApi.Services
         public void ClearAuthCookies(HttpResponse response)
         {
             var isSecure = !_env.IsDevelopment();
+            var sameSiteMode = isSecure ? SameSiteMode.None : SameSiteMode.Lax;
             
             response.Cookies.Delete("lc_token", new CookieOptions
             {
                 HttpOnly = true,
                 Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
+                SameSite = sameSiteMode,
                 Path = "/"
             });
 
@@ -111,7 +116,7 @@ namespace CoreApi.Services
             {
                 HttpOnly = true,
                 Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
+                SameSite = sameSiteMode,
                 Path = "/"
             });
         }
