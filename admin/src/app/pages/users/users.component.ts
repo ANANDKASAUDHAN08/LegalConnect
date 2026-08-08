@@ -23,10 +23,12 @@ import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
 
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+
 @Component({
   selector: 'admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -453,16 +455,7 @@ export class UsersComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.searchSub = this.searchSubject$.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.search = query;
-      this.pagination.page = 1;
-      this.updateUrlParams();
-    });
-
-    this.routeSub = this.route.queryParams.subscribe(params => {
+    this.routeSub = this.route.queryParams.subscribe((params: any) => {
       this.selectedRole = params['role'] || '';
       this.selectedStatus = params['status'] || '';
       this.search = params['search'] || '';
@@ -471,6 +464,7 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.startDate = params['startDate'] || '';
       this.endDate = params['endDate'] || '';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      this.cdr.markForCheck();
       this.fetchUsers();
     });
   }
@@ -501,17 +495,36 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.searchSub?.unsubscribe();
     this.routeSub?.unsubscribe();
     this.fetchSub?.unsubscribe();
-    this.searchSubject$.complete();
   }
 
   onSearchInput(val: string): void {
-    this.searchSubject$.next(val);
+    this.search = val;
+    this.pagination.page = 1;
+    this.updateUrlParams();
   }
 
   onSearchChange(query: string): void {
     this.search = query;
     this.pagination.page = 1;
     this.updateUrlParams();
+  }
+
+  removeFilter(type: 'search' | 'role' | 'status' | 'dateRange'): void {
+    if (type === 'search') this.search = '';
+    if (type === 'role') this.selectedRole = '';
+    if (type === 'status') this.selectedStatus = '';
+    if (type === 'dateRange') { this.startDate = ''; this.endDate = ''; }
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  get activeFilterPills(): { key: 'search' | 'role' | 'status' | 'dateRange'; label: string }[] {
+    const pills: { key: 'search' | 'role' | 'status' | 'dateRange'; label: string }[] = [];
+    if (this.search) pills.push({ key: 'search', label: `Search: "${this.search}"` });
+    if (this.selectedRole) pills.push({ key: 'role', label: `Role: ${this.selectedRole}` });
+    if (this.selectedStatus) pills.push({ key: 'status', label: `Status: ${this.selectedStatus === 'true' ? 'Active' : 'Suspended'}` });
+    if (this.startDate || this.endDate) pills.push({ key: 'dateRange', label: `Date: ${this.startDate || '...'} to ${this.endDate || '...'}` });
+    return pills;
   }
 
   fetchUsers(): void {
@@ -538,6 +551,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.globalLawyerCount = cached.summary.totalLawyers;
         this.globalClientCount = cached.summary.totalClients;
         this.globalTwoFactorPct = cached.summary.twoFactorPct;
+        this.updateDropdownCounts();
       }
       this.isLoading = false;
       this.isInitialLoad = false;
@@ -553,7 +567,6 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.isInitialLoad = false;
         if (res.success) {
           this.users = this.sortData(res.data || []);
-          this.selection.retainOnly(this.users.map(u => u.id));
           this.pagination = res.pagination;
 
           if (res.summary) {
@@ -562,6 +575,7 @@ export class UsersComponent implements OnInit, OnDestroy {
             this.globalLawyerCount = res.summary.totalLawyers;
             this.globalClientCount = res.summary.totalClients;
             this.globalTwoFactorPct = res.summary.twoFactorPct;
+            this.updateDropdownCounts();
           }
 
           this.swrCache.set('users', params, res);
@@ -580,18 +594,57 @@ export class UsersComponent implements OnInit, OnDestroy {
 
   onSearch(): void {
     this.pagination.page = 1;
-    this.fetchUsers();
+    this.updateUrlParams();
   }
 
   onFilterChange(): void {
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchUsers();
   }
 
   refreshData(): void {
     this.toast.info('Refreshing user directory records...');
+    this.swrCache.invalidate('users');
     this.fetchUsers();
+  }
+
+  private updateDropdownCounts(): void {
+    this.roleOptions = [
+      { label: 'All User Roles', value: '', icon: 'info', color: '#818cf8', count: this.globalTotalUsers },
+      { label: 'Client Accounts', value: 'Client', icon: 'user', color: '#38bdf8', count: this.globalClientCount },
+      { label: 'Lawyer Accounts', value: 'Lawyer', icon: 'award', color: '#818cf8', count: this.globalLawyerCount },
+      { label: 'Administrator Accounts', value: 'Admin', icon: 'key', color: '#c084fc', count: this.globalAdminCount }
+    ];
+    this.statusOptions = [
+      { label: 'All Statuses', value: '', icon: 'info', color: '#818cf8', count: this.globalTotalUsers },
+      { label: 'Active Accounts', value: 'true', icon: 'check', color: '#10b981' },
+      { label: 'Suspended Accounts', value: 'false', icon: 'shield', color: '#f43f5e' }
+    ];
+  }
+
+  get activeQueryParamsObj(): Record<string, any> {
+    const obj: Record<string, any> = {};
+    if (this.search) obj['search'] = this.search;
+    if (this.selectedRole) obj['role'] = this.selectedRole;
+    if (this.selectedStatus) obj['status'] = this.selectedStatus;
+    if (this.startDate) obj['startDate'] = this.startDate;
+    if (this.endDate) obj['endDate'] = this.endDate;
+    if (this.sortBy && this.sortBy !== 'newest') obj['sort'] = this.sortBy;
+    if (this.sortOrder && this.sortOrder !== 'desc') obj['sortOrder'] = this.sortOrder;
+    return obj;
+  }
+
+  onSavedViewApply(savedParams: any): void {
+    this.search = savedParams?.['search'] || '';
+    this.selectedRole = savedParams?.['role'] || '';
+    this.selectedStatus = savedParams?.['status'] || '';
+    this.startDate = savedParams?.['startDate'] || '';
+    this.endDate = savedParams?.['endDate'] || '';
+    this.sortBy = savedParams?.['sort'] || 'newest';
+    this.sortOrder = savedParams?.['sortOrder'] || 'desc';
+    this.pagination.page = 1;
+    this.updateUrlParams();
+    this.cdr.markForCheck();
   }
 
   resetFilters(): void {
@@ -606,21 +659,19 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchUsers();
   }
 
   onPageChange(newPage: number): void {
     if (newPage >= 1 && newPage <= this.pagination.pages) {
       this.pagination.page = newPage;
       this.updateUrlParams();
-      this.fetchUsers();
     }
   }
 
   onLimitChange(newLimit: number | any): void {
     this.pagination.limit = Number(newLimit) || 10;
     this.pagination.page = 1;
-    this.fetchUsers();
+    this.updateUrlParams();
   }
 
   async toggleActive(user: any): Promise<void> {
@@ -658,12 +709,21 @@ export class UsersComponent implements OnInit, OnDestroy {
     return this.users.map(u => u.id);
   }
 
+  get isAllPageSelected(): boolean {
+    return this.users.length > 0 && this.users.every(u => this.selection.isSelected(u.id));
+  }
+
   isAllSelected(): boolean {
-    return this.selection.isAllSelected(this.userIds);
+    return this.isAllPageSelected;
   }
 
   toggleSelectAll(): void {
-    this.selection.toggleAll(this.userIds);
+    if (this.isAllPageSelected) {
+      this.selection.clear();
+    } else {
+      this.users.forEach(u => this.selection.selectedIds.add(u.id));
+    }
+    this.cdr.markForCheck();
   }
 
   async bulkUpdateStatus(active: boolean): Promise<void> {

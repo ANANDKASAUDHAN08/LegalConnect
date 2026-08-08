@@ -26,16 +26,33 @@ namespace CoreApi.Controllers
             [FromQuery] int? rating = null,
             [FromQuery] string? role = null,
             [FromQuery] string? moderationStatus = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null,
             [FromQuery] string? search = null)
         {
             var query = _context.Reviews.AsQueryable();
+
+            if (startDate.HasValue)
+                query = query.Where(r => r.CreatedAt >= startDate.Value.ToUniversalTime());
+
+            if (endDate.HasValue)
+                query = query.Where(r => r.CreatedAt <= endDate.Value.ToUniversalTime().Date.AddDays(1));
 
             if (rating.HasValue)
                 query = query.Where(r => r.Rating == rating.Value);
             if (!string.IsNullOrEmpty(role))
                 query = query.Where(r => r.UserRole == role);
             if (!string.IsNullOrEmpty(moderationStatus))
-                query = query.Where(r => r.ModerationStatus == moderationStatus);
+            {
+                if (moderationStatus.Equals("Approved", StringComparison.OrdinalIgnoreCase))
+                {
+                    query = query.Where(r => r.ModerationStatus == "Approved" || string.IsNullOrEmpty(r.ModerationStatus));
+                }
+                else
+                {
+                    query = query.Where(r => r.ModerationStatus == moderationStatus);
+                }
+            }
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var s = search.Trim().ToLower();
@@ -465,6 +482,8 @@ namespace CoreApi.Controllers
             [FromQuery] string? priority = null,
             [FromQuery] string? category = null,
             [FromQuery] string? assignedAgent = null,
+            [FromQuery] DateTime? startDate = null,
+            [FromQuery] DateTime? endDate = null,
             [FromQuery] string? search = null)
         {
             var contactsList = new List<object>();
@@ -500,6 +519,14 @@ namespace CoreApi.Controllers
                             var tSubject = t.TryGetProperty("subject", out var s) ? s.GetString() ?? "Inquiry" : "Inquiry";
                             var tMsg = t.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
 
+                            var tsStr = t.TryGetProperty("timestamp", out var ts) ? ts.GetString() : null;
+                            if (DateTime.TryParse(tsStr, out var ticketDt))
+                            {
+                                var ticketUtc = ticketDt.ToUniversalTime();
+                                if (startDate.HasValue && ticketUtc < startDate.Value.ToUniversalTime()) continue;
+                                if (endDate.HasValue && ticketUtc > endDate.Value.ToUniversalTime().Date.AddDays(1)) continue;
+                            }
+
                             if (!string.IsNullOrWhiteSpace(search))
                             {
                                 var q = search.Trim().ToLower();
@@ -520,7 +547,7 @@ namespace CoreApi.Controllers
                                 source = "MongoDB Desk",
                                 assignedAgent = t.TryGetProperty("assignedAgent", out var ag) ? ag.GetString() : "",
                                 slaTarget = t.TryGetProperty("slaTarget", out var sla) ? sla.GetString() : "24 Hours",
-                                createdAt = t.TryGetProperty("timestamp", out var ts) ? ts.GetString() : DateTime.UtcNow.ToString("o")
+                                createdAt = tsStr ?? DateTime.UtcNow.ToString("o")
                             });
                         }
                     }
@@ -530,6 +557,10 @@ namespace CoreApi.Controllers
 
             // 2. Fetch MySQL ContactSubmissions
             var query = _context.ContactSubmissions.AsQueryable();
+            if (startDate.HasValue)
+                query = query.Where(c => c.CreatedAt >= startDate.Value.ToUniversalTime());
+            if (endDate.HasValue)
+                query = query.Where(c => c.CreatedAt <= endDate.Value.ToUniversalTime().Date.AddDays(1));
             if (!string.IsNullOrEmpty(status))
                 query = query.Where(c => c.Status == status);
             if (!string.IsNullOrEmpty(priority))

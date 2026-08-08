@@ -2,7 +2,7 @@
  * Data Table Helper Components (Clubbed: 3-in-1)
  * Contains: AdminSearchInput, AdminSortHeader, AdminEmptyState
  */
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
@@ -25,16 +25,28 @@ import { sanitizeSearchInput } from '../../../core/utils/security-utils';
         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
       </svg>
       <input type="text"
-        class="form-input w-full !pl-10 bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-xl text-xs py-2.5 transition-all focus:border-indigo-500/50"
+        class="form-input w-full !pl-10 !pr-8 bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-xl text-xs py-2.5 transition-all focus:border-indigo-500/50"
         [placeholder]="placeholder"
         [value]="value"
         (input)="onInput($any($event.target).value)"
         [adminTooltip]="tooltip"
         tooltipPosition="top" />
+      @if (value) {
+        <button type="button"
+          (click)="clearSearch()"
+          class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors p-0.5 rounded-full hover:bg-slate-700/60"
+          adminTooltip="Clear search"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      }
     </div>
   `
 })
-export class AdminSearchInputComponent implements OnInit, OnDestroy {
+export class AdminSearchInputComponent implements OnInit, OnDestroy, OnChanges {
   @Input() placeholder = 'Search...';
   @Input() value = '';
   @Input() tooltip = 'Type to search (debounced 300ms)';
@@ -56,9 +68,20 @@ export class AdminSearchInputComponent implements OnInit, OnDestroy {
     });
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['value'] && !changes['value'].firstChange) {
+      this.value = changes['value'].currentValue || '';
+    }
+  }
+
   onInput(val: string): void {
     this.value = val;
     this.searchSubject$.next(val);
+  }
+
+  clearSearch(): void {
+    this.value = '';
+    this.searchSubject$.next('');
   }
 
   ngOnDestroy(): void {

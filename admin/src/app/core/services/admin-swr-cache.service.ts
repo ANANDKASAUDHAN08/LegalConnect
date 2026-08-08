@@ -18,8 +18,19 @@ export class SwrCacheService {
   private readonly DEFAULT_TTL_MS = 2 * 60 * 1000;
 
   private generateKey(namespace: string, params?: any): string {
-    const serializedParams = params ? JSON.stringify(params) : '{}';
-    return `${namespace}::${serializedParams}`;
+    if (!params || typeof params !== 'object') {
+      return `${namespace}::{}`;
+    }
+    const cleanObj: Record<string, any> = {};
+    Object.keys(params)
+      .sort()
+      .forEach(k => {
+        const val = params[k];
+        if (val !== undefined && val !== null && val !== '') {
+          cleanObj[k] = val;
+        }
+      });
+    return `${namespace}::${JSON.stringify(cleanObj)}`;
   }
 
   /**

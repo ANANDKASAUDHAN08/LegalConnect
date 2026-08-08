@@ -20,13 +20,18 @@ import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail } from '../../core/utils/security-utils';
 
+import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
+
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+
 @Component({
   selector: 'admin-reviews',
   standalone: true,
   imports: [
     CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent,
     ActionMenuComponent, PaginationComponent, ColumnCustomizerComponent,
-    AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent
+    AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent,
+    ExportModalComponent, AdminSavedViewsComponent
   ],
   templateUrl: './reviews.component.html',
   styleUrl: './reviews.component.scss',
@@ -56,7 +61,13 @@ export class ReviewsComponent implements OnInit, OnDestroy {
   startDate = '';
   endDate = '';
 
-  activeMetricCard: 'all' | 'approved' | 'pending' | 'flagged' | 'hidden' = 'all';
+  get activeMetricCard(): 'all' | 'approved' | 'pending' | 'flagged' | 'hidden' {
+    if (this.moderationFilter === 'Approved') return 'approved';
+    if (this.moderationFilter === 'Pending') return 'pending';
+    if (this.moderationFilter === 'Flagged') return 'flagged';
+    if (this.moderationFilter === 'Hidden') return 'hidden';
+    return 'all';
+  }
 
   // Column Customizer setup matching Users/Lawyers page
   columnDefs: ColumnDef[] = [
@@ -131,12 +142,21 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     return this.reviews.map(r => r.id);
   }
 
+  get isAllPageSelected(): boolean {
+    return this.reviews.length > 0 && this.reviews.every(r => this.selection.isSelected(r.id));
+  }
+
   isAllSelected(): boolean {
-    return this.selection.isAllSelected(this.reviewIds);
+    return this.isAllPageSelected;
   }
 
   toggleSelectAll(event?: Event): void {
-    this.selection.toggleAll(this.reviewIds);
+    if (this.isAllPageSelected) {
+      this.selection.clear();
+    } else {
+      this.reviews.forEach(r => this.selection.selectedIds.add(r.id));
+    }
+    this.cdr.markForCheck();
   }
 
   constructor(
@@ -150,21 +170,21 @@ export class ReviewsComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.routeSub = this.route.queryParams.subscribe(params => {
+    this.routeSub = this.route.queryParams.subscribe((params: any) => {
       this.ratingFilter = params['rating'] || '';
-      this.moderationFilter = params['moderation'] || '';
+      this.moderationFilter = params['moderation'] || (
+        params['card'] === 'approved' ? 'Approved' :
+          params['card'] === 'pending' ? 'Pending' :
+            params['card'] === 'flagged' ? 'Flagged' :
+              params['card'] === 'hidden' ? 'Hidden' : ''
+      );
       this.search = params['search'] || '';
       this.startDate = params['startDate'] || '';
       this.endDate = params['endDate'] || '';
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
-      this.activeMetricCard = params['card'] || (
-        this.moderationFilter === 'Approved' ? 'approved' :
-        this.moderationFilter === 'Pending' ? 'pending' :
-        this.moderationFilter === 'Flagged' ? 'flagged' :
-        this.moderationFilter === 'Hidden' ? 'hidden' : 'all'
-      );
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      this.cdr.markForCheck();
       this.fetchReviews();
     });
   }
@@ -201,7 +221,6 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     if (this.moderationFilter) queryParams.moderation = this.moderationFilter;
     if (this.startDate) queryParams.startDate = this.startDate;
     if (this.endDate) queryParams.endDate = this.endDate;
-    if (this.activeMetricCard && this.activeMetricCard !== 'all') queryParams.card = this.activeMetricCard;
     if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
@@ -219,21 +238,13 @@ export class ReviewsComponent implements OnInit, OnDestroy {
 
   toggleMetricFilter(type: 'all' | 'approved' | 'pending' | 'flagged' | 'hidden'): void {
     if (this.activeMetricCard === type && type !== 'all') {
-      this.activeMetricCard = 'all';
       this.moderationFilter = '';
     } else {
-      this.activeMetricCard = type;
-      this.moderationFilter = '';
-
-      if (type === 'approved') {
-        this.moderationFilter = 'Approved';
-      } else if (type === 'pending') {
-        this.moderationFilter = 'Pending';
-      } else if (type === 'flagged') {
-        this.moderationFilter = 'Flagged';
-      } else if (type === 'hidden') {
-        this.moderationFilter = 'Hidden';
-      }
+      if (type === 'approved') this.moderationFilter = 'Approved';
+      else if (type === 'pending') this.moderationFilter = 'Pending';
+      else if (type === 'flagged') this.moderationFilter = 'Flagged';
+      else if (type === 'hidden') this.moderationFilter = 'Hidden';
+      else this.moderationFilter = '';
     }
     this.onFilterChange();
   }
@@ -243,7 +254,6 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     this.endDate = event.endDate || '';
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchReviews();
   }
 
   refreshData(): void {
@@ -251,31 +261,94 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     this.fetchReviews();
   }
 
+  onSearchInput(val: string): void {
+    this.search = val;
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
   onSearchChange(query: string): void {
     this.search = query;
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchReviews();
+  }
+
+  removeFilter(type: 'search' | 'rating' | 'moderation' | 'dateRange'): void {
+    if (type === 'search') this.search = '';
+    if (type === 'rating') this.ratingFilter = '';
+    if (type === 'moderation') this.moderationFilter = '';
+    if (type === 'dateRange') { this.startDate = ''; this.endDate = ''; }
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  get activeFilterPills(): { key: 'search' | 'rating' | 'moderation' | 'dateRange'; label: string }[] {
+    const pills: { key: 'search' | 'rating' | 'moderation' | 'dateRange'; label: string }[] = [];
+    if (this.search) pills.push({ key: 'search', label: `Search: "${this.search}"` });
+    if (this.ratingFilter) pills.push({ key: 'rating', label: `Rating: ${this.ratingFilter} Stars` });
+    if (this.moderationFilter) pills.push({ key: 'moderation', label: `Status: ${this.moderationFilter}` });
+    if (this.startDate || this.endDate) pills.push({ key: 'dateRange', label: `Date: ${this.startDate || '...'} to ${this.endDate || '...'}` });
+    return pills;
   }
 
   onFilterChange(): void {
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchReviews();
+  }
+
+  private updateDropdownCounts(): void {
+    const total = this.pagination.total || this.reviews.length;
+    const approved = this.reviews.filter(r => r.moderationStatus === 'Approved' || (!r.moderationStatus && r.rating >= 4)).length;
+    const pending = this.reviews.filter(r => r.moderationStatus === 'Pending' || (!r.moderationStatus && r.rating === 3)).length;
+    const flagged = this.reviews.filter(r => r.moderationStatus === 'Flagged' || (!r.moderationStatus && r.rating <= 2)).length;
+    const hidden = this.reviews.filter(r => r.moderationStatus === 'Hidden').length;
+
+    this.moderationOptions = [
+      { label: 'All Moderation Statuses', value: '', icon: 'info', color: '#38bdf8', count: total },
+      { label: 'Approved & Public', value: 'Approved', icon: 'check', color: '#10b981', count: approved },
+      { label: 'Pending Audit Queue', value: 'Pending', icon: 'clock', color: '#f59e0b', count: pending },
+      { label: 'Flagged / Quarantined', value: 'Flagged', icon: 'shield', color: '#f43f5e', count: flagged },
+      { label: 'Hidden / Rejected', value: 'Hidden', icon: 'archive', color: '#64748b', count: hidden }
+    ];
+  }
+
+  get activeQueryParamsObj(): Record<string, any> {
+    const obj: Record<string, any> = {};
+    if (this.ratingFilter) obj['rating'] = this.ratingFilter;
+    if (this.moderationFilter) obj['moderation'] = this.moderationFilter;
+    if (this.search) obj['search'] = this.search;
+    if (this.startDate) obj['startDate'] = this.startDate;
+    if (this.endDate) obj['endDate'] = this.endDate;
+    if (this.sortBy && this.sortBy !== 'createdAt') obj['sort'] = this.sortBy;
+    if (this.sortOrder && this.sortOrder !== 'desc') obj['sortOrder'] = this.sortOrder;
+    return obj;
+  }
+
+  onSavedViewApply(savedParams: any): void {
+    this.ratingFilter = savedParams?.['rating'] || '';
+    this.moderationFilter = savedParams?.['moderation'] || '';
+    this.search = savedParams?.['search'] || '';
+    this.startDate = savedParams?.['startDate'] || '';
+    this.endDate = savedParams?.['endDate'] || '';
+    this.sortBy = savedParams?.['sort'] || 'createdAt';
+    this.sortOrder = savedParams?.['sortOrder'] || 'desc';
+    this.pagination.page = 1;
+    this.updateUrlParams();
+    this.cdr.markForCheck();
   }
 
   resetFilters(): void {
-    this.activeMetricCard = 'all';
     this.search = '';
     this.ratingFilter = '';
     this.moderationFilter = '';
     this.startDate = '';
     this.endDate = '';
+    this.sortBy = 'createdAt';
+    this.sortOrder = 'desc';
     this.pagination.page = 1;
     this.resetColumnVisibility();
     this.selection.clear();
     this.updateUrlParams();
-    this.fetchReviews();
   }
 
   onColumnVisibilityChange(visibility: Record<string, boolean>): void {
@@ -314,7 +387,6 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     const cached = this.swrCache.get<any>('reviews', params);
     if (cached) {
       this.reviews = this.sortData(cached.data || []);
-      this.selection.retainOnly(this.reviews.map(r => r.id));
       if (cached.pagination) this.pagination = cached.pagination;
       this.isInitialLoad = false;
       this.isLoading = false;
@@ -329,7 +401,6 @@ export class ReviewsComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const rawItems = res.data || res.items || res || [];
         this.reviews = this.sortData(rawItems);
-        this.selection.retainOnly(this.reviews.map(r => r.id));
         const p = res.pagination || {};
         const total = p.total ?? p.totalItems ?? this.reviews.length;
         const limit = p.limit || this.pagination.limit || 10;
@@ -341,6 +412,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
           pages
         };
         this.pagination = pageMeta;
+        this.updateDropdownCounts();
         this.swrCache.set('reviews', params, { data: rawItems, pagination: pageMeta });
         this.isInitialLoad = false;
         this.cdr.markForCheck();
@@ -542,5 +614,84 @@ export class ReviewsComponent implements OnInit, OnDestroy {
 
   closeActionMenu(): void {
     this.openActionMenuId = null;
+  }
+
+  // Export Modal state & logic
+  isExportModalOpen = false;
+  isExporting = false;
+  exportColumns = [
+    { key: 'id', label: 'Review ID' },
+    { key: 'userName', label: 'Reviewer Name' },
+    { key: 'targetName', label: 'Target Advocate' },
+    { key: 'rating', label: 'Star Rating' },
+    { key: 'comment', label: 'Feedback Comment' },
+    { key: 'moderationStatus', label: 'Moderation Status' },
+    { key: 'createdAt', label: 'Submitted Date' }
+  ];
+
+  openExportModal(): void {
+    this.isExportModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closeExportModal(): void {
+    this.isExportModalOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  handleExport(config: ExportConfig): void {
+    if (this.isExporting) return;
+    this.isExporting = true;
+
+    let targetReviews = this.reviews;
+    if (config.scope === 'selected' && this.selection.size > 0) {
+      targetReviews = this.reviews.filter(r => this.selection.isSelected(r.id));
+    }
+
+    if (targetReviews.length === 0) {
+      this.isExporting = false;
+      this.toast.warning('No reviews available to export.');
+      this.isExportModalOpen = false;
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const selectedCols = config.columns || this.exportColumns.map(c => c.key);
+    const headerLabelsMap: Record<string, string> = {
+      id: 'Review ID',
+      userName: 'Reviewer Name',
+      targetName: 'Target Advocate',
+      rating: 'Star Rating',
+      comment: 'Feedback Comment',
+      moderationStatus: 'Moderation Status',
+      createdAt: 'Submitted Date'
+    };
+
+    const headers = selectedCols.map(key => headerLabelsMap[key] || key);
+    const rows = targetReviews.map(rev => {
+      return selectedCols.map(key => {
+        let val = (rev as any)[key] ?? '';
+        if (key === 'userName') val = this.getReviewerName(rev);
+        if (key === 'targetName') val = rev.targetName || rev.lawyerName || 'LegalConnect Platform';
+        if (key === 'comment') val = rev.comment || rev.content || '';
+        if (key === 'moderationStatus') val = rev.moderationStatus || 'Approved';
+        if (typeof val === 'string') val = `"${val.replace(/"/g, '""')}"`;
+        return val;
+      });
+    });
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement('a');
+    link.setAttribute('href', encodedUri);
+    link.setAttribute('download', `reviews_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    this.isExporting = false;
+    this.isExportModalOpen = false;
+    this.toast.success(`Exported ${targetReviews.length} review(s) to CSV.`);
+    this.cdr.markForCheck();
   }
 }

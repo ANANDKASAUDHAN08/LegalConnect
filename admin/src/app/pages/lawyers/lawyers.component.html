@@ -1,28 +1,56 @@
-<div class="px-3 py-4 w-full flex flex-col gap-2">
+<div class="px-3 py-2 pt-4 w-full flex flex-col gap-2">
 
-  <!-- --- 0. Open Hero Header & Unified Stats Bar --- -->
-  <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 relative">
-    <div class="flex flex-col gap-0 min-w-0">
-      <h1 class="text-2xl 2xl:text-3xl font-black text-white tracking-tight whitespace-nowrap">Lawyer Verification <span
-          class="text-lg 2xl:text-xl text-amber-300">&</span> Roster Management</h1>
-      <p class="text-xs text-slate-400 leading-relaxed max-w-xl">
-        Review Bar Council License credentials, set consultation fees, manage specializations, and approve advocate
-        profiles.
-      </p>
+  <!-- --- 0. Open Hero Header & Compact Stats Bar --- -->
+  <div class="flex flex-col gap-1.5">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex flex-col gap-1">
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Lawyer Verification <span
+            class="text-lg sm:text-xl text-amber-300">&</span> Roster Management</h1>
+        <p class="text-xs sm:text-sm text-slate-400">
+          Review Bar Council License credentials, set consultation fees, manage specializations, and approve advocate
+          profiles.
+        </p>
+      </div>
 
-      <!-- Single Accent Fade (Sky Blue) -->
-      <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-sky-500/50 to-transparent mt-1"></div>
+      <!-- Quick Actions (Top Right Header - Matching Support & Reviews) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
+          (click)="openExportModal()" [adminTooltip]="'Export filtered advocates roster to CSV spreadsheet'"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          <span>Export Lawyers</span>
+        </button>
+
+        <button
+          class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
+          (click)="fetchLawyers()" [adminTooltip]="'Refresh advocate records from backend'" tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [class.animate-spin]="isLoading && !isInitialLoad">
+            <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
+            <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
+          </svg>
+          <span>Refresh Roster</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Unified Minimalist Stats Bar (Fixed Global Telemetry Header) -->
-    <div
-      class="flex flex-wrap sm:flex-nowrap items-center gap-2 p-2 rounded-2xl bg-slate-900/80 border border-slate-800/80 backdrop-blur-md shadow-xl shrink-0">
-      <button class="flex items-center gap-2 px-2 py-1 rounded-xl text-left group hover:bg-slate-800/60 transition-all"
-        [ngClass]="{'ring-1 ring-indigo-500/50 bg-indigo-950/20': verificationFilter === '' && isFilterActive}"
-        (click)="filterByHeaderMetric('all')" [adminTooltip]="'View total roster of registered lawyers'"
-        tooltipPosition="top">
+    <!-- Elegant Accent Gradient Divider Line -->
+    <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-sky-500/40 to-transparent mt-0 mb-1"></div>
+
+    <!-- Frameless Stat Pills (4 items grid row below heading matching Consultations desk) -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+      <!-- Pill 1: Total Roster -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-indigo-500/30"
+        [class.active-pill]="verificationFilter === '' && isFilterActive" (click)="filterByHeaderMetric('all')"
+        [adminTooltip]="'View total roster of registered lawyers'" tooltipPosition="top">
         <div
-          class="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/25 text-indigo-400 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+          class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold shrink-0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
             <circle cx="9" cy="7" r="4"></circle>
@@ -30,86 +58,86 @@
             <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
           </svg>
         </div>
-        <div class="flex flex-col min-w-[65px]">
-          <span class="text-[9.5px] text-slate-400 font-bold uppercase tracking-wider">Total Roster</span>
+        <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
-          <admin-skeleton width="55px" height="16px" class="mt-0.5" />
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
           } @else {
-          <span class="text-xs font-black text-white">{{ globalTotalLawyers }} Advocates</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-slate-100">{{ globalTotalLawyers }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Advocates Roster</span>
+          </div>
           }
         </div>
-      </button>
+      </div>
 
-      <div class="hidden sm:block h-6 w-px bg-slate-800"></div>
-
-      <button class="flex items-center gap-2 px-2 py-1 rounded-xl text-left group hover:bg-slate-800/60 transition-all"
-        [ngClass]="{'ring-1 ring-amber-500/60 bg-amber-950/20': verificationFilter === 'false'}"
-        (click)="filterByHeaderMetric('pending')" [adminTooltip]="'Filter lawyers pending Bar Council license review'"
-        tooltipPosition="top">
+      <!-- Pill 2: Pending Review -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-amber-500/30"
+        [class.active-pill]="verificationFilter === 'false'" (click)="filterByHeaderMetric('pending')"
+        [adminTooltip]="'Filter lawyers pending Bar Council license review'" tooltipPosition="top">
         <div
-          class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+          class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold shrink-0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="12" y1="8" x2="12" y2="12"></line>
             <line x1="12" y1="16" x2="12.01" y2="16"></line>
           </svg>
         </div>
-        <div class="flex flex-col min-w-[65px]">
-          <span class="text-[9.5px] text-amber-300 font-bold uppercase tracking-wider">Pending Review</span>
+        <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
-          <admin-skeleton width="55px" height="16px" class="mt-0.5" />
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
           } @else {
-          <span class="text-xs font-black text-amber-300">{{ globalPendingCount }} Queue</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-amber-300">{{ globalPendingCount }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Pending Review</span>
+          </div>
           }
         </div>
-      </button>
+      </div>
 
-      <div class="hidden sm:block h-6 w-px bg-slate-800"></div>
-
-      <button class="flex items-center gap-2 px-2 py-1 rounded-xl text-left group hover:bg-slate-800/60 transition-all"
-        [ngClass]="{'ring-1 ring-emerald-500/60 bg-emerald-950/20': verificationFilter === 'true'}"
-        (click)="filterByHeaderMetric('verified')" [adminTooltip]="'Filter verified lawyers'" tooltipPosition="top">
+      <!-- Pill 3: Verified Bar -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer select-none bg-slate-900/40 border border-slate-800/80 hover:border-emerald-500/30"
+        [class.active-pill]="verificationFilter === 'true'" (click)="filterByHeaderMetric('verified')"
+        [adminTooltip]="'Filter verified lawyers'" tooltipPosition="top">
         <div
-          class="w-8 h-8 rounded-lg bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center font-bold shrink-0 group-hover:scale-105 transition-transform">
+          class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold shrink-0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
             <polyline points="22 4 12 14.01 9 11.01"></polyline>
           </svg>
         </div>
-        <div class="flex flex-col min-w-[65px]">
-          <span class="text-[9.5px] text-emerald-300 font-bold uppercase tracking-wider">Verified Bar</span>
+        <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
-          <admin-skeleton width="55px" height="16px" class="mt-0.5" />
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
           } @else {
-          <span class="text-xs font-black text-emerald-300">{{ globalVerifiedCount }} Approved</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-emerald-300">{{ globalVerifiedCount }}</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Verified Bar</span>
+          </div>
           }
         </div>
-      </button>
+      </div>
 
-      <div class="hidden sm:block h-6 w-px bg-slate-800"></div>
-
-      <div class="flex items-center gap-2 px-2 py-1 text-left"
+      <!-- Pill 4: Platform Rating -->
+      <div
+        class="metric-pill flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all select-none bg-slate-900/40 border border-slate-800/80"
         [adminTooltip]="'Average overall advocate satisfaction rating'" tooltipPosition="top">
         <div
-          class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center font-bold shrink-0">
+          class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold shrink-0">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
             <polygon
               points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
             </polygon>
           </svg>
         </div>
-        <div class="flex flex-col min-w-[65px]">
-          <span class="text-[9.5px] text-slate-400 font-bold uppercase tracking-wider">Platform Rating</span>
+        <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
-          <admin-skeleton width="55px" height="16px" class="mt-0.5" />
+          <admin-skeleton width="30px" height="16px" borderRadius="4px" />
           } @else {
-          <div class="flex items-center gap-1">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" class="text-amber-400 shrink-0">
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-              </polygon>
-            </svg>
-            <span class="text-xs font-black text-white">{{ globalPlatformRating }} / 5.0</span>
+          <div class="flex items-center gap-1.5">
+            <span class="text-base font-extrabold text-slate-100">{{ globalPlatformRating }} / 5.0</span>
+            <span class="text-[11px] text-slate-400 font-medium truncate">Avg Rating</span>
           </div>
           }
         </div>
@@ -120,15 +148,16 @@
   <!-- --- 1. Filter & Search Bar --- -->
   <div
     class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
-    <!-- Top Controls Row -->
-    <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
+    <!-- Top Controls Row (Option 2 Layout) -->
+    <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
+      <!-- Search Input (Left) -->
       <admin-search-input [value]="search" placeholder="Search lawyers by name, email, or Bar Council number..."
-        tooltip="Type query to auto-debounce search by 300ms" (searchChange)="onSearchChange($event)" maxWidth="300px"
-        minWidth="200px">
+        tooltip="Type query to auto-debounce search by 300ms" (searchChange)="onSearchChange($event)" maxWidth="280px"
+        minWidth="180px">
       </admin-search-input>
 
-      <div
-        class="filter-group flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink min-w-0 max-w-full overflow-visible">
+      <!-- Unified Filters & Tools Cluster (Right) -->
+      <div class="flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
         <!-- Inline Filter Dropdowns -->
         <admin-select [options]="verificationOptions" [value]="verificationFilter"
           (valueChange)="verificationFilter = $event; onFilterChange();" minWidth="130px"
@@ -146,110 +175,72 @@
           [adminTooltip]="'Filter by court practice hierarchy'" tooltipPosition="top">
         </admin-select>
 
-        <!-- Segment 2: View & Tools Segmented Bar -->
-        <div class="flex items-center gap-1 bg-slate-800/40 p-0.5 rounded-xl border border-slate-800/80 shrink-0">
-          <!-- Columns Customizer Dropdown Toggle -->
-          <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
-            (visibilityChange)="onColumnVisibilityChange($event)">
-          </admin-column-customizer>
+        <!-- Saved Filter Views Dropdown Bookmark Manager -->
+        <admin-saved-views storageKey="lawyers" [currentParams]="activeQueryParamsObj"
+          (viewApply)="onSavedViewApply($event)">
+        </admin-saved-views>
 
-          <!-- Custom Date Range Dropdown Popover Toggle -->
-          <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-indigo-400"
-            tooltip="Filter advocates by registration date bounds" (rangeChange)="onDateRangeChange($event)">
-          </admin-date-range-picker>
+        <!-- Columns Customizer Dropdown Toggle -->
+        <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
+          (visibilityChange)="onColumnVisibilityChange($event)">
+        </admin-column-customizer>
 
-          <!-- Refresh Button -->
-          <button
-            class="btn flex items-center justify-center p-2 text-xs font-semibold rounded-lg hover:bg-slate-700/60 text-slate-300 hover:text-white transition-all"
-            (click)="fetchLawyers()" [adminTooltip]="'Refresh advocate records from backend'" tooltipPosition="top">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              [class.animate-spin]="isLoading && !isInitialLoad">
-              <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-              <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-            </svg>
-          </button>
-        </div>
-
-        <!-- Export CSV Button (Far Right) -->
-        <button
-          class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
-          (click)="openExportModal()" [adminTooltip]="'Export filtered advocates roster to CSV spreadsheet'"
-          tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
-          <span>Export CSV</span>
-        </button>
+        <!-- Custom Date Range Dropdown Popover Toggle -->
+        <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-indigo-400"
+          tooltip="Filter advocates by registration date bounds" (rangeChange)="onDateRangeChange($event)">
+        </admin-date-range-picker>
       </div>
     </div>
 
-    <!-- Dynamic Combined Filter & Embedded Bulk Selection Row Bar -->
-    <div class="w-full flex items-center justify-between pt-2 border-t border-slate-800/80 text-xs text-slate-400">
-      <div class="flex items-center gap-2 flex-wrap">
+    <!-- --- Line 1: Active Filters Summary (Always visible when filters applied or active) --- -->
+    @if (isFilterActive || isPiiColumnVisible || lawyers.length > 0) {
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 flex-wrap min-h-[34px]">
+      <!-- Left Side: Active Filter Badges & Clear Link -->
+      <div class="flex items-center gap-2 flex-wrap min-w-0">
         @if (isFilterActive) {
         <span
-          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold">
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold shrink-0">
           <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
           Filtered View Active
         </span>
-        }
 
-        @if (selection.size > 0) {
+        @for (pill of activeFilterPills; track pill.key) {
         <span
-          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-xs font-bold shadow-sm">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            class="text-indigo-400">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
-          <span><strong class="text-white">{{ selection.size }}</strong> selected</span>
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[11px] font-medium shadow-sm transition-all hover:border-sky-500/40">
+          <span>{{ pill.label }}</span>
+          <button type="button" (click)="removeFilter(pill.key)"
+            class="hover:text-red-400 text-slate-400 ml-0.5 font-bold transition-colors">
+            ✕
+          </button>
         </span>
         }
 
-        @if (isFilterActive) {
-        <span class="text-slate-300 font-medium">
-          Showing <strong>{{ pagination.total || lawyers.length }}</strong> matching advocate(s) (filtered from
-          <strong>{{ globalTotalLawyers }}</strong> total)
-        </span>
-        } @else {
-        <span class="text-slate-400 font-medium">
-          Showing all <strong>{{ globalTotalLawyers }}</strong> advocates in verification roster
-        </span>
+        <button (click)="resetFilters()"
+          class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors ml-1"
+          [adminTooltip]="'Clear search query, city & verification filters'">
+          Clear Filters
+        </button>
         }
       </div>
 
-      <div class="flex items-center gap-2">
-        @if (selection.size > 0) {
-        <button
-          class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
-          (click)="bulkVerifyLawyers(true)" [adminTooltip]="'Bulk approve selected advocates'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          <span>Bulk Approve</span>
-        </button>
-
-        <button
-          class="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
-          (click)="bulkVerifyLawyers(false)" [adminTooltip]="'Bulk revoke selected advocates'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
-          <span>Bulk Revoke</span>
-        </button>
-
-        <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
-          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
-          Deselect All
-        </button>
+      <!-- Right Side: Total Matching Count & PII Reveal Toggle -->
+      <div class="flex items-center gap-3 shrink-0 ml-auto">
+        @if (isFilterActive) {
+        <span class="text-slate-400 text-xs font-medium">
+          Showing <strong class="text-slate-200">{{ pagination.total || lawyers.length }}</strong> matching advocate(s)
+          (filtered from
+          <strong class="text-slate-200">{{ globalTotalLawyers }}</strong> total)
+        </span>
+        } @else {
+        <span class="text-slate-400 text-xs font-medium">
+          Showing all <strong class="text-slate-200">{{ globalTotalLawyers }}</strong> advocates in verification roster
+        </span>
         }
+
         @if (isPiiColumnVisible) {
         <button (click)="toggleAllPii($event)"
-          class="btn flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
+          class="btn flex items-center gap-1.5 text-xs !px-2.5 py-1 h-7 !rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
           [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
           tooltipPosition="top">
           @if (piiState.isAllUnmasked) {
@@ -259,25 +250,64 @@
             </path>
             <line x1="1" y1="1" x2="23" y2="23"></line>
           </svg>
-          <span>Mask All Details</span>
+          <span>Mask Details</span>
           } @else {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
-          <span>Reveal All Details</span>
+          <span>Reveal Details</span>
           }
-        </button>
-        }
-        @if (isFilterActive) {
-        <button (click)="resetFilters(); selection.clear();"
-          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
-          [adminTooltip]="'Clear search query, city & verification filters'">
-          Clear Filters
         </button>
         }
       </div>
     </div>
+    }
+
+    <!-- --- Line 2: Polished Compact Bulk Action Dock (Subtle Tint + Linear Divider) --- -->
+    @if (selection.size > 0) {
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/20 px-2.5 rounded-lg animate-in fade-in duration-200 transition-all">
+      <!-- Left Side: Selection Count Pill & Micro Ghost Deselect Action -->
+      <div class="flex items-center gap-2">
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 font-extrabold border border-indigo-500/30 text-[11px] shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selection.size }} advocate(s) selected</span>
+        </span>
+
+        <button
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          <span class="text-[10px] font-bold text-slate-400">✕</span>
+          <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
+        </button>
+      </div>
+
+      <!-- Right Side: Perfectly Height-Matched Bulk Action Buttons (h-7) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          (click)="bulkVerifyLawyers(true)" [adminTooltip]="'Bulk approve selected advocates'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Bulk Approve</span>
+        </button>
+
+        <button
+          class="h-7 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
+          (click)="bulkVerifyLawyers(false)" [adminTooltip]="'Bulk revoke selected advocates'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>Bulk Revoke</span>
+        </button>
+      </div>
+    </div>
+    }
   </div>
 
   <!-- --- Main Lawyer Data Table --- -->

@@ -23,10 +23,12 @@ import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
 
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+
 @Component({
   selector: 'admin-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent],
   templateUrl: './lawyers.component.html',
   styleUrl: './lawyers.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -181,7 +183,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
       this.sortOrder = 'desc';
     }
     this.pagination.page = 1;
-    this.fetchLawyers();
+    this.updateUrlParams();
   }
 
   pagination = {
@@ -241,12 +243,21 @@ export class LawyersComponent implements OnInit, OnDestroy {
     return this.lawyers.map(l => l.id);
   }
 
+  get isAllPageSelected(): boolean {
+    return this.lawyers.length > 0 && this.lawyers.every(l => this.selection.isSelected(l.id));
+  }
+
   isAllSelected(): boolean {
-    return this.selection.isAllSelected(this.lawyerIds);
+    return this.isAllPageSelected;
   }
 
   toggleSelectAll(): void {
-    this.selection.toggleAll(this.lawyerIds);
+    if (this.isAllPageSelected) {
+      this.selection.clear();
+    } else {
+      this.lawyers.forEach(l => this.selection.selectedIds.add(l.id));
+    }
+    this.cdr.markForCheck();
   }
 
   // Export Modal State
@@ -751,6 +762,43 @@ export class LawyersComponent implements OnInit, OnDestroy {
     });
   }
 
+  private updateDropdownCounts(): void {
+    this.verificationOptions = [
+      { label: 'All Verification States', value: '', icon: 'info', color: '#818cf8', count: this.globalTotalLawyers },
+      { label: 'Pending Verification Queue', value: 'false', icon: 'clock', color: '#f59e0b', count: this.globalPendingCount },
+      { label: 'Verified Lawyers Only', value: 'true', icon: 'check', color: '#10b981', count: this.globalVerifiedCount }
+    ];
+  }
+
+  get activeQueryParamsObj(): Record<string, any> {
+    const obj: Record<string, any> = {};
+    if (this.search) obj['search'] = this.search;
+    if (this.verificationFilter) obj['isVerified'] = this.verificationFilter;
+    if (this.selectedCity) obj['city'] = this.selectedCity;
+    if (this.selectedCourtCategory) obj['courtCategory'] = this.selectedCourtCategory;
+    if (this.startDate) obj['startDate'] = this.startDate;
+    if (this.endDate) obj['endDate'] = this.endDate;
+    if (this.sortBy && this.sortBy !== 'createdAt') obj['sort'] = this.sortBy;
+    if (this.sortOrder && this.sortOrder !== 'desc') obj['sortOrder'] = this.sortOrder;
+    return obj;
+  }
+
+  onSavedViewApply(savedParams: any): void {
+    this.search = savedParams?.['search'] || '';
+    this.verificationFilter = savedParams?.['isVerified'] || '';
+    this.selectedCity = savedParams?.['city'] || '';
+    this.selectedCourtCategory = savedParams?.['courtCategory'] || '';
+    this.startDate = savedParams?.['startDate'] || '';
+    this.endDate = savedParams?.['endDate'] || '';
+    this.dateFrom = savedParams?.['startDate'] || '';
+    this.dateTo = savedParams?.['endDate'] || '';
+    this.sortBy = savedParams?.['sort'] || 'createdAt';
+    this.sortOrder = savedParams?.['sortOrder'] || 'desc';
+    this.pagination.page = 1;
+    this.updateUrlParams();
+    this.cdr.markForCheck();
+  }
+
   refreshData(): void {
     this.toast.info('Refreshing advocate directory records...');
     this.swrCache.invalidate('lawyers');
@@ -760,17 +808,8 @@ export class LawyersComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.buildDynamicCityOptions();
 
-    this.searchSubject$.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(query => {
-      this.search = query;
-      this.pagination.page = 1;
-      this.updateUrlParams();
-    });
-
-    this.route.queryParams.subscribe(params => {
-      this.search = params['search'] || params['city'] || '';
+    this.route.queryParams.subscribe((params: any) => {
+      this.search = params['search'] || '';
       this.verificationFilter = params['isVerified'] || '';
       this.selectedCity = params['city'] || '';
       this.selectedCourtCategory = params['courtCategory'] || '';
@@ -781,12 +820,41 @@ export class LawyersComponent implements OnInit, OnDestroy {
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      this.cdr.markForCheck();
       this.fetchLawyers();
     });
   }
 
   onSearchInput(val: string): void {
-    this.searchSubject$.next(val);
+    this.search = val;
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  onSearchChange(query: string): void {
+    this.search = query;
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  removeFilter(type: 'search' | 'verification' | 'city' | 'court' | 'dateRange'): void {
+    if (type === 'search') this.search = '';
+    if (type === 'verification') this.verificationFilter = '';
+    if (type === 'city') this.selectedCity = '';
+    if (type === 'court') this.selectedCourtCategory = '';
+    if (type === 'dateRange') { this.startDate = ''; this.endDate = ''; this.dateFrom = ''; this.dateTo = ''; }
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  get activeFilterPills(): { key: 'search' | 'verification' | 'city' | 'court' | 'dateRange'; label: string }[] {
+    const pills: { key: 'search' | 'verification' | 'city' | 'court' | 'dateRange'; label: string }[] = [];
+    if (this.search) pills.push({ key: 'search', label: `Search: "${this.search}"` });
+    if (this.verificationFilter) pills.push({ key: 'verification', label: `Status: ${this.verificationFilter === 'true' ? 'Verified' : 'Pending'}` });
+    if (this.selectedCity) pills.push({ key: 'city', label: `City: ${this.selectedCity}` });
+    if (this.selectedCourtCategory) pills.push({ key: 'court', label: `Court: ${this.selectedCourtCategory}` });
+    if (this.startDate || this.endDate) pills.push({ key: 'dateRange', label: `Date: ${this.startDate || '...'} to ${this.endDate || '...'}` });
+    return pills;
   }
 
   fetchLawyers(): void {
@@ -796,8 +864,8 @@ export class LawyersComponent implements OnInit, OnDestroy {
       isVerified: this.verificationFilter || undefined,
       city: this.selectedCity || undefined,
       courtCategory: this.selectedCourtCategory || undefined,
-      dateFrom: this.dateFrom || undefined,
-      dateTo: this.dateTo || undefined,
+      dateFrom: this.startDate || this.dateFrom || undefined,
+      dateTo: this.endDate || this.dateTo || undefined,
       sort: this.sortBy,
       sortOrder: this.sortOrder,
       page: this.pagination.page,
@@ -808,7 +876,6 @@ export class LawyersComponent implements OnInit, OnDestroy {
     const cached = this.swrCache.get<any>('lawyers', params);
     if (cached) {
       this.lawyers = this.sortData(cached.data);
-      this.selection.retainOnly(this.lawyers.map(l => l.id));
       this.buildDynamicCityOptions(cached.data, cached.summary);
       this.pagination = { ...cached.pagination };
       if (cached.summary) {
@@ -826,7 +893,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.isInitialLoad = false;
         let fetchedData = res.data || res.lawyers || res || [];
 
-        // Apply client-side date range filtering if dates are set
+        // Apply client-side date range filtering as a fallback if backend did not filter
         if (this.dateFrom || this.dateTo) {
           if (this.dateFrom) {
             const fromTime = new Date(this.dateFrom).getTime();
@@ -851,7 +918,6 @@ export class LawyersComponent implements OnInit, OnDestroy {
         };
 
         this.lawyers = this.sortData(fetchedData);
-        this.selection.retainOnly(this.lawyers.map(l => l.id));
         this.buildDynamicCityOptions(fetchedData, res.summary);
         this.pagination = fetchedPagination;
 
@@ -860,11 +926,13 @@ export class LawyersComponent implements OnInit, OnDestroy {
           this.globalPendingCount = res.summary.pendingCount || 0;
           this.globalVerifiedCount = res.summary.verifiedCount || 0;
           this.globalPlatformRating = res.summary.platformRating ? Number(res.summary.platformRating).toFixed(1) : this.computeAvgRating(fetchedData);
+          this.updateDropdownCounts();
         } else {
           this.globalPlatformRating = this.computeAvgRating(fetchedData);
           if (!this.search && !this.verificationFilter && !this.selectedCity && !this.selectedCourtCategory && !this.dateFrom && !this.dateTo) {
             this.globalTotalLawyers = this.pagination.total || this.lawyers.length;
           }
+          this.updateDropdownCounts();
         }
 
         // Store SWR Cache snapshot
@@ -885,12 +953,6 @@ export class LawyersComponent implements OnInit, OnDestroy {
 
   onSearch(): void {
     this.pagination.page = 1;
-    this.fetchLawyers();
-  }
-
-  onSearchChange(query: string): void {
-    this.search = query;
-    this.pagination.page = 1;
     this.updateUrlParams();
   }
 
@@ -908,6 +970,8 @@ export class LawyersComponent implements OnInit, OnDestroy {
     this.endDate = '';
     this.dateFrom = '';
     this.dateTo = '';
+    this.sortBy = 'createdAt';
+    this.sortOrder = 'desc';
     this.resetColumnVisibility();
     this.selection.clear();
     this.pagination.page = 1;

@@ -1,18 +1,19 @@
-<div class="px-3 py-4 w-full flex flex-col gap-2">
+<div class="px-3 pt-3 w-full flex flex-col gap-2">
 
   <!-- --- 0. Header Banner & Quick Actions --- -->
-  <div class="flex flex-col xl:flex-row xl:items-center justify-between px-2 gap-6">
+  <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
     <div class="flex flex-col gap-1.5">
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Inquiry Command Center & DPDP Desk</h1>
-      <p class="text-xs text-slate-400">
+      <h1 class="text-3xl font-extrabold text-slate-100 tracking-tight mt-1">Inquiry Command Center & DPDP Desk</h1>
+      <p class="text-sm text-slate-400">
         Monitor ticket SLAs, handle statutory complaints under the DPDP Act 2023, assign agents, and dispatch resolution
         emails.
       </p>
     </div>
 
     <!-- Quick Actions -->
-    <div class="flex items-center gap-3">
-      <button class="btn btn-secondary flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl"
+    <div class="flex items-center gap-2">
+      <button
+        class="btn btn-primary flex items-center px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
         (click)="openExportModal()" [adminTooltip]="'Open custom export modal to download CSV or JSON spreadsheet'"
         tooltipPosition="top">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -20,15 +21,17 @@
           <polyline points="7 10 12 15 17 10"></polyline>
           <line x1="12" y1="15" x2="12" y2="3"></line>
         </svg>
-        <span>Export Directory</span>
+        <span>Export Support</span>
       </button>
 
-      <button class="btn btn-primary flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl"
+      <button
+        class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
         (click)="fetchContacts()" [adminTooltip]="'Refresh support inquiry directory from database'"
         tooltipPosition="top">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [class.animate-spin]="isLoading">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
+          <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
         </svg>
         <span>Refresh Desk</span>
       </button>
@@ -166,7 +169,7 @@
 
   </div>
 
-  <!-- --- 2. Advanced Search & Filter Bar (Matching Users/Lawyers Page) --- -->
+  <!-- --- 2. Advanced Search & Filter Bar --- -->
   <div
     class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
     <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
@@ -175,9 +178,8 @@
         tooltip="Type query to auto-debounce search by 300ms" (searchChange)="onSearchChange($event)" minWidth="300px">
       </admin-search-input>
 
-      <!-- Center & Right Controls (Single Unified Segmented Toolbar) -->
-      <div
-        class="filter-group flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink min-w-0 max-w-full overflow-visible">
+      <!-- Unified Filters & Tools Cluster (Right - Option 2) -->
+      <div class="filter-group flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
         <admin-select [options]="statusOptions" [value]="selectedStatus" icon="shield"
           (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="120px"
           [adminTooltip]="'Filter ticket directory by workflow status'" tooltipPosition="top">
@@ -193,6 +195,11 @@
           [adminTooltip]="'Filter by department category'" tooltipPosition="top">
         </admin-select>
 
+        <!-- Saved Filter Views Dropdown Bookmark Manager -->
+        <admin-saved-views storageKey="support" [currentParams]="activeQueryParamsObj"
+          (viewApply)="onSavedViewApply($event)">
+        </admin-saved-views>
+
         <!-- Column Customizer Dropdown Toggle -->
         <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
           (visibilityChange)="onColumnVisibilityChange($event)">
@@ -205,60 +212,48 @@
       </div>
     </div>
 
-    <!-- Active Filters & Selection Bar (Matching Users/Lawyers Page) -->
-    <div class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 flex-wrap">
-      <div class="flex items-center gap-2 flex-wrap">
-        <!-- Filter Active Badge -->
+    <!-- --- Line 1: Active Filters Summary (Always visible when filters applied or active) --- -->
+    @if (hasQueryFilter || isPiiColumnVisible || contacts.length > 0) {
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 flex-wrap min-h-[34px]">
+      <!-- Left Side: Active Filter Badges & Clear Link -->
+      <div class="flex items-center gap-2 flex-wrap min-w-0">
         @if (hasQueryFilter) {
         <span
-          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-sky-500/10 border border-sky-500/30 text-sky-300 text-[11px] font-semibold">
-          <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
-          <span>Filter Active</span>
-          <button (click)="resetFilters()" class="hover:text-white ml-0.5 text-xs font-bold"
-            [adminTooltip]="'Clear all active filters'">✕</button>
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          Filtered View Active
         </span>
-        }
-        @if (selection.size > 0) {
+
+        @for (pill of activeFilterPills; track pill.key) {
         <span
-          class="px-2.5 py-1 bg-indigo-500/20 text-indigo-300 font-bold rounded-lg border border-indigo-500/30 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-          <span>{{ selection.size }} ticket(s) selected</span>
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[11px] font-medium shadow-sm transition-all hover:border-sky-500/40">
+          <span>{{ pill.label }}</span>
+          <button type="button" (click)="removeFilter(pill.key)"
+            class="hover:text-red-400 text-slate-400 ml-0.5 font-bold transition-colors">
+            ✕
+          </button>
         </span>
         }
-        <span class="text-slate-300 font-medium">
-          Showing <strong>{{ contacts.length }}</strong> matching result(s) (filtered from <strong>{{ totalTicketsCount
-            }}</strong> total)
-        </span>
+
+        <button (click)="resetFilters();"
+          class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors ml-1"
+          [adminTooltip]="'Clear search query, status & category filters'">
+          Clear Filters
+        </button>
+        }
       </div>
 
-      <div class="flex items-center gap-2">
-        @if (selection.size > 0) {
-        <button
-          class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
-          (click)="bulkUpdateStatus('Resolved')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          <span>Bulk Resolve</span>
-        </button>
+      <!-- Right Side: Total Matching Count & PII Reveal Toggle -->
+      <div class="flex items-center gap-3 shrink-0 ml-auto">
+        <span class="text-slate-400 text-xs font-medium">
+          Showing <strong class="text-slate-200">{{ contacts.length }}</strong> matching result(s) (filtered from
+          <strong class="text-slate-200">{{ totalTicketsCount }}</strong> total)
+        </span>
 
-        <button
-          class="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 hover:bg-amber-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
-          (click)="bulkUpdateStatus('Escalated to DPO')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          <span>Bulk Escalate to DPO</span>
-        </button>
-
-        <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
-          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
-          Deselect All
-        </button>
-        }
         @if (isPiiColumnVisible) {
         <button (click)="toggleAllPii($event)"
-          class="btn flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
+          class="btn flex items-center gap-1.5 text-xs !px-2.5 py-1 h-7 !rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
           [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
           tooltipPosition="top">
           @if (piiState.isAllUnmasked) {
@@ -268,31 +263,68 @@
             </path>
             <line x1="1" y1="1" x2="23" y2="23"></line>
           </svg>
-          <span>Mask All Details</span>
+          <span>Mask Details</span>
           } @else {
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
-          <span>Reveal All Details</span>
+          <span>Reveal Details</span>
           }
-        </button>
-        }
-        @if (hasQueryFilter) {
-        <button (click)="resetFilters(); selection.clear();"
-          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
-          [adminTooltip]="'Clear search query, status & category filters'">
-          Clear Filters
         </button>
         }
       </div>
     </div>
+    }
+
+    <!-- --- Line 2: Polished Compact Bulk Action Dock (Subtle Tint + Linear Divider) --- -->
+    @if (selection.size > 0) {
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/20 px-2.5 rounded-lg animate-in fade-in duration-200 transition-all">
+      <!-- Left Side: Selection Count Pill & Micro Ghost Deselect Action -->
+      <div class="flex items-center gap-2">
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 font-extrabold border border-indigo-500/30 text-[11px] shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selection.size }} ticket(s) selected</span>
+        </span>
+
+        <button
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          <span class="text-[10px] font-bold text-slate-400">✕</span>
+          <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
+        </button>
+      </div>
+
+      <!-- Right Side: Perfectly Height-Matched Bulk Action Buttons (h-7) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          (click)="bulkUpdateStatus('Resolved')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Bulk Resolve</span>
+        </button>
+
+        <button
+          class="h-7 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
+          (click)="bulkUpdateStatus('Escalated to DPO')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Bulk Escalate to DPO</span>
+        </button>
+      </div>
+    </div>
+    }
   </div>
 
   <!-- --- 4. Main Support Data Table --- -->
   <div
     class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in relative z-10">
-    <div class="data-table-wrapper overflow-x-auto min-h-[380px]">
+    <div class="data-table-wrapper overflow-x-auto min-h-[300px]">
       @if (!isInitialLoad && isLoading) {
       <div
         class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 animate-pulse w-full">
@@ -316,8 +348,8 @@
             <th class="p-3.5 w-[40px] min-w-[40px] text-center">
               <input type="checkbox"
                 class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-sky-500/40 cursor-pointer"
-                (change)="toggleSelectAll($event)" [adminTooltip]="'Select or unselect all visible tickets'"
-                tooltipPosition="right" />
+                [checked]="isAllPageSelected" (change)="toggleSelectAll($event)"
+                [adminTooltip]="'Select or unselect all visible tickets'" tooltipPosition="right" />
             </th>
             @if (columnVisibility['applicant']) {
             <th
@@ -610,7 +642,7 @@
               date:'mediumDate' }}</td>
             }
 
-            <!-- Action Controls matching Users/Lawyers Page -->
+            <!-- Action Controls -->
             <td class="p-3.5 text-center w-[75px] min-w-[75px]" (click)="$event.stopPropagation()">
               <div class="flex items-center justify-center w-full">
                 <button #kebabBtn
@@ -634,7 +666,7 @@
       }
     </div>
 
-    <!-- Pagination Footer Bar matching Users/Lawyers Page -->
+    <!-- Pagination Footer Bar -->
     <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
       [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onLimitChange($event)">
     </admin-pagination>
@@ -845,7 +877,7 @@
     (exportRequest)="handleExport($any($event))">
   </admin-export-modal>
 
-  <!-- --- FLOATING ACTION DROPDOWN matching Users/Lawyers Page --- -->
+  <!-- --- FLOATING ACTION DROPDOWN --- -->
   <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionTicket()"
     headerLabel="Support Ticket Actions" [dropdownWidth]="190" (closed)="closeActionMenu()">
     @if (getOpenActionTicket()) {

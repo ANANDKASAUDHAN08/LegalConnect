@@ -1,33 +1,44 @@
-<div class="p-2 w-full flex flex-col gap-5">
+<div class="px-3 pt-3 w-full flex flex-col gap-2">
 
   <!-- --- 0. Header & Moderation Desk Banner --- -->
-  <div
-    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-6 gap-6 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-xl shadow-xl">
+  <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
     <div class="flex flex-col gap-1.5">
-      <div
-        class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 w-fit"
-        [adminTooltip]="'Moderation desk for auditing public client feedback and advocate responses'"
-        tooltipPosition="right">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>Review Moderation Desk</span>
-      </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Client Reviews & Rating Audit Desk</h1>
-      <p class="text-xs text-slate-400">
+      <h1 class="text-3xl font-extrabold text-slate-100 tracking-tight mt-1">Client Reviews & Rating Audit Desk</h1>
+      <p class="text-sm text-slate-400">
         Audit public advocate feedback, moderate flagged reviews, approve lawyer responses, and prevent fraudulent
         ratings.
       </p>
     </div>
 
-    <!-- Quick Refresh Button -->
-    <button class="btn btn-secondary flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl"
-      (click)="fetchReviews()" [adminTooltip]="'Refresh review directory from database'" tooltipPosition="top">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="1 4 1 10 7 10"></polyline>
-        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-      </svg>
-      <span>Refresh Reviews</span>
-    </button>
+    <!-- Quick Actions -->
+    <div class="flex items-center gap-2">
+      <button
+        class="btn btn-primary flex items-center px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
+        (click)="openExportModal()" [adminTooltip]="'Open custom export modal to download CSV or JSON spreadsheet'"
+        tooltipPosition="top">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Export Reviews</span>
+      </button>
+
+      <button
+        class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
+        (click)="fetchReviews()" [adminTooltip]="'Refresh review directory from database'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [class.animate-spin]="isLoading">
+          <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
+          <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
+        </svg>
+        <span>Refresh Desk</span>
+      </button>
+    </div>
   </div>
+
+  <!-- Single Accent Fade (Sky Blue) -->
+  <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-sky-500/50 to-transparent"></div>
 
   <!-- --- 1. Rating Analytics & Distribution Banner with Skeleton Loaders --- -->
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
@@ -149,7 +160,7 @@
       }
       }
     </div>
-  </div> <!-- --- 2. Advanced Search & Filter Bar (Matching Users/Lawyers Page) --- -->
+  </div> <!-- --- 2. Advanced Search & Filter Bar --- -->
   <div
     class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
     <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
@@ -158,9 +169,8 @@
         tooltip="Type query to auto-debounce search by 300ms" (searchChange)="onSearchChange($event)">
       </admin-search-input>
 
-      <!-- Center & Right Controls -->
-      <div
-        class="filter-group flex items-center gap-1.5 flex-wrap sm:flex-nowrap shrink min-w-0 max-w-full overflow-visible">
+      <!-- Unified Filters & Tools Cluster (Right - Option 2) -->
+      <div class="filter-group flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
         <admin-select [options]="ratingOptions" [value]="ratingFilter" icon="star"
           (valueChange)="ratingFilter = $event; onFilterChange();" minWidth="120px"
           [adminTooltip]="'Filter by rating tier'" tooltipPosition="top">
@@ -170,6 +180,11 @@
           (valueChange)="moderationFilter = $event; onFilterChange();" minWidth="135px"
           [adminTooltip]="'Filter by moderation audit state'" tooltipPosition="top">
         </admin-select>
+
+        <!-- Saved Filter Views Dropdown Bookmark Manager -->
+        <admin-saved-views storageKey="reviews" [currentParams]="activeQueryParamsObj"
+          (viewApply)="onSavedViewApply($event)">
+        </admin-saved-views>
 
         <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
           (visibilityChange)="onColumnVisibilityChange($event)">
@@ -181,67 +196,91 @@
       </div>
     </div>
 
-    <!-- Active Filters & Selection Bar (Matching Users/Lawyers Page) -->
-    <div class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 flex-wrap">
-      <div class="flex items-center gap-2 flex-wrap">
-        <!-- Filter Active Badge -->
+    <!-- --- Line 1: Active Filters Summary (Always visible when filters applied or active) --- -->
+    @if (hasQueryFilter || reviews.length > 0) {
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 flex-wrap min-h-[34px]">
+      <!-- Left Side: Active Filter Badges & Clear Link -->
+      <div class="flex items-center gap-2 flex-wrap min-w-0">
         @if (hasQueryFilter) {
         <span
-          class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold">
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[11px] font-semibold shrink-0">
           <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-          <span>Filter Active</span>
-          <button (click)="resetFilters()" class="hover:text-white ml-0.5 text-xs font-bold"
-            [adminTooltip]="'Clear all active filters'">✕</button>
+          Filtered View Active
         </span>
-        }
-        @if (selection.size > 0) {
+
+        @for (pill of activeFilterPills; track pill.key) {
         <span
-          class="px-2.5 py-1 bg-indigo-500/20 text-indigo-300 font-bold rounded-lg border border-indigo-500/30 flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-          <span>{{ selection.size }} review(s) selected</span>
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[11px] font-medium shadow-sm transition-all hover:border-sky-500/40">
+          <span>{{ pill.label }}</span>
+          <button type="button" (click)="removeFilter(pill.key)"
+            class="hover:text-red-400 text-slate-400 ml-0.5 font-bold transition-colors">
+            ✕
+          </button>
         </span>
         }
-        <span class="text-slate-300 font-medium">
-          Showing <strong>{{ reviews.length }}</strong> matching result(s) (filtered from <strong>{{ totalReviewsCount
-            }}</strong> total)
-        </span>
+
+        <button (click)="resetFilters()"
+          class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors ml-1"
+          [adminTooltip]="'Clear search query, rating & moderation filters'">
+          Clear Filters
+        </button>
+        }
       </div>
 
+      <!-- Right Side: Total Matching Count -->
+      <div class="flex items-center gap-3 shrink-0 ml-auto">
+        <span class="text-slate-400 text-xs font-medium">
+          Showing <strong class="text-slate-200">{{ reviews.length }}</strong> matching result(s) (filtered from <strong
+            class="text-slate-200">{{ totalReviewsCount }}</strong> total)
+        </span>
+      </div>
+    </div>
+    }
+
+    <!-- --- Line 2: Polished Compact Bulk Action Dock (Subtle Tint + Linear Divider) --- -->
+    @if (selection.size > 0) {
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/20 px-2.5 rounded-lg animate-in fade-in duration-200 transition-all">
+      <!-- Left Side: Selection Count Pill & Micro Ghost Deselect Action -->
       <div class="flex items-center gap-2">
-        @if (selection.size > 0) {
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/15 text-indigo-300 font-extrabold border border-indigo-500/30 text-[11px] shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selection.size }} review(s) selected</span>
+        </span>
+
         <button
-          class="px-3 py-1 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
-          (click)="bulkUpdateModeration('Approved')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
+          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
+          <span class="text-[10px] font-bold text-slate-400">✕</span>
+          <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
+        </button>
+      </div>
+
+      <!-- Right Side: Perfectly Height-Matched Bulk Action Buttons (h-7) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          (click)="bulkUpdateModeration('Approved')" [adminTooltip]="'Bulk approve selected reviews'">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
           <span>Bulk Approve &amp; Publish</span>
         </button>
 
         <button
-          class="px-3 py-1 bg-rose-500/20 text-rose-300 border border-rose-500/30 hover:bg-rose-500/30 rounded-lg text-xs font-bold transition-all flex items-center gap-1 shadow-sm"
-          (click)="bulkUpdateModeration('Hidden')">
+          class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
+          (click)="bulkUpdateModeration('Hidden')" [adminTooltip]="'Bulk hide selected reviews'">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
           </svg>
           <span>Bulk Hide</span>
         </button>
-
-        <button class="px-2.5 py-1 text-slate-400 hover:text-white text-xs font-medium transition-colors"
-          (click)="selection.clear()" [adminTooltip]="'Uncheck all selected rows'">
-          Deselect All
-        </button>
-        }
-        @if (hasQueryFilter) {
-        <button (click)="resetFilters(); selection.clear();"
-          class="text-[11px] text-amber-400 hover:text-amber-300 font-semibold underline underline-offset-2 ml-1"
-          [adminTooltip]="'Clear search query, rating & moderation filters'">
-          Clear Filters
-        </button>
-        }
       </div>
     </div>
+    }
   </div>
 
   <!-- --- 4. Main Reviews Moderation Data Table --- -->
@@ -277,8 +316,8 @@
             <th class="p-3.5 w-10 text-center">
               <input type="checkbox"
                 class="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500/40 cursor-pointer"
-                (change)="toggleSelectAll($event)" [adminTooltip]="'Select or unselect all reviews'"
-                tooltipPosition="right" />
+                [checked]="isAllPageSelected" (change)="toggleSelectAll($event)"
+                [adminTooltip]="'Select or unselect all reviews'" tooltipPosition="right" />
             </th>
             @if (columnVisibility['reviewer']) {
             <th class="p-3.5 cursor-pointer group hover:text-amber-300 transition-colors select-none"
@@ -582,7 +621,7 @@
             <td class="p-3.5 text-slate-400 text-[11px]">{{ rev.createdAt | date:'mediumDate' }}</td>
             }
 
-            <!-- Action Controls matching Users/Lawyers Page -->
+            <!-- Action Controls -->
             <td class="p-3.5 text-center w-20" (click)="$event.stopPropagation()">
               <div class="flex items-center justify-center w-full">
                 <button #kebabBtn
@@ -605,39 +644,84 @@
       }
     </div>
 
-    <!-- Pagination Footer Bar matching Users/Lawyers Page -->
+    <!-- Pagination Footer Bar -->
     <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
       [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onLimitChange($event)">
     </admin-pagination>
   </div>
 
-  <!-- --- 5. Review Inspection & Moderation Modal --- -->
+  <!-- --- 5. Enterprise Animated Slide-Over Detail Drawer --- -->
   @if (selectedReview) {
-  <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex items-center justify-center p-4 animate-in"
+  <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-xs flex justify-end transition-opacity duration-300"
     (click)="closeInspectModal()">
     <div
-      class="glass-card max-w-xl w-full rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-5"
+      class="glass-card w-full max-w-2xl h-full !rounded-l-2xl !rounded-r-none border-l border-white/10 bg-slate-900/95 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-5 overflow-y-auto transform transition-transform duration-300 ease-out translate-x-0"
       (click)="$event.stopPropagation()">
 
-      <!-- Modal Header -->
-      <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
-        <div>
-          <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-            <span>Review Inspection Desk</span>
-            <span class="text-amber-400 font-extrabold text-sm">★ {{ selectedReview.rating }}/5</span>
-          </h3>
-          <p class="text-xs text-slate-400 mt-0.5">
+      <!-- Drawer Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex flex-col gap-1">
+          <div class="flex items-center gap-2">
+            <span
+              class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider bg-amber-500/10 text-amber-400 border-amber-500/30">
+              ★ {{ selectedReview.rating }}/5 Rating
+            </span>
+            <span class="text-xs font-mono text-slate-400">ID: #{{ selectedReview.id }}</span>
+          </div>
+          <h2 class="text-xl font-bold text-slate-100 mt-1">Review Inspection Desk</h2>
+          <p class="text-xs text-slate-400">
             By <strong class="text-slate-200">{{ getReviewerName(selectedReview) }}</strong> for <strong
-              class="text-sky-300">{{ selectedReview.targetName || selectedReview.lawyerName || 'Platform' }}</strong>
+              class="text-sky-300">{{ selectedReview.targetName || selectedReview.lawyerName || 'LegalConnect Platform'
+              }}</strong>
           </p>
         </div>
-        <button class="text-slate-400 hover:text-slate-200 text-xl font-bold p-1 cursor-pointer"
-          (click)="closeInspectModal()" [adminTooltip]="'Close inspection modal'"
+        <button class="text-slate-400 hover:text-slate-200 text-2xl font-bold p-1 cursor-pointer transition-colors"
+          (click)="closeInspectModal()" [adminTooltip]="'Close inspection drawer panel'"
           tooltipPosition="left">&times;</button>
       </div>
 
-      <!-- Modal Body -->
-      <div class="modal-body flex flex-col gap-4 text-xs">
+      <!-- Drawer Quick Moderation Controls Bar -->
+      <div
+        class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-slate-400">Moderation State:</span>
+          <span class="px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wider border" [ngClass]="{
+              'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': selectedReview.moderationStatus === 'Approved' || !selectedReview.moderationStatus,
+              'bg-amber-500/10 text-amber-400 border-amber-500/30': selectedReview.moderationStatus === 'Pending',
+              'bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse': selectedReview.moderationStatus === 'Flagged',
+              'bg-slate-700/40 text-slate-400 border-slate-700/50': selectedReview.moderationStatus === 'Hidden'
+            }">
+            {{ selectedReview.moderationStatus || 'Approved' }}
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2 flex-wrap">
+          @if (selectedReview.moderationStatus !== 'Approved') {
+          <button class="btn btn-success text-xs px-3 py-1 font-semibold rounded-lg"
+            (click)="updateModeration(selectedReview, 'Approved', flagReasonInput); closeInspectModal();"
+            [adminTooltip]="'Approve & publish review to public profile'" tooltipPosition="top">
+            Approve Review
+          </button>
+          }
+          @if (selectedReview.moderationStatus !== 'Hidden') {
+          <button class="btn btn-secondary text-xs px-3 py-1 font-semibold rounded-lg"
+            (click)="updateModeration(selectedReview, 'Hidden', flagReasonInput); closeInspectModal();"
+            [adminTooltip]="'Hide review from public profile'" tooltipPosition="top">
+            Hide Review
+          </button>
+          }
+          @if (selectedReview.moderationStatus !== 'Flagged') {
+          <button class="btn btn-warning text-xs px-3 py-1 font-semibold rounded-lg"
+            (click)="updateModeration(selectedReview, 'Flagged', flagReasonInput); closeInspectModal();"
+            [adminTooltip]="'Quarantine review for moderator audit'" tooltipPosition="top">
+            Flag / Quarantine
+          </button>
+          }
+        </div>
+      </div>
+
+      <!-- Drawer Main Details Content -->
+      <div class="flex flex-col gap-4 text-xs">
 
         <!-- Client Feedback Text -->
         <div class="flex flex-col gap-1.5">
@@ -685,37 +769,24 @@
 
       </div>
 
-      <!-- Modal Footer Action Controls -->
-      <div class="modal-footer flex items-center justify-between pt-3 border-t border-slate-800">
+      <!-- Drawer Footer Action Controls -->
+      <div class="flex items-center justify-between pt-4 border-t border-slate-800 mt-auto">
         <button class="btn btn-danger text-xs px-3.5 py-2 font-semibold rounded-xl"
           (click)="deleteReview(selectedReview.id)" [adminTooltip]="'Permanently delete review from system'"
           tooltipPosition="top">
           Delete Permanently
         </button>
 
-        <div class="flex items-center gap-2">
-          <button class="btn btn-secondary text-xs px-3.5 py-2 font-semibold rounded-xl"
-            (click)="updateModeration(selectedReview, 'Hidden', flagReasonInput); closeInspectModal();"
-            [adminTooltip]="'Hide review from public profile'" tooltipPosition="top">
-            Hide Review
-          </button>
-          <button class="btn btn-warning text-xs px-3.5 py-2 font-semibold rounded-xl"
-            (click)="updateModeration(selectedReview, 'Flagged', flagReasonInput); closeInspectModal();"
-            [adminTooltip]="'Quarantine review for moderator audit'" tooltipPosition="top">
-            Flag / Quarantine
-          </button>
-          <button class="btn btn-success text-xs px-3.5 py-2 font-semibold rounded-xl"
-            (click)="updateModeration(selectedReview, 'Approved', flagReasonInput); closeInspectModal();"
-            [adminTooltip]="'Approve & publish review to public profile'" tooltipPosition="top">
-            Approve & Publish
-          </button>
-        </div>
+        <button class="btn btn-secondary text-xs px-4 py-2 font-semibold rounded-xl" (click)="closeInspectModal()">
+          Close Drawer
+        </button>
       </div>
+
     </div>
   </div>
   }
 
-  <!-- --- FLOATING ACTION DROPDOWN matching Users/Lawyers Page --- -->
+  <!-- --- FLOATING ACTION DROPDOWN --- -->
   <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionReview()"
     headerLabel="Review Audit Actions" [dropdownWidth]="190" (closed)="closeActionMenu()">
     @if (getOpenActionReview()) {
@@ -765,5 +836,12 @@
     </button>
     }
   </admin-action-menu>
+
+  <!-- --- 6. Enterprise Custom Export Modal --- -->
+  <admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="totalReviewsCount"
+    [filteredCount]="reviews.length" [selectedCount]="selection.size" [isFilterActive]="hasQueryFilter"
+    [columns]="exportColumns" (close)="closeExportModal()" (closed)="closeExportModal()"
+    (exportConfirm)="handleExport($any($event))" (exportRequest)="handleExport($any($event))">
+  </admin-export-modal>
 
 </div>

@@ -108,4 +108,9 @@ export class AdminApiService {
   revokeAllOtherSessions(): Observable<any> { return this.user.revokeAllOtherSessions(); }
   updateOwnProfile(data: any): Observable<any> { return this.user.updateOwnProfile(data); }
   getAccountAuditLog(): Observable<any> { return this.user.getAccountAuditLog(); }
+
+  // -- Saved Views Cloud Persistence Delegates --
+  getSavedViews(pageKey: string): Observable<any> { return this.user.getSavedViews(pageKey); }
+  saveSavedView(dto: { pageKey: string; name: string; paramsJson: string }): Observable<any> { return this.user.saveSavedView(dto); }
+  deleteSavedView(id: string): Observable<any> { return this.user.deleteSavedView(id); }
 }

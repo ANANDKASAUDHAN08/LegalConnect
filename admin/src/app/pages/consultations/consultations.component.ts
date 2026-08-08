@@ -23,10 +23,12 @@ import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
 
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+
 @Component({
   selector: 'admin-consultations',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent],
   templateUrl: './consultations.component.html',
   styleUrl: './consultations.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -92,12 +94,21 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     return this.consultations.map(c => c.id);
   }
 
+  get isAllPageSelected(): boolean {
+    return this.consultations.length > 0 && this.consultations.every(c => this.selection.isSelected(c.id));
+  }
+
   isAllSelected(): boolean {
-    return this.selection.isAllSelected(this.consultationIds);
+    return this.isAllPageSelected;
   }
 
   toggleSelectAll(): void {
-    this.selection.toggleAll(this.consultationIds);
+    if (this.isAllPageSelected) {
+      this.selection.clear();
+    } else {
+      this.consultations.forEach(c => this.selection.selectedIds.add(c.id));
+    }
+    this.cdr.markForCheck();
   }
 
   get isPiiColumnVisible(): boolean {
@@ -264,16 +275,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   ) { }
 
   ngOnInit(): void {
-    this.searchSubscription = this.searchSubject.pipe(
-      debounceTime(300),
-      distinctUntilChanged()
-    ).subscribe(() => {
-      this.pagination.page = 1;
-      this.updateUrlParams();
-      this.fetchConsultations();
-    });
-
-    this.routeSubscription = this.route.queryParams.subscribe(params => {
+    this.routeSubscription = this.route.queryParams.subscribe((params: any) => {
       this.selectedStatus = params['status'] || '';
       this.slaFilter = params['sla'] || '';
       this.dateRangeFilter = params['dateRange'] || '';
@@ -283,6 +285,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      this.cdr.markForCheck();
       this.fetchConsultations();
     });
   }
@@ -301,7 +304,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     if (this.rowClickTimeout) {
       clearTimeout(this.rowClickTimeout);
     }
-    this.searchSubscription?.unsubscribe();
     this.routeSubscription?.unsubscribe();
     if (this.scrollListener) {
       const tableWrapper = this.elRef.nativeElement.querySelector('.data-table-wrapper');
@@ -325,14 +327,30 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.endDate = event.endDate;
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   onSearchChange(query: string): void {
     this.searchQuery = query;
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.searchSubject.next(query);
+  }
+
+  removeFilter(type: 'search' | 'status' | 'sla' | 'dateRange'): void {
+    if (type === 'search') this.searchQuery = '';
+    if (type === 'status') this.selectedStatus = '';
+    if (type === 'sla') this.slaFilter = '';
+    if (type === 'dateRange') { this.startDate = ''; this.endDate = ''; this.dateRangeFilter = ''; }
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  get activeFilterPills(): { key: 'search' | 'status' | 'sla' | 'dateRange'; label: string }[] {
+    const pills: { key: 'search' | 'status' | 'sla' | 'dateRange'; label: string }[] = [];
+    if (this.searchQuery) pills.push({ key: 'search', label: `Search: "${this.searchQuery}"` });
+    if (this.selectedStatus) pills.push({ key: 'status', label: `Status: ${this.selectedStatus}` });
+    if (this.slaFilter) pills.push({ key: 'sla', label: `SLA: ${this.slaFilter}` });
+    if (this.startDate || this.endDate) pills.push({ key: 'dateRange', label: `Date: ${this.startDate || '...'} to ${this.endDate || '...'}` });
+    return pills;
   }
 
   get pendingCount(): number {
@@ -350,7 +368,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   onFilterChange(): void {
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   get totalCount(): number {
@@ -384,6 +401,43 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     });
   }
 
+  private updateDropdownCounts(): void {
+    if (!this.summaryMetrics) return;
+    this.statusOptions = [
+      { label: 'All Statuses', value: '', icon: 'info', color: '#818cf8', count: this.summaryMetrics.total },
+      { label: 'Pending Response Queue', value: 'Pending', icon: 'clock', color: '#f59e0b', count: this.summaryMetrics.pending },
+      { label: 'Advocate Contacted', value: 'Contacted', icon: 'check', color: '#38bdf8', count: this.summaryMetrics.contacted },
+      { label: 'Closed & Resolved', value: 'Closed', icon: 'archive', color: '#10b981', count: this.summaryMetrics.closed }
+    ];
+  }
+
+  get activeQueryParamsObj(): Record<string, any> {
+    const obj: Record<string, any> = {};
+    if (this.selectedStatus) obj['status'] = this.selectedStatus;
+    if (this.searchQuery) obj['search'] = this.searchQuery;
+    if (this.slaFilter) obj['sla'] = this.slaFilter;
+    if (this.dateRangeFilter) obj['dateRange'] = this.dateRangeFilter;
+    if (this.startDate) obj['startDate'] = this.startDate;
+    if (this.endDate) obj['endDate'] = this.endDate;
+    if (this.sortBy && this.sortBy !== 'createdAt') obj['sortBy'] = this.sortBy;
+    if (this.sortOrder && this.sortOrder !== 'desc') obj['sortOrder'] = this.sortOrder;
+    return obj;
+  }
+
+  onSavedViewApply(savedParams: any): void {
+    this.selectedStatus = savedParams?.['status'] || '';
+    this.searchQuery = savedParams?.['search'] || '';
+    this.slaFilter = savedParams?.['sla'] || '';
+    this.dateRangeFilter = savedParams?.['dateRange'] || '';
+    this.startDate = savedParams?.['startDate'] || '';
+    this.endDate = savedParams?.['endDate'] || '';
+    this.sortBy = savedParams?.['sortBy'] || 'createdAt';
+    this.sortOrder = savedParams?.['sortOrder'] || 'desc';
+    this.pagination.page = 1;
+    this.updateUrlParams();
+    this.cdr.markForCheck();
+  }
+
   resetFilters(): void {
     this.searchQuery = '';
     this.selectedStatus = '';
@@ -397,18 +451,17 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.selection.clear();
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   onPresetTabChange(tab: 'all' | 'overdue' | 'pending' | 'contacted' | 'closed'): void {
     this.presetTab = tab;
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   refreshData(): void {
     this.toast.info('Refreshing consultation directory...');
+    this.api.user.clearConsultationsCache();
     this.fetchConsultations();
   }
 
@@ -420,7 +473,6 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     }
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   fetchConsultations(): void {
@@ -440,10 +492,10 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     const cached = this.api.user.getCachedConsultations(params);
     if (cached && cached.success) {
       this.consultations = cached.data || [];
-      this.selection.retainOnly(this.consultations.map(c => c.id));
       this.pagination = cached.pagination || this.pagination;
       if (cached.metrics) {
         this.summaryMetrics = cached.metrics;
+        this.updateDropdownCounts();
       }
       const totalRecs = cached.pagination?.total ?? this.consultations.length;
       this.pagination.pages = Math.max(1, Math.ceil(totalRecs / this.pagination.limit));
@@ -459,10 +511,10 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         this.isInitialLoad = false;
         if (res.metrics) {
           this.summaryMetrics = res.metrics;
+          this.updateDropdownCounts();
         }
         if (res.success) {
           this.consultations = res.data || [];
-          this.selection.retainOnly(this.consultations.map(c => c.id));
           this.pagination = res.pagination || this.pagination;
           const totalRecs = res.pagination?.total ?? this.consultations.length;
           this.pagination.pages = Math.max(1, Math.ceil(totalRecs / this.pagination.limit));
@@ -532,14 +584,12 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
       this.sortOrder = 'asc';
     }
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   onPageChange(newPage: number): void {
     if (newPage < 1 || newPage > this.pagination.pages || newPage === this.pagination.page) return;
     this.pagination.page = newPage;
     this.updateUrlParams();
-    this.fetchConsultations();
   }
 
   async updateStatus(item: any, newStatus: string): Promise<void> {

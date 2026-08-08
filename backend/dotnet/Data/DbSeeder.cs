@@ -39,6 +39,7 @@ namespace CoreApi.Data
             // Auto-create missing MySQL tables and columns if they don't exist yet
             EnsureAdminNotificationsTableExists(context);
             EnsureSecurityAuditLogsTableExists(context);
+            EnsureAdminSavedViewsTableExists(context);
             EnsureColumnExists(context, "Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'");
             EnsureColumnExists(context, "Users", "LastLoginAt", "DATETIME NULL");
             EnsureColumnExists(context, "Users", "LastIpAddress", "VARCHAR(50) NULL");
@@ -570,6 +571,31 @@ namespace CoreApi.Data
             catch (Exception ex)
             {
                 Console.WriteLine($"Seeder Notice: Could not ensure SecurityAuditLogs table: {ex.Message}");
+            }
+        }
+
+        private static void EnsureAdminSavedViewsTableExists(AppDbContext context)
+        {
+            try
+            {
+                var sql = @"
+                    CREATE TABLE IF NOT EXISTS `AdminSavedViews` (
+                        `Id` char(36) NOT NULL,
+                        `UserId` int NOT NULL,
+                        `PageKey` varchar(50) NOT NULL,
+                        `Name` varchar(100) NOT NULL,
+                        `ParamsJson` longtext NOT NULL,
+                        `IsDefault` tinyint(1) NOT NULL DEFAULT 0,
+                        `CreatedAt` datetime(6) NOT NULL,
+                        `UpdatedAt` datetime(6) NOT NULL,
+                        PRIMARY KEY (`Id`),
+                        KEY `IX_AdminSavedViews_UserId_PageKey` (`UserId`, `PageKey`)
+                    );";
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Seeder Notice: Could not ensure AdminSavedViews table: {ex.Message}");
             }
         }
 

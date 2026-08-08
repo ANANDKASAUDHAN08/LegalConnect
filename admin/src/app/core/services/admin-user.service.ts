@@ -275,4 +275,17 @@ export class AdminUserService {
   getAccountAuditLog(): Observable<any> {
     return this.http.get(`${this.API}/account/audit-log`);
   }
+
+  // -- Saved Views Cloud Persistence --
+  getSavedViews(pageKey: string): Observable<any> {
+    return this.http.get(`${this.API}/AdminSavedViews`, { params: { pageKey } });
+  }
+
+  saveSavedView(dto: { pageKey: string; name: string; paramsJson: string }): Observable<any> {
+    return this.http.post(`${this.API}/AdminSavedViews`, dto);
+  }
+
+  deleteSavedView(id: string): Observable<any> {
+    return this.http.delete(`${this.API}/AdminSavedViews/${id}`);
+  }
 }

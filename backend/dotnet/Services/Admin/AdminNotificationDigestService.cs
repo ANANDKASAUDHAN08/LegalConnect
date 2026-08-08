@@ -40,13 +40,17 @@ namespace CoreApi.Services.Admin
                 try
                 {
                     await CheckAndDispatchDigest(stoppingToken);
+                    await Task.Delay(CheckInterval, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "AdminNotificationDigestService encountered an error during digest check.");
+                    try { await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken); } catch { break; }
                 }
-
-                await Task.Delay(CheckInterval, stoppingToken);
             }
         }
 

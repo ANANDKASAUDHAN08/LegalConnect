@@ -31,6 +31,7 @@ namespace CoreApi.Data
         public DbSet<PolicyFeedback> PolicyFeedbacks { get; set; }
         public DbSet<AdminNotification> AdminNotifications { get; set; }
         public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
+        public DbSet<AdminSavedView> AdminSavedViews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

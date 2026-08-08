@@ -178,7 +178,6 @@ export class ActivityStreamService {
       this.hubConnection.start()
         .then(() => {
           this.signalRConnected.set(true);
-          console.log('🔌 SignalR NotificationHub connected.');
         })
         .catch((err: any) => {
           this.signalRConnected.set(false);

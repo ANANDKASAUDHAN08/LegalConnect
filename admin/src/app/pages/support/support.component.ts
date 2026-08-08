@@ -26,13 +26,16 @@ interface CannedMacro {
   content: string;
 }
 
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+
 @Component({
   selector: 'admin-support',
   standalone: true,
   imports: [
     CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent,
     ExportModalComponent, ActionMenuComponent, PaginationComponent, ColumnCustomizerComponent,
-    AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent
+    AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent,
+    AdminSavedViewsComponent
   ],
   templateUrl: './support.component.html',
   styleUrl: './support.component.scss',
@@ -74,7 +77,6 @@ export class SupportComponent implements OnInit, OnDestroy {
   selectedCategory = '';
   startDate = '';
   endDate = '';
-  activeMetricCard: 'all' | 'pending' | 'urgent' | 'dpdp' | 'resolved' = 'all';
 
   // Column Customizer setup matching Users/Lawyers page
   columnDefs: ColumnDef[] = [
@@ -199,12 +201,21 @@ export class SupportComponent implements OnInit, OnDestroy {
     return this.contacts.map(c => c.id);
   }
 
+  get isAllPageSelected(): boolean {
+    return this.contacts.length > 0 && this.contacts.every(c => this.selection.isSelected(c.id));
+  }
+
   isAllSelected(): boolean {
-    return this.selection.isAllSelected(this.ticketIds);
+    return this.isAllPageSelected;
   }
 
   toggleSelectAll(event?: Event): void {
-    this.selection.toggleAll(this.ticketIds);
+    if (this.isAllPageSelected) {
+      this.selection.clear();
+    } else {
+      this.contacts.forEach(c => this.selection.selectedIds.add(c.id));
+    }
+    this.cdr.markForCheck();
   }
 
   toggleSelectRow(id: string | number, event?: Event): void {
@@ -220,18 +231,24 @@ export class SupportComponent implements OnInit, OnDestroy {
     return this.selection.isSelected(id);
   }
 
+  get activeMetricCard(): 'all' | 'pending' | 'urgent' | 'dpdp' | 'resolved' {
+    if (this.selectedPriority === 'Urgent') return 'urgent';
+    if (this.selectedStatus === 'New' || this.selectedStatus === 'In Progress') return 'pending';
+    if (this.selectedCategory === 'DPDP' || this.selectedStatus === 'Escalated to DPO') return 'dpdp';
+    if (this.selectedStatus === 'Resolved') return 'resolved';
+    return 'all';
+  }
+
   get isFilterActive(): boolean {
     return this.hasQueryFilter;
   }
 
   toggleMetricFilter(type: 'all' | 'pending' | 'urgent' | 'dpdp' | 'resolved'): void {
     if (this.activeMetricCard === type && type !== 'all') {
-      this.activeMetricCard = 'all';
       this.selectedStatus = '';
       this.selectedPriority = '';
       this.selectedCategory = '';
     } else {
-      this.activeMetricCard = type;
       this.selectedStatus = '';
       this.selectedPriority = '';
       this.selectedCategory = '';
@@ -259,22 +276,17 @@ export class SupportComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.routeSub = this.route.queryParams.subscribe(params => {
-      this.selectedPriority = params['priority'] || '';
-      this.selectedStatus = params['status'] || '';
-      this.selectedCategory = params['category'] || '';
+    this.routeSub = this.route.queryParams.subscribe((params: any) => {
+      this.selectedPriority = params['priority'] || (params['card'] === 'urgent' ? 'Urgent' : '');
+      this.selectedStatus = params['status'] || (params['card'] === 'pending' ? 'New' : params['card'] === 'resolved' ? 'Resolved' : '');
+      this.selectedCategory = params['category'] || (params['card'] === 'dpdp' ? 'DPDP' : '');
       this.search = params['search'] || '';
       this.startDate = params['startDate'] || '';
       this.endDate = params['endDate'] || '';
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
-      this.activeMetricCard = params['card'] || (
-        this.selectedPriority === 'Urgent' ? 'urgent' :
-          (this.selectedStatus === 'New' || this.selectedStatus === 'In Progress') ? 'pending' :
-            (this.selectedCategory === 'DPDP' || this.selectedStatus === 'Escalated to DPO') ? 'dpdp' :
-              this.selectedStatus === 'Resolved' ? 'resolved' : 'all'
-      );
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      this.cdr.markForCheck();
       this.fetchContacts();
     });
   }
@@ -294,7 +306,6 @@ export class SupportComponent implements OnInit, OnDestroy {
     if (this.selectedCategory) queryParams.category = this.selectedCategory;
     if (this.startDate) queryParams.startDate = this.startDate;
     if (this.endDate) queryParams.endDate = this.endDate;
-    if (this.activeMetricCard && this.activeMetricCard !== 'all') queryParams.card = this.activeMetricCard;
     if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
@@ -329,7 +340,6 @@ export class SupportComponent implements OnInit, OnDestroy {
     this.endDate = event.endDate || '';
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchContacts();
   }
 
   refreshData(): void {
@@ -337,32 +347,99 @@ export class SupportComponent implements OnInit, OnDestroy {
     this.fetchContacts();
   }
 
+  onSearchInput(val: string): void {
+    this.search = val;
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
   onSearchChange(query: string): void {
     this.search = query;
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchContacts();
+  }
+
+  removeFilter(type: 'search' | 'status' | 'priority' | 'category' | 'dateRange'): void {
+    if (type === 'search') this.search = '';
+    if (type === 'status') this.selectedStatus = '';
+    if (type === 'priority') this.selectedPriority = '';
+    if (type === 'category') this.selectedCategory = '';
+    if (type === 'dateRange') { this.startDate = ''; this.endDate = ''; }
+    this.pagination.page = 1;
+    this.updateUrlParams();
+  }
+
+  get activeFilterPills(): { key: 'search' | 'status' | 'priority' | 'category' | 'dateRange'; label: string }[] {
+    const pills: { key: 'search' | 'status' | 'priority' | 'category' | 'dateRange'; label: string }[] = [];
+    if (this.search) pills.push({ key: 'search', label: `Search: "${this.search}"` });
+    if (this.selectedStatus) pills.push({ key: 'status', label: `Status: ${this.selectedStatus}` });
+    if (this.selectedPriority) pills.push({ key: 'priority', label: `Priority: ${this.selectedPriority}` });
+    if (this.selectedCategory) pills.push({ key: 'category', label: `Category: ${this.selectedCategory}` });
+    if (this.startDate || this.endDate) pills.push({ key: 'dateRange', label: `Date: ${this.startDate || '...'} to ${this.endDate || '...'}` });
+    return pills;
   }
 
   onFilterChange(): void {
     this.pagination.page = 1;
     this.updateUrlParams();
-    this.fetchContacts();
+  }
+
+  private updateDropdownCounts(): void {
+    const total = this.pagination.total || this.contacts.length;
+    const newCount = this.contacts.filter(c => c.status === 'New').length;
+    const inProgress = this.contacts.filter(c => c.status === 'In Progress').length;
+    const dpoEscalated = this.contacts.filter(c => c.status === 'Escalated to DPO').length;
+    const resolved = this.contacts.filter(c => c.status === 'Resolved').length;
+
+    this.statusOptions = [
+      { label: 'All Statuses', value: '', icon: 'info', color: '#38bdf8', count: total },
+      { label: 'New', value: 'New', icon: 'clock', color: '#38bdf8', count: newCount },
+      { label: 'In Progress', value: 'In Progress', icon: 'refresh', color: '#a855f7', count: inProgress },
+      { label: 'Escalated to DPO', value: 'Escalated to DPO', icon: 'shield', color: '#f43f5e', count: dpoEscalated },
+      { label: 'Resolved', value: 'Resolved', icon: 'check', color: '#10b981', count: resolved }
+    ];
+  }
+
+  get activeQueryParamsObj(): Record<string, any> {
+    const obj: Record<string, any> = {};
+    if (this.selectedStatus) obj['status'] = this.selectedStatus;
+    if (this.selectedPriority) obj['priority'] = this.selectedPriority;
+    if (this.selectedCategory) obj['category'] = this.selectedCategory;
+    if (this.search) obj['search'] = this.search;
+    if (this.startDate) obj['startDate'] = this.startDate;
+    if (this.endDate) obj['endDate'] = this.endDate;
+    if (this.sortBy && this.sortBy !== 'createdAt') obj['sort'] = this.sortBy;
+    if (this.sortOrder && this.sortOrder !== 'desc') obj['sortOrder'] = this.sortOrder;
+    return obj;
+  }
+
+  onSavedViewApply(savedParams: any): void {
+    this.selectedStatus = savedParams?.['status'] || '';
+    this.selectedPriority = savedParams?.['priority'] || '';
+    this.selectedCategory = savedParams?.['category'] || '';
+    this.search = savedParams?.['search'] || '';
+    this.startDate = savedParams?.['startDate'] || '';
+    this.endDate = savedParams?.['endDate'] || '';
+    this.sortBy = savedParams?.['sort'] || 'createdAt';
+    this.sortOrder = savedParams?.['sortOrder'] || 'desc';
+    this.pagination.page = 1;
+    this.updateUrlParams();
+    this.cdr.markForCheck();
   }
 
   resetFilters(): void {
-    this.activeMetricCard = 'all';
     this.search = '';
     this.selectedStatus = '';
     this.selectedPriority = '';
     this.selectedCategory = '';
     this.startDate = '';
     this.endDate = '';
+    this.sortBy = 'createdAt';
+    this.sortOrder = 'desc';
     this.pagination.page = 1;
     this.resetColumnVisibility();
     this.selection.clear();
     this.updateUrlParams();
-    this.fetchContacts();
   }
 
   onColumnVisibilityChange(visibility: Record<string, boolean>): void {
@@ -400,7 +477,6 @@ export class SupportComponent implements OnInit, OnDestroy {
     const cached = this.swrCache.get<any>('support', params);
     if (cached) {
       this.contacts = this.sortData(cached.data || []);
-      this.selection.retainOnly(this.contacts.map(c => c.id));
       if (cached.pagination) this.pagination = cached.pagination;
       this.isInitialLoad = false;
       this.isLoading = false;
@@ -415,7 +491,6 @@ export class SupportComponent implements OnInit, OnDestroy {
       next: (res: any) => {
         const rawItems = res.data || res.items || res || [];
         this.contacts = this.sortData(rawItems);
-        this.selection.retainOnly(this.contacts.map(c => c.id));
         const p = res.pagination || {};
         const total = p.total ?? p.totalItems ?? this.contacts.length;
         const limit = p.limit || this.pagination.limit || 10;
@@ -427,6 +502,7 @@ export class SupportComponent implements OnInit, OnDestroy {
           pages
         };
         this.pagination = pageMeta;
+        this.updateDropdownCounts();
         this.swrCache.set('support', params, { data: rawItems, pagination: pageMeta });
         this.isInitialLoad = false;
         this.cdr.markForCheck();

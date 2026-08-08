@@ -36,21 +36,32 @@ namespace CoreApi.Services.Admin
         {
             _logger.LogInformation("🚀 AdminNotificationSyncWorker started. Syncing domain events every {Interval}s.", _syncInterval.TotalSeconds);
 
-            // Initial run after short startup delay
-            await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            try
+            {
+                // Initial run after short startup delay
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
 
             while (!stoppingToken.IsCancellationRequested)
             {
                 try
                 {
                     await PerformDomainSyncAsync();
+                    await Task.Delay(_syncInterval, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "❌ Error occurred during background AdminNotification domain sync.");
+                    try { await Task.Delay(TimeSpan.FromSeconds(10), stoppingToken); } catch { break; }
                 }
-
-                await Task.Delay(_syncInterval, stoppingToken);
             }
         }
 

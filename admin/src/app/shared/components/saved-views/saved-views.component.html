@@ -1,0 +1,81 @@
+<div class="relative inline-block text-left" #container>
+    <button type="button" (click)="toggleMenu()"
+        class="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-xl transition-all duration-200 border"
+        [ngClass]="activePresetId ? 'bg-indigo-500/15 text-indigo-300 border-indigo-500/30 hover:bg-indigo-500/25' : 'bg-slate-800/80 text-slate-300 border-slate-700/80 hover:bg-slate-700/80 hover:text-white'"
+        adminTooltip="Saved filter views & custom audit bookmarks" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+        <span>{{ activePresetName || 'Saved Views' }}</span>
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            class="transition-transform duration-200" [class.rotate-180]="isOpen">
+            <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+    </button>
+
+    @if (isOpen) {
+    <div
+        class="absolute right-0 mt-2 w-64 rounded-2xl bg-slate-900/95 border border-slate-700/80 shadow-2xl backdrop-blur-xl z-50 p-2 text-xs animate-in">
+        <div class="px-2 py-1.5 mb-1 border-b border-slate-800 flex items-center justify-between">
+            <span class="font-bold text-slate-200 tracking-wide">Filter Bookmarks</span>
+            <span class="text-[10px] text-slate-400 font-mono">{{ presets.length }} saved</span>
+        </div>
+
+        <div class="max-h-48 overflow-y-auto space-y-0.5">
+            @for (preset of presets; track preset.id) {
+            <div class="flex items-center justify-between px-2.5 py-2 rounded-xl hover:bg-slate-800/80 transition-colors cursor-pointer group"
+                [ngClass]="{ 'bg-indigo-600/20': preset.id === activePresetId }" (click)="applyPreset(preset, $event)">
+                <div class="flex items-center gap-2 truncate">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        [class.text-indigo-400]="preset.id === activePresetId" class="text-slate-400 shrink-0">
+                        <polygon
+                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                        </polygon>
+                    </svg>
+                    <span class="font-medium text-slate-200 group-hover:text-white truncate"
+                        [class.text-indigo-300]="preset.id === activePresetId">
+                        {{ preset.name }}
+                    </span>
+                </div>
+                @if (!preset.isDefault) {
+                <button type="button" (click)="deletePreset(preset.id, $event)"
+                    class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-rose-400 transition-all rounded-md hover:bg-slate-700/60"
+                    adminTooltip="Delete view" tooltipPosition="top">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+                }
+            </div>
+            }
+        </div>
+
+        <!-- Save Current Filter View Form -->
+        <div class="mt-2 pt-2 border-t border-slate-800">
+            @if (!isNamingView) {
+            <button type="button" (click)="startNamingView($event)"
+                class="w-full flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 font-semibold transition-colors border border-indigo-500/25">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                <span>Save Current View</span>
+            </button>
+            } @else {
+            <div class="space-y-1.5 p-1" (click)="$event.stopPropagation()">
+                <input type="text" [(ngModel)]="newPresetName" (keyup.enter)="saveCurrentView($event)"
+                    placeholder="View name (e.g. Delhi Approvals)"
+                    class="w-full bg-slate-950 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
+                <div class="flex items-center gap-1.5 justify-end">
+                    <button type="button" (click)="cancelSaveView($event)"
+                        class="px-2 py-1 rounded text-slate-400 hover:text-slate-200">Cancel</button>
+                    <button type="button" (click)="saveCurrentView($event)"
+                        class="px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold shadow-sm">Save</button>
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+    }
+</div>
