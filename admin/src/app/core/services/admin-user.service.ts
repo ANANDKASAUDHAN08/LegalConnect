@@ -160,8 +160,20 @@ export class AdminUserService {
     return this.http.get(`${this.API}/reviews`, { params: httpParams });
   }
 
-  updateReviewModeration(id: number, data: { moderationStatus?: string; flagReason?: string; advocateReply?: string; advocateReplyStatus?: string }): Observable<any> {
+  updateReviewModeration(id: number, data: { moderationStatus?: string; flagReason?: string; advocateReply?: string; advocateReplyStatus?: string; reasonCode?: string; notes?: string }): Observable<any> {
     return this.http.put(`${this.API}/reviews/${id}/moderation`, data);
+  }
+
+  getReviewAuditHistory(id: number): Observable<any> {
+    return this.http.get(`${this.API}/reviews/${id}/history`);
+  }
+
+  redactReviewContent(id: number, data: { redactedContent: string; reasonCode?: string; notes?: string }): Observable<any> {
+    return this.http.put(`${this.API}/reviews/${id}/redact`, data);
+  }
+
+  resolveReviewDispute(id: number, data: { decision: 'Upheld' | 'Rejected'; rationale?: string }): Observable<any> {
+    return this.http.put(`${this.API}/reviews/${id}/dispute`, data);
   }
 
   deleteReview(id: number): Observable<any> {

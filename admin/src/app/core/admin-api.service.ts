@@ -59,6 +59,9 @@ export class AdminApiService {
   // -- Reviews & Consultations Delegates --
   getReviews(params: any = {}): Observable<any> { return this.user.getReviews(params); }
   updateReviewModeration(id: number, data: any): Observable<any> { return this.user.updateReviewModeration(id, data); }
+  getReviewAuditHistory(id: number): Observable<any> { return this.user.getReviewAuditHistory(id); }
+  redactReviewContent(id: number, data: any): Observable<any> { return this.user.redactReviewContent(id, data); }
+  resolveReviewDispute(id: number, data: any): Observable<any> { return this.user.resolveReviewDispute(id, data); }
   deleteReview(id: number): Observable<any> { return this.user.deleteReview(id); }
   getConsultations(params: any = {}): Observable<any> { return this.user.getConsultations(params); }
   updateConsultationStatus(id: number, status: string): Observable<any> { return this.user.updateConsultationStatus(id, status); }

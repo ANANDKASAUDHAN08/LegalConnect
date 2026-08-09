@@ -520,9 +520,9 @@
                   <div class="user-name font-bold text-slate-200 flex items-center gap-1.5 truncate"
                     [adminTooltip]="'Author: ' + getReviewerName(rev)" tooltipPosition="top">
                     <span class="truncate">{{ getReviewerName(rev) }}</span>
-                    @if (rev.isVerifiedClient !== false) {
+                    @if (rev.consultationId) {
                     <span class="inline-flex items-center text-emerald-400 shrink-0"
-                      [adminTooltip]="'Verified consultation client'" tooltipPosition="top">
+                      [adminTooltip]="'Verified consultation #LC-' + rev.consultationId" tooltipPosition="top">
                       <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" stroke-width="3"
                         viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
@@ -575,44 +575,89 @@
             <!-- Comment & Flag Tag Column -->
             @if (columnVisibility['comment']) {
             <td class="p-3.5 max-w-sm text-xs text-slate-300 leading-relaxed">
-              <div class="line-clamp-2">{{ rev.comment || rev.content }}</div>
-              @if (rev.rating <= 2) { <span
-                class="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20 mt-1"
-                [adminTooltip]="'Low rating feedback requires moderator verification'" tooltipPosition="top">
-                <svg class="w-3 h-3 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.5"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-                <span>Low Rating Alert</span>
-                </span>
-                }
-                @if (rev.advocateReply) {
-                <div class="text-[10px] text-sky-400 mt-1 font-medium flex items-center gap-1">
-                  <span>Advocate Replied:</span>
-                  @if (rev.advocateReplyStatus === 'Approved') {
-                  <span class="text-emerald-400 font-bold">(Approved)</span>
-                  } @else {
-                  <span class="text-amber-400 font-bold">(Pending Audit)</span>
+              <div class="line-clamp-2">{{ rev.redactedContent || rev.comment || rev.content }}</div>
+              <div class="flex items-center gap-1.5 flex-wrap mt-1">
+                @if (rev.rating <= 2) { <span
+                  class="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20"
+                  [adminTooltip]="'Low rating feedback requires moderator verification'" tooltipPosition="top">
+                  <svg class="w-3 h-3 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.5"
+                    viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                  </svg>
+                  <span>Low Rating Alert</span>
+                  </span>
                   }
-                </div>
-                }
+
+                  @if (rev.isDisputeRequested) {
+                  <span
+                    class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 animate-pulse"
+                    [adminTooltip]="'Advocate requested removal review: ' + (rev.disputeReason || 'Dispute requested')"
+                    tooltipPosition="top">
+                    <svg class="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                      stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round"
+                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                    <span>Dispute Requested</span>
+                  </span>
+                  }
+
+                  @if (rev.consultationId) {
+                  <span
+                    class="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+                    [adminTooltip]="'Verified consultation ID #' + rev.consultationId" tooltipPosition="top">
+                    <span>Consultation #LC-{{ rev.consultationId }}</span>
+                  </span>
+                  }
+
+                  @if (rev.lastEditedAt) {
+                  <span class="text-[10px] text-slate-400 italic"
+                    [adminTooltip]="'Original content preserved. Last edited: ' + (rev.lastEditedAt | date:'medium')"
+                    tooltipPosition="top">
+                    (Edited)
+                  </span>
+                  }
+
+                  @if (rev.advocateReply) {
+                  <div class="text-[10px] text-sky-400 font-medium flex items-center gap-1">
+                    <span>Advocate Replied:</span>
+                    @if (rev.advocateReplyStatus === 'Approved') {
+                    <span class="text-emerald-400 font-bold">(Approved)</span>
+                    } @else {
+                    <span class="text-amber-400 font-bold">(Pending Audit)</span>
+                    }
+                  </div>
+                  }
+              </div>
             </td>
             }
 
             <!-- Moderation Status Badge Column -->
             @if (columnVisibility['status']) {
             <td class="p-3.5">
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
-                [adminTooltip]="'Moderation audit state: ' + (rev.moderationStatus || 'Approved')" tooltipPosition="top"
-                [ngClass]="{
-                  'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': rev.moderationStatus === 'Approved' || !rev.moderationStatus,
-                  'bg-amber-500/10 text-amber-400 border-amber-500/30': rev.moderationStatus === 'Pending',
-                  'bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse': rev.moderationStatus === 'Flagged',
-                  'bg-slate-700/40 text-slate-400 border-slate-700/50': rev.moderationStatus === 'Hidden'
+              <div class="flex flex-col gap-1 items-start">
+                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border"
+                  [adminTooltip]="'Moderation audit state: ' + (rev.moderationStatus || 'Approved')"
+                  tooltipPosition="top" [ngClass]="{
+                    'bg-emerald-500/10 text-emerald-400 border-emerald-500/30': rev.moderationStatus === 'Approved' || !rev.moderationStatus,
+                    'bg-amber-500/10 text-amber-400 border-amber-500/30': rev.moderationStatus === 'Pending',
+                    'bg-rose-500/10 text-rose-400 border-rose-500/30 animate-pulse': rev.moderationStatus === 'Flagged',
+                    'bg-slate-700/40 text-slate-400 border-slate-700/50': rev.moderationStatus === 'Hidden'
+                  }">
+                  {{ rev.moderationStatus || 'Approved' }}
+                </span>
+
+                @if (rev.moderationStatus === 'Pending') {
+                <span class="text-[9px] font-semibold" [ngClass]="{
+                  'text-emerald-400': getTimeSinceSubmission(rev.createdAt).status === 'green',
+                  'text-amber-400': getTimeSinceSubmission(rev.createdAt).status === 'amber',
+                  'text-rose-400 font-bold': getTimeSinceSubmission(rev.createdAt).status === 'red'
                 }">
-                {{ rev.moderationStatus || 'Approved' }}
-              </span>
+                  SLA: {{ getTimeSinceSubmission(rev.createdAt).label }}
+                </span>
+                }
+              </div>
             </td>
             }
 
@@ -661,12 +706,18 @@
       <!-- Drawer Header -->
       <div class="flex items-center justify-between pb-4 border-b border-slate-800">
         <div class="flex flex-col gap-1">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <span
               class="px-2.5 py-0.5 rounded-full text-[10px] font-bold border uppercase tracking-wider bg-amber-500/10 text-amber-400 border-amber-500/30">
               ★ {{ selectedReview.rating }}/5 Rating
             </span>
             <span class="text-xs font-mono text-slate-400">ID: #{{ selectedReview.id }}</span>
+            @if (selectedReview.consultationId) {
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Verified Consultation #LC-{{ selectedReview.consultationId }}
+            </span>
+            }
           </div>
           <h2 class="text-xl font-bold text-slate-100 mt-1">Review Inspection Desk</h2>
           <p class="text-xs text-slate-400">
@@ -680,6 +731,41 @@
           tooltipPosition="left">&times;</button>
       </div>
 
+      <!-- Drawer Tab Switcher -->
+      <div class="flex items-center gap-1 p-1 bg-slate-950/60 rounded-xl border border-slate-800 text-xs font-medium">
+        <button type="button" (click)="activeDrawerTab = 'overview'"
+          [class]="activeDrawerTab === 'overview' ? 'bg-slate-800 text-amber-300 font-bold shadow-xs' : 'text-slate-400 hover:text-slate-200'"
+          class="flex-1 py-1.5 px-2 rounded-lg transition-all text-center">
+          Overview
+        </button>
+        <button type="button" (click)="activeDrawerTab = 'redact'"
+          [class]="activeDrawerTab === 'redact' ? 'bg-slate-800 text-amber-300 font-bold shadow-xs' : 'text-slate-400 hover:text-slate-200'"
+          class="flex-1 py-1.5 px-2 rounded-lg transition-all text-center flex items-center justify-center gap-1">
+          <span>Sanitize PII</span>
+          @if (selectedReview.redactedContent) {
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          }
+        </button>
+        @if (selectedReview.isDisputeRequested) {
+        <button type="button" (click)="activeDrawerTab = 'dispute'"
+          [class]="activeDrawerTab === 'dispute' ? 'bg-amber-500/20 text-amber-300 font-bold shadow-xs' : 'text-rose-400 hover:text-rose-300 font-bold'"
+          class="flex-1 py-1.5 px-2 rounded-lg transition-all text-center animate-pulse flex items-center justify-center gap-1">
+          <svg class="w-3 h-3 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <span>Dispute</span>
+        </button>
+        }
+        <button type="button" (click)="activeDrawerTab = 'history'"
+          [class]="activeDrawerTab === 'history' ? 'bg-slate-800 text-amber-300 font-bold shadow-xs' : 'text-slate-400 hover:text-slate-200'"
+          class="flex-1 py-1.5 px-2 rounded-lg transition-all text-center">
+          Audit History ({{ auditLogs.length }})
+        </button>
+      </div>
+
+      <!-- TAB 1: OVERVIEW & MODERATION -->
+      @if (activeDrawerTab === 'overview') {
       <!-- Drawer Quick Moderation Controls Bar -->
       <div
         class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs">
@@ -725,12 +811,30 @@
 
         <!-- Client Feedback Text -->
         <div class="flex flex-col gap-1.5">
-          <span class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Client Feedback Text</span>
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Client Feedback Text</span>
+            @if (selectedReview.lastEditedAt) {
+            <span class="text-[10px] text-slate-400 italic">Last edited: {{ selectedReview.lastEditedAt | date:'medium'
+              }}</span>
+            }
+          </div>
           <div
             class="p-4 rounded-xl bg-slate-950/80 border border-slate-800 text-slate-200 leading-relaxed font-sans whitespace-pre-wrap text-xs">
-            {{ selectedReview.comment || selectedReview.content }}
+            {{ selectedReview.redactedContent || selectedReview.comment || selectedReview.content }}
           </div>
         </div>
+
+        <!-- Original Pre-Edited Content (If user edited review) -->
+        @if (selectedReview.originalContent) {
+        <div class="flex flex-col gap-1.5">
+          <span class="font-bold text-[11px] uppercase tracking-wider text-amber-400">Original Pre-Edit Text (Preserved
+            History)</span>
+          <div
+            class="p-3.5 rounded-xl bg-slate-950/40 border border-slate-800/80 text-slate-400 leading-relaxed font-sans text-xs italic">
+            "{{ selectedReview.originalContent }}"
+          </div>
+        </div>
+        }
 
         <!-- Advocate Public Response (If advocate replied) -->
         @if (selectedReview.advocateReply) {
@@ -757,17 +861,144 @@
         </div>
         }
 
-        <!-- Moderation Audit Reason Input -->
-        <div class="flex flex-col gap-1.5">
+        <!-- Canned Policy Reason Selector Dropdown -->
+        <div class="flex flex-col gap-1.5 mt-4">
+          <label class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Canned Policy Moderation
+            Reason</label>
+          <admin-select [options]="policyOptions" [value]="selectedPolicyReason" icon="shield"
+            (valueChange)="selectedPolicyReason = $event" width="100%"
+            [adminTooltip]="'Select official platform violation policy preset'" tooltipPosition="top">
+          </admin-select>
+        </div>
+
+        <!-- Custom Notes Input -->
+        <div class="flex flex-col gap-1.5 mt-4">
           <label class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Moderation Audit Reason /
             Notes</label>
           <input type="text"
             class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-xl p-2.5 text-xs"
-            placeholder="Reason for flagging or hiding this review (e.g. Unverified consultation, Profanity, Spam)..."
-            [(ngModel)]="flagReasonInput" />
+            placeholder="Detailed moderation rationale or internal staff notes..." [(ngModel)]="flagReasonInput" />
         </div>
 
       </div>
+      }
+
+      <!-- TAB 2: INLINE PII REDACTION -->
+      @if (activeDrawerTab === 'redact') {
+      <div class="flex flex-col gap-4 text-xs">
+        <div
+          class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 leading-normal flex items-start gap-2">
+          <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+            stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751A11.959 11.959 0 0112 2.714z" />
+          </svg>
+          <div>
+            <strong>Inline PII & Confidentiality Redaction Tool:</strong> Sanitize sensitive client data (case docket
+            numbers, private phone numbers, settlement amounts) before publishing publicly.
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Sanitized Review Text</label>
+          <textarea [(ngModel)]="redactInputText" rows="6"
+            class="form-textarea bg-slate-950/80 border-slate-700 text-slate-100 rounded-xl p-3.5 text-xs leading-relaxed font-sans focus:border-amber-500 outline-none"
+            placeholder="Edit text to mask sensitive legal details with [REDACTED BY MODERATOR]..."></textarea>
+        </div>
+
+        <button type="button" (click)="saveRedactedContent()"
+          class="btn btn-primary bg-amber-600 hover:bg-amber-500 text-white font-bold py-2.5 rounded-xl transition-all self-start flex items-center gap-2"
+          [adminTooltip]="'Save sanitized content to public review feed'" tooltipPosition="top">
+          <span>Save Sanitized Content</span>
+        </button>
+      </div>
+      }
+
+      <!-- TAB 3: ADVOCATE DISPUTE RESOLUTION -->
+      @if (activeDrawerTab === 'dispute') {
+      <div class="flex flex-col gap-4 text-xs">
+        <div class="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 flex flex-col gap-2">
+          <strong class="font-bold text-rose-300 text-sm flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+            </svg>
+            <span>Advocate Removal Dispute Request</span>
+          </strong>
+          <p class="text-slate-300">The target advocate submitted a formal dispute requesting removal of this review.
+          </p>
+          <div class="p-3 bg-slate-950/80 rounded-lg border border-rose-500/20 text-slate-200 font-mono text-[11px]">
+            Reason: "{{ selectedReview.disputeReason || 'Dispute requested' }}"
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Dispute Rationale / Decision
+            Note</label>
+          <input type="text" [(ngModel)]="flagReasonInput"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-xl p-2.5 text-xs"
+            placeholder="Rationale for upholding or rejecting advocate dispute..." />
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+          <button type="button" (click)="resolveDispute('Upheld')"
+            class="btn bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-md transition-all flex-1 flex items-center justify-center gap-1.5"
+            [adminTooltip]="'Uphold advocate dispute and hide review from public profile'" tooltipPosition="top">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+            </svg>
+            <span>Upheld (Hide Review)</span>
+          </button>
+          <button type="button" (click)="resolveDispute('Rejected')"
+            class="btn bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition-all flex-1 flex items-center justify-center gap-1.5"
+            [adminTooltip]="'Reject advocate dispute and keep review published'" tooltipPosition="top">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            <span>Reject Dispute (Keep Published)</span>
+          </button>
+        </div>
+      </div>
+      }
+
+      <!-- TAB 4: AUDIT HISTORY TIMELINE -->
+      @if (activeDrawerTab === 'history') {
+      <div class="flex flex-col gap-3 text-xs">
+        <span class="font-bold text-[11px] uppercase tracking-wider text-slate-300">Immutable Administrative Activity
+          History</span>
+
+        @if (isLoadingAuditHistory) {
+        <div class="flex flex-col gap-2 py-4">
+          <admin-skeleton width="100%" height="40px" />
+          <admin-skeleton width="100%" height="40px" />
+        </div>
+        } @else if (auditLogs.length === 0) {
+        <div class="p-6 rounded-xl bg-slate-950/40 border border-slate-800 text-center text-slate-400">
+          No previous administrative audit logs recorded for this review.
+        </div>
+        } @else {
+        <div class="flex flex-col gap-2 max-h-[350px] overflow-y-auto pr-1">
+          @for (log of auditLogs; track log.id) {
+          <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col gap-1">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-bold text-amber-300">{{ log.action }}</span>
+              <span class="text-slate-400 text-[10px] font-mono">{{ log.createdAt | date:'medium' }}</span>
+            </div>
+            <div class="text-slate-300 text-[11px]">
+              By: <strong class="text-slate-200">{{ log.adminEmail || 'Admin' }}</strong>
+              @if (log.reasonCode) {
+              <span class="ml-2 font-mono text-sky-400">[{{ log.reasonCode }}]</span>
+              }
+            </div>
+            @if (log.notes) {
+            <p class="text-slate-400 text-[11px] italic m-0">"{{ log.notes }}"</p>
+            }
+          </div>
+          }
+        </div>
+        }
+      </div>
+      }
 
       <!-- Drawer Footer Action Controls -->
       <div class="flex items-center justify-between pt-4 border-t border-slate-800 mt-auto">
@@ -788,7 +1019,7 @@
 
   <!-- --- FLOATING ACTION DROPDOWN --- -->
   <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionReview()"
-    headerLabel="Review Audit Actions" [dropdownWidth]="190" (closed)="closeActionMenu()">
+    headerLabel="Review Audit Actions" [dropdownWidth]="190" [dropdownHeight]="165" (closed)="closeActionMenu()">
     @if (getOpenActionReview()) {
     <button class="dropdown-item" (click)="openInspectModal(getOpenActionReview()!); closeActionMenu()">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"

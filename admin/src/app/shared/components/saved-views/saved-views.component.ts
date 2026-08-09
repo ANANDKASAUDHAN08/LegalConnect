@@ -69,6 +69,24 @@ export class AdminSavedViewsComponent implements OnInit {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen) {
+      this.isOpen = false;
+      this.isNamingView = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.isOpen) {
+      this.isOpen = false;
+      this.isNamingView = false;
+      this.cdr.markForCheck();
+    }
+  }
+
   private loadSavedPresets(): void {
     const raw = localStorage.getItem(`legalconnect_views_${this.storageKey}`);
     const defaultPreset: SavedViewPreset = {

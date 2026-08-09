@@ -158,6 +158,15 @@ export interface AdminReviewItem {
   advocateReplyStatus?: string;
   isVerifiedClient?: boolean;
   isApproved?: boolean;
+  consultationId?: number;
+  ipAddress?: string;
+  riskScore?: number;
+  redactedContent?: string;
+  lastEditedAt?: string;
+  originalContent?: string;
+  isDisputeRequested?: boolean;
+  disputeReason?: string;
+  disputeRequestedAt?: string;
   createdAt: string;
 }
 

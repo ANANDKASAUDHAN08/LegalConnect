@@ -21,7 +21,7 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
   private scrollHandler: (() => void) | null = null;
   private clickHandler: ((event: MouseEvent) => void) | null = null;
 
-  constructor(private elementRef: ElementRef, private cdr: ChangeDetectorRef) {}
+  constructor(private elementRef: ElementRef, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
     this.scrollHandler = () => {
@@ -29,7 +29,7 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
         this.updatePosition();
       }
     };
-    window.addEventListener('scroll', this.scrollHandler, true);
+    window.addEventListener('scroll', this.scrollHandler, { capture: true, passive: true });
 
     this.clickHandler = (event: MouseEvent) => {
       if (!this.isOpen) return;
@@ -57,6 +57,16 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
   openAt(triggerEl: HTMLElement): void {
     this.currentTriggerEl = triggerEl;
     this.updatePosition();
+
+    // Auto-measure rendered menu height and adjust position accurately
+    setTimeout(() => {
+      if (!this.isOpen || !this.currentTriggerEl) return;
+      const menuEl = this.elementRef.nativeElement.querySelector('.action-dropdown');
+      if (menuEl && menuEl.offsetHeight > 0) {
+        this.dropdownHeight = menuEl.offsetHeight;
+        this.updatePosition();
+      }
+    }, 0);
   }
 
   updatePosition(): void {
@@ -65,8 +75,8 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
 
     // Find table container if inside one
     const container = this.currentTriggerEl.closest('.data-table-wrapper') ||
-                      this.currentTriggerEl.closest('.table-responsive') ||
-                      this.currentTriggerEl.closest('.glass-card');
+      this.currentTriggerEl.closest('.table-responsive') ||
+      this.currentTriggerEl.closest('.glass-card');
 
     if (container) {
       const containerRect = container.getBoundingClientRect();
@@ -83,20 +93,42 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
       return;
     }
 
-    let top = rect.bottom + 6;
-    let left = rect.left + (rect.width / 2) - (this.dropdownWidth / 2);
+    const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
 
-    // Flip up if near the bottom edge
-    if (top + this.dropdownHeight > window.innerHeight - 16) {
-      top = Math.max(10, rect.top - this.dropdownHeight - 6);
+    // Detect sticky headers / filter toolbars across admin pages to avoid overlap
+    const stickyHeader = document.querySelector('.page-filters') ||
+      document.querySelector('.sticky-header') ||
+      document.querySelector('header');
+    const stickyBottom = stickyHeader ? stickyHeader.getBoundingClientRect().bottom : 60;
+
+    const spaceBelow = viewportHeight - rect.bottom - 16;
+    const spaceAbove = rect.top - stickyBottom - 16;
+    const actualHeight = this.dropdownHeight || 175;
+
+    let top: number;
+    // Prefer opening downwards if space allows or if opening upwards would collide with sticky header
+    if (spaceBelow >= actualHeight || spaceBelow >= spaceAbove) {
+      top = rect.bottom + 6;
+      if (top + actualHeight > viewportHeight - 12) {
+        top = Math.max(stickyBottom + 6, viewportHeight - actualHeight - 12);
+      }
+    } else {
+      top = rect.top - actualHeight - 6;
+      if (top < stickyBottom + 6) {
+        top = stickyBottom + 6;
+      }
     }
-    // Keep within left/right viewport bounds
-    if (left + this.dropdownWidth > window.innerWidth - 16) {
-      left = window.innerWidth - this.dropdownWidth - 16;
-    }
+
+    // Align right edge of menu with right edge of trigger button for clean layout
+    let left = rect.right - this.dropdownWidth;
     if (left < 16) {
       left = 16;
     }
+    if (left + this.dropdownWidth > viewportWidth - 16) {
+      left = viewportWidth - this.dropdownWidth - 16;
+    }
+
     this.position = { top, left };
     this.cdr.markForCheck();
   }
@@ -107,6 +139,24 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
   onEscape(): void {
     if (this.isOpen) {
       this.close();
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (!this.isOpen) return;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      const items = Array.from(this.elementRef.nativeElement.querySelectorAll('.dropdown-item')) as HTMLElement[];
+      if (items.length === 0) return;
+      event.preventDefault();
+      const activeIdx = items.findIndex(el => el === document.activeElement);
+      let nextIdx = 0;
+      if (event.key === 'ArrowDown') {
+        nextIdx = activeIdx >= 0 && activeIdx < items.length - 1 ? activeIdx + 1 : 0;
+      } else {
+        nextIdx = activeIdx > 0 ? activeIdx - 1 : items.length - 1;
+      }
+      items[nextIdx]?.focus();
     }
   }
 

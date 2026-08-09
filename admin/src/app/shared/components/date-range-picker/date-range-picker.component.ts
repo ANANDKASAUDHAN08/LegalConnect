@@ -131,6 +131,13 @@ export class DateRangePickerComponent implements OnInit, OnDestroy {
     }
   }
 
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.isOpen) {
+      this.closePopover();
+    }
+  }
+
   private emitRangeChange(): void {
     this.rangeChange.emit({
       startDate: this.startDate,

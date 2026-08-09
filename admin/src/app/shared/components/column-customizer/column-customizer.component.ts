@@ -54,5 +54,19 @@ export class ColumnCustomizerComponent {
     }
   }
 
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen) {
+      this.isOpen = false;
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.isOpen) {
+      this.isOpen = false;
+    }
+  }
+
   constructor(private elRef: ElementRef) { }
 }

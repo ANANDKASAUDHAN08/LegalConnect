@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 export interface SelectOption {
@@ -50,6 +50,50 @@ export class SelectComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     if (this.clickListener) {
       window.removeEventListener('click', this.clickListener, true);
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscape(): void {
+    if (this.isOpen) {
+      this.isOpen = false;
+      this.searchTerm = '';
+      this.cdr.markForCheck();
+    }
+  }
+
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    if (!this.isOpen) return;
+    const opts = this.filteredOptions;
+    if (opts.length === 0) return;
+
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const currentIdx = opts.findIndex(o => String(o.value) === String(this.value));
+      let nextIdx = 0;
+      if (event.key === 'ArrowDown') {
+        nextIdx = currentIdx >= 0 && currentIdx < opts.length - 1 ? currentIdx + 1 : 0;
+      } else {
+        nextIdx = currentIdx > 0 ? currentIdx - 1 : opts.length - 1;
+      }
+      this.value = opts[nextIdx].value;
+      this.valueChange.emit(this.value);
+      this.cdr.markForCheck();
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      this.isOpen = false;
+      this.searchTerm = '';
+      this.cdr.markForCheck();
+    }
+  }
+
+  @HostListener('window:resize')
+  onResize(): void {
+    if (this.isOpen) {
+      this.isOpen = false;
+      this.searchTerm = '';
+      this.cdr.markForCheck();
     }
   }
 

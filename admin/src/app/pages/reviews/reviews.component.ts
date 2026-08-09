@@ -457,7 +457,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
   }
 
   get verifiedClientCount(): number {
-    return this.reviews.filter(r => r.isVerifiedClient !== false).length;
+    return this.reviews.filter(r => !!r.consultationId).length;
   }
 
   getRatingCount(star: number): number {
@@ -502,25 +502,124 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     this.openInspectModal(rev);
   }
 
+  // Inspection Modal
+  selectedPolicyReason = 'POLICY-101';
+  redactInputText = '';
+  auditLogs: any[] = [];
+  isLoadingAuditHistory = false;
+  activeDrawerTab: 'overview' | 'redact' | 'dispute' | 'history' = 'overview';
+
+  policyOptions: SelectOption[] = [
+    { value: 'POLICY-101', label: '[POLICY-101] Profanity, Libel & Harassment', icon: 'warning', color: '#f43f5e' },
+    { value: 'POLICY-102', label: '[POLICY-102] Unverified Consultation / Non-Client', icon: 'user', color: '#f59e0b' },
+    { value: 'POLICY-103', label: '[POLICY-103] Confidential Case / Privileged Data', icon: 'shield', color: '#38bdf8' },
+    { value: 'POLICY-104', label: '[POLICY-104] Brigading / Bot Velocity Suspicion', icon: 'zap', color: '#a855f7' },
+    { value: 'CUSTOM', label: 'Custom Moderation Reason...', icon: 'file-text', color: '#94a3b8' }
+  ];
+
+  policyPresets = [
+    { code: 'POLICY-101', label: '[POLICY-101] Profanity, Libel & Harassment' },
+    { code: 'POLICY-102', label: '[POLICY-102] Unverified Consultation / Non-Client' },
+    { code: 'POLICY-103', label: '[POLICY-103] Confidential Case / Privileged Data' },
+    { code: 'POLICY-104', label: '[POLICY-104] Brigading / Bot Velocity Suspicion' },
+    { code: 'CUSTOM', label: 'Custom Moderation Reason...' }
+  ];
+
   openInspectModal(rev: AdminReviewItem): void {
     this.selectedReview = { ...rev };
     this.flagReasonInput = rev.flagReason || '';
+    this.redactInputText = rev.redactedContent || rev.content || rev.comment || '';
+    this.activeDrawerTab = 'overview';
+    this.auditLogs = [];
     this.closeActionMenu();
+    this.loadAuditHistory(rev.id);
   }
 
   closeInspectModal(): void {
     this.selectedReview = null;
     this.flagReasonInput = '';
+    this.redactInputText = '';
+    this.auditLogs = [];
+  }
+
+  loadAuditHistory(reviewId: number): void {
+    this.isLoadingAuditHistory = true;
+    this.api.getReviewAuditHistory(reviewId).subscribe({
+      next: (res: any) => {
+        this.auditLogs = res.data || res.items || res || [];
+        this.isLoadingAuditHistory = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isLoadingAuditHistory = false;
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  saveRedactedContent(): void {
+    if (!this.selectedReview || !this.redactInputText.trim()) return;
+    this.api.redactReviewContent(this.selectedReview.id, {
+      redactedContent: this.redactInputText.trim(),
+      reasonCode: this.selectedPolicyReason,
+      notes: this.flagReasonInput || 'Sanitized by moderator'
+    }).subscribe({
+      next: (res: any) => {
+        this.toast.success('Review content sanitized & saved.');
+        if (this.selectedReview) {
+          this.selectedReview.redactedContent = this.redactInputText.trim();
+        }
+        this.fetchReviews();
+        this.loadAuditHistory(this.selectedReview!.id);
+        this.cdr.markForCheck();
+      },
+      error: () => this.toast.error('Failed to sanitize review content.')
+    });
+  }
+
+  resolveDispute(decision: 'Upheld' | 'Rejected'): void {
+    if (!this.selectedReview) return;
+    this.api.resolveReviewDispute(this.selectedReview.id, {
+      decision,
+      rationale: this.flagReasonInput || `Dispute resolved as ${decision}`
+    }).subscribe({
+      next: () => {
+        this.toast.success(`Dispute resolved as ${decision}.`);
+        if (this.selectedReview) {
+          this.selectedReview.isDisputeRequested = false;
+          this.selectedReview.moderationStatus = decision === 'Upheld' ? 'Hidden' : 'Approved';
+        }
+        this.fetchReviews();
+        this.closeInspectModal();
+        this.cdr.markForCheck();
+      },
+      error: () => this.toast.error('Failed to resolve dispute.')
+    });
+  }
+
+  getTimeSinceSubmission(dateStr: string): { label: string; status: 'green' | 'amber' | 'red' } {
+    if (!dateStr) return { label: 'Unknown', status: 'green' };
+    const created = new Date(dateStr).getTime();
+    const now = Date.now();
+    const hours = Math.floor((now - created) / (1000 * 60 * 60));
+    if (hours < 24) return { label: `${hours}h ago`, status: 'green' };
+    if (hours < 72) return { label: `${Math.floor(hours / 24)}d ago`, status: 'amber' };
+    return { label: `${Math.floor(hours / 24)}d overdue`, status: 'red' };
   }
 
   updateModeration(rev: AdminReviewItem, status: 'Approved' | 'Pending' | 'Flagged' | 'Hidden', reason?: string): void {
     rev.moderationStatus = status;
     if (reason) rev.flagReason = reason;
 
-    this.api.updateReviewModeration(rev.id, { moderationStatus: status, flagReason: reason }).subscribe({
+    const reasonCode = this.selectedPolicyReason !== 'CUSTOM' ? this.selectedPolicyReason : 'MANUAL';
+
+    this.api.updateReviewModeration(rev.id, { moderationStatus: status, flagReason: reason, reasonCode }).subscribe({
       next: () => {
         this.toast.success(`Review status updated to ${status}`);
         this.fetchReviews();
+        if (this.selectedReview && this.selectedReview.id === rev.id) {
+          this.loadAuditHistory(rev.id);
+        }
         this.cdr.markForCheck();
       },
       error: () => this.toast.error('Failed to update review moderation status')
