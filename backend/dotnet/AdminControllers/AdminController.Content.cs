@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -55,8 +56,8 @@ namespace CoreApi.Controllers
             }
             if (!string.IsNullOrWhiteSpace(search))
             {
-                var s = search.Trim().ToLower();
-                query = query.Where(r => r.AuthorName.ToLower().Contains(s) || r.TargetName.ToLower().Contains(s) || r.Content.ToLower().Contains(s));
+                var pattern = $"%{search.Trim()}%";
+                query = query.Where(r => EF.Functions.Like(r.AuthorName, pattern) || EF.Functions.Like(r.TargetName, pattern) || EF.Functions.Like(r.Content, pattern));
             }
 
             var total = await query.CountAsync();
@@ -76,6 +77,8 @@ namespace CoreApi.Controllers
             var review = await _context.Reviews.FindAsync(id);
             if (review == null) return NotFound(new { message = "Review not found." });
 
+            var previousStatus = review.ModerationStatus;
+
             if (!string.IsNullOrEmpty(dto.ModerationStatus))
                 review.ModerationStatus = dto.ModerationStatus;
             if (dto.FlagReason != null)
@@ -85,8 +88,110 @@ namespace CoreApi.Controllers
             if (!string.IsNullOrEmpty(dto.AdvocateReplyStatus))
                 review.AdvocateReplyStatus = dto.AdvocateReplyStatus;
 
+            // Audit log recording
+            var adminIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            int.TryParse(adminIdClaim, out int adminId);
+            var adminEmail = User.FindFirstValue(System.Security.Claims.ClaimTypes.Email) ?? "Admin";
+
+            var auditLog = new ReviewAuditLog
+            {
+                ReviewId = review.Id,
+                AdminId = adminId > 0 ? adminId : null,
+                AdminEmail = adminEmail,
+                Action = dto.ModerationStatus ?? "Updated",
+                PreviousStatus = previousStatus,
+                NewStatus = review.ModerationStatus,
+                ReasonCode = dto.ReasonCode ?? "MANUAL_MODERATION",
+                Notes = dto.FlagReason ?? dto.Notes ?? "Moderation status updated by admin.",
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.ReviewAuditLogs.Add(auditLog);
+
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Review moderation status updated successfully.", data = review });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpGet("reviews/{id}/history")]
+        public async Task<IActionResult> GetReviewAuditHistory(int id)
+        {
+            var logs = await _context.ReviewAuditLogs
+                .Where(l => l.ReviewId == id)
+                .OrderByDescending(l => l.CreatedAt)
+                .ToListAsync();
+            return Ok(new { success = true, data = logs });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("reviews/{id}/redact")]
+        public async Task<IActionResult> RedactReviewContent(int id, [FromBody] AdminReviewRedactDto dto)
+        {
+            var review = await _context.Reviews.FindAsync(id);
+            if (review == null) return NotFound(new { message = "Review not found." });
+
+            review.RedactedContent = dto.RedactedContent;
+
+            var adminIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            int.TryParse(adminIdClaim, out int adminId);
+            var adminEmail = User.FindFirstValue(System.Security.Claims.ClaimTypes.Email) ?? "Admin";
+
+            _context.ReviewAuditLogs.Add(new ReviewAuditLog
+            {
+                ReviewId = review.Id,
+                AdminId = adminId > 0 ? adminId : null,
+                AdminEmail = adminEmail,
+                Action = "Redacted",
+                PreviousStatus = review.ModerationStatus,
+                NewStatus = review.ModerationStatus,
+                ReasonCode = dto.ReasonCode ?? "POLICY-103",
+                Notes = dto.Notes ?? "PII/Confidential details redacted by moderator.",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = "Review content sanitized successfully.", data = review });
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPut("reviews/{id}/dispute")]
+        public async Task<IActionResult> ResolveReviewDispute(int id, [FromBody] AdminReviewDisputeResolutionDto dto)
+        {
+            var review = await _context.Reviews.FindAsync(id);
+            if (review == null) return NotFound(new { message = "Review not found." });
+
+            var previousStatus = review.ModerationStatus;
+
+            review.IsDisputeRequested = false;
+            if (string.Equals(dto.Decision, "Upheld", StringComparison.OrdinalIgnoreCase))
+            {
+                review.ModerationStatus = "Hidden";
+                review.FlagReason = $"Dispute Upheld: {dto.Rationale ?? "Advocate removal request approved"}";
+            }
+            else
+            {
+                review.ModerationStatus = "Approved";
+                review.FlagReason = $"Dispute Rejected: {dto.Rationale ?? "Review complies with platform guidelines"}";
+            }
+
+            var adminIdClaim = User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+            int.TryParse(adminIdClaim, out int adminId);
+            var adminEmail = User.FindFirstValue(System.Security.Claims.ClaimTypes.Email) ?? "Admin";
+
+            _context.ReviewAuditLogs.Add(new ReviewAuditLog
+            {
+                ReviewId = review.Id,
+                AdminId = adminId > 0 ? adminId : null,
+                AdminEmail = adminEmail,
+                Action = $"Dispute{dto.Decision}",
+                PreviousStatus = previousStatus,
+                NewStatus = review.ModerationStatus,
+                ReasonCode = "DISPUTE_RESOLUTION",
+                Notes = dto.Rationale ?? $"Advocate dispute resolved as {dto.Decision}.",
+                CreatedAt = DateTime.UtcNow
+            });
+
+            await _context.SaveChangesAsync();
+            return Ok(new { success = true, message = $"Dispute resolved as {dto.Decision}.", data = review });
         }
 
         [Authorize(Roles = "Admin")]
@@ -628,41 +733,5 @@ namespace CoreApi.Controllers
 
             return Ok(new { success = true, message = "Contact ticket updated successfully.", data = contact });
         }
-    }
-
-    public class AdminUpdateTicketDto
-    {
-        public string? Status { get; set; }
-        public string? Priority { get; set; }
-        public string? Category { get; set; }
-        public string? AssignedAgent { get; set; }
-        public string? ResolutionNote { get; set; }
-        public string? InternalNotesJson { get; set; }
-    }
-
-    public class AdminReviewModerationDto
-    {
-        public string? ModerationStatus { get; set; }
-        public string? FlagReason { get; set; }
-        public string? AdvocateReply { get; set; }
-        public string? AdvocateReplyStatus { get; set; }
-    }
-
-    public class AdminBulkConsultationStatusDto
-    {
-        public System.Collections.Generic.List<int> ConsultationIds { get; set; } = new();
-        public string Status { get; set; } = string.Empty;
-    }
-
-    public class AdminUpdateConsultationNotesDto
-    {
-        public string AdminRemark { get; set; } = string.Empty;
-    }
-
-    public class AdminDispatchEmailDto
-    {
-        public string Template { get; set; } = string.Empty;
-        public string Recipient { get; set; } = string.Empty;
-        public string? CustomMessage { get; set; }
     }
 }

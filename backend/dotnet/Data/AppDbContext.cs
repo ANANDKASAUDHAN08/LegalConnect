@@ -15,6 +15,7 @@ namespace CoreApi.Data
         public DbSet<Consultation> Consultations { get; set; }
         public DbSet<Bookmark> Bookmarks { get; set; }
         public DbSet<Review> Reviews { get; set; }
+        public DbSet<ReviewAuditLog> ReviewAuditLogs { get; set; }
         public DbSet<ActiveSession> ActiveSessions { get; set; }
         public DbSet<RefreshToken> RefreshTokens { get; set; }
         public DbSet<LoginHistory> LoginHistories { get; set; }
@@ -192,6 +193,22 @@ namespace CoreApi.Data
 
             modelBuilder.Entity<SecurityAuditLog>()
                 .HasIndex(s => s.Severity);
+
+            // Configure Review & ReviewAuditLog indexes
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.ModerationStatus, r.CreatedAt });
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.Rating);
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.TargetName);
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => r.UserId);
+
+            modelBuilder.Entity<ReviewAuditLog>()
+                .HasIndex(al => new { al.ReviewId, al.CreatedAt });
         }
     }
 }

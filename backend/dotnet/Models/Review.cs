@@ -52,5 +52,27 @@ namespace CoreApi.Models
         public int? UserId { get; set; }
 
         public int Likes { get; set; } = 0;
+
+        public int? ConsultationId { get; set; }
+
+        [MaxLength(50)]
+        public string? IPAddress { get; set; }
+
+        public int RiskScore { get; set; } = 0;
+
+        [MaxLength(2000)]
+        public string? RedactedContent { get; set; }
+
+        public DateTime? LastEditedAt { get; set; }
+
+        [MaxLength(2000)]
+        public string? OriginalContent { get; set; }
+
+        public bool IsDisputeRequested { get; set; } = false;
+
+        [MaxLength(500)]
+        public string? DisputeReason { get; set; }
+
+        public DateTime? DisputeRequestedAt { get; set; }
     }
 }

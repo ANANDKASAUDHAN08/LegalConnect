@@ -40,6 +40,7 @@ namespace CoreApi.Data
             EnsureAdminNotificationsTableExists(context);
             EnsureSecurityAuditLogsTableExists(context);
             EnsureAdminSavedViewsTableExists(context);
+            EnsureReviewAuditLogsTableExists(context);
             EnsureColumnExists(context, "Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'");
             EnsureColumnExists(context, "Users", "LastLoginAt", "DATETIME NULL");
             EnsureColumnExists(context, "Users", "LastIpAddress", "VARCHAR(50) NULL");
@@ -54,6 +55,15 @@ namespace CoreApi.Data
             EnsureColumnExists(context, "ContactSubmissions", "SlaDueDate", "DATETIME NULL");
             EnsureColumnExists(context, "ContactSubmissions", "InternalNotesJson", "VARCHAR(4000) NULL");
             EnsureColumnExists(context, "ContactSubmissions", "ResolutionNote", "VARCHAR(2000) NULL");
+            EnsureColumnExists(context, "Reviews", "ConsultationId", "INT NULL");
+            EnsureColumnExists(context, "Reviews", "IPAddress", "VARCHAR(50) NULL");
+            EnsureColumnExists(context, "Reviews", "RiskScore", "INT DEFAULT 0");
+            EnsureColumnExists(context, "Reviews", "RedactedContent", "VARCHAR(2000) NULL");
+            EnsureColumnExists(context, "Reviews", "LastEditedAt", "DATETIME NULL");
+            EnsureColumnExists(context, "Reviews", "OriginalContent", "VARCHAR(2000) NULL");
+            EnsureColumnExists(context, "Reviews", "IsDisputeRequested", "TINYINT(1) DEFAULT 0");
+            EnsureColumnExists(context, "Reviews", "DisputeReason", "VARCHAR(500) NULL");
+            EnsureColumnExists(context, "Reviews", "DisputeRequestedAt", "DATETIME NULL");
 
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
@@ -596,6 +606,33 @@ namespace CoreApi.Data
             catch (Exception ex)
             {
                 Console.WriteLine($"Seeder Notice: Could not ensure AdminSavedViews table: {ex.Message}");
+            }
+        }
+
+        private static void EnsureReviewAuditLogsTableExists(AppDbContext context)
+        {
+            try
+            {
+                string sql = @"
+                    CREATE TABLE IF NOT EXISTS `ReviewAuditLogs` (
+                        `Id` INT NOT NULL AUTO_INCREMENT,
+                        `ReviewId` INT NOT NULL,
+                        `AdminId` INT NULL,
+                        `AdminEmail` VARCHAR(150) NOT NULL DEFAULT '',
+                        `Action` VARCHAR(50) NOT NULL DEFAULT '',
+                        `PreviousStatus` VARCHAR(30) NULL,
+                        `NewStatus` VARCHAR(30) NULL,
+                        `ReasonCode` VARCHAR(50) NULL,
+                        `Notes` VARCHAR(1000) NULL,
+                        `CreatedAt` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                        PRIMARY KEY (`Id`),
+                        INDEX `IX_ReviewAuditLogs_ReviewId_CreatedAt` (`ReviewId`, `CreatedAt`)
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;";
+                context.Database.ExecuteSqlRaw(sql);
+            }
+            catch
+            {
+                // Silently ignore if table already exists or SQL engine differs
             }
         }
 
