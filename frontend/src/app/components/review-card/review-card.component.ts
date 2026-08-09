@@ -1,52 +1,45 @@
-import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TooltipDirective } from '../../directives/tooltip.directive';
+import { SnackbarService } from '../../services/snackbar.service';
+import { ShareMenuComponent } from '../share-menu/share-menu.component';
 
-export const clientChips = [
-  { emoji: '⚖️', text: 'Vetted Professional' },
-  { emoji: '⚡', text: 'Fast Response' },
-  { emoji: '🧠', text: 'Super Helpful AI' },
-  { emoji: '💬', text: 'Clear Communication' },
-  { emoji: '🤝', text: 'Highly Recommend' },
-  { emoji: '🛡️', text: 'Strong Advocate' },
-  { emoji: '⭐', text: 'Outstanding Service' }
+export interface QuickChip {
+  text: string;
+  category: 'client' | 'lawyer';
+}
+
+export const clientChips: QuickChip[] = [
+  { text: 'Vetted Professional', category: 'client' },
+  { text: 'Fast Response', category: 'client' },
+  { text: 'Clear Communication', category: 'client' },
+  { text: 'Highly Recommend', category: 'client' },
+  { text: 'Strong Advocate', category: 'client' },
+  { text: 'Outstanding Service', category: 'client' }
 ];
 
-export const lawyerChips = [
-  { emoji: '📊', text: 'Streamlined Inbox' },
-  { emoji: '🔎', text: 'Great BNS Search' },
-  { emoji: '📁', text: 'Easy Case Manager' },
-  { emoji: '💼', text: 'Practice Growth' },
-  { emoji: '💻', text: 'Modern Workspace' },
-  { emoji: '⚙️', text: 'Highly Efficient' },
-  { emoji: '📈', text: 'Network Booster' }
+export const lawyerChips: QuickChip[] = [
+  { text: 'Streamlined Inbox', category: 'lawyer' },
+  { text: 'Great BNS Search', category: 'lawyer' },
+  { text: 'Easy Case Manager', category: 'lawyer' },
+  { text: 'Practice Growth', category: 'lawyer' },
+  { text: 'Modern Workspace', category: 'lawyer' },
+  { text: 'Highly Efficient', category: 'lawyer' }
 ];
 
 export function formatReviewContent(content: string): string {
-  if (!content) return '';
-  let formatted = content;
-  const allChips = [...clientChips, ...lawyerChips];
-  for (const chip of allChips) {
-    const withEmoji = `${chip.emoji} ${chip.text}`;
-    if (formatted.includes(chip.text) && !formatted.includes(withEmoji)) {
-      const regex = new RegExp(`(?<!${escapeRegExp(chip.emoji)}\\s*)${escapeRegExp(chip.text)}`, 'g');
-      formatted = formatted.replace(regex, withEmoji);
-    }
-  }
-  return formatted;
-}
-
-function escapeRegExp(string: string) {
-  return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return content || '';
 }
 
 @Component({
   selector: 'app-review-card',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipDirective, ShareMenuComponent],
   templateUrl: './review-card.component.html',
-  styleUrls: ['./review-card.component.scss']
+  styleUrls: ['./review-card.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ReviewCardComponent implements OnInit {
+export class ReviewCardComponent implements OnInit, OnChanges {
   @Input() review!: any;
   @Input() currentUser!: any;
   @Input() showReadMore = false;
@@ -57,21 +50,64 @@ export class ReviewCardComponent implements OnInit {
   @Output() like = new EventEmitter<any>();
   @Output() readMore = new EventEmitter<any>();
   @Output() report = new EventEmitter<any>();
+  @Output() dispute = new EventEmitter<any>();
+  @Output() share = new EventEmitter<any>();
+
+  readonly starArray = [1, 2, 3, 4, 5];
+
+  trackByNumber(index: number, item: number): number {
+    return item || index;
+  }
 
   hasLiked = false;
+  formattedContent = '';
+  isTargetLawyer = false;
+  formattedEditDate = '';
+  reviewShareUrl = '';
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private snackbar: SnackbarService
+  ) { }
 
   ngOnInit() {
     if (this.review?.id) {
       this.hasLiked = localStorage.getItem(`liked_review_${this.review.id}`) === 'true';
     }
+    this.updateFormattedContent();
   }
 
-  getFormattedContent(content: string): string {
-    return formatReviewContent(content);
+  ngOnChanges(changes: SimpleChanges) {
+    if (changes['review'] || changes['currentUser']) {
+      this.updateFormattedContent();
+      this.cdr.markForCheck();
+    }
+  }
+
+  private updateFormattedContent() {
+    if (this.review) {
+      this.formattedContent = this.review.redactedContent || this.review.content || '';
+      this.isTargetLawyer = !!(this.currentUser && this.currentUser.role === 'Lawyer' && this.currentUser.fullName === this.review.targetName);
+      this.formattedEditDate = this.review.lastEditedAt ? 'Last edited on ' + new Date(this.review.lastEditedAt).toLocaleDateString() : '';
+      this.reviewShareUrl = (typeof window !== 'undefined' && this.review.id) ? `${window.location.origin}${window.location.pathname}#review-${this.review.id}` : '';
+    }
   }
 
   onLike() {
     this.like.emit(this.review);
     this.hasLiked = !this.hasLiked;
+    this.cdr.markForCheck();
+  }
+
+  onShare(event: MouseEvent) {
+    event.stopPropagation();
+    if (!this.review?.id) return;
+    const url = this.reviewShareUrl;
+    navigator.clipboard.writeText(url).then(() => {
+      this.snackbar.show('Review link copied to clipboard!', 'info');
+    }).catch(() => {
+      this.snackbar.show('Failed to copy link.', 'error');
+    });
+    this.share.emit(this.review);
   }
 }

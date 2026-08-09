@@ -1133,3 +1133,25 @@ body.mobile-drawer-open app-bottom-nav {
     transform: scaleY(1);
   }
 }
+
+/* ── Hide Bottom Navigation Bar when Mobile Filter Sheet is Open ── */
+body.mobile-drawer-open app-bottom-nav,
+body.mobile-drawer-open .bottom-nav-container {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: translateY(200px) !important;
+}
+
+/* ── Universal Scrollbar Hiding Utilities ── */
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}

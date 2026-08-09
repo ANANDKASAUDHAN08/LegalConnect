@@ -1,98 +1,179 @@
 <div (click)="onCancel()"
-  [style.top.px]="isMobile ? navbarHeight : 0"
-  [style.height]="isMobile ? 'calc(100% - ' + navbarHeight + 'px)' : '100%'"
-  class="fixed inset-x-0 bottom-0 bg-slate-950/60 backdrop-blur-md z-[1100] max-sm:z-[990] flex items-center justify-center p-4 max-sm:p-0 overflow-y-auto max-sm:overflow-hidden scrollbar-none">
-  <!-- Modal Card -->
+  class="fixed inset-0 z-[99999] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-0 sm:p-6 overflow-hidden scrollbar-none">
+
+  <!-- Modal Card Container (Full screen on mobile, centered card on desktop) -->
   <div (click)="$event.stopPropagation()"
-    class="relative w-full sm:max-w-[640px] max-sm:h-full max-sm:max-h-full max-sm:rounded-none max-sm:border-0 bg-white/95 dark:bg-slate-900/95 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl max-h-[90vh] max-sm:max-h-full overflow-y-auto flex flex-col gap-6 scrollbar-none fade-in-up my-auto">
+    class="relative w-full h-full sm:h-auto sm:max-w-[620px] sm:max-h-[calc(100vh-80px)] bg-white dark:bg-slate-900 border-0 sm:border border-slate-200/80 dark:border-slate-800 rounded-none sm:rounded-3xl shadow-none sm:shadow-2xl backdrop-blur-2xl flex flex-col overflow-hidden my-auto fade-in-up">
 
-    <!-- Close button -->
-    <button (click)="onCancel()"
-      class="absolute right-4 top-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 p-1 transition-colors outline-none">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-      </svg>
-    </button>
+    <!-- 1. Modal Header (Fixed at Top of Card) -->
+    <div
+      class="p-4 sm:px-6 sm:py-4 border-b border-slate-200/80 dark:border-slate-800 shrink-0 relative bg-slate-50/60 dark:bg-slate-900/60">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3 pr-4">
+          <div
+            class="w-10 h-10 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 border border-blue-500/20 flex items-center justify-center font-extrabold shrink-0">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="font-extrabold text-slate-900 dark:text-white text-lg sm:text-xl tracking-tight leading-snug">{{
+              modalTitle }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Share your verified legal consultation
+              experience
+              on LegalConnect.</p>
+          </div>
+        </div>
 
-    <!-- Modal Header -->
-    <div>
-      <h3 class="font-bold text-slate-850 dark:text-white text-lg">{{ modalTitle }}</h3>
-      <p class="text-xs text-slate-455 dark:text-slate-500 mt-0.5">Share your experience about a lawyer or the platform itself.</p>
+        <!-- Modal Close Button -->
+        <button (click)="onCancel()" [appTooltip]="'Close Dialog'" [tooltipPlacement]="'left'"
+          class="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors outline-none cursor-pointer border-none shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
     </div>
 
-    <form (submit)="onSubmit()" class="flex flex-col gap-4">
-      <!-- Auth Context Info -->
-      <div *ngIf="currentUser"
-        class="p-3 bg-blue-500/[0.04] dark:bg-blue-500/[0.02] border border-blue-500/10 dark:border-blue-500/20 rounded-xl flex items-center justify-between text-xs">
-        <span class="text-slate-600 dark:text-slate-400 font-medium">Posting Securely As:</span>
-        <span class="font-bold text-blue-600 dark:text-blue-400">{{ currentUser.fullName }} ({{ currentUser.role }})</span>
-      </div>
+    <!-- 2. Form Container wrapping Scrollable Body & Sticky Action Footer -->
+    <form (submit)="onSubmit()" class="flex flex-col flex-1 overflow-hidden min-h-0">
 
-      <!-- Guest Name Input (Only if Logged out) -->
-      <div *ngIf="!currentUser" class="flex flex-col gap-1.5">
-        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Your Name</label>
-        <input type="text" [(ngModel)]="authorName" name="authorName" placeholder="e.g. Amit K." required
-          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs shadow-sm">
-      </div>
+      <!-- Scrollable Form Body -->
+      <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 scrollbar-none no-scrollbar">
 
-      <!-- Review Subject / Target -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Review Subject</label>
-        <input type="text" [(ngModel)]="targetName" name="targetName" placeholder="e.g. Platform, Adv. Priya Sharma" required
-          class="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 text-xs shadow-sm">
-      </div>
-
-      <!-- Rating Star Picker -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Rating</label>
-        <div class="flex items-center gap-1.5">
-          <button type="button" *ngFor="let star of [1,2,3,4,5]" (click)="setRating(star)"
-            class="text-2xl transition-transform hover:scale-110 outline-none">
-            <span [class]="star <= rating ? 'text-amber-400' : 'text-slate-300 dark:text-slate-700'">★</span>
-          </button>
-          <span class="text-xs font-bold text-slate-450 dark:text-slate-500 ml-2">({{ rating }} out of 5 stars)</span>
+        <!-- Auth Context Info Banner -->
+        <div *ngIf="currentUser" [appTooltip]="'Authenticated user session connected'" [tooltipPlacement]="'top'"
+          class="p-3.5 bg-blue-500/10 dark:bg-blue-500/15 border border-blue-500/20 rounded-2xl flex items-center justify-between text-xs shrink-0">
+          <div class="flex items-center gap-2">
+            <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+            <span class="text-slate-600 dark:text-slate-300 font-semibold">Posting Authenticated Review As:</span>
+          </div>
+          <span class="font-extrabold text-blue-600 dark:text-blue-400">{{ currentUser.fullName }} ({{ currentUser.role
+            }})</span>
         </div>
-      </div>
 
-      <!-- Quick Feedback Tags -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Quick Feedback Tags (Click to select)</label>
-        <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto scrollbar-none py-0.5">
-          <button type="button" *ngFor="let chip of currentChips" (click)="toggleChip(chip)"
-            [ngClass]="isChipActive(chip) ? 'bg-blue-600 border-blue-600 text-white font-semibold' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-950/65 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-850'"
-            class="px-2.5 py-1 text-[10px] rounded-lg border transition-all duration-200 outline-none select-none flex items-center gap-1">
-            <span>{{ chip.emoji }} {{ chip.text }}</span>
-            <span *ngIf="isChipActive(chip)" class="text-[9px]">✕</span>
-          </button>
+        <!-- Guest Name Input (Only if Logged out) -->
+        <div *ngIf="!currentUser" class="flex flex-col gap-1.5 shrink-0">
+          <label
+            class="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
+            <span>Your Full Name</span>
+            <span class="text-amber-600 dark:text-amber-400 text-[10px] font-bold">*Required for Guest Posts</span>
+          </label>
+          <input type="text" [(ngModel)]="authorName" name="authorName" placeholder="e.g. Amit Kumar" required
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 text-xs font-semibold shadow-sm transition-all">
         </div>
+
+        <!-- Review Subject / Target Advocate -->
+        <div class="flex flex-col gap-1.5 shrink-0">
+          <label class="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+            Review Subject / Advocate Name
+          </label>
+          <div class="relative">
+            <input type="text" [(ngModel)]="targetName" name="targetName" placeholder="e.g. Platform, Adv. Priya Sharma"
+              required
+              class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 text-xs font-semibold shadow-sm transition-all">
+            <div class="absolute left-3.5 top-3.5 text-slate-400 dark:text-slate-500 pointer-events-none">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rating Star Picker with SVG & Hover state -->
+        <div class="flex flex-col gap-1.5 shrink-0">
+          <label class="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+            Overall Star Rating
+          </label>
+          <div
+            class="flex items-center justify-between p-3 px-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80">
+            <div class="flex items-center gap-1">
+              <button type="button" *ngFor="let star of starArray; trackBy: trackByNumber" (click)="setRating(star)"
+                (mouseenter)="hoverRating = star" (mouseleave)="hoverRating = 0" [appTooltip]="star + ' Star Rating'"
+                [tooltipPlacement]="'top'"
+                class="p-1 rounded-lg transition-transform hover:scale-125 outline-none cursor-pointer border-none bg-transparent">
+                <svg class="w-6 h-6 transition-colors" [class.text-amber-400]="star <= currentDisplayRating"
+                  [class.fill-amber-400]="star <= currentDisplayRating"
+                  [class.text-slate-300]="star > currentDisplayRating"
+                  [class.dark:text-slate-600]="star > currentDisplayRating" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              </button>
+            </div>
+            <span class="text-xs font-extrabold text-amber-600 dark:text-amber-400">
+              {{ currentDisplayRating }} / 5 Stars
+            </span>
+          </div>
+        </div>
+
+        <!-- Quick Feedback Tags (Clickable Pills) -->
+        <div class="flex flex-col gap-1.5 shrink-0">
+          <label class="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+            Quick Tag Pills (Click to add)
+          </label>
+          <div class="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto scrollbar-none py-0.5">
+            <button type="button" *ngFor="let chip of currentChips; trackBy: trackByChipText" (click)="toggleChip(chip)"
+              [appTooltip]="isChipActive(chip) ? 'Click to remove tag' : 'Click to append tag'"
+              [tooltipPlacement]="'top'"
+              [ngClass]="isChipActive(chip) ? 'bg-blue-600 dark:bg-blue-500 border-blue-600 dark:border-blue-500 text-white font-bold shadow-md shadow-blue-500/20' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/80 font-semibold'"
+              class="px-3 py-1.5 text-xs rounded-xl border transition-all duration-200 outline-none select-none flex items-center gap-1.5 cursor-pointer active:scale-95">
+              <span>{{ chip.text }}</span>
+              <span *ngIf="isChipActive(chip)" class="text-[10px] font-extrabold">✕</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Review Content Textarea -->
+        <div class="flex flex-col gap-1.5 shrink-0">
+          <label class="text-[11px] font-extrabold text-slate-500 dark:text-slate-300 uppercase tracking-wider">
+            Detailed Experience & Review Comments
+          </label>
+          <textarea [(ngModel)]="content" name="content" required
+            placeholder="Describe your consultation experience, advocate professionalism, or platform usability in detail..."
+            class="w-full p-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-50 dark:bg-slate-800/60 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-400 outline-none focus:border-blue-500 dark:focus:border-blue-400 focus:bg-white dark:focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/20 resize-none h-24 shadow-sm scrollbar-none font-semibold transition-all"></textarea>
+        </div>
+
+        <!-- Guest Security Notice -->
+        <div *ngIf="!currentUser"
+          [appTooltip]="'LegalConnect review integrity rule under Bar Council moderation guidelines'"
+          [tooltipPlacement]="'top'"
+          class="p-3.5 bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-xs text-amber-800 dark:text-amber-300 rounded-2xl leading-relaxed flex items-start gap-2.5 font-medium shrink-0">
+          <svg class="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+            stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+          </svg>
+          <span><strong>Guest Security Notice:</strong> Guest reviews are published under strict anti-spam screening.
+            Create a free account to edit or delete your reviews anytime.</span>
+        </div>
+
       </div>
 
-      <!-- Review Content Textarea -->
-      <div class="flex flex-col gap-1.5">
-        <label class="text-[11px] font-bold text-slate-500 dark:text-slate-455 uppercase tracking-wide">Comments</label>
-        <textarea [(ngModel)]="content" name="content" required placeholder="Write details about your experience..."
-          class="w-full p-3.5 text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white/70 dark:bg-slate-950 text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 resize-none h-24 shadow-sm scrollbar-none"></textarea>
-      </div>
-
-      <!-- Guest Security Notice -->
-      <div *ngIf="!currentUser"
-        class="p-3 bg-amber-500/[0.04] border border-amber-500/10 text-[10px] text-amber-600 dark:text-amber-455 rounded-xl leading-normal flex items-start gap-1.5 font-medium">
-        <span>⚠️</span>
-        <span><strong>Guest Notice:</strong> Due to security and verification requirements, guest reviews are permanent once submitted. Sign up as a Client to edit/delete reviews anytime.</span>
-      </div>
-
-      <!-- Submit Actions -->
-      <div class="flex gap-2.5 mt-2">
-        <button type="button" (click)="onCancel()"
-          class="btn btn-outline py-3 flex-1 text-xs justify-center font-bold">
+      <!-- 3. Sticky Bottom Action Footer -->
+      <div
+        class="p-4 sm:px-6 sm:py-4 border-t border-slate-200/80 dark:border-slate-800 shrink-0 bg-slate-50/60 dark:bg-slate-900/60 flex items-center justify-between gap-3">
+        <button type="button" (click)="onCancel()" [appTooltip]="'Discard changes and close'"
+          class="py-3 px-5 rounded-xl border border-slate-200 dark:border-slate-700/80 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-extrabold flex-1 text-center transition-colors cursor-pointer">
           Cancel
         </button>
         <button type="submit" [disabled]="isSubmitting || content.trim().length === 0"
-          class="btn btn-accent py-3 flex-1 text-xs font-bold shadow-sm flex items-center justify-center gap-2 disabled:opacity-50">
-          <span *ngIf="isSubmitting">Saving...</span>
-          <span *ngIf="!isSubmitting">Save Review</span>
+          [appTooltip]="'Publish your review to community portal'"
+          class="shimmer-btn py-3 px-5 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-extrabold shadow-lg shadow-blue-500/20 transition-all cursor-pointer flex-1 text-center border-none disabled:bg-slate-200 disabled:dark:bg-slate-800 disabled:text-slate-400 disabled:dark:text-slate-500 disabled:border-none disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-95">
+          <span *ngIf="isSubmitting" class="flex items-center gap-2">
+            <svg class="animate-spin w-4 h-4 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+              </path>
+            </svg>
+            <span>Saving...</span>
+          </span>
+          <span *ngIf="!isSubmitting">Publish Review</span>
         </button>
       </div>
+
     </form>
   </div>
 </div>
