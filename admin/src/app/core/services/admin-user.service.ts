@@ -172,6 +172,10 @@ export class AdminUserService {
     return this.http.put(`${this.API}/reviews/${id}/redact`, data);
   }
 
+  autoSanitizeReviewContent(content: string): Observable<any> {
+    return this.http.post(`${this.API}/reviews/auto-sanitize`, { content });
+  }
+
   resolveReviewDispute(id: number, data: { decision: 'Upheld' | 'Rejected'; rationale?: string }): Observable<any> {
     return this.http.put(`${this.API}/reviews/${id}/dispute`, data);
   }

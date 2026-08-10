@@ -27,6 +27,7 @@ namespace CoreApi.Controllers
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<AdminController> _logger;
         private readonly IMemoryCache _cache;
+        private readonly IPiiSanitizerService _piiSanitizer;
 
         public AdminController(
             AppDbContext context,
@@ -35,7 +36,8 @@ namespace CoreApi.Controllers
             ILawyerSyncService syncService,
             IHttpClientFactory httpClientFactory,
             ILogger<AdminController> logger,
-            IMemoryCache cache)
+            IMemoryCache cache,
+            IPiiSanitizerService piiSanitizer)
         {
             _context = context;
             _configuration = configuration;
@@ -44,6 +46,7 @@ namespace CoreApi.Controllers
             _httpClientFactory = httpClientFactory;
             _logger = logger;
             _cache = cache;
+            _piiSanitizer = piiSanitizer;
         }
 
         // ═══════════════════════════════════════════════════════════════

@@ -577,6 +577,25 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     });
   }
 
+  autoSanitizeCurrentReview(): void {
+    if (!this.redactInputText || !this.redactInputText.trim()) return;
+
+    this.api.autoSanitizeReviewContent(this.redactInputText.trim()).subscribe({
+      next: (res: any) => {
+        if (res && res.sanitizedText) {
+          this.redactInputText = res.sanitizedText;
+          if (res.hasPii && res.detectedTypes?.length > 0) {
+            this.toast.success(`Auto-redacted: ${res.detectedTypes.join(', ')}`);
+          } else {
+            this.toast.info('No PII or confidential patterns detected in text.');
+          }
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => this.toast.error('Failed to run auto-sanitizer.')
+    });
+  }
+
   resolveDispute(decision: 'Upheld' | 'Rejected'): void {
     if (!this.selectedReview) return;
     this.api.resolveReviewDispute(this.selectedReview.id, {

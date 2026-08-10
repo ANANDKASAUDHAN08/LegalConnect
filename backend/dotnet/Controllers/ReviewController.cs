@@ -20,15 +20,17 @@ namespace CoreApi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly ILawyerSyncService _syncService;
+        private readonly IPiiSanitizerService _piiSanitizer;
 
         // In-memory rate limiter: key = "IP:reviewId", value = last action UTC
         private static readonly ConcurrentDictionary<string, DateTime> _likeRateLimit = new();
         private static readonly TimeSpan _likeCooldown = TimeSpan.FromSeconds(60);
 
-        public ReviewController(AppDbContext context, ILawyerSyncService syncService)
+        public ReviewController(AppDbContext context, ILawyerSyncService syncService, IPiiSanitizerService piiSanitizer)
         {
             _context = context;
             _syncService = syncService;
+            _piiSanitizer = piiSanitizer;
         }
 
         [HttpGet]
@@ -195,6 +197,15 @@ namespace CoreApi.Controllers
                 {
                     review.AuthorName = string.IsNullOrWhiteSpace(dto.AuthorName) ? "Anonymous Guest" : dto.AuthorName.Trim();
                     review.UserRole = "Guest";
+                }
+
+                // Auto PII Sanitization Pipeline
+                var piiResult = _piiSanitizer.Sanitize(review.Content);
+                if (piiResult.HasPii)
+                {
+                    review.RedactedContent = piiResult.SanitizedText;
+                    review.ModerationStatus = "Pending";
+                    review.FlagReason = $"[POLICY-103] Auto-detected PII: {string.Join(", ", piiResult.DetectedTypes)}";
                 }
 
                 _context.Reviews.Add(review);

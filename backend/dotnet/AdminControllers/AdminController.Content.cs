@@ -152,6 +152,30 @@ namespace CoreApi.Controllers
             return Ok(new { success = true, message = "Review content sanitized successfully.", data = review });
         }
 
+        public class AutoSanitizeRequestDto
+        {
+            public string? Content { get; set; }
+        }
+
+        [Authorize(Roles = "Admin")]
+        [HttpPost("reviews/auto-sanitize")]
+        public IActionResult AutoSanitizeReviewContent([FromBody] AutoSanitizeRequestDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto?.Content))
+            {
+                return Ok(new { success = true, hasPii = false, sanitizedText = string.Empty, detectedTypes = new List<string>() });
+            }
+
+            var result = _piiSanitizer.Sanitize(dto.Content);
+            return Ok(new
+            {
+                success = true,
+                hasPii = result.HasPii,
+                sanitizedText = result.SanitizedText,
+                detectedTypes = result.DetectedTypes
+            });
+        }
+
         [Authorize(Roles = "Admin")]
         [HttpPut("reviews/{id}/dispute")]
         public async Task<IActionResult> ResolveReviewDispute(int id, [FromBody] AdminReviewDisputeResolutionDto dto)

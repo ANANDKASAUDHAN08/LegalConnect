@@ -39,6 +39,7 @@ builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
+builder.Services.AddSingleton<IPiiSanitizerService, PiiSanitizerService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHostedService<ProfileSyncWorker>();
 builder.Services.AddHostedService<AdminNotificationDigestService>();
