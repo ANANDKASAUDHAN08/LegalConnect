@@ -78,6 +78,12 @@ export class ReviewsSectionComponent implements OnInit, OnDestroy {
   showReadMoreModal = false;
   selectedReview: ReviewItem | null = null;
 
+  starArray = [1, 2, 3, 4, 5];
+
+  trackByReviewId(index: number, item: ReviewItem): number | string {
+    return item?.id || index;
+  }
+
   get isMobile(): boolean {
     return window.innerWidth < 640;
   }
@@ -112,25 +118,29 @@ export class ReviewsSectionComponent implements OnInit, OnDestroy {
 
   loadReviews() {
     this.reviewService.getReviews().subscribe({
-      next: (data) => {
-        this.allReviews = data;
+      next: (res: any) => {
+        const data = res?.data || res?.items || res || [];
+        this.allReviews = Array.isArray(data) ? data : [];
         this.filterReviews();
       },
       error: (err) => {
         console.error('Failed to load reviews', err);
+        this.allReviews = [];
+        this.filterReviews();
       }
     });
   }
 
   filterReviews() {
+    const list = Array.isArray(this.allReviews) ? this.allReviews : [];
     if (this.activeTab === 'client') {
       // Clients see client/guest reviews about matched lawyers or the platform
-      this.filteredReviews = this.allReviews.filter(
+      this.filteredReviews = list.filter(
         r => r.userRole === 'Client' || r.userRole === 'Guest'
       );
     } else {
       // Lawyers see lawyer reviews about the platform/workstation
-      this.filteredReviews = this.allReviews.filter(
+      this.filteredReviews = list.filter(
         r => r.userRole === 'Lawyer'
       );
     }

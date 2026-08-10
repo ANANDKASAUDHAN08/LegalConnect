@@ -68,35 +68,45 @@
     </div>
 
     <!-- Shared Review Write/Edit Modal Component -->
+    @defer (when showWriteModal) {
     <app-write-review-modal *ngIf="showWriteModal" [currentUser]="currentUser" [reviewToEdit]="editModeReview"
       [navbarHeight]="navbarHeight" (close)="showWriteModal = false" (saved)="onReviewSaved($event)">
     </app-write-review-modal>
+    }
 
     <!-- Reviews snap-scroll carousel track -->
-    <div *ngIf="filteredReviews.length > 0; else noReviews" #carouselTrack
-      class="carousel-track flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none pb-4 pt-1 px-1">
+    @if (filteredReviews.length > 0) {
+    <div #carouselTrack
+      class="carousel-track flex gap-6 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none pb-6 pt-2 px-1">
 
       <!-- Review Card -->
-      <app-review-card *ngFor="let rev of filteredReviews"
-        class="carousel-card snap-start h-[210px] block w-[280px] sm:w-[320px] flex-shrink-0" [review]="rev"
+      @for (rev of filteredReviews; track trackByReviewId($index, rev)) {
+      <app-review-card class="carousel-card snap-start h-[260px] block flex-shrink-0" [review]="rev"
         [currentUser]="currentUser" [showReadMore]="true" (edit)="openEditModal($event)"
         (delete)="onDeleteReview($event)" (like)="likeReview($event)" (readMore)="openReadMoreModal($event)">
       </app-review-card>
+      }
     </div>
-
+    } @else {
     <!-- Empty State -->
-    <ng-template #noReviews>
-      <div class="text-center py-16 flex flex-col items-center gap-3">
-        <span class="text-4xl">💭</span>
-        <h3 class="font-bold text-slate-800 dark:text-white text-base">No reviews found</h3>
-        <p class="text-xs text-slate-450 max-w-sm">There are no testimonials recorded for this tab yet. Be the first to
-          share your thoughts!</p>
-        <button (click)="openWriteModal()" class="btn btn-outline btn-sm text-xs mt-1">Write a Testimonial</button>
+    <div class="text-center py-16 flex flex-col items-center gap-3">
+      <div
+        class="w-12 h-12 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shadow-xs">
+        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round"
+            d="M8.625 12a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H8.25m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0H12m4.125 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 01-2.555-.337A5.972 5.972 0 015.41 20.97a5.969 5.969 0 01-.474-.065 4.48 4.48 0 00.978-2.025c.09-.457-.133-.901-.467-1.226C3.93 16.178 3 14.189 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25z" />
+        </svg>
       </div>
-    </ng-template>
+      <h3 class="font-bold text-slate-800 dark:text-white text-base">No reviews found</h3>
+      <p class="text-xs text-slate-450 max-w-sm">There are no testimonials recorded for this tab yet. Be the first to
+        share your thoughts!</p>
+      <button (click)="openWriteModal()" class="btn btn-outline btn-sm text-xs mt-1">Write a Testimonial</button>
+    </div>
+    }
   </div>
 
   <!-- Read-Only Review Modal Overlay -->
+  @defer (when showReadMoreModal && selectedReview) {
   <div *ngIf="showReadMoreModal && selectedReview" (click)="closeReadMoreModal()"
     [style.top.px]="isMobile ? navbarHeight : 0"
     [style.height]="isMobile ? 'calc(100% - ' + navbarHeight + 'px)' : '100%'"
@@ -129,8 +139,9 @@
       <!-- Rating & Target -->
       <div class="flex items-center justify-between text-xs">
         <div class="flex items-center gap-0.5">
-          <span *ngFor="let s of [1,2,3,4,5]"
-            [class]="s <= selectedReview.rating ? 'text-amber-400' : 'text-slate-200 dark:text-slate-800'">★</span>
+          @for (s of starArray; track s) {
+          <span [class]="s <= selectedReview.rating ? 'text-amber-400' : 'text-slate-200 dark:text-slate-800'">★</span>
+          }
         </div>
         <span class="text-[9px] font-bold uppercase tracking-widest text-slate-450 dark:text-slate-555">
           Target: {{ selectedReview.targetName }}
@@ -156,8 +167,11 @@
       </div>
     </div>
   </div>
+  }
 </section>
 
+@defer (when isConfirmOpen) {
 <app-confirm-dialog [isOpen]="isConfirmOpen" [title]="confirmTitle" [message]="confirmMessage" [type]="confirmType"
   (confirm)="onConfirmDialog()" (cancel)="onCancelDialog()">
 </app-confirm-dialog>
+}

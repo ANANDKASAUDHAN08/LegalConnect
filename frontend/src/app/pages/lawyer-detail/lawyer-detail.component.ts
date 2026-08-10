@@ -134,11 +134,13 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
     if (!this.lawyer) return;
     this.loadingReviews = true;
     this.reviewService.getReviews(this.lawyer.name).subscribe({
-      next: (res) => {
-        this.reviews = res;
+      next: (res: any) => {
+        const data = res?.data || res?.items || res || [];
+        this.reviews = Array.isArray(data) ? data : [];
         this.loadingReviews = false;
       },
       error: () => {
+        this.reviews = [];
         this.loadingReviews = false;
       }
     });

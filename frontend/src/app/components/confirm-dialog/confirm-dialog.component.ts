@@ -30,7 +30,13 @@ export class ConfirmDialogComponent {
       return this.icon.toLowerCase();
     }
     const msg = (this.message + ' ' + this.title).toLowerCase();
-    if (msg.includes('delete') || msg.includes('remove') || msg.includes('wipe') || msg.includes('clear')) {
+    if (msg.includes('dispute') || msg.includes('appeal')) {
+      return 'dispute';
+    }
+    if (msg.includes('report') || msg.includes('flag') || msg.includes('violation')) {
+      return 'report';
+    }
+    if (msg.includes('delete') || msg.includes('permanently') || msg.includes('wipe') || msg.includes('clear')) {
       return 'trash';
     }
     if (msg.includes('sync') || msg.includes('switch') || msg.includes('mode')) {

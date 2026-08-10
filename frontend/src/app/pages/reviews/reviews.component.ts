@@ -23,6 +23,7 @@ import { debounceTime, takeUntil } from 'rxjs/operators';
 })
 export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroy$ = new Subject<void>();
+  private searchSubject$ = new Subject<string>();
 
   // Modal Dialog Signals
   isConfirmOpen = signal<boolean>(false);
@@ -476,8 +477,7 @@ export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   onSearchInput(query: string) {
-    this.searchText.set(query);
-    this.currentPage.set(1);
+    this.searchSubject$.next(query);
   }
 
   @HostListener('document:click', ['$event'])
@@ -529,6 +529,15 @@ export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
       takeUntil(this.destroy$)
     ).subscribe(user => {
       this.currentUser.set(user);
+    });
+
+    this.searchSubject$.pipe(
+      debounceTime(300),
+      takeUntil(this.destroy$)
+    ).subscribe(query => {
+      this.searchText.set(query);
+      this.currentPage.set(1);
+      this.cdr.markForCheck();
     });
 
     this.loadReviews();
@@ -696,9 +705,9 @@ export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
   onReportReview(review: ReviewItem) {
     if (!review.id) return;
     this.triggerConfirm(
-      'Report Review',
-      'Are you sure you want to flag this review to moderators? It will be quarantined for audit.',
-      'warning',
+      'Report Review to Moderation',
+      'Are you sure you want to report this review for community guidelines violation? It will be flagged for moderator audit.',
+      'danger',
       () => {
         this.reviewService.flagReview(review.id!, 'Flagged by community user').subscribe({
           next: () => {

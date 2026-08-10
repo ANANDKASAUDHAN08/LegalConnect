@@ -86,9 +86,25 @@ export class ReviewCardComponent implements OnInit, OnChanges {
 
   private updateFormattedContent() {
     if (this.review) {
-      this.formattedContent = this.review.redactedContent || this.review.content || '';
-      this.isTargetLawyer = !!(this.currentUser && this.currentUser.role === 'Lawyer' && this.currentUser.fullName === this.review.targetName);
-      this.formattedEditDate = this.review.lastEditedAt ? 'Last edited on ' + new Date(this.review.lastEditedAt).toLocaleDateString() : '';
+      let text = this.review.redactedContent || this.review.content || '';
+      // Strip any [REDACTED ...] tags seamlessly for clean display
+      text = text.replace(/\[REDACTED[^\]]*\]/gi, '').replace(/\s+/g, ' ').replace(/\s+([,\.\?!])/g, '$1').trim();
+      this.formattedContent = text;
+
+      const normalize = (s?: string) => (s || '').replace(/^adv\.?\s+/i, '').trim().toLowerCase();
+      const uNorm = normalize(this.currentUser?.fullName);
+      const tNorm = normalize(this.review?.targetName);
+      const lNorm = normalize(this.review?.lawyerName);
+
+      this.isTargetLawyer = !!(
+        this.currentUser &&
+        this.currentUser.role === 'Lawyer' &&
+        uNorm &&
+        (uNorm === tNorm || uNorm === lNorm)
+      );
+
+      const isAuthorEdit = !!(this.review.lastEditedAt && this.review.originalContent && !this.review.redactedContent);
+      this.formattedEditDate = isAuthorEdit ? 'Edited on ' + new Date(this.review.lastEditedAt).toLocaleDateString() : '';
       this.reviewShareUrl = (typeof window !== 'undefined' && this.review.id) ? `${window.location.origin}${window.location.pathname}#review-${this.review.id}` : '';
     }
   }
