@@ -64,6 +64,8 @@ namespace CoreApi.Data
             EnsureColumnExists(context, "Reviews", "IsDisputeRequested", "TINYINT(1) DEFAULT 0");
             EnsureColumnExists(context, "Reviews", "DisputeReason", "VARCHAR(500) NULL");
             EnsureColumnExists(context, "Reviews", "DisputeRequestedAt", "DATETIME NULL");
+            EnsureColumnExists(context, "Reviews", "TargetId", "INT NULL");
+            EnsureColumnExists(context, "Reviews", "TargetType", "VARCHAR(50) NOT NULL DEFAULT 'Platform'");
             EnsureColumnExists(context, "Reviews", "ModerationStatus", "VARCHAR(30) NOT NULL DEFAULT 'Approved'");
             EnsureColumnExists(context, "Reviews", "FlagReason", "VARCHAR(250) NULL");
             EnsureColumnExists(context, "Reviews", "AdvocateReply", "VARCHAR(2000) NULL");
