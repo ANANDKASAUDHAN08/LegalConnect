@@ -64,6 +64,11 @@ namespace CoreApi.Data
             EnsureColumnExists(context, "Reviews", "IsDisputeRequested", "TINYINT(1) DEFAULT 0");
             EnsureColumnExists(context, "Reviews", "DisputeReason", "VARCHAR(500) NULL");
             EnsureColumnExists(context, "Reviews", "DisputeRequestedAt", "DATETIME NULL");
+            EnsureColumnExists(context, "Reviews", "ModerationStatus", "VARCHAR(30) NOT NULL DEFAULT 'Approved'");
+            EnsureColumnExists(context, "Reviews", "FlagReason", "VARCHAR(250) NULL");
+            EnsureColumnExists(context, "Reviews", "AdvocateReply", "VARCHAR(2000) NULL");
+            EnsureColumnExists(context, "Reviews", "AdvocateReplyStatus", "VARCHAR(30) NULL");
+            EnsureColumnExists(context, "Reviews", "IsVerifiedClient", "TINYINT(1) DEFAULT 0");
 
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
