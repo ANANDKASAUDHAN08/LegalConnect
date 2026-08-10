@@ -195,10 +195,11 @@ namespace CoreApi.Controllers
         [EnableRateLimiting("AuthSessionPolicy")]
         public async Task<IActionResult> RefreshToken([FromBody] RefreshRequestDto? bodyPayload = null)
         {
-            var rawRefreshToken = Request.Cookies["__session"];
-            if (string.IsNullOrWhiteSpace(rawRefreshToken) && bodyPayload != null && !string.IsNullOrWhiteSpace(bodyPayload.RefreshToken))
+            // Prioritize explicitly provided refresh token in JSON request body over cookie
+            var rawRefreshToken = bodyPayload?.RefreshToken;
+            if (string.IsNullOrWhiteSpace(rawRefreshToken))
             {
-                rawRefreshToken = bodyPayload.RefreshToken;
+                rawRefreshToken = Request.Cookies["__session"];
             }
 
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();

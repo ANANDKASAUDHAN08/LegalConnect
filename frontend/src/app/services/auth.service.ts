@@ -1,5 +1,5 @@
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { Injectable, NgZone } from '@angular/core';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, tap, catchError, of, map, Observable, timer, switchMap, share, finalize } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenStorageService } from './token-storage.service';
@@ -63,11 +63,14 @@ export class AuthService {
     withCredentials: true
   };
 
+  private lastResumeCheckTime = 0;
+
   constructor(
     private http: HttpClient,
     private router: Router,
     private tokenStorage: TokenStorageService,
-    private userProfileService: UserProfileService
+    private userProfileService: UserProfileService,
+    private ngZone: NgZone
   ) {
     this.initMultiTabSync();
     this.initResumeListener();
@@ -80,6 +83,10 @@ export class AuthService {
   private initResumeListener(): void {
     if (typeof window !== 'undefined') {
       const checkResumeSession = () => {
+        const now = Date.now();
+        if (now - this.lastResumeCheckTime < 2000) return;
+        this.lastResumeCheckTime = now;
+
         if (this._isLoggedIn.value) {
           const token = this.getToken();
           if (token) {
@@ -88,17 +95,15 @@ export class AuthService {
               if (parts.length >= 2) {
                 const payload = JSON.parse(atob(parts[1]));
                 const expMs = payload.exp * 1000;
-                // If token expires within 2 minutes or has already expired, refresh proactively
                 if (Date.now() + 120000 >= expMs) {
-                  this.executeProactiveRefresh();
+                  this.ngZone.run(() => this.executeProactiveRefresh());
                 }
               }
             } catch {
-              this.executeProactiveRefresh();
+              this.ngZone.run(() => this.executeProactiveRefresh());
             }
           } else {
-            // Logged in but no token — try to refresh
-            this.executeProactiveRefresh();
+            this.ngZone.run(() => this.executeProactiveRefresh());
           }
         }
       };
@@ -341,12 +346,14 @@ export class AuthService {
   }
 
   private handleSessionExpired(): void {
-    this.clearSessionState();
-    const currentUrl = this.router.url.split('?')[0];
-    const isPublic = PUBLIC_ROUTES.some(route => currentUrl.startsWith(route));
-    if (!isPublic) {
-      this.router.navigate(['/login'], { queryParams: { sessionExpired: 'true', returnUrl: currentUrl } });
-    }
+    this.ngZone.run(() => {
+      this.clearSessionState();
+      const currentUrl = this.router.url.split('?')[0];
+      const isPublic = PUBLIC_ROUTES.some(route => currentUrl.startsWith(route));
+      if (!isPublic) {
+        this.router.navigate(['/login'], { queryParams: { sessionExpired: 'true', returnUrl: currentUrl } });
+      }
+    });
   }
 
   private clearSessionState(shouldBroadcast = true): void {
@@ -389,8 +396,9 @@ export class AuthService {
 
   private executeProactiveRefresh(): void {
     this.refreshToken().pipe(
-      catchError(() => {
-        if (this._proactiveRefreshRetries < this.MAX_REFRESH_RETRIES) {
+      catchError((err: HttpErrorResponse | any) => {
+        const isAuthError = err?.status === 401 || err?.status === 403;
+        if (!isAuthError && this._proactiveRefreshRetries < this.MAX_REFRESH_RETRIES) {
           this._proactiveRefreshRetries++;
           timer(this.RETRY_DELAY_MS).subscribe(() => this.executeProactiveRefresh());
         } else {
