@@ -84,12 +84,12 @@ namespace CoreApi.Services
             return (true, "User registered successfully! You can now sign in.", user);
         }
 
-        public async Task<(bool isSuccess, string message, User? user, string? sessionId)> RegisterAndLoginAsync(RegisterDto request, string? ipAddress, string? userAgent)
+        public async Task<(bool isSuccess, string message, User? user, string? sessionId, string? rawRefreshToken)> RegisterAndLoginAsync(RegisterDto request, string? ipAddress, string? userAgent)
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
             {
                 _logger.LogWarning("[Security Audit] Registration failed: Email already exists. Email: {Email}, IP: {IP}", request.Email, ipAddress);
-                return (false, "User with this email already exists.", null, null);
+                return (false, "User with this email already exists.", null, null, null);
             }
 
             var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
@@ -127,7 +127,7 @@ namespace CoreApi.Services
             {
                 await _context.SaveChangesAsync();
                 await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
-                return (true, "User registered successfully! Please check your email to verify your account.", user, null);
+                return (true, "User registered successfully! Please check your email to verify your account.", user, null, null);
             }
 
             var sessionId = Guid.NewGuid().ToString("N");
@@ -150,16 +150,16 @@ namespace CoreApi.Services
                 Status = "Success"
             });
 
-            var (_, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
+            var (rawRefresh, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
             _context.RefreshTokens.Add(refreshEntity);
 
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("[Security Audit] Atomic registration & session creation succeeded. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}", user.Id, user.Email, sessionId);
-            return (true, "Registered and authenticated successfully!", user, sessionId);
+            return (true, "Registered and authenticated successfully!", user, sessionId, rawRefresh);
         }
 
-        public async Task<(bool isSuccess, string message, bool requires2fa, User? user, string? sessionId)> LoginAsync(LoginDto request, string? ipAddress, string? userAgent)
+        public async Task<(bool isSuccess, string message, bool requires2fa, User? user, string? sessionId, string? rawRefreshToken)> LoginAsync(LoginDto request, string? ipAddress, string? userAgent)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             bool isPasswordValid = false;
@@ -193,14 +193,14 @@ namespace CoreApi.Services
                     });
                     await _context.SaveChangesAsync();
                 }
-                return (false, "Invalid credentials.", false, null, null);
+                return (false, "Invalid credentials.", false, null, null, null);
             }
 
             if (user.IsTwoFactorEnabled)
             {
                 if (string.IsNullOrEmpty(request.TwoFactorCode))
                 {
-                    return (false, "2FA verification required.", true, null, null);
+                    return (false, "2FA verification required.", true, null, null, null);
                 }
                 if (string.IsNullOrEmpty(user.TwoFactorSecret) || !TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode))
                 {
@@ -214,7 +214,7 @@ namespace CoreApi.Services
                         Status = "Failed"
                     });
                     await _context.SaveChangesAsync();
-                    return (false, "Invalid 2FA verification code.", false, null, null);
+                    return (false, "Invalid 2FA verification code.", false, null, null, null);
                 }
             }
 
@@ -222,7 +222,7 @@ namespace CoreApi.Services
             if (requireVerification && !user.IsEmailVerified)
             {
                 _logger.LogWarning("[Security Audit] Login blocked for unverified email. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
-                return (false, "Please verify your email address before signing in.", false, null, null);
+                return (false, "Please verify your email address before signing in.", false, null, null, null);
             }
 
             var sessionId = Guid.NewGuid().ToString("N");
@@ -246,20 +246,20 @@ namespace CoreApi.Services
                 Status = "Success"
             });
 
-            var (_, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
+            var (rawRefresh, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
             _context.RefreshTokens.Add(refreshEntity);
 
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("[Security Audit] Successful login. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}, IP: {IP}", user.Id, user.Email, sessionId, ipAddress);
-            return (true, "Logged in successfully!", false, user, sessionId);
+            return (true, "Logged in successfully!", false, user, sessionId, rawRefresh);
         }
 
-        public async Task<(bool isSuccess, string message, User? user, string? sessionId)> GoogleLoginAsync(GoogleLoginDto request, string? ipAddress, string? userAgent)
+        public async Task<(bool isSuccess, string message, User? user, string? sessionId, string? rawRefreshToken)> GoogleLoginAsync(GoogleLoginDto request, string? ipAddress, string? userAgent)
         {
             if (string.IsNullOrWhiteSpace(request?.Credential))
             {
-                return (false, "Google ID token is required.", null, null);
+                return (false, "Google ID token is required.", null, null, null);
             }
 
             GoogleJsonWebSignature.Payload payload;
@@ -277,12 +277,12 @@ namespace CoreApi.Services
             catch (Exception ex)
             {
                 _logger.LogWarning(ex, "[Security Audit] Google token validation failed from IP: {IP}", ipAddress);
-                return (false, "Invalid or expired Google authentication token.", null, null);
+                return (false, "Invalid or expired Google authentication token.", null, null, null);
             }
 
             if (string.IsNullOrWhiteSpace(payload.Email))
             {
-                return (false, "Google account email could not be verified.", null, null);
+                return (false, "Google account email could not be verified.", null, null, null);
             }
 
             var user = await _context.Users.FirstOrDefaultAsync(u => u.GoogleId == payload.Subject || u.Email == payload.Email);
@@ -349,7 +349,7 @@ namespace CoreApi.Services
 
             if (!user.IsActive)
             {
-                return (false, "Your account has been deactivated. Please contact support.", null, null);
+                return (false, "Your account has been deactivated. Please contact support.", null, null, null);
             }
 
             var sessionId = Guid.NewGuid().ToString("N");
@@ -372,13 +372,13 @@ namespace CoreApi.Services
                 Status = "Success (Google OAuth)"
             });
 
-            var (_, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
+            var (rawRefresh, refreshEntity) = _tokenService.GenerateRefreshToken(user.Id, sessionId);
             _context.RefreshTokens.Add(refreshEntity);
 
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("[Security Audit] Successful Google login. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}", user.Id, user.Email, sessionId);
-            return (true, "Logged in with Google successfully!", user, sessionId);
+            return (true, "Logged in with Google successfully!", user, sessionId, rawRefresh);
         }
 
         public async Task<(bool isSuccess, string message, string? accessToken, string? newRawRefreshToken)> RefreshTokenAsync(string rawRefreshToken, string? ipAddress, string? userAgent)

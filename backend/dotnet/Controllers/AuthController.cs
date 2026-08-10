@@ -46,7 +46,7 @@ namespace CoreApi.Controllers
             if (user != null && result.sessionId != null)
             {
                 var token = _tokenService.CreateAccessToken(user, result.sessionId);
-                var (rawRefresh, _) = _tokenService.GenerateRefreshToken(user.Id, result.sessionId);
+                var rawRefresh = result.rawRefreshToken!;
 
                 _tokenService.SetAuthCookies(Response, token, rawRefresh);
 
@@ -96,7 +96,7 @@ namespace CoreApi.Controllers
             }
 
             var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
-            var (rawRefresh, _) = _tokenService.GenerateRefreshToken(result.user!.Id, result.sessionId!);
+            var rawRefresh = result.rawRefreshToken!;
 
             _tokenService.SetAuthCookies(Response, token, rawRefresh);
 
@@ -140,7 +140,7 @@ namespace CoreApi.Controllers
             }
 
             var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
-            var (rawRefresh, _) = _tokenService.GenerateRefreshToken(result.user!.Id, result.sessionId!);
+            var rawRefresh = result.rawRefreshToken!;
 
             _tokenService.SetAuthCookies(Response, token, rawRefresh);
 
