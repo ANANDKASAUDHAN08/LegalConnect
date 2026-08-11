@@ -9,7 +9,13 @@ import { CommonModule } from '@angular/common';
   styleUrl: './skeleton.component.scss'
 })
 export class SkeletonComponent {
+  @Input() type: 'line' | 'card' | 'table' | 'grid' | 'reader' | 'stat' = 'line';
   @Input() width = '100%';
   @Input() height = '20px';
-  @Input() borderRadius = 'var(--radius-md)';
+  @Input() borderRadius = '12px';
+  @Input() count = 3;
+
+  get countArray(): number[] {
+    return Array.from({ length: this.count }, (_, i) => i);
+  }
 }

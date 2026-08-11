@@ -83,8 +83,11 @@ export class AdminApiService {
 
   // -- Bare Acts Delegates --
   getActs(): Observable<any> { return this.content.getActs(); }
+  createAct(data: any): Observable<any> { return this.content.createAct(data); }
   getActDetail(shortName: string): Observable<any> { return this.content.getActDetail(shortName); }
   updateSection(shortName: string, sectionId: string, data: any): Observable<any> { return this.content.updateSection(shortName, sectionId, data); }
+  patchActMetadata(shortName: string, data: any): Observable<any> { return this.content.patchActMetadata(shortName, data); }
+  deleteAct(shortName: string): Observable<any> { return this.content.deleteAct(shortName); }
 
   // -- Resources Delegates --
   getResources(params: any = {}): Observable<any> { return this.content.getResources(params); }

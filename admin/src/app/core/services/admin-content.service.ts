@@ -16,12 +16,24 @@ export class AdminContentService {
     return this.http.get(`${this.NODE_API}/acts?refresh=true`);
   }
 
+  createAct(data: any): Observable<any> {
+    return this.http.post(`${this.NODE_API}/admin/acts`, data);
+  }
+
   getActDetail(shortName: string): Observable<any> {
     return this.http.get(`${this.NODE_API}/acts/${shortName}?refresh=true`);
   }
 
   updateSection(shortName: string, sectionId: string, data: any): Observable<any> {
-    return this.http.put(`${this.NODE_API}/legal/admin/sections/${sectionId}`, { shortName, ...data });
+    return this.http.put(`${this.NODE_API}/admin/sections/${sectionId}`, { shortName, ...data });
+  }
+
+  patchActMetadata(shortName: string, data: { actName?: string; newShortName?: string; year?: number; description?: string }): Observable<any> {
+    return this.http.patch(`${this.NODE_API}/admin/acts/${shortName}/metadata`, data);
+  }
+
+  deleteAct(shortName: string): Observable<any> {
+    return this.http.delete(`${this.NODE_API}/admin/acts/${shortName}`);
   }
 
   // -- Legal Resources --

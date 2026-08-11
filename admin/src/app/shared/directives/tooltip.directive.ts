@@ -14,32 +14,44 @@ import {
 export class TooltipDirective implements OnDestroy {
   @Input('adminTooltip') tooltipText = '';
   @Input() tooltipPosition: 'top' | 'bottom' | 'left' | 'right' = 'top';
+  @Input() tooltipDelay = 150; // ms delay before showing
 
   private tooltipElement: HTMLElement | null = null;
+  private showTimeout: any = null;
 
   constructor(private el: ElementRef, private renderer: Renderer2) { }
 
   @HostListener('mouseenter')
   onMouseEnter(): void {
     if (!this.tooltipText) return;
-    this.createTooltip();
+    this.clearTimer();
+    this.showTimeout = setTimeout(() => {
+      this.createTooltip();
+    }, this.tooltipDelay);
   }
 
   @HostListener('mouseleave')
   @HostListener('click')
   @HostListener('window:scroll')
   onMouseLeave(): void {
+    this.clearTimer();
     this.removeTooltip();
+  }
+
+  private clearTimer(): void {
+    if (this.showTimeout) {
+      clearTimeout(this.showTimeout);
+      this.showTimeout = null;
+    }
   }
 
   private createTooltip(): void {
     this.removeTooltip(); // Ensure no duplicates
 
     this.tooltipElement = this.renderer.createElement('div');
-    this.renderer.appendChild(
-      this.tooltipElement,
-      this.renderer.createText(this.tooltipText)
-    );
+    const textSpan = this.renderer.createElement('span');
+    this.renderer.appendChild(textSpan, this.renderer.createText(this.tooltipText));
+    this.renderer.appendChild(this.tooltipElement, textSpan);
 
     this.renderer.addClass(this.tooltipElement, 'admin-custom-tooltip');
     this.renderer.addClass(this.tooltipElement, `tooltip-${this.tooltipPosition}`);
@@ -88,8 +100,10 @@ export class TooltipDirective implements OnDestroy {
       top = hostPos.top - tooltipPos.height - 8;
     }
 
-    this.renderer.setStyle(this.tooltipElement, 'top', `${top + window.scrollY}px`);
-    this.renderer.setStyle(this.tooltipElement, 'left', `${left + window.scrollX}px`);
+    this.renderer.setStyle(this.tooltipElement, 'position', 'fixed');
+    this.renderer.setStyle(this.tooltipElement, 'top', `${top}px`);
+    this.renderer.setStyle(this.tooltipElement, 'left', `${left}px`);
+    this.renderer.setStyle(this.tooltipElement, 'z-index', '99999');
   }
 
   private removeTooltip(): void {
@@ -100,6 +114,7 @@ export class TooltipDirective implements OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.clearTimer();
     this.removeTooltip();
   }
 }
