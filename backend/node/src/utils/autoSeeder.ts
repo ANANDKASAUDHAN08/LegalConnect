@@ -3,6 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
 import BareAct, { SectionModel, IChapter, ISection } from '../models/BareAct';
+import { normalizeActInfo } from './actNormalizer';
 import HelpCategory from '../models/HelpCategory';
 import HelpHelpline from '../models/HelpHelpline';
 import LegalResource from '../models/LegalResource';
@@ -469,6 +470,10 @@ export const seedFullDatabaseIfEmpty = async () => {
       console.log(`  Found ${centralActs.length} acts in Central Acts Library seed.`);
 
       for (const act of centralActs) {
+        const norm = normalizeActInfo(act.actName || act.name || act.title, act.shortName, act.year);
+        act.actName = norm.actName;
+        act.shortName = norm.shortName;
+
         // Skip acts we already seeded (Constitution, BNS, etc. to avoid duplicates)
         if (actsToInsert.some(a => a.shortName.toUpperCase() === act.shortName.toUpperCase())) {
           continue;

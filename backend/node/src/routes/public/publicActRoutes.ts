@@ -4,8 +4,32 @@ import { AppError } from '../../utils/AppError';
 import BareAct, { SectionModel } from '../../models/BareAct';
 import { getCache, setCache } from '../../services/statsService';
 import { normalizeActShortName } from '../../utils/geoUtils';
+import { normalizeActInfo } from '../../utils/actNormalizer';
 
 const router = Router();
+
+/**
+ * Ensures a value from MongoDB is always returned as a plain string.
+ * Prevents [object Object] rendering bugs when nested documents
+ * leak through as raw objects instead of strings.
+ */
+function safeString(val: any): string {
+  if (val === null || val === undefined) return '';
+  if (typeof val === 'string') {
+    // Strip literal [object Object] artifacts baked into database strings
+    return val.replace(/\[object\s+Object\]/gi, '').replace(/;\s*$/, '').trim();
+  }
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if (Array.isArray(val)) {
+    return val.map(item => {
+      if (typeof item === 'string') return item.replace(/\[object\s+Object\]/gi, '');
+      if (item && typeof item === 'object' && item.text) return item.text;
+      return '';
+    }).filter(Boolean).join('\n');
+  }
+  if (typeof val === 'object' && val.text) return String(val.text);
+  try { return JSON.stringify(val); } catch { return ''; }
+}
 
 // GET /acts - Get all acts (name, shortName, year, description, chapters)
 router.get('/acts', asyncHandler(async (req: Request, res: Response) => {
@@ -17,14 +41,26 @@ router.get('/acts', asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  const acts = await BareAct.find({}, 'actName shortName year description chapters');
-  await setCache('legal:acts', acts);
+  const acts = await BareAct.find({}, 'actName shortName year description chapters updatedAt').lean();
+  const normalizedActs = acts.map((act: any) => {
+    const rawTitle = act.actName || act.name || act.title;
+    const norm = normalizeActInfo(rawTitle, act.shortName, act.year);
+    return {
+      ...act,
+      actName: norm.actName,
+      name: norm.actName,
+      shortName: norm.shortName,
+      updatedAt: (act as any).updatedAt || null
+    };
+  });
+
+  await setCache('legal:acts', normalizedActs);
   if (req.query.refresh === 'true') {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   } else {
     res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
   }
-  res.json({ success: true, count: acts.length, data: acts });
+  res.json({ success: true, count: normalizedActs.length, data: normalizedActs });
 }));
 
 // GET /acts/:shortName - Get detailed act structure with sections
@@ -44,8 +80,12 @@ router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
     throw AppError.notFound('Act not found.');
   }
 
-  const actObj = act.toObject ? act.toObject() : { ...act };
-  actObj.shortName = shortName;
+  const actObj: any = act.toObject ? act.toObject() : { ...act };
+  const rawTitle = actObj.actName || actObj.name || actObj.title;
+  const norm = normalizeActInfo(rawTitle, actObj.shortName, actObj.year);
+  actObj.actName = norm.actName;
+  actObj.name = norm.actName;
+  actObj.shortName = norm.shortName;
 
   // Join full section documents from SectionModel to get complete legal provisions, clauses, and content blocks
   const fullSections = await SectionModel.find({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i') }).lean();
@@ -66,11 +106,13 @@ router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
             let processedSec = { ...sec };
 
             if (fullSec) {
-              let blocks = fullSec.content_blocks || [];
-              blocks = blocks.filter((b: any) => {
+              let blocks = (fullSec.content_blocks || []).map((b: any) => ({
+                ...b,
+                text: safeString(b.text)
+              })).filter((b: any) => {
                 const txt = (b.text || '').trim();
                 return !/^(February|January|March|April|May|June|July|August|September|October|November|December),\s*\d{4},?\s*see/i.test(txt) &&
-                  !/^Gazette of India/i.test(txt);
+                  !/^Gazette of India/i.test(txt) && txt.length > 0;
               });
 
               blocks.sort((a: any, b: any) => {
@@ -87,12 +129,12 @@ router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
               processedSec = {
                 ...sec,
                 _id: fullSec._id,
-                content: fullSec.content,
-                content_hi: fullSec.content_hi,
+                content: safeString(fullSec.content),
+                content_hi: safeString(fullSec.content_hi),
                 content_blocks: blocks,
-                content_blocks_hi: fullSec.content_blocks_hi,
-                introduction_text: fullSec.content || fullSec.introduction_text || sec.introduction_text,
-                introduction_text_hi: fullSec.content_hi || fullSec.introduction_text_hi || sec.introduction_text_hi
+                content_blocks_hi: (fullSec.content_blocks_hi || []).map((b: any) => ({ ...b, text: safeString(b.text) })),
+                introduction_text: safeString(fullSec.content || fullSec.introduction_text || sec.introduction_text),
+                introduction_text_hi: safeString(fullSec.content_hi || fullSec.introduction_text_hi || sec.introduction_text_hi)
               };
             }
 
