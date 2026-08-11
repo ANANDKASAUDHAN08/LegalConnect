@@ -2,3 +2,55 @@
   display: block;
   width: 100%;
 }
+
+/* ── Era Accent Stripes ── */
+.act-card-stripe {
+  transition: opacity 0.3s ease;
+}
+
+.act-card-stripe.era-modern {
+  background: linear-gradient(90deg, #10b981, #059669, #34d399);
+}
+
+.act-card-stripe.era-recent {
+  background: linear-gradient(90deg, #6366f1, #818cf8, #6366f1);
+}
+
+.act-card-stripe.era-historical {
+  background: linear-gradient(90deg, #f59e0b, #d97706, #fbbf24);
+}
+
+/* ── Card Styles ── */
+.act-card {
+  animation: card-fade-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes card-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Gradient fade on description overflow */
+.act-card-desc {
+  -webkit-mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 60%, transparent 100%);
+}
+
+/* Card hover accent glow */
+.act-card:hover .act-card-stripe {
+  opacity: 1;
+  filter: brightness(1.3);
+}
+
+.act-card:hover {
+  box-shadow:
+    0 4px 20px rgba(99, 102, 241, 0.08),
+    0 0 0 1px rgba(99, 102, 241, 0.15);
+}

@@ -1,59 +1,590 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="p-2 w-full flex flex-col gap-5">
 
-  <!-- --- 0. Header Banner --- -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
-    <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-semibold text-purple-300 w-fit">
+  <!-- ═══ Header Banner & Metrics ═══ -->
+  <div
+    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-6 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl animate-in">
+    <div class="flex flex-col gap-2">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-purple-500/30 bg-purple-500/10 text-xs font-semibold text-purple-300 w-fit">
         <span class="w-2 h-2 rounded-full bg-purple-400 animate-ping"></span>
-        <span>Statutory Bare Acts Roster</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Statutory Bare Acts Registry</span>
       </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Bare Acts & Statutory Content Directory</h1>
-      <p class="text-xs text-slate-400">
-        Manage statutory legal acts, chapters, and section content stored in MongoDB.
+      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight">Bare Acts & Statutory Content</h1>
+      <p class="text-xs text-slate-400 max-w-2xl leading-relaxed">
+        Centralized repository of Indian statutory acts, codes, chapters, and section content digitized for
+        LegalConnect intelligence engines.
       </p>
     </div>
 
-    <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="fetchActs()" [adminTooltip]="'Refresh statutory acts list'" tooltipPosition="top">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="1 4 1 10 7 10"></polyline>
-        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-      </svg>
-      <span>Refresh Directory</span>
-    </button>
+    <!-- Metric Cards & Actions -->
+    <div class="flex flex-wrap items-center gap-3">
+      <!-- Total Acts -->
+      <div
+        class="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-white/5 bg-slate-800/50 text-xs shadow-inner">
+        <div class="p-2 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Total Acts</span>
+          <span class="text-base font-extrabold text-slate-100">{{ totalActsCount }}</span>
+        </div>
+      </div>
+
+      <!-- Chapters -->
+      <div
+        class="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-white/5 bg-slate-800/50 text-xs shadow-inner">
+        <div class="p-2 rounded-lg bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Chapters</span>
+          <span class="text-base font-extrabold text-slate-100">{{ totalChaptersCount }}</span>
+        </div>
+      </div>
+
+      <!-- Sections -->
+      <div
+        class="flex items-center gap-3 px-4 py-2.5 rounded-xl border border-white/5 bg-slate-800/50 text-xs shadow-inner">
+        <div class="p-2 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <span class="text-slate-400 text-[10px] uppercase font-bold tracking-wider">Sections</span>
+          <span class="text-base font-extrabold text-slate-100">{{ totalSectionsCount }}</span>
+        </div>
+      </div>
+
+      <!-- Refresh -->
+      <button class="btn btn-secondary flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl"
+        (click)="fetchActs()" [adminTooltip]="'Refresh acts list from database'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" [class.animate-spin]="isLoading">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+        <span>Refresh</span>
+      </button>
+
+      <!-- Create New Act -->
+      <button
+        class="btn btn-primary flex items-center gap-2 px-4 py-2.5 text-xs font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/20"
+        (click)="openCreateModal()" [adminTooltip]="'Create a new statutory Bare Act entry'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Create New Act</span>
+      </button>
+    </div>
   </div>
 
-  <!-- --- 1. Acts Grid --- -->
-  @if (isLoading) {
-    <div class="glass-card p-6 rounded-2xl border border-white/10 bg-slate-900/70">
-      <admin-skeleton type="table"></admin-skeleton>
+  <!-- ═══ Toolbar — Search, Filters, Sort ═══ -->
+  <div
+    class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4 animate-in">
+    <!-- Search -->
+    <div class="relative flex-1 w-full max-w-lg">
+      <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+      </div>
+      <input type="text"
+        class="form-input w-full pl-10 pr-9 py-2 bg-slate-950/60 border border-slate-800 text-slate-100 placeholder-slate-500 rounded-xl text-xs focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all"
+        placeholder="Search by act name, abbreviation (BNS, IPC), or year..." [(ngModel)]="searchQuery"
+        (ngModelChange)="onSearchChange()" />
+      @if (searchQuery) {
+      <button class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-200"
+        (click)="searchQuery = ''; onSearchChange()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+      }
     </div>
+
+    <!-- Filters & Sort -->
+    <div class="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0">
+      <!-- Era Filter Pills -->
+      <div class="flex bg-slate-950/60 p-1 rounded-xl border border-slate-800/80 text-xs">
+        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+          [class.bg-indigo-600]="yearFilter === 'all'" [class.text-white]="yearFilter === 'all'"
+          [class.text-slate-400]="yearFilter !== 'all'" (click)="yearFilter = 'all'; onSearchChange()"
+          [adminTooltip]="'Show all statutory acts'" tooltipPosition="top">
+          All Laws
+        </button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5"
+          [class.bg-indigo-600]="yearFilter === 'new'" [class.text-white]="yearFilter === 'new'"
+          [class.text-slate-400]="yearFilter !== 'new'" (click)="yearFilter = 'new'; onSearchChange()"
+          [adminTooltip]="'Show acts enacted in year 2000 or later'" tooltipPosition="top">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          Modern (2000+)
+        </button>
+        <button class="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+          [class.bg-indigo-600]="yearFilter === 'historical'" [class.text-white]="yearFilter === 'historical'"
+          [class.text-slate-400]="yearFilter !== 'historical'" (click)="yearFilter = 'historical'; onSearchChange()"
+          [adminTooltip]="'Show acts enacted before year 2000'" tooltipPosition="top">
+          Pre-2000
+        </button>
+      </div>
+
+      <!-- Sort Select -->
+      <div class="flex items-center gap-2">
+        <label class="text-xs text-slate-400 font-medium hidden sm:inline">Sort:</label>
+        <select
+          class="form-select bg-slate-950/60 border border-slate-800 text-slate-200 rounded-xl text-xs py-1.5 px-3 focus:border-indigo-500"
+          [(ngModel)]="sortBy">
+          <option value="name">Name (A-Z)</option>
+          <option value="year-desc">Year (Newest First)</option>
+          <option value="year-asc">Year (Oldest First)</option>
+          <option value="chapters-desc">Most Chapters</option>
+          <option value="sections-desc">Most Sections</option>
+        </select>
+      </div>
+
+      <!-- Results Count Badge -->
+      <div
+        class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-[11px] text-slate-300 font-medium">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+        </svg>
+        {{ filteredAndSortedActs.length }} of {{ totalActsCount }}
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ Acts Grid ═══ -->
+  @if (isLoading) {
+  <div class="p-2">
+    <admin-skeleton type="grid" [count]="6"></admin-skeleton>
+  </div>
   } @else {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-in">
-      @for (act of acts; track act.shortName) {
-        <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl hover:border-indigo-500/30 transition-all flex flex-col justify-between gap-3 cursor-pointer" (click)="openActDetail(act.shortName, true)">
-          <div class="flex items-center justify-between">
-            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-purple-500/10 text-purple-300 border-purple-500/30">{{ act.shortName }}</span>
-            <span class="text-xs text-slate-400 font-medium">Year {{ act.year }}</span>
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 animate-in">
+    @for (act of visibleActs; track act.shortName; let idx = $index) {
+    <div
+      class="act-card glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl hover:border-indigo-500/40 hover:shadow-indigo-500/5 hover:-translate-y-0.5 transition-all flex flex-col justify-between cursor-pointer group overflow-hidden"
+      [style.animation-delay]="(idx % 30) * 40 + 'ms'" (click)="openActDetail(act.shortName, true)">
+
+      <!-- Era Accent Stripe -->
+      <div class="act-card-stripe h-1 w-full" [ngClass]="getEraClass(act.year)"></div>
+
+      <div class="p-5 flex flex-col gap-3.5 flex-1">
+        <!-- Card Top Row -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <span
+              class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold border bg-purple-500/10 text-purple-300 border-purple-500/30 group-hover:border-purple-400/50 transition-colors tracking-wide">
+              {{ act.shortName }}
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-bold border bg-slate-800/80 text-slate-400 border-slate-700/50"
+              [adminTooltip]="getEraLabel(act.year)" tooltipPosition="top">
+              {{ act.year }}
+            </span>
           </div>
-          <div class="flex flex-col gap-1">
-            <h4 class="text-base font-bold text-slate-100 line-clamp-2">{{ act.actName }}</h4>
-            <p class="text-xs text-slate-400 leading-relaxed line-clamp-3">{{ act.description || 'Statutory legal act registered in database.' }}</p>
-          </div>
-          <div class="flex items-center justify-between pt-3 border-t border-slate-800/80 mt-1">
-            <span class="text-xs text-slate-400 font-medium">{{ act.chapters?.length || 0 }} Chapters</span>
-            <button class="btn btn-primary btn-sm text-xs px-3 py-1.5 flex items-center gap-1" (click)="openActDetail(act.shortName, true); $event.stopPropagation();">
-              <span>Inspect Sections</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15 3 21 3 21 9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
+          <!-- Quick Actions (visible on hover) -->
+          <div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-colors"
+              (click)="openEditMetaModal(act, $event)" [adminTooltip]="'Edit act name, abbreviation, or description'"
+              tooltipPosition="top">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </button>
+            <button class="p-1.5 rounded-lg text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors"
+              (click)="confirmDeleteAct(act, $event)" [adminTooltip]="'Delete this act permanently'"
+              tooltipPosition="top">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
               </svg>
             </button>
           </div>
         </div>
-      } @empty {
-        <div class="col-span-full glass-card p-12 text-center text-slate-400 text-sm">No bare acts registered in MongoDB.</div>
+
+        <!-- Act Name -->
+        <div class="flex flex-col gap-1">
+          <h4
+            class="text-sm font-bold text-slate-100 group-hover:text-indigo-300 transition-colors line-clamp-2 leading-snug">
+            {{ act.actName }}
+          </h4>
+          @if (act.description) {
+          <p class="text-xs text-slate-400 leading-relaxed line-clamp-2 act-card-desc">
+            {{ act.description }}
+          </p>
+          }
+        </div>
+      </div>
+
+      <!-- Card Footer -->
+      <div class="px-5 pb-4 pt-3 border-t border-slate-800/80 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="text-[11px] font-medium text-slate-400 flex items-center gap-1"
+            [adminTooltip]="getChapterCount(act) + ' chapters in this act'" tooltipPosition="top">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-purple-400" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            {{ getChapterCount(act) }} Chapters
+          </span>
+          <span class="text-slate-700">·</span>
+          <span class="text-[11px] font-medium text-slate-400 flex items-center gap-1"
+            [adminTooltip]="getSectionCount(act) + ' sections in this act'" tooltipPosition="top">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-emerald-400" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+            </svg>
+            {{ getSectionCount(act) }} Sections
+          </span>
+        </div>
+
+        <button
+          class="btn btn-primary btn-sm text-[11px] px-3 py-1.5 flex items-center gap-1.5 group-hover:bg-indigo-500 transition-colors shadow-md rounded-lg"
+          (click)="openActDetail(act.shortName, true); $event.stopPropagation();"
+          [adminTooltip]="'Open statutory reader for ' + act.shortName" tooltipPosition="top">
+          <span>Open Reader</span>
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
+      </div>
+
+    </div>
+    } @empty {
+    <div
+      class="col-span-full glass-card p-12 text-center flex flex-col items-center justify-center gap-4 rounded-2xl border border-white/10 bg-slate-900/70">
+      <div class="p-4 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/50">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          <line x1="8" y1="11" x2="14" y2="11"></line>
+        </svg>
+      </div>
+      <div class="flex flex-col gap-1 max-w-sm">
+        <h3 class="text-base font-bold text-slate-200">No Acts Found</h3>
+        <p class="text-xs text-slate-400 leading-relaxed">
+          @if (searchQuery) {
+          No statutory acts match "<span class="text-indigo-300 font-semibold">{{ searchQuery }}</span>". Try a
+          different search term or clear filters.
+          } @else {
+          No acts available in the database. Create a new act to get started.
+          }
+        </p>
+      </div>
+      @if (searchQuery || yearFilter !== 'all') {
+      <button class="btn btn-secondary text-xs px-4 py-2 flex items-center gap-2" (click)="clearSearch()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+        Clear Filters
+      </button>
       }
     </div>
+    }
+  </div>
+
+  <!-- Load More Button -->
+  @if (hasMoreActs) {
+  <div class="flex flex-col items-center gap-2 py-4 animate-in">
+    <button
+      class="btn btn-secondary px-6 py-2.5 text-xs font-semibold rounded-xl flex items-center gap-2 hover:bg-slate-800 transition-colors"
+      (click)="loadMore()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="7 13 12 18 17 13"></polyline>
+        <polyline points="7 6 12 11 17 6"></polyline>
+      </svg>
+      Load More ({{ remainingCount }} remaining)
+    </button>
+    <span class="text-[10px] text-slate-500">Showing {{ visibleActs.length }} of {{ filteredAndSortedActs.length }}
+      acts</span>
+  </div>
+  }
+  }
+
+  <!-- ═══ Create New Act Modal ═══ -->
+  @if (isCreateModalOpen) {
+  <div
+    class="fixed inset-0 z-[50] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto animate-in">
+    <div
+      class="glass-card w-full max-w-2xl rounded-2xl border border-white/10 bg-slate-900 shadow-2xl p-6 flex flex-col gap-5 text-slate-100 my-8">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-4 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="12" y1="18" x2="12" y2="12"></line>
+              <line x1="9" y1="15" x2="15" y2="15"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-100">Create New Bare Act</h2>
+            <p class="text-xs text-slate-400">Add a new statutory act with initial chapter and section structure</p>
+          </div>
+        </div>
+        <button class="p-2 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
+          (click)="closeCreateModal()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Form Body -->
+      <div class="flex flex-col gap-4 text-xs">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300 flex items-center gap-1">
+            <span>Act Official Title</span>
+            <span class="text-rose-400">*</span>
+          </label>
+          <input type="text" [(ngModel)]="newActForm.actName" (ngModelChange)="onActNameChange()"
+            placeholder="e.g. Bharatiya Nyaya Sanhita, 2023"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="font-semibold text-slate-300 flex items-center gap-1">
+              <span>Short Code / Abbreviation</span>
+              <span class="text-rose-400">*</span>
+            </label>
+            <input type="text" [(ngModel)]="newActForm.shortName" placeholder="e.g. BNS, IPC"
+              class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 font-mono uppercase placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+            <span class="text-[10px] text-slate-400">Unique identifier used in URLs (e.g., /legal-content/BNS)</span>
+          </div>
+          <div class="flex flex-col gap-1.5">
+            <label class="font-semibold text-slate-300 flex items-center gap-1">
+              <span>Enactment Year</span>
+              <span class="text-rose-400">*</span>
+            </label>
+            <input type="number" [(ngModel)]="newActForm.year" placeholder="2023"
+              class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Description / Preamble</label>
+          <textarea [(ngModel)]="newActForm.description" rows="2"
+            placeholder="An Act to consolidate and amend the provisions relating to..."
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"></textarea>
+        </div>
+
+        <!-- Initial Chapter -->
+        <div class="p-3.5 rounded-xl border border-indigo-500/20 bg-indigo-950/20 flex flex-col gap-3">
+          <div class="flex items-center gap-2 text-indigo-300 font-semibold text-xs">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+            <span>Initial Chapter & Section Structure</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-medium text-slate-400">Chapter I Title</label>
+              <input type="text" [(ngModel)]="newActForm.initialChapterTitle"
+                class="input-field px-3 py-2 rounded-lg border border-white/10 bg-slate-800/90 text-slate-100">
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-medium text-slate-400">Section 1 Title</label>
+              <input type="text" [(ngModel)]="newActForm.initialSectionTitle"
+                class="input-field px-3 py-2 rounded-lg border border-white/10 bg-slate-800/90 text-slate-100">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-slate-800">
+        <button class="btn btn-secondary text-xs px-4 py-2 rounded-xl" (click)="closeCreateModal()">Cancel</button>
+        <button
+          class="btn btn-primary text-xs px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 font-semibold shadow-lg shadow-indigo-500/20"
+          [disabled]="isSubmittingAct || !newActForm.actName || !newActForm.shortName || !newActForm.year"
+          (click)="submitCreateAct()">
+          @if (isSubmittingAct) {
+          <svg class="animate-spin -ml-1 mr-1 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          <span>Saving Act...</span>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save & Publish Act</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ═══ Edit Act Metadata Modal ═══ -->
+  @if (isEditMetaModalOpen) {
+  <div
+    class="fixed inset-0 z-[50] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto animate-in"
+    (click)="closeEditMetaModal()">
+    <div
+      class="glass-card w-full max-w-lg rounded-2xl border border-white/10 bg-slate-900 shadow-2xl p-6 flex flex-col gap-5 text-slate-100"
+      (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 20h9"></path>
+              <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-slate-100">Edit Act Metadata</h2>
+            <p class="text-[11px] text-slate-400">Fix act name, short code, or description</p>
+          </div>
+        </div>
+        <button class="p-2 text-slate-400 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
+          (click)="closeEditMetaModal()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Act Name</label>
+          <input type="text" [(ngModel)]="editMetaForm.actName"
+            class="input-field w-full px-3 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold text-slate-300">Short Code</label>
+            <input type="text" [(ngModel)]="editMetaForm.shortName"
+              class="input-field w-full px-3 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 font-mono uppercase focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold text-slate-300">Year</label>
+            <input type="number" [(ngModel)]="editMetaForm.year"
+              class="input-field w-full px-3 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+          </div>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Description</label>
+          <textarea [(ngModel)]="editMetaForm.description" rows="2"
+            class="input-field w-full px-3 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800">
+        <button class="btn btn-secondary text-xs px-4 py-2 rounded-xl" (click)="closeEditMetaModal()">Cancel</button>
+        <button
+          class="btn btn-primary text-xs px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white flex items-center gap-2 font-semibold shadow-lg shadow-indigo-500/20"
+          [disabled]="isEditingMeta" (click)="submitEditMeta()">
+          @if (isEditingMeta) {
+          <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          }
+          <span>Save Changes</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- ═══ Delete Confirmation Modal ═══ -->
+  @if (deleteTarget) {
+  <div class="fixed inset-0 z-[50] flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 animate-in"
+    (click)="cancelDelete()">
+    <div
+      class="glass-card w-full max-w-md rounded-2xl border border-rose-500/30 bg-slate-900 shadow-2xl p-6 flex flex-col gap-4 text-slate-100"
+      (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+            </path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-bold text-slate-100">Delete Act Permanently?</h3>
+          <p class="text-xs text-slate-400 mt-0.5">This action cannot be undone.</p>
+        </div>
+      </div>
+      <div class="p-3 rounded-xl bg-rose-950/30 border border-rose-500/20 text-xs text-rose-200">
+        <span class="font-bold">{{ deleteTarget.actName }}</span>
+        <span class="text-rose-400 ml-1">({{ deleteTarget.shortName }})</span>
+        <span class="block mt-1 text-rose-300/70">{{ getChapterCount(deleteTarget) }} chapters and {{
+          getSectionCount(deleteTarget) }} sections will be permanently removed.</span>
+      </div>
+      <div class="flex items-center justify-end gap-3">
+        <button class="btn btn-secondary text-xs px-4 py-2 rounded-xl" (click)="cancelDelete()">Cancel</button>
+        <button
+          class="btn text-xs px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-semibold shadow-lg shadow-rose-500/20 flex items-center gap-2"
+          (click)="executeDelete()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Delete Permanently
+        </button>
+      </div>
+    </div>
+  </div>
   }
 </div>

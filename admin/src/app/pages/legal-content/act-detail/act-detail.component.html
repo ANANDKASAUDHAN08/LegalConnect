@@ -1,257 +1,760 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="p-3 w-full flex flex-col gap-6" [ngClass]="{
+    'reader-theme-light': readerTheme === 'light',
+    'reader-serif': fontFamily === 'serif'
+  }">
 
-  <!-- --- 0. Top Workspace Header --- -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl shadow-xl animate-in">
-    <div class="flex items-center gap-4">
-      <a routerLink="/legal-content" class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
-        [adminTooltip]="'Return to Bare Acts directory overview'" tooltipPosition="right">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+  <!-- ═══ HEADER — Clean 2-Row Layout ═══ -->
+  <div
+    class="act-header flex flex-col gap-4 p-5 pb-6 rounded-2xl border border-slate-800 bg-slate-900 animate-in relative z-50">
+
+    <!-- Row 1: Back + Title + Metadata -->
+    <div class="flex items-center gap-4 flex-wrap">
+      <a routerLink="/legal-content"
+        class="btn btn-secondary flex items-center gap-2 px-3 py-2 text-xs font-semibold rounded-xl shrink-0"
+        [adminTooltip]="'Return to acts directory'" tooltipPosition="right">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
           <line x1="19" y1="12" x2="5" y2="12"></line>
           <polyline points="12 19 5 12 12 5"></polyline>
         </svg>
-        <span>Back to Directory</span>
+        <span>Directory</span>
       </a>
-      <div class="flex flex-col">
-        <h1 class="text-xl font-extrabold text-[var(--text-primary)] tracking-tight">{{ act?.actName || shortName }} ({{ shortName }})</h1>
-        <span class="text-xs text-[var(--text-secondary)]">Year {{ act?.year }} - Enacted Statutory Legal Code</span>
+
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-slate-700 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+
+      <div class="flex flex-col min-w-0 flex-1">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <h1 class="act-title-text text-lg font-extrabold text-slate-100 tracking-tight truncate max-w-[550px]">
+            {{ act?.actName || shortName }}
+          </h1>
+          <span
+            class="px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold bg-purple-500/10 text-purple-300 border border-purple-500/30 shrink-0">
+            {{ shortName }}
+          </span>
+        </div>
+        <span class="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" class="text-slate-600">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          Year {{ act?.year }}
+          <span class="text-slate-700">·</span>
+          {{ totalSectionsInActCount }} Provisions
+        </span>
       </div>
     </div>
 
-    <div class="flex-1 max-w-md">
-      <div class="search-box relative" [adminTooltip]="'Filter sections by section number or title keyword'" tooltipPosition="top">
-        <input type="text" class="form-input w-full bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] placeholder-[var(--text-tertiary)] rounded-lg text-sm p-2" placeholder="Search section number or keyword..."
-          [(ngModel)]="searchQuery" />
+    <!-- Row 2: Search + Compact Controls -->
+    <div class="flex items-center gap-3 flex-wrap">
+      <!-- Search Box -->
+      <div class="flex-1 max-w-lg min-w-[200px]">
+        <div class="relative">
+          <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <input #searchInput type="text"
+            class="form-input w-full pl-10 pr-24 py-2.5 bg-slate-950/50 border border-slate-800/80 text-slate-100 placeholder-slate-600 rounded-xl text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500/30 transition-all"
+            placeholder="Search sections..." [(ngModel)]="searchQuery" />
+          <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1.5">
+            @if (searchQuery) {
+            <span
+              class="px-2 py-0.5 rounded-md bg-indigo-500/15 text-indigo-300 text-[10px] font-semibold border border-indigo-500/20">
+              {{ totalMatchingSectionsCount }} found
+            </span>
+            <button class="text-slate-500 hover:text-slate-300 p-1 transition-colors" (click)="searchQuery = ''">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+            } @else {
+            <span
+              class="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-500 text-[10px] font-mono border border-slate-700/60">Ctrl+F</span>
+            }
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div class="flex items-center gap-3">
-      <!-- Language Selector Pill -->
-      <div class="flex bg-[var(--bg-tertiary)] p-1 rounded-xl border border-[var(--border-subtle)]">
-        <button class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors" [class.bg-indigo-600]="activeLanguage === 'en'" [class.text-white]="activeLanguage === 'en'" [class.text-[var(--text-secondary)]]="activeLanguage !== 'en'" (click)="activeLanguage = 'en'"
-          [adminTooltip]="'Display English legal provisions only'" tooltipPosition="bottom">English</button>
-        <button class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors" [class.bg-indigo-600]="activeLanguage === 'hi'" [class.text-white]="activeLanguage === 'hi'" [class.text-[var(--text-secondary)]]="activeLanguage !== 'hi'" (click)="activeLanguage = 'hi'"
-          [adminTooltip]="'Display Hindi legal text only'" tooltipPosition="bottom">हिंदी</button>
-        <button class="px-3 py-1 text-xs font-semibold rounded-lg transition-colors" [class.bg-indigo-600]="activeLanguage === 'both'" [class.text-white]="activeLanguage === 'both'" [class.text-[var(--text-secondary)]]="activeLanguage !== 'both'" (click)="activeLanguage = 'both'"
-          [adminTooltip]="'Display English & Hindi statutes side-by-side'" tooltipPosition="bottom">Dual View</button>
+      <div class="flex items-center gap-2 ml-auto">
+        <!-- Sidebar TOC Toggle Button (Focus Mode) -->
+        <button
+          class="btn btn-secondary btn-sm text-xs font-semibold px-3 py-2 flex items-center gap-1.5 rounded-xl border border-white/[0.08] transition-all"
+          [ngClass]="{ 'border-indigo-500 bg-indigo-500/10 text-indigo-300': !isTocCollapsed }" (click)="toggleToc()"
+          [adminTooltip]="isTocCollapsed ? 'Show Table of Contents (Ctrl+B)' : 'Hide Sidebar / Focus Mode (Ctrl+B)'"
+          tooltipPosition="bottom">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-slate-400" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="12" x2="15" y2="12"></line>
+            <line x1="3" y1="18" x2="18" y2="18"></line>
+          </svg>
+          <span class="hidden sm:inline">{{ isTocCollapsed ? 'Show TOC' : 'Contents' }}</span>
+        </button>
+
+        <!-- Reader Settings Button -->
+        <div class="relative z-50">
+          <button
+            class="reader-settings-toggle btn btn-secondary btn-sm text-xs font-semibold px-3 py-2 flex items-center gap-1.5 rounded-xl border border-white/[0.08] transition-all"
+            [ngClass]="{ 'border-indigo-500': showReaderSettings, 'bg-indigo-500/10': showReaderSettings }"
+            (click)="toggleReaderSettings()" [adminTooltip]="'Reader preferences'" tooltipPosition="bottom">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-slate-400" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="4" y1="21" x2="4" y2="14"></line>
+              <line x1="4" y1="10" x2="4" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12" y2="3"></line>
+              <line x1="20" y1="21" x2="20" y2="16"></line>
+              <line x1="20" y1="12" x2="20" y2="3"></line>
+              <line x1="1" y1="14" x2="7" y2="14"></line>
+              <line x1="9" y1="8" x2="15" y2="8"></line>
+              <line x1="17" y1="16" x2="23" y2="16"></line>
+            </svg>
+            <span>Reader</span>
+          </button>
+
+          <!-- Reader Settings Dropdown Panel -->
+          @if (showReaderSettings) {
+          <div class="reader-settings-dropdown" (click)="$event.stopPropagation()">
+            <!-- Language -->
+            <div class="settings-section">
+              <div class="settings-label">Language</div>
+              <div class="settings-toggle-group">
+                <button class="settings-toggle-btn" [class.active]="activeLanguage === 'en'"
+                  (click)="activeLanguage = 'en'">English</button>
+                <button class="settings-toggle-btn" [class.active]="activeLanguage === 'hi'"
+                  (click)="activeLanguage = 'hi'">हिंदी</button>
+                <button class="settings-toggle-btn" [class.active]="activeLanguage === 'both'"
+                  (click)="activeLanguage = 'both'">Both</button>
+              </div>
+            </div>
+
+            <!-- Font Size -->
+            <div class="settings-section">
+              <div class="settings-label">Font Size</div>
+              <div class="font-size-controls">
+                <button (click)="setFontScale(-10)" [adminTooltip]="'Decrease'" tooltipPosition="bottom">A−</button>
+                <span class="font-size-value">{{ fontScale }}%</span>
+                <button (click)="setFontScale(10)" [adminTooltip]="'Increase'" tooltipPosition="bottom">A+</button>
+              </div>
+            </div>
+
+            <!-- Font Family + View Mode -->
+            <div class="settings-section">
+              <div class="settings-label">Font & View</div>
+              <div class="flex gap-2">
+                <div class="settings-toggle-group flex-1">
+                  <button class="settings-toggle-btn" [class.active]="fontFamily === 'sans'"
+                    (click)="fontFamily = 'sans'">Sans</button>
+                  <button class="settings-toggle-btn" [class.active]="fontFamily === 'serif'"
+                    (click)="fontFamily = 'serif'">Serif</button>
+                </div>
+                <div class="settings-toggle-group flex-1">
+                  <button class="settings-toggle-btn" [class.active]="viewMode === 'structured'"
+                    (click)="viewMode = 'structured'">Tree</button>
+                  <button class="settings-toggle-btn" [class.active]="viewMode === 'raw'"
+                    (click)="viewMode = 'raw'">Raw</button>
+                </div>
+              </div>
+            </div>
+          </div>
+          }
+        </div>
+
+        <!-- PDF Export -->
+        <button
+          class="btn btn-secondary btn-sm text-xs font-semibold px-3 py-2 flex items-center gap-1.5 rounded-xl border border-white/8"
+          (click)="exportFullActPDF()" [adminTooltip]="'Export complete act as PDF'" tooltipPosition="bottom">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-slate-400" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M12 18v-6"></path>
+            <path d="M9 15l3 3 3-3"></path>
+          </svg>
+          <span>PDF</span>
+        </button>
+
+        <!-- Edit Mode Toggle -->
+        <button class="btn btn-sm text-xs font-semibold px-3 py-2 flex items-center gap-1.5 rounded-xl transition-all"
+          [class.btn-primary]="isEditMode" [class.btn-secondary]="!isEditMode" (click)="isEditMode = !isEditMode"
+          [adminTooltip]="isEditMode ? 'Disable editing mode' : 'Enable editing mode'" tooltipPosition="bottom">
+          @if (isEditMode) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Editing</span>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+          <span>Edit</span>
+          }
+        </button>
       </div>
-
-      <!-- Edit Mode Toggle -->
-      <button class="btn btn-sm text-xs font-semibold px-3 py-1.5 flex items-center gap-1.5" [class.btn-primary]="isEditMode" [class.btn-secondary]="!isEditMode"
-        (click)="isEditMode = !isEditMode" [adminTooltip]="'Toggle statutory text editing privileges'" tooltipPosition="left">
-        @if (isEditMode) {
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
-        <span>Editing Active</span>
-        } @else {
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 20h9"></path>
-          <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-        </svg>
-        <span>Admin Edit Mode</span>
-        }
-      </button>
     </div>
   </div>
 
-  <!-- --- 1. Main Two-Column Reader Workspace --- -->
+  <!-- ═══ Main Two-Column Layout ═══ -->
   @if (isLoading) {
-  <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 animate-in">
-    <div class="glass-card p-6 rounded-2xl">
-      <admin-skeleton type="table"></admin-skeleton>
-    </div>
-    <div class="glass-card p-6 rounded-2xl space-y-4">
-      <admin-skeleton type="card"></admin-skeleton>
-      <admin-skeleton type="card"></admin-skeleton>
-      <admin-skeleton type="card"></admin-skeleton>
-    </div>
+  <div class="p-2">
+    <admin-skeleton type="reader"></admin-skeleton>
   </div>
   } @else {
-  <div class="grid grid-cols-1 lg:grid-cols-[300px_1fr] gap-4 animate-in">
-    <!-- Left Column: Chapter & Section Navigation Index -->
-    <aside class="glass-card rounded-2xl p-4 flex flex-col gap-3 sticky top-4 max-h-[calc(100vh-140px)] overflow-hidden" [adminTooltip]="'Statutory Table of Contents - Click to jump'"
-      tooltipPosition="right">
-      <div class="flex items-center justify-between pb-2 border-b border-[var(--border-subtle)]">
-        <h4 class="font-bold text-[var(--text-primary)] text-xs uppercase tracking-wider">Table of Contents</h4>
-        <span class="px-2 py-0.5 rounded-full text-[11px] font-semibold border bg-[var(--bg-glass)] text-[var(--text-secondary)] border-[var(--border-subtle)]">{{ act?.chapters?.length || 0 }} Chapters</span>
+  <div class="grid grid-cols-1 transition-all duration-300 gap-6 animate-in"
+    [ngClass]="{ 'lg:grid-cols-[300px_1fr]': !isTocCollapsed, 'lg:grid-cols-1 max-w-5xl mx-auto w-full': isTocCollapsed }">
+
+    <!-- ── Left: Table of Contents (Soft Glass UI) ── -->
+    @if (!isTocCollapsed) {
+    <aside
+      class="toc-sidebar rounded-2xl p-4 flex flex-col gap-3 sticky top-4 max-h-[calc(100vh-90px)] overflow-hidden border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-xl transition-all">
+
+      <!-- Reading Progress Bar -->
+      <div class="reading-progress rounded-full overflow-hidden bg-slate-800/80 h-1.5 w-full">
+        <div
+          class="progress-fill h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-indigo-400 transition-all duration-300"
+          [style.width.%]="readingProgress"></div>
       </div>
 
-      <div class="overflow-y-auto flex flex-col gap-3 pr-1 text-xs">
-        @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
-        <div class="flex flex-col gap-1">
-          <div class="py-1 font-bold text-[var(--text-primary)] text-xs">
-            Chapter {{ chap.chapterNumber || chap.chapter_number }}: {{ chap.title }}
-          </div>
-          <div class="flex flex-col gap-1 pl-2 border-l border-[var(--border-subtle)]">
-            @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
-            <a class="flex items-center gap-2 p-1.5 rounded-lg text-[var(--text-secondary)] hover:bg-indigo-600/20 hover:text-[var(--text-primary)] transition-colors cursor-pointer" [class.bg-indigo-900]="activeSectionId === getSecId(sec)" [class.font-bold]="activeSectionId === getSecId(sec)"
-              (click)="scrollToSection(sec.section_number || sec.sectionNumber)">
-              <span class="font-mono text-indigo-400 font-semibold text-[11px]">Sec {{ sec.section_number || sec.sectionNumber }}</span>
-              <span class="truncate text-[11px]">{{ getCleanTitle(sec) }}</span>
-            </a>
-            }
-          </div>
+      <!-- TOC Header & Quick Stats -->
+      <div class="flex items-center justify-between pb-2 border-b border-white/5">
+        <div class="flex items-center gap-2">
+          <h4 class="font-extrabold text-slate-200 text-xs uppercase tracking-wider">Contents</h4>
+          <span
+            class="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">
+            {{ totalSectionsInActCount }} Secs
+          </span>
         </div>
-        } @empty {
-        <div class="p-4 text-xs text-[var(--text-tertiary)] text-center">No matching sections found.</div>
+        <div class="flex items-center gap-1.5 text-[10px]">
+          <button
+            class="px-2 py-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition-all font-semibold flex items-center gap-1 border border-white/5 bg-slate-950/40"
+            (click)="toggleAllTocChapters($event)"
+            [adminTooltip]="areAllTocChaptersCollapsed ? 'Expand all chapters' : 'Collapse all chapters'"
+            tooltipPosition="top">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              class="text-indigo-400 transition-transform duration-200" [class.rotate-180]="areAllTocChaptersCollapsed">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+            <span>{{ areAllTocChaptersCollapsed ? 'Expand All' : 'Collapse All' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Inline TOC Search Input -->
+      <div class="relative w-full">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </div>
+        <input type="text"
+          class="toc-search-input w-full pl-8 pr-7 py-1.5 bg-slate-950/60 border border-white/10 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+          placeholder="Filter TOC..." [(ngModel)]="tocSearchQuery" />
+        @if (tocSearchQuery) {
+        <button class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-500 hover:text-slate-300"
+          (click)="tocSearchQuery = ''">
+          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
         }
       </div>
-    </aside>
 
-    <!-- Right Column: Full-Width Document Reader -->
-    <main class="flex flex-col gap-6">
-      @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
-      <div class="flex flex-col gap-4">
-        <div class="flex items-center gap-3 pb-2 border-b border-[var(--border-subtle)]">
-          <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-purple-500/10 text-purple-300 border-purple-500/30">Chapter {{ chap.chapterNumber || chap.chapter_number }}</span>
-          <h3 class="text-lg font-bold text-[var(--text-primary)]">{{ chap.title }}</h3>
-        </div>
-
-        <div class="flex flex-col gap-4">
-          @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
-          <div class="glass-card p-5 rounded-2xl border border-[var(--border-subtle)] shadow-xl flex flex-col gap-3 transition-all" [id]="'section-' + (sec.section_number || sec.sectionNumber)"
-            [class.border-indigo-500]="activeSectionId === getSecId(sec)">
-            <div class="flex items-start justify-between gap-4 flex-wrap">
-              <div class="flex items-center gap-3">
-                <span class="px-2.5 py-1 rounded-full text-xs font-mono font-bold border bg-indigo-500/10 text-indigo-300 border-indigo-500/30">Sec {{ sec.section_number || sec.sectionNumber }}</span>
-                <h4 class="text-base font-bold text-[var(--text-primary)]">{{ getCleanTitle(sec) }}</h4>
-              </div>
-
-              <div class="flex items-center gap-2">
-                @if (activeLanguage === 'en') {
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-300 border border-indigo-500/20">ENGLISH STATUTE</span>
-                } @else if (activeLanguage === 'hi') {
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">हिंदी पाठ</span>
-                } @else if (activeLanguage === 'both') {
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-purple-500/10 text-purple-300 border border-purple-500/20">DUAL VIEW</span>
-                }
-
-                <button class="btn btn-secondary btn-xs text-xs px-2.5 py-1 flex items-center gap-1" (click)="copySectionCitation(sec)"
-                  [adminTooltip]="'Copy formal legal citation'" tooltipPosition="top">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                  <span>Cite</span>
-                </button>
-
-                <button class="btn btn-secondary btn-xs text-xs px-2.5 py-1 flex items-center gap-1" (click)="copySectionLink(sec)"
-                  [adminTooltip]="'Copy direct anchor link to Section ' + (sec.section_number || sec.sectionNumber)"
-                  tooltipPosition="top">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                  </svg>
-                  <span>Link</span>
-                </button>
-
-                @if (isEditMode) {
-                <button class="btn btn-primary btn-xs text-xs px-2.5 py-1 flex items-center gap-1" (click)="openEditSection(sec)"
-                  [adminTooltip]="'Edit statutory text, title, or Hindi translation'" tooltipPosition="left">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                  <span>Edit</span>
-                </button>
-                }
-              </div>
+      <!-- Chapters & Sections List -->
+      <div class="overflow-y-auto flex flex-col gap-2.5 pr-1 custom-scrollbar">
+        @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
+        <div class="flex flex-col gap-1">
+          <!-- Chapter Header Card -->
+          <div
+            class="toc-chapter-header py-2 px-3 rounded-xl flex items-center justify-between cursor-pointer text-slate-300 bg-slate-800/40 border border-white/[0.04] hover:bg-slate-800/80 hover:border-white/10 transition-all"
+            (click)="toggleTocChapterCollapse(getChapKey(chap), $event)">
+            <span class="truncate pr-2 flex items-center gap-2 text-xs font-bold text-slate-200">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                class="text-indigo-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Ch. {{ chap.chapterNumber || chap.chapter_number }}: {{ chap.title }}
+            </span>
+            <div class="flex items-center gap-2 shrink-0">
+              <span
+                class="px-1.5 py-0.5 rounded-md text-[9px] font-mono font-medium bg-slate-900 text-slate-400 border border-white/5">
+                {{ chap.sections?.length || 0 }}
+              </span>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                class="text-slate-500 transition-transform duration-200"
+                [class.rotate-180]="tocCollapsedChapters[getChapKey(chap)]" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
             </div>
+          </div>
 
-            <!-- English Text View -->
-            @if (activeLanguage === 'en' || activeLanguage === 'both') {
-            <div class="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-xs leading-relaxed text-[var(--text-primary)]">
-              @if (sec.content_blocks && sec.content_blocks.length > 0) {
-              <div class="flex flex-col gap-3">
-                @for (block of sec.content_blocks; track $index) {
-                <div class="p-3 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-subtle)]" [ngStyle]="getClauseStyle(block.text, block.type)">
-                  @if (block.type === 'explanation') {
-                  <span class="inline-block mb-1 px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">EXPLANATION</span>
-                  } @else if (block.type === 'illustration') {
-                  <span class="inline-block mb-1 px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20">ILLUSTRATION</span>
-                  }
-                  <p class="text-xs text-[var(--text-primary)] leading-relaxed">{{ block.text }}</p>
-                </div>
-                }
-              </div>
-              } @else {
-              <p class="whitespace-pre-wrap font-sans text-xs text-[var(--text-primary)] leading-relaxed">{{ getCleanBody(sec) }}</p>
-              }
-            </div>
-            }
-
-            <!-- Hindi Text View -->
-            @if ((activeLanguage === 'hi' || activeLanguage === 'both') && (sec.title_hi || sec.introduction_text_hi ||
-            sec.content_hi || sec.text_hi)) {
-            <div class="p-4 rounded-xl bg-[var(--bg-tertiary)] border border-[var(--border-subtle)] text-xs leading-relaxed text-[var(--text-primary)] mt-2">
-              @if (sec.title_hi) {
-              <h5 class="font-bold text-[var(--text-primary)] text-xs mb-2">{{ sec.title_hi }}</h5>
-              }
-              @if (sec.content_blocks_hi && sec.content_blocks_hi.length > 0) {
-              <div class="flex flex-col gap-3">
-                @for (block of sec.content_blocks_hi; track $index) {
-                <div class="p-3 rounded-lg bg-[var(--bg-glass)] border border-[var(--border-subtle)]" [ngStyle]="getClauseStyle(block.text, block.type)">
-                  <p class="text-xs text-[var(--text-primary)] leading-relaxed">{{ block.text }}</p>
-                </div>
-                }
-              </div>
-              } @else {
-              <p class="whitespace-pre-wrap font-sans text-xs text-[var(--text-primary)] leading-relaxed">{{ sec.content_hi || sec.introduction_text_hi || sec.text_hi }}</p>
-              }
+          <!-- Section Items -->
+          @if (!tocCollapsedChapters[getChapKey(chap)]) {
+          <div class="flex flex-col gap-1 ml-2.5 border-l border-white/10 pl-2">
+            @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
+            <div class="toc-section-item" [ngClass]="{ 'toc-active': activeSectionId === getSecId(sec) }"
+              (click)="scrollToSection(sec.section_number || sec.sectionNumber)">
+              <span class="toc-sec-num">{{ sec.section_number || sec.sectionNumber }}</span>
+              <span class="toc-sec-title">{{ getCleanTitle(sec) }}</span>
             </div>
             }
           </div>
           }
         </div>
+        } @empty {
+        <div class="p-4 text-xs text-slate-500 text-center rounded-xl border border-white/5 bg-slate-950/40">
+          No provisions match "{{ tocSearchQuery || searchQuery }}".
+        </div>
+        }
+      </div>
+    </aside>
+    }
+
+    <!-- ── Right: Document Reader ── -->
+    <main class="flex flex-col gap-8">
+      @if (isTocCollapsed) {
+      <div
+        class="flex items-center justify-between px-4 py-2.5 rounded-2xl border border-indigo-500/20 bg-indigo-500/10 text-xs text-slate-300 animate-in">
+        <div class="flex items-center gap-2">
+          <span
+            class="px-2 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 font-bold text-[10px] tracking-wider uppercase">Focus
+            Reading Mode</span>
+          <span class="text-slate-400 hidden sm:inline">Table of contents hidden for maximum reading space</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <button (click)="toggleJumpToSection()"
+            class="text-indigo-400 hover:text-indigo-300 font-semibold flex items-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span>Jump to Section (Ctrl+G)</span>
+          </button>
+          <button (click)="toggleToc()" class="text-slate-300 hover:text-white font-bold flex items-center gap-1">
+            <span>Expand TOC (Ctrl+B)</span>
+          </button>
+        </div>
+      </div>
+      }
+      @if (useVirtualScroll) {
+      <cdk-virtual-scroll-viewport itemSize="240" class="h-[calc(100vh-160px)] w-full pr-2" #virtualViewport>
+        <div *cdkVirtualFor="let item of allFlatSections" class="pb-8">
+          <div class="chapter-banner mb-4">
+            <div class="flex items-center gap-3">
+              <span class="chapter-badge">Ch. {{ item.chapterNumber }}</span>
+              <span class="chapter-title">{{ item.chapterTitle }}</span>
+            </div>
+          </div>
+          <ng-container *ngTemplateOutlet="sectionCardTpl; context: { $implicit: item.section }"></ng-container>
+        </div>
+      </cdk-virtual-scroll-viewport>
+      } @else {
+      @for (chap of filteredChapters; track (chap.chapterNumber || chap.title)) {
+      <div class="flex flex-col gap-8">
+        <!-- Chapter Banner -->
+        <div class="chapter-banner border-b border-slate-800/50 pb-3 cursor-pointer"
+          (click)="toggleChapterCollapse(getChapKey(chap))">
+          <div class="flex items-center gap-3">
+            <span class="chapter-badge">Chapter {{ chap.chapterNumber || chap.chapter_number }}</span>
+            <h3 class="chapter-title">{{ chap.title }}</h3>
+          </div>
+          <span class="chapter-meta flex items-center gap-1.5 shrink-0">
+            {{ chap.sections?.length || 0 }} Sections
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-slate-600 transition-transform duration-200"
+              [class.rotate-180]="collapsedChapters[getChapKey(chap)]" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 12 15 18 9"></polyline>
+            </svg>
+          </span>
+        </div>
+
+        <!-- Sections -->
+        @if (!collapsedChapters[getChapKey(chap)]) {
+        <div class="flex flex-col gap-8">
+          @for (sec of chap.sections; track (sec.section_number || sec.sectionNumber || sec.title)) {
+          <ng-container *ngTemplateOutlet="sectionCardTpl; context: { $implicit: sec }"></ng-container>
+          }
+        </div>
+        }
       </div>
       } @empty {
-      <div class="glass-card p-12 text-center text-[var(--text-tertiary)] text-sm rounded-2xl">No statutory sections available for display.</div>
+      <div
+        class="p-12 text-center text-slate-500 text-sm rounded-2xl border border-white/6 bg-slate-900/40 flex flex-col items-center justify-center gap-3">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+          class="text-slate-600" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <p>No sections found matching "{{ searchQuery }}".</p>
+        <button class="btn btn-secondary text-xs px-3 py-1.5" (click)="searchQuery = ''">Clear Search</button>
+      </div>
+      }
       }
     </main>
   </div>
   }
 
-  <!-- Admin Section Edit Modal -->
-  @if (editingSection) {
-  <div class="fixed inset-0 z-[1000] bg-black/70 backdrop-blur-md flex items-center justify-center p-4 animate-in" (click)="editingSection = null">
-    <div class="glass-card max-w-2xl w-full rounded-2xl p-6 flex flex-col gap-4 shadow-2xl" (click)="$event.stopPropagation()">
-      <div class="modal-header flex items-center justify-between pb-3 border-b border-[var(--border-subtle)]">
-        <div>
-          <h3 class="text-lg font-bold text-[var(--text-primary)]">Edit Section {{ editForm.section_number }}</h3>
-          <p class="text-xs text-[var(--text-secondary)]">{{ shortName }} - Statutory Text Amendment</p>
+  <!-- ═══ Section Card Template ═══ -->
+  <ng-template #sectionCardTpl let-sec>
+    <div class="section-card" [id]="'section-' + (sec.section_number || sec.sectionNumber)"
+      [ngClass]="{ 'section-active': activeSectionId === getSecId(sec), 'section-collapsed': collapsedSections[getSecId(sec)] }">
+
+      <!-- Section Header -->
+      <div class="flex items-start justify-between gap-4 cursor-pointer" [class.mb-5]="!collapsedSections[getSecId(sec)]"
+        (click)="toggleSectionCollapse(getSecId(sec), $event)">
+        <div class="flex items-baseline gap-3 min-w-0">
+          <span class="section-number">§ {{ sec.section_number || sec.sectionNumber }}</span>
+          <h4 class="section-title">{{ getCleanTitle(sec) }}</h4>
         </div>
-        <button class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1" (click)="editingSection = null" [adminTooltip]="'Close edit modal'"
-          tooltipPosition="left">&times;</button>
+
+        <!-- Action Buttons — hover reveal -->
+        <div class="section-actions shrink-0">
+          <!-- Section Collapse Toggle Button -->
+          <button (click)="toggleSectionCollapse(getSecId(sec), $event)"
+            [adminTooltip]="collapsedSections[getSecId(sec)] ? 'Expand section content' : 'Collapse section content'"
+            tooltipPosition="top"
+            class="!text-indigo-400 hover:!text-indigo-300 hover:!bg-indigo-500/20">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="transition-transform duration-200" [class.rotate-180]="collapsedSections[getSecId(sec)]"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="18 15 12 9 6 15"></polyline>
+            </svg>
+          </button>
+          <button (click)="copySectionCitation(sec)" [adminTooltip]="'Copy citation'" tooltipPosition="top">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </button>
+          <button (click)="copySectionLink(sec)" [adminTooltip]="'Copy link'" tooltipPosition="top">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+              <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+            </svg>
+          </button>
+          <button (click)="printSection(sec)" [adminTooltip]="'Print section'" tooltipPosition="top">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+          </button>
+          @if (isEditMode) {
+          <button (click)="openEditSection(sec)" [adminTooltip]="'Edit section'" tooltipPosition="top"
+            class="!text-amber-400 hover:!text-amber-300 hover:!bg-amber-500/10">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </button>
+          }
+        </div>
       </div>
 
-      <div class="modal-body flex flex-col gap-3 text-xs">
-        <div class="flex flex-col gap-1">
-          <label class="font-semibold text-[var(--text-secondary)]">Section Title (English)</label>
-          <input type="text" class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2" [(ngModel)]="editForm.title" />
+      <!-- Section Content Body (Collapsible) -->
+      @if (!collapsedSections[getSecId(sec)]) {
+      <!-- Pending Digitization Banner -->
+      @if (!hasContent(sec)) {
+      <div class="pending-banner text-xs flex items-center justify-between gap-3">
+        <div class="flex items-center gap-2.5 text-amber-300">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-amber-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span><span class="font-bold">Pending:</span> Section {{ sec.section_number || sec.sectionNumber }} has not
+            been digitized.</span>
         </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="font-semibold text-[var(--text-secondary)]">Section Title (Hindi - title_hi)</label>
-          <input type="text" class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2" [(ngModel)]="editForm.title_hi" placeholder="e.g. एकांत परिरोध" />
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="font-semibold text-[var(--text-secondary)]">English Legal Text & Full Subsections</label>
-          <textarea class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2 text-xs" rows="6" [(ngModel)]="editForm.introduction_text"></textarea>
-        </div>
-
-        <div class="flex flex-col gap-1">
-          <label class="font-semibold text-[var(--text-secondary)]">Hindi Legal Text (introduction_text_hi / content_hi)</label>
-          <textarea class="form-input bg-[var(--bg-glass)] border-[var(--border-light)] text-[var(--text-primary)] rounded-lg p-2 text-xs" rows="6" [(ngModel)]="editForm.introduction_text_hi"></textarea>
-        </div>
-      </div>
-
-      <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-subtle)]">
-        <button class="btn btn-primary px-4 py-2 text-xs font-semibold" (click)="saveSectionEdit()" [disabled]="isSaving"
-          [adminTooltip]="'Save updated statutory text to MongoDB database'" tooltipPosition="top">
-          {{ isSaving ? 'Saving to MongoDB...' : 'Save Statutory Amendment' }}
+        @if (isEditMode) {
+        <button class="btn btn-sm btn-primary text-xs shrink-0 px-3 py-1" (click)="openEditSection(sec)">
+          Add Content
         </button>
-        <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="editingSection = null">Cancel</button>
+        }
+      </div>
+      }
+
+      <!-- English Text -->
+      <ng-container *ngIf="(activeLanguage === 'en' || activeLanguage === 'both') && hasContent(sec)">
+        <ng-container *ngIf="getParsedSection(sec) as parsed">
+
+          <!-- Plain English Summary — Demoted, subtle -->
+          <div class="summary-card mt-1 mb-4" (click)="toggleLaymanSummary(getSecId(sec))">
+            <div class="flex items-center justify-between">
+              <span class="summary-label">Summary</span>
+              <button class="summary-toggle">
+                {{ showLaymanSummary[getSecId(sec)] ? 'Hide' : 'Show' }}
+              </button>
+            </div>
+            <p *ngIf="showLaymanSummary[getSecId(sec)]" class="summary-body">
+              {{ parsed.laymanSummary }}
+            </p>
+          </div>
+
+          <!-- Defined Terms — Collapsible -->
+          <div *ngIf="parsed.definedTerms && parsed.definedTerms.length > 0" class="defined-terms-bar mb-4">
+            <div class="flex items-center justify-between mb-2 cursor-pointer"
+              (click)="toggleDefinedTerms(getSecId(sec))">
+              <span class="text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider">
+                Defined Terms ({{ parsed.definedTerms.length }})
+              </span>
+              <button class="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300">
+                {{ showDefinedTerms[getSecId(sec)] === false ? 'Show' : 'Hide' }}
+              </button>
+            </div>
+            <div *ngIf="showDefinedTerms[getSecId(sec)] !== false" class="flex flex-wrap gap-1.5">
+              <span *ngFor="let term of parsed.definedTerms" class="term-pill">
+                "{{ term }}"
+              </span>
+            </div>
+          </div>
+
+          <!-- Structured Tree View vs Raw View -->
+          <div *ngIf="viewMode === 'structured' && parsed.hasStructure; else rawViewTpl" class="clause-tree-container"
+            [style.font-size.px]="14 * (fontScale / 100)">
+            <!-- Preamble -->
+            <div *ngIf="parsed.preamble" class="clause-preamble">
+              {{ parsed.preamble }}
+            </div>
+
+            <!-- Root Level Nodes -->
+            <ng-container *ngFor="let node of parsed.nodes">
+              <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: node }"></ng-container>
+            </ng-container>
+          </div>
+
+          <ng-template #rawViewTpl>
+            <div class="raw-text-view" [style.font-size.px]="14 * (fontScale / 100)">
+              <p class="whitespace-pre-wrap">{{ getCleanBody(sec) }}</p>
+            </div>
+          </ng-template>
+
+        </ng-container>
+      </ng-container>
+
+      <!-- Hindi Text -->
+      <div
+        *ngIf="(activeLanguage === 'hi' || activeLanguage === 'both') && (sec.title_hi || sec.introduction_text_hi || sec.content_hi || sec.text_hi)"
+        class="raw-text-view mt-4" style="border-left: 3px solid rgba(245, 158, 11, 0.3);">
+        <h5 *ngIf="sec.title_hi" class="font-bold text-amber-300 text-sm mb-3 flex items-center gap-2">
+          <span
+            class="px-1.5 py-0.5 rounded bg-amber-500/10 text-[10px] font-semibold border border-amber-500/20">हिंदी</span>
+          {{ sec.title_hi }}
+        </h5>
+        <div *ngIf="sec.content_blocks_hi && sec.content_blocks_hi.length > 0; else rawHindiTpl"
+          class="flex flex-col gap-2.5">
+          <div *ngFor="let block of sec.content_blocks_hi" class="p-3 rounded-lg"
+            [ngStyle]="getClauseStyle(getCleanBlockText(block.text), block.type)">
+            <p class="text-sm text-slate-200 leading-relaxed">{{ getCleanBlockText(block.text) }}</p>
+          </div>
+        </div>
+        <ng-template #rawHindiTpl>
+          <p class="whitespace-pre-wrap text-sm text-slate-200 leading-relaxed">{{ sec.content_hi ||
+            sec.introduction_text_hi || sec.text_hi }}</p>
+        </ng-template>
+      </div>
+      }
+
+    </div>
+  </ng-template>
+
+  <!-- ═══ Recursive Clause Node Template ═══ -->
+  <ng-template #clauseNodeTpl let-node>
+    <!-- Callout nodes (Proviso / Explanation / Illustration) -->
+    <div *ngIf="isCalloutNode(node); else regularNodeTpl" class="clause-callout" [ngClass]="getCalloutClass(node.type)">
+      <span class="callout-label">{{ getCalloutLabel(node.type) }}</span>
+      <span class="clause-text-body" [innerHTML]="node.cleanText"></span>
+      <!-- Recursive children of callout -->
+      <div *ngIf="node.children && node.children.length > 0" class="mt-2">
+        <ng-container *ngFor="let child of node.children">
+          <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: child }"></ng-container>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Regular clause nodes -->
+    <ng-template #regularNodeTpl>
+      <div class="clause-node" [ngClass]="getNodeLevelClass(node.level)">
+        <div class="clause-content">
+          <!-- Inline marker -->
+          <span *ngIf="node.marker" class="clause-marker" [ngClass]="getMarkerClass(node.level)">
+            {{ node.marker }}
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="clause-text-body" [innerHTML]="node.cleanText"></div>
+          </div>
+        </div>
+
+        <!-- Recursive Nested Children -->
+        <div *ngIf="node.children && node.children.length > 0">
+          <ng-container *ngFor="let child of node.children">
+            <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: child }"></ng-container>
+          </ng-container>
+        </div>
+      </div>
+    </ng-template>
+  </ng-template>
+
+  <!-- ═══ Floating Action Buttons ═══ -->
+  @if (showBackToTop) {
+  <div class="floating-actions">
+    <button class="fab-btn slide-up" (click)="scrollToTop()" [adminTooltip]="'Scroll to top'" tooltipPosition="left">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="18 15 12 9 6 15"></polyline>
+      </svg>
+      <span>Top</span>
+    </button>
+  </div>
+  }
+
+  <!-- ═══ Jump to Section Panel ═══ -->
+  @if (showJumpToSection) {
+  <div class="settings-backdrop" (click)="showJumpToSection = false; jumpSearchQuery = ''"></div>
+  <div class="jump-to-panel">
+    <div class="jump-search">
+      <input #jumpSearchInput type="text" placeholder="Type section number or title..." [(ngModel)]="jumpSearchQuery"
+        (keydown.escape)="showJumpToSection = false; jumpSearchQuery = ''" />
+    </div>
+    <div class="jump-results">
+      @for (item of jumpFilteredSections; track item.section.section_number || item.section.sectionNumber) {
+      <div class="jump-item" (click)="scrollToSection(item.section.section_number || item.section.sectionNumber)">
+        <span class="jump-num">§ {{ item.section.section_number || item.section.sectionNumber }}</span>
+        <span class="jump-title">{{ getCleanTitle(item.section) }}</span>
+      </div>
+      } @empty {
+      <div class="p-4 text-xs text-slate-600 text-center">No sections found.</div>
+      }
+    </div>
+  </div>
+  }
+
+  <!-- ═══ Edit Section Modal ═══ -->
+  @if (editingSection) {
+  <div
+    class="edit-modal-overlay fixed inset-0 z-[1000] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4"
+    (click)="editingSection = null">
+    <div
+      class="edit-modal-card max-w-2xl w-full rounded-2xl p-6 flex flex-col gap-4 shadow-2xl border border-white/8 bg-slate-900/98"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800/60">
+        <div class="flex items-center gap-3">
+          <div class="p-2 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-100">Edit Section {{ editForm.section_number }}</h3>
+            <p class="text-[11px] text-slate-500">{{ shortName }} — Statutory Text Amendment</p>
+          </div>
+        </div>
+        <button class="p-2 text-slate-500 hover:text-slate-200 rounded-lg hover:bg-white/5 transition-colors"
+          (click)="editingSection = null">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Language Tabs -->
+      <div class="flex bg-slate-950/50 p-1 rounded-xl border border-slate-800/60 w-fit">
+        <button class="px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+          [class.bg-indigo-600]="editTab === 'en'" [class.text-white]="editTab === 'en'"
+          [class.text-slate-500]="editTab !== 'en'" (click)="editTab = 'en'">English</button>
+        <button class="px-4 py-1.5 text-xs font-semibold rounded-lg transition-colors"
+          [class.bg-indigo-600]="editTab === 'hi'" [class.text-white]="editTab === 'hi'"
+          [class.text-slate-500]="editTab !== 'hi'" (click)="editTab = 'hi'">हिंदी</button>
+      </div>
+
+      <!-- Tab Content -->
+      <div class="flex flex-col gap-3 text-sm max-h-[60vh] overflow-y-auto pr-1">
+        @if (editTab === 'en') {
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300 text-xs">Section Title (English)</label>
+          <input type="text"
+            class="form-input bg-slate-950/60 border border-slate-800/80 text-slate-100 rounded-xl p-2.5 text-sm focus:border-indigo-500"
+            [(ngModel)]="editForm.title" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <label class="font-semibold text-slate-300 text-xs">Provision Body Text (English)</label>
+            <span class="text-[10px] text-slate-600">{{ editWordCount }} words</span>
+          </div>
+          <textarea
+            class="form-input bg-slate-950/60 border border-slate-800/80 text-slate-100 rounded-xl p-2.5 text-sm focus:border-indigo-500 leading-relaxed"
+            rows="10" [(ngModel)]="editForm.introduction_text"
+            placeholder="Enter complete statutory provision text..."></textarea>
+        </div>
+        } @else {
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300 text-xs">Section Title (हिंदी)</label>
+          <input type="text"
+            class="form-input bg-slate-950/60 border border-slate-800/80 text-slate-100 rounded-xl p-2.5 text-sm focus:border-indigo-500"
+            [(ngModel)]="editForm.title_hi" placeholder="धारा का शीर्षक" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <label class="font-semibold text-slate-300 text-xs">Provision Body Text (हिंदी)</label>
+            <span class="text-[10px] text-slate-600">{{ editWordCount }} words</span>
+          </div>
+          <textarea
+            class="form-input bg-slate-950/60 border border-slate-800/80 text-slate-100 rounded-xl p-2.5 text-sm focus:border-indigo-500 leading-relaxed"
+            rows="10" [(ngModel)]="editForm.introduction_text_hi"
+            placeholder="हिन्दी में धारा का पूरा पाठ दर्ज करें..."></textarea>
+        </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800/60">
+        <button class="btn btn-secondary px-4 py-2 text-xs font-semibold rounded-xl"
+          (click)="editingSection = null">Cancel</button>
+        <button class="btn btn-primary px-5 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg"
+          (click)="saveSectionEdit()" [disabled]="isSaving">
+          @if (isSaving) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="animate-spin" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+          </svg>
+          <span>Saving...</span>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save Amendment</span>
+          }
+        </button>
       </div>
     </div>
   </div>

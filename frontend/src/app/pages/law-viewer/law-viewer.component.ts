@@ -23,6 +23,7 @@ import { LawViewerChatComponent } from './law-viewer-chat/law-viewer-chat.compon
 import { LawViewerCompareComponent } from './law-viewer-compare/law-viewer-compare.component';
 import { LawViewerCompanionComponent } from './law-viewer-companion/law-viewer-companion.component';
 import { ScrollService } from '../../services/scroll.service';
+import { LegalTextParser, ParsedLegalSection } from '../../core/utils/legal-text-parser';
 
 const FULL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*)\s+of\s+the\s+([A-Za-z\s’'\",\-]+Act(?:,\s+\d{4})?))/gi;
 const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/gi;
@@ -99,6 +100,20 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   fontSize = 16;
   selectedLanguage: 'en' | 'hi' | 'parallel' = 'en';
   translatingSection = false;
+  private parsedSectionsCache = new Map<string, ParsedLegalSection>();
+
+  getParsedSection(sec: Section | null): ParsedLegalSection | null {
+    if (!sec) return null;
+    const secId = String(sec.section_number);
+    if (this.parsedSectionsCache.has(secId)) {
+      return this.parsedSectionsCache.get(secId)!;
+    }
+    const body = (sec as any).content || sec.introduction_text || sec.title || '';
+    const title = sec.title || '';
+    const parsed = LegalTextParser.parse(typeof body === 'string' ? body : String(body), title);
+    this.parsedSectionsCache.set(secId, parsed);
+    return parsed;
+  }
 
   // Notes state
   currentNoteText = '';
