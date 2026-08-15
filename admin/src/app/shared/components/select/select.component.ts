@@ -24,6 +24,8 @@ export class SelectComponent implements OnInit, OnDestroy {
   @Input() minWidth: string = '160px';
   @Input() icon?: string;
   @Input() dropPosition: 'down' | 'up' | 'auto' = 'auto';
+  @Input() maxMenuHeight: string = '360px';
+  @Input() height?: string;
 
   @Output() valueChange = new EventEmitter<any>();
 
@@ -117,10 +119,12 @@ export class SelectComponent implements OnInit, OnDestroy {
   }
 
   get selectedOption(): SelectOption | undefined {
+    if (this.value === undefined || this.value === null) return undefined;
     return this.options.find(o => String(o.value ?? '') === String(this.value ?? ''));
   }
 
   isSelected(optValue: any): boolean {
+    if (this.value === undefined || this.value === null) return false;
     return String(optValue ?? '') === String(this.value ?? '');
   }
 

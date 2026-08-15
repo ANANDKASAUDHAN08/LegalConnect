@@ -11,7 +11,7 @@ export interface LegalClauseNode {
   term?: string;
   rawText: string;
   cleanText: string;
-  type: 'subsection' | 'clause' | 'subclause' | 'subsubclause' | 'proviso' | 'explanation' | 'illustration' | 'preamble';
+  type: 'subsection' | 'clause' | 'subclause' | 'subsubclause' | 'proviso' | 'explanation' | 'illustration' | 'exception' | 'preamble';
   children: LegalClauseNode[];
   footnotes: LegalFootnote[];
 }
@@ -26,6 +26,8 @@ export interface ParsedLegalSection {
 }
 
 export class LegalTextParser {
+  private static parseCache = new Map<string, ParsedLegalSection>();
+
   public static parse(rawText: string, sectionTitle?: string): ParsedLegalSection {
     if (!rawText || typeof rawText !== 'string') {
       return {
@@ -39,24 +41,31 @@ export class LegalTextParser {
     }
 
     const trimmed = rawText.trim();
-    const footnotesMap: Map<string, LegalFootnote> = new Map();
+    const cacheKey = `${sectionTitle || ''}__${trimmed}`;
+    if (this.parseCache.has(cacheKey)) {
+      return this.parseCache.get(cacheKey)!;
+    }
 
+    const footnotesMap: Map<string, LegalFootnote> = new Map();
     const { textWithFootnoteMarkers, footnotes } = this.extractFootnotes(trimmed, footnotesMap);
 
-    const preambleMatch = textWithFootnoteMarkers.match(/^(In this Act[^—\n]*[—:]?|Provided that|Save as otherwise provided[^—\n]*[—:]?)/i);
+    // Preamble should ONLY match dedicated statutory intro preambles in Definition sections (Section 2),
+    // such as "In this Act, unless the context otherwise requires,—" or "इस अधिनियम में, जब तक कि संदर्भ से अन्यथा अपेक्षित न हो,—"
     let preamble = '';
     let bodyText = textWithFootnoteMarkers;
 
-    if (preambleMatch && preambleMatch[0].length < 150) {
-      preamble = preambleMatch[0].trim();
-      bodyText = textWithFootnoteMarkers.substring(preamble.length).trim();
+    const defPreambleRegex = /^(?:In this Act,\s*unless the context otherwise requires[—:\s,]*|जब तक कि संदर्भ से अन्यथा अपेक्षित न हो[—:\s,]*|इस अधिनियम में,\s*जब तक कि संदर्भ से अन्यथा अपेक्षित न हो[—:\s,]*)/i;
+    const defPreambleMatch = textWithFootnoteMarkers.match(defPreambleRegex);
+    if (defPreambleMatch) {
+      preamble = defPreambleMatch[0].replace(/[—:\s,]+$/, '').trim() + '—';
+      bodyText = textWithFootnoteMarkers.substring(defPreambleMatch[0].length).trim();
     }
 
     const nodes = this.parseClauseTree(bodyText, footnotesMap);
     const definedTerms = this.extractAllDefinedTerms(nodes);
     const laymanSummary = this.generateLaymanSummary(sectionTitle, preamble, nodes, rawText);
 
-    return {
+    const parsedResult: ParsedLegalSection = {
       preamble,
       nodes,
       footnotes,
@@ -64,6 +73,15 @@ export class LegalTextParser {
       definedTerms,
       hasStructure: nodes.length > 0 || preamble.length > 0
     };
+
+    // Cache up to 1000 parsed sections to prevent unbounded memory growth
+    if (this.parseCache.size > 1000) {
+      const firstKey = this.parseCache.keys().next().value;
+      if (firstKey) this.parseCache.delete(firstKey);
+    }
+    this.parseCache.set(cacheKey, parsedResult);
+
+    return parsedResult;
   }
 
   private static extractFootnotes(text: string, footnotesMap: Map<string, LegalFootnote>): { textWithFootnoteMarkers: string; footnotes: LegalFootnote[] } {
@@ -91,49 +109,78 @@ export class LegalTextParser {
     const nodes: LegalClauseNode[] = [];
     if (!bodyText) return nodes;
 
-    const markerRegex = /(?:\s|^)(?:\(([0-9]{1,3}[A-Z]*)\)|\(([a-z]{1,3})\)|\(([ivxlcdm]+)\)|\(([A-Z]{1,2})\)|(Provided\s+that|Provided\s+further\s+that)|(Explanation\s*\d*\.?—?)|(Illustration\s*\d*\.?—?))/gi;
+    const markerRegex = /(?:^|[\r\n]+|[.;:।॥]\s*|\s{2,}|\b)(?:\(([0-9]{1,3}[A-Za-z]?|[०-९]{1,3}[क-ह]?)\)|\(([a-z]{1,2}|[क-ह])\)|\(([ivxlcdm]{1,4}|[क-ह]{2})\)|\(([A-Z])\)|(Provided\s+(?:further\s+)?that|परन्तु\s*(?:यह\s*और\s*कि|यह\s*कि|कि)?)|(Explanation\s*\d*\.?[-—:]?|स्पष्टीकरण\s*[\d०-९]*\.?[-—:]?)|(Illustration\s*\d*\.?[-—:]?|दृष्टांत\s*[\d०-९]*\.?[-—:]?)|(Exception\s*\d*\.?[-—:]?|अपवाद\s*[\d०-९]*\.?[-—:]?))/gi;
 
-    const matches: { index: number; marker: string; type: LegalClauseNode['type']; level: LegalClauseNode['level'] }[] = [];
+    interface MatchItem {
+      index: number;
+      markerLength: number;
+      marker: string;
+      type: LegalClauseNode['type'];
+      level: LegalClauseNode['level'];
+    }
+
+    const matches: MatchItem[] = [];
     let match: RegExpExecArray | null;
 
     while ((match = markerRegex.exec(bodyText)) !== null) {
-      const matchIndex = match.index;
-      const precedingText = bodyText.substring(Math.max(0, matchIndex - 35), matchIndex).trim();
+      let rawMarker = '';
+      let type: LegalClauseNode['type'] = 'clause';
+      let level: LegalClauseNode['level'] = 2;
 
-      const isCrossReference = /\b(sub-section|subsection|section|sec|clause|sub-clause|subclause|article|art|rule|paragraph|para|item|under|of)\s*$/i.test(precedingText);
+      if (match[1]) {
+        rawMarker = `(${match[1]})`;
+        type = 'subsection';
+        level = 1;
+      } else if (match[2]) {
+        rawMarker = `(${match[2]})`;
+        type = 'clause';
+        level = 2;
+      } else if (match[3]) {
+        rawMarker = `(${match[3]})`;
+        type = 'subclause';
+        level = 3;
+      } else if (match[4]) {
+        rawMarker = `(${match[4]})`;
+        type = 'subsubclause';
+        level = 4;
+      } else if (match[5]) {
+        rawMarker = match[5].trim();
+        type = 'proviso';
+        level = 2;
+      } else if (match[6]) {
+        rawMarker = match[6].trim();
+        type = 'explanation';
+        level = 2;
+      } else if (match[7]) {
+        rawMarker = match[7].trim();
+        type = 'illustration';
+        level = 2;
+      } else if (match[8]) {
+        rawMarker = match[8].trim();
+        type = 'exception';
+        level = 2;
+      } else {
+        continue;
+      }
+
+      const matchOffset = match[0].lastIndexOf(rawMarker);
+      const markerStartIndex = matchOffset !== -1 ? match.index + matchOffset : match.index;
+      const precedingText = bodyText.substring(Math.max(0, markerStartIndex - 40), markerStartIndex).trim();
+
+      const isCrossReference = /\b(sub-section|subsection|section|sec|clause|sub-clause|subclause|article|art|rule|paragraph|para|item|under|of)\s*$/i.test(precedingText) ||
+        /(?:उपधारा|उप-धारा|धारा|खंड|उप-खंड|उपखंड|अनुच्छेद|नियम|विनियम|पैरा|प्रस्तर|के\s+अधीन|के\s+अनुसार)\s*$/.test(precedingText);
 
       if (isCrossReference) {
         continue;
       }
 
-      const fullMarker = match[0].trim();
-      let type: LegalClauseNode['type'] = 'clause';
-      let level: LegalClauseNode['level'] = 2;
-
-      if (match[1]) {
-        type = 'subsection';
-        level = 1;
-      } else if (match[2]) {
-        type = 'clause';
-        level = 2;
-      } else if (match[3]) {
-        type = 'subclause';
-        level = 3;
-      } else if (match[4]) {
-        type = 'subsubclause';
-        level = 4;
-      } else if (match[5]) {
-        type = 'proviso';
-        level = 2;
-      } else if (match[6]) {
-        type = 'explanation';
-        level = 2;
-      } else if (match[7]) {
-        type = 'illustration';
-        level = 2;
-      }
-
-      matches.push({ index: matchIndex, marker: fullMarker, type, level });
+      matches.push({
+        index: markerStartIndex,
+        markerLength: rawMarker.length,
+        marker: rawMarker,
+        type,
+        level
+      });
     }
 
     if (matches.length === 0) {
@@ -144,9 +191,15 @@ export class LegalTextParser {
     const flatNodes: LegalClauseNode[] = [];
     for (let i = 0; i < matches.length; i++) {
       const curr = matches[i];
-      const start = curr.index + curr.marker.length;
+      const start = curr.index + curr.markerLength;
       const end = (i + 1 < matches.length) ? matches[i + 1].index : bodyText.length;
-      const rawTextSlice = bodyText.substring(start, end).trim();
+      let rawTextSlice = bodyText.substring(start, end).trim();
+
+      rawTextSlice = rawTextSlice.replace(/^[.;:।॥,\s—-]+/, '').replace(/[.;:।॥,\s—-]+$/, '').trim();
+
+      if (!rawTextSlice && i === 0 && matches.length > 1) {
+        continue;
+      }
 
       const node = this.createNode(`node-${i + 1}`, curr.level, curr.marker, rawTextSlice, curr.type, footnotesMap);
       flatNodes.push(node);
@@ -163,7 +216,7 @@ export class LegalTextParser {
     type: LegalClauseNode['type'],
     _footnotesMap: Map<string, LegalFootnote>
   ): LegalClauseNode {
-    const cleanedRaw = rawText.replace(/^[\s\)\.\:-]+/, '').trim();
+    const cleanedRaw = rawText.replace(/^[\s\)\.\:-—]+/, '').trim();
     const termMatch = cleanedRaw.match(/["“]([^"”]+)["”]/);
     const term = termMatch ? termMatch[1].trim() : undefined;
 
@@ -235,11 +288,11 @@ export class LegalTextParser {
 
   private static generateLaymanSummary(title?: string, preamble?: string, nodes?: LegalClauseNode[], rawText?: string): string {
     const secTitle = title || '';
-    if (secTitle.toLowerCase().includes('short title') || secTitle.toLowerCase().includes('commencement')) {
+    if (secTitle.toLowerCase().includes('short title') || secTitle.toLowerCase().includes('commencement') || secTitle.includes('संक्षिप्त नाम') || secTitle.includes('प्रारंभ')) {
       return 'Defines the legal title of the Act, geographical jurisdiction, and official date of enforcement.';
     }
 
-    if (secTitle.toLowerCase().includes('definition')) {
+    if (secTitle.toLowerCase().includes('definition') || secTitle.includes('परिभाषा')) {
       const termsCount = nodes ? this.extractAllDefinedTerms(nodes).length : 0;
       return `Establishes official legal definitions for ${termsCount > 0 ? termsCount : 'key'} statutory terms used throughout this Act.`;
     }

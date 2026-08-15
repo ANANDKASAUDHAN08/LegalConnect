@@ -1,7 +1,7 @@
 <div class="custom-select-container" [style.width]="width" [style.min-width]="minWidth" [class.is-open]="isOpen"
   [class.drop-up]="dropUp">
   <!-- Trigger Button -->
-  <div class="custom-select-trigger" [class.is-active]="(value !== '' && value !== null && value !== undefined)"
+  <div class="custom-select-trigger" [style.height]="height" [style.min-height]="height" [class.is-active]="(value !== '' && value !== null && value !== undefined && selectedOption !== undefined && selectedOption.value !== '')"
     (click)="toggleOpen()">
     <div class="trigger-label">
       @if (selectedOption?.icon || icon) {
@@ -141,7 +141,7 @@
       </div>
     </div>
     }
-    <div class="options-list">
+    <div class="options-list" [style.max-height]="maxMenuHeight">
       @for (opt of filteredOptions; track opt.value) {
       <div class="option-item" [class.selected]="isSelected(opt.value)" (click)="selectOption(opt, $event)">
         <div class="option-left">
