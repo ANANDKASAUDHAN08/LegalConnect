@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import readline from 'readline';
 import BareAct, { SectionModel, IChapter, ISection } from '../models/BareAct';
-import { normalizeActInfo } from './actNormalizer';
+import { normalizeActInfo, classifyActCategory, generateHierarchicalId } from './actNormalizer';
 import HelpCategory from '../models/HelpCategory';
 import HelpHelpline from '../models/HelpHelpline';
 import LegalResource from '../models/LegalResource';
@@ -504,6 +504,15 @@ export const seedFullDatabaseIfEmpty = async () => {
 
     // Execute upsert insertion to avoid duplicate key errors
     for (const act of actsToInsert) {
+      const norm = normalizeActInfo(act.actName || act.name || act.title, act.shortName, act.year);
+      const category = classifyActCategory(norm.actName);
+      const hierarchical_id = generateHierarchicalId(norm.shortName, act.year, category);
+      act.actName = norm.actName;
+      act.shortName = norm.shortName;
+      act.category = category;
+      act.hierarchical_id = hierarchical_id;
+      act.act_code = norm.shortName;
+
       await BareAct.updateOne({ shortName: act.shortName }, { $set: act }, { upsert: true }).catch(() => { });
     }
 
@@ -519,7 +528,7 @@ export const seedFullDatabaseIfEmpty = async () => {
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);
-    console.log(`✅ Auto-seeding check complete! Synchronized 15 Acts & ${sectionsToInsert.length} Sections in ${duration}s.`);
+    console.log(`✅ Auto-seeding check complete! Synchronized ${actsToInsert.length} Acts & ${sectionsToInsert.length} Sections in ${duration}s.`);
   } catch (error: any) {
     console.error('❌ Auto-seeding check failed:', error.message);
   }

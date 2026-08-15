@@ -7,6 +7,7 @@ import aiService from '../../services/AiService';
 import { normalizeActShortName } from '../../utils/geoUtils';
 import { splitTitle, getParsedContent } from '../../utils/textParser';
 import { defaultAiRateLimiter } from '../../middlewares/aiRateLimiter';
+import actRegistry from '../../services/actRegistry';
 
 const router = Router();
 
@@ -67,19 +68,22 @@ router.post('/help/ai-solve', asyncHandler(async (req: Request, res: Response) =
 // GET /acts/:shortName/sections/:sectionNumber/summary - Generate or get AI Summary
 router.get('/acts/:shortName/sections/:sectionNumber/summary', asyncHandler(async (req: Request, res: Response) => {
   const shortName = req.params.shortName as string;
-  const normalizedShortName = normalizeActShortName(shortName);
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
   const sectionNumber = req.params.sectionNumber as string;
 
-  const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName');
+  const act = registryEntry
+    ? await BareAct.findById(registryEntry._id, 'actName shortName')
+    : await BareAct.findOne({ shortName: resolvedShortName }, 'actName shortName');
   if (!act) {
     throw AppError.notFound('Act not found.');
   }
 
-  let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+  let section = await SectionModel.findOne({ actShortName: act.shortName, section_number: sectionNumber });
   if (!section && sectionNumber.includes('_')) {
     const baseSecNum = sectionNumber.split('_')[0];
     section = await SectionModel.findOne({
-      actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+      actShortName: act.shortName,
       section_number: baseSecNum
     });
   }
@@ -119,20 +123,23 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
   res.write(': ping\n\n');
   try {
     const shortName = req.params.shortName as string;
-    const normalizedShortName = normalizeActShortName(shortName);
+    const registryEntry = actRegistry.resolveAct(shortName);
+    const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
     const sectionNumber = req.params.sectionNumber as string;
 
-    const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName');
+    const act = registryEntry
+      ? await BareAct.findById(registryEntry._id, 'actName shortName')
+      : await BareAct.findOne({ shortName: resolvedShortName }, 'actName shortName');
     if (!act) {
       res.write(`event: error\ndata: ${JSON.stringify({ message: 'Act not found.' })}\n\n`);
       return res.end();
     }
 
-    let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+    let section = await SectionModel.findOne({ actShortName: act.shortName, section_number: sectionNumber });
     if (!section && sectionNumber.includes('_')) {
       const baseSecNum = sectionNumber.split('_')[0];
       section = await SectionModel.findOne({
-        actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+        actShortName: act.shortName,
         section_number: baseSecNum
       });
     }
@@ -174,19 +181,22 @@ router.get('/acts/:shortName/sections/:sectionNumber/summary/stream', async (req
 router.post('/acts/:shortName/sections/:sectionNumber/chat', asyncHandler(async (req: Request, res: Response) => {
   const { question } = req.body;
   const shortName = req.params.shortName as string;
-  const normalizedShortName = normalizeActShortName(shortName);
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
   const sectionNumber = req.params.sectionNumber as string;
 
-  const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName');
+  const act = registryEntry
+    ? await BareAct.findById(registryEntry._id, 'actName shortName')
+    : await BareAct.findOne({ shortName: resolvedShortName }, 'actName shortName');
   if (!act) {
     throw AppError.notFound('Act not found.');
   }
 
-  let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+  let section = await SectionModel.findOne({ actShortName: act.shortName, section_number: sectionNumber });
   if (!section && sectionNumber.includes('_')) {
     const baseSecNum = sectionNumber.split('_')[0];
     section = await SectionModel.findOne({
-      actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+      actShortName: act.shortName,
       section_number: baseSecNum
     });
   }
@@ -214,19 +224,22 @@ Provide a helpful, direct, and concise answer in plain language (1-2 short parag
 // POST /acts/:shortName/sections/:sectionNumber/translate - On-the-fly translation
 router.post('/acts/:shortName/sections/:sectionNumber/translate', asyncHandler(async (req: Request, res: Response) => {
   const shortName = req.params.shortName as string;
-  const normalizedShortName = normalizeActShortName(shortName);
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
   const sectionNumber = req.params.sectionNumber as string;
 
-  const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName shortName year');
+  const act = registryEntry
+    ? await BareAct.findById(registryEntry._id, 'actName shortName year')
+    : await BareAct.findOne({ shortName: resolvedShortName }, 'actName shortName year');
   if (!act) {
     throw AppError.notFound('Act not found.');
   }
 
-  let section = await SectionModel.findOne({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i'), section_number: sectionNumber });
+  let section = await SectionModel.findOne({ actShortName: act.shortName, section_number: sectionNumber });
   if (!section && sectionNumber.includes('_')) {
     const baseSecNum = sectionNumber.split('_')[0];
     section = await SectionModel.findOne({
-      actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+      actShortName: act.shortName,
       section_number: baseSecNum
     });
   }

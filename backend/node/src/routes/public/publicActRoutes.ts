@@ -5,6 +5,7 @@ import BareAct, { SectionModel } from '../../models/BareAct';
 import { getCache, setCache } from '../../services/statsService';
 import { normalizeActShortName } from '../../utils/geoUtils';
 import { normalizeActInfo } from '../../utils/actNormalizer';
+import actRegistry from '../../services/actRegistry';
 
 const router = Router();
 
@@ -41,7 +42,20 @@ router.get('/acts', asyncHandler(async (req: Request, res: Response) => {
     }
   }
 
-  const acts = await BareAct.find({}, 'actName shortName year description chapters updatedAt').lean();
+  // Use in-memory registry if available (O(1), zero DB queries)
+  if (actRegistry.initialized) {
+    const directory = actRegistry.getActDirectory();
+    await setCache('legal:acts', directory);
+    if (req.query.refresh === 'true') {
+      res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
+    } else {
+      res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
+    }
+    return res.json({ success: true, count: directory.length, data: directory });
+  }
+
+  // Fallback to DB query if registry not yet initialized
+  const acts = await BareAct.find({}, 'actName shortName year description category act_code legacy_short_names hierarchical_id updatedAt').lean();
   const normalizedActs = acts.map((act: any) => {
     const rawTitle = act.actName || act.name || act.title;
     const norm = normalizeActInfo(rawTitle, act.shortName, act.year);
@@ -50,6 +64,10 @@ router.get('/acts', asyncHandler(async (req: Request, res: Response) => {
       actName: norm.actName,
       name: norm.actName,
       shortName: norm.shortName,
+      legacy_short_names: act.legacy_short_names || [],
+      act_code: act.act_code || norm.shortName,
+      category: act.category || null,
+      hierarchical_id: act.hierarchical_id || null,
       updatedAt: (act as any).updatedAt || null
     };
   });
@@ -66,16 +84,31 @@ router.get('/acts', asyncHandler(async (req: Request, res: Response) => {
 // GET /acts/:shortName - Get detailed act structure with sections
 router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) => {
   const shortName = req.params.shortName as string;
-  const normalizedShortName = normalizeActShortName(shortName);
+
+  // Resolve via O(1) registry (handles ASIR, ATM, AOSAIR2, AT(, etc.)
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
+
   if (req.query.refresh !== 'true') {
-    const cached = await getCache(`legal:act:${shortName}`);
+    const cached = await getCache(`legal:act:${resolvedShortName}`);
     if (cached) {
       res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
       return res.json({ success: true, data: cached, fromCache: true });
     }
   }
 
-  const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') });
+  // Use registry _id for indexed lookup, fallback to shortName query
+  let act;
+  if (registryEntry) {
+    act = await BareAct.findById(registryEntry._id);
+  }
+  if (!act) {
+    // Fallback: try both the resolved and raw shortName
+    act = await BareAct.findOne({ shortName: resolvedShortName });
+  }
+  if (!act) {
+    act = await BareAct.findOne({ shortName: new RegExp(`^${normalizeActShortName(shortName)}$`, 'i') });
+  }
   if (!act) {
     throw AppError.notFound('Act not found.');
   }
@@ -87,8 +120,9 @@ router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
   actObj.name = norm.actName;
   actObj.shortName = norm.shortName;
 
-  // Join full section documents from SectionModel to get complete legal provisions, clauses, and content blocks
-  const fullSections = await SectionModel.find({ actShortName: new RegExp(`^${normalizedShortName}$`, 'i') }).lean();
+  // Join full section documents — use resolved shortName for section lookup
+  const dbShortName = act.shortName;
+  const fullSections = await SectionModel.find({ actShortName: dbShortName }).lean();
   if (fullSections && fullSections.length > 0) {
     const sectionMap = new Map(fullSections.map(s => [s.section_number, s]));
     if (actObj.chapters && Array.isArray(actObj.chapters)) {
@@ -147,7 +181,7 @@ router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
     }
   }
 
-  await setCache(`legal:act:${shortName}`, actObj);
+  await setCache(`legal:act:${resolvedShortName}`, actObj);
   if (req.query.refresh === 'true') {
     res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   } else {
@@ -159,8 +193,10 @@ router.get('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
 // GET /acts/:shortName/outline - Get outline of act (structural metadata, excluding heavy content fields)
 router.get('/acts/:shortName/outline', asyncHandler(async (req: Request, res: Response) => {
   const shortName = req.params.shortName as string;
-  const normalizedShortName = normalizeActShortName(shortName);
-  const cacheKey = `legal:act:outline:${shortName}`;
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
+  const cacheKey = `legal:act:outline:${resolvedShortName}`;
+
   if (req.query.refresh !== 'true') {
     const cached = await getCache(cacheKey);
     if (cached) {
@@ -169,22 +205,28 @@ router.get('/acts/:shortName/outline', asyncHandler(async (req: Request, res: Re
     }
   }
 
-  const act = await BareAct.findOne(
-    { shortName: new RegExp(`^${normalizedShortName}$`, 'i') },
-    {
-      actName: 1,
-      shortName: 1,
-      year: 1,
-      description: 1,
-      'chapters.chapterNumber': 1,
-      'chapters.title': 1,
-      'chapters.sections.section_number': 1,
-      'chapters.sections.title': 1,
-      'chapters.sections.title_hi': 1,
-      'chapters.sections.clean_title': 1,
+  let act;
+  if (registryEntry) {
+    act = await BareAct.findById(registryEntry._id, {
+      actName: 1, shortName: 1, year: 1, description: 1,
+      'chapters.chapterNumber': 1, 'chapters.title': 1,
+      'chapters.sections.section_number': 1, 'chapters.sections.title': 1,
+      'chapters.sections.title_hi': 1, 'chapters.sections.clean_title': 1,
       'chapters.sections.clean_title_hi': 1
-    }
-  );
+    });
+  }
+  if (!act) {
+    act = await BareAct.findOne(
+      { shortName: resolvedShortName },
+      {
+        actName: 1, shortName: 1, year: 1, description: 1,
+        'chapters.chapterNumber': 1, 'chapters.title': 1,
+        'chapters.sections.section_number': 1, 'chapters.sections.title': 1,
+        'chapters.sections.title_hi': 1, 'chapters.sections.clean_title': 1,
+        'chapters.sections.clean_title_hi': 1
+      }
+    );
+  }
 
   if (!act) {
     throw AppError.notFound('Act not found.');
@@ -206,16 +248,18 @@ router.get('/acts/:shortName/outline', asyncHandler(async (req: Request, res: Re
 router.get('/acts/:shortName/sections/:sectionNumber', asyncHandler(async (req: Request, res: Response) => {
   const shortName = req.params.shortName as string;
   const sectionNumber = req.params.sectionNumber as string;
-  const normalizedShortName = normalizeActShortName(shortName);
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
+
   let section = await SectionModel.findOne({
-    actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+    actShortName: resolvedShortName,
     section_number: sectionNumber
   });
 
   if (!section && sectionNumber.includes('_')) {
     const baseSecNum = sectionNumber.split('_')[0];
     section = await SectionModel.findOne({
-      actShortName: new RegExp(`^${normalizedShortName}$`, 'i'),
+      actShortName: resolvedShortName,
       section_number: baseSecNum
     });
   }
@@ -224,7 +268,7 @@ router.get('/acts/:shortName/sections/:sectionNumber', asyncHandler(async (req: 
     throw AppError.notFound('Section not found.');
   }
 
-  const act = await BareAct.findOne({ shortName: new RegExp(`^${normalizedShortName}$`, 'i') }, 'actName year');
+  const act = await BareAct.findOne({ shortName: resolvedShortName }, 'actName year');
 
   const secNum = parseInt(section.section_number) || 0;
   let isBailable = true;
@@ -233,7 +277,7 @@ router.get('/acts/:shortName/sections/:sectionNumber', asyncHandler(async (req: 
   let punishment = 'Fine or minor imprisonment';
   let severity = 'low';
 
-  if (normalizedShortName === 'IPC' || normalizedShortName === 'BNS') {
+  if (resolvedShortName === 'IPC' || resolvedShortName === 'BNS') {
     if (secNum === 302 || secNum === 101 || secNum === 307 || secNum === 109 || secNum === 376 || secNum === 64) {
       isBailable = false;
       isCognizable = true;

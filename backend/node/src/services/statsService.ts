@@ -22,7 +22,28 @@ if (redisUrl) {
   });
 }
 
-const inMemoryCache: Record<string, { data: any; expiry: number }> = {};
+const MAX_CACHE_SIZE = 500;
+const inMemoryCache: Map<string, { data: any; expiry: number }> = new Map();
+
+/** Evict oldest entries when cache exceeds max size (simple LRU approximation) */
+function evictIfNeeded(): void {
+  if (inMemoryCache.size <= MAX_CACHE_SIZE) return;
+  const now = Date.now();
+  // First pass: remove expired entries
+  for (const [key, item] of inMemoryCache) {
+    if (item.expiry <= now) {
+      inMemoryCache.delete(key);
+    }
+  }
+  // Second pass: if still over limit, remove oldest entries
+  if (inMemoryCache.size > MAX_CACHE_SIZE) {
+    const excess = inMemoryCache.size - MAX_CACHE_SIZE;
+    const keysToRemove = Array.from(inMemoryCache.keys()).slice(0, excess);
+    for (const key of keysToRemove) {
+      inMemoryCache.delete(key);
+    }
+  }
+}
 
 export async function getCache(key: string): Promise<any> {
   if (isRedisConnected && redisClient) {
@@ -33,9 +54,12 @@ export async function getCache(key: string): Promise<any> {
       console.warn(`Redis getCache error for key ${key}:`, err);
     }
   }
-  const item = inMemoryCache[key];
+  const item = inMemoryCache.get(key);
   if (item && item.expiry > Date.now()) {
     return item.data;
+  }
+  if (item) {
+    inMemoryCache.delete(key); // Clean up expired
   }
   return null;
 }
@@ -49,10 +73,11 @@ export async function setCache(key: string, data: any, ttlSeconds: number = 600)
       console.warn(`Redis setCache error for key ${key}:`, err);
     }
   }
-  inMemoryCache[key] = {
+  inMemoryCache.set(key, {
     data,
     expiry: Date.now() + (ttlSeconds * 1000)
-  };
+  });
+  evictIfNeeded();
 }
 
 export async function incrRateLimitKey(key: string, windowSeconds: number): Promise<{ count: number; ttlSeconds: number }> {
@@ -71,10 +96,10 @@ export async function incrRateLimitKey(key: string, windowSeconds: number): Prom
 
   // In-memory fallback
   const now = Date.now();
-  const item = inMemoryCache[key];
+  const item = inMemoryCache.get(key);
   if (!item || item.expiry <= now) {
     const expiry = now + (windowSeconds * 1000);
-    inMemoryCache[key] = { data: 1, expiry };
+    inMemoryCache.set(key, { data: 1, expiry });
     return { count: 1, ttlSeconds: windowSeconds };
   }
   item.data += 1;

@@ -1,8 +1,17 @@
 import LegalResource from '../models/LegalResource';
+import { getShortNameMap } from './actNormalizer';
+
+const _shortNameMap = getShortNameMap();
 
 export function normalizeActShortName(shortName: string): string {
   if (!shortName) return shortName;
-  const upper = shortName.toUpperCase().trim();
+  const trimmed = shortName.trim();
+  // Check the comprehensive map first
+  if (_shortNameMap[trimmed]) return _shortNameMap[trimmed];
+  // Check uppercase variant
+  const upper = trimmed.toUpperCase();
+  if (_shortNameMap[upper]) return _shortNameMap[upper];
+  // Legacy compat
   if (upper === 'CPA') return 'CP';
   if (upper === 'ITA') return 'IT';
   return shortName;

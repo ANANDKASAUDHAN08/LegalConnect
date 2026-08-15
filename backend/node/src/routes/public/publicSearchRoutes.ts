@@ -7,6 +7,7 @@ import Lawyer from '../../models/Lawyer';
 import { getCache, setCache } from '../../services/statsService';
 import aiService from '../../services/AiService';
 import { calculateDistance, resolveCityAndStateFromText } from '../../utils/geoUtils';
+import actRegistry from '../../services/actRegistry';
 
 const router = Router();
 
@@ -53,10 +54,25 @@ router.get('/search', asyncHandler(async (req: Request, res: Response) => {
   ).sort({ score: { $meta: "textScore" } }).limit(20);
 
   const actShortNames = [...new Set(sections.map(s => s.actShortName || ''))].filter(Boolean);
-  const acts = actShortNames.length > 0
-    ? await BareAct.find({ shortName: { $in: actShortNames } }, 'actName shortName year description')
-    : [];
-  const actMap = new Map(acts.map(a => [a.shortName, a]));
+
+  // Use registry for O(1) batch resolution, fallback to DB
+  const actMap = new Map<string, any>();
+  const unresolvedCodes: string[] = [];
+  for (const code of actShortNames) {
+    const entry = actRegistry.resolveAct(code);
+    if (entry) {
+      actMap.set(code, entry);
+    } else {
+      unresolvedCodes.push(code);
+    }
+  }
+  // Fallback DB query for any codes the registry doesn't know
+  if (unresolvedCodes.length > 0) {
+    const dbActs = await BareAct.find({ shortName: { $in: unresolvedCodes } }, 'actName shortName year description');
+    for (const a of dbActs) {
+      actMap.set(a.shortName, a);
+    }
+  }
 
   const data = sections.map(sec => {
     const act = actMap.get(sec.actShortName || '');

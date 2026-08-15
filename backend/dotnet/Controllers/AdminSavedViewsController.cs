@@ -25,7 +25,11 @@ namespace CoreApi.Controllers
 
         private int GetCurrentUserId()
         {
-            var val = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? User.FindFirst("id")?.Value ?? User.FindFirst("userId")?.Value;
+            var val = User.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                   ?? User.FindFirst("nameid")?.Value
+                   ?? User.FindFirst("sub")?.Value
+                   ?? User.FindFirst("id")?.Value
+                   ?? User.FindFirst("userId")?.Value;
             if (int.TryParse(val, out int userId))
             {
                 return userId;

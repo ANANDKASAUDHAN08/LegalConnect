@@ -48,9 +48,15 @@ export interface IBareAct extends Document {
   year: number;
   description?: string;
   chapters: IChapterOutline[];
+  hierarchical_id?: string;
+  act_code?: string;
+  category?: string;
+  legacy_short_names?: string[];
 }
 
-export interface ISectionDocument extends ISection, Document {}
+export interface ISectionDocument extends ISection, Document {
+  hierarchical_id?: string;
+}
 
 // --- Mongoose Schemas ---
 const SectionOutlineSchema = new Schema<ISectionOutline>({
@@ -74,7 +80,11 @@ const BareActSchema = new Schema<IBareAct>({
   shortName: { type: String, required: true, unique: true, index: true },
   year: { type: Number, required: true },
   description: { type: String },
-  chapters: [ChapterOutlineSchema]
+  chapters: [ChapterOutlineSchema],
+  hierarchical_id: { type: String, sparse: true, index: true },
+  act_code: { type: String, sparse: true, index: true },
+  category: { type: String, sparse: true, index: true },
+  legacy_short_names: [{ type: String }]
 }, {
   timestamps: true
 });
@@ -99,7 +109,8 @@ const SectionSchema = new Schema<ISectionDocument>({
   content_blocks_hi: [{
     type: { type: String },
     text: { type: String }
-  }]
+  }],
+  hierarchical_id: { type: String, sparse: true, index: true }
 }, {
   timestamps: true
 });
