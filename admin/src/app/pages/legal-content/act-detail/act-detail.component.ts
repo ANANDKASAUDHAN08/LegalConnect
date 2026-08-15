@@ -1,19 +1,103 @@
-import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, ChangeDetectionStrategy, ChangeDetectorRef, ElementRef, ViewChild, NgZone } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  AfterViewInit,
+  HostListener,
+  ChangeDetectionStrategy,
+  ChangeDetectorRef,
+  ElementRef,
+  ViewChild,
+  NgZone
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { ScrollingModule, CdkVirtualScrollViewport } from '@angular/cdk/scrolling';
+import { Subject, Subscription } from 'rxjs';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { AdminApiService } from '../../../core/admin-api.service';
 import { SkeletonComponent } from '../../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
 import { ToastService } from '../../../shared/services/toast.service';
+import { HighlightPipe } from '../../../shared/pipes/highlight.pipe';
+import { LegalPrintService } from '../../../core/services/legal-print.service';
 import { LegalTextParser, ParsedLegalSection, LegalClauseNode } from '../../../core/utils/legal-text-parser';
-import { Subscription } from 'rxjs';
+
+export interface EnrichedClauseNode extends LegalClauseNode {
+  levelClass: string;
+  markerClass: string;
+  isCallout: boolean;
+  calloutClass: string;
+  calloutLabel: string;
+  children: EnrichedClauseNode[];
+}
+
+export interface EnrichedParsedLegalSection extends ParsedLegalSection {
+  enrichedNodes: EnrichedClauseNode[];
+}
+
+export interface EnrichedSection {
+  _id?: string;
+  id?: string;
+  section_number: string;
+  sectionNumber: string;
+  secId: string;
+  cleanTitle: string;
+  cleanBody: string;
+  rawContent: string;
+  title_hi?: string;
+  introduction_text_hi?: string;
+  content_hi?: string;
+  text_hi?: string;
+  content_blocks_hi?: any[];
+  hasContent: boolean;
+  wordCount: number;
+  readingTimeMinutes: number;
+  parsed: EnrichedParsedLegalSection;
+  parsed_hi?: EnrichedParsedLegalSection;
+  chapterNumber: string;
+  chapterTitle: string;
+  chapKey: string;
+  index: number;
+  searchTokens: string;
+  isBookmarked?: boolean;
+}
+
+export interface EnrichedChapter {
+  chapterNumber: string;
+  chapter_number?: string;
+  title: string;
+  chapKey: string;
+  sections: EnrichedSection[];
+  totalSections: number;
+  digitizedCount: number;
+  pendingCount: number;
+}
+
+export interface EnrichedAct {
+  actName?: string;
+  shortName?: string;
+  year?: number | string;
+  description?: string;
+  preamble?: string;
+  totalSections: number;
+  totalChapters: number;
+  chapters: EnrichedChapter[];
+  flatSections: EnrichedSection[];
+  sectionMap: Map<string, EnrichedSection>;
+}
 
 @Component({
   selector: 'admin-act-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, SkeletonComponent, TooltipDirective, ScrollingModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    SkeletonComponent,
+    TooltipDirective,
+    HighlightPipe
+  ],
   templateUrl: './act-detail.component.html',
   styleUrl: './act-detail.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,217 +105,634 @@ import { Subscription } from 'rxjs';
 export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('searchInput') searchInputEl?: ElementRef<HTMLInputElement>;
   @ViewChild('jumpSearchInput') jumpSearchInputEl?: ElementRef<HTMLInputElement>;
-  @ViewChild('virtualViewport') virtualViewport?: CdkVirtualScrollViewport;
+  @ViewChild('tocScrollContainer') tocScrollContainerEl?: ElementRef<HTMLElement>;
 
   shortName = '';
-  act: any = null;
+  actRaw: any = null;
+  enrichedAct: EnrichedAct | null = null;
   isLoading = false;
-  searchQuery = '';
-  activeLanguage: 'en' | 'hi' | 'both' = 'en';
-  isEditMode = false;
-  editingSection: any = null;
-  editForm: any = { section_number: '', title: '', title_hi: '', introduction_text: '', introduction_text_hi: '' };
-  editTab: 'en' | 'hi' = 'en';
-  isSaving = false;
-  activeSectionId = '';
-  collapsedChapters: { [key: string]: boolean } = {};
-  tocCollapsedChapters: { [key: string]: boolean } = {};
-  readingProgress = 0;
 
-  // Reader Customization
+  // Search & Filter State (Debounced)
+  searchQuery = '';
+  tocSearchQuery = '';
+  jumpSearchQuery = '';
+  digitizationFilter: 'all' | 'digitized' | 'pending' = 'all';
+  showBookmarkedOnly = false;
+  private searchSubject = new Subject<string>();
+  private tocSearchSubject = new Subject<string>();
+  private jumpSearchSubject = new Subject<string>();
+
+  // Filtered / Displayed ViewModels
+  displayedChapters: EnrichedChapter[] = [];
+  filteredJumpSections: Array<{ section: EnrichedSection; chapterTitle: string }> = [];
+  matchingSectionsCount = 0;
+  totalDigitizedCount = 0;
+  totalPendingCount = 0;
+
+  // Reader Preferences (Persisted)
   readerTheme: 'slate' | 'light' = 'slate';
-  fontScale: number = 100; // 85 to 140
+  fontScale = 100; // 85 to 140
   fontFamily: 'sans' | 'serif' = 'sans';
   viewMode: 'structured' | 'raw' = 'structured';
-  showLaymanSummary: { [secId: string]: boolean } = {};
-  activeFootnote: { id: string; number: string; text: string } | null = null;
-  private parsedSectionsCache = new Map<string, ParsedLegalSection>();
+  activeLanguage: 'en' | 'hi' | 'both' = 'en';
+  splitViewMode: 'stacked' | 'split' = 'stacked';
+  isTocCollapsed = false;
 
-  // UI State — Progressive Disclosure
+  // Interactive State
+  activeSectionId = '';
+  activeSection: EnrichedSection | null = null;
+  readingProgress = 0;
+  collapsedChapters: Record<string, boolean> = {};
+  tocCollapsedChapters: Record<string, boolean> = {};
+  collapsedSections: Record<string, boolean> = {};
+  showLaymanSummary: Record<string, boolean> = {};
+  showDefinedTerms: Record<string, boolean> = {};
+  bookmarkedSectionIds = new Set<string>();
+
+  // Modals & Panels
   showReaderSettings = false;
   showBackToTop = false;
   showJumpToSection = false;
-  jumpSearchQuery = '';
-  tocSearchQuery = '';
-  showDefinedTerms: { [secId: string]: boolean } = {};
-  isTocCollapsed = false;
-  collapsedSections: { [secId: string]: boolean } = {};
+  showShortcutsModal = false;
+  activeFootnote: { id: string; number: string; text: string } | null = null;
 
-  private paramSub?: Subscription;
+  // Editing Mode
+  isEditMode = false;
+  editingSection: EnrichedSection | null = null;
+  editForm: any = { section_number: '', title: '', title_hi: '', introduction_text: '', introduction_text_hi: '' };
+  editTab: 'en' | 'hi' | 'preview' = 'en';
+  isSaving = false;
+  isTranslating = false;
+  isEnhancing = false;
+
+  // Scrollspy & Interaction Locks
+  isUserHoveringToc = false;
+  isProgrammaticScrolling = false;
+  private programmaticScrollTimer: any = null;
+  private tocAutoScrollTimeout: any = null;
+  private hoverCooldownTimer: any = null;
+  private sectionObserver: IntersectionObserver | null = null;
   private scrollContainer: HTMLElement | null = null;
   private boundScrollHandler = this.handleContainerScroll.bind(this);
+  private subscriptions = new Subscription();
 
   constructor(
     private route: ActivatedRoute,
     private api: AdminApiService,
     private toast: ToastService,
+    private printService: LegalPrintService,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
     private elRef: ElementRef
   ) { }
 
   ngOnInit(): void {
-    this.paramSub = this.route.params.subscribe(params => {
-      this.shortName = params['shortName'];
-      if (this.shortName) {
-        this.fetchActDetail();
-      }
-    });
+    this.loadPersistedPreferences();
+
+    // Debounced search streams
+    this.subscriptions.add(
+      this.searchSubject.pipe(debounceTime(150), distinctUntilChanged()).subscribe(q => {
+        this.searchQuery = q;
+        this.recalculateDisplayedChapters();
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.tocSearchSubject.pipe(debounceTime(120), distinctUntilChanged()).subscribe(q => {
+        this.tocSearchQuery = q;
+        this.recalculateDisplayedChapters();
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.jumpSearchSubject.pipe(debounceTime(80), distinctUntilChanged()).subscribe(q => {
+        this.jumpSearchQuery = q;
+        this.recalculateJumpSections();
+        this.cdr.markForCheck();
+      })
+    );
+
+    this.subscriptions.add(
+      this.route.params.subscribe(params => {
+        const nextShortName = params['shortName'];
+        if (nextShortName && nextShortName !== this.shortName) {
+          this.shortName = nextShortName;
+          this.loadBookmarks();
+          this.fetchActDetail();
+        }
+      })
+    );
   }
 
   ngAfterViewInit(): void {
-    // Find the .content-body scroll container from the layout
-    this.scrollContainer = document.querySelector('main.content-body');
+    this.scrollContainer = document.querySelector('main.content-body') || document.documentElement;
     if (this.scrollContainer) {
       this.ngZone.runOutsideAngular(() => {
         this.scrollContainer!.addEventListener('scroll', this.boundScrollHandler, { passive: true });
       });
+      this.setupScrollspyObserver();
     }
   }
 
   ngOnDestroy(): void {
-    this.paramSub?.unsubscribe();
+    this.subscriptions.unsubscribe();
     if (this.scrollContainer) {
       this.scrollContainer.removeEventListener('scroll', this.boundScrollHandler);
     }
+    if (this.sectionObserver) {
+      this.sectionObserver.disconnect();
+      this.sectionObserver = null;
+    }
+    clearTimeout(this.programmaticScrollTimer);
+    clearTimeout(this.tocAutoScrollTimeout);
+    clearTimeout(this.hoverCooldownTimer);
   }
 
-  /** Auto-enable virtual scroll for acts with many sections */
-  get useVirtualScroll(): boolean {
-    return this.totalSectionsInActCount > 100;
-  }
+  /* ═══════════════════════════════════════════════════════
+     DATA INGESTION & VIEWMODEL TRANSFORMATION ENGINE
+     ═══════════════════════════════════════════════════════ */
 
-  private handleContainerScroll(): void {
-    this.ngZone.run(() => {
-      // Close reader settings dropdown on scroll
-      if (this.showReaderSettings) {
-        this.showReaderSettings = false;
-        this.cdr.markForCheck();
-      }
+  fetchActDetail(): void {
+    this.isLoading = true;
+    this.cdr.markForCheck();
 
-      if (!this.act || !this.act.chapters || !this.scrollContainer) return;
+    this.api.getActDetail(this.shortName).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        this.actRaw = res.data || res;
+        this.enrichActPayload();
 
-      // Update reading progress
-      const scrollTop = this.scrollContainer.scrollTop;
-      const docHeight = this.scrollContainer.scrollHeight - this.scrollContainer.clientHeight;
-      this.readingProgress = docHeight > 0 ? Math.min(100, Math.round((scrollTop / docHeight) * 100)) : 0;
-
-      // Show/hide back-to-top
-      const shouldShow = scrollTop > 300;
-      if (this.showBackToTop !== shouldShow) {
-        this.showBackToTop = shouldShow;
-        this.cdr.markForCheck();
-      }
-
-      // Update active section
-      const scrollPos = scrollTop + 180;
-      for (const chap of this.act.chapters) {
-        for (const sec of chap.sections || []) {
-          const secNum = String(sec.section_number || sec.sectionNumber || '');
-          const el = document.getElementById(`section-${secNum}`);
-          if (el) {
-            const top = el.offsetTop;
-            const height = el.offsetHeight;
-            if (scrollPos >= top && scrollPos < top + height) {
-              if (this.activeSectionId !== secNum) {
-                this.activeSectionId = secNum;
-                this.cdr.markForCheck();
-              }
-              return;
-            }
-          }
+        if (this.enrichedAct?.flatSections?.length) {
+          this.activeSection = this.enrichedAct.flatSections[0];
+          this.activeSectionId = this.activeSection.secId;
         }
+
+        this.loadBookmarks();
+        this.recalculateDisplayedChapters();
+        this.recalculateJumpSections();
+        this.refreshScrollspyObserver();
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isLoading = false;
+        this.toast.error('Failed to load Act details.');
+        this.cdr.markForCheck();
       }
     });
   }
 
-  @HostListener('window:keydown', ['$event'])
-  onKeyDown(event: KeyboardEvent): void {
-    // Ignore keypresses when typing in input/textarea
-    const tag = (event.target as HTMLElement)?.tagName?.toLowerCase();
-    const isTyping = tag === 'input' || tag === 'textarea';
-
-    // Ctrl+F → focus search
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
-      event.preventDefault();
-      this.searchInputEl?.nativeElement?.focus();
+  private enrichActPayload(): void {
+    if (!this.actRaw || !this.actRaw.chapters) {
+      this.enrichedAct = null;
+      return;
     }
 
-    // Escape handling
-    if (event.key === 'Escape') {
-      if (this.showJumpToSection) {
-        this.showJumpToSection = false;
-        this.jumpSearchQuery = '';
-        this.cdr.markForCheck();
-        return;
+    const flatSections: EnrichedSection[] = [];
+    const sectionMap = new Map<string, EnrichedSection>();
+    const enrichedChapters: EnrichedChapter[] = [];
+
+    let globalIndex = 0;
+    let totalDig = 0;
+    let totalPend = 0;
+
+    for (const rawChap of this.actRaw.chapters || []) {
+      const chapKey = String(rawChap.chapterNumber || rawChap.chapter_number || rawChap.title || '');
+      const chapTitle = String(rawChap.title || '');
+      const chapNumber = String(rawChap.chapterNumber || rawChap.chapter_number || '');
+
+      const enrichedSections: EnrichedSection[] = [];
+      let chapDig = 0;
+      let chapPend = 0;
+
+      for (const rawSec of rawChap.sections || []) {
+        const secNum = String(rawSec.section_number || rawSec.sectionNumber || '');
+        const cleanTitle = this.computeCleanTitle(rawSec);
+        const cleanBody = this.computeCleanBody(rawSec);
+        const rawContent = this.safeStringify(rawSec.content || rawSec.introduction_text || rawSec.text || '');
+        const hasContent = (rawSec.content_blocks && rawSec.content_blocks.length > 0) || (cleanBody && cleanBody.length > 10);
+
+        if (hasContent) {
+          totalDig++;
+          chapDig++;
+        } else {
+          totalPend++;
+          chapPend++;
+        }
+
+        const wordCount = cleanBody ? cleanBody.trim().split(/\s+/).filter(Boolean).length : 0;
+        const readingTimeMinutes = Math.max(1, Math.ceil(wordCount / 200));
+
+        // Parse legal AST structure (memoized internally by LegalTextParser)
+        const parsedBase = LegalTextParser.parse(cleanBody, cleanTitle);
+        const enrichedParsed: EnrichedParsedLegalSection = {
+          ...parsedBase,
+          enrichedNodes: this.enrichClauseNodes(parsedBase.nodes)
+        };
+
+        // Parse Hindi legal AST structure if Hindi content exists
+        const cleanBodyHi = this.safeStringify(rawSec.introduction_text_hi || rawSec.content_hi || rawSec.text_hi || '');
+        const cleanTitleHi = this.safeStringify(rawSec.title_hi || '');
+        let enrichedParsedHi: EnrichedParsedLegalSection | undefined;
+        if (cleanBodyHi.trim()) {
+          const parsedHiBase = LegalTextParser.parse(cleanBodyHi, cleanTitleHi);
+          enrichedParsedHi = {
+            ...parsedHiBase,
+            enrichedNodes: this.enrichClauseNodes(parsedHiBase.nodes)
+          };
+        }
+
+        const searchTokens = `${secNum} ${cleanTitle} ${rawSec.title_hi || ''} ${cleanBody} ${rawSec.content_hi || ''}`.toLowerCase();
+
+        const enrichedSec: EnrichedSection = {
+          _id: rawSec._id,
+          id: rawSec.id,
+          section_number: secNum,
+          sectionNumber: secNum,
+          secId: secNum,
+          cleanTitle,
+          cleanBody,
+          rawContent,
+          title_hi: rawSec.title_hi || '',
+          introduction_text_hi: rawSec.introduction_text_hi || '',
+          content_hi: rawSec.content_hi || '',
+          text_hi: rawSec.text_hi || '',
+          content_blocks_hi: rawSec.content_blocks_hi || [],
+          hasContent: Boolean(hasContent),
+          wordCount,
+          readingTimeMinutes,
+          parsed: enrichedParsed,
+          parsed_hi: enrichedParsedHi,
+          chapterNumber: chapNumber,
+          chapterTitle: chapTitle,
+          chapKey,
+          index: globalIndex++,
+          searchTokens,
+          isBookmarked: this.bookmarkedSectionIds.has(secNum)
+        };
+
+        enrichedSections.push(enrichedSec);
+        flatSections.push(enrichedSec);
+        sectionMap.set(secNum, enrichedSec);
       }
-      if (this.showReaderSettings) {
-        this.showReaderSettings = false;
-        this.cdr.markForCheck();
-        return;
-      }
-      if (this.editingSection) {
-        this.editingSection = null;
-        this.cdr.markForCheck();
-      } else if (this.searchQuery) {
-        this.searchQuery = '';
-        this.cdr.markForCheck();
-      }
+
+      enrichedChapters.push({
+        chapterNumber: chapNumber,
+        chapter_number: chapNumber,
+        title: chapTitle,
+        chapKey,
+        sections: enrichedSections,
+        totalSections: enrichedSections.length,
+        digitizedCount: chapDig,
+        pendingCount: chapPend
+      });
     }
 
-    // Ctrl+G → Jump to section
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g') {
-      event.preventDefault();
-      this.toggleJumpToSection();
-    }
+    this.totalDigitizedCount = totalDig;
+    this.totalPendingCount = totalPend;
 
-    // Ctrl+B → Toggle TOC Sidebar (Focus Mode)
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'b') {
-      event.preventDefault();
-      this.toggleToc();
-    }
-
-    // Skip keyboard navigation if typing in an input
-    if (isTyping) return;
-
-    // J/K or ↓/↑ — Navigate between sections
-    if (event.key === 'j' || event.key === 'ArrowDown') {
-      if (!event.ctrlKey && !event.metaKey && !event.altKey) {
-        event.preventDefault();
-        this.navigateSection(1);
-      }
-    }
-    if (event.key === 'k' || event.key === 'ArrowUp') {
-      if (!event.ctrlKey && !event.metaKey && !event.altKey) {
-        event.preventDefault();
-        this.navigateSection(-1);
-      }
-    }
+    this.enrichedAct = {
+      actName: this.actRaw.actName || this.shortName,
+      shortName: this.shortName,
+      year: this.actRaw.year || '',
+      description: this.actRaw.description || this.actRaw.preamble || '',
+      preamble: this.actRaw.preamble || '',
+      totalSections: flatSections.length,
+      totalChapters: enrichedChapters.length,
+      chapters: enrichedChapters,
+      flatSections,
+      sectionMap
+    };
   }
 
-  /**
-   * Navigate to next/previous section
-   */
-  navigateSection(direction: 1 | -1): void {
-    const flat = this.allFlatSections;
-    if (flat.length === 0) return;
+  private enrichClauseNodes(nodes: LegalClauseNode[]): EnrichedClauseNode[] {
+    return (nodes || []).map(node => ({
+      ...node,
+      levelClass: this.computeNodeLevelClass(node.level),
+      markerClass: this.computeMarkerClass(node.level),
+      isCallout: node.type === 'proviso' || node.type === 'explanation' || node.type === 'illustration',
+      calloutClass: this.computeCalloutClass(node.type),
+      calloutLabel: this.computeCalloutLabel(node.type),
+      children: this.enrichClauseNodes(node.children)
+    }));
+  }
 
-    const currentIdx = flat.findIndex(
-      item => String(item.section.section_number || item.section.sectionNumber) === this.activeSectionId
-    );
+  /* ═══════════════════════════════════════════════════════
+     SEARCH & FILTER COMPUTATION (REACTIVE)
+     ═══════════════════════════════════════════════════════ */
 
-    let nextIdx: number;
-    if (currentIdx === -1) {
-      nextIdx = 0;
-    } else {
-      nextIdx = currentIdx + direction;
+  onSearchInput(val: string): void {
+    this.searchSubject.next(val);
+  }
+
+  onTocSearchInput(val: string): void {
+    this.tocSearchSubject.next(val);
+  }
+
+  onJumpSearchInput(val: string): void {
+    this.jumpSearchSubject.next(val);
+  }
+
+  clearMainSearch(): void {
+    this.searchQuery = '';
+    this.searchSubject.next('');
+  }
+
+  clearTocSearch(): void {
+    this.tocSearchQuery = '';
+    this.tocSearchSubject.next('');
+  }
+
+  setDigitizationFilter(filter: 'all' | 'digitized' | 'pending'): void {
+    this.digitizationFilter = filter;
+    this.recalculateDisplayedChapters();
+    this.cdr.markForCheck();
+  }
+
+  toggleBookmarkedOnly(): void {
+    this.showBookmarkedOnly = !this.showBookmarkedOnly;
+    this.recalculateDisplayedChapters();
+    this.cdr.markForCheck();
+  }
+
+  private recalculateDisplayedChapters(): void {
+    if (!this.enrichedAct) {
+      this.displayedChapters = [];
+      this.matchingSectionsCount = 0;
+      return;
     }
 
+    const mainQ = this.searchQuery.toLowerCase().trim();
+    const tocQ = this.tocSearchQuery.toLowerCase().trim();
+    const activeQuery = tocQ || mainQ;
+
+    let totalMatches = 0;
+
+    const filtered = this.enrichedAct.chapters.map(chap => {
+      const matching = chap.sections.filter(sec => {
+        // 1. Text Search Filter
+        if (activeQuery && !sec.searchTokens.includes(activeQuery)) {
+          return false;
+        }
+
+        // 2. Digitization Status Filter
+        if (this.digitizationFilter === 'digitized' && !sec.hasContent) return false;
+        if (this.digitizationFilter === 'pending' && sec.hasContent) return false;
+
+        // 3. Bookmarked Only Filter
+        if (this.showBookmarkedOnly && !this.bookmarkedSectionIds.has(sec.secId)) return false;
+
+        return true;
+      });
+
+      totalMatches += matching.length;
+      return { ...chap, sections: matching };
+    }).filter(chap => chap.sections.length > 0);
+
+    this.displayedChapters = filtered;
+    this.matchingSectionsCount = totalMatches;
+
+    // If searching, auto-expand all TOC chapters containing matches
+    if (activeQuery) {
+      this.tocCollapsedChapters = {};
+    }
+
+    this.refreshScrollspyObserver();
+  }
+
+  private recalculateJumpSections(): void {
+    if (!this.enrichedAct) {
+      this.filteredJumpSections = [];
+      return;
+    }
+
+    const q = this.jumpSearchQuery.toLowerCase().trim();
+    if (!q) {
+      this.filteredJumpSections = this.enrichedAct.flatSections.map(s => ({
+        section: s,
+        chapterTitle: s.chapterTitle
+      }));
+      return;
+    }
+
+    this.filteredJumpSections = this.enrichedAct.flatSections
+      .filter(s => s.secId.toLowerCase().includes(q) || s.cleanTitle.toLowerCase().includes(q))
+      .map(s => ({ section: s, chapterTitle: s.chapterTitle }));
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     ZERO-REFLOW SCROLLSPY & TOC SYNCHRONIZATION ENGINE
+     ═══════════════════════════════════════════════════════ */
+
+  private scrollRafPending = false;
+
+  private setupScrollspyObserver(): void {
+    if (typeof IntersectionObserver === 'undefined') return;
+
+    if (this.sectionObserver) {
+      this.sectionObserver.disconnect();
+    }
+
+    const options: IntersectionObserverInit = {
+      root: this.scrollContainer && this.scrollContainer !== document.documentElement ? this.scrollContainer : null,
+      rootMargin: '-110px 0px -65% 0px',
+      threshold: [0, 0.1]
+    };
+
+    this.sectionObserver = new IntersectionObserver((entries) => {
+      if (this.isProgrammaticScrolling) return;
+
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          const secId = entry.target.getAttribute('data-section-id');
+          if (secId && secId !== this.activeSectionId) {
+            this.ngZone.run(() => {
+              this.activeSectionId = secId;
+              this.activeSection = this.enrichedAct?.sectionMap.get(secId) || null;
+              this.scrollTocToActiveSection(secId, false);
+              this.cdr.markForCheck();
+            });
+            break;
+          }
+        }
+      }
+    }, options);
+
+    this.refreshScrollspyObserver();
+  }
+
+  private refreshScrollspyObserver(): void {
+    if (!this.sectionObserver) return;
+    this.sectionObserver.disconnect();
+
+    requestAnimationFrame(() => {
+      if (!this.sectionObserver) return;
+      const cards = document.querySelectorAll('.section-card');
+      cards.forEach(card => this.sectionObserver!.observe(card));
+    });
+  }
+
+  private handleContainerScroll(): void {
+    if (!this.scrollContainer || !this.enrichedAct) return;
+
+    const scrollTop = this.scrollContainer.scrollTop;
+    const scrollHeight = this.scrollContainer.scrollHeight;
+    const clientHeight = this.scrollContainer.clientHeight;
+    const docHeight = scrollHeight - clientHeight;
+    const newProgress = docHeight > 0 ? Math.min(100, Math.round((scrollTop / docHeight) * 100)) : 0;
+    const shouldShow = scrollTop > 250;
+
+    let dropdownClosed = false;
+    if (this.showReaderSettings) {
+      this.showReaderSettings = false;
+      dropdownClosed = true;
+    }
+
+    if (this.scrollRafPending) return;
+    this.scrollRafPending = true;
+
+    requestAnimationFrame(() => {
+      this.scrollRafPending = false;
+      if (!this.scrollContainer || !this.enrichedAct) return;
+
+      // Handle bottom edge case
+      if (!this.isProgrammaticScrolling) {
+        const isAtBottom = scrollTop + clientHeight >= scrollHeight - 35;
+        if (isAtBottom && this.enrichedAct.flatSections.length > 0) {
+          const lastSec = this.enrichedAct.flatSections[this.enrichedAct.flatSections.length - 1];
+          if (lastSec && lastSec.secId !== this.activeSectionId) {
+            this.ngZone.run(() => {
+              this.activeSectionId = lastSec.secId;
+              this.activeSection = lastSec;
+              this.scrollTocToActiveSection(lastSec.secId, false);
+              this.cdr.markForCheck();
+            });
+          }
+        }
+      }
+
+      const isProgressChanged = Math.abs(newProgress - this.readingProgress) >= 1;
+      const isShowBackToTopChanged = shouldShow !== this.showBackToTop;
+
+      if (isProgressChanged || isShowBackToTopChanged || dropdownClosed) {
+        this.ngZone.run(() => {
+          this.readingProgress = newProgress;
+          this.showBackToTop = shouldShow;
+          this.cdr.markForCheck();
+        });
+      }
+    });
+  }
+
+  private setActiveSection(secId: string, forceTocScroll = false): void {
+    this.activeSectionId = secId;
+    this.activeSection = this.enrichedAct?.sectionMap.get(secId) || null;
+
+    // Auto-scroll TOC sidebar to keep active section centered in view
+    this.scrollTocToActiveSection(secId, forceTocScroll);
+    this.cdr.markForCheck();
+  }
+
+  scrollTocToActiveSection(secId: string, force = false): void {
+    if (this.isUserHoveringToc && !force) return;
+
+    const sec = this.enrichedAct?.sectionMap.get(secId);
+    if (sec && this.tocCollapsedChapters[sec.chapKey]) {
+      // Auto-expand chapter in TOC so the provision is visible
+      this.tocCollapsedChapters[sec.chapKey] = false;
+      this.cdr.markForCheck();
+    }
+
+    clearTimeout(this.tocAutoScrollTimeout);
+    this.tocAutoScrollTimeout = setTimeout(() => {
+      if (!this.tocScrollContainerEl?.nativeElement) return;
+
+      const container = this.tocScrollContainerEl.nativeElement;
+      const targetItem = container.querySelector(`[data-toc-sec-id="${secId}"]`) as HTMLElement;
+
+      if (!targetItem) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const itemRect = targetItem.getBoundingClientRect();
+
+      const itemTopRelativeToContainer = itemRect.top - containerRect.top + container.scrollTop;
+      const targetScrollTop = itemTopRelativeToContainer - (container.clientHeight / 2) + (itemRect.height / 2);
+
+      container.scrollTo({
+        top: Math.max(0, targetScrollTop),
+        behavior: 'smooth'
+      });
+    }, 20);
+  }
+
+  onTocMouseEnter(): void {
+    this.isUserHoveringToc = true;
+    clearTimeout(this.hoverCooldownTimer);
+  }
+
+  onTocMouseLeave(): void {
+    clearTimeout(this.hoverCooldownTimer);
+    this.hoverCooldownTimer = setTimeout(() => {
+      this.isUserHoveringToc = false;
+    }, 300);
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     INTERACTIVE NAVIGATION & BOOKMARKING
+     ═══════════════════════════════════════════════════════ */
+
+  scrollToSection(secNum: string): void {
+    const secStr = String(secNum);
+    this.isProgrammaticScrolling = true;
+    this.setActiveSection(secStr, true);
+
+    this.showJumpToSection = false;
+    this.jumpSearchQuery = '';
+
+    const sec = this.enrichedAct?.sectionMap.get(secStr);
+    let needCdr = false;
+    if (sec) {
+      // If chapter is collapsed in main reading view, expand it
+      if (this.collapsedChapters[sec.chapKey]) {
+        this.collapsedChapters[sec.chapKey] = false;
+        needCdr = true;
+      }
+      // If section card itself is collapsed, expand it
+      if (this.collapsedSections[secStr]) {
+        this.collapsedSections[secStr] = false;
+        needCdr = true;
+      }
+    }
+    if (needCdr) {
+      this.refreshScrollspyObserver();
+      this.cdr.detectChanges();
+    }
+
+    requestAnimationFrame(() => {
+      const el = document.getElementById(`section-${secStr}`);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+
+    // Release programmatic scroll lock after smooth scrolling completes
+    clearTimeout(this.programmaticScrollTimer);
+    this.programmaticScrollTimer = setTimeout(() => {
+      this.isProgrammaticScrolling = false;
+    }, 700);
+  }
+
+  navigateSection(direction: 1 | -1): void {
+    if (!this.enrichedAct || this.enrichedAct.flatSections.length === 0) return;
+
+    const flat = this.enrichedAct.flatSections;
+    const currentIdx = flat.findIndex(s => s.secId === this.activeSectionId);
+
+    let nextIdx = currentIdx === -1 ? 0 : currentIdx + direction;
     if (nextIdx < 0 || nextIdx >= flat.length) return;
 
-    const nextSec = flat[nextIdx].section;
-    const secNum = String(nextSec.section_number || nextSec.sectionNumber);
-    this.scrollToSection(secNum);
+    this.scrollToSection(flat[nextIdx].secId);
   }
 
   scrollToTop(): void {
@@ -242,20 +743,250 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
-    if (!this.showReaderSettings) return;
-    // Check if click is inside the reader settings dropdown or its toggle button
-    const target = event.target as HTMLElement;
-    const dropdownEl = this.elRef.nativeElement.querySelector('.reader-settings-dropdown');
-    const toggleBtn = this.elRef.nativeElement.querySelector('.reader-settings-toggle');
-    if (dropdownEl?.contains(target) || toggleBtn?.contains(target)) return;
-    this.showReaderSettings = false;
+  toggleBookmark(secId: string, event?: Event): void {
+    event?.stopPropagation();
+    const isAdding = !this.bookmarkedSectionIds.has(secId);
+
+    // 1. Optimistic instant UI update
+    if (isAdding) {
+      this.bookmarkedSectionIds.add(secId);
+    } else {
+      this.bookmarkedSectionIds.delete(secId);
+    }
+
+    const sec = this.enrichedAct?.sectionMap.get(secId);
+    if (sec) sec.isBookmarked = isAdding;
+
+    this.recalculateDisplayedChapters();
+    this.cdr.markForCheck();
+
+    // 2. Sync with Backend API
+    this.api.togglePinnedSection(this.shortName, secId).subscribe({
+      next: (res: any) => {
+        if (res?.pinnedSections) {
+          this.bookmarkedSectionIds = new Set(res.pinnedSections);
+          this.applyBookmarksToViewModel();
+        }
+        // Cloud synced successfully — clear local cache
+        localStorage.removeItem(`lc_bookmarks_${this.shortName}`);
+
+        if (isAdding) {
+          this.toast.success(`Pinned Section § ${secId} to cloud dossier`);
+        } else {
+          this.toast.info(`Unpinned Section § ${secId}`);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        // Fallback to local storage if offline or request fails
+        this.saveBookmarks();
+        this.toast.warning(`Section § ${secId} saved locally (offline).`);
+      }
+    });
+  }
+
+  private loadBookmarks(): void {
+    // 1. Read existing local storage if any (to handle offline or pending unsynced pins)
+    let localPending: string[] = [];
+    try {
+      const stored = localStorage.getItem(`lc_bookmarks_${this.shortName}`);
+      if (stored) {
+        localPending = JSON.parse(stored);
+      }
+    } catch { }
+
+    if (localPending.length > 0) {
+      this.bookmarkedSectionIds = new Set(localPending);
+      this.applyBookmarksToViewModel();
+    }
+
+    // 2. Fetch ground truth from backend API
+    this.api.getPinnedSections(this.shortName).subscribe({
+      next: (res: any) => {
+        const backendPins: string[] = res?.data || res || [];
+
+        // If we had local pending pins not yet on backend, sync them to cloud
+        if (localPending.length > 0) {
+          const combined = Array.from(new Set([...backendPins, ...localPending]));
+          this.api.syncPinnedSections(this.shortName, combined).subscribe({
+            next: (syncRes: any) => {
+              const finalPins: string[] = syncRes?.pinnedSections || syncRes?.data || combined;
+              this.bookmarkedSectionIds = new Set(finalPins);
+              this.applyBookmarksToViewModel();
+              // Clear local cache once synced
+              localStorage.removeItem(`lc_bookmarks_${this.shortName}`);
+              this.cdr.markForCheck();
+            },
+            error: () => {
+              this.bookmarkedSectionIds = new Set([...backendPins, ...localPending]);
+              this.applyBookmarksToViewModel();
+              this.cdr.markForCheck();
+            }
+          });
+        } else {
+          // Direct backend load — apply and ensure local cache is cleared
+          this.bookmarkedSectionIds = new Set(backendPins);
+          this.applyBookmarksToViewModel();
+          localStorage.removeItem(`lc_bookmarks_${this.shortName}`);
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {
+        // Offline / backend unavailable — retain local cache
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private applyBookmarksToViewModel(): void {
+    if (!this.enrichedAct?.flatSections) return;
+    this.enrichedAct.flatSections.forEach(sec => {
+      sec.isBookmarked = this.bookmarkedSectionIds.has(sec.secId);
+    });
+    this.recalculateDisplayedChapters();
     this.cdr.markForCheck();
   }
 
-  toggleReaderSettings(): void {
+  private saveBookmarks(): void {
+    try {
+      localStorage.setItem(
+        `lc_bookmarks_${this.shortName}`,
+        JSON.stringify(Array.from(this.bookmarkedSectionIds))
+      );
+    } catch { }
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     COLLAPSE & ACCORDION STATE CONTROLS
+     ═══════════════════════════════════════════════════════ */
+
+  get areAllChaptersCollapsed(): boolean {
+    if (!this.enrichedAct?.chapters?.length) return false;
+    return this.enrichedAct.chapters.every(c => this.collapsedChapters[c.chapKey]);
+  }
+
+  get areAllTocChaptersCollapsed(): boolean {
+    if (!this.displayedChapters?.length) return false;
+    return this.displayedChapters.every(c => this.tocCollapsedChapters[c.chapKey]);
+  }
+
+  toggleChapterCollapse(chapKey: string, event?: Event): void {
+    event?.stopPropagation();
+    this.collapsedChapters[chapKey] = !this.collapsedChapters[chapKey];
+    this.refreshScrollspyObserver();
+    this.cdr.markForCheck();
+  }
+
+  toggleTocChapterCollapse(chapKey: string, event?: Event): void {
+    event?.stopPropagation();
+    this.tocCollapsedChapters[chapKey] = !this.tocCollapsedChapters[chapKey];
+    this.cdr.markForCheck();
+  }
+
+  toggleAllChapters(event?: Event): void {
+    event?.stopPropagation();
+    const shouldCollapse = !this.areAllChaptersCollapsed;
+    if (this.enrichedAct) {
+      for (const chap of this.enrichedAct.chapters) {
+        this.collapsedChapters[chap.chapKey] = shouldCollapse;
+      }
+    }
+    this.refreshScrollspyObserver();
+    this.cdr.markForCheck();
+  }
+
+  toggleAllTocChapters(event?: Event): void {
+    event?.stopPropagation();
+    const shouldCollapse = !this.areAllTocChaptersCollapsed;
+    if (this.enrichedAct) {
+      for (const chap of this.enrichedAct.chapters) {
+        this.tocCollapsedChapters[chap.chapKey] = shouldCollapse;
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  toggleSectionCollapse(secId: string, event?: Event): void {
+    event?.stopPropagation();
+    this.collapsedSections[secId] = !this.collapsedSections[secId];
+    this.refreshScrollspyObserver();
+    this.cdr.markForCheck();
+  }
+
+  toggleAllSectionsCollapse(collapse: boolean): void {
+    if (!this.enrichedAct) return;
+    for (const sec of this.enrichedAct.flatSections) {
+      this.collapsedSections[sec.secId] = collapse;
+    }
+    this.refreshScrollspyObserver();
+    this.cdr.markForCheck();
+  }
+
+  toggleLaymanSummary(secId: string): void {
+    this.showLaymanSummary[secId] = !this.showLaymanSummary[secId];
+    this.cdr.markForCheck();
+  }
+
+  toggleDefinedTerms(secId: string): void {
+    const isCurrentlyShown = this.showDefinedTerms[secId] !== false;
+    this.showDefinedTerms[secId] = !isCurrentlyShown;
+    this.cdr.markForCheck();
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     READER CUSTOMIZATION & PERSISTENCE
+     ═══════════════════════════════════════════════════════ */
+
+  setFontScale(delta: number): void {
+    // Clean 10% steps bounded between 80% and 140%
+    const nextScale = Math.round((this.fontScale + delta) / 10) * 10;
+    this.fontScale = Math.min(140, Math.max(80, nextScale));
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  resetFontScale(): void {
+    this.fontScale = 100;
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  setFontFamily(family: 'sans' | 'serif'): void {
+    this.fontFamily = family;
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  setViewMode(mode: 'structured' | 'raw'): void {
+    this.viewMode = mode;
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  setActiveLanguage(lang: 'en' | 'hi' | 'both'): void {
+    this.activeLanguage = lang;
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  setSplitViewMode(mode: 'stacked' | 'split'): void {
+    this.splitViewMode = mode;
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  toggleToc(): void {
+    this.isTocCollapsed = !this.isTocCollapsed;
+    this.savePersistedPreferences();
+    this.cdr.markForCheck();
+  }
+
+  toggleReaderSettings(event?: Event): void {
+    event?.stopPropagation();
     this.showReaderSettings = !this.showReaderSettings;
+    if (this.showReaderSettings) {
+      this.showShortcutsModal = false;
+    }
     this.cdr.markForCheck();
   }
 
@@ -267,261 +998,159 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   toggleJumpToSection(): void {
     this.showJumpToSection = !this.showJumpToSection;
     this.jumpSearchQuery = '';
+    this.recalculateJumpSections();
     this.cdr.markForCheck();
     if (this.showJumpToSection) {
       setTimeout(() => this.jumpSearchInputEl?.nativeElement?.focus(), 100);
     }
   }
 
-  toggleToc(): void {
-    this.isTocCollapsed = !this.isTocCollapsed;
-    this.cdr.markForCheck();
-  }
-
-  toggleSectionCollapse(secId: string, event?: Event): void {
+  toggleShortcutsModal(event?: Event): void {
     event?.stopPropagation();
-    this.collapsedSections[secId] = !this.collapsedSections[secId];
+    this.showShortcutsModal = !this.showShortcutsModal;
+    if (this.showShortcutsModal) {
+      this.showReaderSettings = false;
+    }
     this.cdr.markForCheck();
   }
 
-  toggleDefinedTerms(secId: string): void {
-    this.showDefinedTerms[secId] = !this.showDefinedTerms[secId];
-    this.cdr.markForCheck();
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (!target) return;
+
+    // Check if user clicked an amendment footnote badge anywhere in the reader
+    const fnBadge = target.closest('.fn-badge') as HTMLElement;
+    if (fnBadge) {
+      event.preventDefault();
+      event.stopPropagation();
+      const fnNum = fnBadge.getAttribute('data-fn') || fnBadge.textContent?.replace(/\D/g, '') || '1';
+      this.showFootnoteDetails(fnNum);
+      return;
+    }
+
+    let changed = false;
+    if (this.showReaderSettings && !target.closest('.reader-settings-dropdown') && !target.closest('.reader-settings-toggle')) {
+      this.showReaderSettings = false;
+      changed = true;
+    }
+
+    if (this.showShortcutsModal && !target.closest('.shortcuts-dropdown') && !target.closest('.shortcuts-toggle')) {
+      this.showShortcutsModal = false;
+      changed = true;
+    }
+
+    if (changed) {
+      this.cdr.markForCheck();
+    }
   }
 
-  get jumpFilteredSections(): Array<{ section: any; chapterTitle: string }> {
-    const flat = this.allFlatSections;
-    if (!this.jumpSearchQuery.trim()) return flat.map(f => ({ section: f.section, chapterTitle: f.chapterTitle }));
+  @HostListener('document:keydown', ['$event'])
+  onKeydown(event: KeyboardEvent): void {
+    const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement)?.tagName || '');
 
-    const q = this.jumpSearchQuery.toLowerCase().trim();
-    return flat
-      .filter(f => {
-        const secNum = String(f.section.section_number || f.section.sectionNumber || '').toLowerCase();
-        const title = this.getCleanTitle(f.section).toLowerCase();
-        return secNum.includes(q) || title.includes(q);
-      })
-      .map(f => ({ section: f.section, chapterTitle: f.chapterTitle }));
-  }
-
-  getSecId(sec: any): string {
-    return String(sec.section_number || sec.sectionNumber || '');
-  }
-
-  getChapKey(chap: any): string {
-    return String(chap.chapterNumber || chap.chapter_number || chap.title || '');
-  }
-
-  fetchActDetail(): void {
-    this.isLoading = true;
-    this.cdr.markForCheck();
-    this.api.getActDetail(this.shortName).subscribe({
-      next: (res: any) => {
-        this.isLoading = false;
-        this.act = res.data || res;
-        if (this.act && this.act.chapters && this.act.chapters.length > 0) {
-          const firstSec = this.act.chapters[0].sections?.[0];
-          if (firstSec) {
-            this.activeSectionId = String(firstSec.section_number || firstSec.sectionNumber);
-          }
-        }
+    if (event.key === 'Escape') {
+      if (this.showReaderSettings || this.showShortcutsModal || this.showJumpToSection || this.editingSection || this.activeFootnote) {
+        this.showReaderSettings = false;
+        this.showShortcutsModal = false;
+        this.showJumpToSection = false;
+        this.editingSection = null;
+        this.activeFootnote = null;
         this.cdr.markForCheck();
-      },
-      error: () => {
-        this.isLoading = false;
-        this.toast.error('Failed to load Act details.');
-        this.cdr.markForCheck();
+        return;
       }
-    });
-  }
-
-  get totalSectionsInActCount(): number {
-    if (!this.act || !this.act.chapters) return 0;
-    return this.act.chapters.reduce((sum: number, chap: any) => sum + (chap.sections?.length || 0), 0);
-  }
-
-  get totalMatchingSectionsCount(): number {
-    const chapters = this.filteredChapters;
-    return chapters.reduce((sum: number, chap: any) => sum + (chap.sections?.length || 0), 0);
-  }
-
-  get filteredChapters(): any[] {
-    if (!this.act || !this.act.chapters) return [];
-    const mainQ = this.searchQuery.toLowerCase().trim();
-    const tocQ = this.tocSearchQuery.toLowerCase().trim();
-    const q = tocQ || mainQ;
-    if (!q) return this.act.chapters;
-
-    return this.act.chapters.map((chap: any) => {
-      const matchingSections = (chap.sections || []).filter((sec: any) => {
-        const secNum = String(sec.section_number || sec.sectionNumber || '').toLowerCase();
-        const title = String(sec.title || '').toLowerCase();
-        const titleHi = String(sec.title_hi || '').toLowerCase();
-        const content = this.safeStringify(sec.content || sec.introduction_text || '').toLowerCase();
-        return secNum.includes(q) || title.includes(q) || titleHi.includes(q) || content.includes(q);
-      });
-      return { ...chap, sections: matchingSections };
-    }).filter((chap: any) => chap.sections.length > 0);
-  }
-
-  toggleChapterCollapse(chapKey: string, event?: Event): void {
-    event?.stopPropagation();
-    this.collapsedChapters[chapKey] = !this.collapsedChapters[chapKey];
-    this.cdr.markForCheck();
-  }
-
-  expandAllChapters(event?: Event): void {
-    event?.stopPropagation();
-    this.collapsedChapters = {};
-    this.cdr.markForCheck();
-  }
-
-  collapseAllChapters(event?: Event): void {
-    event?.stopPropagation();
-    if (!this.act || !this.act.chapters) return;
-    for (const chap of this.act.chapters) {
-      const key = String(chap.chapterNumber || chap.chapter_number || chap.title);
-      this.collapsedChapters[key] = true;
-    }
-    this.cdr.markForCheck();
-  }
-
-  toggleTocChapterCollapse(chapKey: string, event?: Event): void {
-    event?.stopPropagation();
-    this.tocCollapsedChapters[chapKey] = !this.tocCollapsedChapters[chapKey];
-    this.cdr.markForCheck();
-  }
-
-  get areAllTocChaptersCollapsed(): boolean {
-    if (!this.act || !this.act.chapters || this.act.chapters.length === 0) return false;
-    return this.act.chapters.every((chap: any) => {
-      const key = String(chap.chapterNumber || chap.chapter_number || chap.title);
-      return !!this.tocCollapsedChapters[key];
-    });
-  }
-
-  toggleAllTocChapters(event?: Event): void {
-    event?.stopPropagation();
-    if (this.areAllTocChaptersCollapsed) {
-      this.expandAllTocChapters(event);
-    } else {
-      this.collapseAllTocChapters(event);
-    }
-  }
-
-  expandAllTocChapters(event?: Event): void {
-    event?.stopPropagation();
-    this.tocCollapsedChapters = {};
-    this.cdr.markForCheck();
-  }
-
-  collapseAllTocChapters(event?: Event): void {
-    event?.stopPropagation();
-    if (!this.act || !this.act.chapters) return;
-    for (const chap of this.act.chapters) {
-      const key = String(chap.chapterNumber || chap.chapter_number || chap.title);
-      this.tocCollapsedChapters[key] = true;
-    }
-    this.cdr.markForCheck();
-  }
-
-  /**
-   * Safely converts any value to a string.
-   * Prevents [object Object] from rendering when MongoDB returns nested documents.
-   */
-  private safeStringify(val: any): string {
-    if (val === null || val === undefined) return '';
-    if (typeof val === 'string') return val;
-    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
-    if (Array.isArray(val)) {
-      return val.map(item => {
-        if (typeof item === 'string') return item;
-        if (item && typeof item === 'object' && item.text) return item.text;
-        return '';
-      }).filter(Boolean).join('\n');
-    }
-    if (typeof val === 'object' && val.text) return String(val.text);
-    try { return JSON.stringify(val); } catch { return ''; }
-  }
-
-  getCleanTitle(sec: any): string {
-    const raw = sec.clean_title || sec.title || '';
-    if (!raw) return 'Section ' + (sec.section_number || sec.sectionNumber || '');
-    const cleaned = typeof raw === 'string' ? raw : this.safeStringify(raw);
-    if (cleaned.includes('.-')) {
-      const titlePart = cleaned.split('.-')[0];
-      return titlePart.replace(/^Sec(tion)?\s*\d+[\s:.\-]*/i, '').trim();
-    }
-    return cleaned.replace(/^Sec(tion)?\s*\d+[\s:.\-]*/i, '').trim();
-  }
-
-  getCleanBody(sec: any): string {
-    let fullContent = sec.content || sec.introduction_text || sec.text || '';
-
-    // Safety: if content is not a string, convert it
-    fullContent = this.safeStringify(fullContent);
-
-    if (fullContent && fullContent.trim().length > 5) {
-      let cleaned = fullContent
-        .replace(/^(February|January|March|April|May|June|July|August|September|October|November|December),\s*\d{4},?\s*see Gazette of India.*?\.\s*/i, '')
-        // Strip literal [object Object] artifacts from bad serialization
-        .replace(/\[object\s+Object\]/gi, '')
-        .replace(/\{"[^"]*":\s*"[^"]*"\}/g, '') // Strip stray JSON fragments
-        .trim();
-      return cleaned || fullContent.trim();
-    }
-    const raw = sec.title || '';
-    const rawStr = this.safeStringify(raw);
-    if (rawStr.includes('.-')) {
-      const parts = rawStr.split('.-');
-      if (parts.length > 1) {
-        return parts.slice(1).join('.-').trim();
+      if (this.searchQuery) {
+        this.clearMainSearch();
+        return;
       }
     }
-    return fullContent || rawStr || '';
-  }
 
-  getCleanBlockText(text: any): string {
-    const str = this.safeStringify(text);
-    return str
-      .replace(/\[object\s+Object\]/gi, '')
-      .replace(/\{"[^"]*":\s*"[^"]*"\}/g, '')
-      .trim();
-  }
+    if (isInput) return;
 
-  /**
-   * Returns a cached ParsedLegalSection model generated by LegalTextParser
-   */
-  getParsedSection(sec: any): ParsedLegalSection {
-    const secId = this.getSecId(sec);
-    if (this.parsedSectionsCache.has(secId)) {
-      return this.parsedSectionsCache.get(secId)!;
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'f') {
+      event.preventDefault();
+      this.searchInputEl?.nativeElement?.focus();
+    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g') {
+      event.preventDefault();
+      this.toggleJumpToSection();
+    } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'b') {
+      event.preventDefault();
+      this.toggleToc();
+    } else if (event.key === '?') {
+      event.preventDefault();
+      this.toggleShortcutsModal();
+    } else if (event.key.toLowerCase() === 'j' || event.key === 'ArrowDown') {
+      if (!event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        this.navigateSection(1);
+      }
+    } else if (event.key.toLowerCase() === 'k' || event.key === 'ArrowUp') {
+      if (!event.ctrlKey && !event.metaKey && !event.altKey) {
+        event.preventDefault();
+        this.navigateSection(-1);
+      }
+    } else if (event.key.toLowerCase() === 'b' && !event.ctrlKey && !event.metaKey) {
+      if (this.activeSectionId) {
+        event.preventDefault();
+        this.toggleBookmark(this.activeSectionId);
+      }
+    } else if (event.key.toLowerCase() === 'e' && !event.ctrlKey && !event.metaKey) {
+      event.preventDefault();
+      this.isEditMode = !this.isEditMode;
+      this.cdr.markForCheck();
     }
-
-    const rawBody = this.getCleanBody(sec);
-    const title = this.getCleanTitle(sec);
-    const parsed = LegalTextParser.parse(rawBody, title);
-    this.parsedSectionsCache.set(secId, parsed);
-    return parsed;
   }
 
-  toggleLaymanSummary(secId: string): void {
-    this.showLaymanSummary[secId] = !this.showLaymanSummary[secId];
-    this.cdr.markForCheck();
+  private loadPersistedPreferences(): void {
+    try {
+      const prefs = localStorage.getItem('lc_reader_preferences');
+      if (prefs) {
+        const parsed = JSON.parse(prefs);
+        if (parsed.readerTheme) this.readerTheme = parsed.readerTheme;
+        if (parsed.fontScale) this.fontScale = parsed.fontScale;
+        if (parsed.fontFamily) this.fontFamily = parsed.fontFamily;
+        if (parsed.viewMode) this.viewMode = parsed.viewMode;
+        if (parsed.activeLanguage) this.activeLanguage = parsed.activeLanguage;
+        if (parsed.splitViewMode) this.splitViewMode = parsed.splitViewMode;
+        if (typeof parsed.isTocCollapsed === 'boolean') this.isTocCollapsed = parsed.isTocCollapsed;
+      }
+    } catch { }
   }
 
-  setReaderTheme(theme: 'slate' | 'light'): void {
-    this.readerTheme = theme;
-    this.cdr.markForCheck();
+  private savePersistedPreferences(): void {
+    try {
+      localStorage.setItem('lc_reader_preferences', JSON.stringify({
+        readerTheme: this.readerTheme,
+        fontScale: this.fontScale,
+        fontFamily: this.fontFamily,
+        viewMode: this.viewMode,
+        activeLanguage: this.activeLanguage,
+        splitViewMode: this.splitViewMode,
+        isTocCollapsed: this.isTocCollapsed
+      }));
+    } catch { }
   }
 
-  setFontScale(delta: number): void {
-    this.fontScale = Math.min(140, Math.max(85, this.fontScale + delta));
-    this.cdr.markForCheck();
+  /* ═══════════════════════════════════════════════════════
+     LEGAL CITATIONS, PRINT & EXPORTS
+     ═══════════════════════════════════════════════════════ */
+
+  copySectionCitation(sec: EnrichedSection, event?: Event): void {
+    event?.stopPropagation();
+    const citation = `Section ${sec.secId}, ${this.enrichedAct?.actName || this.shortName} (${this.enrichedAct?.year || ''}): "${sec.cleanTitle}"`;
+    navigator.clipboard.writeText(citation).then(
+      () => this.toast.success(`Citation copied for Section ${sec.secId}`),
+      () => this.toast.error('Failed to copy citation to clipboard')
+    );
   }
 
-  toggleFontFamily(): void {
-    this.fontFamily = this.fontFamily === 'sans' ? 'serif' : 'sans';
-    this.cdr.markForCheck();
+  copySectionLink(sec: EnrichedSection, event?: Event): void {
+    event?.stopPropagation();
+    const url = `${window.location.origin}/legal-content/${this.shortName}#section-${sec.secId}`;
+    navigator.clipboard.writeText(url).then(
+      () => this.toast.success(`Section ${sec.secId} link copied to clipboard`),
+      () => this.toast.error('Failed to copy link to clipboard')
+    );
   }
 
   showFootnoteDetails(fnNumber: string): void {
@@ -538,254 +1167,71 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  /** Get the level-specific marker CSS class */
-  getMarkerClass(level: number): string {
-    switch (level) {
-      case 1: return 'marker-l1';
-      case 2: return 'marker-l2';
-      case 3: return 'marker-l3';
-      case 4: return 'marker-l4';
-      default: return 'marker-l1';
-    }
-  }
-
-  /** Get the level-specific node CSS class */
-  getNodeLevelClass(level: number): string {
-    switch (level) {
-      case 1: return 'level-1';
-      case 2: return 'level-2';
-      case 3: return 'level-3';
-      case 4: return 'level-4';
-      default: return 'level-1';
-    }
-  }
-
-  /** Check if a node is a callout type (proviso/explanation/illustration) */
-  isCalloutNode(node: LegalClauseNode): boolean {
-    return node.type === 'proviso' || node.type === 'explanation' || node.type === 'illustration';
-  }
-
-  /** Get callout CSS class */
-  getCalloutClass(type: string): string {
-    switch (type) {
-      case 'proviso': return 'callout-proviso';
-      case 'explanation': return 'callout-explanation';
-      case 'illustration': return 'callout-illustration';
-      default: return '';
-    }
-  }
-
-  /** Get callout label text */
-  getCalloutLabel(type: string): string {
-    switch (type) {
-      case 'proviso': return 'Proviso';
-      case 'explanation': return 'Explanation';
-      case 'illustration': return 'Illustration';
-      default: return '';
-    }
-  }
-
-  hasContent(sec: any): boolean {
-    const body = this.getCleanBody(sec);
-    const blocks = sec.content_blocks;
-    return (blocks && blocks.length > 0) || (body && body.length > 10);
-  }
-
-  getClauseStyle(text: string, type?: string): any {
-    if (type === 'explanation') {
-      return { 'border-left': '3px solid #0ea5e9', 'background-color': 'rgba(14, 165, 233, 0.05)', 'margin-left': '0' };
-    }
-    if (type === 'illustration') {
-      return { 'border-left': '3px solid #10b981', 'background-color': 'rgba(16, 185, 129, 0.05)', 'margin-left': '0' };
-    }
-    return {};
-  }
-
-  get allFlatSections(): Array<{ section: any; chapterNumber: string; chapterTitle: string; index: number }> {
-    if (!this.act || !this.act.chapters) return [];
-    const flat: Array<{ section: any; chapterNumber: string; chapterTitle: string; index: number }> = [];
-    let idx = 0;
-    for (const chap of this.filteredChapters) {
-      for (const sec of chap.sections || []) {
-        flat.push({
-          section: sec,
-          chapterNumber: String(chap.chapterNumber || chap.chapter_number || ''),
-          chapterTitle: String(chap.title || ''),
-          index: idx++
-        });
-      }
-    }
-    return flat;
-  }
-
-  scrollToSection(secNum: string): void {
-    const secStr = String(secNum);
-    this.activeSectionId = secStr;
-    this.showJumpToSection = false;
-    this.jumpSearchQuery = '';
-    this.cdr.markForCheck();
-
-    if (this.useVirtualScroll && this.virtualViewport) {
-      const targetIndex = this.allFlatSections.findIndex(
-        item => String(item.section.section_number || item.section.sectionNumber) === secStr
-      );
-      if (targetIndex >= 0) {
-        this.virtualViewport.scrollToIndex(targetIndex, 'smooth');
-      }
-    } else {
-      const el = document.getElementById(`section-${secStr}`);
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
-  }
-
-  copySectionCitation(sec: any): void {
-    const secNum = sec.section_number || sec.sectionNumber;
-    const title = this.getCleanTitle(sec);
-    const citation = `Section ${secNum}, ${this.act?.actName || this.shortName} (${this.act?.year || ''}): "${title}"`;
-    navigator.clipboard.writeText(citation).then(() => {
-      this.toast.success(`Citation copied for Section ${secNum}`);
+  printSection(sec: EnrichedSection, event?: Event): void {
+    event?.stopPropagation();
+    this.toast.info(`Preparing print document for Section ${sec.secId}...`);
+    this.printService.printLegalSection({
+      actOrDocTitle: this.enrichedAct?.actName || this.shortName,
+      shortCode: this.shortName,
+      year: this.enrichedAct?.year || '',
+      sectionNumber: sec.secId,
+      sectionTitle: sec.cleanTitle,
+      chapterNumber: sec.chapterNumber,
+      chapterTitle: sec.chapterTitle,
+      bodyTextOrHtml: sec.cleanBody,
+      hindiTitle: sec.title_hi,
+      hindiBody: sec.introduction_text_hi || sec.content_hi,
+      metadata: [
+        { label: 'Act Short Code', value: this.shortName },
+        { label: 'Jurisdiction', value: 'Republic of India' },
+        { label: 'Word Count', value: `${sec.wordCount} words` },
+        { label: 'Digitized', value: sec.hasContent ? 'Yes' : 'Pending' }
+      ]
     });
-  }
-
-  copySectionLink(sec: any): void {
-    const secNum = sec.section_number || sec.sectionNumber;
-    const url = `${window.location.origin}/legal-content/${this.shortName}#section-${secNum}`;
-    navigator.clipboard.writeText(url).then(() => {
-      this.toast.success('Section link copied to clipboard');
-    });
-  }
-
-  printSection(sec: any): void {
-    const secNum = sec.section_number || sec.sectionNumber;
-    const title = this.getCleanTitle(sec);
-    const body = this.getCleanBody(sec);
-    const actTitle = this.act?.actName || this.shortName;
-    const year = this.act?.year || '';
-    const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    const printWin = window.open('', '_blank', 'width=900,height=750');
-    if (!printWin) {
-      this.toast.error('Pop-up blocked. Please allow pop-ups for print.');
-      return;
-    }
-
-    printWin.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Section ${secNum} — ${actTitle} (${year})</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
-          @page { size: A4; margin: 20mm 15mm; }
-          body { font-family: 'Lora', Georgia, serif; color: #0f172a; background: #ffffff; line-height: 1.7; padding: 30px 40px; margin: 0; }
-          .brand-header { display: flex; align-items: center; justify-content: space-between; border-bottom: 3px double #1e3a8a; padding-bottom: 16px; margin-bottom: 24px; }
-          .brand-logo { font-family: 'Cinzel', serif; font-size: 22px; font-weight: 700; color: #1e3a8a; letter-spacing: 1.5px; }
-          .brand-tag { font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 4px; border: 1px solid #cbd5e1; }
-          .act-banner { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #2563eb; padding: 16px 20px; border-radius: 8px; margin-bottom: 24px; }
-          .act-title { font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: #3b82f6; margin-bottom: 4px; }
-          .sec-header { font-size: 22px; font-weight: 700; color: #0f172a; margin: 0; }
-          .sec-subtitle { font-size: 16px; font-style: italic; color: #475569; margin-top: 6px; }
-          .body-content { font-size: 15px; color: #1e293b; text-align: justify; white-space: pre-wrap; margin-top: 20px; }
-          .citation-box { font-family: 'Inter', sans-serif; font-size: 11px; color: #334155; background: #f1f5f9; border: 1px dashed #cbd5e1; padding: 10px 14px; border-radius: 6px; margin-top: 30px; }
-          .footer { margin-top: 40px; padding-top: 14px; border-top: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; font-family: 'Inter', sans-serif; font-size: 11px; color: #64748b; }
-          @media print { body { padding: 0; } }
-        </style>
-      </head>
-      <body>
-        <div class="brand-header">
-          <div>
-            <div class="brand-logo">LEGALCONNECT</div>
-            <div style="font-family: 'Inter', sans-serif; font-size: 10px; color: #64748b; margin-top: 2px;">OFFICIAL DIGITAL STATUTORY RECORD</div>
-          </div>
-          <div class="brand-tag">Certified Record</div>
-        </div>
-        <div class="act-banner">
-          <div class="act-title">${actTitle} (${year})</div>
-          <div class="sec-header">Section ${secNum}</div>
-          <div class="sec-subtitle">${title}</div>
-        </div>
-        <div class="body-content">${body}</div>
-        <div class="citation-box"><strong>Citation:</strong> Section ${secNum}, ${actTitle} (${year}) — LegalConnect</div>
-        <div class="footer">
-          <div>Generated on ${dateStr} • LegalConnect</div>
-          <div>Page 1 of 1</div>
-        </div>
-      </body>
-      </html>
-    `);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => { printWin.print(); }, 300);
   }
 
   exportFullActPDF(): void {
-    if (!this.act) return;
-    const actTitle = this.act.actName || this.shortName;
-    const year = this.act.year || '';
-    const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-
-    const printWin = window.open('', '_blank', 'width=1000,height=800');
-    if (!printWin) {
-      this.toast.error('Pop-up blocked. Please allow pop-ups to export.');
+    if (!this.enrichedAct) {
+      this.toast.warning('No act data available to export.');
       return;
     }
-
-    let fullHtml = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>${actTitle} (${year}) — Complete Act</title>
-        <style>
-          @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@700&family=Inter:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
-          @page { size: A4; margin: 20mm 15mm; }
-          body { font-family: 'Lora', Georgia, serif; color: #0f172a; line-height: 1.7; padding: 40px; margin: 0; }
-          .header { border-bottom: 3px double #1e3a8a; padding-bottom: 16px; margin-bottom: 24px; text-align: center; }
-          .brand { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; color: #1e3a8a; }
-          .act-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-top: 10px; }
-          .act-meta { font-family: 'Inter', sans-serif; font-size: 12px; color: #475569; margin-top: 4px; }
-          .chap-title { font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; text-transform: uppercase; color: #1e40af; border-bottom: 2px solid #93c5fd; padding-bottom: 6px; margin-top: 30px; margin-bottom: 16px; page-break-after: avoid; }
-          .sec-card { margin-bottom: 20px; page-break-inside: avoid; }
-          .sec-num { font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 700; color: #0f172a; }
-          .sec-body { font-size: 13.5px; color: #1e293b; text-align: justify; white-space: pre-wrap; }
-          .footer { margin-top: 50px; border-top: 1px solid #cbd5e1; padding-top: 12px; font-family: 'Inter', sans-serif; font-size: 10px; color: #94a3b8; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="brand">LEGALCONNECT STATUTORY REPOSITORY</div>
-          <div class="act-title">${actTitle}</div>
-          <div class="act-meta">Year ${year} • Exported ${dateStr}</div>
-        </div>
-    `;
-
-    for (const chap of this.filteredChapters) {
-      fullHtml += `<div class="chap-title">Chapter ${chap.chapterNumber || chap.chapter_number}: ${chap.title}</div>`;
-      for (const sec of chap.sections || []) {
-        const secNum = sec.section_number || sec.sectionNumber;
-        const title = this.getCleanTitle(sec);
-        const body = this.getCleanBody(sec);
-        fullHtml += `<div class="sec-card"><div class="sec-num">Section ${secNum}. ${title}</div><div class="sec-body">${body}</div></div>`;
-      }
-    }
-
-    fullHtml += `<div class="footer">LegalConnect Statutory Repository — Official Digital Archive</div></body></html>`;
-    printWin.document.write(fullHtml);
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => { printWin.print(); }, 400);
+    this.toast.info(`Generating full PDF for ${this.enrichedAct.actName || this.shortName}...`);
+    this.printService.printCompleteAct({
+      actName: this.enrichedAct.actName || this.shortName,
+      shortName: this.shortName,
+      year: this.enrichedAct.year,
+      description: this.enrichedAct.description,
+      totalSections: this.enrichedAct.totalSections,
+      totalChapters: this.enrichedAct.totalChapters,
+      chapters: this.displayedChapters.map(chap => ({
+        chapterNumber: chap.chapterNumber,
+        title: chap.title,
+        sections: chap.sections.map(sec => ({
+          secId: sec.secId,
+          cleanTitle: sec.cleanTitle,
+          cleanBody: sec.cleanBody,
+          title_hi: sec.title_hi,
+          introduction_text_hi: sec.introduction_text_hi,
+          content_hi: sec.content_hi
+        }))
+      }))
+    });
   }
 
-  openEditSection(sec: any): void {
+  /* ═══════════════════════════════════════════════════════
+     ADMIN INLINE EDITING
+     ═══════════════════════════════════════════════════════ */
+
+  openEditSection(sec: EnrichedSection, event?: Event): void {
+    event?.stopPropagation();
     this.editingSection = sec;
     this.editTab = 'en';
     this.editForm = {
-      section_number: sec.section_number || sec.sectionNumber || '',
-      title: this.getCleanTitle(sec),
+      section_number: sec.secId,
+      title: sec.cleanTitle,
       title_hi: sec.title_hi || '',
-      introduction_text: this.safeStringify(sec.content || sec.introduction_text || sec.text || ''),
-      introduction_text_hi: this.safeStringify(sec.content_hi || sec.introduction_text_hi || sec.text_hi || '')
+      introduction_text: sec.rawContent || sec.cleanBody,
+      introduction_text_hi: sec.introduction_text_hi || sec.content_hi || ''
     };
     this.cdr.markForCheck();
   }
@@ -800,14 +1246,24 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.api.updateSection(this.shortName, secId, this.editForm).subscribe({
       next: () => {
         this.isSaving = false;
-        this.editingSection.clean_title = this.editForm.title;
-        this.editingSection.title = this.editForm.title;
-        this.editingSection.title_hi = this.editForm.title_hi;
-        this.editingSection.content = this.editForm.introduction_text;
-        this.editingSection.introduction_text = this.editForm.introduction_text;
-        this.editingSection.introduction_text_hi = this.editForm.introduction_text_hi;
+        if (this.editingSection) {
+          this.editingSection.cleanTitle = this.editForm.title;
+          this.editingSection.title_hi = this.editForm.title_hi;
+          this.editingSection.rawContent = this.editForm.introduction_text;
+          this.editingSection.cleanBody = this.editForm.introduction_text;
+          this.editingSection.introduction_text_hi = this.editForm.introduction_text_hi;
+          this.editingSection.hasContent = this.editForm.introduction_text.trim().length > 10;
+
+          // Re-parse AST
+          const parsedBase = LegalTextParser.parse(this.editingSection.cleanBody, this.editingSection.cleanTitle);
+          this.editingSection.parsed = {
+            ...parsedBase,
+            enrichedNodes: this.enrichClauseNodes(parsedBase.nodes)
+          };
+        }
         this.editingSection = null;
         this.toast.success(`Section ${this.editForm.section_number} updated successfully.`);
+        this.recalculateDisplayedChapters();
         this.cdr.markForCheck();
       },
       error: () => {
@@ -818,9 +1274,222 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
-  /** Word count for edit form */
   get editWordCount(): number {
-    const text = this.editTab === 'en' ? this.editForm.introduction_text : this.editForm.introduction_text_hi;
-    return text ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+    const text = this.editTab === 'hi' ? this.editForm.introduction_text_hi : this.editForm.introduction_text;
+    if (!text) return 0;
+    return text.trim().split(/\s+/).filter(Boolean).length;
+  }
+
+  get editCharCount(): number {
+    const text = this.editTab === 'hi' ? this.editForm.introduction_text_hi : this.editForm.introduction_text;
+    return text ? text.length : 0;
+  }
+
+  get editReadingTime(): number {
+    return Math.max(1, Math.ceil(this.editWordCount / 200));
+  }
+
+  get hasHindiContent(): boolean {
+    return Boolean(this.editForm.title_hi?.trim() || this.editForm.introduction_text_hi?.trim());
+  }
+
+  get editPreviewParsed(): EnrichedParsedLegalSection | null {
+    if (!this.editForm.introduction_text) return null;
+    const parsedBase = LegalTextParser.parse(this.editForm.introduction_text, this.editForm.title || '');
+    return {
+      ...parsedBase,
+      enrichedNodes: this.enrichClauseNodes(parsedBase.nodes)
+    };
+  }
+
+  formatEditClauses(): void {
+    const field = this.editTab === 'hi' ? 'introduction_text_hi' : 'introduction_text';
+    let text = this.editForm[field] || '';
+    if (!text.trim()) return;
+
+    // Normalizes numbered sub-clauses so (1), (2), (a), (b), (i), (ii) start cleanly on newlines
+    text = text
+      .replace(/\r\n/g, '\n')
+      .replace(/([^\n])\s*(\(\d+[a-zA-Z]?\))\s*/g, '$1\n\n$2 ')
+      .replace(/([^\n])\s*(\([a-z]\))\s*/g, '$1\n  $2 ')
+      .replace(/([^\n])\s*(\([ivxlcdm]+\))\s*/g, '$1\n    $2 ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    this.editForm[field] = text;
+    this.toast.info('Clauses auto-formatted.');
+    this.cdr.markForCheck();
+  }
+
+  translateToHindiWithAi(): void {
+    if (!this.editForm.introduction_text?.trim() && !this.editForm.title?.trim()) {
+      this.toast.warning('Please enter English title or text first to translate.');
+      return;
+    }
+
+    this.isTranslating = true;
+    this.cdr.markForCheck();
+
+    this.api.translateSectionWithAi({
+      actName: this.enrichedAct?.actName || this.shortName,
+      shortName: this.shortName,
+      section_number: this.editForm.section_number,
+      title: this.editForm.title,
+      introduction_text: this.editForm.introduction_text
+    }).subscribe({
+      next: (res: any) => {
+        this.isTranslating = false;
+        if (res.data) {
+          if (res.data.title_hi) this.editForm.title_hi = res.data.title_hi;
+          if (res.data.introduction_text_hi) this.editForm.introduction_text_hi = res.data.introduction_text_hi;
+          this.editTab = 'hi';
+          this.toast.success('Official Hindi translation generated.');
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.isTranslating = false;
+        const msg = err.error?.error?.message || err.error?.message || 'Failed to translate with AI.';
+        this.toast.error(msg);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  enhanceEnglishWithAi(): void {
+    if (!this.editForm.introduction_text?.trim() && !this.editForm.title?.trim()) {
+      this.toast.warning('Please enter text first to format.');
+      return;
+    }
+
+    this.isEnhancing = true;
+    this.cdr.markForCheck();
+
+    this.api.enhanceSectionWithAi({
+      actName: this.enrichedAct?.actName || this.shortName,
+      shortName: this.shortName,
+      section_number: this.editForm.section_number,
+      title: this.editForm.title,
+      introduction_text: this.editForm.introduction_text
+    }).subscribe({
+      next: (res: any) => {
+        this.isEnhancing = false;
+        if (res.data) {
+          if (res.data.title) this.editForm.title = res.data.title;
+          if (res.data.introduction_text) this.editForm.introduction_text = res.data.introduction_text;
+          this.toast.success('Section text proofread & formatted.');
+        }
+        this.cdr.markForCheck();
+      },
+      error: (err: any) => {
+        this.isEnhancing = false;
+        const msg = err.error?.error?.message || err.error?.message || 'Failed to enhance with AI.';
+        this.toast.error(msg);
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════
+     INTERNAL HELPERS & STRING CONVERTERS
+     ═══════════════════════════════════════════════════════ */
+
+  private safeStringify(val: any): string {
+    if (val === null || val === undefined) return '';
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+    if (Array.isArray(val)) {
+      return val.map(item => {
+        if (typeof item === 'string') return item;
+        if (item && typeof item === 'object' && item.text) return item.text;
+        return '';
+      }).filter(Boolean).join('\n');
+    }
+    if (typeof val === 'object' && val.text) return String(val.text);
+    try { return JSON.stringify(val); } catch { return ''; }
+  }
+
+  private computeCleanTitle(sec: any): string {
+    const raw = sec.clean_title || sec.title || '';
+    if (!raw) return `Section ${sec.section_number || sec.sectionNumber || ''}`;
+    const cleaned = typeof raw === 'string' ? raw : this.safeStringify(raw);
+    const titlePart = cleaned.includes('.-') ? cleaned.split('.-')[0] : cleaned;
+    return titlePart.replace(/^Sec(tion)?\s*\d+[\s:.\-]*/i, '').trim();
+  }
+
+  private computeCleanBody(sec: any): string {
+    let fullContent = sec.content || sec.introduction_text || sec.text || '';
+    fullContent = this.safeStringify(fullContent);
+
+    if (fullContent && fullContent.trim().length > 5) {
+      const cleaned = fullContent
+        .replace(/^(February|January|March|April|May|June|July|August|September|October|November|December),\s*\d{4},?\s*see Gazette of India.*?\.\s*/i, '')
+        .replace(/\[object\s+Object\]/gi, '')
+        .replace(/\{"[^"]*":\s*"[^"]*"\}/g, '')
+        .trim();
+      return cleaned || fullContent.trim();
+    }
+    const raw = sec.title || '';
+    const rawStr = this.safeStringify(raw);
+    if (rawStr.includes('.-')) {
+      const parts = rawStr.split('.-');
+      if (parts.length > 1) {
+        return parts.slice(1).join('.-').trim();
+      }
+    }
+    return fullContent || rawStr || '';
+  }
+
+  private computeMarkerClass(level: number): string {
+    switch (level) {
+      case 1: return 'marker-l1';
+      case 2: return 'marker-l2';
+      case 3: return 'marker-l3';
+      case 4: return 'marker-l4';
+      default: return 'marker-l1';
+    }
+  }
+
+  private computeNodeLevelClass(level: number): string {
+    switch (level) {
+      case 1: return 'level-1';
+      case 2: return 'level-2';
+      case 3: return 'level-3';
+      case 4: return 'level-4';
+      default: return 'level-1';
+    }
+  }
+
+  private computeCalloutClass(type: string): string {
+    switch (type) {
+      case 'proviso': return 'callout-proviso';
+      case 'explanation': return 'callout-explanation';
+      case 'illustration': return 'callout-illustration';
+      default: return '';
+    }
+  }
+
+  private computeCalloutLabel(type: string): string {
+    switch (type) {
+      case 'proviso': return 'Proviso';
+      case 'explanation': return 'Explanation';
+      case 'illustration': return 'Illustration';
+      default: return '';
+    }
+  }
+
+  getCleanBlockText(text: any): string {
+    const str = this.safeStringify(text);
+    return str.replace(/\[object\s+Object\]/gi, '').replace(/\{"[^"]*":\s*"[^"]*"\}/g, '').trim();
+  }
+
+  getClauseStyle(text: string, type?: string): any {
+    if (type === 'explanation') {
+      return { 'border-left': '3px solid #0ea5e9', 'background-color': 'rgba(14, 165, 233, 0.05)', 'margin-left': '0' };
+    }
+    if (type === 'illustration') {
+      return { 'border-left': '3px solid #10b981', 'background-color': 'rgba(16, 185, 129, 0.05)', 'margin-left': '0' };
+    }
+    return {};
   }
 }

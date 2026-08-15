@@ -1,0 +1,245 @@
+<div
+  class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 overflow-y-auto animate-in"
+  (click)="closeModal()">
+  <div
+    class="glass-card w-full max-w-2xl rounded-3xl border border-white/10 bg-slate-900 shadow-2xl p-6 md:p-8 flex flex-col gap-5 text-slate-100 relative overflow-hidden"
+    (click)="$event.stopPropagation()">
+
+    <!-- Ambient Background Accent -->
+    <div class="absolute -top-20 -right-20 w-64 h-64 bg-amber-500/10 rounded-full blur-[80px] pointer-events-none">
+    </div>
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800 relative z-10">
+      <div class="flex items-center gap-3.5">
+        <div class="p-3 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-inner">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <h2 class="text-lg md:text-xl font-extrabold text-white tracking-tight">Edit Act Metadata</h2>
+            <span
+              class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/15 text-purple-300 border border-purple-500/20">
+              {{ editMetaForm.originalShortName }}
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Update statutory details, abbreviations, gazette metadata & preamble
+          </p>
+        </div>
+      </div>
+      <button
+        class="p-2 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-white/5 transition-colors cursor-pointer"
+        (click)="closeModal()">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Data-Rich Content Stats Banner -->
+    <div
+      class="grid grid-cols-3 gap-3 p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 text-xs relative z-10">
+      <div class="flex flex-col gap-0.5">
+        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Chapters</span>
+        <span class="text-sm font-extrabold text-purple-300 flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-purple-400" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          {{ getChapterCount() }} Chapters
+        </span>
+      </div>
+
+      <div class="flex flex-col gap-0.5 border-x border-slate-800/80 px-3">
+        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Sections</span>
+        <span class="text-sm font-extrabold text-emerald-300 flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-emerald-400" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          </svg>
+          {{ getSectionCount() }} Sections
+        </span>
+      </div>
+
+      <div class="flex flex-col gap-0.5 pl-1">
+        <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Era Classification</span>
+        <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full" [ngClass]="getEraClass()"></span>
+          {{ getEraLabel() }}
+        </span>
+      </div>
+    </div>
+
+    <!-- 2-Tab Sub-Navigation -->
+    <div class="flex border-b border-slate-800/80 text-xs font-semibold gap-2 pb-0.5 relative z-10">
+      <button class="pb-2.5 px-3 transition-all border-b-2 flex items-center gap-1.5 cursor-pointer"
+        [class.border-indigo-500]="activeTab === 'core'" [class.text-white]="activeTab === 'core'"
+        [class.border-transparent]="activeTab !== 'core'" [class.text-slate-400]="activeTab !== 'core'"
+        (click)="activeTab = 'core'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Core Identity & Code</span>
+      </button>
+
+      <button class="pb-2.5 px-3 transition-all border-b-2 flex items-center gap-1.5 cursor-pointer"
+        [class.border-indigo-500]="activeTab === 'gazette'" [class.text-white]="activeTab === 'gazette'"
+        [class.border-transparent]="activeTab !== 'gazette'" [class.text-slate-400]="activeTab !== 'gazette'"
+        (click)="activeTab = 'gazette'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Gazette & Regulatory Details</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: Core Identity -->
+    @if (activeTab === 'core') {
+    <div class="flex flex-col gap-3.5 text-xs animate-in relative z-10">
+      <!-- Act Name -->
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">Act Official Title *</label>
+        <input type="text" [(ngModel)]="editMetaForm.actName"
+          class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+      </div>
+
+      <!-- Short Code & Year -->
+      <div class="grid grid-cols-2 gap-3.5">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300 flex items-center justify-between">
+            <span>Short Code *</span>
+            @if (shortCodeCollision) {
+            <span class="text-[10px] font-bold text-rose-400">⚠️ Code In Use</span>
+            }
+          </label>
+          <input type="text" [(ngModel)]="editMetaForm.shortName" (ngModelChange)="checkShortCodeCollision()"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border bg-slate-800/80 text-slate-100 font-mono uppercase text-xs font-bold focus:outline-none focus:ring-1"
+            [ngClass]="shortCodeCollision ? 'border-rose-500 focus:border-rose-500' : 'border-white/10 focus:border-indigo-500'">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Enactment Year *</label>
+          <input type="number" [(ngModel)]="editMetaForm.year"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs font-semibold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500">
+        </div>
+      </div>
+
+      <!-- Act Number & Jurisdiction -->
+      <div class="grid grid-cols-2 gap-3.5">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Act Number / Statutory ID</label>
+          <input type="text" [(ngModel)]="editMetaForm.actNumber" placeholder="e.g. Act No. 45 of 2023"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Jurisdiction</label>
+          <admin-select [options]="jurisdictionOptions" [value]="editMetaForm.jurisdiction || ''"
+            (valueChange)="editMetaForm.jurisdiction = $event" width="100%" minWidth="100%" height="34px"
+            dropPosition="up">
+          </admin-select>
+        </div>
+      </div>
+
+      <!-- Legal Category -->
+      <div class="flex flex-col gap-1">
+        <label class="font-semibold text-slate-300">Legal Field / Category</label>
+        <admin-select [options]="categoryOptions" [value]="editMetaForm.category || ''"
+          (valueChange)="editMetaForm.category = $event" width="100%" minWidth="100%" height="34px" dropPosition="up">
+        </admin-select>
+      </div>
+    </div>
+    }
+
+    <!-- Tab 2: Gazette & Preamble -->
+    @if (activeTab === 'gazette') {
+    <div class="flex flex-col gap-3.5 text-xs animate-in relative z-10">
+      <div class="grid grid-cols-2 gap-3.5">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Ministry / Department</label>
+          <input type="text" [(ngModel)]="editMetaForm.ministry" placeholder="e.g. Ministry of Law and Justice"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Gazette Notification Ref</label>
+          <input type="text" [(ngModel)]="editMetaForm.gazetteRef" placeholder="e.g. Gazette of India, Extra."
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-3.5">
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Assent Date</label>
+          <input type="date" [(ngModel)]="editMetaForm.assentDate"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Commencement Date</label>
+          <input type="date" [(ngModel)]="editMetaForm.commencementDate"
+            class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+
+      <!-- Description / Preamble with Templates -->
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between">
+          <label class="font-semibold text-slate-300">Statutory Preamble / Description</label>
+          <div class="flex items-center gap-1 text-[10px]">
+            <span class="text-slate-400">Fill:</span>
+            <button
+              class="px-1.5 py-0.5 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-medium cursor-pointer"
+              (click)="applyPreambleTemplate('consolidation')">+ Consolidation</button>
+            <button
+              class="px-1.5 py-0.5 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-medium cursor-pointer"
+              (click)="applyPreambleTemplate('regulation')">+ Regulation</button>
+            <button
+              class="px-1.5 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-medium cursor-pointer"
+              (click)="applyPreambleTemplate('establishment')">+ Framework</button>
+          </div>
+        </div>
+        <textarea [(ngModel)]="editMetaForm.description" rows="3"
+          placeholder="An Act to consolidate and amend the statutory provisions relating to..."
+          class="input-field w-full px-3.5 py-2.5 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 text-xs leading-relaxed focus:outline-none focus:border-indigo-500"></textarea>
+      </div>
+    </div>
+    }
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-end gap-3 pt-3 border-t border-slate-800 relative z-10">
+      <button class="btn btn-secondary text-xs px-4 py-2 rounded-xl cursor-pointer"
+        (click)="closeModal()">Cancel</button>
+      <button
+        class="btn btn-primary text-xs px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-500 via-indigo-600 to-purple-600 hover:from-amber-400 hover:to-purple-500 text-white flex items-center gap-2 font-bold shadow-lg shadow-indigo-500/20 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+        [disabled]="isEditingMeta || shortCodeCollision || !editMetaForm.actName || !editMetaForm.shortName || !editMetaForm.year"
+        (click)="submitEditMeta()">
+        @if (isEditingMeta) {
+        <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor"
+            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+          </path>
+        </svg>
+        <span>Saving Changes...</span>
+        } @else {
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span>Save Changes</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,440 @@
+<div
+  class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/85 backdrop-blur-xl p-4 overflow-y-auto animate-in"
+  (click)="closeModal(true)">
+  <div
+    class="glass-card w-full max-w-4xl md:max-w-5xl rounded-3xl border border-white/10 bg-slate-900/95 shadow-2xl p-6 md:p-8 flex flex-col gap-6 text-slate-100 my-8 relative overflow-visible z-50"
+    (click)="$event.stopPropagation()">
+
+    <!-- Ambient Background Blur Accent -->
+    <div class="absolute -top-24 -right-24 w-80 h-80 bg-indigo-600/10 rounded-full blur-[90px] pointer-events-none">
+    </div>
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-4 border-b border-slate-800/80 relative z-10">
+      <div class="flex items-center gap-3.5">
+        <div class="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="12" y1="18" x2="12" y2="12"></line>
+            <line x1="9" y1="15" x2="15" y2="15"></line>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <div class="flex items-center gap-2">
+            <h2 class="text-lg md:text-xl font-extrabold text-white tracking-tight">Create Statutory Bare Act</h2>
+            <span
+              class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/20">
+              {{ formCompletionPercentage }}% Complete
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Digitize Bare Act & model initial chapter structure for
+            LegalConnect engine</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Reset / Clear Fields Button -->
+        <button
+          class="p-2 text-slate-400 hover:text-rose-300 rounded-xl hover:bg-rose-500/10 transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
+          (click)="clearAllFields()" [adminTooltip]="'Clear form fields & wipe draft'" tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 6h18"></path>
+            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
+            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
+          </svg>
+          <span class="hidden sm:inline">Reset</span>
+        </button>
+
+        <!-- Close (X) Button -->
+        <button
+          class="p-2 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
+          (click)="closeModal(true)" [adminTooltip]="'Auto-saves draft and closes'" tooltipPosition="top">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Unsaved Draft Status Banner -->
+    @if (hasRestoredDraft || draftSavedTime) {
+    <div
+      class="px-4 py-2.5 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-300 text-xs flex items-center justify-between gap-3 animate-in">
+      <div class="flex items-center gap-2">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-400"></span>
+        </span>
+        <span>Restored unsaved draft {{ draftSavedTime ? 'saved at ' + draftSavedTime : '' }}. Data is preserved
+          automatically.</span>
+      </div>
+      <button class="text-[11px] font-bold underline hover:text-amber-200 cursor-pointer"
+        (click)="clearAllFields()">Discard Draft</button>
+    </div>
+    }
+
+    <!-- Modal Tab Navigation with Numbered Step Badges -->
+    <div
+      class="flex border-b border-slate-800/80 gap-2 text-xs font-semibold overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden pb-0.5">
+      <button class="pb-3 px-3 transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+        [class.border-indigo-500]="activeModalTab === 'essentials'" [class.text-white]="activeModalTab === 'essentials'"
+        [class.border-transparent]="activeModalTab !== 'essentials'"
+        [class.text-slate-400]="activeModalTab !== 'essentials'" (click)="onTabChange('essentials')">
+        <span
+          class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold flex items-center justify-center border border-indigo-500/30">
+          1
+        </span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+        </svg>
+        <span>Step 1: Statutory Essentials</span>
+      </button>
+
+      <button class="pb-3 px-3 transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+        [class.border-indigo-500]="activeModalTab === 'gazette'" [class.text-white]="activeModalTab === 'gazette'"
+        [class.border-transparent]="activeModalTab !== 'gazette'" [class.text-slate-400]="activeModalTab !== 'gazette'"
+        (click)="onTabChange('gazette')">
+        <span
+          class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-extrabold flex items-center justify-center border border-purple-500/30">2</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="text-purple-400">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <span>Step 2: Gazette & Preamble</span>
+      </button>
+
+      <button class="pb-3 px-3 transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+        [class.border-indigo-500]="activeModalTab === 'structure'" [class.text-white]="activeModalTab === 'structure'"
+        [class.border-transparent]="activeModalTab !== 'structure'"
+        [class.text-slate-400]="activeModalTab !== 'structure'" (click)="onTabChange('structure')">
+        <span
+          class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold flex items-center justify-center border border-emerald-500/30">3</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+        </svg>
+        <span>Step 3: Initial Provision</span>
+      </button>
+
+      <button class="pb-3 px-3 transition-all border-b-2 flex items-center gap-1.5 cursor-pointer whitespace-nowrap"
+        [class.border-indigo-500]="activeModalTab === 'json'" [class.text-white]="activeModalTab === 'json'"
+        [class.border-transparent]="activeModalTab !== 'json'" [class.text-slate-400]="activeModalTab !== 'json'"
+        (click)="onTabChange('json')">
+        <span
+          class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold flex items-center justify-center border border-cyan-500/30">4</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400">
+          <polyline points="16 18 22 12 16 6"></polyline>
+          <polyline points="8 6 2 12 8 18"></polyline>
+        </svg>
+        <span>Step 4: 2-Way JSON Editor</span>
+      </button>
+    </div>
+
+    <!-- Tab 1: Statutory Essentials -->
+    @if (activeModalTab === 'essentials') {
+    <div class="flex flex-col gap-4 text-xs animate-in">
+      <!-- Act Official Title -->
+      <div class="flex flex-col gap-1.5">
+        <label class="font-semibold text-slate-300 flex items-center justify-between">
+          <span class="flex items-center gap-1">
+            <span>Act Official Title</span>
+            <span class="text-rose-400">*</span>
+          </span>
+          <span class="text-[10px] text-slate-500 font-normal">Full statutory title as enacted in Parliament</span>
+        </label>
+        <input type="text" [(ngModel)]="newActForm.actName" (ngModelChange)="onActNameChange()"
+          placeholder="e.g. Bharatiya Nyaya Sanhita, 2023"
+          class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs font-medium">
+      </div>
+
+      <!-- Short Code & Year -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300 flex items-center justify-between">
+            <span class="flex items-center gap-1">
+              <span>Short Code / Abbreviation</span>
+              <span class="text-rose-400">*</span>
+            </span>
+            @if (shortCodeCollision) {
+            <span class="text-[10px] font-bold text-rose-400">⚠️ Code Already Exists</span>
+            }
+          </label>
+          <input type="text" [(ngModel)]="newActForm.shortName" (ngModelChange)="onFormInput()"
+            placeholder="e.g. BNS, IPC"
+            class="input-field w-full px-4 py-3 rounded-xl border bg-slate-800/80 text-slate-100 font-mono uppercase placeholder-slate-500 focus:outline-none focus:ring-1 text-xs font-bold"
+            [ngClass]="shortCodeCollision ? 'border-rose-500 focus:border-rose-500' : 'border-white/10 focus:border-indigo-500'">
+          <span class="text-[10px] text-slate-400">Unique identifier used in URLs & AI index (e.g.
+            /legal-content/BNS)</span>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300 flex items-center gap-1">
+            <span>Enactment Year</span>
+            <span class="text-rose-400">*</span>
+          </label>
+          <input type="number" [(ngModel)]="newActForm.year" (ngModelChange)="onFormInput()" placeholder="2023"
+            class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs font-semibold">
+        </div>
+      </div>
+
+      <!-- Act Number & Jurisdiction -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Act Number / Statutory ID</label>
+          <input type="text" [(ngModel)]="newActForm.actNumber" (ngModelChange)="onFormInput()"
+            placeholder="e.g. Act No. 45 of 2023"
+            class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 text-xs">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Jurisdiction / Territorial Extent</label>
+          <admin-select [options]="jurisdictionOptions" [value]="newActForm.jurisdiction"
+            (valueChange)="newActForm.jurisdiction = $event; onFormInput()" width="100%" minWidth="100%" height="36px"
+            dropPosition="up">
+          </admin-select>
+        </div>
+      </div>
+
+      <!-- Category / Legal Branch -->
+      <div class="flex flex-col gap-1.5">
+        <label class="font-semibold text-slate-300">Legal Field / Category</label>
+        <admin-select [options]="categoryOptions" [value]="newActForm.category"
+          (valueChange)="newActForm.category = $event; onFormInput()" width="100%" minWidth="100%" height="36px"
+          dropPosition="up">
+        </admin-select>
+      </div>
+    </div>
+    }
+
+    <!-- Tab 2: Gazette & Preamble -->
+    @if (activeModalTab === 'gazette') {
+    <div class="flex flex-col gap-4 text-xs animate-in">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Ministry / Department</label>
+          <input type="text" [(ngModel)]="newActForm.ministry" (ngModelChange)="onFormInput()"
+            placeholder="e.g. Ministry of Law and Justice"
+            class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Gazette Notification Ref</label>
+          <input type="text" [(ngModel)]="newActForm.gazetteRef" (ngModelChange)="onFormInput()"
+            placeholder="e.g. Gazette of India, Extra., Part II"
+            class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Presidential / Royal Assent Date</label>
+          <input type="date" [(ngModel)]="newActForm.assentDate" (ngModelChange)="onFormInput()"
+            class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 focus:outline-none focus:border-indigo-500 text-xs">
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="font-semibold text-slate-300">Enforcement / Commencement Date</label>
+          <input type="date" [(ngModel)]="newActForm.commencementDate" (ngModelChange)="onFormInput()"
+            class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 focus:outline-none focus:border-indigo-500 text-xs">
+        </div>
+      </div>
+
+      <!-- Description / Preamble with Quick Fill Templates -->
+      <div class="flex flex-col gap-2">
+        <div class="flex items-center justify-between">
+          <label class="font-semibold text-slate-300">Statutory Preamble / Statement of Objects</label>
+          <div class="flex items-center gap-1.5 text-[10px]">
+            <span class="text-slate-400">Quick Templates:</span>
+            <button
+              class="px-2 py-0.5 rounded bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-medium cursor-pointer"
+              (click)="applyPreambleTemplate('consolidation')">+ Consolidation</button>
+            <button
+              class="px-2 py-0.5 rounded bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-medium cursor-pointer"
+              (click)="applyPreambleTemplate('regulation')">+ Regulation</button>
+            <button
+              class="px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/20 font-medium cursor-pointer"
+              (click)="applyPreambleTemplate('establishment')">+ Framework</button>
+          </div>
+        </div>
+        <textarea [(ngModel)]="newActForm.description" (ngModelChange)="onFormInput()" rows="3"
+          placeholder="An Act to consolidate and amend the provisions relating to offences and for matters connected therewith..."
+          class="input-field w-full px-4 py-3 rounded-xl border border-white/10 bg-slate-800/80 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 text-xs leading-relaxed"></textarea>
+      </div>
+    </div>
+    }
+
+    <!-- Tab 3: Initial Provision Structure -->
+    @if (activeModalTab === 'structure') {
+    <div class="flex flex-col gap-4 text-xs animate-in">
+      <div class="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-950/20 flex flex-col gap-4">
+        <div class="flex items-center gap-2.5 text-indigo-300 font-bold text-xs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+          </svg>
+          <span>Initial Seed Provision (Chapter I & Section 1)</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-semibold text-slate-300">Chapter I Title</label>
+            <input type="text" [(ngModel)]="newActForm.initialChapterTitle" (ngModelChange)="onFormInput()"
+              class="input-field px-4 py-2.5 rounded-xl border border-white/10 bg-slate-800/90 text-slate-100 text-xs font-semibold">
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-[11px] font-semibold text-slate-300">Section 1 Title</label>
+            <input type="text" [(ngModel)]="newActForm.initialSectionTitle" (ngModelChange)="onFormInput()"
+              class="input-field px-4 py-2.5 rounded-xl border border-white/10 bg-slate-800/90 text-slate-100 text-xs font-semibold">
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] font-semibold text-slate-300">Section 1 Introduction / Commencement Clause
+            Text</label>
+          <textarea [(ngModel)]="newActForm.initialSectionContent" (ngModelChange)="onFormInput()" rows="3"
+            [placeholder]="'This Act may be called the ' + (newActForm.actName || 'Statutory Act') + ', ' + newActForm.year + '. It shall come into force on such date as the Central Government may appoint.'"
+            class="input-field px-4 py-3 rounded-xl border border-white/10 bg-slate-800/90 text-slate-100 text-xs leading-relaxed"></textarea>
+        </div>
+      </div>
+    </div>
+    }
+
+    <!-- Tab 4: Interactive 2-Way Live JSON Payload Editor -->
+    @if (activeModalTab === 'json') {
+    <div class="flex flex-col gap-3 text-xs animate-in">
+      <div class="flex items-center justify-between flex-wrap gap-2">
+        <div class="flex items-center gap-2">
+          <span class="font-semibold text-slate-300">Statutory Payload JSON Code Editor</span>
+          @if (isJsonValid) {
+          <span
+            class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+            ✓ Valid JSON & Synced to Form
+          </span>
+          } @else {
+          <span
+            class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-rose-500/15 text-rose-400 border border-rose-500/30">
+            ⚠️ {{ jsonSyntaxError || 'Invalid Syntax' }}
+          </span>
+          }
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button
+            class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-semibold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
+            (click)="syncJsonFromForm()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            <span>Sync From Form</span>
+          </button>
+
+          <button
+            class="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-semibold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
+            (click)="formatJsonText()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="21" y1="10" x2="7" y2="10"></line>
+              <line x1="21" y1="6" x2="3" y2="6"></line>
+              <line x1="21" y1="14" x2="3" y2="14"></line>
+              <line x1="21" y1="18" x2="7" y2="18"></line>
+            </svg>
+            <span>Format JSON</span>
+          </button>
+        </div>
+      </div>
+
+      <textarea [(ngModel)]="jsonText" (ngModelChange)="onJsonInputChange()" rows="10"
+        placeholder="Edit raw JSON payload here to update form fields in real-time..."
+        class="w-full p-4 rounded-2xl bg-slate-950 border font-mono text-[11px] leading-relaxed shadow-inner focus:outline-none transition-all"
+        [ngClass]="isJsonValid ? 'border-slate-800 text-emerald-300 focus:border-indigo-500' : 'border-rose-500/60 text-rose-300 focus:border-rose-500'"></textarea>
+
+      <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-amber-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17.5H10L8.5 14.5Z"></path>
+          <line x1="10" y1="20" x2="14" y2="20"></line>
+        </svg>
+        <span>Power User Feature: You can edit or paste raw JSON payload directly above to update all statutory fields
+          in real-time.</span>
+      </span>
+    </div>
+    }
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-between gap-4 pt-4 border-t border-slate-800/80 relative z-10">
+      <!-- Left Side Draft Auto-save Indicator -->
+      <div class="flex items-center gap-2 text-[11px] text-slate-400">
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+        </span>
+        <span>Draft auto-saved {{ draftSavedTime ? 'at ' + draftSavedTime : '' }}</span>
+      </div>
+
+      <!-- Right Side Controls -->
+      <div class="flex items-center gap-2.5 flex-wrap justify-end">
+        @if (activeModalTab !== 'essentials') {
+        <button
+          class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white transition-all cursor-pointer flex items-center gap-1"
+          (click)="prevTab()">
+          <span>← Back</span>
+        </button>
+        }
+
+        @if (activeModalTab !== 'json') {
+        <button
+          class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 border border-indigo-500/20 transition-all cursor-pointer flex items-center gap-1"
+          (click)="nextTab()">
+          <span>Next Step →</span>
+        </button>
+        }
+
+        <button
+          class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-800/60 hover:bg-slate-700/80 text-slate-300 hover:text-white backdrop-blur-md transition-all cursor-pointer"
+          (click)="closeModal(true)" [adminTooltip]="'Save draft and close modal'" tooltipPosition="top">
+          Cancel & Save Draft
+        </button>
+
+        <button
+          class="flex items-center gap-2 px-5 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-xl shadow-indigo-500/25 transition-all duration-300 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:pointer-events-none cursor-pointer"
+          [disabled]="isSubmittingAct || !newActForm.actName || !newActForm.shortName || !newActForm.year || shortCodeCollision"
+          (click)="submitCreateAct()">
+          @if (isSubmittingAct) {
+          <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+            </path>
+          </svg>
+          <span>Publishing Act...</span>
+          } @else {
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save & Publish Act</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

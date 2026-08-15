@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { AdminStatsService } from './services/admin-stats.service';
 import { AdminUserService } from './services/admin-user.service';
 import { AdminContentService } from './services/admin-content.service';
+import { BareAct, CreateActPayload, EditMetaPayload } from '../pages/legal-content/legal-content.models';
 
 /**
  * AdminApiService - Master Facade Service:
@@ -83,11 +84,18 @@ export class AdminApiService {
 
   // -- Bare Acts Delegates --
   getActs(): Observable<any> { return this.content.getActs(); }
-  createAct(data: any): Observable<any> { return this.content.createAct(data); }
-  getActDetail(shortName: string): Observable<any> { return this.content.getActDetail(shortName); }
+  createAct(data: CreateActPayload | any): Observable<BareAct> { return this.content.createAct(data); }
+  getActDetail(shortName: string): Observable<BareAct> { return this.content.getActDetail(shortName); }
   updateSection(shortName: string, sectionId: string, data: any): Observable<any> { return this.content.updateSection(shortName, sectionId, data); }
-  patchActMetadata(shortName: string, data: any): Observable<any> { return this.content.patchActMetadata(shortName, data); }
+  translateSectionWithAi(data: any): Observable<any> { return this.content.translateSectionWithAi(data); }
+  enhanceSectionWithAi(data: any): Observable<any> { return this.content.enhanceSectionWithAi(data); }
+  patchActMetadata(shortName: string, data: EditMetaPayload): Observable<any> { return this.content.patchActMetadata(shortName, data); }
   deleteAct(shortName: string): Observable<any> { return this.content.deleteAct(shortName); }
+  getFavorites(): Observable<any> { return this.content.getFavorites(); }
+  toggleFavorite(shortName: string): Observable<any> { return this.content.toggleFavorite(shortName); }
+  getPinnedSections(shortName: string): Observable<{ success: boolean; data: string[] }> { return this.content.getPinnedSections(shortName); }
+  togglePinnedSection(shortName: string, sectionId: string): Observable<any> { return this.content.togglePinnedSection(shortName, sectionId); }
+  syncPinnedSections(shortName: string, sectionIds: string[]): Observable<any> { return this.content.syncPinnedSections(shortName, sectionIds); }
 
   // -- Resources Delegates --
   getResources(params: any = {}): Observable<any> { return this.content.getResources(params); }
