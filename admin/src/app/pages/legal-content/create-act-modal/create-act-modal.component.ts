@@ -206,7 +206,7 @@ export class CreateActModalComponent implements OnInit, OnDestroy {
     if (this.newActForm.actName && (!this.newActForm.shortName || this.hasRestoredDraft === false)) {
       const words = this.newActForm.actName.replace(/[^a-zA-Z0-9\s]/g, '').trim().split(/\s+/);
       if (words.length > 1) {
-        this.newActForm.shortName = words.map(w => w[0]?.toUpperCase()).join('');
+        this.newActForm.shortName = words.map((w: string) => w[0]?.toUpperCase()).join('');
       } else if (words[0] && words[0].length >= 3) {
         this.newActForm.shortName = words[0].substring(0, 4).toUpperCase();
       }

@@ -26,7 +26,36 @@ export interface ParsedLegalSection {
 }
 
 export class LegalTextParser {
+  private static readonly MAX_CACHE_SIZE = 1000;
   private static parseCache = new Map<string, ParsedLegalSection>();
+
+  private static getFromCache(key: string): ParsedLegalSection | undefined {
+    const value = this.parseCache.get(key);
+    if (value) {
+      // Re-insert to refresh LRU access order
+      this.parseCache.delete(key);
+      this.parseCache.set(key, value);
+    }
+    return value;
+  }
+
+  private static setToCache(key: string, value: ParsedLegalSection): void {
+    if (this.parseCache.has(key)) {
+      this.parseCache.delete(key);
+    } else if (this.parseCache.size >= this.MAX_CACHE_SIZE) {
+      // Evict least recently used entry (first in insertion order)
+      const oldestKey = this.parseCache.keys().next().value;
+      if (oldestKey) this.parseCache.delete(oldestKey);
+    }
+    this.parseCache.set(key, value);
+  }
+
+  private static escapeHtml(str: string): string {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;');
+  }
 
   public static parse(rawText: string, sectionTitle?: string): ParsedLegalSection {
     if (!rawText || typeof rawText !== 'string') {
@@ -42,8 +71,9 @@ export class LegalTextParser {
 
     const trimmed = rawText.trim();
     const cacheKey = `${sectionTitle || ''}__${trimmed}`;
-    if (this.parseCache.has(cacheKey)) {
-      return this.parseCache.get(cacheKey)!;
+    const cached = this.getFromCache(cacheKey);
+    if (cached) {
+      return cached;
     }
 
     const footnotesMap: Map<string, LegalFootnote> = new Map();
@@ -75,12 +105,7 @@ export class LegalTextParser {
       hasStructure: nodes.length > 0 || preamble.length > 0
     };
 
-    // Cache up to 1000 parsed sections to prevent unbounded memory growth
-    if (this.parseCache.size > 1000) {
-      const firstKey = this.parseCache.keys().next().value;
-      if (firstKey) this.parseCache.delete(firstKey);
-    }
-    this.parseCache.set(cacheKey, parsedResult);
+    this.setToCache(cacheKey, parsedResult);
 
     return parsedResult;
   }
@@ -102,7 +127,8 @@ export class LegalTextParser {
       return ` {FN:${fnNum}} ${fnContent} `;
     });
 
-    result = result.replace(/\s+/g, ' ').trim();
+    // Collapse horizontal whitespace (spaces/tabs) but preserve newlines for boundary detection
+    result = result.replace(/[^\S\r\n]+/g, ' ').replace(/[\r\n][\s]*/g, '\n').trim();
     return { textWithFootnoteMarkers: result, footnotes };
   }
 
@@ -117,7 +143,9 @@ export class LegalTextParser {
     // (A), (B), (C)...
     // Callouts: Provided that, Explanation, Illustration, Exception (English & Hindi)
     // Boundary anchors: start of text, newlines, period/semicolon/colon, Devanagari danda (।), or double space
-    const markerRegex = /(?:^|[\r\n]+|[.;:।॥]\s*|\s{2,}|\b)(?:\(([0-9]{1,3}[A-Za-z]?|[०-९]{1,3}[क-ह]?)\)|\(([a-z]{1,2}|[क-ह])\)|\(([ivxlcdm]{1,4}|[क-ह]{2})\)|\(([A-Z])\)|(Provided\s+(?:further\s+)?that|परन्तु\s*(?:यह\s*और\s*कि|यह\s*कि|कि)?)|(Explanation\s*\d*\.?[-—:]?|स्पष्टीकरण\s*[\d०-९]*\.?[-—:]?)|(Illustration\s*\d*\.?[-—:]?|दृष्टांत\s*[\d०-९]*\.?[-—:]?)|(Exception\s*\d*\.?[-—:]?|अपवाद\s*[\d०-९]*\.?[-—:]?))/gi;
+    // Boundary: start-of-text, newline, common punctuation (period/semicolon/colon/comma/em-dash/danda/closing-paren) + optional whitespace, OR any single whitespace.
+    // Using \s (not \s{2,}) ensures markers after a single space are detected — the cross-reference filter prevents false positives.
+    const markerRegex = /(?:^|[\r\n]+|[.;:।॥,—]\s*|\)\s*|\s)(?:\(([0-9]{1,3}[A-Za-z]?|[०-९]{1,3}[क-ह]?)\)|\(([a-z]{1,2}|[क-ह])\)|\(([ivxlcdm]{1,4}|[क-ह]{2})\)|\(([A-Z])\)|(Provided\s+(?:further\s+)?that|परन्तु\s*(?:यह\s*और\s*कि|यह\s*कि|कि)?)|(Explanation\s*\d*\.?[-—:]?|स्पष्टीकरण\s*[\d०-९]*\.?[-—:]?)|(Illustration\s*\d*\.?[-—:]?|दृष्टांत\s*[\d०-९]*\.?[-—:]?)|(Exception\s*\d*\.?[-—:]?|अपवाद\s*[\d०-९]*\.?[-—:]?))/gi;
 
     interface MatchItem {
       index: number;
@@ -177,8 +205,8 @@ export class LegalTextParser {
       const precedingText = bodyText.substring(Math.max(0, markerStartIndex - 40), markerStartIndex).trim();
 
       // Ignore cross references like "sub-section (3) of section 3" or "उपधारा (1) के अधीन"
-      const isCrossReference = /\b(sub-section|subsection|section|sec|clause|sub-clause|subclause|article|art|rule|paragraph|para|item|under|of)\s*$/i.test(precedingText) ||
-        /(?:उपधारा|उप-धारा|धारा|खंड|उप-खंड|उपखंड|अनुच्छेद|नियम|विनियम|पैरा|प्रस्तर|के\s+अधीन|के\s+अनुसार)\s*$/.test(precedingText);
+      const isCrossReference = /\b(sub-section|subsection|section|sec|clause|sub-clause|subclause|article|art|rule|paragraph|para|item|under|of|part|schedule|entry|proviso|explanation|referred\s+to\s+in|specified\s+in|mentioned\s+in)\s*$/i.test(precedingText) ||
+        /(?:उपधारा|उप-धारा|धारा|खंड|उप-खंड|उपखंड|अनुच्छेद|नियम|विनियम|पैरा|प्रस्तर|के\s+अधीन|के\s+अनुसार|में\s+निर्दिष्ट|में\s+उल्लिखित)\s*$/.test(precedingText);
 
       if (isCrossReference) {
         continue;
@@ -205,8 +233,9 @@ export class LegalTextParser {
       const end = (i + 1 < matches.length) ? matches[i + 1].index : bodyText.length;
       let rawTextSlice = bodyText.substring(start, end).trim();
 
-      // Clean leading and trailing punctuation noise from the text slice
-      rawTextSlice = rawTextSlice.replace(/^[.;:।॥,\s—-]+/, '').replace(/[.;:।॥,\s—-]+$/, '').trim();
+      // Clean leading punctuation noise (periods, semicolons, colons, commas, dashes, dandas) and trailing noise.
+      // These characters are separators between the marker and the clause content, not part of the text itself.
+      rawTextSlice = rawTextSlice.replace(/^[\s.;:,\-–—।॥]+/, '').replace(/[\s.;।॥]+$/, '').trim();
 
       if (!rawTextSlice && i === 0 && matches.length > 1) {
         continue;
@@ -227,15 +256,22 @@ export class LegalTextParser {
     type: LegalClauseNode['type'],
     _footnotesMap: Map<string, LegalFootnote>
   ): LegalClauseNode {
-    const cleanedRaw = rawText.replace(/^[\s\)\.\:-—]+/, '').trim();
+    // Strip all leading noise: whitespace, closing parens, and common punctuation separators.
+    // Includes commas, semicolons, hyphens, dashes which may appear as artifacts from data truncation.
+    const cleanedRaw = rawText.replace(/^[\s).,:;\-–—।॥]+/, '').trim();
     const termMatch = cleanedRaw.match(/["“]([^"”]+)["”]/);
     const term = termMatch ? termMatch[1].trim() : undefined;
 
-    let cleanText = cleanedRaw.replace(/\{FN:(\d+)\}/g, '<sup class="fn-badge" data-fn="$1">[$1]</sup>');
+    // First escape any raw HTML entities to prevent XSS / broken layouts
+    let cleanText = this.escapeHtml(cleanedRaw);
+
+    // Replace footnote tokens safely
+    cleanText = cleanText.replace(/\{FN:(\d+)\}/g, '<sup class="fn-badge" data-fn="$1">[$1]</sup>');
 
     // Highlight defined terms naturally inline in sentence
     if (term) {
-      const termRegex = new RegExp(`(["“]${term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}["”])`, 'g');
+      const escapedTerm = this.escapeHtml(term);
+      const termRegex = new RegExp(`(["“]${escapedTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}["”])`, 'g');
       cleanText = cleanText.replace(termRegex, '<strong class="defined-term-inline text-amber-300 font-bold">$1</strong>');
     }
 

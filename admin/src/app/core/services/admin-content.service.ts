@@ -4,17 +4,34 @@ import { Observable } from 'rxjs';
 import { shareReplay } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
-import { BareAct, CreateActPayload, EditMetaPayload } from '../../pages/legal-content/legal-content.models';
+import {
+  BareAct,
+  CreateActPayload,
+  EditMetaPayload,
+  ApiResponse,
+  UpdateSectionPayload,
+  AiTranslateSectionRequest,
+  AiTranslateSectionResponse,
+  AiEnhanceSectionRequest,
+  AiEnhanceSectionResponse,
+  PinnedSectionsResponse,
+  TogglePinnedSectionResponse,
+  ToggleFavoriteResponse,
+  LegalResourceItem,
+  HelplineItem,
+  LegalTemplateItem
+} from '../../pages/legal-content/legal-content.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminContentService {
   private readonly NODE_API = environment.nodeUrl;
-  private helplinesCache$?: Observable<any>;
+  private helplinesCache$?: Observable<ApiResponse<HelplineItem[]>>;
+  private actDetailCache = new Map<string, Observable<BareAct>>();
 
   constructor(private http: HttpClient) { }
 
   // -- Legal Content (Bare Acts & Sections) --
-  getActs(): Observable<BareAct[] | { data?: BareAct[]; acts?: BareAct[]; items?: BareAct[] }> {
+  getActs(): Observable<ApiResponse<BareAct[]> | BareAct[] | { data?: BareAct[]; acts?: BareAct[]; items?: BareAct[] }> {
     return this.http.get<any>(`${this.NODE_API}/acts?refresh=true`);
   }
 
@@ -23,109 +40,130 @@ export class AdminContentService {
   }
 
   getActDetail(shortName: string): Observable<BareAct> {
-    return this.http.get<BareAct>(`${this.NODE_API}/acts/${shortName}?refresh=true`);
+    const key = shortName.toUpperCase();
+    if (!this.actDetailCache.has(key)) {
+      this.actDetailCache.set(
+        key,
+        this.http.get<BareAct>(`${this.NODE_API}/acts/${shortName}`).pipe(
+          shareReplay({ bufferSize: 1, refCount: true })
+        )
+      );
+    }
+    return this.actDetailCache.get(key)!;
   }
 
-  updateSection(shortName: string, sectionId: string, data: any): Observable<any> {
-    return this.http.put(`${this.NODE_API}/admin/sections/${sectionId}`, { shortName, ...data });
+  /** Invalidate cached act detail after mutations (save, delete, metadata change) */
+  private invalidateActDetailCache(shortName?: string): void {
+    if (shortName) {
+      this.actDetailCache.delete(shortName.toUpperCase());
+    } else {
+      this.actDetailCache.clear();
+    }
   }
 
-  translateSectionWithAi(data: { actName: string; shortName: string; section_number: string; title: string; introduction_text: string }): Observable<any> {
-    return this.http.post(`${this.NODE_API}/admin/ai/translate-section`, data);
+  updateSection(shortName: string, sectionId: string, data: Partial<UpdateSectionPayload> | any): Observable<ApiResponse<void>> {
+    this.invalidateActDetailCache(shortName);
+    return this.http.put<ApiResponse<void>>(`${this.NODE_API}/admin/sections/${sectionId}`, { shortName, ...data });
   }
 
-  enhanceSectionWithAi(data: { actName: string; shortName: string; section_number: string; title: string; introduction_text: string }): Observable<any> {
-    return this.http.post(`${this.NODE_API}/admin/ai/enhance-section`, data);
+  translateSectionWithAi(data: AiTranslateSectionRequest): Observable<AiTranslateSectionResponse> {
+    return this.http.post<AiTranslateSectionResponse>(`${this.NODE_API}/admin/ai/translate-section`, data);
   }
 
-  patchActMetadata(shortName: string, data: EditMetaPayload): Observable<any> {
-    return this.http.patch(`${this.NODE_API}/admin/acts/${shortName}/metadata`, data);
+  enhanceSectionWithAi(data: AiEnhanceSectionRequest): Observable<AiEnhanceSectionResponse> {
+    return this.http.post<AiEnhanceSectionResponse>(`${this.NODE_API}/admin/ai/enhance-section`, data);
   }
 
-  deleteAct(shortName: string): Observable<any> {
-    return this.http.delete(`${this.NODE_API}/admin/acts/${shortName}`);
+  patchActMetadata(shortName: string, data: EditMetaPayload): Observable<ApiResponse<{ actName: string; shortName: string; year: number; description: string }>> {
+    this.invalidateActDetailCache(shortName);
+    return this.http.patch<ApiResponse<any>>(`${this.NODE_API}/admin/acts/${shortName}/metadata`, data);
   }
 
-  getFavorites(): Observable<any> {
-    return this.http.get(`${this.NODE_API}/admin/favorites`);
+  deleteAct(shortName: string): Observable<ApiResponse<void>> {
+    this.invalidateActDetailCache(shortName);
+    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/acts/${shortName}`);
   }
 
-  toggleFavorite(shortName: string): Observable<any> {
-    return this.http.post(`${this.NODE_API}/admin/favorites/toggle`, { shortName });
+  getFavorites(): Observable<ApiResponse<string[]>> {
+    return this.http.get<ApiResponse<string[]>>(`${this.NODE_API}/admin/favorites`);
   }
 
-  getPinnedSections(shortName: string): Observable<{ success: boolean; data: string[] }> {
-    return this.http.get<{ success: boolean; data: string[] }>(`${this.NODE_API}/admin/acts/${shortName}/pinned-sections`);
+  toggleFavorite(shortName: string): Observable<ToggleFavoriteResponse> {
+    return this.http.post<ToggleFavoriteResponse>(`${this.NODE_API}/admin/favorites/toggle`, { shortName });
   }
 
-  togglePinnedSection(shortName: string, sectionId: string): Observable<any> {
-    return this.http.post(`${this.NODE_API}/admin/acts/${shortName}/pinned-sections/toggle`, { sectionId });
+  getPinnedSections(shortName: string): Observable<PinnedSectionsResponse> {
+    return this.http.get<PinnedSectionsResponse>(`${this.NODE_API}/admin/acts/${shortName}/pinned-sections`);
   }
 
-  syncPinnedSections(shortName: string, sectionIds: string[]): Observable<any> {
-    return this.http.post(`${this.NODE_API}/admin/acts/${shortName}/pinned-sections/sync`, { sectionIds });
+  togglePinnedSection(shortName: string, sectionId: string): Observable<TogglePinnedSectionResponse> {
+    return this.http.post<TogglePinnedSectionResponse>(`${this.NODE_API}/admin/acts/${shortName}/pinned-sections/toggle`, { sectionId });
+  }
+
+  syncPinnedSections(shortName: string, sectionIds: string[]): Observable<ApiResponse<{ pinnedCount: number }>> {
+    return this.http.post<ApiResponse<any>>(`${this.NODE_API}/admin/acts/${shortName}/pinned-sections/sync`, { sectionIds });
   }
 
   // -- Legal Resources --
-  getResources(params: any = {}): Observable<any> {
+  getResources(params: Record<string, any> = {}): Observable<ApiResponse<LegalResourceItem[]>> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
       if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
         httpParams = httpParams.set(key, params[key]);
       }
     });
-    return this.http.get(`${this.NODE_API}/admin/resources`, { params: httpParams });
+    return this.http.get<ApiResponse<LegalResourceItem[]>>(`${this.NODE_API}/admin/resources`, { params: httpParams });
   }
 
-  createResource(data: any): Observable<any> {
-    return this.http.post(`${this.NODE_API}/admin/resources`, data);
+  createResource(data: Partial<LegalResourceItem>): Observable<ApiResponse<LegalResourceItem>> {
+    return this.http.post<ApiResponse<LegalResourceItem>>(`${this.NODE_API}/admin/resources`, data);
   }
 
-  updateResource(id: string, data: any): Observable<any> {
-    return this.http.put(`${this.NODE_API}/admin/resources/${id}`, data);
+  updateResource(id: string, data: Partial<LegalResourceItem>): Observable<ApiResponse<LegalResourceItem>> {
+    return this.http.put<ApiResponse<LegalResourceItem>>(`${this.NODE_API}/admin/resources/${id}`, data);
   }
 
-  deleteResource(id: string): Observable<any> {
-    return this.http.delete(`${this.NODE_API}/admin/resources/${id}`);
+  deleteResource(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/resources/${id}`);
   }
 
   // -- Helplines & Emergency Directories --
-  getHelplines(): Observable<any> {
+  getHelplines(): Observable<ApiResponse<HelplineItem[]>> {
     if (!this.helplinesCache$) {
-      this.helplinesCache$ = this.http.get(`${this.NODE_API}/admin/helplines`).pipe(
+      this.helplinesCache$ = this.http.get<ApiResponse<HelplineItem[]>>(`${this.NODE_API}/admin/helplines`).pipe(
         shareReplay({ bufferSize: 1, refCount: true })
       );
     }
     return this.helplinesCache$;
   }
 
-  createHelpline(data: any): Observable<any> {
+  createHelpline(data: Partial<HelplineItem>): Observable<ApiResponse<HelplineItem>> {
     this.helplinesCache$ = undefined;
-    return this.http.post(`${this.NODE_API}/admin/helplines`, data);
+    return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines`, data);
   }
 
-  updateHelpline(id: string, data: any): Observable<any> {
+  updateHelpline(id: string, data: Partial<HelplineItem>): Observable<ApiResponse<HelplineItem>> {
     this.helplinesCache$ = undefined;
-    return this.http.put(`${this.NODE_API}/admin/helplines/${id}`, data);
+    return this.http.put<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}`, data);
   }
 
-  deleteHelpline(id: string): Observable<any> {
+  deleteHelpline(id: string): Observable<ApiResponse<void>> {
     this.helplinesCache$ = undefined;
-    return this.http.delete(`${this.NODE_API}/admin/helplines/${id}`);
+    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/${id}`);
   }
 
   // -- Template & Draft Catalog --
-  getTemplates(params: any = {}): Observable<any> {
+  getTemplates(params: Record<string, any> = {}): Observable<ApiResponse<LegalTemplateItem[]>> {
     let httpParams = new HttpParams();
     Object.keys(params).forEach(key => {
       if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
         httpParams = httpParams.set(key, params[key]);
       }
     });
-    return this.http.get(`${this.NODE_API}/admin/templates`, { params: httpParams });
+    return this.http.get<ApiResponse<LegalTemplateItem[]>>(`${this.NODE_API}/admin/templates`, { params: httpParams });
   }
 
-  deleteTemplate(id: string): Observable<any> {
-    return this.http.delete(`${this.NODE_API}/admin/templates/${id}`);
+  deleteTemplate(id: string): Observable<ApiResponse<void>> {
+    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/templates/${id}`);
   }
 }
