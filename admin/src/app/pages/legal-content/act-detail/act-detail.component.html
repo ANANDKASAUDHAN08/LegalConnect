@@ -388,25 +388,26 @@
 
         <!-- Edit Mode Toggle Button -->
         <button
-          class="hero-action-btn h-11 flex items-center gap-1 px-3 py-2 text-xs font-semibold rounded-xl border transition-all duration-200 cursor-pointer active:scale-95"
+          class="hero-action-btn h-11 flex items-center gap-1 px-4 py-2 text-xs font-bold rounded-xl border transition-all duration-200 cursor-pointer active:scale-95"
           [ngClass]="{
-            'bg-gradient-to-r from-indigo-600 to-purple-600 border-indigo-400 text-white shadow-lg shadow-indigo-500/25': isEditMode,
+            'bg-gradient-to-r from-amber-500/25 via-amber-600/30 to-amber-500/20 border-amber-400 text-amber-200 shadow-lg shadow-amber-500/20 ring-2 ring-amber-400/30': isEditMode,
             'border-white/10 bg-slate-800/50 hover:bg-slate-700/80 text-slate-300 hover:text-white backdrop-blur-md shadow-md': !isEditMode
-          }" (click)="isEditMode = !isEditMode"
-          [adminTooltip]="isEditMode ? 'Disable editing mode (E)' : 'Enable editing mode (E)'" tooltipPosition="bottom">
+          }" (click)="toggleEditMode($event)"
+          [adminTooltip]="isEditMode ? 'Exit edit mode (E)' : 'Enable edit mode (E)'" tooltipPosition="bottom">
           @if (isEditMode) {
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
+            stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-amber-300">
             <polyline points="20 6 9 17 4 12"></polyline>
           </svg>
-          <span>Editing</span>
+          <span>Editing Active</span>
           } @else {
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
             stroke-linecap="round" stroke-linejoin="round" class="text-amber-400 shrink-0">
             <path d="M12 20h9"></path>
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
           </svg>
-          <span>Edit</span>
+          <span>Edit Mode</span>
           }
         </button>
       </div>
@@ -416,7 +417,7 @@
   <!-- ═══ Sticky Provision Breadcrumb & Reading Status ═══ -->
   @if (activeSection) {
   <div
-    class="sticky top-0 z-40 mb-1 flex items-center justify-between px-4 py-2.5 rounded-b-xl border-x border-b bg-slate-900 border border-white/10 shadow-2xl transition-all text-xs">
+    class="sticky-reading-bar sticky top-0 z-40 mb-1 flex items-center justify-between px-4 py-2.5 rounded-b-xl border-x border-b bg-slate-900 border border-white/10 shadow-2xl transition-all text-xs">
     <div class="flex items-center gap-2 min-w-0 flex-1">
       <span class="font-bold text-indigo-400 font-mono">§ {{ activeSection.secId }}</span>
       <span class="text-slate-600">•</span>
@@ -426,18 +427,32 @@
         activeSection.chapterTitle }}</span>
     </div>
     <div class="flex items-center gap-2 shrink-0">
+      <!-- Edit Current Section Button -->
+      <button type="button"
+        class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-amber-200 border border-amber-500/30 hover:border-amber-400/50 shadow-sm backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-95 group/sticky-edit"
+        (click)="openEditSection(activeSection, $event)"
+        [adminTooltip]="'Edit Section § ' + activeSection.secId + ' (E)'" tooltipPosition="bottom">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round"
+          class="text-amber-400 group-hover/sticky-edit:rotate-6 transition-transform">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span>Edit § {{ activeSection.secId }}</span>
+      </button>
+
       <span class="text-[10px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md border border-white/5">
         {{ readingProgress }}% read
       </span>
       <div class="flex items-center gap-1 border-l border-white/10 pl-2">
-        <button class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white" (click)="navigateSection(-1)"
-          [adminTooltip]="'Previous section (K / ↑)'" tooltipPosition="bottom">
+        <button class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+          (click)="navigateSection(-1)" [adminTooltip]="'Previous section (K / ↑)'" tooltipPosition="bottom">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="18 15 12 9 6 15"></polyline>
           </svg>
         </button>
-        <button class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white" (click)="navigateSection(1)"
-          [adminTooltip]="'Next section (J / ↓)'" tooltipPosition="bottom">
+        <button class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
+          (click)="navigateSection(1)" [adminTooltip]="'Next section (J / ↓)'" tooltipPosition="bottom">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="6 9 12 15 18 9"></polyline>
           </svg>
@@ -698,7 +713,7 @@
               </svg>
             </span>
             }
-            <div class="flex items-center gap-1.5">
+            <div class="flex items-center gap-1.5" aria-live="polite" aria-atomic="true">
               <span
                 class="px-2 py-0.5 rounded-md font-mono font-bold text-xs bg-indigo-500/15 text-indigo-300 border border-indigo-500/25 shadow-inner">
                 {{ matchingSectionsCount }}
@@ -764,152 +779,34 @@
           </span>
         </div>
 
-        <!-- Sections -->
+        <!-- Sections with Progressive Viewport Hydration -->
         @if (!collapsedChapters[chap.chapKey]) {
         <div class="flex flex-col gap-4 mb-4">
           @for (sec of chap.sections; track sec.secId) {
-          <div class="section-card" [id]="'section-' + sec.secId" [attr.data-section-id]="sec.secId" [ngClass]="{
-              'section-active': activeSectionId === sec.secId,
-              'section-collapsed': collapsedSections[sec.secId]
-            }">
-
-            <!-- Section Header -->
-            <div class="flex items-start justify-between gap-2 cursor-pointer"
-              [class.mb-5]="!collapsedSections[sec.secId]" (click)="toggleSectionCollapse(sec.secId, $event)">
-              <div class="flex items-baseline gap-3 min-w-0">
-                <span class="section-number">§ {{ sec.secId }}</span>
-                <h4 class="section-title" [innerHTML]="sec.cleanTitle | highlight: searchQuery"></h4>
-              </div>
-
-              <!-- Action Buttons — hover reveal -->
-              <div class="section-actions shrink-0" (click)="$event.stopPropagation()">
-                <!-- Bookmark Star Button -->
-                <button type="button" (click)="toggleBookmark(sec.secId, $event)"
-                  [adminTooltip]="sec.isBookmarked ? 'Remove bookmark' : 'Bookmark section (B)'" tooltipPosition="top"
-                  [class.!text-amber-400]="sec.isBookmarked">
-                  <svg width="14" height="14" viewBox="0 0 24 24"
-                    [attr.fill]="sec.isBookmarked ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polygon
-                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                    </polygon>
-                  </svg>
-                </button>
-
-                <!-- Section Collapse Toggle Button -->
-                <button type="button" (click)="toggleSectionCollapse(sec.secId, $event)"
-                  [adminTooltip]="collapsedSections[sec.secId] ? 'Expand section content' : 'Collapse section content'"
-                  tooltipPosition="top" class="!text-indigo-400 hover:!text-indigo-300 hover:!bg-indigo-500/20">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="transition-transform duration-200" [class.rotate-180]="collapsedSections[sec.secId]"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15"></polyline>
-                  </svg>
-                </button>
-
-                <!-- Copy Citation -->
-                <button type="button" (click)="copySectionCitation(sec, $event)" [adminTooltip]="'Copy citation'"
-                  tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                </button>
-
-                <!-- Copy Link -->
-                <button type="button" (click)="copySectionLink(sec, $event)" [adminTooltip]="'Copy link'"
-                  tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                  </svg>
-                </button>
-
-                <!-- Print Section -->
-                <button type="button" (click)="printSection(sec, $event)" [adminTooltip]="'Print section'"
-                  tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 6 2 18 2 18 9"></polyline>
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-                    <rect x="6" y="14" width="12" height="8"></rect>
-                  </svg>
-                </button>
-
-                @if (isEditMode) {
-                <button type="button" (click)="openEditSection(sec, $event)" [adminTooltip]="'Edit section'"
-                  tooltipPosition="top" class="!text-amber-400 hover:!text-amber-300 hover:!bg-amber-500/10">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                </button>
-                }
-              </div>
+          @defer (on viewport; prefetch on idle) {
+          <admin-section-card [section]="sec" [searchQuery]="searchQuery" [viewMode]="viewMode"
+            [activeLanguage]="activeLanguage" [splitViewMode]="splitViewMode" [isEditMode]="isEditMode"
+            [isActive]="activeSectionId === sec.secId" [isCollapsed]="collapsedSections[sec.secId]"
+            [showLayman]="showLaymanSummary[sec.secId]" [showDefined]="showDefinedTerms[sec.secId] !== false"
+            (bookmarkToggle)="toggleBookmark($event.secId, $event.event)"
+            (collapseToggle)="toggleSectionCollapse($event.secId, $event.event)"
+            (editClick)="openEditSection($event.section, $event.event)"
+            (printClick)="printSection($event.section, $event.event)"
+            (copyCitationClick)="copySectionCitation($event.section, $event.event)"
+            (copyLinkClick)="copySectionLink($event.section, $event.event)"
+            (copyCleanTextClick)="copyCleanSectionText($event.section, $event.event)"
+            (laymanToggle)="toggleLaymanSummary($event)" (definedTermsToggle)="toggleDefinedTerms($event)"
+            (footnoteClick)="showFootnoteDetails($event)">
+          </admin-section-card>
+          } @placeholder {
+          <div
+            class="section-card min-h-[120px] flex items-center justify-between p-6 opacity-60 bg-slate-900/40 rounded-2xl border border-white/5 animate-pulse">
+            <div class="flex items-center gap-3">
+              <span class="font-mono text-sm font-bold text-indigo-400">§ {{ sec.secId }}</span>
+              <span class="text-sm text-slate-300 font-semibold">{{ sec.cleanTitle }}</span>
             </div>
-
-            <!-- Section Content Body (Collapsible) -->
-            @if (!collapsedSections[sec.secId]) {
-            <!-- Pending Digitization Banner -->
-            @if (!sec.hasContent) {
-            <div class="pending-banner text-xs flex items-center justify-between gap-3">
-              <div class="flex items-center gap-2.5 text-amber-300">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-amber-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                  </path>
-                  <line x1="12" y1="9" x2="12" y2="13"></line>
-                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                </svg>
-                <span><span class="font-bold">Pending:</span> Section {{ sec.secId }} has not been digitized.</span>
-              </div>
-              @if (isEditMode) {
-              <button class="btn btn-sm btn-primary text-xs shrink-0 px-3 py-1" (click)="openEditSection(sec)">
-                Add Content
-              </button>
-              }
-            </div>
-            }
-
-            <!-- Side-by-Side Dual Column Bilingual Mode -->
-            @if (activeLanguage === 'both' && splitViewMode === 'split' && sec.hasContent) {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <!-- Column 1: English -->
-              <div class="flex flex-col gap-4 border-r border-white/5 pr-4">
-                <div class="flex items-center gap-2 text-xs font-bold text-indigo-300">
-                  <span class="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">English</span>
-                  <span>Authentic Version</span>
-                </div>
-                <ng-container *ngTemplateOutlet="englishContentTpl; context: { $implicit: sec }"></ng-container>
-              </div>
-
-              <!-- Column 2: Hindi -->
-              <div class="flex flex-col gap-4 pl-2">
-                <div class="flex items-center gap-2 text-xs font-bold text-amber-300">
-                  <span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">हिंदी</span>
-                  <span>Official Translation</span>
-                </div>
-                <ng-container *ngTemplateOutlet="hindiContentTpl; context: { $implicit: sec }"></ng-container>
-              </div>
-            </div>
-            } @else {
-            <!-- Standard Stacked View -->
-            @if ((activeLanguage === 'en' || activeLanguage === 'both') && sec.hasContent) {
-            <ng-container *ngTemplateOutlet="englishContentTpl; context: { $implicit: sec }"></ng-container>
-            }
-
-            @if ((activeLanguage === 'hi' || activeLanguage === 'both') && (sec.title_hi || sec.introduction_text_hi ||
-            sec.content_hi || sec.text_hi)) {
-            <ng-container *ngTemplateOutlet="hindiContentTpl; context: { $implicit: sec }"></ng-container>
-            }
-            }
-
-            }
-
           </div>
+          }
           }
         </div>
         }
@@ -930,155 +827,6 @@
     </main>
   </div>
   }
-
-  <!-- ═══ English Content Sub-Template ═══ -->
-  <ng-template #englishContentTpl let-sec>
-    <!-- Plain English Summary (Demoted, Subtle) -->
-    @if (sec.parsed.laymanSummary) {
-    <div class="summary-card mt-0" [class.mb-2]="sec.parsed.definedTerms && sec.parsed.definedTerms.length > 0"
-      (click)="toggleLaymanSummary(sec.secId)"
-      [adminTooltip]="showLaymanSummary[sec.secId] ? 'Click to hide plain English summary' : 'Click to read plain English summary'"
-      tooltipPosition="top">
-      <div class="flex items-center justify-between">
-        <span class="summary-label">Summary</span>
-        <button type="button" class="summary-toggle">
-          {{ showLaymanSummary[sec.secId] ? 'Hide' : 'Show' }}
-        </button>
-      </div>
-      @if (showLaymanSummary[sec.secId]) {
-      <p class="summary-body">
-        {{ sec.parsed.laymanSummary }}
-      </p>
-      }
-    </div>
-    }
-
-    <!-- Defined Terms Bar -->
-    @if (sec.parsed.definedTerms && sec.parsed.definedTerms.length > 0) {
-    <div class="defined-terms-bar">
-      <div class="flex items-center justify-between cursor-pointer" [class.mb-2]="showDefinedTerms[sec.secId] !== false"
-        (click)="toggleDefinedTerms(sec.secId)"
-        [adminTooltip]="showDefinedTerms[sec.secId] === false ? 'Expand defined statutory terms' : 'Collapse defined statutory terms'"
-        tooltipPosition="top">
-        <span class="text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider">
-          Defined Terms ({{ sec.parsed.definedTerms.length }})
-        </span>
-        <button type="button" class="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300">
-          {{ showDefinedTerms[sec.secId] === false ? 'Show' : 'Hide' }}
-        </button>
-      </div>
-      @if (showDefinedTerms[sec.secId] !== false) {
-      <div class="flex flex-wrap gap-1.5">
-        @for (term of sec.parsed.definedTerms; track term) {
-        <span class="term-pill">"{{ term }}"</span>
-        }
-      </div>
-      }
-    </div>
-    }
-
-    <!-- Structured Tree View vs Raw View -->
-    @if (viewMode === 'structured' && sec.parsed.hasStructure) {
-    <div class="clause-tree-container">
-      @if (sec.parsed.preamble) {
-      <div class="clause-preamble">
-        {{ sec.parsed.preamble }}
-      </div>
-      }
-
-      @for (node of sec.parsed.enrichedNodes; track node.id) {
-      <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: node }"></ng-container>
-      }
-    </div>
-    } @else {
-    <div class="raw-text-view">
-      <p class="whitespace-pre-wrap" [innerHTML]="sec.cleanBody | highlight: searchQuery"></p>
-    </div>
-    }
-  </ng-template>
-
-  <!-- ═══ Hindi Content Sub-Template ═══ -->
-  <ng-template #hindiContentTpl let-sec>
-    <div class="hindi-content-wrapper flex flex-col gap-3 font-hindi">
-      @if (sec.title_hi) {
-      <div class="flex items-center gap-2 pb-1 border-b border-amber-500/15">
-        <span
-          class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 text-[10px] font-semibold border border-amber-500/20 uppercase tracking-wider">
-          हिंदी
-        </span>
-        <h5 class="font-bold text-amber-200/90 text-sm leading-relaxed">
-          {{ sec.title_hi }}
-        </h5>
-      </div>
-      }
-
-      <!-- Structured Tree View for Hindi -->
-      @if (viewMode === 'structured' && sec.parsed_hi?.hasStructure) {
-      <div class="clause-tree-container hindi-tree">
-        @if (sec.parsed_hi.preamble) {
-        <div class="clause-preamble">
-          {{ sec.parsed_hi.preamble }}
-        </div>
-        }
-
-        @for (node of sec.parsed_hi.enrichedNodes; track node.id) {
-        <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: node }"></ng-container>
-        }
-      </div>
-      } @else if (sec.content_blocks_hi && sec.content_blocks_hi.length > 0) {
-      <div class="flex flex-col gap-2.5">
-        @for (block of sec.content_blocks_hi; track $index) {
-        <div class="p-3 rounded-lg" [ngStyle]="getClauseStyle(getCleanBlockText(block.text), block.type)">
-          <p class="text-sm text-slate-200 leading-relaxed">{{ getCleanBlockText(block.text) }}</p>
-        </div>
-        }
-      </div>
-      } @else {
-      <div class="raw-text-view">
-        <p class="whitespace-pre-wrap text-sm text-slate-200 leading-relaxed">{{ sec.content_hi ||
-          sec.introduction_text_hi || sec.text_hi }}</p>
-      </div>
-      }
-    </div>
-  </ng-template>
-
-  <!-- ═══ Recursive Clause Node Template ═══ -->
-  <ng-template #clauseNodeTpl let-node>
-    @if (node.isCallout) {
-    <div class="clause-callout" [ngClass]="node.calloutClass">
-      <span class="callout-label">{{ node.calloutLabel }}</span>
-      <span class="clause-text-body" [innerHTML]="node.cleanText | highlight: searchQuery"></span>
-      @if (node.children && node.children.length > 0) {
-      <div class="mt-2">
-        @for (child of node.children; track child.id) {
-        <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: child }"></ng-container>
-        }
-      </div>
-      }
-    </div>
-    } @else {
-    <div class="clause-node" [ngClass]="node.levelClass">
-      <div class="clause-content">
-        @if (node.marker) {
-        <span class="clause-marker" [ngClass]="node.markerClass">
-          {{ node.marker }}
-        </span>
-        }
-        <div class="min-w-0 flex-1">
-          <div class="clause-text-body" [innerHTML]="node.cleanText | highlight: searchQuery"></div>
-        </div>
-      </div>
-
-      @if (node.children && node.children.length > 0) {
-      <div>
-        @for (child of node.children; track child.id) {
-        <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: child }"></ng-container>
-        }
-      </div>
-      }
-    </div>
-    }
-  </ng-template>
 
   <!-- ═══ Floating Action Buttons ═══ -->
   @if (showBackToTop) {
@@ -1116,312 +864,21 @@
   </div>
   }
 
-  <!-- ═══ Edit Section Modal ═══ -->
+  <!-- ═══ Edit Section Modal (Modular Standalone Component) ═══ -->
   @if (editingSection) {
-  <div
-    class="edit-modal-overlay fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
-    (click)="editingSection = null" (keydown.escape)="editingSection = null" (keydown.ctrl.enter)="saveSectionEdit()"
-    (keydown.meta.enter)="saveSectionEdit()">
-    <div
-      class="edit-modal-card max-w-3xl w-full rounded-2xl p-6 flex flex-col gap-4 shadow-2xl border border-indigo-500/25 bg-slate-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_25px_rgba(99,102,241,0.12)] animate-in zoom-in-95 duration-200"
-      role="dialog" aria-modal="true" aria-labelledby="editSectionDialogTitle" (click)="$event.stopPropagation()">
-
-      <!-- Modal Header -->
-      <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
-        <div class="flex items-center gap-3">
-          <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-            </svg>
-          </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 id="editSectionDialogTitle" class="text-base font-bold text-slate-100">Edit Section {{
-                editForm.section_number }}</h3>
-              <span
-                class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">§
-                {{ editForm.section_number }}</span>
-            </div>
-            <p class="text-[11px] text-slate-400 mt-0.5">{{ shortName }} — Statutory Text Amendment</p>
-          </div>
-        </div>
-
-        <button class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
-          (click)="editingSection = null" [adminTooltip]="'Close (Esc)'" tooltipPosition="left">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <!-- Toolbar: Language Tabs + Formatting Tools -->
-      <div class="flex items-center justify-between gap-3 flex-wrap">
-        <!-- Segmented Tabs -->
-        <div class="flex bg-slate-950/70 p-1 rounded-xl border border-slate-800/80 shadow-inner">
-          <button type="button"
-            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
-            [class.bg-indigo-600]="editTab === 'en'" [class.text-white]="editTab === 'en'"
-            [class.shadow-md]="editTab === 'en'" [class.text-slate-400]="editTab !== 'en'" (click)="editTab = 'en'">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-              <line x1="16" y1="13" x2="8" y2="13"></line>
-              <line x1="16" y1="17" x2="8" y2="17"></line>
-            </svg>
-            <span>English</span>
-          </button>
-
-          <button type="button"
-            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
-            [class.bg-indigo-600]="editTab === 'hi'" [class.text-white]="editTab === 'hi'"
-            [class.shadow-md]="editTab === 'hi'" [class.text-slate-400]="editTab !== 'hi'" (click)="editTab = 'hi'">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="2" y1="12" x2="22" y2="12"></line>
-              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-              </path>
-            </svg>
-            <span>हिंदी</span>
-            @if (hasHindiContent) {
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            } @else {
-            <span class="text-[9px] text-slate-500 font-mono" [class.text-white]="editTab === 'hi'">(empty)</span>
-            }
-          </button>
-
-          <button type="button"
-            class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
-            [class.bg-purple-600]="editTab === 'preview'" [class.text-white]="editTab === 'preview'"
-            [class.shadow-md]="editTab === 'preview'" [class.text-slate-400]="editTab !== 'preview'"
-            (click)="editTab = 'preview'">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-              <circle cx="12" cy="12" r="3"></circle>
-            </svg>
-            <span>Live Preview</span>
-          </button>
-        </div>
-
-        <!-- Action Tools for Active Tab -->
-        <div class="flex items-center gap-2 flex-wrap">
-          @if (editTab === 'en') {
-          <button type="button" (click)="enhanceEnglishWithAi()" [disabled]="isEnhancing"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-indigo-600/20 hover:from-indigo-600/50 hover:to-purple-600/50 text-indigo-200 hover:text-white border border-indigo-400/30 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
-            [adminTooltip]="'Use Gemini AI to clean OCR glitches and proofread statutory text'" tooltipPosition="top">
-            @if (isEnhancing) {
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              class="animate-spin text-indigo-300" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a10 10 0 0 1 10 10"></path>
-            </svg>
-            <span>Proofreading...</span>
-            } @else {
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-indigo-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-              <path
-                d="M12 3l1.912 5.885a1 1 0 00.95.691H21l-4.945 3.593a1 1 0 00-.364 1.118L17.603 20.2 12.658 16.6a1 1 0 00-1.176 0l-4.945 3.593 1.912-5.913a1 1 0 00-.364-1.118L3.14 9.576h6.138a1 1 0 00.95-.691L12 3z">
-              </path>
-            </svg>
-            <span>AI Proofread</span>
-            }
-          </button>
-
-          <button type="button" (click)="formatEditClauses()"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
-            [adminTooltip]="'Auto-format clauses so (1), (2), (a) start on clean new lines'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-slate-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="4 7 4 4 20 4 20 7"></polyline>
-              <line x1="9" y1="20" x2="15" y2="20"></line>
-              <line x1="12" y1="4" x2="12" y2="20"></line>
-            </svg>
-            <span>Auto-Format</span>
-          </button>
-          }
-
-          @if (editTab === 'hi') {
-          <button type="button" (click)="translateToHindiWithAi()" [disabled]="isTranslating"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white border border-indigo-400/40 hover:brightness-110 transition-all cursor-pointer shadow-md shadow-indigo-500/20 active:scale-95 disabled:opacity-50"
-            [adminTooltip]="'Translate English statutory title & body to official Indian legal Hindi'"
-            tooltipPosition="top">
-            @if (isTranslating) {
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              class="animate-spin text-white" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a10 10 0 0 1 10 10"></path>
-            </svg>
-            <span>Translating...</span>
-            } @else {
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-indigo-200 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"></path>
-            </svg>
-            <span>AI Translate from English</span>
-            }
-          </button>
-
-          <button type="button" (click)="formatEditClauses()"
-            class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
-            [adminTooltip]="'Auto-format clauses so (1), (2), (a) start on clean new lines'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-slate-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="4 7 4 4 20 4 20 7"></polyline>
-              <line x1="9" y1="20" x2="15" y2="20"></line>
-              <line x1="12" y1="4" x2="12" y2="20"></line>
-            </svg>
-            <span>Auto-Format</span>
-          </button>
-          }
-        </div>
-      </div>
-
-      <!-- Tab Body -->
-      <div class="flex flex-col gap-3.5 text-sm max-h-[55vh] overflow-y-auto pr-1">
-        @if (editTab === 'en') {
-        <div class="flex flex-col gap-1.5">
-          <label class="font-semibold text-slate-300 text-xs flex items-center justify-between">
-            <span>Section Title (English)</span>
-          </label>
-          <input type="text"
-            class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 transition-all"
-            [(ngModel)]="editForm.title" placeholder="e.g. Short title, extent and commencement." />
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between">
-            <label class="font-semibold text-slate-300 text-xs">Provision Body Text (English)</label>
-            <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-              <span class="text-indigo-300 font-semibold">{{ editWordCount }} words</span>
-              <span>•</span>
-              <span>{{ editCharCount }} chars</span>
-              <span>•</span>
-              <span>~{{ editReadingTime }} min read</span>
-            </div>
-          </div>
-          <textarea
-            class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 leading-relaxed font-sans transition-all"
-            rows="10" [(ngModel)]="editForm.introduction_text"
-            placeholder="Enter complete statutory provision text..."></textarea>
-        </div>
-        } @else if (editTab === 'hi') {
-        <div class="flex flex-col gap-1.5">
-          <label class="font-semibold text-slate-300 text-xs">Section Title (Hindi)</label>
-          <input type="text"
-            class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 transition-all"
-            [(ngModel)]="editForm.title_hi" placeholder="धारा का शीर्षक (हिंदी में)" />
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <div class="flex items-center justify-between">
-            <label class="font-semibold text-slate-300 text-xs">Provision Body Text (Hindi)</label>
-            <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
-              <span class="text-indigo-300 font-semibold">{{ editWordCount }} words</span>
-              <span>•</span>
-              <span>{{ editCharCount }} chars</span>
-            </div>
-          </div>
-          <textarea
-            class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 leading-relaxed font-sans transition-all"
-            rows="10" [(ngModel)]="editForm.introduction_text_hi"
-            placeholder="हिन्दी में धारा का पूरा पाठ दर्ज करें..."></textarea>
-        </div>
-        } @else if (editTab === 'preview') {
-        <!-- Live Preview Tab -->
-        <div class="flex flex-col gap-3 p-4 rounded-xl bg-slate-950/80 border border-slate-800">
-          <div class="flex items-center justify-between pb-2 border-b border-white/5">
-            <div class="flex items-baseline gap-2">
-              <span class="text-xs font-mono font-bold text-indigo-400">§ {{ editForm.section_number }}</span>
-              <h4 class="font-bold text-slate-100 text-sm">{{ editForm.title || '(No title)' }}</h4>
-            </div>
-            <span
-              class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">Parsed
-              Live Preview</span>
-          </div>
-
-          @if (editPreviewParsed) {
-          @if (editPreviewParsed.preamble) {
-          <div
-            class="text-xs italic text-indigo-200/90 bg-indigo-500/10 p-2.5 rounded-lg border-l-2 border-indigo-400 leading-relaxed">
-            {{ editPreviewParsed.preamble }}
-          </div>
-          }
-
-          @if (editPreviewParsed.enrichedNodes && editPreviewParsed.enrichedNodes.length > 0) {
-          <div class="flex flex-col gap-2.5">
-            @for (node of editPreviewParsed.enrichedNodes; track node.marker + $index) {
-            <div class="flex items-start gap-2.5 text-xs">
-              <span class="font-bold text-indigo-400 shrink-0 font-mono">{{ node.marker }}</span>
-              <span class="text-slate-200 leading-relaxed">{{ node.cleanText }}</span>
-            </div>
-            }
-          </div>
-          } @else {
-          <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{{ editForm.introduction_text }}</p>
-          }
-          } @else {
-          <div class="text-center py-6 text-slate-500 text-xs">
-            No provision text entered yet to preview.
-          </div>
-          }
-        </div>
-        }
-      </div>
-
-      <!-- Modal Footer -->
-      <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
-        <div class="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500">
-          <kbd
-            class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] border border-white/10">Ctrl+Enter</kbd>
-          <span>to save</span>
-          <span class="mx-1">•</span>
-          <kbd
-            class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] border border-white/10">Esc</kbd>
-          <span>to cancel</span>
-        </div>
-
-        <div class="flex items-center gap-2.5 ml-auto">
-          <button type="button" class="btn btn-secondary px-4 py-2 text-xs font-semibold rounded-xl cursor-pointer"
-            (click)="editingSection = null">Cancel</button>
-          <button type="button"
-            class="btn btn-primary px-5 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-500/20 cursor-pointer"
-            (click)="saveSectionEdit()" [disabled]="isSaving">
-            @if (isSaving) {
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="animate-spin" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"></circle>
-              <path d="M12 2a10 10 0 0 1 10 10"></path>
-            </svg>
-            <span>Saving...</span>
-            } @else {
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-              <polyline points="17 21 17 13 7 13 7 21"></polyline>
-              <polyline points="7 3 7 8 15 8"></polyline>
-            </svg>
-            <span>Save Amendment</span>
-            }
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
+  <admin-section-edit-modal [section]="editingSection" [shortName]="shortName"
+    [actName]="enrichedAct?.actName || shortName" [isSaving]="isSaving" (save)="saveSectionEdit($event)"
+    (close)="editingSection = null">
+  </admin-section-edit-modal>
   }
 
   <!-- ═══ Footnote Details Modal ═══ -->
   @if (activeFootnote) {
   <div class="settings-backdrop" (click)="closeFootnoteModal()"></div>
   <div
-    class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1050] max-w-md w-full p-6 rounded-2xl bg-slate-900 border border-white/10 shadow-2xl animate-in"
+    class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1050] max-w-md w-full px-6 py-3 rounded-2xl bg-slate-900 border border-white/10 shadow-2xl animate-in"
     role="dialog" aria-modal="true" aria-labelledby="fnDialogTitle">
-    <div class="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
+    <div class="flex items-center justify-between border-b border-white/10 mb-1">
       <div class="flex items-center gap-2">
         <span class="px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 font-mono font-bold text-xs">
           [{{ activeFootnote.number }}]
@@ -1437,7 +894,7 @@
       </button>
     </div>
     <p class="text-sm text-slate-300 leading-relaxed">{{ activeFootnote.text }}</p>
-    <div class="mt-5 flex justify-end">
+    <div class="mt-2 flex justify-end">
       <button class="btn btn-primary px-4 py-1.5 text-xs font-semibold rounded-xl cursor-pointer"
         (click)="closeFootnoteModal()">
         Understood

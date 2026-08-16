@@ -3,7 +3,6 @@ import {
   OnInit,
   OnDestroy,
   AfterViewInit,
-  HostListener,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   ElementRef,
@@ -22,6 +21,9 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { HighlightPipe } from '../../../shared/pipes/highlight.pipe';
 import { LegalPrintService } from '../../../core/services/legal-print.service';
 import { LegalTextParser, ParsedLegalSection, LegalClauseNode } from '../../../core/utils/legal-text-parser';
+import { AdminSectionCardComponent } from './components/admin-section-card/admin-section-card.component';
+import { AdminSectionEditModalComponent } from './components/admin-section-edit-modal/admin-section-edit-modal.component';
+import { BareAct, EditSectionFormData, EditSectionSaveEvent } from '../legal-content.models';
 
 export interface EnrichedClauseNode extends LegalClauseNode {
   levelClass: string;
@@ -96,7 +98,9 @@ export interface EnrichedAct {
     RouterLink,
     SkeletonComponent,
     TooltipDirective,
-    HighlightPipe
+    HighlightPipe,
+    AdminSectionCardComponent,
+    AdminSectionEditModalComponent
   ],
   templateUrl: './act-detail.component.html',
   styleUrl: './act-detail.component.scss',
@@ -108,7 +112,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('tocScrollContainer') tocScrollContainerEl?: ElementRef<HTMLElement>;
 
   shortName = '';
-  actRaw: any = null;
+  actRaw: BareAct | null = null;
   enrichedAct: EnrichedAct | null = null;
   isLoading = false;
 
@@ -159,7 +163,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   // Editing Mode
   isEditMode = false;
   editingSection: EnrichedSection | null = null;
-  editForm: any = { section_number: '', title: '', title_hi: '', introduction_text: '', introduction_text_hi: '' };
+  editForm: EditSectionFormData = { section_number: '', title: '', title_hi: '', introduction_text: '', introduction_text_hi: '' };
   editTab: 'en' | 'hi' | 'preview' = 'en';
   isSaving = false;
   isTranslating = false;
@@ -168,10 +172,14 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   // Scrollspy & Interaction Locks
   isUserHoveringToc = false;
   isProgrammaticScrolling = false;
-  private programmaticScrollTimer: any = null;
-  private tocAutoScrollTimeout: any = null;
-  private hoverCooldownTimer: any = null;
+  private isManualScrolling = false;
+  private programmaticScrollTimer: ReturnType<typeof setTimeout> | undefined;
+  private tocAutoScrollTimeout: ReturnType<typeof setTimeout> | undefined;
+  private hoverCooldownTimer: ReturnType<typeof setTimeout> | undefined;
+  private scrollSpyDebounceTimer: ReturnType<typeof setTimeout> | undefined;
+  private manualScrollIdleTimer: ReturnType<typeof setTimeout> | undefined;
   private sectionObserver: IntersectionObserver | null = null;
+  private sectionMutationObserver: MutationObserver | null = null;
   private scrollContainer: HTMLElement | null = null;
   private boundScrollHandler = this.handleContainerScroll.bind(this);
   private subscriptions = new Subscription();
@@ -219,7 +227,6 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         const nextShortName = params['shortName'];
         if (nextShortName && nextShortName !== this.shortName) {
           this.shortName = nextShortName;
-          this.loadBookmarks();
           this.fetchActDetail();
         }
       })
@@ -233,7 +240,14 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.scrollContainer!.addEventListener('scroll', this.boundScrollHandler, { passive: true });
       });
       this.setupScrollspyObserver();
+      this.setupSectionMutationObserver();
     }
+
+    // Register document-level event listeners outside Angular zone to avoid CD triggers on every click/keypress
+    this.ngZone.runOutsideAngular(() => {
+      document.addEventListener('click', this.boundDocClickHandler);
+      document.addEventListener('keydown', this.boundDocKeydownHandler);
+    });
   }
 
   ngOnDestroy(): void {
@@ -241,13 +255,21 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.scrollContainer) {
       this.scrollContainer.removeEventListener('scroll', this.boundScrollHandler);
     }
+    document.removeEventListener('click', this.boundDocClickHandler);
+    document.removeEventListener('keydown', this.boundDocKeydownHandler);
     if (this.sectionObserver) {
       this.sectionObserver.disconnect();
       this.sectionObserver = null;
     }
-    clearTimeout(this.programmaticScrollTimer);
-    clearTimeout(this.tocAutoScrollTimeout);
-    clearTimeout(this.hoverCooldownTimer);
+    if (this.sectionMutationObserver) {
+      this.sectionMutationObserver.disconnect();
+      this.sectionMutationObserver = null;
+    }
+    if (this.programmaticScrollTimer) clearTimeout(this.programmaticScrollTimer);
+    if (this.tocAutoScrollTimeout) clearTimeout(this.tocAutoScrollTimeout);
+    if (this.hoverCooldownTimer) clearTimeout(this.hoverCooldownTimer);
+    if (this.scrollSpyDebounceTimer) clearTimeout(this.scrollSpyDebounceTimer);
+    if (this.manualScrollIdleTimer) clearTimeout(this.manualScrollIdleTimer);
   }
 
   /* ═══════════════════════════════════════════════════════
@@ -259,10 +281,11 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
 
     this.api.getActDetail(this.shortName).subscribe({
-      next: (res: any) => {
+      next: (res: BareAct | { data?: BareAct }) => {
         this.isLoading = false;
-        this.actRaw = res.data || res;
+        this.actRaw = (res as any).data || (res as BareAct);
         this.enrichActPayload();
+        this.actRaw = null; // Release raw payload to GC — enrichedAct holds all needed data
 
         if (this.enrichedAct?.flatSections?.length) {
           this.activeSection = this.enrichedAct.flatSections[0];
@@ -343,7 +366,9 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
           };
         }
 
-        const searchTokens = `${secNum} ${cleanTitle} ${rawSec.title_hi || ''} ${cleanBody} ${rawSec.content_hi || ''}`.toLowerCase();
+        // Lightweight search tokens: only section number + titles (not full body text)
+        // Body text is searched on-demand in recalculateDisplayedChapters() to avoid ~1.6MB duplication
+        const searchTokens = `${secNum} ${cleanTitle} ${rawSec.title_hi || ''}`.toLowerCase();
 
         const enrichedSec: EnrichedSection = {
           _id: rawSec._id,
@@ -471,8 +496,9 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
 
     const filtered = this.enrichedAct.chapters.map(chap => {
       const matching = chap.sections.filter(sec => {
-        // 1. Text Search Filter
-        if (activeQuery && !sec.searchTokens.includes(activeQuery)) {
+        // 1. Text Search Filter (lazy: check lightweight tokens first, then body on-demand)
+        if (activeQuery && !sec.searchTokens.includes(activeQuery)
+          && !sec.cleanBody.toLowerCase().includes(activeQuery)) {
           return false;
         }
 
@@ -541,7 +567,9 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     };
 
     this.sectionObserver = new IntersectionObserver((entries) => {
-      if (this.isProgrammaticScrolling) return;
+      // Skip IO callbacks entirely during manual or programmatic scrolling
+      // to prevent fighting with the scroll-position-based detector
+      if (this.isProgrammaticScrolling || this.isManualScrolling) return;
 
       for (const entry of entries) {
         if (entry.isIntersecting) {
@@ -562,15 +590,115 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.refreshScrollspyObserver();
   }
 
+  /**
+   * MutationObserver watches for newly hydrated section-card elements from @defer.
+   * When new cards appear in the DOM, they get observed by the IntersectionObserver.
+   */
+  private setupSectionMutationObserver(): void {
+    const hostEl = this.elRef.nativeElement as HTMLElement;
+    this.sectionMutationObserver = new MutationObserver((mutations) => {
+      let hasNewCards = false;
+      for (const mutation of mutations) {
+        for (let i = 0; i < mutation.addedNodes.length; i++) {
+          const node = mutation.addedNodes[i];
+          if (node instanceof HTMLElement) {
+            if (node.classList?.contains('section-card') || node.querySelector?.('.section-card')) {
+              hasNewCards = true;
+              break;
+            }
+          }
+        }
+        if (hasNewCards) break;
+      }
+      if (hasNewCards && this.sectionObserver) {
+        // Re-observe all section cards including newly hydrated ones
+        const cards = hostEl.querySelectorAll('.section-card');
+        cards.forEach(card => {
+          this.sectionObserver!.observe(card);
+        });
+      }
+    });
+
+    this.sectionMutationObserver.observe(hostEl, {
+      childList: true,
+      subtree: true
+    });
+  }
+
   private refreshScrollspyObserver(): void {
     if (!this.sectionObserver) return;
     this.sectionObserver.disconnect();
 
     requestAnimationFrame(() => {
       if (!this.sectionObserver) return;
-      const cards = document.querySelectorAll('.section-card');
+      const hostEl = this.elRef.nativeElement as HTMLElement;
+      const cards = hostEl.querySelectorAll('.section-card');
       cards.forEach(card => this.sectionObserver!.observe(card));
     });
+  }
+
+  /**
+   * Scroll-position-based active section detection — the PRIMARY authority during
+   * manual scrolling. Scans all rendered section-card elements and picks the one
+   * whose top edge is closest to, and at or above, the detection line (top of
+   * viewport + header offset). Falls through to the card that occupies the most
+   * visible area if none has its top at/above the detection line.
+   */
+  private detectActiveSectionByScrollPosition(): void {
+    if (this.isProgrammaticScrolling || !this.scrollContainer || !this.enrichedAct) return;
+
+    const hostEl = this.elRef.nativeElement as HTMLElement;
+    const cards = hostEl.querySelectorAll('.section-card[data-section-id]');
+    if (!cards.length) return;
+
+    const containerRect = this.scrollContainer.getBoundingClientRect();
+    // Detection line: top of scroll container + 80px (accounting for sticky header/breadcrumb)
+    const detectionLine = containerRect.top + 80;
+    const viewportBottom = containerRect.bottom;
+
+    let bestCard: Element | null = null;
+    let bestScore = -Infinity;
+
+    cards.forEach(card => {
+      const rect = card.getBoundingClientRect();
+      // Skip cards completely outside the visible area
+      if (rect.bottom < containerRect.top + 10 || rect.top > viewportBottom) return;
+
+      // Calculate how much of the card is visible in the viewport
+      const visibleTop = Math.max(rect.top, containerRect.top);
+      const visibleBottom = Math.min(rect.bottom, viewportBottom);
+      const visibleHeight = Math.max(0, visibleBottom - visibleTop);
+
+      // Score: cards whose top is at or above the detection line get a large bonus.
+      // Among those, prefer the one closest to (but not far above) the detection line.
+      // Cards below the detection line get scored by their visible area as fallback.
+      let score: number;
+      if (rect.top <= detectionLine) {
+        // Card's top is above or at the detection line — this is ideal.
+        // Higher score for cards closer to the detection line (less negative distance).
+        score = 10000 - (detectionLine - rect.top);
+      } else {
+        // Card's top is below the detection line — only if no above-line card exists.
+        score = visibleHeight - (rect.top - detectionLine);
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestCard = card;
+      }
+    });
+
+    if (bestCard) {
+      const secId = (bestCard as HTMLElement).getAttribute('data-section-id');
+      if (secId && secId !== this.activeSectionId) {
+        this.ngZone.run(() => {
+          this.activeSectionId = secId;
+          this.activeSection = this.enrichedAct?.sectionMap.get(secId) || null;
+          this.scrollTocToActiveSection(secId, false);
+          this.cdr.markForCheck();
+        });
+      }
+    }
   }
 
   private handleContainerScroll(): void {
@@ -587,6 +715,22 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.showReaderSettings) {
       this.showReaderSettings = false;
       dropdownClosed = true;
+    }
+
+    // Set manual scrolling flag to suppress IntersectionObserver during scroll
+    if (!this.isProgrammaticScrolling) {
+      this.isManualScrolling = true;
+      clearTimeout(this.manualScrollIdleTimer);
+      // Clear the flag after 200ms of scroll idle — IO can resume then
+      this.manualScrollIdleTimer = setTimeout(() => {
+        this.isManualScrolling = false;
+      }, 200);
+
+      // Debounced scroll-position-based section detection (every ~60ms during scroll)
+      clearTimeout(this.scrollSpyDebounceTimer);
+      this.scrollSpyDebounceTimer = setTimeout(() => {
+        this.detectActiveSectionByScrollPosition();
+      }, 60);
     }
 
     if (this.scrollRafPending) return;
@@ -1014,8 +1158,11 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent): void {
+  // Document-level click handler — runs outside Angular zone to avoid CD on every click
+  private boundDocClickHandler = this.onDocumentClick.bind(this);
+  private boundDocKeydownHandler = this.onDocumentKeydown.bind(this);
+
+  private onDocumentClick(event: MouseEvent): void {
     const target = event.target as HTMLElement;
     if (!target) return;
 
@@ -1025,7 +1172,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       event.preventDefault();
       event.stopPropagation();
       const fnNum = fnBadge.getAttribute('data-fn') || fnBadge.textContent?.replace(/\D/g, '') || '1';
-      this.showFootnoteDetails(fnNum);
+      this.ngZone.run(() => this.showFootnoteDetails(fnNum));
       return;
     }
 
@@ -1041,26 +1188,27 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     }
 
     if (changed) {
-      this.cdr.markForCheck();
+      this.ngZone.run(() => this.cdr.markForCheck());
     }
   }
 
-  @HostListener('document:keydown', ['$event'])
-  onKeydown(event: KeyboardEvent): void {
+  private onDocumentKeydown(event: KeyboardEvent): void {
     const isInput = ['INPUT', 'TEXTAREA', 'SELECT'].includes((event.target as HTMLElement)?.tagName || '');
 
     if (event.key === 'Escape') {
       if (this.showReaderSettings || this.showShortcutsModal || this.showJumpToSection || this.editingSection || this.activeFootnote) {
-        this.showReaderSettings = false;
-        this.showShortcutsModal = false;
-        this.showJumpToSection = false;
-        this.editingSection = null;
-        this.activeFootnote = null;
-        this.cdr.markForCheck();
+        this.ngZone.run(() => {
+          this.showReaderSettings = false;
+          this.showShortcutsModal = false;
+          this.showJumpToSection = false;
+          this.editingSection = null;
+          this.activeFootnote = null;
+          this.cdr.markForCheck();
+        });
         return;
       }
       if (this.searchQuery) {
-        this.clearMainSearch();
+        this.ngZone.run(() => this.clearMainSearch());
         return;
       }
     }
@@ -1072,32 +1220,33 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
       this.searchInputEl?.nativeElement?.focus();
     } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'g') {
       event.preventDefault();
-      this.toggleJumpToSection();
+      this.ngZone.run(() => this.toggleJumpToSection());
     } else if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'b') {
       event.preventDefault();
-      this.toggleToc();
+      this.ngZone.run(() => this.toggleToc());
     } else if (event.key === '?') {
       event.preventDefault();
-      this.toggleShortcutsModal();
+      this.ngZone.run(() => this.toggleShortcutsModal());
     } else if (event.key.toLowerCase() === 'j' || event.key === 'ArrowDown') {
       if (!event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
-        this.navigateSection(1);
+        this.ngZone.run(() => this.navigateSection(1));
       }
     } else if (event.key.toLowerCase() === 'k' || event.key === 'ArrowUp') {
       if (!event.ctrlKey && !event.metaKey && !event.altKey) {
         event.preventDefault();
-        this.navigateSection(-1);
+        this.ngZone.run(() => this.navigateSection(-1));
       }
     } else if (event.key.toLowerCase() === 'b' && !event.ctrlKey && !event.metaKey) {
       if (this.activeSectionId) {
         event.preventDefault();
-        this.toggleBookmark(this.activeSectionId);
+        this.ngZone.run(() => this.toggleBookmark(this.activeSectionId));
       }
     } else if (event.key.toLowerCase() === 'e' && !event.ctrlKey && !event.metaKey) {
       event.preventDefault();
-      this.isEditMode = !this.isEditMode;
-      this.cdr.markForCheck();
+      this.ngZone.run(() => {
+        this.toggleEditMode();
+      });
     }
   }
 
@@ -1150,6 +1299,17 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
     navigator.clipboard.writeText(url).then(
       () => this.toast.success(`Section ${sec.secId} link copied to clipboard`),
       () => this.toast.error('Failed to copy link to clipboard')
+    );
+  }
+
+  copyCleanSectionText(sec: EnrichedSection, event?: Event): void {
+    event?.stopPropagation();
+    const title = sec.cleanTitle || `Section ${sec.secId}`;
+    const body = sec.cleanBody || sec.rawContent || '';
+    const textToCopy = `§ ${sec.secId}. ${title}\n\n${body}`;
+    navigator.clipboard.writeText(textToCopy).then(
+      () => this.toast.success(`Copied clean text for Section § ${sec.secId}`),
+      () => this.toast.error('Failed to copy text to clipboard')
     );
   }
 
@@ -1219,172 +1379,66 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   /* ═══════════════════════════════════════════════════════
-     ADMIN INLINE EDITING
+     ADMIN INLINE EDITING (MODAL COORDINATION)
      ═══════════════════════════════════════════════════════ */
+
+  toggleEditMode(event?: Event): void {
+    event?.stopPropagation();
+    this.isEditMode = !this.isEditMode;
+    if (this.isEditMode) {
+      this.toast.info('Edit Mode activated — click "Edit" on any provision to modify legal text or translations.');
+    } else {
+      this.toast.info('Edit Mode exited.');
+    }
+    this.cdr.markForCheck();
+  }
 
   openEditSection(sec: EnrichedSection, event?: Event): void {
     event?.stopPropagation();
     this.editingSection = sec;
-    this.editTab = 'en';
-    this.editForm = {
-      section_number: sec.secId,
-      title: sec.cleanTitle,
-      title_hi: sec.title_hi || '',
-      introduction_text: sec.rawContent || sec.cleanBody,
-      introduction_text_hi: sec.introduction_text_hi || sec.content_hi || ''
-    };
     this.cdr.markForCheck();
   }
 
-  saveSectionEdit(): void {
-    if (!this.editingSection) return;
+  saveSectionEdit(payload: EditSectionSaveEvent): void {
+    const { section, formData } = payload;
     this.isSaving = true;
     this.cdr.markForCheck();
 
-    const secId = this.editingSection._id || this.editingSection.id || this.editForm.section_number;
+    const secId = section._id || section.id || formData.section_number;
 
-    this.api.updateSection(this.shortName, secId, this.editForm).subscribe({
+    this.api.updateSection(this.shortName, secId, formData).subscribe({
       next: () => {
         this.isSaving = false;
-        if (this.editingSection) {
-          this.editingSection.cleanTitle = this.editForm.title;
-          this.editingSection.title_hi = this.editForm.title_hi;
-          this.editingSection.rawContent = this.editForm.introduction_text;
-          this.editingSection.cleanBody = this.editForm.introduction_text;
-          this.editingSection.introduction_text_hi = this.editForm.introduction_text_hi;
-          this.editingSection.hasContent = this.editForm.introduction_text.trim().length > 10;
+        section.cleanTitle = formData.title;
+        section.title_hi = formData.title_hi;
+        section.rawContent = formData.introduction_text;
+        section.cleanBody = formData.introduction_text;
+        section.introduction_text_hi = formData.introduction_text_hi;
+        section.hasContent = (formData.introduction_text || '').trim().length > 10;
 
-          // Re-parse AST
-          const parsedBase = LegalTextParser.parse(this.editingSection.cleanBody, this.editingSection.cleanTitle);
-          this.editingSection.parsed = {
-            ...parsedBase,
-            enrichedNodes: this.enrichClauseNodes(parsedBase.nodes)
+        // Re-parse AST on demand
+        const parsedBase = LegalTextParser.parse(section.cleanBody, section.cleanTitle);
+        section.parsed = {
+          ...parsedBase,
+          enrichedNodes: this.enrichClauseNodes(parsedBase.nodes)
+        };
+
+        if (formData.introduction_text_hi?.trim()) {
+          const parsedHiBase = LegalTextParser.parse(formData.introduction_text_hi, formData.title_hi || '');
+          section.parsed_hi = {
+            ...parsedHiBase,
+            enrichedNodes: this.enrichClauseNodes(parsedHiBase.nodes)
           };
         }
+
         this.editingSection = null;
-        this.toast.success(`Section ${this.editForm.section_number} updated successfully.`);
+        this.toast.success(`Section § ${formData.section_number} updated successfully.`);
         this.recalculateDisplayedChapters();
         this.cdr.markForCheck();
       },
       error: () => {
         this.isSaving = false;
         this.toast.error('Failed to save section edits.');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  get editWordCount(): number {
-    const text = this.editTab === 'hi' ? this.editForm.introduction_text_hi : this.editForm.introduction_text;
-    if (!text) return 0;
-    return text.trim().split(/\s+/).filter(Boolean).length;
-  }
-
-  get editCharCount(): number {
-    const text = this.editTab === 'hi' ? this.editForm.introduction_text_hi : this.editForm.introduction_text;
-    return text ? text.length : 0;
-  }
-
-  get editReadingTime(): number {
-    return Math.max(1, Math.ceil(this.editWordCount / 200));
-  }
-
-  get hasHindiContent(): boolean {
-    return Boolean(this.editForm.title_hi?.trim() || this.editForm.introduction_text_hi?.trim());
-  }
-
-  get editPreviewParsed(): EnrichedParsedLegalSection | null {
-    if (!this.editForm.introduction_text) return null;
-    const parsedBase = LegalTextParser.parse(this.editForm.introduction_text, this.editForm.title || '');
-    return {
-      ...parsedBase,
-      enrichedNodes: this.enrichClauseNodes(parsedBase.nodes)
-    };
-  }
-
-  formatEditClauses(): void {
-    const field = this.editTab === 'hi' ? 'introduction_text_hi' : 'introduction_text';
-    let text = this.editForm[field] || '';
-    if (!text.trim()) return;
-
-    // Normalizes numbered sub-clauses so (1), (2), (a), (b), (i), (ii) start cleanly on newlines
-    text = text
-      .replace(/\r\n/g, '\n')
-      .replace(/([^\n])\s*(\(\d+[a-zA-Z]?\))\s*/g, '$1\n\n$2 ')
-      .replace(/([^\n])\s*(\([a-z]\))\s*/g, '$1\n  $2 ')
-      .replace(/([^\n])\s*(\([ivxlcdm]+\))\s*/g, '$1\n    $2 ')
-      .replace(/\n{3,}/g, '\n\n')
-      .trim();
-
-    this.editForm[field] = text;
-    this.toast.info('Clauses auto-formatted.');
-    this.cdr.markForCheck();
-  }
-
-  translateToHindiWithAi(): void {
-    if (!this.editForm.introduction_text?.trim() && !this.editForm.title?.trim()) {
-      this.toast.warning('Please enter English title or text first to translate.');
-      return;
-    }
-
-    this.isTranslating = true;
-    this.cdr.markForCheck();
-
-    this.api.translateSectionWithAi({
-      actName: this.enrichedAct?.actName || this.shortName,
-      shortName: this.shortName,
-      section_number: this.editForm.section_number,
-      title: this.editForm.title,
-      introduction_text: this.editForm.introduction_text
-    }).subscribe({
-      next: (res: any) => {
-        this.isTranslating = false;
-        if (res.data) {
-          if (res.data.title_hi) this.editForm.title_hi = res.data.title_hi;
-          if (res.data.introduction_text_hi) this.editForm.introduction_text_hi = res.data.introduction_text_hi;
-          this.editTab = 'hi';
-          this.toast.success('Official Hindi translation generated.');
-        }
-        this.cdr.markForCheck();
-      },
-      error: (err: any) => {
-        this.isTranslating = false;
-        const msg = err.error?.error?.message || err.error?.message || 'Failed to translate with AI.';
-        this.toast.error(msg);
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  enhanceEnglishWithAi(): void {
-    if (!this.editForm.introduction_text?.trim() && !this.editForm.title?.trim()) {
-      this.toast.warning('Please enter text first to format.');
-      return;
-    }
-
-    this.isEnhancing = true;
-    this.cdr.markForCheck();
-
-    this.api.enhanceSectionWithAi({
-      actName: this.enrichedAct?.actName || this.shortName,
-      shortName: this.shortName,
-      section_number: this.editForm.section_number,
-      title: this.editForm.title,
-      introduction_text: this.editForm.introduction_text
-    }).subscribe({
-      next: (res: any) => {
-        this.isEnhancing = false;
-        if (res.data) {
-          if (res.data.title) this.editForm.title = res.data.title;
-          if (res.data.introduction_text) this.editForm.introduction_text = res.data.introduction_text;
-          this.toast.success('Section text proofread & formatted.');
-        }
-        this.cdr.markForCheck();
-      },
-      error: (err: any) => {
-        this.isEnhancing = false;
-        const msg = err.error?.error?.message || err.error?.message || 'Failed to enhance with AI.';
-        this.toast.error(msg);
         this.cdr.markForCheck();
       }
     });
