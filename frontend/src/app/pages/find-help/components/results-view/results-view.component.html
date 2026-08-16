@@ -103,8 +103,8 @@
         <div class="flex items-start sm:items-center gap-2.5">
           <div class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0 mt-1 sm:mt-0"></div>
           <span class="text-xs font-bold text-slate-800 dark:text-slate-200 leading-relaxed">
-            {{ isFreeAidEligible ? '⚡ Free Legal Aid: Eligible! Results filtered to DLSA clinics.' : '⚖️ Standard
-            Advocate Fees Apply' }}
+            {{ isFreeAidEligible ? 'Free Legal Aid: Eligible! Results filtered to DLSA clinics.' : 'Standard Advocate
+            Fees Apply' }}
           </span>
         </div>
         <button (click)="resetEligibilityCheck()" [appTooltip]="'Reset the eligibility checker inputs'"
@@ -142,11 +142,11 @@
           class="flex items-center justify-between w-full border-b border-slate-100 dark:border-slate-800/80 px-1 md:px-0">
 
           <!-- Left Tabs Group -->
-          <div class="flex items-center">
+          <div class="flex items-center justify-between sm:justify-start w-full md:w-auto gap-1 sm:gap-2">
             <!-- Action Guide Tab -->
             <button (click)="switchTab('roadmap')"
               [appTooltip]="'View step-by-step guidance, procedures, and legal pathways'" tooltipPlacement="bottom"
-              class="flex-1 md:flex-none justify-center whitespace-nowrap relative py-2.5 md:py-3 px-1 md:px-5 bg-transparent border-0 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-0 active:scale-95"
+              class="flex-1 md:flex-none justify-center whitespace-nowrap relative py-2.5 md:py-3 px-2 sm:px-4 md:px-5 bg-transparent border-0 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-0 active:scale-95"
               [ngClass]="activeResultsTab === 'roadmap' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'">
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -155,13 +155,13 @@
               <span>Guide</span>
               <!-- Active Underline Indicator -->
               <span *ngIf="activeResultsTab === 'roadmap'"
-                class="absolute bottom-0 left-3 right-3 md:left-4 md:right-4 h-[2.1px] bg-amber-600 dark:bg-amber-400 rounded-full"></span>
+                class="absolute bottom-0 left-2 right-2 sm:left-3 sm:right-3 md:left-4 md:right-4 h-[2.5px] bg-amber-600 dark:bg-amber-400 rounded-full"></span>
             </button>
 
             <!-- Nearby Help Tab -->
             <button (click)="switchTab('nearby')"
               [appTooltip]="'Find local legal aid clinics, courts, and support offices'" tooltipPlacement="bottom"
-              class="flex-1 md:flex-none justify-center whitespace-nowrap relative py-2.5 md:py-3 px-1 md:px-5 bg-transparent border-0 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-0 active:scale-95"
+              class="flex-1 md:flex-none justify-center whitespace-nowrap relative py-2.5 md:py-3 px-2 sm:px-4 md:px-5 bg-transparent border-0 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-0 active:scale-95"
               [ngClass]="activeResultsTab === 'nearby' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 hover:text-emerald-600 dark:hover:text-emerald-400'">
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -177,13 +177,13 @@
               </span>
               <!-- Active Underline Indicator -->
               <span *ngIf="activeResultsTab === 'nearby'"
-                class="absolute bottom-0 left-3 right-3 md:left-4 md:right-4 h-[2.1px] bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
+                class="absolute bottom-0 left-2 right-2 sm:left-3 sm:right-3 md:left-4 md:right-4 h-[2.5px] bg-emerald-600 dark:bg-emerald-400 rounded-full"></span>
             </button>
 
             <!-- Verified Lawyers Tab -->
             <button (click)="switchTab('lawyers')"
               [appTooltip]="'Consult verified advocates practicing in this area of law'" tooltipPlacement="bottom"
-              class="flex-1 md:flex-none justify-center whitespace-nowrap relative py-2.5 md:py-3 px-1 md:px-5 bg-transparent border-0 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-0 active:scale-95"
+              class="flex-1 md:flex-none justify-center whitespace-nowrap relative py-2.5 md:py-3 px-2 sm:px-4 md:px-5 bg-transparent border-0 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 focus:outline-none focus:ring-0 active:scale-95"
               [ngClass]="activeResultsTab === 'lawyers' ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400'">
               <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -197,7 +197,7 @@
               </span>
               <!-- Active Underline Indicator -->
               <span *ngIf="activeResultsTab === 'lawyers'"
-                class="absolute bottom-0 left-3 right-3 md:left-4 md:right-4 h-[2.1px] bg-indigo-600 dark:bg-indigo-400 rounded-full"></span>
+                class="absolute bottom-0 left-2 right-2 sm:left-3 sm:right-3 md:left-4 md:right-4 h-[2.5px] bg-indigo-600 dark:bg-indigo-400 rounded-full"></span>
             </button>
           </div>
 
