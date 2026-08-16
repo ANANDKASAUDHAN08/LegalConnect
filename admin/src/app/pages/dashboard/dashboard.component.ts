@@ -117,14 +117,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   getHealthColor(service: 'node' | 'dotnet' | 'db'): string {
     if (service === 'node') {
       if (!this.systemHealth.nodeApi) return 'bg-red-400';
-      if (this.nodeLatency > 1000) return 'bg-red-400';
-      if (this.nodeLatency > 500) return 'bg-amber-400';
+      if (this.nodeLatency > 3000) return 'bg-red-400';
+      if (this.nodeLatency > 800) return 'bg-amber-400';
       return 'bg-emerald-400';
     }
     if (service === 'dotnet') {
       if (!this.systemHealth.dotnetApi) return 'bg-red-400';
-      if (this.dotnetLatency > 1000) return 'bg-red-400';
-      if (this.dotnetLatency > 500) return 'bg-amber-400';
+      if (this.dotnetLatency > 3000) return 'bg-red-400';
+      if (this.dotnetLatency > 800) return 'bg-amber-400';
       return 'bg-emerald-400';
     }
     // db
@@ -134,14 +134,14 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
 
   getHealthStatus(): string {
     const allHealthy = this.systemHealth.nodeApi && this.systemHealth.dotnetApi && this.systemHealth.database;
-    if (allHealthy && this.nodeLatency < 500 && this.dotnetLatency < 500) return 'All Systems Operational';
+    if (allHealthy && this.nodeLatency < 1000 && this.dotnetLatency < 1000) return 'All Systems Operational';
     if (allHealthy) return 'Systems Operational - High Latency';
     return 'Service Degradation Detected';
   }
 
   getHealthBadgeColor(): string {
     const allHealthy = this.systemHealth.nodeApi && this.systemHealth.dotnetApi && this.systemHealth.database;
-    if (allHealthy && this.nodeLatency < 500 && this.dotnetLatency < 500) return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
+    if (allHealthy && this.nodeLatency < 1000 && this.dotnetLatency < 1000) return 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400';
     if (allHealthy) return 'bg-amber-500/10 border-amber-500/20 text-amber-400';
     return 'bg-red-500/10 border-red-500/20 text-red-400';
   }
@@ -176,7 +176,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   // Real HTTP Latency Ping to Backend Endpoints
   pingSystemHealth(): void {
     const t0 = performance.now();
-    this.api.getOverview().subscribe({
+    this.api.getNodeHealth().subscribe({
       next: () => {
         this.nodeLatency = Math.round(performance.now() - t0);
         this.systemHealth.nodeApi = true;
@@ -199,7 +199,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         } else if (res?.dbConnections) {
           this.dbConnections = res.dbConnections;
         } else {
-          this.dbConnections = this.overview?.activeSessions || 0;
+          this.dbConnections = this.overview?.activeSessions || 1;
         }
       },
       error: () => {

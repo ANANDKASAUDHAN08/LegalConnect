@@ -23,6 +23,7 @@ export class AdminApiService {
   // -- Dashboard & Analytics Delegates --
   getOverview(): Observable<any> { return this.stats.getOverview(); }
   getHealth(): Observable<any> { return this.stats.getHealth(); }
+  getNodeHealth(): Observable<any> { return this.stats.getNodeHealth(); }
   getRegistrationTrends(): Observable<any> { return this.stats.getRegistrationTrends(); }
   getLoginTrends(): Observable<any> { return this.stats.getLoginTrends(); }
   getConsultationTrends(): Observable<any> { return this.stats.getConsultationTrends(); }

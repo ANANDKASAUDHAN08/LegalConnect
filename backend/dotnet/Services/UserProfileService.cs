@@ -93,10 +93,13 @@ namespace CoreApi.Services
             {
                 try
                 {
-                    using var httpClient = new HttpClient();
-                    var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? "http://localhost:5000";
-                    var nodeUrl = $"{nodeBaseUrl}/api/lawyers/sync/{userEmail}";
-                    await httpClient.DeleteAsync(nodeUrl);
+                    var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? (_env.IsDevelopment() ? "http://localhost:5000" : null);
+                    if (!string.IsNullOrEmpty(nodeBaseUrl))
+                    {
+                        using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(800) };
+                        var nodeUrl = $"{nodeBaseUrl}/api/lawyers/sync/{userEmail}";
+                        await httpClient.DeleteAsync(nodeUrl);
+                    }
                 }
                 catch (Exception ex)
                 {

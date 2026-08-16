@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { EnrichedSection, EnrichedClauseNode, EnrichedParsedLegalSection } from '../../act-detail.component';
+import { EnrichedSection, EnrichedParsedLegalSection } from '../../act-detail.component';
 import { TooltipDirective } from '../../../../../shared/directives/tooltip.directive';
 import { HighlightPipe } from '../../../../../shared/pipes/highlight.pipe';
 

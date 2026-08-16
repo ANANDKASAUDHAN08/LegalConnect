@@ -48,8 +48,8 @@ app.use((req, res, next) => {
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'Node.js API is running cleanly! 🚀' });
+app.get(['/api/health', '/api/legal/health'], (req, res) => {
+  res.json({ status: 'healthy', service: 'Node.js Express API', timestamp: new Date().toISOString() });
 });
 
 // Role-Separated Router Gateway with Inter-Service Backwards Compatibility

@@ -52,6 +52,10 @@ export class AdminStatsService {
     return this.http.get(`${baseApi}/health`);
   }
 
+  getNodeHealth(): Observable<any> {
+    return this.http.get(`${this.NODE_API}/health`);
+  }
+
   getRegistrationTrends(): Observable<any> {
     return this.http.get(`${this.API}/stats/registrations`);
   }

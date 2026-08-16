@@ -614,16 +614,23 @@ namespace CoreApi.Controllers
         {
             var contactsList = new List<object>();
 
-            // 1. Fetch real MongoDB tickets from Node backend
+            // 1. Fetch real MongoDB tickets from Node backend if configured
             try
             {
-                var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? "http://localhost:5000";
-                var httpClient = _httpClientFactory.CreateClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(3);
-                var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets");
-                if (response.IsSuccessStatusCode)
+                var nodeBaseUrl = _configuration["NodeServices:BaseUrl"];
+                if (string.IsNullOrEmpty(nodeBaseUrl) && _env.IsDevelopment())
                 {
-                    var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
+                    nodeBaseUrl = "http://localhost:5000";
+                }
+
+                if (!string.IsNullOrEmpty(nodeBaseUrl) && !nodeBaseUrl.Contains("localhost:5000") || _env.IsDevelopment())
+                {
+                    using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(800));
+                    var httpClient = _httpClientFactory.CreateClient();
+                    var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets", cts.Token);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(cancellationToken: cts.Token);
                     if (json.TryGetProperty("tickets", out var ticketsProp) && ticketsProp.ValueKind == System.Text.Json.JsonValueKind.Array)
                     {
                         foreach (var t in ticketsProp.EnumerateArray())

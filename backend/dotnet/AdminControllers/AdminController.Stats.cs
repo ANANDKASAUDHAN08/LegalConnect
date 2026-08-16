@@ -49,22 +49,30 @@ namespace CoreApi.Controllers
             var totalContacts = await _context.ContactSubmissions.CountAsync();
             var newContacts = await _context.ContactSubmissions.CountAsync(c => c.Status == "New");
 
-            // Fetch real user tickets from Node.js MongoDB ticket service if available
+            // Fetch real user tickets from Node.js MongoDB ticket service if available & properly configured
             try
             {
-                var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? "http://localhost:5000";
-                var httpClient = _httpClientFactory.CreateClient();
-                httpClient.Timeout = TimeSpan.FromSeconds(2);
-                var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets");
-                if (response.IsSuccessStatusCode)
+                var nodeBaseUrl = _configuration["NodeServices:BaseUrl"];
+                if (string.IsNullOrEmpty(nodeBaseUrl) && _env.IsDevelopment())
                 {
-                    var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>();
-                    if (json.TryGetProperty("total", out var totalProp) && json.TryGetProperty("newCount", out var newCountProp))
+                    nodeBaseUrl = "http://localhost:5000";
+                }
+
+                if (!string.IsNullOrEmpty(nodeBaseUrl) && !nodeBaseUrl.Contains("localhost:5000") || _env.IsDevelopment())
+                {
+                    using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(600));
+                    var httpClient = _httpClientFactory.CreateClient();
+                    var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets", cts.Token);
+                    if (response.IsSuccessStatusCode)
                     {
-                        var mongoTotal = totalProp.GetInt32();
-                        var mongoNew = newCountProp.GetInt32();
-                        totalContacts += mongoTotal;
-                        newContacts += mongoNew;
+                        var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(cancellationToken: cts.Token);
+                        if (json.TryGetProperty("total", out var totalProp) && json.TryGetProperty("newCount", out var newCountProp))
+                        {
+                            var mongoTotal = totalProp.GetInt32();
+                            var mongoNew = newCountProp.GetInt32();
+                            totalContacts += mongoTotal;
+                            newContacts += mongoNew;
+                        }
                     }
                 }
             }

@@ -172,14 +172,26 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             },
             OnTokenValidated = async context =>
             {
-                var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
                 var sessionIdClaim = context.Principal?.FindFirst("SessionId")?.Value;
                 if (string.IsNullOrEmpty(sessionIdClaim))
                 {
                     context.Fail("Session claim is missing.");
                     return;
                 }
-                var sessionExists = await dbContext.ActiveSessions.AnyAsync(s => s.TokenId == sessionIdClaim);
+
+                var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                var cacheKey = $"ActiveSession_{sessionIdClaim}";
+
+                if (!cache.TryGetValue(cacheKey, out bool sessionExists))
+                {
+                    var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
+                    sessionExists = await dbContext.ActiveSessions.AnyAsync(s => s.TokenId == sessionIdClaim);
+                    if (sessionExists)
+                    {
+                        cache.Set(cacheKey, true, TimeSpan.FromSeconds(60));
+                    }
+                }
+
                 if (!sessionExists)
                 {
                     context.Fail("Session has been revoked.");
@@ -241,7 +253,20 @@ app.UseAuthorization();
 
 app.UseResponseCompression();
 
-app.MapHealthChecks("/api/health");
+app.MapHealthChecks("/api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    ResponseWriter = async (context, report) =>
+    {
+        context.Response.ContentType = "application/json";
+        var payload = System.Text.Json.JsonSerializer.Serialize(new
+        {
+            status = report.Status.ToString(),
+            activeConnections = 1,
+            timestamp = DateTime.UtcNow
+        });
+        await context.Response.WriteAsync(payload);
+    }
+});
 app.MapControllers();
 app.MapHub<AdminNotificationHub>("/hubs/notifications");
 app.MapHub<AdminNotificationHub>("/hubs/admin/notifications");

@@ -41,36 +41,41 @@ namespace CoreApi.Data
             EnsureSecurityAuditLogsTableExists(context);
             EnsureAdminSavedViewsTableExists(context);
             EnsureReviewAuditLogsTableExists(context);
-            EnsureColumnExists(context, "Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'");
-            EnsureColumnExists(context, "Users", "LastLoginAt", "DATETIME NULL");
-            EnsureColumnExists(context, "Users", "LastIpAddress", "VARCHAR(50) NULL");
-            EnsureColumnExists(context, "Users", "TwoFactorBackupCodes", "varchar(2000) NULL");
-            EnsureColumnExists(context, "Consultations", "AdminRemark", "TEXT NULL");
-            EnsureColumnExists(context, "Consultations", "AuditLogJson", "LONGTEXT NULL");
-            EnsureColumnExists(context, "LawyerProfiles", "VerificationRemarks", "TEXT NULL");
-            EnsureColumnExists(context, "LawyerProfiles", "CopExpiryDate", "DATETIME NULL");
-            EnsureColumnExists(context, "ContactSubmissions", "Priority", "VARCHAR(20) NOT NULL DEFAULT 'Normal'");
-            EnsureColumnExists(context, "ContactSubmissions", "Category", "VARCHAR(50) NOT NULL DEFAULT 'General'");
-            EnsureColumnExists(context, "ContactSubmissions", "AssignedAgent", "VARCHAR(100) NULL");
-            EnsureColumnExists(context, "ContactSubmissions", "SlaDueDate", "DATETIME NULL");
-            EnsureColumnExists(context, "ContactSubmissions", "InternalNotesJson", "VARCHAR(4000) NULL");
-            EnsureColumnExists(context, "ContactSubmissions", "ResolutionNote", "VARCHAR(2000) NULL");
-            EnsureColumnExists(context, "Reviews", "ConsultationId", "INT NULL");
-            EnsureColumnExists(context, "Reviews", "IPAddress", "VARCHAR(50) NULL");
-            EnsureColumnExists(context, "Reviews", "RiskScore", "INT DEFAULT 0");
-            EnsureColumnExists(context, "Reviews", "RedactedContent", "VARCHAR(2000) NULL");
-            EnsureColumnExists(context, "Reviews", "LastEditedAt", "DATETIME NULL");
-            EnsureColumnExists(context, "Reviews", "OriginalContent", "VARCHAR(2000) NULL");
-            EnsureColumnExists(context, "Reviews", "IsDisputeRequested", "TINYINT(1) DEFAULT 0");
-            EnsureColumnExists(context, "Reviews", "DisputeReason", "VARCHAR(500) NULL");
-            EnsureColumnExists(context, "Reviews", "DisputeRequestedAt", "DATETIME NULL");
-            EnsureColumnExists(context, "Reviews", "TargetId", "INT NULL");
-            EnsureColumnExists(context, "Reviews", "TargetType", "VARCHAR(50) NOT NULL DEFAULT 'Platform'");
-            EnsureColumnExists(context, "Reviews", "ModerationStatus", "VARCHAR(30) NOT NULL DEFAULT 'Approved'");
-            EnsureColumnExists(context, "Reviews", "FlagReason", "VARCHAR(250) NULL");
-            EnsureColumnExists(context, "Reviews", "AdvocateReply", "VARCHAR(2000) NULL");
-            EnsureColumnExists(context, "Reviews", "AdvocateReplyStatus", "VARCHAR(30) NULL");
-            EnsureColumnExists(context, "Reviews", "IsVerifiedClient", "TINYINT(1) DEFAULT 0");
+
+            // Fast single-roundtrip batch column check
+            EnsureColumnsBatch(context, new List<(string Table, string Column, string Definition)>
+            {
+                ("Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'"),
+                ("Users", "LastLoginAt", "DATETIME NULL"),
+                ("Users", "LastIpAddress", "VARCHAR(50) NULL"),
+                ("Users", "TwoFactorBackupCodes", "varchar(2000) NULL"),
+                ("Consultations", "AdminRemark", "TEXT NULL"),
+                ("Consultations", "AuditLogJson", "LONGTEXT NULL"),
+                ("LawyerProfiles", "VerificationRemarks", "TEXT NULL"),
+                ("LawyerProfiles", "CopExpiryDate", "DATETIME NULL"),
+                ("ContactSubmissions", "Priority", "VARCHAR(20) NOT NULL DEFAULT 'Normal'"),
+                ("ContactSubmissions", "Category", "VARCHAR(50) NOT NULL DEFAULT 'General'"),
+                ("ContactSubmissions", "AssignedAgent", "VARCHAR(100) NULL"),
+                ("ContactSubmissions", "SlaDueDate", "DATETIME NULL"),
+                ("ContactSubmissions", "InternalNotesJson", "VARCHAR(4000) NULL"),
+                ("ContactSubmissions", "ResolutionNote", "VARCHAR(2000) NULL"),
+                ("Reviews", "ConsultationId", "INT NULL"),
+                ("Reviews", "IPAddress", "VARCHAR(50) NULL"),
+                ("Reviews", "RiskScore", "INT DEFAULT 0"),
+                ("Reviews", "RedactedContent", "VARCHAR(2000) NULL"),
+                ("Reviews", "LastEditedAt", "DATETIME NULL"),
+                ("Reviews", "OriginalContent", "VARCHAR(2000) NULL"),
+                ("Reviews", "IsDisputeRequested", "TINYINT(1) DEFAULT 0"),
+                ("Reviews", "DisputeReason", "VARCHAR(500) NULL"),
+                ("Reviews", "DisputeRequestedAt", "DATETIME NULL"),
+                ("Reviews", "TargetId", "INT NULL"),
+                ("Reviews", "TargetType", "VARCHAR(50) NOT NULL DEFAULT 'Platform'"),
+                ("Reviews", "ModerationStatus", "VARCHAR(30) NOT NULL DEFAULT 'Approved'"),
+                ("Reviews", "FlagReason", "VARCHAR(250) NULL"),
+                ("Reviews", "AdvocateReply", "VARCHAR(2000) NULL"),
+                ("Reviews", "AdvocateReplyStatus", "VARCHAR(30) NULL"),
+                ("Reviews", "IsVerifiedClient", "TINYINT(1) DEFAULT 0")
+            });
 
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
@@ -643,7 +648,7 @@ namespace CoreApi.Data
             }
         }
 
-        private static void EnsureColumnExists(AppDbContext context, string tableName, string columnName, string columnDefinition)
+        private static void EnsureColumnsBatch(AppDbContext context, List<(string Table, string Column, string Definition)> columns)
         {
             try
             {
@@ -651,27 +656,33 @@ namespace CoreApi.Data
                 bool wasOpen = conn.State == System.Data.ConnectionState.Open;
                 if (!wasOpen) conn.Open();
 
-                using var cmd = conn.CreateCommand();
-                cmd.CommandText = "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = @tableName AND column_name = @columnName";
-
-                var p1 = cmd.CreateParameter();
-                p1.ParameterName = "@tableName";
-                p1.Value = tableName;
-                cmd.Parameters.Add(p1);
-
-                var p2 = cmd.CreateParameter();
-                p2.ParameterName = "@columnName";
-                p2.Value = columnName;
-                cmd.Parameters.Add(p2);
-
-                var count = Convert.ToInt32(cmd.ExecuteScalar());
-                if (!wasOpen) conn.Close();
-
-                if (count == 0)
+                var existingColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                using (var cmd = conn.CreateCommand())
                 {
-                    string alterSql = string.Format("ALTER TABLE `{0}` ADD COLUMN `{1}` {2};", tableName, columnName, columnDefinition);
-                    context.Database.ExecuteSqlRaw(alterSql);
+                    cmd.CommandText = "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = DATABASE();";
+                    using var reader = cmd.ExecuteReader();
+                    while (reader.Read())
+                    {
+                        var t = reader.GetString(0);
+                        var c = reader.GetString(1);
+                        existingColumns.Add($"{t}.{c}");
+                    }
                 }
+
+                foreach (var col in columns)
+                {
+                    if (!existingColumns.Contains($"{col.Table}.{col.Column}"))
+                    {
+                        try
+                        {
+                            string alterSql = $"ALTER TABLE `{col.Table}` ADD COLUMN `{col.Column}` {col.Definition};";
+                            context.Database.ExecuteSqlRaw(alterSql);
+                        }
+                        catch { }
+                    }
+                }
+
+                if (!wasOpen) conn.Close();
             }
             catch
             {

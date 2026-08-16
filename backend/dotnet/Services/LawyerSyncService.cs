@@ -51,7 +51,7 @@ namespace CoreApi.Services
                     }
                 }
 
-                using var httpClient = new HttpClient();
+                using var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(2) };
                 
                 // Parse specializations string to array
                 string[] specArray = Array.Empty<string>();
