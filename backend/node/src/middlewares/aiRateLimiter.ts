@@ -40,7 +40,7 @@ export const createAiRateLimiter = (options: AiRateLimitOptions = {}) => {
 
       // Prompt payload inspection & sanitization guard
       if (req.body && (req.method === 'POST' || req.method === 'PUT')) {
-        const textFields = ['question', 'description', 'prompt', 'text', 'content'];
+        const textFields = ['question', 'description', 'prompt', 'text', 'content', 'introduction_text', 'introduction_text_hi', 'title', 'title_hi'];
         for (const field of textFields) {
           if (typeof req.body[field] === 'string') {
             if (req.body[field].length > maxCharLength) {

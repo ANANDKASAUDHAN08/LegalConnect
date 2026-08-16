@@ -1,5 +1,7 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import dotenv from 'dotenv';
+import crypto from 'crypto';
+import { getCache, setCache } from './statsService';
 
 dotenv.config();
 
@@ -241,17 +243,39 @@ class AiService {
   }
 
   // ═════════════════════════════════════════════════════════
-  // STATUTORY SECTION TRANSLATION & PROOFREADING
   // ═════════════════════════════════════════════════════════
+  // STATUTORY SECTION TRANSLATION & PROOFREADING (WITH MEMOIZATION)
+  // ═════════════════════════════════════════════════════════
+
+  private getStatutoryHash(prefix: string, actName: string, sectionNumber: string, title: string, content: string): string {
+    const raw = `${prefix}:${actName.trim().toLowerCase()}:${sectionNumber.trim()}:${title.trim()}:${content.trim()}`;
+    return crypto.createHash('sha256').update(raw).digest('hex');
+  }
 
   async translateSectionToHindi(
     actName: string,
     sectionNumber: string,
     title: string,
     content: string
-  ): Promise<{ title_hi: string; introduction_text_hi: string }> {
+  ): Promise<{ title_hi: string; introduction_text_hi: string; fromCache?: boolean }> {
     if (!this.isConfigured) {
       throw new Error('AI Service is not configured. Please set OPENROUTER_API_KEY or GEMINI_API_KEY in backend/.env.');
+    }
+
+    const hash = this.getStatutoryHash('trans_hi', actName, sectionNumber, title, content);
+    const cacheKey = `ai:statutory:${hash}`;
+
+    try {
+      const cached = await getCache(cacheKey);
+      if (cached && (cached.title_hi || cached.introduction_text_hi)) {
+        return {
+          title_hi: String(cached.title_hi || '').trim(),
+          introduction_text_hi: String(cached.introduction_text_hi || '').trim(),
+          fromCache: true
+        };
+      }
+    } catch (cacheErr) {
+      console.warn('AI Cache check skipped:', cacheErr);
     }
 
     const systemPrompt = `You are a Senior Legislative Draftsman and Official Legal Translator for the Legislative Department, Ministry of Law and Justice, Government of India.
@@ -285,19 +309,35 @@ ENGLISH STATUTORY TEXT:
 ${content}`;
 
     try {
-      const text = await this.executePrompt(prompt, {
-        systemPrompt,
-        jsonMode: true,
-        temperature: 0.1
-      });
+      // 15-second timeout circuit breaker
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('AI Translation request timed out after 15 seconds. Please retry.')), 15000)
+      );
+
+      const text = await Promise.race([
+        this.executePrompt(prompt, {
+          systemPrompt,
+          jsonMode: true,
+          temperature: 0.1
+        }),
+        timeoutPromise
+      ]);
 
       const cleaned = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
       const parsed = JSON.parse(cleaned);
 
-      return {
+      const result = {
         title_hi: String(parsed.title_hi || '').trim(),
-        introduction_text_hi: String(parsed.introduction_text_hi || '').trim()
+        introduction_text_hi: String(parsed.introduction_text_hi || '').trim(),
+        fromCache: false
       };
+
+      // Cache result for 30 days
+      try {
+        await setCache(cacheKey, result, 86400 * 30);
+      } catch {}
+
+      return result;
     } catch (error: any) {
       console.error('Error in translateSectionToHindi:', error);
       throw new Error(`Failed to translate section: ${error.message || 'Unknown error'}`);
@@ -309,9 +349,25 @@ ${content}`;
     sectionNumber: string,
     title: string,
     content: string
-  ): Promise<{ title: string; introduction_text: string }> {
+  ): Promise<{ title: string; introduction_text: string; fromCache?: boolean }> {
     if (!this.isConfigured) {
       throw new Error('AI Service is not configured. Please set OPENROUTER_API_KEY or GEMINI_API_KEY in backend/.env.');
+    }
+
+    const hash = this.getStatutoryHash('enh_en', actName, sectionNumber, title, content);
+    const cacheKey = `ai:statutory:${hash}`;
+
+    try {
+      const cached = await getCache(cacheKey);
+      if (cached && (cached.title || cached.introduction_text)) {
+        return {
+          title: String(cached.title || title).trim(),
+          introduction_text: String(cached.introduction_text || content).trim(),
+          fromCache: true
+        };
+      }
+    } catch (cacheErr) {
+      console.warn('AI Cache check skipped:', cacheErr);
     }
 
     const systemPrompt = `You are an expert Legal Proofreader for the official Indian Bare Acts database.
@@ -338,19 +394,33 @@ CURRENT STATUTORY TEXT:
 ${content}`;
 
     try {
-      const text = await this.executePrompt(prompt, {
-        systemPrompt,
-        jsonMode: true,
-        temperature: 0.1
-      });
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('AI Enhancement request timed out after 15 seconds. Please retry.')), 15000)
+      );
+
+      const text = await Promise.race([
+        this.executePrompt(prompt, {
+          systemPrompt,
+          jsonMode: true,
+          temperature: 0.1
+        }),
+        timeoutPromise
+      ]);
 
       const cleaned = text.replace(/^```json\s*/i, '').replace(/```$/i, '').trim();
       const parsed = JSON.parse(cleaned);
 
-      return {
+      const result = {
         title: String(parsed.title || title).trim(),
-        introduction_text: String(parsed.introduction_text || content).trim()
+        introduction_text: String(parsed.introduction_text || content).trim(),
+        fromCache: false
       };
+
+      try {
+        await setCache(cacheKey, result, 86400 * 30);
+      } catch {}
+
+      return result;
     } catch (error: any) {
       console.error('Error in enhanceSectionEnglish:', error);
       throw new Error(`Failed to enhance section: ${error.message || 'Unknown error'}`);

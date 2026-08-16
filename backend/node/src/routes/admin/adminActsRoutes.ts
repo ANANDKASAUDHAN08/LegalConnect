@@ -6,8 +6,15 @@ import BareAct, { SectionModel } from '../../models/BareAct';
 import { normalizeActInfo, classifyActCategory, generateHierarchicalId } from '../../utils/actNormalizer';
 import actRegistry from '../../services/actRegistry';
 import AiService from '../../services/AiService';
+import { createAiRateLimiter } from '../../middlewares/aiRateLimiter';
 
 const router = Router();
+
+const adminAiLimiter = createAiRateLimiter({
+  windowMs: 60 * 1000,
+  maxRequests: 30,
+  maxCharLength: 12000
+});
 
 function escapeRegExp(string: string): string {
   return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -289,7 +296,7 @@ router.post('/acts/:shortName/pinned-sections/sync', asyncHandler(async (req: Re
 }));
 
 // POST /ai/translate-section - High-precision Hindi translation for statutory sections
-router.post('/ai/translate-section', asyncHandler(async (req: Request, res: Response) => {
+router.post('/ai/translate-section', adminAiLimiter, asyncHandler(async (req: Request, res: Response) => {
   const { actName, shortName, section_number, title, introduction_text } = req.body;
 
   if (!introduction_text && !title) {
@@ -303,11 +310,15 @@ router.post('/ai/translate-section', asyncHandler(async (req: Request, res: Resp
     String(introduction_text || '')
   );
 
-  res.json({ success: true, data: result });
+  res.json({
+    success: true,
+    data: result,
+    fromCache: Boolean((result as any).fromCache)
+  });
 }));
 
 // POST /ai/enhance-section - Proofread and format English statutory section
-router.post('/ai/enhance-section', asyncHandler(async (req: Request, res: Response) => {
+router.post('/ai/enhance-section', adminAiLimiter, asyncHandler(async (req: Request, res: Response) => {
   const { actName, shortName, section_number, title, introduction_text } = req.body;
 
   if (!introduction_text && !title) {
@@ -321,7 +332,11 @@ router.post('/ai/enhance-section', asyncHandler(async (req: Request, res: Respon
     String(introduction_text || '')
   );
 
-  res.json({ success: true, data: result });
+  res.json({
+    success: true,
+    data: result,
+    fromCache: Boolean((result as any).fromCache)
+  });
 }));
 
 export default router;

@@ -480,29 +480,26 @@ namespace CoreApi.Controllers
         private void AppendAuditLog(Consultation consultation, string actionText)
         {
             var timestamp = DateTime.UtcNow.ToString("o");
-            var newEntry = $"{{\"timestamp\":\"{timestamp}\",\"action\":\"{actionText}\"}}";
-            if (string.IsNullOrEmpty(consultation.AuditLogJson))
+            var newEntry = new { timestamp, action = actionText };
+
+            try
             {
-                consultation.AuditLogJson = $"[{newEntry}]";
+                var entries = new List<object>();
+                if (!string.IsNullOrWhiteSpace(consultation.AuditLogJson))
+                {
+                    var existing = System.Text.Json.JsonSerializer.Deserialize<List<System.Text.Json.JsonElement>>(consultation.AuditLogJson);
+                    if (existing != null)
+                    {
+                        entries.AddRange(existing.Cast<object>());
+                    }
+                }
+                entries.Add(newEntry);
+                consultation.AuditLogJson = System.Text.Json.JsonSerializer.Serialize(entries);
             }
-            else
+            catch
             {
-                try
-                {
-                    var trimmed = consultation.AuditLogJson.Trim();
-                    if (trimmed.EndsWith("]"))
-                    {
-                        consultation.AuditLogJson = trimmed.Substring(0, trimmed.Length - 1) + $",{newEntry}]";
-                    }
-                    else
-                    {
-                        consultation.AuditLogJson = $"[{newEntry}]";
-                    }
-                }
-                catch
-                {
-                    consultation.AuditLogJson = $"[{newEntry}]";
-                }
+                // If existing JSON is corrupt, start fresh with just the new entry
+                consultation.AuditLogJson = System.Text.Json.JsonSerializer.Serialize(new[] { newEntry });
             }
         }
 
