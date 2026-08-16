@@ -1,0 +1,216 @@
+<div *ngIf="isOpen"
+  class="fixed inset-0 z-[1900] flex items-center justify-center p-0 sm:p-4 overflow-y-auto no-print animate-fade-in"
+  role="dialog" aria-modal="true" aria-labelledby="triage-modal-title">
+
+  <!-- Backdrop -->
+  <div (click)="closeModal()" class="fixed inset-0 bg-black/80 backdrop-blur-md transition-opacity duration-300"></div>
+
+  <!-- Modal Box (Full screen on mobile, elegant MNC glassmorphic card on desktop) -->
+  <div
+    class="relative w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-4xl bg-white dark:bg-[#0b101b] border-0 sm:border border-slate-200/80 dark:border-slate-800/80 sm:rounded-3xl rounded-none shadow-2xl overflow-hidden z-10 animate-scale-up flex flex-col">
+
+    <!-- Premium MNC Glass Header -->
+    <div
+      class="px-4 sm:px-6 py-3.5 sm:py-4 bg-gradient-to-r from-slate-900 via-[#111726] to-slate-900 text-white flex items-center justify-between shrink-0 border-b border-white/[0.08]">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-9 h-9 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <div>
+          <h3 id="triage-modal-title" class="text-sm sm:text-base font-black text-white m-0 leading-tight">
+            Legal Diagnostic &amp; Triage Wizard
+          </h3>
+          <p class="text-[10.5px] sm:text-[11px] text-slate-300 m-0 mt-0.5">
+            Instant AI-Assisted Dispute Triage &bull; Statutory Rights Navigator
+          </p>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <button (click)="closeModal()" [appTooltip]="'Close Diagnostic Wizard'" tooltipPlacement="left"
+        class="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white cursor-pointer transition-colors border-0 shrink-0">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Stepper Navigation Strip -->
+    <div
+      class="bg-slate-50 dark:bg-slate-900/60 px-4 sm:px-6 py-2.5 border-b border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-1 sm:gap-2 text-[10.5px] sm:text-xs font-bold text-slate-400">
+        <span class="inline-flex items-center gap-1.5"
+          [ngClass]="currentStep >= 1 ? 'text-indigo-600 dark:text-indigo-400' : ''">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+            [ngClass]="currentStep >= 1 ? 'bg-indigo-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'">1</span>
+          <span>Domain</span>
+        </span>
+        <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="inline-flex items-center gap-1.5"
+          [ngClass]="currentStep >= 2 ? 'text-amber-600 dark:text-amber-400' : ''">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+            [ngClass]="currentStep >= 2 ? 'bg-amber-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'">2</span>
+          <span>Urgency</span>
+        </span>
+        <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+        </svg>
+        <span class="inline-flex items-center gap-1.5"
+          [ngClass]="currentStep === 3 ? 'text-purple-600 dark:text-purple-400' : ''">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black"
+            [ngClass]="currentStep === 3 ? 'bg-purple-600 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'">3</span>
+          <span>Relief Goal</span>
+        </span>
+      </div>
+
+      <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        Step {{ currentStep }} / 3
+      </span>
+    </div>
+
+    <!-- Modal Body (Scrollable with no scrollbar) -->
+    <div class="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1 no-scrollbar bg-slate-50/30 dark:bg-black/10">
+
+      <!-- ── STEP 1: What is your dispute? ── -->
+      <div *ngIf="currentStep === 1" class="space-y-3.5 animate-fade-in">
+        <div>
+          <h4 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white m-0">
+            Step 1: Select Your Legal Domain
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">
+            Select the legal domain that best aligns with your current dispute:
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <button *ngFor="let opt of categoryOptions; trackBy: trackByOptionId" (click)="selectCategory(opt.id)"
+            [appTooltip]="'Select ' + opt.title" tooltipPlacement="top"
+            [ngClass]="selectedCategory === opt.id ? 'border-indigo-500 bg-indigo-50/70 dark:bg-indigo-950/40 ring-2 ring-indigo-500/50' : 'border-slate-200 dark:border-slate-800/90 bg-white dark:bg-slate-900/80 hover:border-indigo-400 dark:hover:border-indigo-700/80'"
+            class="p-3.5 rounded-xl border text-left cursor-pointer transition-all duration-200 flex flex-col justify-between gap-2.5 shadow-xs group active:scale-[0.98]">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span
+                  class="text-xs font-bold text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                  {{ opt.title }}
+                </span>
+              </div>
+              <span class="text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full border shrink-0"
+                [ngClass]="opt.iconBg">
+                {{ opt.badge }}
+              </span>
+            </div>
+            <p class="text-[10.5px] text-slate-550 dark:text-slate-400 m-0 leading-relaxed">
+              {{ opt.desc }}
+            </p>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 2: Urgency & Statutory Clocks ── -->
+      <div *ngIf="currentStep === 2" class="space-y-3.5 animate-fade-in">
+        <div>
+          <h4 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white m-0">
+            Step 2: When Did This Incident Occur?
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">
+            This determines critical statutory deadlines, Golden Hour emergency freezes, and filing rules:
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 pt-1">
+          <button *ngFor="let urg of urgencyOptions; trackBy: trackByUrgencyId" (click)="selectUrgency(urg.id)"
+            [appTooltip]="'Select ' + urg.title" tooltipPlacement="left"
+            [ngClass]="selectedUrgency === urg.id ? 'border-amber-500 bg-amber-50/60 dark:bg-amber-950/40 ring-2 ring-amber-500/50' : 'border-slate-200 dark:border-slate-800/90 bg-white dark:bg-slate-900/80 hover:border-amber-400 dark:hover:border-amber-700/80'"
+            class="p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 shadow-xs group active:scale-[0.98]">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 flex-wrap mb-1">
+                <span
+                  class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors">
+                  {{ urg.title }}
+                </span>
+                <span class="text-[8.5px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  [ngClass]="urg.badgeClass">
+                  {{ urg.badge }}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-550 dark:text-slate-400 m-0 leading-relaxed">
+                {{ urg.desc }}
+              </p>
+            </div>
+            <svg
+              class="w-4 h-4 text-slate-400 group-hover:text-amber-600 group-hover:translate-x-0.5 transition-all shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- ── STEP 3: Primary Relief Goal ── -->
+      <div *ngIf="currentStep === 3" class="space-y-3.5 animate-fade-in">
+        <div>
+          <h4 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white m-0">
+            Step 3: What Immediate Legal Relief Do You Need?
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">
+            We will customize your action checklist, statutory clocks, and filter the directory accordingly:
+          </p>
+        </div>
+
+        <div class="flex flex-col gap-3 pt-1">
+          <button *ngFor="let goal of goalOptions; trackBy: trackByGoalId" (click)="selectGoal(goal.id)" [appTooltip]="'Select ' + goal.title"
+            tooltipPlacement="left"
+            [ngClass]="selectedGoal === goal.id ? 'border-purple-500 bg-purple-50/60 dark:bg-purple-950/40 ring-2 ring-purple-500/50' : 'border-slate-200 dark:border-slate-800/90 bg-white dark:bg-slate-900/80 hover:border-purple-400 dark:hover:border-purple-700/80'"
+            class="p-4 rounded-xl border text-left cursor-pointer transition-all duration-200 flex items-center justify-between gap-3 shadow-xs group active:scale-[0.98]">
+            <div class="flex-1 min-w-0">
+              <div class="flex items-center gap-2.5 flex-wrap mb-1">
+                <span
+                  class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-slate-100 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  {{ goal.title }}
+                </span>
+                <span class="text-[8.5px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full border"
+                  [ngClass]="goal.badgeClass">
+                  {{ goal.badge }}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-550 dark:text-slate-400 m-0 leading-relaxed">
+                {{ goal.desc }}
+              </p>
+            </div>
+            <svg
+              class="w-4 h-4 text-slate-400 group-hover:text-purple-600 group-hover:translate-x-0.5 transition-all shrink-0"
+              fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Premium MNC Footer -->
+    <div
+      class="px-4 sm:px-6 py-3 sm:py-3.5 bg-slate-50 dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+      <button *ngIf="currentStep > 1" (click)="prevStep()"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer bg-white dark:bg-slate-950 transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" />
+        </svg>
+        <span>Previous Step</span>
+      </button>
+      <div *ngIf="currentStep === 1"></div>
+
+      <button (click)="closeModal()"
+        class="px-3.5 py-1.5 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 bg-transparent border-0 cursor-pointer transition-colors">
+        Cancel
+      </button>
+    </div>
+
+  </div>
+</div>
