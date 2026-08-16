@@ -1,0 +1,306 @@
+<div class="section-card" [id]="'section-' + section.secId" [attr.data-section-id]="section.secId" [ngClass]="{
+    'section-active': isActive,
+    'section-collapsed': isCollapsed,
+    'section-edit-mode': isEditMode
+  }">
+
+  <!-- Section Header -->
+  <div class="flex items-start justify-between gap-3 cursor-pointer" [class.mb-5]="!isCollapsed"
+    (click)="onToggleCollapse($event)" role="button" [attr.aria-expanded]="!isCollapsed"
+    [attr.aria-label]="'Section ' + section.secId + ': ' + section.cleanTitle + ' - click to ' + (isCollapsed ? 'expand' : 'collapse')">
+    <div class="flex items-baseline gap-3 min-w-0 flex-1">
+      <span class="section-number">§ {{ section.secId }}</span>
+      <h4 class="section-title" [innerHTML]="section.cleanTitle | highlight: searchQuery"></h4>
+      @if (isEditMode) {
+      <span
+        class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30 shrink-0">
+        Editable
+      </span>
+      }
+    </div>
+
+    <!-- Action Buttons — hover reveal -->
+    <div class="section-actions shrink-0" (click)="$event.stopPropagation()">
+      <!-- Edit Section Button -->
+      <button type="button" (click)="onEdit($event)" [adminTooltip]="'Edit Section § ' + section.secId"
+        tooltipPosition="top" class="!text-amber-400 hover:!text-amber-300 hover:!bg-amber-500/20">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      </button>
+
+      <!-- Bookmark Star Button -->
+      <button type="button" (click)="onBookmark($event)"
+        [adminTooltip]="section.isBookmarked ? 'Remove bookmark' : 'Bookmark section (B)'" tooltipPosition="top"
+        [attr.aria-label]="section.isBookmarked ? 'Remove bookmark for Section ' + section.secId : 'Bookmark Section ' + section.secId"
+        [class.!text-amber-400]="section.isBookmarked">
+        <svg width="14" height="14" viewBox="0 0 24 24" [attr.fill]="section.isBookmarked ? 'currentColor' : 'none'"
+          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon
+            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+          </polygon>
+        </svg>
+      </button>
+
+      <!-- Section Collapse Toggle Button -->
+      <button type="button" (click)="onToggleCollapse($event)"
+        [adminTooltip]="isCollapsed ? 'Expand section content' : 'Collapse section content'" tooltipPosition="top"
+        [attr.aria-label]="isCollapsed ? 'Expand Section ' + section.secId : 'Collapse Section ' + section.secId"
+        [attr.aria-expanded]="!isCollapsed" class="!text-indigo-400 hover:!text-indigo-300 hover:!bg-indigo-500/20">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round" class="transition-transform duration-200"
+          [class.rotate-180]="isCollapsed">
+          <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+      </button>
+
+      <!-- Copy Clean Text -->
+      <button type="button" (click)="onCopyCleanText($event)" [adminTooltip]="'Copy clean statutory text'"
+        tooltipPosition="top" class="hover:!text-emerald-300">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
+          <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
+        </svg>
+      </button>
+
+      <!-- Copy Citation -->
+      <button type="button" (click)="onCopyCitation($event)" [adminTooltip]="'Copy citation'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
+
+      <!-- Copy Link -->
+      <button type="button" (click)="onCopyLink($event)" [adminTooltip]="'Copy link'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+        </svg>
+      </button>
+
+      <!-- Print Section -->
+      <button type="button" (click)="onPrint($event)" [adminTooltip]="'Print section'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 6 2 18 2 18 9"></polyline>
+          <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+          <rect x="6" y="14" width="12" height="8"></rect>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Section Content Body (Collapsible) -->
+  @if (!isCollapsed) {
+  <!-- Pending Digitization Banner -->
+  @if (!section.hasContent) {
+  <div class="pending-banner text-xs flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2.5 text-amber-300">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        class="text-amber-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
+        </path>
+        <line x1="12" y1="9" x2="12" y2="13"></line>
+        <line x1="12" y1="17" x2="12.01" y2="17"></line>
+      </svg>
+      <span><span class="font-bold">Pending:</span> Section {{ section.secId }} has not been digitized.</span>
+    </div>
+    @if (isEditMode) {
+    <button class="btn btn-sm btn-primary text-xs shrink-0 px-3 py-1" (click)="onEdit($event)">
+      Add Content
+    </button>
+    }
+  </div>
+  }
+
+  <!-- Side-by-Side Dual Column Bilingual Mode -->
+  @if (activeLanguage === 'both' && splitViewMode === 'split' && section.hasContent) {
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+    <!-- Column 1: English -->
+    <div class="flex flex-col gap-4 border-r border-white/5 pr-4">
+      <div class="flex items-center gap-2 text-xs font-bold text-indigo-300">
+        <span class="px-2 py-0.5 rounded bg-indigo-500/10 border border-indigo-500/20">English</span>
+        <span>Authentic Version</span>
+      </div>
+      <ng-container *ngTemplateOutlet="englishContentTpl"></ng-container>
+    </div>
+
+    <!-- Column 2: Hindi -->
+    <div class="flex flex-col gap-4 pl-2">
+      <div class="flex items-center gap-2 text-xs font-bold text-amber-300">
+        <span class="px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">हिंदी</span>
+        <span>Official Translation</span>
+      </div>
+      <ng-container *ngTemplateOutlet="hindiContentTpl"></ng-container>
+    </div>
+  </div>
+  } @else {
+  <!-- Standard Stacked View -->
+  @if ((activeLanguage === 'en' || activeLanguage === 'both') && section.hasContent) {
+  <ng-container *ngTemplateOutlet="englishContentTpl"></ng-container>
+  }
+
+  @if ((activeLanguage === 'hi' || activeLanguage === 'both') && (section.title_hi || section.introduction_text_hi ||
+  section.content_hi || section.text_hi)) {
+  <ng-container *ngTemplateOutlet="hindiContentTpl"></ng-container>
+  }
+  }
+
+  }
+
+</div>
+
+<!-- ═══ English Content Sub-Template ═══ -->
+<ng-template #englishContentTpl>
+  <!-- Plain English Summary (Demoted, Subtle) -->
+  @if (section.parsed.laymanSummary) {
+  <div class="summary-card mt-0" [class.mb-2]="section.parsed.definedTerms && section.parsed.definedTerms.length > 0"
+    (click)="onToggleLayman()"
+    [adminTooltip]="showLayman ? 'Click to hide plain English summary' : 'Click to read plain English summary'"
+    tooltipPosition="top">
+    <div class="flex items-center justify-between">
+      <span class="summary-label">Summary</span>
+      <button type="button" class="summary-toggle">
+        {{ showLayman ? 'Hide' : 'Show' }}
+      </button>
+    </div>
+    @if (showLayman) {
+    <p class="summary-body">
+      {{ section.parsed.laymanSummary }}
+    </p>
+    }
+  </div>
+  }
+
+  <!-- Defined Terms Bar -->
+  @if (section.parsed.definedTerms && section.parsed.definedTerms.length > 0) {
+  <div class="defined-terms-bar">
+    <div class="flex items-center justify-between cursor-pointer" [class.mb-2]="showDefined"
+      (click)="onToggleDefinedTerms()"
+      [adminTooltip]="!showDefined ? 'Expand defined statutory terms' : 'Collapse defined statutory terms'"
+      tooltipPosition="top">
+      <span class="text-[10px] font-bold text-indigo-300/70 uppercase tracking-wider">
+        Defined Terms ({{ section.parsed.definedTerms.length }})
+      </span>
+      <button type="button" class="text-[10px] font-semibold text-indigo-400 hover:text-indigo-300">
+        {{ showDefined ? 'Hide' : 'Show' }}
+      </button>
+    </div>
+    @if (showDefined) {
+    <div class="flex flex-wrap gap-1.5">
+      @for (term of section.parsed.definedTerms; track term) {
+      <span class="term-pill">"{{ term }}"</span>
+      }
+    </div>
+    }
+  </div>
+  }
+
+  <!-- Structured Tree View vs Raw View -->
+  @if (viewMode === 'structured' && section.parsed.hasStructure) {
+  <div class="clause-tree-container">
+    @if (section.parsed.preamble) {
+    <div class="clause-preamble">
+      {{ section.parsed.preamble }}
+    </div>
+    }
+
+    @for (node of section.parsed.enrichedNodes; track node.id) {
+    <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: node }"></ng-container>
+    }
+  </div>
+  } @else {
+  <div class="raw-text-view">
+    <p class="whitespace-pre-wrap" [innerHTML]="section.cleanBody | highlight: searchQuery"></p>
+  </div>
+  }
+</ng-template>
+
+<!-- ═══ Hindi Content Sub-Template ═══ -->
+<ng-template #hindiContentTpl>
+  <div class="hindi-content-wrapper flex flex-col gap-3 font-hindi">
+    @if (section.title_hi) {
+    <div class="flex items-center gap-2 pb-1 border-b border-amber-500/15">
+      <span
+        class="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 text-[10px] font-semibold border border-amber-500/20 uppercase tracking-wider">
+        हिंदी
+      </span>
+      <h5 class="font-bold text-amber-200/90 text-sm leading-relaxed">
+        {{ section.title_hi }}
+      </h5>
+    </div>
+    }
+
+    <!-- Structured Tree View for Hindi -->
+    @if (viewMode === 'structured' && parsedHi && parsedHi.hasStructure) {
+    <div class="clause-tree-container hindi-tree">
+      @if (parsedHi.preamble) {
+      <div class="clause-preamble">
+        {{ parsedHi.preamble }}
+      </div>
+      }
+
+      @for (node of parsedHi.enrichedNodes; track node.id) {
+      <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: node }"></ng-container>
+      }
+    </div>
+    } @else if (section.content_blocks_hi && section.content_blocks_hi.length > 0) {
+    <div class="flex flex-col gap-2.5">
+      @for (block of section.content_blocks_hi; track $index) {
+      <div class="p-3 rounded-lg" [ngStyle]="getClauseStyle(getCleanBlockText(block.text), block.type)">
+        <p class="text-sm text-slate-200 leading-relaxed">{{ getCleanBlockText(block.text) }}</p>
+      </div>
+      }
+    </div>
+    } @else {
+    <div class="raw-text-view">
+      <p class="whitespace-pre-wrap text-sm text-slate-200 leading-relaxed">{{ section.content_hi ||
+        section.introduction_text_hi || section.text_hi }}</p>
+    </div>
+    }
+  </div>
+</ng-template>
+
+<!-- ═══ Recursive Clause Node Template ═══ -->
+<ng-template #clauseNodeTpl let-node>
+  @if (node.isCallout) {
+  <div class="clause-callout" [ngClass]="node.calloutClass">
+    <span class="callout-label">{{ node.calloutLabel }}</span>
+    <span class="clause-text-body" [innerHTML]="node.cleanText | highlight: searchQuery"></span>
+    @if (node.children && node.children.length > 0) {
+    <div class="mt-2">
+      @for (child of node.children; track child.id) {
+      <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: child }"></ng-container>
+      }
+    </div>
+    }
+  </div>
+  } @else {
+  <div class="clause-node" [ngClass]="node.levelClass">
+    <div class="clause-content">
+      @if (node.marker) {
+      <span class="clause-marker" [ngClass]="node.markerClass">
+        {{ node.marker }}
+      </span>
+      }
+      <div class="min-w-0 flex-1">
+        <div class="clause-text-body" [innerHTML]="node.cleanText | highlight: searchQuery"></div>
+      </div>
+    </div>
+
+    @if (node.children && node.children.length > 0) {
+    <div>
+      @for (child of node.children; track child.id) {
+      <ng-container *ngTemplateOutlet="clauseNodeTpl; context: { $implicit: child }"></ng-container>
+      }
+    </div>
+    }
+  </div>
+  }
+</ng-template>

@@ -1,0 +1,42 @@
+:host {
+  display: block;
+}
+
+.edit-modal-overlay {
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.edit-modal-card {
+  animation: zoomIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.form-input {
+  font-family: var(--act-font-sans, sans-serif);
+  outline: none;
+
+  &:focus {
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.25);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

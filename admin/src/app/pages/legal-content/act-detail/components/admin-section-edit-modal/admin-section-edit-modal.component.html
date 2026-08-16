@@ -1,0 +1,295 @@
+<div
+  class="edit-modal-overlay fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200"
+  (click)="onClose()">
+  <div
+    class="edit-modal-card max-w-3xl w-full rounded-2xl p-6 flex flex-col gap-4 shadow-2xl border border-indigo-500/25 bg-slate-900 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.8),0_0_25px_rgba(99,102,241,0.12)] animate-in zoom-in-95 duration-200"
+    role="dialog" aria-modal="true" aria-labelledby="editSectionDialogTitle" (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 id="editSectionDialogTitle" class="text-base font-bold text-slate-100">Edit Section {{
+              editForm.section_number }}</h3>
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/15 text-indigo-300 border border-indigo-500/25">§
+              {{ editForm.section_number }}</span>
+          </div>
+          <p class="text-[11px] text-slate-400 mt-0.5">{{ shortName }} — Statutory Text Amendment</p>
+        </div>
+      </div>
+
+      <button class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
+        (click)="onClose()" [adminTooltip]="'Close (Esc)'" tooltipPosition="left">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round" stroke-linejoin="round">
+          <line x1="18" y1="6" x2="6" y2="18"></line>
+          <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Toolbar: Language Tabs + Formatting Tools -->
+    <div class="flex items-center justify-between gap-3 flex-wrap">
+      <!-- Segmented Tabs -->
+      <div class="flex bg-slate-950/70 p-1 rounded-xl border border-slate-800/80 shadow-inner">
+        <button type="button"
+          class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+          [class.bg-indigo-600]="editTab === 'en'" [class.text-white]="editTab === 'en'"
+          [class.shadow-md]="editTab === 'en'" [class.text-slate-400]="editTab !== 'en'" (click)="editTab = 'en'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <span>English</span>
+        </button>
+
+        <button type="button"
+          class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+          [class.bg-indigo-600]="editTab === 'hi'" [class.text-white]="editTab === 'hi'"
+          [class.shadow-md]="editTab === 'hi'" [class.text-slate-400]="editTab !== 'hi'" (click)="editTab = 'hi'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
+            </path>
+          </svg>
+          <span>हिंदी</span>
+          @if (hasHindiContent) {
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          } @else {
+          <span class="text-[9px] text-slate-500 font-mono" [class.text-white]="editTab === 'hi'">(empty)</span>
+          }
+        </button>
+
+        <button type="button"
+          class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
+          [class.bg-purple-600]="editTab === 'preview'" [class.text-white]="editTab === 'preview'"
+          [class.shadow-md]="editTab === 'preview'" [class.text-slate-400]="editTab !== 'preview'"
+          (click)="editTab = 'preview'">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+          <span>Live Preview</span>
+        </button>
+      </div>
+
+      <!-- Action Tools for Active Tab -->
+      <div class="flex items-center gap-2 flex-wrap">
+        @if (editTab === 'en') {
+        <button type="button" (click)="enhanceEnglishWithAi()" [disabled]="isEnhancing || isAiOnCooldown"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600/30 via-purple-600/30 to-indigo-600/20 hover:from-indigo-600/50 hover:to-purple-600/50 text-indigo-200 hover:text-white border border-indigo-400/30 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50"
+          [adminTooltip]="isAiOnCooldown ? 'Cooldown: ' + aiCooldownRemaining + 's remaining' : 'Use AI to clean OCR glitches and proofread statutory text'"
+          tooltipPosition="top">
+          @if (isEnhancing) {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            class="animate-spin text-indigo-300" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+          </svg>
+          <span>Proofreading...</span>
+          } @else {
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-indigo-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+            <path
+              d="M12 3l1.912 5.885a1 1 0 00.95.691H21l-4.945 3.593a1 1 0 00-.364 1.118L17.603 20.2 12.658 16.6a1 1 0 00-1.176 0l-4.945 3.593 1.912-5.913a1 1 0 00-.364-1.118L3.14 9.576h6.138a1 1 0 00.95-.691L12 3z">
+            </path>
+          </svg>
+          <span>AI Proofread</span>
+          }
+        </button>
+
+        <button type="button" (click)="formatEditClauses()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
+          [adminTooltip]="'Auto-format clauses so (1), (2), (a) start on clean new lines'" tooltipPosition="top">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-slate-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 7 4 4 20 4 20 7"></polyline>
+            <line x1="9" y1="20" x2="15" y2="20"></line>
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+          </svg>
+          <span>Auto-Format</span>
+        </button>
+        }
+
+        @if (editTab === 'hi') {
+        <button type="button" (click)="translateToHindiWithAi()" [disabled]="isTranslating || isAiOnCooldown"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-600 text-white border border-indigo-400/40 hover:brightness-110 transition-all cursor-pointer shadow-md shadow-indigo-500/20 active:scale-95 disabled:opacity-50"
+          [adminTooltip]="isAiOnCooldown ? 'Cooldown: ' + aiCooldownRemaining + 's remaining' : 'Translate English statutory title & body to official Indian legal Hindi'"
+          tooltipPosition="top">
+          @if (isTranslating) {
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            class="animate-spin text-white" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+          </svg>
+          <span>Translating...</span>
+          } @else {
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-indigo-200 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"></path>
+          </svg>
+          <span>AI Translate from English</span>
+          }
+        </button>
+
+        <button type="button" (click)="formatEditClauses()"
+          class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
+          [adminTooltip]="'Auto-format clauses so (1), (2), (a) start on clean new lines'" tooltipPosition="top">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="text-slate-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="4 7 4 4 20 4 20 7"></polyline>
+            <line x1="9" y1="20" x2="15" y2="20"></line>
+            <line x1="12" y1="4" x2="12" y2="20"></line>
+          </svg>
+          <span>Auto-Format</span>
+        </button>
+        }
+      </div>
+    </div>
+
+    <!-- Tab Body -->
+    <div class="flex flex-col gap-3.5 text-sm max-h-[55vh] overflow-y-auto pr-1">
+      @if (editTab === 'en') {
+      <div class="flex flex-col gap-1.5">
+        <label class="font-semibold text-slate-300 text-xs flex items-center justify-between">
+          <span>Section Title (English)</span>
+        </label>
+        <input type="text"
+          class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 transition-all"
+          [(ngModel)]="editForm.title" placeholder="e.g. Short title, extent and commencement." />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between">
+          <label class="font-semibold text-slate-300 text-xs">Provision Body Text (English)</label>
+          <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+            <span class="text-indigo-300 font-semibold">{{ editWordCount }} words</span>
+            <span>•</span>
+            <span>{{ editCharCount }} chars</span>
+            <span>•</span>
+            <span>~{{ editReadingTime }} min read</span>
+          </div>
+        </div>
+        <textarea
+          class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 leading-relaxed font-sans transition-all"
+          rows="10" [(ngModel)]="editForm.introduction_text" (ngModelChange)="onContentChange()"
+          placeholder="Enter complete statutory provision text..."></textarea>
+      </div>
+      } @else if (editTab === 'hi') {
+      <div class="flex flex-col gap-1.5">
+        <label class="font-semibold text-slate-300 text-xs">Section Title (Hindi)</label>
+        <input type="text"
+          class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 transition-all"
+          [(ngModel)]="editForm.title_hi" placeholder="धारा का शीर्षक (हिंदी में)" />
+      </div>
+
+      <div class="flex flex-col gap-1.5">
+        <div class="flex items-center justify-between">
+          <label class="font-semibold text-slate-300 text-xs">Provision Body Text (Hindi)</label>
+          <div class="flex items-center gap-2 text-[11px] font-mono text-slate-400">
+            <span class="text-indigo-300 font-semibold">{{ editWordCount }} words</span>
+            <span>•</span>
+            <span>{{ editCharCount }} chars</span>
+          </div>
+        </div>
+        <textarea
+          class="form-input bg-slate-950/70 border border-slate-800 focus:border-indigo-500 text-slate-100 rounded-xl p-3 text-sm focus:ring-1 focus:ring-indigo-500/30 leading-relaxed font-sans transition-all"
+          rows="10" [(ngModel)]="editForm.introduction_text_hi" (ngModelChange)="onContentChange()"
+          placeholder="हिन्दी में धारा का पूरा पाठ दर्ज करें..."></textarea>
+      </div>
+      } @else if (editTab === 'preview') {
+      <!-- Live Preview Tab -->
+      <div class="flex flex-col gap-3 p-4 rounded-xl bg-slate-950/80 border border-slate-800">
+        <div class="flex items-center justify-between pb-2 border-b border-white/5">
+          <div class="flex items-baseline gap-2">
+            <span class="text-xs font-mono font-bold text-indigo-400">§ {{ editForm.section_number }}</span>
+            <h4 class="font-bold text-slate-100 text-sm">{{ editForm.title || '(No title)' }}</h4>
+          </div>
+          <span
+            class="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/30 font-bold">Parsed
+            Live Preview</span>
+        </div>
+
+        @if (editPreviewParsed) {
+        @if (editPreviewParsed.preamble) {
+        <div
+          class="text-xs italic text-indigo-200/90 bg-indigo-500/10 p-2.5 rounded-lg border-l-2 border-indigo-400 leading-relaxed">
+          {{ editPreviewParsed.preamble }}
+        </div>
+        }
+
+        @if (editPreviewParsed.enrichedNodes && editPreviewParsed.enrichedNodes.length > 0) {
+        <div class="flex flex-col gap-2.5">
+          @for (node of editPreviewParsed.enrichedNodes; track node.marker + $index) {
+          <div class="flex items-start gap-2.5 text-xs">
+            <span class="font-bold text-indigo-400 shrink-0 font-mono">{{ node.marker }}</span>
+            <span class="text-slate-200 leading-relaxed" [innerHTML]="node.cleanText"></span>
+          </div>
+          }
+        </div>
+        } @else {
+        <p class="text-xs text-slate-300 leading-relaxed whitespace-pre-line">{{ editForm.introduction_text }}</p>
+        }
+        } @else {
+        <div class="text-center py-6 text-slate-500 text-xs">
+          No provision text entered yet to preview.
+        </div>
+        }
+      </div>
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-between pt-3 border-t border-slate-800/80">
+      <div class="hidden sm:flex items-center gap-1.5 text-[11px] text-slate-500">
+        <kbd
+          class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] border border-white/10">Ctrl+Enter</kbd>
+        <span>to save</span>
+        <span class="mx-1">•</span>
+        <kbd
+          class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-[10px] border border-white/10">Esc</kbd>
+        <span>to cancel</span>
+      </div>
+
+      <div class="flex items-center gap-2.5 ml-auto">
+        <button type="button" class="btn btn-secondary px-4 py-2 text-xs font-semibold rounded-xl cursor-pointer"
+          (click)="onClose()">Cancel</button>
+        <button type="button"
+          class="btn btn-primary px-5 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-500/20 cursor-pointer"
+          (click)="onSave()" [disabled]="isSaving">
+          @if (isSaving) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="animate-spin" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10"></path>
+          </svg>
+          <span>Saving...</span>
+          } @else {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+          <span>Save Amendment</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
