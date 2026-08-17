@@ -686,6 +686,7 @@ namespace CoreApi.Controllers
                     }
                 }
             }
+            }
             catch {}
 
             // 2. Fetch MySQL ContactSubmissions

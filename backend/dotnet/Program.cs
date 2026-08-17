@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.ResponseCompression;
 using LegalConnect.Middleware;
 using CoreApi.Hubs.Admin;
 using CoreApi.Services.Admin;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
