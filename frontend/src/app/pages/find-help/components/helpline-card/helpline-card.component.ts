@@ -19,26 +19,27 @@ export class HelplineCardComponent {
 
   @Output() showQr = new EventEmitter<any>();
 
-  isSaved = computed(() => (this.helpline?._id ? this.savedItems.isSavedHelpline(this.helpline._id) : false));
+  // Reactive saved state — uses MongoDB _id string
+  isSaved = computed(() => this.helpline?._id ? this.savedItems.isSavedHelpline(this.helpline._id) : false);
 
   constructor(
     private savedItems: SavedItemsService,
     private snackbar: SnackbarService
-  ) {}
+  ) { }
 
-  onSaveClick(event: Event): void {
+  onSaveClick(event: Event) {
     event.stopPropagation();
     if (this.helpline?._id) {
       this.savedItems.toggleHelpline(this.helpline._id, this.helpline.name);
     }
   }
 
-  copyCardDetails(): void {
+  copyCardDetails() {
     const text = this.getShareText() + `\nShared via LegalConnect Find-Help Portal`;
     navigator.clipboard.writeText(text).then(() => {
-      this.snackbar.show('Helpline details copied to clipboard!', 'success');
+      this.snackbar.show('Helpline details copied to clipboard!');
     }).catch(() => {
-      this.snackbar.show('Could not copy helpline details.', 'error');
+      this.snackbar.show('Could not copy helpline details.');
     });
   }
 
@@ -48,11 +49,11 @@ export class HelplineCardComponent {
 
   getShareText(): string {
     if (!this.helpline) return '';
-    let text = `${this.helpline.name}\n`;
+    let text = `🚨 ${this.helpline.name}\n`;
     text += `----------------------------------------------\n`;
-    text += `Number: ${this.helpline.number}\n`;
+    text += `📞 Number: ${this.helpline.number}\n`;
     if (this.helpline.description) {
-      text += `Description: ${this.helpline.description}\n`;
+      text += `ℹ️ Description: ${this.helpline.description}\n`;
     }
     return text;
   }
@@ -61,7 +62,7 @@ export class HelplineCardComponent {
     return 'https://legalconnect.com';
   }
 
-  onQrClick(event: Event): void {
+  onQrClick(event: Event) {
     event.stopPropagation();
     if (this.showQr.observed) {
       this.showQr.emit(this.helpline);

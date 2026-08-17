@@ -1,16 +1,16 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EMERGENCY_HELPLINES, EmergencyHelpline } from '../../config/category-data.config';
-import { TooltipDirective } from '../../../../directives/tooltip.directive';
-import { DiscreetExitBarComponent } from '../discreet-exit-bar/discreet-exit-bar.component';
 
 /**
- * Emergency helpline ticker bar with live 24/7 helplines marquee and Discreet Quick Exit safety bar.
+ * Emergency helpline ticker bar — scrolling marquee on mobile, centered on desktop.
+ * Data-driven from EMERGENCY_HELPLINES config. Eliminates 90 lines of duplicated HTML
+ * that was previously copy-pasted for the seamless mobile scroll loop.
  */
 @Component({
   selector: 'app-emergency-ticker',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, DiscreetExitBarComponent],
+  imports: [CommonModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './emergency-ticker.component.html',
   styleUrls: ['./emergency-ticker.component.scss']

@@ -1,63 +1,33 @@
 <div [ngClass]="isScrolled ? 'top-[55px] md:top-[58px]' : 'top-[68px] md:top-[72px]'"
-  class="fixed left-0 right-0 bg-[#fff9f9] dark:bg-[#150a0a] border-b border-rose-500/20 py-1 sm:py-1.5 overflow-hidden z-[990] flex items-center justify-between px-2 sm:px-4 md:px-6 transition-all duration-300 no-print shadow-xs">
+  class="fixed left-0 right-0 bg-[#fff8f8] dark:bg-[#170c0c] border-b border-dashed border-red-600/30 py-1.5 overflow-hidden z-[990] flex justify-start md:justify-center transition-all duration-300 no-print">
 
-  <!-- Desktop Pinned Left Header: 24/7 National Emergency (visible on desktop md: and up) -->
-  <div
-    class="hidden md:flex shrink-0 items-center gap-1.5 font-black text-rose-600 dark:text-rose-400 uppercase tracking-widest text-xs pr-4 border-r border-rose-500/25 z-20 bg-[#fff9f9] dark:bg-[#150a0a] select-none">
-    <span class="relative flex h-2 w-2 shrink-0">
-      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-      <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-600"></span>
-    </span>
-    <svg class="w-3.5 h-3.5 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-    <span>24/7 National Emergency</span>
-  </div>
+  <div class="flex items-center marquee-scroll">
+    <!-- Helpline Set (rendered from data, duplicated once for seamless mobile loop) -->
+    <ng-container *ngFor="let set of [0, 1]; trackBy: trackByIndex">
+      <div
+        [class]="set === 1 ? 'flex md:hidden items-center gap-6 shrink-0 pr-6 text-[11px] md:text-sm text-textPrimary dark:text-slate-200' : 'flex items-center gap-6 shrink-0 pr-6 text-[11px] md:text-sm text-textPrimary dark:text-slate-200'">
 
-  <!-- Center Helpline Marquee: Takes maximum screen width on mobile! -->
-  <div class="flex-1 overflow-hidden mx-1 sm:mx-2 md:mx-3 relative min-w-0">
-    <!-- Subtle gradient edge masks -->
-    <div
-      class="pointer-events-none absolute left-0 top-0 bottom-0 w-2 sm:w-4 md:w-6 bg-gradient-to-r from-[#fff9f9] dark:from-[#150a0a] to-transparent z-10">
-    </div>
-    <div
-      class="pointer-events-none absolute right-0 top-0 bottom-0 w-2 sm:w-4 md:w-6 bg-gradient-to-l from-[#fff9f9] dark:from-[#150a0a] to-transparent z-10">
-    </div>
-
-    <div class="flex items-center marquee-scroll">
-      <!-- Helpline Set (duplicated for infinite seamless glide) -->
-      <ng-container *ngFor="let set of [0, 1]; trackBy: trackByIndex">
-        <div
-          class="flex items-center gap-4 sm:gap-6 md:gap-8 shrink-0 pr-6 sm:pr-8 text-[10.5px] sm:text-[11px] md:text-xs text-slate-700 dark:text-slate-200 select-none">
-
-          <!-- Mobile-only inline emergency indicator in loop -->
-          <span
-            class="md:hidden inline-flex items-center gap-1 font-black text-rose-600 uppercase tracking-widest shrink-0 text-[10px]">
-            <span class="relative flex h-1.5 w-1.5">
-              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-              <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-rose-600"></span>
-            </span>
-            24/7 SOS:
+        <!-- Pulsing "Need help?" label -->
+        <span
+          class="inline-flex items-center gap-1.5 font-bold text-red-600 uppercase tracking-wider animate-pulse shrink-0">
+          <span class="relative flex h-2 w-2">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-2 w-2 bg-red-600"></span>
           </span>
+          <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          Need <span class="hidden sm:inline">immediate</span> help?
+        </span>
 
-          <span *ngFor="let h of helplines; trackBy: trackByNumber" class="inline-flex items-center gap-1.5 shrink-0">
-            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ h.label }}:</span>
-            <strong class="text-rose-600 font-black tracking-wider">{{ h.number }}</strong>
-            <a [href]="'tel:' + h.number" [appTooltip]="'Call ' + h.label + ' (' + h.number + ') immediately'"
-              tooltipPlacement="bottom"
-              class="bg-rose-600 hover:bg-rose-700 text-white px-2 py-0.5 rounded text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all no-underline shadow-xs hover:scale-105 active:scale-95 cursor-pointer">
-              Call
-            </a>
-          </span>
-        </div>
-      </ng-container>
-    </div>
+        <!-- Dynamic helpline items -->
+        <span *ngFor="let h of helplines; trackBy: trackByNumber" class="inline-flex items-center gap-1.5 shrink-0">
+          {{ h.label }}: <strong class="text-red-600 font-bold">{{ h.number }}</strong>
+          <a [href]="'tel:' + h.number"
+            class="bg-red-600 hover:bg-red-700 text-white px-1.5 py-0.5 rounded text-[9.5px] font-bold transition-all hover:scale-105">CALL</a>
+        </span>
+      </div>
+    </ng-container>
   </div>
-
-  <!-- Right: Quick Exit Button (Ultra-compact on mobile) -->
-  <div class="shrink-0 pl-1 sm:pl-2 md:pl-3 border-l border-rose-500/25 relative z-20">
-    <app-discreet-exit-bar></app-discreet-exit-bar>
-  </div>
-
 </div>

@@ -1,6 +1,6 @@
 <div appJargonTooltip class="pt-[70px] md:pt-[80px] print:pt-0">
 
-  <!-- Emergency Helpline Ticker (marquee + Discreet Quick Exit button) -->
+  <!-- Emergency Helpline Ticker (data-driven sub-component) -->
   <app-emergency-ticker [isScrolled]="isScrolled"></app-emergency-ticker>
 
   <div class="w-full pt-6 pb-8 relative min-h-[75vh]">
@@ -10,11 +10,10 @@
       [class]="isResultsMode ? 'absolute top-0 left-0 w-full opacity-0 -translate-x-full pointer-events-none' : 'relative w-full opacity-100 translate-x-0'"
       class="transition-all duration-500 ease-in-out transform">
 
-      <!-- Hero Header Component with Triage & Pocket Rights Triggers -->
+      <!-- Hero Header Component (dynamic data and content projection) -->
       <app-hero-header [locationQuery]="locationQuery" [isLocationEstimated]="isLocationEstimated"
         [isStatsLoading]="isStatsLoading" [animatedStats]="animatedStats" (locationClicked)="openMapModal()"
-        (suggestClicked)="openSuggestionModal()" (triageWizardClicked)="openTriageModal()"
-        (pocketRightsClicked)="openPocketRightsModal()">
+        (suggestClicked)="openSuggestionModal()">
 
         <!-- Mobile Search Slot (projected into mobile layout in hero) -->
         <div mobile-search class="w-full">
@@ -39,7 +38,7 @@
                 <span class="max-w-[110px] truncate">{{ s.query }}</span>
                 <button (click)="removeRecentSearch(idx, $event)"
                   class="text-slate-400 dark:text-slate-550 hover:text-red-500 border-0 bg-transparent p-0 flex items-center justify-center ml-0.5"
-                  [appTooltip]="'Remove search query from history'" tooltipPlacement="top">
+                  appTooltip="Remove this search query from your history" tooltipPlacement="top">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -71,7 +70,7 @@
                 class="text-[9px] font-black text-slate-400 dark:text-slate-600 uppercase tracking-wider">Recent</span>
               <button (click)="clearRecentSearches()"
                 class="text-[10px] text-red-400 hover:text-red-600 hover:underline font-bold cursor-pointer bg-transparent border-0"
-                [appTooltip]="'Permanently erase all recent searches'" tooltipPlacement="top">Clear
+                appTooltip="Permanently erase all recent searches" tooltipPlacement="top">Clear
                 All</button>
             </div>
             <div class="flex gap-2 overflow-x-auto scrollbar-none">
@@ -81,7 +80,7 @@
                 <span class="max-w-[150px] truncate">{{ s.query }}</span>
                 <button (click)="removeRecentSearch(idx, $event)"
                   class="text-slate-400 dark:text-slate-550 hover:text-red-500 border-0 bg-transparent p-0 flex items-center justify-center ml-0.5"
-                  [appTooltip]="'Remove search query from history'" tooltipPlacement="top">
+                  appTooltip="Remove this search query from your history" tooltipPlacement="top">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -113,7 +112,7 @@
               </span>
               <button (click)="aiSummary = ''"
                 class="text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-200 cursor-pointer transition-all bg-transparent border-0"
-                [appTooltip]="'Close this AI summary'" tooltipPlacement="left">
+                appTooltip="Close this AI summary" tooltipPlacement="left">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -133,55 +132,27 @@
     </div>
 
     <!-- ================= STATE 2: RESULTS SPLIT VIEW (Lazy-loaded via @defer) ================= -->
-    <div [class]="isResultsMode 
+    <div
+      [class]="isResultsMode 
         ? (transitionComplete ? 'relative w-full opacity-100' : 'relative w-full opacity-100 translate-x-0 transform') 
         : 'absolute top-0 left-0 w-full opacity-0 translate-x-full pointer-events-none transform'"
       class="transition-all duration-500 ease-in-out">
-      @defer (when isResultsMode; prefetch on idle) {
+      @defer (when isResultsMode) {
       <app-results-view *ngIf="isResultsMode" [activeCategory]="activeCategory" [locationQuery]="locationQuery"
         (back)="goBackToCategories()" (suggestClicked)="openSuggestionModal()" (changeLocation)="openMapModal()">
       </app-results-view>
-      } @loading (after 100ms; minimum 250ms) {
-      <div class="w-full py-16 flex flex-col items-center justify-center gap-3">
-        <div class="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
-        <span class="text-xs font-semibold text-slate-500">Loading legal assistance directory...</span>
-      </div>
-      } @placeholder (minimum 150ms) {
-      <div class="w-full min-h-[400px] bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl animate-pulse"></div>
       }
     </div>
   </div>
 
-  <!-- SOS Emergency Action Hub Drawer -->
-  <app-sos-drawer [showSosDrawer]="showSosDrawer" (toggleSosDrawer)="showSosDrawer = $event">
-  </app-sos-drawer>
-
-  <!-- 3-Step Guided Triage Wizard Modal -->
-  @defer (when isTriageModalOpen; prefetch on idle) {
-  <app-triage-wizard-modal [isOpen]="isTriageModalOpen" (close)="closeTriageModal()"
-    (triageCompleted)="onTriageCompleted($event)">
-  </app-triage-wizard-modal>
-  }
-
-  <!-- Pocket Rights Dossier (Printable Wallet Card) Modal -->
-  @defer (when isPocketRightsModalOpen; prefetch on idle) {
-  <app-pocket-rights-modal [isOpen]="isPocketRightsModalOpen" [locationQuery]="locationQuery"
-    (close)="closePocketRightsModal()">
-  </app-pocket-rights-modal>
-  }
-
   <!-- Suggest Resource Modal -->
-  @defer (when isSuggestModalOpen; prefetch on idle) {
   <app-suggest-resource-modal [isOpen]="isSuggestModalOpen" (close)="closeSuggestionModal()"
     (submitted)="onSuggestionSubmitted($event)">
   </app-suggest-resource-modal>
-  }
 
   <!-- Location Map Modal -->
-  @defer (when showMapModal; prefetch on idle) {
   <app-location-map-modal *ngIf="showMapModal" [initialCity]="locationQuery"
     (locationConfirmed)="onMapLocationConfirmed($event)" (closed)="closeMapModal()">
   </app-location-map-modal>
-  }
 
 </div>

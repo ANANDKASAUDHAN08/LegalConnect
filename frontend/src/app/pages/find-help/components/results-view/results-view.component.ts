@@ -28,7 +28,6 @@ import { FreeAidService } from '../../../../services/free-aid.service';
 import { FiltersPanelComponent } from '../filters-panel/filters-panel.component';
 import { ResultsHeaderComponent } from '../results-header/results-header.component';
 import { CasePackPreviewModalComponent } from '../case-pack-preview-modal/case-pack-preview-modal.component';
-import { getCategoryMeta } from '../../config/category-data.config';
 import { ResourceCardComponent } from '../resource-card/resource-card.component';
 import { HelplineCardComponent } from '../helpline-card/helpline-card.component';
 import { LawyerCardComponent } from '../../../../components/lawyer-card/lawyer-card.component';
@@ -981,262 +980,68 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
 
   executePrintProcess() {
     const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      this.snackbar.show('Please allow popups to download or print the case dossier.', 'error');
-      return;
-    }
+    if (!printWindow) return;
 
-    const docDate = new Date().toLocaleDateString('en-IN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric'
-    });
-    const docTime = new Date().toLocaleTimeString('en-IN', {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    const docRef = 'LC-DOS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-    const documentChecklistHtml = (this.roadmap?.documents || []).map((d: string) => `
-      <li style="margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px;">
-        <span style="display: inline-block; width: 14px; height: 14px; border: 1.5px solid #64748b; border-radius: 3px; flex-shrink: 0; margin-top: 1px;"></span>
-        <span>${d}</span>
-      </li>
-    `).join('');
-
-    const actionStepsHtml = (this.roadmap?.steps || []).map((s: any, i: number) => `
-      <div style="margin-bottom: 12px; padding: 10px 12px; background: #f8fafc; border-left: 3.5px solid #2563eb; border-radius: 0 6px 6px 0;">
-        <b style="color: #1e3a8a; font-size: 12px; display: block; margin-bottom: 3px;">Step ${i + 1}: ${s.title}</b>
-        <p style="margin: 0; color: #334155; font-size: 11px; line-height: 1.4;">${s.detail}</p>
+    const documentChecklistHtml = this.roadmap.documents.map((d: string) => `<li>[ ] ${d}</li>`).join('');
+    const actionStepsHtml = this.roadmap.steps.map((s: any, i: number) => `
+      <div style="margin-bottom: 15px;">
+        <b style="color: #1e3a8a;">Step ${i + 1}: ${s.title}</b>
+        <p style="margin: 4px 0 0 0; color: #475569; font-size: 13px;">${s.detail}</p>
       </div>
     `).join('');
 
-    const resourceCardsHtml = (this.filteredResources || []).slice(0, 4).map(res => `
-      <div style="border: 1px solid #e2e8f0; border-radius: 6px; padding: 10px 12px; background: #f8fafc; margin-bottom: 8px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-          <b style="font-size: 12px; color: #0f172a;">${res.name}</b>
-          <span style="font-size: 9px; font-weight: 800; text-transform: uppercase; background: #e0f2fe; color: #0369a1; padding: 2px 6px; border-radius: 4px;">${res.type}</span>
-        </div>
-        <p style="margin: 2px 0; font-size: 10.5px; color: #475569;">${res.address}</p>
-        <div style="font-size: 10px; color: #64748b; margin-top: 4px;">
-          <strong>Phone:</strong> ${res.contactNumber || '112'} &bull; <strong>Hours:</strong> ${res.operatingHours || '10:00 AM - 5:00 PM'}
-        </div>
+    const resourceCardsHtml = this.filteredResources.slice(0, 5).map(res => `
+      <div style="border-bottom: 1px solid #e2e8f0; padding: 10px 0;">
+        <b style="font-size: 14px;">${res.name} (${res.type})</b>
+        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">${res.address}</p>
+        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Phone: ${res.contactNumber || 'N/A'} | Hours: ${res.operatingHours}</p>
       </div>
     `).join('');
-
-    const limitationData = getCategoryMeta(this.activeCategory)?.limitation;
-    const limitationHtml = limitationData ? `
-      <div style="background: #fefce8; border: 1.5px solid #fef08a; border-radius: 8px; padding: 12px; margin-bottom: 18px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <b style="color: #854d0e; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Statutory Limitation Clock &bull; ${limitationData.title}</b>
-          <span style="background: #fef08a; color: #713f12; font-size: 9px; font-weight: 800; padding: 2px 8px; border-radius: 999px;">${limitationData.timeframe}</span>
-        </div>
-        <p style="margin: 0; font-size: 10.5px; color: #713f12; line-height: 1.4;">${limitationData.description}</p>
-        <div style="font-size: 9.5px; font-weight: 700; color: #854d0e; margin-top: 4px;">Legal Authority: ${limitationData.legalBasis}</div>
-      </div>
-    ` : '';
 
     printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <meta charset="utf-8">
-        <title>LegalConnect Case Dossier - ${this.activeCategory}</title>
-        <style>
-          @page {
-            size: A4 portrait;
-            margin: 12mm 15mm;
-          }
-          * {
-            box-sizing: border-box;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            color: #0f172a;
-            background: #ffffff;
-            margin: 0;
-            padding: 0;
-            font-size: 11.5px;
-            line-height: 1.45;
-          }
-          .doc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2.5px solid #1e3a8a;
-            padding-bottom: 12px;
-            margin-bottom: 14px;
-          }
-          .brand-logo-area {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-          }
-          .logo-emblem {
-            width: 38px;
-            height: 38px;
-            background: #1e3a8a;
-            color: #ffffff;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            font-size: 18px;
-          }
-          .brand-title {
-            font-size: 18px;
-            font-weight: 900;
-            color: #1e3a8a;
-            letter-spacing: -0.5px;
-            margin: 0;
-            line-height: 1.1;
-          }
-          .brand-sub {
-            font-size: 9.5px;
-            font-weight: 700;
-            color: #d97706;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            margin-top: 2px;
-          }
-          .header-meta {
-            text-align: right;
-            font-size: 9px;
-            color: #64748b;
-            line-height: 1.35;
-          }
-          .header-meta strong {
-            color: #0f172a;
-            font-size: 9.5px;
-          }
-          .title-banner {
-            background: #f8fafc;
-            border: 1.5px solid #cbd5e1;
-            border-radius: 8px;
-            padding: 10px 14px;
-            margin-bottom: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-          }
-          h2.section-heading {
-            color: #1e3a8a;
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 1.5px solid #e2e8f0;
-            padding-bottom: 4px;
-            margin-top: 16px;
-            margin-bottom: 10px;
-          }
-          .doc-footer {
-            border-top: 1.5px solid #e2e8f0;
-            padding-top: 10px;
-            margin-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 8.5px;
-            color: #64748b;
-          }
-        </style>
-      </head>
-      <body>
-        <!-- Official Header with Brand Identity Matching Website -->
-        <div class="doc-header">
-          <div class="brand-logo-area">
-            <div style="width: 36px; height: 36px; border-radius: 50%; background: #2563eb; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0; box-shadow: 0 2px 8px rgba(37,99,235,0.25);">
-              <svg viewBox="0 0 24 24" fill="none" style="width: 22px; height: 22px; color: #ffffff;" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 4v16M8 20h8" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
-                <path d="M5 8h14" stroke="#ffffff" stroke-width="2" stroke-linecap="round" />
-                <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="#ffffff" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                <circle cx="12" cy="11" r="2.2" fill="#ffffff" />
-              </svg>
-            </div>
-            <div style="display: flex; flex-direction: column;">
-              <span style="font-size: 19px; font-weight: 900; color: #0f172a; letter-spacing: -0.5px; line-height: 1.1;">LegalConnect</span>
-              <span style="font-size: 8.5px; color: #64748b; font-weight: 700; letter-spacing: 0.8px; text-transform: uppercase; margin-top: 1px;">LEGAL HELP, SIMPLIFIED.</span>
-            </div>
+      <html>
+        <head>
+          <title>LegalConnect Case Pack - ${this.activeCategory}</title>
+          <style>
+            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
+            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 20px; }
+            h1 { margin: 0; color: #1e3a8a; font-size: 24px; }
+            h2 { color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; font-size: 16px; margin-top: 30px; }
+            .meta { color: #64748b; font-size: 12px; margin-top: 5px; }
+            ul { padding-left: 20px; font-size: 13px; }
+            li { margin-bottom: 6px; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <h1>LegalConnect Offline Case Pack</h1>
+            <div class="meta">Category: ${this.activeCategory} | Location: ${this.locationQuery} | Generated: ${new Date().toLocaleDateString()}</div>
           </div>
-          <div class="header-meta">
-            <div>Case Ref: <strong>${docRef}</strong></div>
-            <div>Generated: <strong>${docDate}, ${docTime}</strong></div>
-            <div>Jurisdiction: <strong>${this.locationQuery}</strong></div>
-          </div>
-        </div>
+          
+          <h2>📋 PERSONALIZED LEGAL ROADMAP</h2>
+          ${actionStepsHtml}
 
-        <!-- Case Banner -->
-        <div class="title-banner">
-          <div>
-            <h2 style="margin:0; font-size: 14px; font-weight: 800; color: #0f172a;">
-              Action Roadmap for: ${this.activeCategory}
-            </h2>
-            <div style="font-size: 9.5px; color: #64748b; margin-top: 2px;">
-              Statutory procedural guidelines &bull; Court filing roadmap &bull; Verified legal contacts
-            </div>
-          </div>
-          <span style="font-size: 9.5px; font-weight: 800; background: #e2e8f0; color: #334155; padding: 3px 8px; border-radius: 999px;">
-            ${this.locationQuery}
-          </span>
-        </div>
+          <h2>📁 REQUIRED DOCUMENTS CHECKLIST</h2>
+          <ul>${documentChecklistHtml}</ul>
 
-        <!-- Limitation Clock -->
-        ${limitationHtml}
+          <h2>🏢 NEARBY SUPPORT CONTACTS</h2>
+          ${resourceCardsHtml}
 
-        <!-- Section 1: Action Steps -->
-        <h2 class="section-heading">1. Mandatory Procedural Action Steps</h2>
-        ${actionStepsHtml}
+          <h2>💡 LOK ADALAT / ADR ADVISORY</h2>
+          <p style="font-size: 13px; color: #475569;">${this.roadmap.lokAdalatGuidance}</p>
 
-        <!-- Section 2: Required Evidence Checklist -->
-        <h2 class="section-heading">2. Required Evidence Documents Checklist</h2>
-        <ul style="list-none; padding-left: 0; margin: 0 0 14px 0;">
-          ${documentChecklistHtml}
-        </ul>
-
-        <!-- Section 3: Verified Support Contacts -->
-        <h2 class="section-heading">3. Verified Local Support Contacts &amp; Clinics</h2>
-        ${resourceCardsHtml}
-
-        <!-- Section 4: Lok Adalat & ADR Guidance -->
-        ${this.roadmap?.lokAdalatGuidance ? `
-          <h2 class="section-heading">4. Alternative Dispute Resolution (ADR) &amp; Lok Adalat Advisory</h2>
-          <p style="font-size: 10.5px; color: #334155; line-height: 1.45; margin: 0; background: #f8fafc; padding: 10px 12px; border-radius: 6px; border-left: 3.5px solid #d97706;">
-            ${this.roadmap.lokAdalatGuidance}
-          </p>
-        ` : ''}
-
-        <!-- Footer -->
-        <div class="doc-footer">
-          <div>
-            <div style="font-weight: 800; color: #1e3a8a; text-transform: uppercase;">✓ Official LegalConnect Case Dossier</div>
-            <div>Portal: <strong>https://legalconnect-501109.web.app</strong></div>
-          </div>
-          <div style="font-size: 8px; color: #94a3b8; text-align: right; max-width: 60%; line-height: 1.25;">
-            LegalConnect &copy; 2026. This is an informational legal action dossier generated under Article 39A. Always consult an advocate before submitting in court.
-          </div>
-        </div>
-
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
+          <footer style="margin-top: 50px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center;">
+            LegalConnect &copy; 2026. This is an informational case pack. Always consult a legal professional before filing suits.
+          </footer>
+          <script>
+            window.onload = () => {
               window.print();
-            }, 250);
-          };
-        </script>
-      </body>
+            }
+          </script>
+        </body>
       </html>
     `);
-
-    try {
-      printWindow.document.close();
-    } catch {
-      // Ignored
-    }
+    printWindow.document.close();
   }
 
   // Speech synthesis narrator

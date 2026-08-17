@@ -22,8 +22,6 @@ export class HeroHeaderComponent {
 
   @Output() locationClicked = new EventEmitter<void>();
   @Output() suggestClicked = new EventEmitter<void>();
-  @Output() triageWizardClicked = new EventEmitter<void>();
-  @Output() pocketRightsClicked = new EventEmitter<void>();
 
   trackByIndex(index: number): number {
     return index;
