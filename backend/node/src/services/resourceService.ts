@@ -20,7 +20,16 @@ export async function getResources(filter: ResourceFilter = {}) {
 
 export async function getHelpNearMe(category?: string, location?: string) {
   const filter: any = {};
-  if (location) filter.city = new RegExp(location, 'i');
+  if (location && location.trim()) {
+    const loc = location.trim();
+    const escaped = loc.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.$or = [
+      { city: new RegExp(escaped, 'i') },
+      { district: new RegExp(escaped, 'i') },
+      { state: new RegExp(escaped, 'i') },
+      { address: new RegExp(escaped, 'i') }
+    ];
+  }
   if (category) filter.categories = category;
 
   const [resources, helplines] = await Promise.all([
