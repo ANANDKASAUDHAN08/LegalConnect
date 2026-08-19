@@ -1,570 +1,989 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="w-full flex flex-col">
 
-  <!-- --- 0. Top Header Banner --- -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
-    <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-sky-500/30 bg-sky-500/10 text-xs font-semibold text-sky-300 w-fit">
-        <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
-        <span>Institutional Roster & Directory</span>
-      </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Legal Resources & Institutional Directory</h1>
-      <p class="text-xs text-slate-400">
-        Manage verified court complexes, state legal services authorities (SLSA/DLSA), police stations, and government legal aid desks.
-      </p>
+  <!-- --- 0. Distinct National Judicial Command & Territory Header (Full-Width Edge-to-Edge) --- -->
+  <div
+    class="relative overflow-hidden w-full border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-[#0b1329] to-slate-950 backdrop-blur-2xl px-4 sm:px-6 py-4 sm:py-5 shadow-2xl flex flex-col gap-4 animate-in">
+
+    <!-- Ambient Gradient Mesh Accents -->
+    <div class="absolute -top-24 left-1/4 w-96 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-10 right-10 w-80 h-36 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none">
     </div>
 
-    <div class="flex flex-wrap items-center gap-2.5">
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="exportCSV()" [adminTooltip]="'Download resources directory as CSV'"
-        tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        <span>Export CSV</span>
-      </button>
-
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="openImportModal()"
-        [adminTooltip]="'Bulk import resources from JSON file/text'" tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="17 8 12 3 7 8"></polyline>
-          <line x1="12" y1="3" x2="12" y2="15"></line>
-        </svg>
-        <span>Bulk Import</span>
-      </button>
-
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="fetchResources()"
-        [adminTooltip]="'Refresh resources list from backend database'" tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          [class.animate-spin]="isLoading">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
-        <span>Refresh</span>
-      </button>
-
-      <button class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="openCreateModal()"
-        [adminTooltip]="'Onboard a new legal institution or help desk'" tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
-        <span>Create Resource</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- --- 1. KPI Metrics Banner Grid --- -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-sky-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="60px" height="24px" />
-        } @else {
-        <span class="text-xl font-extrabold text-sky-400">{{ totalRecords }}</span>
-        <span class="text-xs text-slate-400 font-medium">Total Institutions</span>
-        }
-      </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="60px" height="24px" />
-        } @else {
-        <span class="text-xl font-extrabold text-emerald-400">{{ verifiedCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Verified & Approved</span>
-        }
-      </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-indigo-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M3 21h18"></path>
-          <path d="M5 21V7l8-4 8 4v14"></path>
-          <path d="M9 18h6"></path>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="60px" height="24px" />
-        } @else {
-        <span class="text-xl font-extrabold text-indigo-300">{{ courtsCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Courts & Judiciary</span>
-        }
-      </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="60px" height="24px" />
-        } @else {
-        <span class="text-xl font-extrabold text-amber-400">{{ pendingCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Pending Review</span>
-        }
-      </div>
-    </div>
-  </div>
-
-  <!-- --- 2. Filter Controls Bar --- -->
-  <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
-    <div class="search-box flex-1 min-w-[280px]">
-      <input type="text" class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-sm" placeholder="Search resources by name, city, or address..." [value]="search"
-        (input)="onSearchInput($any($event.target).value)"
-        [adminTooltip]="'Type query to auto-debounce search by 300ms'" tooltipPosition="top" />
-    </div>
-
-    <div class="flex items-center gap-2.5 flex-wrap">
-      <admin-select [options]="typeOptions" [value]="selectedType"
-        (valueChange)="selectedType = $event; onFilterChange();" minWidth="180px"
-        [adminTooltip]="'Filter by resource category'" tooltipPosition="top">
-      </admin-select>
-
-      <admin-select [options]="cityOptions" [value]="selectedCity"
-        (valueChange)="selectedCity = $event; onFilterChange();" minWidth="140px"
-        [adminTooltip]="'Filter by city location'" tooltipPosition="top">
-      </admin-select>
-
-      <admin-select [options]="statusOptions" [value]="selectedStatus"
-        (valueChange)="selectedStatus = $event; onFilterChange();" minWidth="170px"
-        [adminTooltip]="'Filter by verification status'" tooltipPosition="top">
-      </admin-select>
-
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold" (click)="resetFilters()" [adminTooltip]="'Clear search query and filters'"
-        tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
-        <span>Reset</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- --- 3. Resources Data Table --- -->
-  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
-    <div class="data-table-wrapper overflow-x-auto min-h-[360px]">
-      @if (!isInitialLoad && isLoading) {
-      <div class="table-loading-bar h-1 bg-indigo-500 animate-pulse w-full"></div>
-      }
-      <table class="data-table w-full text-left border-collapse" [class.table-refreshing]="!isInitialLoad && isLoading">
-        <thead>
-          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-            <th class="p-3.5">Resource Name</th>
-            <th class="p-3.5">Type</th>
-            <th class="p-3.5">City / Location</th>
-            <th class="p-3.5">Physical Address</th>
-            <th class="p-3.5">Verification Status</th>
-            <th class="p-3.5 text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-800/60 text-xs">
-          @if (isInitialLoad && isLoading) {
-          @for (item of [1,2,3,4,5]; track $index) {
-          <tr class="hover:bg-slate-800/30">
-            <td class="p-3.5"><admin-skeleton width="200px" height="16px" /></td>
-            <td class="p-3.5"><admin-skeleton width="100px" height="22px" borderRadius="12px" /></td>
-            <td class="p-3.5"><admin-skeleton width="90px" height="16px" /></td>
-            <td class="p-3.5"><admin-skeleton width="240px" height="16px" /></td>
-            <td class="p-3.5"><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
-            <td class="p-3.5 text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
-          </tr>
-          }
-          } @else {
-          @for (res of resources; track res._id || res.id) {
-          <tr class="hover:bg-slate-800/40 transition-colors">
-            <td class="p-3.5 font-bold text-slate-100">
-              <div class="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-sky-400">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <span>{{ res.name }}</span>
-              </div>
-            </td>
-            <td class="p-3.5">
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-sky-500/10 text-sky-400 border-sky-500/30 flex items-center gap-1 w-fit">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <span>{{ res.type || 'Legal Institution' }}</span>
-              </span>
-            </td>
-            <td class="p-3.5 text-sm font-semibold text-slate-200">{{ res.city || 'Delhi' }}</td>
-            <td class="p-3.5 text-xs text-slate-400 truncate max-w-[300px]" [title]="res.address">{{ res.address || 'N/A' }}</td>
-            <td class="p-3.5">
-              @if (res.status === 'pending') {
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-amber-500/10 text-amber-400 border-amber-500/30 flex items-center gap-1 w-fit">
-                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-                <span>Pending Review</span>
-              </span>
-              } @else {
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-emerald-500/10 text-emerald-400 border-emerald-500/30 flex items-center gap-1 w-fit">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
-                <span>Verified</span>
-              </span>
-              }
-            </td>
-            <td class="p-3.5 text-right">
-              <div class="flex items-center justify-end gap-1.5">
-                @if (res.status === 'pending') {
-                <button class="btn btn-success btn-sm text-xs p-1.5" (click)="approveResource(res)"
-                  [adminTooltip]="'Approve and verify this legal resource'" tooltipPosition="top">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </button>
-                }
-                <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="openInspector(res)"
-                  [adminTooltip]="'Inspect GIS coordinates and contact metadata'" tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                  </svg>
-                </button>
-
-                <button class="btn btn-secondary btn-sm" (click)="openEditModal(res)"
-                  [adminTooltip]="'Edit resource details and location'" tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
-                </button>
-
-                <button class="btn btn-danger btn-sm" (click)="openDeleteModal(res)"
-                  [adminTooltip]="'Delete resource record permanently'" tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
-                </button>
-              </div>
-            </td>
-          </tr>
-          } @empty {
-          <tr>
-            <td colspan="6" class="text-center text-muted" style="padding: 3rem 1rem;">
-              <div class="flex flex-col items-center justify-center">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  class="mb-1 text-muted">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
-                <p class="font-semibold text-sm">No legal resources found.</p>
-                <p class="text-xs text-secondary mt-1">Try resetting filters or onboard a new legal resource.</p>
-              </div>
-            </td>
-          </tr>
-          }
-          }
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination (Image 3 Style) -->
-    <div class="pagination">
-      <div class="page-info">
-        Showing <strong>{{ startRecord }}</strong> to <strong>{{ endRecord }}</strong> of <strong>{{ totalRecords
-          }}</strong> records
-      </div>
-      <div class="pagination-controls">
-        <button class="pagination-btn" [disabled]="currentPage <= 1 || isLoading" (click)="prevPage()"
-          [adminTooltip]="'Previous page'">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="15 18 9 12 15 6"></polyline>
-          </svg>
-          <span>Previous</span>
-        </button>
-
-        <span class="page-indicator">
-          Page <strong>{{ currentPage }}</strong> of <strong>{{ totalPages }}</strong>
-        </span>
-
-        <button class="pagination-btn" [disabled]="currentPage >= totalPages || isLoading" (click)="nextPage()"
-          [adminTooltip]="'Next page'">
-          <span>Next</span>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Create / Edit Slide-Over Drawer Modal -->
-  @if (isModalOpen) {
-  <div class="drawer-backdrop animate-in" (click)="closeModal()">
-    <div class="drawer-content" (click)="$event.stopPropagation()">
-      <div>
-        <div class="drawer-header">
-          <div class="flex items-center gap-1">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-info">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
-            <h4>{{ isEditMode ? 'Edit Legal Resource' : 'Onboard Legal Institution' }}</h4>
-          </div>
-          <button class="btn btn-secondary btn-sm" (click)="closeModal()" [adminTooltip]="'Close drawer form'"
-            tooltipPosition="left">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
-
-        <div class="flex flex-col gap-2">
-          <div class="form-group">
-            <label class="form-label">Institution Name *</label>
-            <input type="text" class="form-input" placeholder="e.g. Delhi High Court or DLSA Office"
-              [(ngModel)]="formData.name" />
-          </div>
-
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">Resource Type *</label>
-              <select class="form-select" [(ngModel)]="formData.type">
-                <option value="Court">Court / Judiciary</option>
-                <option value="LegalAid">Legal Aid Center</option>
-                <option value="PoliceStation">Police Station</option>
-                <option value="GovernmentOffice">Government Office</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Status *</label>
-              <select class="form-select" [(ngModel)]="formData.status">
-                <option value="approved">Approved & Verified</option>
-                <option value="pending">Pending Review</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">City *</label>
-              <input type="text" class="form-input" placeholder="e.g. Delhi" [(ngModel)]="formData.city" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">State</label>
-              <input type="text" class="form-input" placeholder="e.g. Delhi" [(ngModel)]="formData.state" />
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">Street Address *</label>
-            <textarea class="form-input" style="height: 80px; resize: none;"
-              placeholder="Enter complete physical location address..." [(ngModel)]="formData.address"></textarea>
-          </div>
-
-          <!-- GIS Coordinates Box -->
+    <!-- Top Header Row -->
+    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+      <div class="flex flex-col gap-1.5 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
           <div
-            style="padding: 0.75rem; border-radius: var(--radius-md); background: rgba(0,0,0,0.3); border: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 0.5rem;">
-            <label class="form-label text-info flex items-center gap-1" style="margin: 0;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              </svg>
-              <span>GIS Location Coordinates</span>
-            </label>
-            <div class="grid-2">
-              <div class="form-group">
-                <label style="font-size: 0.65rem; color: var(--text-tertiary);">Latitude</label>
-                <input type="number" step="0.0001" class="form-input font-mono"
-                  style="padding: 6px 10px; font-size: 0.8rem;" [(ngModel)]="formData.lat" />
-              </div>
-              <div class="form-group">
-                <label style="font-size: 0.65rem; color: var(--text-tertiary);">Longitude</label>
-                <input type="number" step="0.0001" class="form-input font-mono"
-                  style="padding: 6px 10px; font-size: 0.8rem;" [(ngModel)]="formData.lng" />
-              </div>
-            </div>
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-sky-400/30 bg-sky-500/15 text-xs font-semibold text-sky-200 shadow-sm shadow-sky-500/20 w-fit backdrop-blur-md">
+            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
+            <span class="tracking-wider uppercase text-[10px] font-bold">National Judicial Infrastructure & GIS
+              Directory</span>
           </div>
-
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">Phone Number</label>
-              <input type="text" class="form-input font-mono" style="font-size: 0.8rem;"
-                placeholder="Comma separated phone numbers" [(ngModel)]="formData.phone" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Email Address</label>
-              <input type="email" class="form-input" style="font-size: 0.8rem;" placeholder="Official contact email"
-                [(ngModel)]="formData.email" />
-            </div>
-          </div>
-
-          <div class="grid-2">
-            <div class="form-group">
-              <label class="form-label">Website URL</label>
-              <input type="text" class="form-input" style="font-size: 0.8rem;" placeholder="https://..."
-                [(ngModel)]="formData.website" />
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Operating Hours</label>
-              <input type="text" class="form-input" style="font-size: 0.8rem;" placeholder="e.g. 09:30 AM - 05:00 PM"
-                [(ngModel)]="formData.operatingHours" />
-            </div>
-          </div>
+          <span class="text-slate-500 text-xs hidden sm:inline">•</span>
+          <span class="text-slate-400 text-xs font-medium">Pan-India Judicial Roster</span>
         </div>
+
+        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-1 flex-wrap">
+          <span>Legal Resources</span>
+          <span
+            class="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent text-2xl">&</span>
+          <span class="text-slate-100">Institutional Directory</span>
+        </h1>
+
+        <p class="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
+          National registry for High Courts, District Courts, State & District Legal Services Authorities (SLSA/DLSA),
+          e-Sewa Kendras, LADCS defense counsel rosters, and police stations across 28 States & 8 UTs.
+        </p>
       </div>
 
-      <div class="drawer-footer">
-        <button class="btn btn-secondary" style="flex: 1;" (click)="closeModal()">Cancel</button>
-        <button class="btn btn-primary" style="flex: 1;" (click)="saveResource()" [disabled]="isSaving">
-          @if (isSaving) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="animate-spin">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+      <!-- Quick Action Toolbar -->
+      <div class="flex items-center gap-2 shrink-0 flex-wrap">
+        <!-- Onboard Primary Action -->
+        <button
+          class="btn flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-lg shadow-emerald-950/60 border border-emerald-400/40 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shrink-0 transition-all active:scale-95"
+          (click)="openCreateModal()" [adminTooltip]="'Onboard a new court complex or DLSA legal aid center'"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
           </svg>
-          }
-          <span>{{ isEditMode ? 'Save Changes' : 'Onboard Institution' }}</span>
+          <span>Onboard Institution</span>
         </button>
-      </div>
-    </div>
-  </div>
-  }
 
-  <!-- GIS Inspector Modal -->
-  @if (inspectItem) {
-  <div class="modal-overlay animate-in" (click)="closeInspector()">
-    <div class="modal-box" (click)="$event.stopPropagation()">
-      <div class="drawer-header" style="margin-bottom: 1rem;">
-        <div class="flex items-center gap-1">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-info">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
-          <h4>{{ inspectItem.name }}</h4>
-        </div>
-        <button class="btn btn-secondary btn-sm" (click)="closeInspector()" [adminTooltip]="'Close preview modal'"
-          tooltipPosition="left">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
-        </button>
-      </div>
-
-      <div class="flex flex-col gap-2 text-sm">
-        <div>
-          <div class="form-label" style="font-size: 0.65rem;">Category / Location</div>
-          <div class="text-primary font-semibold mt-1">{{ inspectItem.type }} ({{ inspectItem.city }})</div>
-        </div>
-
-        <div>
-          <div class="form-label" style="font-size: 0.65rem;">Physical Address</div>
-          <div class="text-primary mt-1">{{ inspectItem.address }}</div>
-        </div>
-
-        <div class="grid-2"
-          style="padding: 0.75rem; background: rgba(0,0,0,0.3); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); font-family: monospace; font-size: 0.8rem;">
-          <div>
-            <div style="font-size: 0.65rem; color: var(--text-tertiary);">LATITUDE</div>
-            <div class="text-info font-bold mt-1">{{ inspectItem.coordinates?.lat || '28.6139' }}</div>
-          </div>
-          <div>
-            <div style="font-size: 0.65rem; color: var(--text-tertiary);">LONGITUDE</div>
-            <div class="text-info font-bold mt-1">{{ inspectItem.coordinates?.lng || '77.2090' }}</div>
-          </div>
-        </div>
-
-        @if (inspectItem.operatingHours) {
-        <div>
-          <div class="form-label" style="font-size: 0.65rem;">Operating Hours</div>
-          <div class="text-primary mt-1">{{ inspectItem.operatingHours }}</div>
-        </div>
-        }
-
-        @if (inspectItem.website) {
-        <div>
-          <div class="form-label" style="font-size: 0.65rem;">Official Website</div>
-          <a [href]="inspectItem.website" target="_blank" class="text-info mt-1 truncate"
-            style="display: inline-block; max-width: 100%;">
-            {{ inspectItem.website }}
-          </a>
-        </div>
-        }
-      </div>
-
-      <div class="drawer-footer" style="padding-top: 1rem; margin-top: 1rem; justify-content: flex-end;">
-        <button class="btn btn-secondary" (click)="closeInspector()">Close Preview</button>
-      </div>
-    </div>
-  </div>
-  }
-
-  <!-- Bulk Import Slide-Over Side Drawer -->
-  @if (showImportModal) {
-  <div class="drawer-backdrop animate-in" (click)="closeImportModal()">
-    <div class="drawer-content" (click)="$event.stopPropagation()"
-      style="display: flex; flex-direction: column; justify-content: space-between;">
-      <div>
-        <div class="drawer-header">
-          <div class="flex items-center gap-1">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-info">
+        <!-- Secondary Actions Group -->
+        <div class="inline-flex rounded-xl bg-slate-900/80 p-0.5 border border-slate-700/80 shadow-md backdrop-blur-md">
+          <button
+            class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
+            (click)="openImportModal()" [adminTooltip]="'Batch Import Pipeline Wizard with dry-run validation'"
+            tooltipPosition="top">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-sky-400">
               <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
               <polyline points="17 8 12 3 7 8"></polyline>
               <line x1="12" y1="3" x2="12" y2="15"></line>
             </svg>
-            <h4 class="text-primary font-bold">Bulk Import Legal Resources</h4>
-          </div>
-          <button class="btn btn-secondary btn-sm" (click)="closeImportModal()">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
+            <span class="hidden sm:inline">Batch Wizard</span>
+          </button>
+
+          <button
+            class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
+            (click)="openExportModal()" [adminTooltip]="'Export directory to CSV, JSON, or TSV'" tooltipPosition="top">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-indigo-400">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span class="hidden sm:inline">Export</span>
+          </button>
+
+          <button
+            class="px-2.5 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center justify-center transition-all"
+            (click)="fetchResources(true)" [adminTooltip]="'Refresh directory live feed'" tooltipPosition="top">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              [class.animate-spin]="isLoading && !isInitialLoad">
+              <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
+              <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
             </svg>
           </button>
         </div>
+      </div>
+    </div>
 
-        <p class="text-xs text-secondary mb-3">Paste a JSON array containing institutional resource items matching the
-          schema below:</p>
-
-        <div class="form-group">
-          <label class="form-label">JSON Payload</label>
-          <textarea [(ngModel)]="bulkJsonText" rows="18" class="form-input font-mono text-xs w-full"
-            style="resize: vertical; min-height: 350px;"
-            placeholder='[&#10;  {&#10;    "name": "District Legal Services Authority Delhi",&#10;    "type": "LegalAid",&#10;    "city": "Delhi",&#10;    "state": "Delhi",&#10;    "address": "Tis Hazari Courts Complex",&#10;    "contactNumber": "011-23968018",&#10;    "status": "approved",&#10;    "coordinates": { "lat": 28.6667, "lng": 77.2167 }&#10;  }&#10;]'></textarea>
+    <!-- Integrated Territory Telemetry Banner (High-Density Status Strip) -->
+    <div class="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-slate-800/80">
+      <!-- Stat 1: Total Registered -->
+      <div
+        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-950/80 border border-slate-800/80 hover:border-sky-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
+        [class.border-sky-500]="selectedType === '' && isFilterActive" (click)="resetFilters()"
+        [adminTooltip]="'Total verified judicial institutions across Indian States'">
+        <div
+          class="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-base font-extrabold text-slate-100 leading-tight">{{ summaryMetrics.total }}</span>
+          <span class="text-[11px] text-slate-400 font-medium truncate">Total across {{
+            summaryMetrics.coveredStatesCount || 28 }} States</span>
         </div>
       </div>
 
-      <div class="drawer-footer" style="margin-top: 1.5rem;">
-        <button class="btn btn-secondary" style="flex: 1;" (click)="closeImportModal()">Cancel</button>
-        <button class="btn btn-primary" style="flex: 1;" (click)="processBulkImport()">Import Resources</button>
+      <!-- Stat 2: Verified Compliance Rate -->
+      <div
+        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-emerald-950/20 border border-slate-800/80 hover:border-emerald-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
+        [class.border-emerald-500]="selectedStatus === 'approved'" (click)="filterByStatusMetric('approved')"
+        [adminTooltip]="'Filter verified compliance institutions'">
+        <div
+          class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-base font-extrabold text-emerald-300 leading-tight">{{ summaryMetrics.verified }}</span>
+          <span class="text-[11px] text-slate-400 font-medium truncate">Annual Audit Verified</span>
+        </div>
+      </div>
+
+      <!-- Stat 3: Courts vs DLSA Distribution -->
+      <div
+        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-indigo-950/20 border border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
+        [class.border-indigo-500]="selectedType === 'Court'" (click)="filterByTypeMetric('Court')"
+        [adminTooltip]="'Filter Court Complexes & Legal Aid DLSAs'">
+        <div
+          class="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 21h18"></path>
+            <path d="M5 21V7l8-4 8 4v14"></path>
+            <path d="M9 18h6"></path>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-base font-extrabold text-indigo-300 leading-tight">{{ summaryMetrics.courts }} / {{
+            summaryMetrics.legalAid }}</span>
+          <span class="text-[11px] text-slate-400 font-medium truncate">Courts / DLSAs</span>
+        </div>
+      </div>
+
+      <!-- Stat 4: Digital Capabilities (e-Sewa / LADCS) -->
+      <div
+        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-amber-950/20 border border-slate-800/80 hover:border-amber-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
+        [class.border-amber-500]="selectedFacility === 'hasEfiling'" (click)="filterByFacilityMetric('hasEfiling')"
+        [adminTooltip]="'Filter e-Sewa Kendras & LADCS defense units'">
+        <div
+          class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-base font-extrabold text-amber-300 leading-tight">{{ summaryMetrics.efilingEnabled }} / {{
+            summaryMetrics.ladcsActive }}</span>
+          <span class="text-[11px] text-slate-400 font-medium truncate">e-Sewa / LADCS Active</span>
+        </div>
       </div>
     </div>
   </div>
-  }
+
+  <!-- --- Main Body Container with Standard Page Padding --- -->
+  <div class="px-8 py-3 w-full flex flex-col gap-1">
+
+    <!-- --- 1. Unified Judicial Filter Studio with Integrated Bulk Action Dock --- -->
+    <div
+      class="glass-card page-filters p-3 rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-2xl overflow-visible">
+
+      <!-- ROW 1: Search Bar on Left, All Filters Grouped on Far Right (via ml-auto) -->
+      <div class="flex items-center justify-between gap-3 w-full flex-wrap sm:flex-nowrap overflow-visible">
+        <!-- Left Side: Search Input -->
+        <div class="w-full sm:w-[260px] lg:w-[300px] shrink min-w-[180px]">
+          <admin-search-input [value]="search" placeholder="Search court name, DLSA, district, pincode, address..."
+            tooltip="Type query to auto-debounce search by 300ms (Press / to focus)"
+            (searchChange)="onSearchChange($event)">
+          </admin-search-input>
+        </div>
+
+        <!-- Right Side: Filter Dropdowns Cluster (pushed to far right via ml-auto) -->
+        <div class="filter-group flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
+          <!-- 1. Category / Type Dropdown -->
+          <admin-select [options]="typeOptions" [value]="selectedType" icon="briefcase"
+            (valueChange)="selectedType = $event; onFilterChange();" minWidth="120px" maxWidth="170px"
+            [tooltip]="selectedType ? ('Institution Type: ' + getSelectedTypeLabel()) : 'Filter by institution type (Courts, Legal Aid DLSA, Police)'"
+            tooltipPosition="top">
+          </admin-select>
+
+          <!-- 2. State Dropdown -->
+          <admin-select [options]="stateOptions" [value]="selectedState" icon="map-pin"
+            (valueChange)="onStateChange($event)" minWidth="120px" maxWidth="185px"
+            [tooltip]="selectedState ? ('State / UT: ' + selectedState) : 'Filter by Indian State or Union Territory'"
+            tooltipPosition="top">
+          </admin-select>
+
+          <!-- 3. Facilities Dropdown -->
+          <admin-select [options]="facilityOptions" [value]="selectedFacility" icon="zap"
+            (valueChange)="selectedFacility = $event; onFilterChange();" minWidth="120px" maxWidth="170px"
+            [tooltip]="selectedFacility ? ('Facility: ' + getSelectedFacilityLabel()) : 'Filter by digital capabilities (e-Sewa, LADCS, VC Remand, Aid Clinic)'"
+            tooltipPosition="top">
+          </admin-select>
+
+          <!-- 4. Columns Customizer -->
+          <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
+            (visibilityChange)="onColumnVisibilityChange($event)">
+          </admin-column-customizer>
+
+          <!-- 5. Advanced Filters Popover Trigger Button -->
+          <div class="relative shrink-0" #filtersContainer>
+            <button type="button" (click)="toggleMoreFilters($event)"
+              class="btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all shadow-sm"
+              [ngClass]="activeSecondaryFilterCount > 0 || isMoreFiltersOpen ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sky-500/20' : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700/80 border-slate-700/60'"
+              [adminTooltip]="'Open advanced filters for district, hierarchy, compliance, and dates'"
+              tooltipPosition="top">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+              <span>Filters</span>
+              @if (activeSecondaryFilterCount > 0) {
+              <span
+                class="w-4 h-4 rounded-full bg-sky-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
+                {{ activeSecondaryFilterCount }}
+              </span>
+              }
+            </button>
+
+            <!-- Secondary Filters Popover Drawer -->
+            @if (isMoreFiltersOpen) {
+            <div
+              class="absolute right-0 top-full mt-2 w-[310px] p-3.5 rounded-2xl bg-[#0f172a] border border-slate-700 shadow-2xl z-50 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
+              <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+                <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="text-sky-400">
+                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
+                  </svg>
+                  <span>Advanced Registry Filters</span>
+                </span>
+                <button type="button"
+                  class="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-800"
+                  (click)="closeMoreFilters()" [adminTooltip]="'Close advanced filters'" tooltipPosition="left">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- District -->
+              <div class="flex flex-col gap-1">
+                <div class="flex items-center justify-between">
+                  <label class="text-[11px] font-semibold" [class.text-slate-400]="selectedState"
+                    [class.text-slate-500]="!selectedState">
+                    District / Territory
+                  </label>
+                  @if (!selectedState) {
+                  <span class="text-[10px] text-amber-400/80 font-medium tracking-tight">Requires State</span>
+                  }
+                </div>
+                <admin-select [options]="districtOptions" [value]="selectedDistrict" icon="map-pin"
+                  [disabled]="!selectedState"
+                  [placeholder]="selectedState ? ('All Districts in ' + selectedState) : 'Select a State first...'"
+                  (valueChange)="onDistrictChange($event)" width="100%" minWidth="100%" maxWidth="100%"
+                  menuMinWidth="100%" menuMaxWidth="100%"
+                  [tooltip]="selectedState ? (selectedDistrict ? ('District: ' + selectedDistrict) : ('Filter by specific district in ' + selectedState)) : 'Please select a State / UT in the filter bar above to enable district filtering'"
+                  tooltipPosition="top">
+                </admin-select>
+              </div>
+
+              <!-- Hierarchy -->
+              <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-semibold text-slate-400">Judicial Hierarchy Level</label>
+                <admin-select [options]="jurisdictionOptions" [value]="selectedJurisdiction" icon="award"
+                  (valueChange)="selectedJurisdiction = $event; onFilterChange();" width="100%" minWidth="100%"
+                  maxWidth="100%" menuMinWidth="100%" menuMaxWidth="100%"
+                  [tooltip]="selectedJurisdiction ? ('Hierarchy: ' + getSelectedJurisdictionLabel()) : 'Filter by statutory hierarchy tier (Supreme Court, High Court, District, Taluka)'"
+                  tooltipPosition="top">
+                </admin-select>
+              </div>
+
+              <!-- Compliance Status -->
+              <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-semibold text-slate-400">Compliance Audit Status</label>
+                <admin-select [options]="statusOptions" [value]="selectedStatus" icon="shield"
+                  (valueChange)="selectedStatus = $event; onFilterChange();" width="100%" minWidth="100%"
+                  maxWidth="100%" menuMinWidth="100%" menuMaxWidth="100%"
+                  [tooltip]="selectedStatus ? ('Status: ' + (selectedStatus === 'approved' ? 'Audit Verified' : 'Pending Audit')) : 'Filter by statutory annual compliance audit status'"
+                  tooltipPosition="top">
+                </admin-select>
+              </div>
+
+              <!-- Date Bounds -->
+              <div class="flex flex-col gap-1">
+                <label class="text-[11px] font-semibold text-slate-400">Audit Cycle Date Bounds</label>
+                <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-sky-400"
+                  dropDirection="up" (rangeChange)="onDateRangeChange($event)">
+                </admin-date-range-picker>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <button type="button" class="text-xs text-rose-400 hover:text-rose-300 font-semibold transition-colors"
+                  (click)="resetSecondaryFilters()" [adminTooltip]="'Reset all advanced drawer filters'"
+                  tooltipPosition="top">Reset Advanced</button>
+                <button type="button"
+                  class="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
+                  (click)="closeMoreFilters()" [adminTooltip]="'Apply and close filters drawer'"
+                  tooltipPosition="top">Done</button>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+      <!-- ROW 2: Active Filters Badges & Result Counts -->
+      <div
+        class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 min-h-[32px] w-full min-w-0">
+        @if (hasQueryFilter) {
+        <!-- Left Side: Filtered Badge (Static) -->
+        <div class="flex items-center gap-2 shrink-0">
+          <span
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10.5px] font-semibold shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+            Filtered
+          </span>
+        </div>
+
+        <!-- Middle: Scrollable Active Filter Badges Container with Edge Fade & Mouse Wheel Support -->
+        <div class="active-chips-scroll-wrapper relative min-w-0 flex-1 flex items-center overflow-hidden">
+          <div class="active-chips-scroll flex items-center gap-1.5 overflow-x-auto min-w-0 w-full py-0.5"
+            (wheel)="onChipsWheel($event)">
+            @for (pill of activeFilterPills; track pill.key) {
+            <span [adminTooltip]="pill.label" tooltipPosition="top"
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[10.5px] font-medium shadow-sm transition-all hover:border-sky-500/40 shrink-0 max-w-[210px]">
+              <span class="truncate">{{ pill.label }}</span>
+              <button type="button" (click)="removeFilter(pill.key)"
+                class="hover:text-red-400 text-slate-400 ml-0.5 p-0.5 rounded transition-colors shrink-0"
+                [adminTooltip]="'Remove filter: ' + pill.label" tooltipPosition="top">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </button>
+            </span>
+            }
+          </div>
+        </div>
+
+        <!-- Right Side: Clear All & Result Count -->
+        <div class="flex items-center gap-2.5 shrink-0 ml-auto pl-2">
+          <button (click)="resetFilters()"
+            class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors shrink-0"
+            [adminTooltip]="'Reset all search and filters'" tooltipPosition="top">
+            Clear All
+          </button>
+          <span class="text-slate-600 font-light select-none">|</span>
+          <span class="text-slate-400 text-xs font-medium shrink-0">
+            Showing <strong class="text-slate-200">{{ pagination.total || resources.length }}</strong> matching
+            (filtered from <strong class="text-slate-200">{{ summaryMetrics.total }}</strong> total)
+          </span>
+        </div>
+        } @else {
+        <!-- Idle Status Indicator -->
+        <div class="flex items-center gap-1.5 min-w-0">
+          <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400/80"></span>
+            All institutional filters active & up to date
+          </span>
+        </div>
+
+        <!-- Total Count -->
+        <div class="flex items-center gap-2 shrink-0 ml-auto">
+          <span class="text-slate-400 text-xs font-medium">
+            Showing all <strong class="text-slate-200">{{ summaryMetrics.total }}</strong> verified institutions
+          </span>
+        </div>
+        }
+      </div>
+
+      <!-- ROW 3 (Integrated Bulk Action Dock): Appears inside the filter card when rows are checked -->
+      @if (selection.size > 0) {
+      <div
+        class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/30 px-3 py-1.5 rounded-xl animate-in fade-in duration-200 transition-all">
+        <!-- Left Side: Selection Count Pill & Deselect -->
+        <div class="flex items-center gap-2">
+          <span
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold border border-indigo-500/40 text-[11px] shadow-sm">
+            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+            <span>{{ selection.size }} institution(s) selected</span>
+          </span>
+
+          <button
+            class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
+            (click)="selection.clear()" [adminTooltip]="'Clear current selection'" tooltipPosition="top">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              class="text-slate-400">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
+          </button>
+        </div>
+
+        <!-- Right Side: Bulk Action Buttons -->
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            (click)="bulkVerifyCycles()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <span>Bulk Verify (+12m)</span>
+          </button>
+
+          <button
+            class="h-7 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+            (click)="bulkUpdateStatus('approved')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>Bulk Approve</span>
+          </button>
+
+          <button
+            class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
+            (click)="bulkDeleteSelected()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+            </svg>
+            <span>Bulk Delete</span>
+          </button>
+        </div>
+      </div>
+      }
+    </div>
+
+    <!-- --- Main Legal Resources Data Table --- -->
+    <div
+      class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
+      <div class="data-table-wrapper overflow-x-auto min-h-[400px]">
+        @if (!isInitialLoad && isLoading) {
+        <div
+          class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-pink-500 animate-pulse w-full">
+        </div>
+        }
+
+        @if (isNoColumnsVisible) {
+        <!-- Full-Size Unified Columns Hidden Empty State -->
+        <admin-empty-state title="All Data Columns Currently Hidden"
+          message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display institutional directory records."
+          [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
+          (action)="onColumnVisibilityChange({ institution: true, location: true, facilities: true, contacts: true, compliance: true })">
+          <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
+          </svg>
+        </admin-empty-state>
+        } @else if (!isLoading && resources.length === 0) {
+        <!-- Full-Size Unified Empty State -->
+        <admin-empty-state title="No Legal Institutions Found"
+          message="No institutional records match your active search, state, district, or facility criteria. Try refining your filters or onboard a new institution."
+          [showAction]="isFilterActive" actionLabel="Reset Registry Filters" (action)="resetFilters()">
+        </admin-empty-state>
+        } @else {
+        <table class="data-table w-full text-left border-collapse table-fixed"
+          [class.table-refreshing]="!isInitialLoad && isLoading">
+          <thead>
+            <tr class="table-header-row text-xs uppercase tracking-wider font-semibold">
+              <th class="px-2 py-3 text-center w-[42px] min-w-[42px] max-w-[42px]">
+                <input type="checkbox"
+                  class="rounded border-slate-700 bg-slate-800 text-emerald-500 accent-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
+                  [checked]="isAllSelected()" (change)="toggleSelectAll()" [adminTooltip]="'Select all rows'"
+                  tooltipPosition="top" />
+              </th>
+
+              <!-- 1. Institution & Hierarchy -->
+              @if (columnVisibility['institution']) {
+              <th
+                class="px-3.5 pr-4 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[28%] min-w-[240px]"
+                (click)="toggleSort('name')" [adminTooltip]="'Click to sort by institution name'">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span [class.text-sky-400]="sortBy === 'name'" class="truncate">Institution & Hierarchy</span>
+                  @if (sortBy === 'name') {
+                  @if (sortOrder === 'asc') {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-sky-400 flex-shrink-0">
+                    <path d="M12 19V5M5 12l7-7 7 7"></path>
+                  </svg>
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-sky-400 flex-shrink-0">
+                    <path d="M12 5v14M5 12l7 7 7-7"></path>
+                  </svg>
+                  }
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
+                    <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                  </svg>
+                  }
+                </div>
+              </th>
+              }
+
+              <!-- 2. Location & District -->
+              @if (columnVisibility['location']) {
+              <th
+                class="px-3 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[20%] min-w-[180px]"
+                (click)="toggleSort('state')" [adminTooltip]="'Click to sort by State/District'">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span [class.text-sky-400]="sortBy === 'state' || sortBy === 'district'" class="truncate">Location &
+                    District</span>
+                  @if (sortBy === 'state' || sortBy === 'district') {
+                  @if (sortOrder === 'asc') {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-sky-400 flex-shrink-0">
+                    <path d="M12 19V5M5 12l7-7 7 7"></path>
+                  </svg>
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-sky-400 flex-shrink-0">
+                    <path d="M12 5v14M5 12l7 7 7-7"></path>
+                  </svg>
+                  }
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
+                    <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                  </svg>
+                  }
+                </div>
+              </th>
+              }
+
+              <!-- 3. Capabilities & Hours (Expanded to 20% for comfortable inline display) -->
+              @if (columnVisibility['facilities']) {
+              <th class="px-3 py-3 w-[16%] min-w-[150px] truncate">Capabilities & Hours</th>
+              }
+
+              <!-- 4. Contacts Channels -->
+              @if (columnVisibility['contacts']) {
+              <th class="px-3 py-3 w-[14%] min-w-[130px] truncate">Official Contacts</th>
+              }
+
+              <!-- 5. Compliance & Audit -->
+              @if (columnVisibility['compliance']) {
+              <th
+                class="px-3 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[100px] min-w-[100px]"
+                (click)="toggleSort('lastAuditDate')" [adminTooltip]="'Click to sort by audit date'">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span [class.text-sky-400]="sortBy === 'lastAuditDate' || sortBy === 'status'" class="truncate">Audit
+                    Status</span>
+                  @if (sortBy === 'lastAuditDate' || sortBy === 'status') {
+                  @if (sortOrder === 'asc') {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-sky-400 flex-shrink-0">
+                    <path d="M12 19V5M5 12l7-7 7 7"></path>
+                  </svg>
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    class="text-sky-400 flex-shrink-0">
+                    <path d="M12 5v14M5 12l7 7 7-7"></path>
+                  </svg>
+                  }
+                  } @else {
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
+                    <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
+                  </svg>
+                  }
+                </div>
+              </th>
+              }
+
+              <!-- 6. Actions Header -->
+              <th class="px-2 py-3 text-center w-[50px] min-w-[50px]">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 text-xs">
+            @if (isLoading && isInitialLoad) {
+            @for (item of [1,2,3,4,5,6,7,8]; track $index) {
+            <tr class="hover:bg-slate-800/30">
+              <td class="px-2 py-3 text-center"><admin-skeleton width="16px" height="16px" /></td>
+              <td class="px-3.5 pr-4 py-3"><admin-skeleton width="210px" height="20px" /></td>
+              <td class="px-3 py-3"><admin-skeleton width="140px" height="18px" /></td>
+              <td class="px-3 py-3"><admin-skeleton width="160px" height="20px" borderRadius="8px" /></td>
+              <td class="px-3 py-3"><admin-skeleton width="140px" height="20px" borderRadius="8px" /></td>
+              <td class="px-3 py-3"><admin-skeleton width="105px" height="20px" borderRadius="12px" /></td>
+              <td class="px-2 py-3 text-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></td>
+            </tr>
+            }
+            } @else {
+            @for (r of resources; track (r._id || r.id || $index)) {
+            <tr class="table-data-row hover:bg-slate-800/40 transition-all duration-150 cursor-pointer"
+              [class.selected-row]="selection.isSelected(r._id || r.id || '')"
+              [class.focused-row]="focusedRowIndex === $index" (click)="onRowClick(r._id || r.id || '')"
+              (dblclick)="onRowDblClick(r)">
+
+              <!-- Checkbox -->
+              <td class="px-2 py-2 text-center w-[42px] min-w-[42px] max-w-[42px] align-middle"
+                (click)="$event.stopPropagation()">
+                <input type="checkbox" [checked]="selection.isSelected(r._id || r.id || '')"
+                  (change)="toggleSelectOne(r._id || r.id || '')"
+                  class="rounded border-slate-700 bg-slate-800 text-emerald-500 accent-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
+                  [adminTooltip]="'Select ' + r.name" tooltipPosition="right" />
+              </td>
+
+              <!-- 1. Institution Name & Hierarchy -->
+              @if (columnVisibility['institution']) {
+              <td class="px-3.5 pr-4 py-2 w-[28%] min-w-[240px] overflow-hidden align-middle">
+                <div class="flex items-center gap-2.5 min-w-0 max-w-full overflow-hidden">
+                  <!-- Compact 28x28 Type Badge Avatar -->
+                  <div class="type-badge-icon w-7 h-7 shrink-0" [ngClass]="{
+                    'court': r.type === 'Court',
+                    'legalaid': r.type === 'LegalAid',
+                    'police': r.type === 'PoliceStation',
+                    'gov': r.type === 'GovernmentOffice'
+                  }">
+                    @if (r.type === 'Court') {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M3 21h18"></path>
+                      <path d="M5 21V7l8-4 8 4v14"></path>
+                      <path d="M9 18h6"></path>
+                    </svg>
+                    } @else if (r.type === 'LegalAid') {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
+                    </svg>
+                    } @else if (r.type === 'PoliceStation') {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    } @else {
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                      <line x1="9" y1="22" x2="9" y2="22.01"></line>
+                      <line x1="15" y1="22" x2="15" y2="22.01"></line>
+                    </svg>
+                    }
+                  </div>
+
+                  <!-- Text Info with Dynamic Flex Truncation & Portal Link -->
+                  <div class="flex flex-col min-w-0 flex-1 overflow-hidden">
+                    <div class="flex items-center gap-1.5 min-w-0 max-w-full overflow-hidden">
+                      <span
+                        class="text-slate-100 font-bold hover:text-sky-300 text-[12.5px] leading-snug truncate block min-w-0 flex-1"
+                        [adminTooltip]="r.name" tooltipPosition="top">
+                        {{ r.name }}
+                      </span>
+
+                      @if (r.website) {
+                      <a [href]="r.website" target="_blank" rel="noopener noreferrer"
+                        class="text-slate-400 hover:text-sky-400 transition-colors shrink-0 p-0.5"
+                        [adminTooltip]="'Open Official Portal: ' + r.website" tooltipPosition="top"
+                        (click)="$event.stopPropagation()">
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                          stroke-width="2.5">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                          <polyline points="15 3 21 3 21 9"></polyline>
+                          <line x1="10" y1="14" x2="21" y2="3"></line>
+                        </svg>
+                      </a>
+                      }
+                    </div>
+
+                    <div class="flex items-center gap-1.5 mt-0.5 min-w-0 max-w-full overflow-hidden">
+                      <!-- Dynamic Contextual Hierarchy Badge -->
+                      @if (getJurisdictionBadge(r); as badge) {
+                      <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold border shrink-0 leading-none"
+                        [ngClass]="badge.class">
+                        {{ badge.label }}
+                      </span>
+                      }
+
+                      <span class="text-[11px] text-slate-400 font-medium truncate flex-1 min-w-0 block">
+                        {{ r.district || r.city }} <span class="text-slate-600">•</span> {{ r.pincode || 'PIN N/A' }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+              }
+
+              <!-- 2. Location & District -->
+              @if (columnVisibility['location']) {
+              <td class="px-3 py-2 text-xs w-[20%] min-w-[180px] overflow-hidden align-middle">
+                <div class="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
+                  <div class="flex items-center gap-1.5 min-w-0">
+                    <div
+                      class="w-3.5 h-3.5 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2.5">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                    </div>
+                    <span class="font-bold text-slate-200 truncate flex-1 min-w-0 text-[12px]"
+                      [adminTooltip]="(r.district || r.city ? (r.district || r.city) + ', ' : '') + r.state"
+                      tooltipPosition="top">
+                      {{ r.district || r.city }}, {{ r.state }}
+                    </span>
+                  </div>
+                  <span class="text-[10.5px] text-slate-400 truncate max-w-full block pl-0.5"
+                    [adminTooltip]="r.address ? ('Address: ' + r.address) : 'No street address recorded'"
+                    tooltipPosition="top">
+                    {{ r.address }}
+                  </span>
+                </div>
+              </td>
+              }
+
+              <!-- 3. Capabilities & Hours (Clean Single-Line Badges with +N More Tooltip) -->
+              @if (columnVisibility['facilities']) {
+              <td class="px-3 py-2 text-xs w-[16%] min-w-[150px] overflow-hidden align-middle">
+                <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
+                  <!-- Operating Hours Line -->
+                  <div class="flex items-center gap-1 min-w-0"
+                    [adminTooltip]="(r.operatingHours || '09:30 AM - 05:00 PM') + (r.lunchBreak ? ' (Recess: ' + r.lunchBreak + ')' : '')"
+                    tooltipPosition="top">
+                    @if (r.operatingHours?.includes('24') || r.type === 'PoliceStation') {
+                    <span
+                      class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px] shrink-0 leading-tight">
+                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                      <span>24x7 Active</span>
+                    </span>
+                    } @else {
+                    <div class="inline-flex items-center gap-1 text-slate-300 font-medium text-[11px] min-w-0">
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        class="text-sky-400/80 shrink-0">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                      </svg>
+                      <span class="whitespace-nowrap font-mono text-[10.5px] text-slate-200">{{
+                        getDisplayHours(r.operatingHours, r.type) }}</span>
+                    </div>
+                    }
+                  </div>
+
+                  <!-- Capabilities Strip: Max 2 Chips + "+N more" Hover Badge -->
+                  <div class="flex items-center gap-1 flex-nowrap overflow-hidden pt-0.5">
+                    @if (getFacilityChips(r.facilities); as chips) {
+                    @if (chips.length > 0) {
+                    @for (chip of chips.slice(0, 2); track chip.label) {
+                    <span
+                      class="h-[17px] px-1.5 rounded text-[9px] font-semibold border inline-flex items-center shrink-0 leading-none whitespace-nowrap"
+                      [ngClass]="chip.class" [adminTooltip]="chip.tooltip" tooltipPosition="top">{{ chip.label }}</span>
+                    }
+                    @if (chips.length > 2) {
+                    <span
+                      class="h-[17px] px-1.5 rounded text-[9px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30 inline-flex items-center shrink-0 leading-none cursor-help whitespace-nowrap hover:bg-sky-500/25 transition-colors"
+                      [adminTooltip]="getFacilityMoreTooltip(r.facilities)" tooltipPosition="top">
+                      +{{ chips.length - 2 }} more
+                    </span>
+                    }
+                    } @else {
+                    <span class="text-slate-500 text-[10px] italic">Standard Desk</span>
+                    }
+                    }
+                  </div>
+                </div>
+              </td>
+              }
+
+              <!-- 4. Contacts Channels (Compact Slimline Badges) -->
+              @if (columnVisibility['contacts']) {
+              <td class="px-3 py-2 text-xs w-[14%] min-w-[130px] overflow-hidden align-middle">
+                <div class="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
+                  @if (r.contactNumber | phoneDisplay; as phoneVal) {
+                  <div
+                    class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono text-[10px] shadow-sm leading-none">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      class="text-amber-400 shrink-0">
+                      <path
+                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                      </path>
+                    </svg>
+                    <span class="font-medium tracking-wide whitespace-nowrap">{{ phoneVal }}</span>
+                    <button type="button"
+                      class="text-amber-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
+                      (click)="copyToClipboard(phoneVal, 'Phone Number'); $event.stopPropagation()"
+                      [adminTooltip]="'Copy phone number'">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  }
+
+                  @if (r.email | emailDisplay; as emailVal) {
+                  <div
+                    class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono text-[9.5px] shadow-sm max-w-full leading-none">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                      class="text-sky-400 shrink-0">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                      <polyline points="22,6 12,13 2,6"></polyline>
+                    </svg>
+                    <span class="font-medium truncate max-w-[125px]">{{ emailVal }}</span>
+                    <button type="button"
+                      class="text-sky-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
+                      (click)="copyToClipboard(emailVal, 'Email Address'); $event.stopPropagation()"
+                      [adminTooltip]="'Copy email address'">
+                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                      </svg>
+                    </button>
+                  </div>
+                  }
+
+                  @if (!r.contactNumber && !r.email) {
+                  <span class="text-slate-500 text-[10px] italic">No Direct Line</span>
+                  }
+                </div>
+              </td>
+              }
+
+              <!-- 5. Audit Compliance Status -->
+              @if (columnVisibility['compliance']) {
+              <td class="px-3 py-2 w-[100px] min-w-[100px] overflow-hidden align-middle">
+                <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
+                  <span
+                    class="px-2 py-1 rounded-full text-[9px] font-semibold border flex items-center gap-1.5 w-fit whitespace-nowrap leading-none"
+                    [ngClass]="r.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border-amber-500/30'"
+                    [adminTooltip]="r.status === 'approved' ? 'Compliance verified by High Court/DLSA registrar' : 'Pending moderation inspection'"
+                    tooltipPosition="top">
+                    <span class="w-1.5 h-1.5 rounded-full shrink-0"
+                      [ngClass]="r.status === 'approved' ? 'bg-emerald-400' : 'bg-amber-400'"></span>
+                    <span class="whitespace-nowrap">{{ r.status === 'approved' ? 'Audit Verified' : 'Pending Audit'
+                      }}</span>
+                  </span>
+                  <span class="text-[9.5px] text-slate-400 font-mono whitespace-nowrap pl-0.5">
+                    {{ r.lastAuditDate ? (r.lastAuditDate | date:'mediumDate') : 'Pending Cycle' }}
+                  </span>
+                </div>
+              </td>
+              }
+
+              <!-- 6. Actions Cell -->
+              <td class="px-2 py-2 text-center w-[50px] min-w-[50px] align-middle">
+                <div class="flex items-center justify-center">
+                  <button #kebabBtn type="button"
+                    class="kebab-btn w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all shadow-sm"
+                    [class.active]="openActionMenuId === (r._id || r.id)"
+                    (click)="toggleActionMenu(r._id || r.id || '', kebabBtn, $event)"
+                    [adminTooltip]="'Institutional Actions'" tooltipPosition="left">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                      <circle cx="12" cy="5" r="2.2"></circle>
+                      <circle cx="12" cy="12" r="2.2"></circle>
+                      <circle cx="12" cy="19" r="2.2"></circle>
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+            }
+            }
+          </tbody>
+        </table>
+        }
+      </div>
+
+      <!-- Standard Admin Pagination Footer -->
+      <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
+        [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onPageSizeChange($event)">
+      </admin-pagination>
+    </div>
+
+    <!-- ----- Floating Action Dropdown Menu ----- -->
+    <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionItem()" [dropdownWidth]="210"
+      headerLabel="Institutional Actions" (closed)="closeActionMenu()">
+      @if (getOpenActionItem()) {
+      <!-- 1. Inspect Dossier -->
+      <button class="dropdown-item" (click)="openDossier(getOpenActionItem()!); closeActionMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-sky-400">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span>Inspect Dossier</span>
+        <span class="dropdown-item-shortcut">View</span>
+      </button>
+
+      <!-- 2. Renew Annual Verification Cycle -->
+      <button class="dropdown-item" (click)="renewVerificationCycle(getOpenActionItem()!); closeActionMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-emerald-400">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>Renew Cycle (+12m)</span>
+        <span class="dropdown-item-shortcut">Renew</span>
+      </button>
+
+      <!-- 3. Edit Institutional Profile -->
+      <button class="dropdown-item" (click)="openEditModal(getOpenActionItem()!); closeActionMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-indigo-400">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+        <span>Edit Configuration</span>
+        <span class="dropdown-item-shortcut">Edit</span>
+      </button>
+
+      @if (getOpenActionItem()?.website) {
+      <a class="dropdown-item" [href]="getOpenActionItem()!.website" target="_blank" rel="noopener noreferrer"
+        (click)="closeActionMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-amber-400">
+          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+          <polyline points="15 3 21 3 21 9"></polyline>
+          <line x1="10" y1="14" x2="21" y2="3"></line>
+        </svg>
+        <span>Official Web Portal</span>
+        <span class="dropdown-item-shortcut">Link ↗</span>
+      </a>
+      }
+
+      <div class="dropdown-divider"></div>
+
+      <!-- 4. Delete Institutional Record -->
+      <button class="dropdown-item danger" (click)="openDeleteModal(getOpenActionItem()!); closeActionMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-rose-400">
+          <polyline points="3 6 5 6 21 6"></polyline>
+          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+        </svg>
+        <span class="text-rose-400 font-semibold">Delete Institution</span>
+        <span class="dropdown-item-shortcut text-rose-400">Del</span>
+      </button>
+      }
+    </admin-action-menu>
+
+    <!-- --- 4. Master-Detail Intelligence Dossier Drawer (4 Tabs) --- -->
+    @defer (when inspectItem) {
+    <admin-resource-dossier [item]="inspectItem" [activeTab]="activeDossierTab" [isVerifyingCycle]="isVerifyingCycle"
+      (closed)="closeDossier()" (activeTabChange)="activeDossierTab = $event; updateUrlParams()"
+      (editRequested)="closeDossier(); openEditModal($event)" (renewRequested)="renewVerificationCycle($event)">
+    </admin-resource-dossier>
+    }
+
+    <!-- --- 5. Create / Edit Institution Modal Studio --- -->
+    @defer (when isModalOpen) {
+    <admin-resource-modal [isOpen]="isModalOpen" [isEditMode]="isEditMode" [formData]="formData"
+      [stateOptions]="stateOptions" [isSaving]="isSaving" [isGeocoding]="isGeocoding" (closed)="closeModal()"
+      (saved)="saveResource()" (resolveGis)="resolveAddressGis()">
+    </admin-resource-modal>
+    }
+
+    <!-- --- 6. Batch Data Pipeline Import Wizard Modal --- -->
+    @defer (when showImportModal) {
+    <admin-resource-import-wizard [isOpen]="showImportModal" [step]="importWizardStep" [bulkJsonText]="bulkJsonText"
+      [isDryRunning]="isDryRunning" [isBatchImporting]="isBatchImporting" [validationReport]="validationReport"
+      [importResult]="importResult" (closed)="closeImportModal()" (bulkJsonTextChange)="bulkJsonText = $event"
+      (stepChange)="importWizardStep = $event" (runDryRun)="runDryRunValidation()"
+      (executeImport)="executeBatchImport($event)">
+    </admin-resource-import-wizard>
+    }
+
+    <!-- --- 7. Export Modal --- -->
+    @defer (when isExportModalOpen) {
+    <admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="pagination.total"
+      [selectedCount]="selection.size" [isFilterActive]="isFilterActive" [columns]="exportColumns"
+      [visibleColumnKeys]="visibleColumnKeys" (exportRequest)="handleExport($event)"
+      (closed)="isExportModalOpen = false">
+    </admin-export-modal>
+    }
+
+  </div>
 </div>

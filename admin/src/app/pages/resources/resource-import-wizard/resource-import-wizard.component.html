@@ -1,0 +1,893 @@
+@if (isOpen) {
+<div
+  class="fixed inset-0 z-[1000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 md:p-5 animate-in"
+  (click)="close()" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+  <div
+    class="glass-card w-[95vw] max-w-6xl h-[90vh] max-h-[920px] rounded-2xl border border-sky-500/30 bg-slate-900/98 backdrop-blur-2xl shadow-2xl flex flex-col overflow-hidden"
+    (click)="$event.stopPropagation()">
+
+    <!-- 1. PINNED MODAL HEADER -->
+    <div class="shrink-0 px-6 py-3.5 border-b border-slate-800 bg-slate-950/70 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/20 border border-sky-500/30 text-sky-400 flex items-center justify-center font-bold shadow-inner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="17 8 12 3 7 8"></polyline>
+            <line x1="12" y1="3" x2="12" y2="15"></line>
+          </svg>
+        </div>
+        <div>
+          <h3 id="wizardTitle" class="text-base font-bold text-slate-100 flex items-center gap-2">
+            <span>Batch Data Pipeline Import Wizard</span>
+            <span
+              class="px-2 py-0.5 rounded text-[10px] font-semibold bg-sky-500/15 text-sky-300 border border-sky-500/30 font-mono">
+              Enterprise ETL
+            </span>
+          </h3>
+          <p class="text-[11px] text-slate-400 mt-0.5">
+            Automated schema mapping, geospatial bounds validation & duplicate detection.
+          </p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <!-- Sample Template Menu -->
+        <div class="flex items-center gap-1 bg-slate-800/80 p-1 rounded-lg border border-slate-700/80 text-[11px]">
+          <span class="text-slate-400 px-1.5 font-medium">Templates:</span>
+          <button type="button"
+            class="px-2 py-0.5 rounded text-sky-300 hover:bg-sky-500/20 transition-all font-semibold"
+            (click)="downloadSampleTemplate('csv')"
+            [adminTooltip]="'Download Sample CSV Spreadsheet template with pre-defined schema'" tooltipPosition="top">
+            .CSV
+          </button>
+          <button type="button"
+            class="px-2 py-0.5 rounded text-indigo-300 hover:bg-indigo-500/20 transition-all font-semibold"
+            (click)="downloadSampleTemplate('json')" [adminTooltip]="'Download Sample JSON Array template'"
+            tooltipPosition="top">
+            .JSON
+          </button>
+        </div>
+
+        <button class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+          (click)="close()" [adminTooltip]="'Close wizard (Esc)'" tooltipPosition="left">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. PINNED STEPPER PROGRESS BAR -->
+    <div class="shrink-0 px-6 py-2 bg-slate-950/40 border-b border-slate-800/60">
+      <div class="grid grid-cols-3 gap-2 text-xs max-w-2xl mx-auto">
+        <div class="flex items-center justify-center gap-2 py-1 px-3 rounded-lg transition-all"
+          [ngClass]="step === 'input' ? 'bg-sky-500/15 text-sky-300 font-bold border border-sky-500/30' : 'text-slate-400'">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+            [ngClass]="step === 'input' ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-400'">1</span>
+          <span>Source & Ingest</span>
+        </div>
+
+        <div class="flex items-center justify-center gap-2 py-1 px-3 rounded-lg transition-all"
+          [ngClass]="step === 'validate' ? 'bg-sky-500/15 text-sky-300 font-bold border border-sky-500/30' : 'text-slate-400'">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+            [ngClass]="step === 'validate' ? 'bg-sky-500 text-slate-950' : 'bg-slate-800 text-slate-400'">2</span>
+          <span>Dry-Run Pre-Validation</span>
+        </div>
+
+        <div class="flex items-center justify-center gap-2 py-1 px-3 rounded-lg transition-all"
+          [ngClass]="step === 'success' ? 'bg-emerald-500/15 text-emerald-300 font-bold border border-emerald-500/30' : 'text-slate-400'">
+          <span class="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold"
+            [ngClass]="step === 'success' ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 text-slate-400'">3</span>
+          <span>Commit & Audit</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MAIN STEP WORKSPACE (EXPANSIVE VIEWPORT) -->
+    <div class="flex-1 min-h-0 flex flex-col p-6 overflow-hidden">
+
+      <!-- STEP 1: SOURCE INGESTION -->
+      @if (step === 'input') {
+      <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col gap-4 text-xs px-2 py-1">
+
+        <!-- Source Toggle Header -->
+        <div class="flex items-center justify-between shrink-0">
+          <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <button type="button"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+              [ngClass]="inputMode === 'file' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+              (click)="setInputMode('file')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <span>Upload File (.XLSX / .CSV / .JSON)</span>
+            </button>
+
+            <button type="button"
+              class="px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all"
+              [ngClass]="inputMode === 'text' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+              (click)="setInputMode('text')">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="16 18 22 12 16 6"></polyline>
+                <polyline points="8 6 2 12 8 18"></polyline>
+              </svg>
+              <span>Paste Raw Code / JSON</span>
+            </button>
+          </div>
+
+          @if (inputMode === 'text' && bulkJsonText.trim()) {
+          <div class="flex items-center gap-2">
+            <button type="button"
+              class="px-2.5 py-1 rounded-lg bg-slate-800 text-sky-300 hover:bg-slate-700 font-semibold border border-slate-700 flex items-center gap-1"
+              (click)="formatJson()" [adminTooltip]="'Format & validate JSON syntax'">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                <line x1="9" y1="20" x2="15" y2="20"></line>
+                <line x1="12" y1="4" x2="12" y2="20"></line>
+              </svg>
+              <span>Prettify JSON</span>
+            </button>
+
+            <button type="button" class="px-2 py-1 rounded-lg text-rose-400 hover:bg-rose-500/10 transition-colors"
+              (click)="clearInput()" [adminTooltip]="'Clear input content'">
+              Clear
+            </button>
+          </div>
+          }
+        </div>
+
+        <!-- Mode 1: Drag & Drop File Zone -->
+        @if (inputMode === 'file') {
+        <div
+          class="border-2 border-dashed rounded-2xl p-10 flex flex-col items-center justify-center gap-3.5 text-center transition-all cursor-pointer relative"
+          [ngClass]="isDragging ? 'border-sky-400 bg-sky-500/10' : 'border-slate-700 bg-slate-950/40 hover:border-slate-600 hover:bg-slate-950/60'"
+          (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onFileDrop($event)"
+          (click)="fileInput.click()">
+          <input #fileInput type="file" class="hidden" accept=".csv,.xlsx,.xls,.json"
+            (change)="onFileInputChange($event)" />
+
+          <div
+            class="w-16 h-16 rounded-2xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center shadow-inner">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="17 8 12 3 7 8"></polyline>
+              <line x1="12" y1="3" x2="12" y2="15"></line>
+            </svg>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <span class="text-sm font-bold text-slate-100">
+              Drag and drop institutional dataset file here
+            </span>
+            <span class="text-xs text-slate-400">
+              Supports Microsoft Excel (<strong class="text-slate-300">.xlsx, .xls</strong>), Comma-Separated Values
+              (<strong class="text-slate-300">.csv</strong>), or (<strong class="text-slate-300">.json</strong>) up to
+              25MB
+            </span>
+          </div>
+
+          <button type="button"
+            class="btn btn-secondary px-4 py-1.5 text-xs font-semibold rounded-lg mt-1 pointer-events-none">
+            Browse Computer Files
+          </button>
+
+          @if (uploadedFileName) {
+          <div
+            class="mt-3 p-3 rounded-xl bg-sky-500/10 border border-sky-500/30 flex items-center gap-3 w-full max-w-md"
+            (click)="$event.stopPropagation()">
+            <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-300 flex items-center justify-center shrink-0">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12"></polyline>
+              </svg>
+            </div>
+            <div class="flex flex-col text-left truncate flex-1">
+              <span class="text-xs font-bold text-slate-100 truncate">{{ uploadedFileName }}</span>
+              <span class="text-[11px] text-slate-400">{{ uploadedFileSize }} • {{ parsedRecordCount }} records
+                parsed</span>
+            </div>
+            <button type="button" class="text-slate-400 hover:text-rose-400 p-1"
+              (click)="clearInput(); $event.stopPropagation()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          </div>
+          }
+        </div>
+        }
+
+        <!-- Mode 2: Code Editor -->
+        @if (inputMode === 'text') {
+        <div class="flex flex-col gap-1.5">
+          <div class="flex items-center justify-between text-slate-400 text-[11px] px-0.5">
+            <span>Enter an array of JSON objects conforming to the resource schema:</span>
+            <span class="font-mono text-slate-500">{{ bulkJsonText.length }} chars</span>
+          </div>
+          <div
+            class="relative rounded-xl border border-slate-800 bg-slate-950/80 focus-within:border-sky-500/50 focus-within:ring-1 focus-within:ring-sky-500/40 transition-all overflow-hidden">
+            <textarea [ngModel]="bulkJsonText" (ngModelChange)="onJsonChange($event)" rows="10"
+              placeholder='[&#10;  {&#10;    "name": "District Court Tis Hazari",&#10;    "type": "Court",&#10;    "state": "Delhi",&#10;    "city": "Delhi"&#10;  }&#10;]'
+              class="w-full bg-transparent border-0 outline-none p-4 font-mono text-xs text-sky-300 placeholder-slate-600 resize-y custom-scrollbar focus:ring-0 block"></textarea>
+          </div>
+        </div>
+        }
+
+        <!-- Parse Error Banner -->
+        @if (fileParseError) {
+        <div
+          class="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-center gap-2.5 text-rose-300 text-xs">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="shrink-0">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <span>{{ fileParseError }}</span>
+        </div>
+        }
+
+        <!-- Duplicate Resolution Strategy Settings -->
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <span class="font-bold text-slate-200 flex items-center gap-2 text-xs">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                class="text-sky-400">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+              </svg>
+              <span>Duplicate & Conflict Resolution Rule:</span>
+            </span>
+            <span class="text-[11px] text-slate-400">Match criteria: Name + State / District</span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+              [ngClass]="duplicateStrategy === 'skip' ? 'bg-sky-500/10 border-sky-500/40 text-slate-100 shadow-sm' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'">
+              <input type="radio" name="dupStrategy" value="skip" [(ngModel)]="duplicateStrategy"
+                class="mt-0.5 accent-sky-500" />
+              <div class="flex flex-col">
+                <span class="font-bold text-xs">Skip Existing</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 leading-snug">Ignore existing institutions; append new
+                  ones only.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+              [ngClass]="duplicateStrategy === 'upsert' ? 'bg-indigo-500/10 border-indigo-500/40 text-slate-100 shadow-sm' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'">
+              <input type="radio" name="dupStrategy" value="upsert" [(ngModel)]="duplicateStrategy"
+                class="mt-0.5 accent-indigo-500" />
+              <div class="flex flex-col">
+                <span class="font-bold text-xs">Upsert / Overwrite</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 leading-snug">Update facility & contact data for existing
+                  matches.</span>
+              </div>
+            </label>
+
+            <label class="flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition-all"
+              [ngClass]="duplicateStrategy === 'new' ? 'bg-amber-500/10 border-amber-500/40 text-slate-100 shadow-sm' : 'bg-slate-900/40 border-slate-800 text-slate-400 hover:border-slate-700'">
+              <input type="radio" name="dupStrategy" value="new" [(ngModel)]="duplicateStrategy"
+                class="mt-0.5 accent-amber-500" />
+              <div class="flex flex-col">
+                <span class="font-bold text-xs">Create All as New</span>
+                <span class="text-[11px] text-slate-400 mt-0.5 leading-snug">Create independent record regardless of
+                  duplicates.</span>
+              </div>
+            </label>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- STEP 2: DRY-RUN PRE-VALIDATION REPORT -->
+      @if (step === 'validate' && validationReport) {
+      <div class="flex-1 min-h-0 flex flex-col gap-3 text-xs overflow-hidden">
+
+        <!-- Unified Executive Ribbon (Stats + Strategy side-by-side) -->
+        <div class="shrink-0 grid grid-cols-1 lg:grid-cols-12 gap-3">
+
+          <!-- Left: 4 Metric Cards (5 cols) -->
+          <div class="lg:col-span-5 grid grid-cols-4 gap-2 p-2 rounded-xl bg-slate-950/80 border border-slate-800 shadow-inner items-stretch">
+
+            <!-- Ingested Stat -->
+            <div
+              class="flex flex-col justify-center items-center text-center p-2 rounded-lg bg-slate-900/60 border border-slate-800/80 hover:border-sky-500/30 transition-all gap-1">
+              <div class="flex items-center gap-1 text-slate-400 text-[10px] font-semibold uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                <span>Ingested</span>
+              </div>
+              <div class="text-xl font-extrabold text-slate-100 font-mono leading-none my-0.5">
+                {{ validationReport.totalCount }}
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-sky-500/10 text-sky-300 border border-sky-500/20">
+                TOTAL
+              </span>
+            </div>
+
+            <!-- Clean Stat -->
+            <div
+              class="flex flex-col justify-center items-center text-center p-2 rounded-lg bg-emerald-500/5 border border-emerald-500/20 hover:border-emerald-500/40 transition-all gap-1">
+              <div class="flex items-center gap-1 text-emerald-300 text-[10px] font-semibold uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>Clean</span>
+              </div>
+              <div class="text-xl font-extrabold text-emerald-400 font-mono leading-none my-0.5">
+                {{ cleanCount }}
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                READY
+              </span>
+            </div>
+
+            <!-- Warnings Stat -->
+            <div
+              class="flex flex-col justify-center items-center text-center p-2 rounded-lg bg-amber-500/5 border border-amber-500/20 hover:border-amber-500/40 transition-all gap-1">
+              <div class="flex items-center gap-1 text-amber-300 text-[10px] font-semibold uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                <span>Warnings</span>
+              </div>
+              <div class="text-xl font-extrabold text-amber-400 font-mono leading-none my-0.5">
+                {{ warningCount }}
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                REVIEW
+              </span>
+            </div>
+
+            <!-- Blocked Stat -->
+            <div
+              class="flex flex-col justify-center items-center text-center p-2 rounded-lg bg-rose-500/5 border border-rose-500/20 hover:border-rose-500/40 transition-all gap-1">
+              <div class="flex items-center gap-1 text-rose-300 text-[10px] font-semibold uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                <span>Blocked</span>
+              </div>
+              <div class="text-xl font-extrabold text-rose-400 font-mono leading-none my-0.5">
+                {{ errorCount }}
+              </div>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                OMIT
+              </span>
+            </div>
+
+          </div>
+
+          <!-- Right: Strategy & Conflict Guidance Card (7 cols) -->
+          <div
+            class="lg:col-span-7 p-2.5 rounded-xl border transition-all flex flex-col justify-between gap-2 shadow-inner"
+            [ngClass]="{
+              'bg-sky-950/40 border-sky-500/40 shadow-sky-950/30': duplicateStrategy === 'skip',
+              'bg-indigo-950/40 border-indigo-500/40 shadow-indigo-950/30': duplicateStrategy === 'upsert',
+              'bg-amber-950/40 border-amber-500/40 shadow-amber-950/30': duplicateStrategy === 'new'
+            }">
+
+            <!-- Strategy Header & Switcher -->
+            <div class="flex items-center justify-between gap-2 flex-wrap pb-1.5 border-b border-slate-800/80">
+              <div class="flex items-center gap-2">
+                @if (duplicateStrategy === 'skip') {
+                <span class="flex h-2 w-2 relative">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-sky-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-sky-500"></span>
+                </span>
+                <span
+                  class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-sky-500/20 text-sky-300 border border-sky-500/40">APPEND-ONLY</span>
+                <span class="font-bold text-slate-100 text-xs">Skip Existing Records</span>
+                <span class="text-[10.5px] text-slate-400 hidden sm:inline">• Production safe</span>
+                } @else if (duplicateStrategy === 'upsert') {
+                <span class="flex h-2 w-2 relative">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                </span>
+                <span
+                  class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/40">SYNC
+                  & MERGE</span>
+                <span class="font-bold text-slate-100 text-xs">Upsert & Overwrite Matches</span>
+                <span class="text-[10.5px] text-slate-400 hidden sm:inline">• Update facilities & contacts</span>
+                } @else {
+                <span class="flex h-2 w-2 relative">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                </span>
+                <span
+                  class="px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">FORCE
+                  INSERT</span>
+                <span class="font-bold text-slate-100 text-xs">Create All as New</span>
+                <span class="text-[10.5px] text-slate-400 hidden sm:inline">• For separate benches</span>
+                }
+              </div>
+
+              <!-- Quick Switch Pills -->
+              <div class="flex items-center gap-1 bg-slate-950/90 p-0.5 rounded-lg border border-slate-800">
+                <span class="text-[10px] text-slate-400 px-1 font-medium">Conflict Rule:</span>
+                <button type="button" (click)="duplicateStrategy = 'skip'"
+                  class="px-2.5 py-0.5 rounded text-[10px] font-semibold transition-all"
+                  [ngClass]="duplicateStrategy === 'skip' ? 'bg-sky-500/25 text-sky-200 border border-sky-500/50 shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                  Skip
+                </button>
+                <button type="button" (click)="duplicateStrategy = 'upsert'"
+                  class="px-2.5 py-0.5 rounded text-[10px] font-semibold transition-all"
+                  [ngClass]="duplicateStrategy === 'upsert' ? 'bg-indigo-500/25 text-indigo-200 border border-indigo-500/50 shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                  Upsert
+                </button>
+                <button type="button" (click)="duplicateStrategy = 'new'"
+                  class="px-2.5 py-0.5 rounded text-[10px] font-semibold transition-all"
+                  [ngClass]="duplicateStrategy === 'new' ? 'bg-amber-500/25 text-amber-200 border border-amber-500/50 shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+                  Force New
+                </button>
+              </div>
+            </div>
+
+            <!-- 3-Point Micro-Cards Roadmap -->
+            <div class="grid grid-cols-3 gap-2 text-[10.5px]">
+              @if (duplicateStrategy === 'skip') {
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">1</span>
+                <div>
+                  <div class="font-bold text-slate-200">Clean Records</div>
+                  <div class="text-slate-400 text-[10px]">Inserted as new institutions</div>
+                </div>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">2</span>
+                <div>
+                  <div class="font-bold text-slate-200">Existing Matches</div>
+                  <div class="text-sky-300/90 text-[10px]">Skipped safely (no edits)</div>
+                </div>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">3</span>
+                <div>
+                  <div class="font-bold text-slate-200">Operator Review</div>
+                  <div class="text-slate-400 text-[10px]">Uncheck any row to exclude</div>
+                </div>
+              </div>
+              } @else if (duplicateStrategy === 'upsert') {
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-indigo-500/20 text-indigo-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">1</span>
+                <div>
+                  <div class="font-bold text-slate-200">Existing Matches</div>
+                  <div class="text-indigo-300/90 text-[10px]">Facilities & contacts synced</div>
+                </div>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">2</span>
+                <div>
+                  <div class="font-bold text-slate-200">New Records</div>
+                  <div class="text-slate-400 text-[10px]">Created automatically</div>
+                </div>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">3</span>
+                <div>
+                  <div class="font-bold text-slate-200">Operator Review</div>
+                  <div class="text-slate-400 text-[10px]">Verify phone & email values</div>
+                </div>
+              </div>
+              } @else {
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">1</span>
+                <div>
+                  <div class="font-bold text-slate-200">All Valid Rows</div>
+                  <div class="text-amber-300/90 text-[10px]">Inserted as new documents</div>
+                </div>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-rose-500/20 text-rose-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">2</span>
+                <div>
+                  <div class="font-bold text-slate-200">Duplicate Alert</div>
+                  <div class="text-rose-300/90 text-[10px]">May create multiple entries</div>
+                </div>
+              </div>
+              <div class="p-1.5 rounded-lg bg-slate-950/50 border border-slate-800/80 flex items-start gap-1.5">
+                <span
+                  class="w-4 h-4 rounded bg-sky-500/20 text-sky-400 flex items-center justify-center font-bold text-[9.5px] shrink-0 mt-0.5">3</span>
+                <div>
+                  <div class="font-bold text-slate-200">Recommended For</div>
+                  <div class="text-slate-400 text-[10px]">Separate benches / desks</div>
+                </div>
+              </div>
+              }
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Filter Controls & Error CSV Export Row -->
+        <div class="shrink-0 flex items-center justify-between gap-2 flex-wrap">
+          <div class="flex items-center gap-1.5 flex-wrap">
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+              [ngClass]="validationFilter === 'ALL' ? 'bg-slate-800 text-sky-300 border border-slate-700' : 'text-slate-400 hover:text-slate-200'"
+              (click)="setValidationFilter('ALL')">
+              All ({{ validationReport.totalCount }})
+            </button>
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+              [ngClass]="validationFilter === 'VALID' ? 'bg-emerald-500/15 text-emerald-300 border border-emerald-500/30' : 'text-slate-400 hover:text-slate-200'"
+              (click)="setValidationFilter('VALID')">
+              Clean ({{ cleanCount }})
+            </button>
+            @if (warningCount > 0) {
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+              [ngClass]="validationFilter === 'WARNING' ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30' : 'text-slate-400 hover:text-slate-200'"
+              (click)="setValidationFilter('WARNING')">
+              Warnings ({{ warningCount }})
+            </button>
+            }
+            @if (errorCount > 0) {
+            <button type="button" class="px-2.5 py-1 rounded-lg text-xs font-semibold transition-all"
+              [ngClass]="validationFilter === 'INVALID' ? 'bg-rose-500/15 text-rose-300 border border-rose-500/30' : 'text-slate-400 hover:text-slate-200'"
+              (click)="setValidationFilter('INVALID')">
+              Errors ({{ errorCount }})
+            </button>
+            }
+          </div>
+
+          <div class="flex items-center gap-2">
+            <input type="text" placeholder="Filter rows..." [ngModel]="validationSearch"
+              (ngModelChange)="onValidationSearchChange($event)"
+              class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-200 placeholder-slate-500 w-36 focus:w-48 transition-all" />
+
+            @if (errorCount > 0 || warningCount > 0) {
+            <button type="button"
+              class="btn btn-secondary px-2.5 py-1 text-xs font-semibold flex items-center gap-1.5 text-amber-300 border-amber-500/30"
+              (click)="downloadErrorReport()" [adminTooltip]="'Download CSV report of invalid rows with reasons'">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>Export Error Log (.CSV)</span>
+            </button>
+            }
+          </div>
+        </div>
+
+        <!-- Full-Height Data Table Container (Flex Fill) -->
+        <div
+          class="flex-1 min-h-0 flex flex-col rounded-xl border border-slate-800 bg-slate-950/70 shadow-inner overflow-hidden">
+
+          <!-- Scrollable Table Body -->
+          <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar">
+            <table class="w-full text-left text-[11px]">
+              <thead
+                class="sticky top-0 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 text-slate-400 font-semibold z-10">
+                <tr>
+                  <th class="p-2.5 w-9 text-center">
+                    <input type="checkbox" [checked]="areAllValidSelected"
+                      (change)="areAllValidSelected ? deselectAllValid() : selectAllValid()"
+                      class="rounded border-slate-700 bg-slate-800 text-sky-500 accent-sky-500 focus:ring-sky-500/20 cursor-pointer"
+                      [adminTooltip]="'Toggle select/exclude all importable rows'" tooltipPosition="right" />
+                  </th>
+                  <th class="p-2.5 w-16">Status</th>
+                  <th class="p-2.5 w-64">Institution Name</th>
+                  <th class="p-2.5 w-44">Type & Jurisdiction</th>
+                  <th class="p-2.5 w-36">Location</th>
+                  <th class="p-2.5">Validation Inspection Notes</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800/60">
+                @for (item of paginatedValidationItems; track item.index) {
+                <tr class="hover:bg-slate-900/50 transition-colors"
+                  [ngClass]="{ 'opacity-40 line-through': item.excluded }">
+                  <td class="p-2.5 text-center" (click)="$event.stopPropagation()">
+                    <input type="checkbox" [checked]="!item.excluded && item.status !== 'INVALID'"
+                      [disabled]="item.status === 'INVALID'" (change)="toggleItemExclusion(item)"
+                      class="rounded border-slate-700 bg-slate-800 text-sky-500 accent-sky-500 focus:ring-sky-500/20 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed"
+                      [adminTooltip]="item.status === 'INVALID' ? 'Blocked due to schema error' : (item.excluded ? 'Click to include in commit' : 'Click to exclude from commit')" />
+                  </td>
+                  <td class="p-2.5 font-bold">
+                    @if (item.status === 'VALID') {
+                    <span
+                      class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-mono">
+                      CLEAN
+                    </span>
+                    } @else if (item.status === 'WARNING') {
+                    <span
+                      class="px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-400 border border-amber-500/30 font-mono">
+                      WARN
+                    </span>
+                    } @else {
+                    <span
+                      class="px-2 py-0.5 rounded text-[10px] bg-rose-500/15 text-rose-400 border border-rose-500/30 font-mono">
+                      BLOCKED
+                    </span>
+                    }
+                  </td>
+                  <td class="p-2.5 text-slate-200 font-medium truncate max-w-[260px]">
+                    <span [title]="item.name">{{ item.name || 'Untitled' }}</span>
+                    @if (item.excluded) {
+                    <span
+                      class="ml-1.5 text-[9px] px-1 py-0.2 rounded bg-slate-800 text-slate-400 border border-slate-700 font-mono not-italic no-underline">
+                      EXCLUDED
+                    </span>
+                    }
+                  </td>
+                  <td class="p-2.5 text-slate-400 font-mono text-[10px]">
+                    <span>{{ item.type || 'Court' }}</span>
+                    @if (item.jurisdictionLevel) {
+                    <span class="text-slate-500"> • {{ item.jurisdictionLevel }}</span>
+                    }
+                  </td>
+                  <td class="p-2.5 text-slate-400 truncate max-w-[140px]"
+                    [title]="item.district || item.city || item.state || 'N/A'">
+                    {{ item.district || item.city || item.state || 'N/A' }}
+                  </td>
+                  <td class="p-2.5">
+                    @if (item.errors && item.errors.length > 0) {
+                    <span class="text-rose-400 font-medium">{{ item.errors.join('; ') }}</span>
+                    } @else if (item.warnings && item.warnings.length > 0) {
+                    <span class="text-amber-300 font-medium">{{ item.warnings.join('; ') }}</span>
+                    } @else {
+                    <span class="text-slate-400">{{ item.validationNotes?.join(', ') || 'Ready for atomic insertion'
+                      }}</span>
+                    }
+                  </td>
+                </tr>
+                }
+                @if (filteredValidationItems.length === 0) {
+                <tr>
+                  <td colspan="6" class="p-8 text-center text-slate-500 italic">
+                    No records matching active validation filter.
+                  </td>
+                </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Pinned Mini Pagination Bar -->
+          @if (filteredValidationItems.length > 0) {
+          <div
+            class="shrink-0 flex items-center justify-between px-4 py-2 bg-slate-900/90 border-t border-slate-800 text-[11px] text-slate-400">
+            <div class="flex items-center gap-3">
+              <span>
+                Showing <strong class="text-slate-200">{{ (currentPage - 1) * pageSize + 1 }}</strong> to
+                <strong class="text-slate-200">{{ (currentPage * pageSize) > filteredValidationItems.length ?
+                  filteredValidationItems.length : (currentPage * pageSize) }}</strong>
+                of <strong class="text-slate-200">{{ filteredValidationItems.length }}</strong> rows
+              </span>
+              <div class="flex items-center gap-1 ml-2">
+                <span class="text-slate-500">Per page:</span>
+                <button type="button" class="px-1.5 py-0.5 rounded font-mono text-[11px]"
+                  [ngClass]="pageSize === 25 ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30' : 'text-slate-400 hover:text-slate-200'"
+                  (click)="setPageSize(25)">25</button>
+                <button type="button" class="px-1.5 py-0.5 rounded font-mono text-[11px]"
+                  [ngClass]="pageSize === 50 ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30' : 'text-slate-400 hover:text-slate-200'"
+                  (click)="setPageSize(50)">50</button>
+                <button type="button" class="px-1.5 py-0.5 rounded font-mono text-[11px]"
+                  [ngClass]="pageSize === 100 ? 'bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30' : 'text-slate-400 hover:text-slate-200'"
+                  (click)="setPageSize(100)">100</button>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-1.5">
+              <button type="button"
+                class="px-2 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs"
+                (click)="setPage(currentPage - 1)" [disabled]="currentPage <= 1">
+                ‹ Prev
+              </button>
+              <span class="px-2 font-mono text-slate-300 text-xs">Page {{ currentPage }} / {{ totalPages }}</span>
+              <button type="button"
+                class="px-2 py-1 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 disabled:opacity-40 disabled:pointer-events-none text-xs"
+                (click)="setPage(currentPage + 1)" [disabled]="currentPage >= totalPages">
+                Next ›
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+      <!-- STEP 3: COMMIT & AUDIT RECEIPT -->
+      @if (step === 'success') {
+      <div class="flex-1 min-h-0 overflow-y-auto custom-scrollbar flex flex-col gap-4 text-xs pr-1 animate-in">
+
+        <!-- Success Hero Banner -->
+        <div
+          class="p-5 rounded-2xl bg-gradient-to-b from-emerald-500/15 via-slate-900/80 to-slate-950/90 border border-emerald-500/30 flex flex-col items-center text-center gap-2.5 relative overflow-hidden shadow-xl">
+          <div class="absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none">
+          </div>
+
+          <div
+            class="w-14 h-14 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 ring-4 ring-emerald-500/10">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+
+          <div class="flex flex-col gap-1 max-w-lg">
+            <h4 class="text-base font-bold text-slate-100 flex items-center justify-center gap-2">
+              <span>Batch Pipeline Committed Successfully</span>
+              <span
+                class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono">
+                200 OK
+              </span>
+            </h4>
+            <p class="text-xs text-slate-300">
+              All validated legal institutional records have been ingested, normalized, and indexed into the active
+              database.
+            </p>
+          </div>
+        </div>
+
+        <!-- Execution Audit Metrics (4 Columns) -->
+        <div class="grid grid-cols-4 gap-3 p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 shadow-inner">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-slate-400 text-[11px]">Created / Ingested:</span>
+            <span class="text-xl font-extrabold text-emerald-400 font-mono">
+              {{ importResult?.importedCount ?? validationReport?.validCount ?? 0 }}
+            </span>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-slate-400 text-[11px]">Upserted / Updated:</span>
+            <span class="text-xl font-extrabold text-indigo-300 font-mono">
+              {{ importResult?.updatedCount ?? 0 }}
+            </span>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-slate-400 text-[11px]">Skipped Duplicates:</span>
+            <span class="text-xl font-extrabold text-slate-400 font-mono">
+              {{ importResult?.skippedCount ?? 0 }}
+            </span>
+          </div>
+          <div class="flex flex-col gap-0.5">
+            <span class="text-slate-400 text-[11px]">Latency Duration:</span>
+            <span class="text-xl font-extrabold text-sky-400 font-mono">
+              {{ importResult?.durationMs ?? 140 }}ms
+            </span>
+          </div>
+        </div>
+
+        <!-- Audit Batch ID & Telemetry -->
+        <div class="flex items-center justify-between p-3 rounded-xl bg-slate-950/60 border border-slate-800 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">Audit Batch ID:</span>
+            <span class="px-2 py-0.5 rounded bg-sky-500/10 text-sky-300 border border-sky-500/30 font-mono font-bold">
+              {{ importResult?.batchId || 'BATCH-ETL-COMPLETED' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-slate-400">Strategy:</span>
+            <span
+              class="px-2 py-0.5 rounded bg-slate-800 text-slate-200 border border-slate-700 font-mono uppercase font-bold text-[10px]">
+              {{ duplicateStrategy }}
+            </span>
+            <span class="text-xs font-semibold text-emerald-400 flex items-center gap-1.5 ml-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>SWR Synced</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Pipeline Audit Trail Summary Log -->
+        <div
+          class="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800/80 flex flex-col gap-2 font-mono text-[11px] text-slate-300 shadow-inner">
+          <div
+            class="flex items-center justify-between text-slate-400 pb-1.5 border-b border-slate-800/60 font-sans font-bold text-xs">
+            <span>Pipeline Telemetry & Verification Log</span>
+            <span class="text-[10px] text-emerald-400 font-mono">ATOMIC_COMMIT_PASS</span>
+          </div>
+          <div class="flex items-center gap-2 text-emerald-400">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>[ETL_INGESTION] Source payload parsed & normalized to LegalResource schema.</span>
+          </div>
+          <div class="flex items-center gap-2 text-emerald-400">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>[GEOSPATIAL] Coordinates verified within Indian territorial boundaries.</span>
+          </div>
+          <div class="flex items-center gap-2 text-emerald-400">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+            <span>[DATABASE_ATOMIC] Committed {{ importResult?.importedCount ?? validationReport?.validCount ?? 0 }}
+              live records into active database.</span>
+          </div>
+          @if (validationReport && validationReport.errorCount > 0) {
+          <div class="flex items-center gap-2 text-slate-400">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="8" x2="12" y2="12"></line>
+              <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>[EXCLUSION_REPORT] {{ validationReport.errorCount }} invalid rows excluded from DB commit.</span>
+          </div>
+          }
+        </div>
+      </div>
+      }
+
+    </div>
+
+    <!-- 4. PINNED MODAL ACTION FOOTER -->
+    <div class="shrink-0 px-6 py-3.5 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between">
+      @if (step === 'input') {
+      <button type="button" class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="close()">
+        Cancel
+      </button>
+
+      <button type="button"
+        class="btn btn-primary px-5 py-2 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-sky-500/20"
+        (click)="onRunDryRun()" [disabled]="isDryRunning || !bulkJsonText.trim()">
+        @if (isDryRunning) {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="animate-spin">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Inspecting Schema...</span>
+        } @else {
+        <span>Run Pre-Validation Dry Run</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+        }
+      </button>
+      }
+
+      @if (step === 'validate') {
+      <button type="button" class="btn btn-secondary px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+        (click)="setStep('input')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <span>Back to Edit Source</span>
+      </button>
+
+      <button type="button"
+        class="btn btn-primary px-5 py-2 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-sky-500/20"
+        (click)="onExecuteImport()" [disabled]="isBatchImporting || importableCount === 0">
+        @if (isBatchImporting) {
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="animate-spin">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        }
+        <span>Execute Batch Import ({{ importableCount }} Selected Records • {{ duplicateStrategy | uppercase }})</span>
+      </button>
+      }
+
+      @if (step === 'success') {
+      <button type="button" class="btn btn-secondary px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+        (click)="resetWizard()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Import Another Batch</span>
+      </button>
+
+      <button type="button"
+        class="btn btn-primary px-5 py-2 text-xs font-semibold flex items-center gap-2 shadow-lg shadow-sky-500/20"
+        (click)="close()">
+        <span>View Ingested Records in Table</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+      </button>
+      }
+    </div>
+
+  </div>
+</div>
+}

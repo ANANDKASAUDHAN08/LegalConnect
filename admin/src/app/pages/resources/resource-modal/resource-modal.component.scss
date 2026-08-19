@@ -1,0 +1,384 @@
+// ============================================
+// Resource Modal — Premium SCSS
+// Design: Linear meets Stripe aesthetic
+// ============================================
+
+.glass-card {
+  background: rgba(11, 19, 43, 0.98);
+  border-color: rgba(56, 189, 248, 0.2);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.85),
+    0 0 40px -5px rgba(56, 189, 248, 0.08);
+}
+
+// --- Modal Entrance Animation (Rise-Up) ---
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes overlayFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.modal-overlay {
+  animation: overlayFadeIn 0.2s ease-out both;
+}
+
+.animate-in {
+  animation: modalEnter 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.tab-content-animate {
+  animation: fadeInContent 0.18s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+// --- Underline Tab Navigation (Linear/Notion Style) ---
+.tab-nav {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+  padding-bottom: 0;
+}
+
+.tab-btn {
+  position: relative;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(148, 163, 184, 1);
+  background: transparent;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  transition: color 0.18s ease, background 0.18s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+
+  &:hover:not(.tab-active) {
+    color: rgba(226, 232, 240, 1);
+    background: rgba(30, 41, 59, 0.5);
+  }
+
+  // Active underline indicator
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 8px;
+    right: 8px;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
+    background: transparent;
+    transition: background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  &.tab-active {
+    color: rgba(56, 189, 248, 1);
+
+    &::after {
+      background: rgba(56, 189, 248, 1);
+      box-shadow: 0 0 8px rgba(56, 189, 248, 0.35);
+    }
+  }
+
+  // Error/completion indicators
+  .tab-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    &.error {
+      background: #f43f5e;
+      box-shadow: 0 0 6px rgba(244, 63, 94, 0.5);
+      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+    }
+
+    &.complete {
+      background: #10b981;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.4);
+    }
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+// --- Premium Form Field Styling ---
+.form-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 8px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: rgba(148, 163, 184, 0.7);
+  }
+
+  .section-icon {
+    width: 16px;
+    height: 16px;
+    color: rgba(56, 189, 248, 0.5);
+  }
+}
+
+// Enhanced input focus glow
+.form-input {
+  transition: border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.15s ease;
+
+  &:focus {
+    border-color: rgba(56, 189, 248, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.08),
+      0 0 12px rgba(56, 189, 248, 0.06);
+    background: rgba(2, 6, 23, 0.95);
+  }
+
+  &.input-error {
+    border-color: rgba(244, 63, 94, 0.5) !important;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.08);
+  }
+}
+
+// Primary field emphasis
+.field-primary .form-input {
+  font-size: 13px;
+  padding: 10px 14px;
+}
+
+// --- Modern Toggle Switch (Spring Physics) ---
+.custom-toggle {
+  width: 36px;
+  height: 20px;
+  border-radius: 9999px;
+  background: rgba(30, 41, 59, 0.9);
+  border: 1px solid rgba(71, 85, 105, 0.6);
+  position: relative;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  .toggle-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background: #94a3b8;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  &.active {
+    background: linear-gradient(135deg, #0ea5e9 0%, #38bdf8 100%);
+    border-color: rgba(56, 189, 248, 0.6);
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.3);
+
+    .toggle-thumb {
+      left: 18px;
+      background: #ffffff;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+    }
+  }
+}
+
+// --- Toggle Card Unified Styling ---
+.toggle-card {
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(51, 65, 85, 0.5);
+  background: rgba(2, 6, 23, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s ease;
+
+  &:hover:not(.toggle-card-active) {
+    border-color: rgba(71, 85, 105, 0.8);
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  &.toggle-card-active {
+    background: rgba(14, 165, 233, 0.08);
+    border-color: rgba(56, 189, 248, 0.35);
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.06);
+  }
+
+  .toggle-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    border: 1px solid rgba(51, 65, 85, 0.5);
+    background: rgba(15, 23, 42, 0.8);
+    color: rgba(148, 163, 184, 1);
+    transition: all 0.2s ease;
+  }
+
+  &.toggle-card-active .toggle-card-icon {
+    background: rgba(14, 165, 233, 0.15);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: rgba(56, 189, 248, 1);
+  }
+
+  .toggle-card-status {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 4px;
+    letter-spacing: 0.02em;
+  }
+}
+
+// --- Custom Select Integration Overrides Inside Modal ---
+:host ::ng-deep {
+  .custom-select-container {
+    width: 100% !important;
+
+    .custom-select-trigger {
+      background: rgba(2, 6, 23, 0.8) !important;
+      border: 1px solid rgba(51, 65, 85, 0.8) !important;
+      border-radius: 12px !important;
+      padding: 8px 12px !important;
+      height: 38px !important;
+      min-height: 38px !important;
+      color: #f1f5f9 !important;
+      font-size: 0.75rem !important;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+
+      &:hover {
+        background: rgba(15, 23, 42, 0.95) !important;
+        border-color: rgba(56, 189, 248, 0.35) !important;
+      }
+
+      &.is-active {
+        border-color: rgba(56, 189, 248, 0.5) !important;
+        box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.08), 0 0 10px rgba(56, 189, 248, 0.08) !important;
+      }
+    }
+
+    .custom-select-menu {
+      z-index: 150 !important;
+      background: #0f172a !important;
+      border: 1px solid rgba(56, 189, 248, 0.3) !important;
+      border-radius: 12px !important;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8) !important;
+      width: 100% !important;
+
+      .options-list {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(56, 189, 248, 0.3) transparent;
+
+        &::-webkit-scrollbar {
+          width: 4px;
+        }
+
+        &::-webkit-scrollbar-thumb {
+          background: rgba(56, 189, 248, 0.3);
+          border-radius: 9999px;
+        }
+      }
+    }
+  }
+}
+
+// --- Sleek Scrollbar ---
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(56, 189, 248, 0.2);
+    border-radius: 9999px;
+
+    &:hover {
+      background: rgba(56, 189, 248, 0.4);
+    }
+  }
+}
+
+// --- Footer Progress Bar ---
+.progress-bar-track {
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(30, 41, 59, 0.8);
+  overflow: hidden;
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, #0ea5e9, #38bdf8);
+    transition: width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+// --- Save Button Hover Breathe ---
+.btn-save {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 8px 24px rgba(14, 165, 233, 0.25),
+      0 0 0 1px rgba(56, 189, 248, 0.2);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0) scale(0.98);
+  }
+}
