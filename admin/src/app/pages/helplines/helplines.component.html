@@ -1,20 +1,26 @@
-<div class="p-2 w-full flex flex-col gap-4">
+<div class="p-2 w-full flex flex-col gap-5">
 
-  <!-- --- 0. Top Header Banner --- -->
-  <div class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl animate-in">
-    <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 w-fit">
-        <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
-        <span>National Emergency Roster</span>
+  <!-- --- 0. Top Header Command Banner --- -->
+  <div
+    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-6 gap-6 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl animate-in">
+    <div class="flex flex-col gap-1.5">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-red-500/30 bg-red-500/10 text-xs font-semibold text-red-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-red-400 animate-ping"></span>
+        <span class="tracking-wide uppercase text-[10px]">National Emergency Dispatch & Hotline Telemetry</span>
       </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">Emergency Helplines & Legal Hotlines</h1>
-      <p class="text-xs text-slate-400">
-        Configure emergency toll-free numbers, Women Safety desks, Cyber Crime escalation channels, and Legal Aid hotlines.
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-100 tracking-tight">Emergency Helplines & Crisis Command
+      </h1>
+      <p class="text-xs text-slate-400 max-w-2xl">
+        Monitor operational health of life-safety emergency lines (112, 1091), cyber fraud golden-hour routing (1930),
+        and national statutory legal aid tele-desks (15100).
       </p>
     </div>
 
     <div class="flex flex-wrap items-center gap-2.5">
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="exportCSV()" [adminTooltip]="'Download helpline directory as CSV file'"
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold"
+        (click)="exportCSV()"
+        [adminTooltip]="'Download complete emergency helpline roster with operational schedules as CSV'"
         tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -24,177 +30,399 @@
         <span>Export CSV</span>
       </button>
 
-      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="fetchHelplines()"
-        [adminTooltip]="'Sync live helpline feed from backend database'" tooltipPosition="bottom">
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold"
+        (click)="fetchHelplines()"
+        [adminTooltip]="'Sync real-time line telemetry and operational metrics from database'" tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          [class.animate-spin]="isLoading">
+          [class.animate-spin]="isLoading()">
           <polyline points="1 4 1 10 7 10"></polyline>
           <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
         </svg>
-        <span>Refresh</span>
+        <span>Live Sync</span>
       </button>
 
-      <button class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold" (click)="openCreateModal()"
-        [adminTooltip]="'Register a new toll-free helpline number in the system'" tooltipPosition="bottom">
+      <button class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-xs font-semibold"
+        (click)="openCreateModal()"
+        [adminTooltip]="'Register a new toll-free hotline into the national emergency directory'"
+        tooltipPosition="bottom">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="12" y1="5" x2="12" y2="19"></line>
           <line x1="5" y1="12" x2="19" y2="12"></line>
         </svg>
-        <span>Add Helpline</span>
+        <span>Register Hotline</span>
       </button>
     </div>
   </div>
 
-  <!-- --- 1. KPI Metrics Grid --- -->
+  <!-- --- 1. Bento-Grid Telemetry Header --- -->
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+    <!-- P0 Critical SOS -->
+    <div
+      class="glass-card p-4 rounded-xl border border-red-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-red-500/40 transition-all cursor-default"
+      [adminTooltip]="'Life safety emergency lines with zero-wait routing priority (112, 1091, 1098)'"
+      tooltipPosition="top">
+      <div
+        class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center font-bold">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path
-            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-          </path>
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
       </div>
       <div class="flex flex-col">
-        @if (isLoading) {
+        @if (isLoading() && isInitialLoad()) {
         <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="14px" />
         } @else {
-        <span class="text-xl font-extrabold text-slate-100">{{ totalCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Total Helplines</span>
+        <span class="text-2xl font-extrabold text-red-400">{{ metrics().p0Critical }} Lines</span>
+        <span class="text-xs text-slate-400 font-medium">P0 Critical Life SOS (112, 1091)</span>
         }
       </div>
     </div>
 
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold">
+    <!-- P1 Urgent Cyber & Fraud -->
+    <div
+      class="glass-card p-4 rounded-xl border border-amber-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/40 transition-all cursor-default"
+      [adminTooltip]="'Urgent financial crime and cyber fraud reporting desks (1930)'" tooltipPosition="top">
+      <div
+        class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+      </div>
+      <div class="flex flex-col">
+        @if (isLoading() && isInitialLoad()) {
+        <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="14px" />
+        } @else {
+        <span class="text-2xl font-extrabold text-amber-400">{{ metrics().p1Urgent }} Lines</span>
+        <span class="text-xs text-slate-400 font-medium">P1 Urgent Cyber / Fraud (1930)</span>
+        }
+      </div>
+    </div>
+
+    <!-- P2 Legal Aid & Rights -->
+    <div
+      class="glass-card p-4 rounded-xl border border-sky-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-sky-500/40 transition-all cursor-default"
+      [adminTooltip]="'Statutory legal aid and tele-law consultation lines (15100, 14468)'" tooltipPosition="top">
+      <div
+        class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center font-bold">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
+        </svg>
+      </div>
+      <div class="flex flex-col">
+        @if (isLoading() && isInitialLoad()) {
+        <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="14px" />
+        } @else {
+        <span class="text-2xl font-extrabold text-sky-400">{{ metrics().p2Advisory }} Lines</span>
+        <span class="text-xs text-slate-400 font-medium">P2 Advisory Legal Aid (15100)</span>
+        }
+      </div>
+    </div>
+
+    <!-- Active 24/7 Line Health -->
+    <div
+      class="glass-card p-4 rounded-xl border border-emerald-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/40 transition-all cursor-default"
+      [adminTooltip]="'Real-time ratio of operational lines vs. maintenance lines'" tooltipPosition="top">
+      <div
+        class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
         </svg>
       </div>
       <div class="flex flex-col">
-        @if (isLoading) {
+        @if (isLoading() && isInitialLoad()) {
         <admin-skeleton width="60px" height="24px" />
+        <admin-skeleton width="100px" height="14px" />
         } @else {
-        <span class="text-xl font-extrabold text-emerald-400">{{ activeCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Active 24/7 Lines</span>
-        }
-      </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-sky-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="60px" height="24px" />
-        } @else {
-        <span class="text-xl font-extrabold text-sky-400">{{ emergencyCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Emergency & Cyber Desks</span>
-        }
-      </div>
-    </div>
-
-    <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-red-500/30 transition-all">
-      <div class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-        </svg>
-      </div>
-      <div class="flex flex-col">
-        @if (isLoading) {
-        <admin-skeleton width="60px" height="24px" />
-        } @else {
-        <span class="text-xl font-extrabold text-red-400">{{ inactiveCount }}</span>
-        <span class="text-xs text-slate-400 font-medium">Offline Lines</span>
+        <span class="text-2xl font-extrabold text-emerald-400">{{ metrics().active }} / {{ metrics().total }}</span>
+        <span class="text-xs text-slate-400 font-medium">Operational 24/7 Carrier Dispatch</span>
         }
       </div>
     </div>
   </div>
 
-  <!-- --- 2. Filter & Search Controls --- -->
-  <div class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
+  <!-- --- 2. Advanced Filter & Action Toolbar --- -->
+  <div
+    class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/60 backdrop-blur-md flex flex-wrap items-center justify-between gap-3 animate-in">
     <div class="search-box flex-1 min-w-[280px]">
-      <input type="text" class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-sm" placeholder="Search helpline title, phone number, or description..."
-        [(ngModel)]="searchQuery" [adminTooltip]="'Type keyword or toll-free number to filter'" tooltipPosition="top" />
+      <input type="text"
+        class="form-input w-full bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-400 rounded-lg text-xs"
+        placeholder="Search helpline title, emergency number (e.g. 112, 1930), or state..." [value]="searchQuery()"
+        (input)="searchQuery.set($any($event.target).value)" [adminTooltip]="'Filter live emergency roster by keywords'"
+        tooltipPosition="top" />
     </div>
 
-    <div class="flex items-center gap-2.5">
-      <select class="form-select bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2 text-xs min-w-[180px]" [(ngModel)]="selectedCategory"
-        [adminTooltip]="'Filter helplines by category'" tooltipPosition="top">
-        @for (cat of categories; track cat.value) {
-        <option [value]="cat.value">{{ cat.label }}</option>
-        }
-      </select>
+    <div class="flex items-center gap-2.5 flex-wrap">
+      <admin-select [options]="priorityOptions" [value]="selectedPriority()"
+        (valueChange)="selectedPriority.set($event); onFilterChange();" minWidth="170px"
+        [adminTooltip]="'Filter by severity priority tier (P0 Life SOS, P1 Cyber Fraud, P2 Legal Aid)'"
+        tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="categoryOptions" [value]="selectedCategory()"
+        (valueChange)="selectedCategory.set($event); onFilterChange();" minWidth="160px"
+        [adminTooltip]="'Filter by category domain'" tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="stateOptions" [value]="selectedState()"
+        (valueChange)="selectedState.set($event); onFilterChange();" minWidth="150px"
+        [adminTooltip]="'Filter by state jurisdiction scope'" tooltipPosition="top">
+      </admin-select>
+
+      <admin-select [options]="statusOptions" [value]="selectedStatus()"
+        (valueChange)="selectedStatus.set($event); onFilterChange();" minWidth="140px"
+        [adminTooltip]="'Filter by carrier operational status'" tooltipPosition="top">
+      </admin-select>
+
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
+        (click)="resetFilters()" [adminTooltip]="'Reset search and all active filters'" tooltipPosition="top">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="1 4 1 10 7 10"></polyline>
+          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+        </svg>
+        <span>Reset</span>
+      </button>
     </div>
   </div>
+
+  <!-- Bulk Action Bar when items selected -->
+  @if (selectedIds().size > 0) {
+  <div
+    class="glass-card p-3 rounded-xl border border-sky-500/30 bg-sky-950/40 backdrop-blur-md flex items-center justify-between gap-4 animate-in">
+    <div class="flex items-center gap-2 text-xs font-semibold text-sky-200">
+      <span
+        class="w-5 h-5 rounded-full bg-sky-500 text-slate-950 flex items-center justify-center font-bold text-[10px]">{{
+        selectedIds().size }}</span>
+      <span>Helpline line(s) selected for bulk batch action:</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button class="btn btn-sm btn-success text-xs font-semibold flex items-center gap-1 px-3 py-1.5"
+        (click)="bulkSetStatus(true)" [adminTooltip]="'Activate selected helplines across all citizen SOS hubs'"
+        tooltipPosition="top">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span>Set Active (24/7)</span>
+      </button>
+
+      <button class="btn btn-sm btn-danger text-xs font-semibold flex items-center gap-1 px-3 py-1.5"
+        (click)="bulkSetStatus(false)"
+        [adminTooltip]="'Mark selected helplines as offline / undergoing carrier maintenance'" tooltipPosition="top">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="15" y1="9" x2="9" y2="15"></line>
+          <line x1="9" y1="9" x2="15" y2="15"></line>
+        </svg>
+        <span>Set Offline</span>
+      </button>
+    </div>
+  </div>
+  }
 
   <!-- --- 3. Helplines Data Table --- -->
-  <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
-    <div class="data-table-wrapper overflow-x-auto min-h-[360px]">
+  <div
+    class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto min-h-[380px]">
       <table class="data-table w-full text-left border-collapse">
         <thead>
-          <tr class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
-            <th class="p-3.5">Helpline Service Title</th>
-            <th class="p-3.5">Toll-Free Number</th>
-            <th class="p-3.5">Category</th>
-            <th class="p-3.5">Description & Purpose</th>
-            <th class="p-3.5">Status</th>
+          <tr
+            class="border-b border-slate-800 bg-slate-900/90 text-xs uppercase tracking-wider text-slate-400 font-semibold">
+            <th class="p-3.5 w-10 text-center">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll($any($event.target).checked)"
+                class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0"
+                [adminTooltip]="'Select / deselect all visible lines'" tooltipPosition="top" />
+            </th>
+            <th class="p-3.5">Helpline Title & Domain</th>
+            <th class="p-3.5">Toll-Free / Number</th>
+            <th class="p-3.5">Priority Tier</th>
+            <th class="p-3.5">Jurisdiction Scope</th>
+            <th class="p-3.5">Operating Schedule</th>
+            <th class="p-3.5">Supported Languages</th>
+            <th class="p-3.5">Operational Health</th>
             <th class="p-3.5 text-right">Actions</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-slate-800/60 text-xs">
-          @if (isLoading) {
-          @for (item of [1,2,3,4,5]; track $index) {
+          @if (isLoading()) {
+          @for (item of [1,2,3,4,5,6]; track $index) {
           <tr class="hover:bg-slate-800/30">
-            <td class="p-3.5"><admin-skeleton width="180px" height="16px" /></td>
-            <td class="p-3.5"><admin-skeleton width="110px" height="16px" /></td>
-            <td class="p-3.5"><admin-skeleton width="100px" height="22px" borderRadius="12px" /></td>
-            <td class="p-3.5"><admin-skeleton width="240px" height="16px" /></td>
-            <td class="p-3.5"><admin-skeleton width="70px" height="22px" borderRadius="12px" /></td>
-            <td class="p-3.5 text-right"><admin-skeleton width="120px" height="28px" borderRadius="6px" /></td>
+            <td class="p-3.5 text-center"><admin-skeleton width="16px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="220px" height="18px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="24px" borderRadius="6px" /></td>
+            <td class="p-3.5"><admin-skeleton width="110px" height="22px" borderRadius="12px" /></td>
+            <td class="p-3.5"><admin-skeleton width="100px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="120px" height="16px" /></td>
+            <td class="p-3.5"><admin-skeleton width="90px" height="18px" /></td>
+            <td class="p-3.5"><admin-skeleton width="80px" height="22px" borderRadius="12px" /></td>
+            <td class="p-3.5 text-right"><admin-skeleton width="140px" height="28px" borderRadius="6px" /></td>
           </tr>
           }
           } @else {
-          @for (h of filteredHelplines; track h._id || h.id || h.number) {
-          <tr class="hover:bg-slate-800/40 transition-colors">
+          @for (h of filteredHelplines(); track $index) {
+          <tr class="hover:bg-slate-800/40 transition-colors"
+            [ngClass]="{ 'bg-sky-500/10': selectedIds().has(h._id || h.id || '') }">
+            <td class="p-3.5 text-center">
+              <input type="checkbox" [checked]="selectedIds().has(h._id || h.id || '')"
+                (change)="toggleSelectOne(h._id || h.id || '')"
+                class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-0"
+                [adminTooltip]="'Select ' + (h.name || h.title)" tooltipPosition="right" />
+            </td>
             <td class="p-3.5 font-bold text-slate-100">
-              <div class="flex items-center gap-2">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-amber-400">
-                  <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                  </path>
-                </svg>
-                <span>{{ h.name || h.title || 'Emergency Helpline' }}</span>
+              <div class="flex items-center gap-2.5">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center font-bold text-xs" [ngClass]="{
+                    'bg-red-500/10 text-red-400 border border-red-500/30': h.priorityTier === 'P0_CRITICAL',
+                    'bg-amber-500/10 text-amber-400 border border-amber-500/30': h.priorityTier === 'P1_URGENT',
+                    'bg-sky-500/10 text-sky-400 border border-sky-500/30': !h.priorityTier || h.priorityTier === 'P2_ADVISORY'
+                  }">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                    </path>
+                  </svg>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-slate-100 font-bold hover:text-sky-300 cursor-pointer" (click)="openEditModal(h)">
+                    {{ h.name || h.title }}
+                  </span>
+                  <span class="text-[10px] text-slate-400 truncate max-w-[240px]">{{ h.description || h.category
+                    }}</span>
+                </div>
               </div>
             </td>
-            <td class="p-3.5 font-mono text-amber-400 font-bold text-sm">{{ h.number || h.phone || '112' }}</td>
+
+            <!-- Toll-Free / Number -->
             <td class="p-3.5">
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border bg-sky-500/10 text-sky-400 border-sky-500/30 flex items-center gap-1 w-fit">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
-                  <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="font-mono text-amber-300 font-extrabold text-sm tracking-wide bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 select-all cursor-pointer"
+                  (click)="copyToClipboard(h.number || h.phone || '112', 'Emergency Number')"
+                  [adminTooltip]="'Click to copy emergency number to clipboard'" tooltipPosition="top">
+                  {{ h.number || h.phone || '112' }}
+                </span>
+                <button class="text-slate-500 hover:text-slate-200 transition-colors p-1"
+                  (click)="copyToClipboard(h.number || h.phone || '112', 'Emergency Number')"
+                  [adminTooltip]="'Copy number'" tooltipPosition="top">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
+                </button>
+              </div>
+            </td>
+
+            <!-- Priority Severity Tier -->
+            <td class="p-3.5">
+              @if (h.priorityTier === 'P0_CRITICAL') {
+              <span
+                class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-red-500/15 text-red-300 border-red-500/40 flex items-center gap-1.5 w-fit"
+                [adminTooltip]="'Critical Tier: Dispatched to immediate life-safety SOS responders'"
+                tooltipPosition="top">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-400 animate-ping"></span>
+                <span>P0 Critical SOS</span>
+              </span>
+              } @else if (h.priorityTier === 'P1_URGENT') {
+              <span
+                class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-amber-500/15 text-amber-300 border-amber-500/40 flex items-center gap-1 w-fit"
+                [adminTooltip]="'Urgent Tier: Financial crime freeze and cyber fraud golden-hour desk'"
+                tooltipPosition="top">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
                 </svg>
-                <span>{{ h.category || 'General' }}</span>
+                <span>P1 Cyber / Fraud</span>
+              </span>
+              } @else {
+              <span
+                class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-sky-500/15 text-sky-300 border-sky-500/40 flex items-center gap-1 w-fit"
+                [adminTooltip]="'Advisory Tier: Statutory legal counseling & free representation'"
+                tooltipPosition="top">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
+                </svg>
+                <span>P2 Legal Aid</span>
+              </span>
+              }
+            </td>
+
+            <!-- Jurisdiction Scope -->
+            <td class="p-3.5 text-xs text-slate-300">
+              <span
+                class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1 w-fit">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                  class="text-sky-400">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                  <circle cx="12" cy="10" r="3"></circle>
+                </svg>
+                <span>{{ h.state || 'All India' }}</span>
               </span>
             </td>
-            <td class="p-3.5 text-xs text-slate-400 truncate max-w-[320px]" [title]="h.description">{{ h.description || 'N/A' }}</td>
+
+            <!-- Operating Schedule -->
+            <td class="p-3.5 text-xs text-slate-300 font-medium">
+              @if (h.is24x7 !== false) {
+              <span class="text-emerald-400 font-bold flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                <span>24/7 Continuous</span>
+              </span>
+              } @else {
+              <span class="text-slate-300 font-mono text-[11px]">{{ h.operatingHours || '09:30 AM - 05:30 PM' }}</span>
+              }
+            </td>
+
+            <!-- Supported Languages -->
+            <td class="p-3.5 text-xs text-slate-400">
+              <div class="flex items-center gap-1 flex-wrap max-w-[150px]">
+                @if (h.languages && h.languages.length > 0) {
+                @for (lang of h.languages; track lang) {
+                <span
+                  class="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px] border border-slate-700/60">{{
+                  lang }}</span>
+                }
+                } @else {
+                <span
+                  class="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px] border border-slate-700/60">English</span>
+                <span
+                  class="px-1.5 py-0.5 rounded bg-slate-800/80 text-slate-300 text-[10px] border border-slate-700/60">Hindi</span>
+                }
+              </div>
+            </td>
+
+            <!-- Status & Verification Telemetry -->
             <td class="p-3.5">
-              <span class="px-2.5 py-1 rounded-full text-[11px] font-semibold border flex items-center gap-1.5 w-fit"
-                [ngClass]="h.isActive !== false ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'">
-                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="h.isActive !== false ? 'bg-emerald-400 animate-ping' : 'bg-red-400'"></span>
-                <span>{{ h.isActive !== false ? 'Active Line' : 'Offline' }}</span>
-              </span>
+              <div class="flex flex-col gap-1">
+                <span
+                  class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border flex items-center gap-1.5 w-fit"
+                  [ngClass]="h.isActive !== false ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-red-500/10 text-red-400 border-red-500/30'"
+                  [adminTooltip]="h.isActive !== false ? 'Carrier line is live and responding to dispatch' : 'Carrier line is offline for maintenance'"
+                  tooltipPosition="top">
+                  <span class="w-1.5 h-1.5 rounded-full"
+                    [ngClass]="h.isActive !== false ? 'bg-emerald-400' : 'bg-red-400'"></span>
+                  <span>{{ h.isActive !== false ? 'Operational' : 'Offline' }}</span>
+                </span>
+                <span class="text-[9px] text-slate-500 font-mono">
+                  Ping: {{ h.lastVerifiedAt ? (h.lastVerifiedAt | date:'shortDate') : 'Pending' }}
+                </span>
+              </div>
             </td>
+
+            <!-- Actions -->
             <td class="p-3.5 text-right">
               <div class="flex items-center justify-end gap-1.5">
+                <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="openPingModal(h)"
+                  [adminTooltip]="'Record live carrier line verification dial test'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="text-amber-400">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                  </svg>
+                </button>
+
                 <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="openEditModal(h)"
-                  [adminTooltip]="'Edit helpline information and configuration'" tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  [adminTooltip]="'Edit emergency hotline schedule & routing'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
                   </svg>
@@ -202,17 +430,17 @@
 
                 <button class="btn btn-sm text-xs p-1.5" [class.btn-danger]="h.isActive !== false"
                   [class.btn-success]="h.isActive === false" (click)="toggleActive(h)"
-                  [adminTooltip]="h.isActive !== false ? 'Deactivate helpline from citizen apps' : 'Activate helpline for citizen emergency drawer'"
+                  [adminTooltip]="h.isActive !== false ? 'Set line offline for maintenance' : 'Restore line to active status'"
                   tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
                     <line x1="12" y1="2" x2="12" y2="12"></line>
                   </svg>
                 </button>
 
                 <button class="btn btn-danger btn-sm text-xs p-1.5" (click)="openDeleteModal(h)"
-                  [adminTooltip]="'Delete helpline record permanently'" tooltipPosition="top">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  [adminTooltip]="'Permanently delete helpline record'" tooltipPosition="top">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <polyline points="3 6 5 6 21 6"></polyline>
                     <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                   </svg>
@@ -222,16 +450,16 @@
           </tr>
           } @empty {
           <tr>
-            <td colspan="6" class="text-center py-8 text-slate-400 text-sm">
+            <td colspan="9" class="text-center py-12 text-slate-400 text-sm">
               <div class="flex flex-col items-center justify-center">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  class="mb-2 text-slate-500">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
+                  class="mb-2 text-slate-600">
                   <path
                     d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
                   </path>
                 </svg>
-                <p class="font-bold text-slate-200 text-sm">No helpline records found.</p>
-                <p class="text-xs text-slate-400 mt-1">Try resetting your search query or add a new helpline.</p>
+                <p class="font-bold text-slate-200 text-sm">No emergency helplines match current criteria.</p>
+                <p class="text-xs text-slate-500 mt-1">Try resetting your filters or onboard a new emergency line.</p>
               </div>
             </td>
           </tr>
@@ -244,11 +472,26 @@
 
   <!-- --- 4. Create / Edit Modal Drawer --- -->
   @if (isModalOpen) {
-  <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in" (click)="closeModal()">
-    <div class="glass-card max-w-md w-full rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4" (click)="$event.stopPropagation()">
+  <div class="fixed inset-0 z-[1000] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4 animate-in"
+    (click)="closeModal()">
+    <div
+      class="glass-card max-w-lg w-full rounded-2xl border border-white/10 bg-slate-900/95 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4 max-h-[90vh] overflow-y-auto"
+      (click)="$event.stopPropagation()">
       <div class="modal-header flex items-center justify-between pb-3 border-b border-slate-800">
-        <h3 class="text-lg font-bold text-slate-100">{{ isEditMode ? 'Edit Helpline Details' : 'New Helpline Registration' }}</h3>
-        <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="closeModal()">
+        <div class="flex items-center gap-2">
+          <div
+            class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+              </path>
+            </svg>
+          </div>
+          <h3 class="text-base font-bold text-slate-100">{{ isEditMode ? 'Edit Emergency Hotline Configuration' :
+            'Onboard Emergency Dispatch Hotline' }}</h3>
+        </div>
+        <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="closeModal()"
+          [adminTooltip]="'Close configuration modal'" tooltipPosition="left">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="18" y1="6" x2="6" y2="18"></line>
             <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -258,54 +501,188 @@
 
       <div class="modal-body flex flex-col gap-3 text-xs">
         <div class="flex flex-col gap-1">
-          <label class="font-semibold text-slate-300">Helpline Title *</label>
-          <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" placeholder="e.g. National Cyber Crime Helpline"
-            [(ngModel)]="formData.name" />
+          <label class="font-semibold text-slate-300">Helpline Service Title *</label>
+          <input type="text"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2.5 text-xs"
+            placeholder="e.g. National Cyber Crime Reporting Helpline" [(ngModel)]="formData.name" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold text-slate-300">Primary Toll-Free / Number *</label>
+            <input type="text"
+              class="form-input bg-slate-800/80 border-slate-700/80 text-amber-300 font-mono font-bold rounded-lg p-2.5 text-xs"
+              placeholder="e.g. 1930 or 112" [(ngModel)]="formData.number" />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold text-slate-300">Priority Severity Tier *</label>
+            <select class="form-select bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2.5 text-xs"
+              [(ngModel)]="formData.priorityTier">
+              <option value="P0_CRITICAL">P0 - Critical Life Safety (112, 1091)</option>
+              <option value="P1_URGENT">P1 - Urgent Cyber / Fraud (1930)</option>
+              <option value="P2_ADVISORY">P2 - Advisory & Legal Aid (15100)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold text-slate-300">Category Domain *</label>
+            <select class="form-select bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2.5 text-xs"
+              [(ngModel)]="formData.category">
+              <option value="General">General / Public Services</option>
+              <option value="Women Safety">Women Safety & Crisis</option>
+              <option value="Cyber">Cyber Crime & Financial Fraud</option>
+              <option value="Child Care">Child Protection & Care</option>
+              <option value="Family">Family & Senior Citizens</option>
+              <option value="LegalAid">Legal Aid & Rights (NALSA)</option>
+            </select>
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <label class="font-semibold text-slate-300">Jurisdiction Scope *</label>
+            <select class="form-select bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2.5 text-xs"
+              [(ngModel)]="formData.state">
+              <option value="All India">National (All India)</option>
+              @for (st of stateOptions; track st.value) {
+              @if (st.value && st.value !== 'National') {
+              <option [value]="st.value">{{ st.label }}</option>
+              }
+              }
+            </select>
+          </div>
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="font-semibold text-slate-300">Toll-Free Phone Number *</label>
-          <input type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-amber-300 font-mono rounded-lg p-2" placeholder="e.g. 1930 or 1091"
-            [(ngModel)]="formData.number" />
+          <label class="font-semibold text-slate-300">Alternate / Backup Direct Numbers</label>
+          <input type="text"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-200 font-mono rounded-lg p-2.5 text-xs"
+            placeholder="Comma-separated backup numbers (e.g. 011-23388597, 1800-11-4000)"
+            [(ngModel)]="formData.alternateNumbersStr" />
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="font-semibold text-slate-300">Category *</label>
-          <select class="form-select bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2" [(ngModel)]="formData.category">
-            <option value="General">General / Public</option>
-            <option value="Women Safety">Women Safety</option>
-            <option value="Cyber">Cyber Crime</option>
-            <option value="Family">Family & Elder Support</option>
-            <option value="Child Care">Child Helpline</option>
-          </select>
+          <label class="font-semibold text-slate-300">Supported Languages</label>
+          <input type="text"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-200 rounded-lg p-2.5 text-xs"
+            placeholder="Comma-separated languages (e.g. English, Hindi, Tamil, Telugu)"
+            [(ngModel)]="formData.languagesStr" />
+        </div>
+
+        <div class="p-3 rounded-xl bg-slate-950/40 border border-slate-800 flex flex-col gap-2">
+          <div class="flex items-center justify-between">
+            <span class="font-semibold text-slate-200">24/7 Continuous Emergency Operations</span>
+            <input type="checkbox" id="is24x7Check"
+              class="rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-0"
+              [(ngModel)]="formData.is24x7" />
+          </div>
+          @if (!formData.is24x7) {
+          <div class="flex flex-col gap-1 mt-1">
+            <label class="text-[11px] text-slate-400">Operating Shift Hours (IST)</label>
+            <input type="text"
+              class="form-input bg-slate-800/80 border-slate-700/80 text-slate-200 rounded-lg p-2 text-xs"
+              placeholder="e.g. 09:30 AM - 05:30 PM (Mon-Fri)" [(ngModel)]="formData.operatingHours" />
+          </div>
+          }
         </div>
 
         <div class="flex flex-col gap-1">
-          <label class="font-semibold text-slate-300">Description & Guidance</label>
-          <textarea class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2 text-xs" style="height: 90px; resize: none;"
-            placeholder="Provide operational scope, eligibility, or emergency instructions..."
+          <label class="font-semibold text-slate-300">Description & Citizen Triage Guidance</label>
+          <textarea class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2.5 text-xs"
+            style="height: 75px; resize: none;"
+            placeholder="Detail the operational scope, eligibility, and citizen triage instructions..."
             [(ngModel)]="formData.description"></textarea>
         </div>
 
         <div class="flex items-center gap-2 mt-1">
-          <input type="checkbox" id="isActiveCheck" class="rounded border-slate-700 bg-slate-800" [(ngModel)]="formData.isActive" />
-          <label for="isActiveCheck" class="text-xs font-semibold text-slate-200 cursor-pointer">Set Helpline Active Immediately</label>
+          <input type="checkbox" id="isActiveCheck"
+            class="rounded border-slate-700 bg-slate-800 text-emerald-500 focus:ring-0"
+            [(ngModel)]="formData.isActive" />
+          <label for="isActiveCheck" class="text-xs font-semibold text-slate-200 cursor-pointer">Set hotline immediately
+            active in citizen SOS drawers</label>
         </div>
       </div>
 
       <div class="modal-footer flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
         <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="closeModal()">Cancel</button>
-        <button class="btn btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5" (click)="saveHelpline()" [disabled]="isSaving">
-          @if (isSaving) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="animate-spin">
+        <button class="btn btn-primary px-5 py-2 text-xs font-semibold flex items-center gap-1.5"
+          (click)="saveHelpline()" [disabled]="isSaving()">
+          @if (isSaving()) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="animate-spin">
             <polyline points="1 4 1 10 7 10"></polyline>
             <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
           </svg>
           }
-          <span>{{ isEditMode ? 'Save Changes' : 'Create Line' }}</span>
+          <span>{{ isEditMode ? 'Save Changes' : 'Onboard Helpline' }}</span>
         </button>
       </div>
     </div>
   </div>
   }
+
+  <!-- --- 5. Live Telemetry Ping Verification Modal --- -->
+  @if (pingModalItem) {
+  <div class="fixed inset-0 z-[1000] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-4 animate-in"
+    (click)="closePingModal()">
+    <div
+      class="glass-card max-w-md w-full rounded-2xl border border-amber-500/30 bg-slate-900/95 backdrop-blur-2xl shadow-2xl p-6 flex flex-col gap-4"
+      (click)="$event.stopPropagation()">
+      <div class="flex items-center gap-3 pb-3 border-b border-slate-800">
+        <div
+          class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+          </svg>
+        </div>
+        <div class="flex flex-col">
+          <h3 class="text-base font-bold text-slate-100">Live Carrier Heartbeat Dial Test</h3>
+          <span class="text-xs text-amber-300 font-mono font-bold">{{ pingModalItem.name }} ({{ pingModalItem.number
+            }})</span>
+        </div>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <p class="text-slate-300 leading-relaxed">
+          Log an official dial-test audit. This timestamp will update the national verification compliance ledger.
+        </p>
+
+        <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col gap-1.5 text-slate-300">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Jurisdiction:</span>
+            <span class="font-semibold text-slate-200">{{ pingModalItem.state || 'National' }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Schedule:</span>
+            <span class="text-emerald-400 font-semibold">{{ pingModalItem.is24x7 ? '24/7 Active' :
+              (pingModalItem.operatingHours || 'Shift') }}</span>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-1">
+          <label class="font-semibold text-slate-300">Audit & Dial Test Remarks</label>
+          <textarea class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 rounded-lg p-2.5 text-xs"
+            rows="3" [(ngModel)]="pingNotes" placeholder="Enter line test observations..."></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
+        <button class="btn btn-secondary px-4 py-2 text-xs font-semibold" (click)="closePingModal()">Cancel</button>
+        <button class="btn btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
+          (click)="executePing()" [disabled]="isPinging()">
+          @if (isPinging()) {
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            class="animate-spin">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          }
+          <span>Log Verified Heartbeat Ping</span>
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
 </div>
