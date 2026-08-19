@@ -1,5 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 export interface SelectOption {
   label: string;
@@ -12,7 +13,7 @@ export interface SelectOption {
 @Component({
   selector: 'admin-select',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipDirective],
   templateUrl: './select.component.html',
   styleUrl: './select.component.scss'
 })
@@ -22,10 +23,16 @@ export class SelectComponent implements OnInit, OnDestroy {
   @Input() placeholder: string = 'Select Option';
   @Input() width: string = 'auto';
   @Input() minWidth: string = '160px';
+  @Input() maxWidth?: string;
   @Input() icon?: string;
   @Input() dropPosition: 'down' | 'up' | 'auto' = 'auto';
   @Input() maxMenuHeight: string = '360px';
+  @Input() menuMinWidth: string = '200px';
+  @Input() menuMaxWidth: string = '340px';
   @Input() height?: string;
+  @Input() tooltip?: string;
+  @Input() tooltipPosition: 'top' | 'bottom' | 'left' | 'right' = 'top';
+  @Input() disabled: boolean = false;
 
   @Output() valueChange = new EventEmitter<any>();
 
@@ -123,12 +130,19 @@ export class SelectComponent implements OnInit, OnDestroy {
     return this.options.find(o => String(o.value ?? '') === String(this.value ?? ''));
   }
 
+  get triggerTooltip(): string {
+    if (this.tooltip) return this.tooltip;
+    if (this.selectedOption) return this.selectedOption.label;
+    return this.placeholder || '';
+  }
+
   isSelected(optValue: any): boolean {
     if (this.value === undefined || this.value === null) return false;
     return String(optValue ?? '') === String(this.value ?? '');
   }
 
   toggleOpen(): void {
+    if (this.disabled) return;
     this.isOpen = !this.isOpen;
     if (this.isOpen) {
       this.searchTerm = '';

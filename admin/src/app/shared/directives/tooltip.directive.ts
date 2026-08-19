@@ -18,8 +18,19 @@ export class TooltipDirective implements OnDestroy {
 
   private tooltipElement: HTMLElement | null = null;
   private showTimeout: any = null;
+  private scrollListener: (() => void) | null = null;
 
   constructor(private el: ElementRef, private renderer: Renderer2) { }
+
+  ngOnInit(): void {
+    this.scrollListener = () => {
+      if (this.tooltipElement || this.showTimeout) {
+        this.clearTimer();
+        this.removeTooltip();
+      }
+    };
+    window.addEventListener('scroll', this.scrollListener, true);
+  }
 
   @HostListener('mouseenter')
   onMouseEnter(): void {
@@ -32,7 +43,6 @@ export class TooltipDirective implements OnDestroy {
 
   @HostListener('mouseleave')
   @HostListener('click')
-  @HostListener('window:scroll')
   onMouseLeave(): void {
     this.clearTimer();
     this.removeTooltip();
@@ -47,6 +57,8 @@ export class TooltipDirective implements OnDestroy {
 
   private createTooltip(): void {
     this.removeTooltip(); // Ensure no duplicates
+    const activeTooltips = document.querySelectorAll('.admin-custom-tooltip');
+    activeTooltips.forEach(t => t.remove());
 
     this.tooltipElement = this.renderer.createElement('div');
     const textSpan = this.renderer.createElement('span');
@@ -62,6 +74,7 @@ export class TooltipDirective implements OnDestroy {
 
     let top = 0;
     let left = 0;
+    let effectivePosition = this.tooltipPosition;
 
     switch (this.tooltipPosition) {
       case 'top':
@@ -87,22 +100,54 @@ export class TooltipDirective implements OnDestroy {
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
 
+    // Horizontal Flip Protection for left/right positions
+    if (this.tooltipPosition === 'right' && hostPos.right + tooltipPos.width + 8 > viewportWidth - margin) {
+      left = hostPos.left - tooltipPos.width - 8;
+      effectivePosition = 'left';
+    } else if (this.tooltipPosition === 'left' && hostPos.left - tooltipPos.width - 8 < margin) {
+      left = hostPos.right + 8;
+      effectivePosition = 'right';
+    }
+
     if (left + tooltipPos.width > viewportWidth - margin) {
       left = viewportWidth - tooltipPos.width - margin;
     }
     if (left < margin) {
       left = margin;
     }
-    if (top < margin) {
+
+    // Vertical Flip Protection for top/bottom positions
+    if (top < margin && (this.tooltipPosition === 'top' || this.tooltipPosition === 'bottom')) {
       top = hostPos.bottom + 8;
-    }
-    if (top + tooltipPos.height > viewportHeight - margin) {
+      effectivePosition = 'bottom';
+    } else if (top + tooltipPos.height > viewportHeight - margin && (this.tooltipPosition === 'top' || this.tooltipPosition === 'bottom')) {
       top = hostPos.top - tooltipPos.height - 8;
+      effectivePosition = 'top';
     }
 
+    if (top < margin) {
+      top = margin;
+    } else if (top + tooltipPos.height > viewportHeight - margin) {
+      top = viewportHeight - tooltipPos.height - margin;
+    }
+
+    if (effectivePosition !== this.tooltipPosition) {
+      this.renderer.removeClass(this.tooltipElement, `tooltip-${this.tooltipPosition}`);
+      this.renderer.addClass(this.tooltipElement, `tooltip-${effectivePosition}`);
+    }
+
+    // Dynamic arrow alignment relative to the hovered element's center
+    const targetCenterX = hostPos.left + hostPos.width / 2;
+    const arrowLeft = Math.max(14, Math.min(tooltipPos.width - 14, targetCenterX - left));
+    this.renderer.setStyle(this.tooltipElement, '--arrow-left', `${arrowLeft}px`);
+
+    const targetCenterY = hostPos.top + hostPos.height / 2;
+    const arrowTop = Math.max(10, Math.min(tooltipPos.height - 10, targetCenterY - top));
+    this.renderer.setStyle(this.tooltipElement, '--arrow-top', `${arrowTop}px`);
+
     this.renderer.setStyle(this.tooltipElement, 'position', 'fixed');
-    this.renderer.setStyle(this.tooltipElement, 'top', `${top}px`);
-    this.renderer.setStyle(this.tooltipElement, 'left', `${left}px`);
+    this.renderer.setStyle(this.tooltipElement, 'top', `${Math.round(top)}px`);
+    this.renderer.setStyle(this.tooltipElement, 'left', `${Math.round(left)}px`);
     this.renderer.setStyle(this.tooltipElement, 'z-index', '99999');
   }
 
@@ -116,5 +161,8 @@ export class TooltipDirective implements OnDestroy {
   ngOnDestroy(): void {
     this.clearTimer();
     this.removeTooltip();
+    if (this.scrollListener) {
+      window.removeEventListener('scroll', this.scrollListener, true);
+    }
   }
 }

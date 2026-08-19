@@ -24,10 +24,12 @@ export class DateRangePickerComponent implements OnInit, OnDestroy {
   @Input() endDate = '';
   @Input() tooltip = 'Filter by custom date range bounds';
   @Input() activeColorClass = 'text-sky-400';
+  @Input() dropDirection: 'auto' | 'up' | 'down' = 'auto';
 
   @Output() rangeChange = new EventEmitter<DateRangeEvent>();
 
   isOpen = false;
+  opensUpward = false;
   selectedPresetLabel = '';
 
   private clickListener = (event: MouseEvent) => {
@@ -64,8 +66,28 @@ export class DateRangePickerComponent implements OnInit, OnDestroy {
   }
 
   togglePopover(): void {
+    if (!this.isOpen) {
+      this.calculateSmartPlacement();
+    }
     this.isOpen = !this.isOpen;
     this.cdr.markForCheck();
+  }
+
+  private calculateSmartPlacement(): void {
+    if (this.dropDirection === 'up') {
+      this.opensUpward = true;
+      return;
+    }
+    if (this.dropDirection === 'down') {
+      this.opensUpward = false;
+      return;
+    }
+    const rect = this.el.nativeElement.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const popoverHeight = 280;
+
+    this.opensUpward = spaceBelow < popoverHeight && spaceAbove > spaceBelow;
   }
 
   closePopover(): void {

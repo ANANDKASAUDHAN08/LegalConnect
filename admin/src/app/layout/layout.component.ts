@@ -1,6 +1,7 @@
-import { Component, ElementRef, HostListener } from '@angular/core';
+import { Component, ElementRef, HostListener, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router, NavigationEnd } from '@angular/router';
+import { filter, Subscription } from 'rxjs';
 import { AdminAuthService } from '../core/auth.service';
 import { TooltipDirective } from '../shared/directives/tooltip.directive';
 import { DialogComponent } from '../shared/components/dialog/dialog.component';
@@ -25,7 +26,10 @@ import { TwoFactorModalComponent } from '../shared/components/two-factor-modal/t
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'
 })
-export class LayoutComponent {
+export class LayoutComponent implements OnInit, OnDestroy {
+  @ViewChild('contentBody') contentBody?: ElementRef<HTMLElement>;
+  private routerSub?: Subscription;
+
   isCollapsed = false;
   showActivityDropdown = false;
 
@@ -35,11 +39,26 @@ export class LayoutComponent {
 
   constructor(
     private auth: AdminAuthService,
+    private router: Router,
     public themeService: AdminThemeService,
     public activityService: ActivityStreamService,
     public commandPalette: CommandPaletteService,
     private elementRef: ElementRef
   ) { }
+
+  ngOnInit(): void {
+    this.routerSub = this.router.events
+      .pipe(filter((event): event is NavigationEnd => event instanceof NavigationEnd))
+      .subscribe(() => {
+        if (this.contentBody?.nativeElement) {
+          this.contentBody.nativeElement.scrollTop = 0;
+        }
+      });
+  }
+
+  ngOnDestroy(): void {
+    this.routerSub?.unsubscribe();
+  }
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {

@@ -222,15 +222,59 @@ export interface ToggleFavoriteResponse {
 // LEGAL RESOURCES & HELPLINES DTOs
 // ═════════════════════════════════════════════════════════════════
 
+export interface LegalResourceFacilities {
+  hasEfiling?: boolean;
+  hasLADCS?: boolean;
+  hasVCRoom?: boolean;
+  hasLegalAidClinic?: boolean;
+  isWheelchairAccessible?: boolean;
+}
+
 export interface LegalResourceItem {
   _id?: string;
   id?: string;
-  title: string;
-  category: string;
-  description?: string;
-  fileUrl?: string;
-  externalUrl?: string;
+  name: string;
+  type: 'LegalAid' | 'Court' | 'GovernmentOffice' | 'PoliceStation' | 'Helpline' | string;
+  categories?: string[];
+  subcategories?: string[];
+  city: string;
+  district?: string;
+  state?: string;
+  pincode?: string;
+  pincodeCoverage?: string[];
+  address: string;
+  alternateAddress?: string;
+  contactNumber?: string[] | string;
+  faxNumber?: string[] | string;
+  email?: string[] | string;
+  website?: string;
+  operatingHours?: string;
+  lunchBreak?: string;
+  isOpenNow?: boolean;
+  isVerified?: boolean;
+  languages?: string[];
+  coordinates?: {
+    lat: number;
+    lng: number;
+  };
+  status?: 'approved' | 'pending' | string;
+  jurisdictionLevel?: 'National' | 'State' | 'District' | 'Taluka' | 'SpecialTribunal' | string;
+  parentAuthorityId?: string;
+  facilities?: LegalResourceFacilities;
+  isStateAuthority?: boolean;
+  isNationalAuthority?: boolean;
+  executiveChairman?: string;
+  memberSecretary?: string;
+  patronInChief?: string;
+  sclscChairman?: string;
+  sclscSecretary?: string;
+  sclscAddress?: string;
+  additionalStaff?: Array<{ name: string; role: string }>;
   tags?: string[];
+  lastAuditDate?: string | Date;
+  verificationExpiry?: string | Date;
+  verifiedByAdmin?: string;
+  auditNotes?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -239,11 +283,25 @@ export interface HelplineItem {
   _id?: string;
   id?: string;
   name: string;
+  title?: string;
   category: string;
   number: string;
+  phone?: string;
   description?: string;
-  state?: string;
+  priorityTier?: 'P0_CRITICAL' | 'P1_URGENT' | 'P2_ADVISORY';
+  isActive?: boolean;
   is24x7?: boolean;
+  operatingHours?: string;
+  operatingDays?: string[];
+  languages?: string[];
+  state?: string;
+  tollFree?: boolean;
+  alternateNumbers?: string[];
+  lastVerifiedAt?: string | Date;
+  verifiedBy?: string;
+  verificationNotes?: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface LegalTemplateItem {

@@ -4,5 +4,6 @@ export const environment = {
   smartLoadingThresholdMs: 150, // 150ms Stripe/Linear standard threshold to prevent loading flicker
   apiUrl: 'http://localhost:5001/api/admin',
   nodeUrl: 'http://localhost:5000/api/legal',
-  userAppUrl: 'http://localhost:4200'
+  userAppUrl: 'http://localhost:4200',
+  googleMapsApiKey: 'AIzaSyCbDolXO7Xj46w-Ty1NqG-2cqDr69nsu4s'
 };

@@ -127,29 +127,59 @@ export class AdminContentService {
     return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/resources/${id}`);
   }
 
+  validateResourceBatch(items: any[]): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.NODE_API}/admin/resources/batch-validate`, { items });
+  }
+
+  importResourceBatch(items: any[], duplicateStrategy: string = 'skip'): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.NODE_API}/admin/resources/batch-import`, { items, duplicateStrategy });
+  }
+
+  verifyResourceCycle(id: string, data: any = {}): Observable<ApiResponse<LegalResourceItem>> {
+    return this.http.patch<ApiResponse<LegalResourceItem>>(`${this.NODE_API}/admin/resources/${id}/verify-cycle`, data);
+  }
+
+  bulkUpdateResourceStatus(ids: string[], status: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/resources/bulk-status`, { ids, status });
+  }
+
+  bulkVerifyResourceCycles(ids: string[], notes?: string): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/resources/bulk-verify`, { ids, notes });
+  }
+
+  bulkDeleteResources(ids: string[]): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/resources/bulk-delete`, { ids });
+  }
+
   // -- Helplines & Emergency Directories --
-  getHelplines(): Observable<ApiResponse<HelplineItem[]>> {
-    if (!this.helplinesCache$) {
-      this.helplinesCache$ = this.http.get<ApiResponse<HelplineItem[]>>(`${this.NODE_API}/admin/helplines`).pipe(
-        shareReplay({ bufferSize: 1, refCount: true })
-      );
-    }
-    return this.helplinesCache$;
+  getHelplines(params: Record<string, any> = {}): Observable<ApiResponse<HelplineItem[]>> {
+    let httpParams = new HttpParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        httpParams = httpParams.set(key, params[key]);
+      }
+    });
+    return this.http.get<ApiResponse<HelplineItem[]>>(`${this.NODE_API}/admin/helplines`, { params: httpParams });
   }
 
   createHelpline(data: Partial<HelplineItem>): Observable<ApiResponse<HelplineItem>> {
-    this.helplinesCache$ = undefined;
     return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines`, data);
   }
 
   updateHelpline(id: string, data: Partial<HelplineItem>): Observable<ApiResponse<HelplineItem>> {
-    this.helplinesCache$ = undefined;
     return this.http.put<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}`, data);
   }
 
   deleteHelpline(id: string): Observable<ApiResponse<void>> {
-    this.helplinesCache$ = undefined;
     return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/${id}`);
+  }
+
+  verifyHelplinePing(id: string, data: any = {}): Observable<ApiResponse<HelplineItem>> {
+    return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}/verify-ping`, data);
+  }
+
+  bulkUpdateHelplineStatus(ids: string[], isActive: boolean): Observable<ApiResponse<void>> {
+    return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/bulk-status`, { ids, isActive });
   }
 
   // -- Template & Draft Catalog --

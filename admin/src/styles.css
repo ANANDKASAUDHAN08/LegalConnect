@@ -1130,22 +1130,27 @@ select:disabled {
 
 /* --- Custom Tooltip Overlay --- */
 .admin-custom-tooltip {
-  position: absolute;
-  z-index: 9999;
-  padding: 7px 13px;
+  position: fixed;
+  z-index: 99999;
+  padding: 6px 12px;
   background: rgba(15, 23, 42, 0.96);
-  backdrop-filter: blur(12px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: #e2e8f0;
-  border: 1px solid rgba(99, 102, 241, 0.2);
-  border-top: 2px solid rgba(99, 102, 241, 0.5);
+  border: 1px solid rgba(99, 102, 241, 0.28);
+  border-top: 2px solid rgba(99, 102, 241, 0.65);
   border-radius: 8px;
-  font-size: 0.7rem;
+  font-size: 0.72rem;
   font-weight: 500;
   line-height: 1.45;
-  white-space: nowrap;
-  max-width: 320px;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  width: max-content;
+  max-width: 360px;
+  box-sizing: border-box;
   pointer-events: none;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(99, 102, 241, 0.08);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(99, 102, 241, 0.12);
   animation: tooltip-fade-in 120ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -1154,7 +1159,7 @@ select:disabled {
   content: '';
   position: absolute;
   top: 100%;
-  left: 50%;
+  left: var(--arrow-left, 50%);
   transform: translateX(-50%);
   border: 5px solid transparent;
   border-top-color: rgba(15, 23, 42, 0.96);
@@ -1164,7 +1169,7 @@ select:disabled {
   content: '';
   position: absolute;
   bottom: 100%;
-  left: 50%;
+  left: var(--arrow-left, 50%);
   transform: translateX(-50%);
   border: 5px solid transparent;
   border-bottom-color: rgba(15, 23, 42, 0.96);
@@ -1174,7 +1179,7 @@ select:disabled {
   content: '';
   position: absolute;
   left: 100%;
-  top: 50%;
+  top: var(--arrow-top, 50%);
   transform: translateY(-50%);
   border: 5px solid transparent;
   border-left-color: rgba(15, 23, 42, 0.96);
@@ -1184,7 +1189,7 @@ select:disabled {
   content: '';
   position: absolute;
   right: 100%;
-  top: 50%;
+  top: var(--arrow-top, 50%);
   transform: translateY(-50%);
   border: 5px solid transparent;
   border-right-color: rgba(15, 23, 42, 0.96);
@@ -1312,6 +1317,7 @@ input::-webkit-credentials-auto-fill-button {
     opacity: 0;
     transform: translateY(8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -1344,4 +1350,71 @@ input::-webkit-credentials-auto-fill-button {
 /* --- Rotate Utility --- */
 .rotate-180 {
   transform: rotate(180deg);
+}
+
+/* ==========================================================================
+   Global Slide-Over Side Drawer System & Animations
+   ========================================================================== */
+@keyframes drawerBackdropFadeIn {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+
+  to {
+    opacity: 1;
+    backdrop-filter: blur(1px);
+    -webkit-backdrop-filter: blur(1px);
+  }
+}
+
+@keyframes drawerSlideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0.6;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawerSlideInLeft {
+  from {
+    transform: translateX(-100%);
+    opacity: 0.6;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* Universal Backdrop Animation for all Slide-Over Overlays */
+div[class*="fixed inset-0"][class*="z-[1000]"][class*="flex justify-end"],
+div[class*="fixed inset-0"][class*="z-[999]"][class*="flex justify-end"],
+.admin-drawer-overlay,
+.drawer-backdrop {
+  animation: drawerBackdropFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+  backdrop-filter: blur(1px) !important;
+  -webkit-backdrop-filter: blur(1px) !important;
+}
+
+/* Universal Slide-In Animation for all Right-Side Drawers across every page */
+div[class*="fixed inset-0"][class*="z-[1000]"][class*="flex justify-end"]>div,
+div[class*="fixed inset-0"][class*="z-[999]"][class*="flex justify-end"]>div,
+.admin-drawer-content,
+.drawer-panel,
+.drawer-content,
+.slide-in-from-right,
+.drawer-slide-in {
+  animation: drawerSlideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  will-change: transform, opacity;
+}
+
+.slide-in-from-left {
+  animation: drawerSlideInLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1) both !important;
+  will-change: transform, opacity;
 }

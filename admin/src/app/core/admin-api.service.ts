@@ -103,12 +103,20 @@ export class AdminApiService {
   createResource(data: any): Observable<any> { return this.content.createResource(data); }
   updateResource(id: any, data: any): Observable<any> { return this.content.updateResource(String(id), data); }
   deleteResource(id: any): Observable<any> { return this.content.deleteResource(String(id)); }
+  validateResourceBatch(items: any[]): Observable<any> { return this.content.validateResourceBatch(items); }
+  importResourceBatch(items: any[], duplicateStrategy: string = 'skip'): Observable<any> { return this.content.importResourceBatch(items, duplicateStrategy); }
+  verifyResourceCycle(id: any, data: any = {}): Observable<any> { return this.content.verifyResourceCycle(String(id), data); }
+  bulkUpdateResourceStatus(ids: string[], status: string): Observable<any> { return this.content.bulkUpdateResourceStatus(ids, status); }
+  bulkVerifyResourceCycles(ids: string[], notes?: string): Observable<any> { return this.content.bulkVerifyResourceCycles(ids, notes); }
+  bulkDeleteResources(ids: string[]): Observable<any> { return this.content.bulkDeleteResources(ids); }
 
   // -- Helplines Delegates --
-  getHelplines(params: any = {}): Observable<any> { return this.content.getHelplines(); }
+  getHelplines(params: any = {}): Observable<any> { return this.content.getHelplines(params); }
   createHelpline(data: any): Observable<any> { return this.content.createHelpline(data); }
   updateHelpline(id: any, data: any): Observable<any> { return this.content.updateHelpline(String(id), data); }
   deleteHelpline(id: any): Observable<any> { return this.content.deleteHelpline(String(id)); }
+  verifyHelplinePing(id: any, data: any = {}): Observable<any> { return this.content.verifyHelplinePing(String(id), data); }
+  bulkUpdateHelplineStatus(ids: string[], isActive: boolean): Observable<any> { return this.content.bulkUpdateHelplineStatus(ids, isActive); }
 
   // -- Templates Delegates --
   getTemplates(params: any = {}): Observable<any> { return this.content.getTemplates(params); }
