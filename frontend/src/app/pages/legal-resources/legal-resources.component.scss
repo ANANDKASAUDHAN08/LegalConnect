@@ -1,0 +1,610 @@
+:host {
+  display: block;
+}
+
+/* ==========================================================================
+   HERO AMBIENT BACKGROUND & MESH GLOW
+   ========================================================================== */
+
+.hero-gradient-wrapper {
+  position: relative;
+  z-index: 30;
+  overflow: visible;
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.08) 0%, rgba(99, 102, 241, 0) 70%),
+              radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.05) 0%, transparent 40%),
+              radial-gradient(circle at 90% 15%, rgba(16, 185, 129, 0.04) 0%, transparent 40%);
+}
+
+:host-context(.dark) .hero-gradient-wrapper {
+  background: radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.16) 0%, rgba(99, 102, 241, 0) 65%),
+              radial-gradient(circle at 15% 10%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
+              radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+              linear-gradient(180deg, rgba(15, 23, 42, 0.7) 0%, rgba(11, 15, 25, 1) 100%);
+}
+
+/* Subtle background grid matrix */
+.hero-grid-pattern {
+  background-image: radial-gradient(rgba(148, 163, 184, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+:host-context(.dark) .hero-grid-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+}
+
+/* ==========================================================================
+   LUXURY GLASSMORPHIC CARDS & TELEMETRY
+   ========================================================================== */
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.95);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+}
+
+:host-context(.dark) .glass-panel {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* ==========================================================================
+   LUXURY SKELETON SHIMMER SWEEP ANIMATION
+   ========================================================================== */
+
+.skeleton-shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.5) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmerSweep 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+  transform: skewX(-20deg);
+}
+
+:host-context(.dark) .skeleton-shimmer-sweep,
+.dark .skeleton-shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.06) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+}
+
+@keyframes shimmerSweep {
+  0% {
+    transform: translateX(-150%) skewX(-20deg);
+  }
+  100% {
+    transform: translateX(150%) skewX(-20deg);
+  }
+}
+
+.telemetry-card {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: transparent;
+    transition: background 0.3s ease;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px -4px rgba(99, 102, 241, 0.12);
+  }
+}
+
+:host-context(.dark) .telemetry-card:hover {
+  box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.6), 0 0 20px rgba(99, 102, 241, 0.15);
+}
+
+/* Category Quick Filter Pill */
+.category-pill {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Live Synchronized Pulsing Beacon */
+.live-pulse-dot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  &::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 9999px;
+    background-color: inherit;
+    animation: live-beacon 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+    opacity: 0.75;
+  }
+}
+
+@keyframes live-beacon {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  70%, 100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   CUSTOM SLEEK DIRECTORY SCROLLBAR
+   ========================================================================== */
+
+.custom-state-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
+
+    &:hover {
+      background-color: rgba(99, 102, 241, 0.6);
+    }
+  }
+}
+
+:host-context(.dark) .custom-state-scroll {
+  scrollbar-color: rgba(71, 85, 105, 0.5) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(71, 85, 105, 0.5);
+
+    &:hover {
+      background-color: rgba(129, 140, 248, 0.7);
+    }
+  }
+}
+
+/* ==========================================================================
+   STATE DIRECTORY BUTTONS & CONTRAST TOKENS
+   ========================================================================== */
+
+.state-item-btn {
+  background-color: #ffffff;
+  color: #1e293b;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  .state-count-pill {
+    background-color: #f1f5f9;
+    color: #475569;
+  }
+
+  &:hover {
+    border-color: #818cf8;
+    background-color: #f8fafc;
+    color: #4f46e5;
+  }
+
+  &.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #4f46e5 !important;
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.35);
+
+    .state-count-pill {
+      background-color: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+  }
+}
+
+:host-context(.dark) .state-item-btn {
+  background-color: rgba(15, 23, 42, 0.85);
+  color: #e2e8f0;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  .state-count-pill {
+    background-color: rgba(30, 41, 59, 0.9);
+    color: #94a3b8;
+  }
+
+  &:hover {
+    border-color: #6366f1;
+    background-color: rgba(30, 41, 59, 0.9);
+    color: #a5b4fc;
+  }
+
+  &.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 16px rgba(99, 102, 241, 0.4);
+
+    .state-count-pill {
+      background-color: rgba(255, 255, 255, 0.25);
+      color: #ffffff;
+    }
+  }
+}
+
+/* Quick Region Chip */
+.quick-region-btn {
+  background-color: rgba(238, 242, 255, 0.8);
+  color: #4338ca;
+  border: 1px solid rgba(199, 210, 254, 0.7);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #e0e7ff;
+    border-color: #818cf8;
+  }
+
+  &.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #4f46e5 !important;
+  }
+}
+
+:host-context(.dark) .quick-region-btn {
+  background-color: rgba(49, 46, 129, 0.35);
+  color: #c7d2fe;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+
+  &:hover {
+    background-color: rgba(67, 56, 202, 0.5);
+    border-color: #818cf8;
+  }
+
+  &.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #818cf8 !important;
+  }
+}
+
+/* UT Item Button */
+.ut-item-btn {
+  background-color: #f1f5f9;
+  color: #334155;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  transition: all 0.2s ease;
+
+  &:hover {
+    background-color: #e2e8f0;
+    color: #0f172a;
+  }
+
+  &.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #4f46e5 !important;
+  }
+}
+
+:host-context(.dark) .ut-item-btn {
+  background-color: rgba(15, 23, 42, 0.75);
+  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  &:hover {
+    background-color: rgba(30, 41, 59, 0.9);
+    color: #ffffff;
+    border-color: rgba(255, 255, 255, 0.15);
+  }
+
+  &.is-active {
+    background-color: #4f46e5 !important;
+    color: #ffffff !important;
+    border-color: #6366f1 !important;
+  }
+}
+
+/* Smooth Horizontal Scroll for Mobile Touch Screens */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   LUXURY INSTITUTION RESOURCE CARDS & SKELETONS
+   ========================================================================== */
+
+.resource-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 36px -6px rgba(99, 102, 241, 0.12), 0 0 0 1px rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.4);
+  }
+}
+
+:host-context(.dark) .resource-card {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.7), 0 0 24px rgba(99, 102, 241, 0.2);
+    border-color: rgba(129, 140, 248, 0.4);
+  }
+}
+
+/* Shimmer Wave Animation for Skeletons */
+.shimmer-wave {
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.6) 0%, rgba(241, 245, 249, 0.9) 50%, rgba(226, 232, 240, 0.6) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-anim 1.8s ease-in-out infinite;
+}
+
+:host-context(.dark) .shimmer-wave {
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(51, 65, 85, 0.8) 50%, rgba(30, 41, 59, 0.6) 100%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer-anim {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Active Filter Pill Tag */
+.filter-active-tag {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    filter: brightness(1.08);
+  }
+}
+
+/* Glass Data Grid Table */
+.luxury-table {
+  border-collapse: separate;
+  border-spacing: 0;
+
+  thead th {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+
+  tbody tr {
+    transition: background-color 0.15s ease;
+  }
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ==========================================================================
+   PRINT GAZETTE OUTPUT
+   ========================================================================== */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 11pt !important;
+  }
+
+  nav, footer, .sticky, button, .app-india-map, [appTooltip] {
+    box-shadow: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  th, td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+    color: #000000 !important;
+  }
+
+  thead {
+    display: table-header-group;
+    background-color: #f1f5f9 !important;
+  }
+}
+
+/* ==========================================================================
+   SLIDE-OVER RIGHT DRAWER (DESKTOP) & BOTTOM SHEET (MOBILE)
+   ========================================================================== */
+
+.filter-drawer-panel {
+  will-change: transform;
+  animation: drawer-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  box-shadow: 0 -10px 40px -5px rgba(0, 0, 0, 0.5);
+
+  @media (min-width: 640px) {
+    animation: drawer-slide-right 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    box-shadow: -12px 0 45px -5px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  }
+}
+
+@keyframes drawer-slide-up {
+  0% {
+    transform: translateY(100%);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-slide-right {
+  0% {
+    transform: translateX(100%);
+    opacity: 0.7;
+  }
+  100% {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+:host-context(.dark) .filter-drawer-panel {
+  box-shadow: -18px 0 55px -5px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+/* Card-to-Map Pulse Highlight when map pin is clicked */
+.pulse-highlight {
+  animation: card-focus-pulse 1.8s ease-out;
+}
+
+@keyframes card-focus-pulse {
+  0% {
+    transform: scale(1.03);
+    box-shadow: 0 0 0 3px #4f46e5, 0 20px 40px -8px rgba(79, 70, 229, 0.5);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 2px #4f46e5, 0 16px 32px -6px rgba(79, 70, 229, 0.35);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+}
+
+/* ==========================================================================
+   SCROLLABLE ACTIVE FILTER CHIPS WITH HOVER SCROLLBAR & FADE MASK
+   ========================================================================== */
+
+.filter-scroll-wrapper {
+  position: relative;
+  mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, black calc(100% - 36px), transparent 100%);
+}
+
+.filter-chips-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.25s ease;
+
+  &::-webkit-scrollbar {
+    height: 3px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color 0.25s ease;
+  }
+
+  &:hover {
+    scrollbar-color: rgba(99, 102, 241, 0.4) transparent;
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(99, 102, 241, 0.4);
+
+      &:hover {
+        background-color: rgba(99, 102, 241, 0.7);
+      }
+    }
+  }
+}
+
+:host-context(.dark) .filter-chips-scroll:hover {
+  scrollbar-color: rgba(129, 140, 248, 0.4) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(129, 140, 248, 0.4);
+
+    &:hover {
+      background-color: rgba(129, 140, 248, 0.7);
+    }
+  }
+}
+
+/* ==========================================================================
+   MOBILE FLOATING VIEW MODE SWITCHER PILL (AIRBNB / GOOGLE MAPS PATTERN)
+   ========================================================================== */
+
+.mobile-view-pill {
+  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.15);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 36px -4px rgba(99, 102, 241, 0.4), 0 0 0 1px rgba(99, 102, 241, 0.4);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+/* ==========================================================================
+   MOBILE MAP PIN SLIDE-UP PREVIEW CARD
+   ========================================================================== */
+
+.preview-card-slide-up {
+  animation: preview-slide-up 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+}
+
+@keyframes preview-slide-up {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

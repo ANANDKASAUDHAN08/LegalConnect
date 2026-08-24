@@ -182,7 +182,7 @@ export class NavbarComponent implements OnInit, OnDestroy {
           } else if (place.name) {
             // Fallback: geocode raw text entered by user
             const query = place.name.trim();
-            
+
             // Close dropdown immediately and show resolving state in navbar pill
             this.dropdownOpen = false;
             this.isDetecting = true;
@@ -229,110 +229,37 @@ export class NavbarComponent implements OnInit, OnDestroy {
   }
 
   useCurrentLocation() {
-    if (!navigator.geolocation) {
-      this.snackbar.show('Geolocation not supported by your browser.', 'warning');
-      return;
-    }
-
     // Close dropdown and show detecting state in pill
     this.dropdownOpen = false;
     this.isDetecting = true;
     this.detectingText = 'Detecting...';
     this.cdr.markForCheck();
 
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        this.zone.run(() => {
-          const lat = pos.coords.latitude;
-          const lng = pos.coords.longitude;
-          this.detectingText = 'Getting address...';
+    this.locationService.detectGpsPosition()
+      .then(async (coords) => {
+        this.detectingText = 'Getting address...';
+        this.cdr.markForCheck();
 
-          // Reverse geocoding using Google Geocoding API (if available)
-          this.reverseGeocodeToCity(lat, lng);
+        const address = await this.locationService.reverseGeocode(coords.lat, coords.lng);
+        this.zone.run(() => {
+          this.isDetecting = false;
+          this.detectingText = '';
+          this.locationService.setLocation(address, false, coords);
+          const clean = this.locationService.cleanAddress(address);
+          const displayAddress = clean.length > 20 ? clean.substring(0, 17) + '...' : clean;
+          this.snackbar.show(`Location set to ${displayAddress}`, 'success');
+          this.cdr.markForCheck();
         });
-      },
-      (err) => {
+      })
+      .catch((err) => {
         this.zone.run(() => {
           console.warn('Geolocation error', err);
           this.isDetecting = false;
           this.detectingText = '';
           this.snackbar.show('Failed to detect location. Please search manually.', 'error');
-        });
-      },
-      { timeout: 10000 }
-    );
-  }
-
-  private reverseGeocodeToCity(lat: number, lng: number) {
-    const apiKey = (window as any).GOOGLE_MAPS_API_KEY || '';
-
-    if (apiKey && (window as any).google?.maps) {
-      const geocoder = new (window as any).google.maps.Geocoder();
-      geocoder.geocode({ location: { lat, lng } }, (results: any[], status: string) => {
-        this.zone.run(() => {
-          this.isDetecting = false;
-          this.detectingText = '';
-
-          if (status === 'OK' && results[0]) {
-            const address = results[0].formatted_address;
-            this.locationService.setLocation(address, false, { lat, lng });
-            const clean = this.locationService.cleanAddress(address);
-            const displayAddress = clean.length > 20 ? clean.substring(0, 17) + '...' : clean;
-            this.snackbar.show(`Location set to ${displayAddress}`, 'success');
-          } else {
-            this.fallbackCityDetection(lat, lng);
-          }
+          this.cdr.markForCheck();
         });
       });
-    } else {
-      // Fallback: proximity-based city detection
-      setTimeout(() => {
-        this.zone.run(() => {
-          this.isDetecting = false;
-          this.detectingText = '';
-          this.fallbackCityDetection(lat, lng);
-        });
-      }, 800);
-    }
-  }
-
-  private extractCityFromGeocoderResult(result: any): string {
-    const components = result.address_components || [];
-    // Try locality first, then sublocality, then administrative_area_level_2
-    const levels = ['locality', 'sublocality_level_1', 'administrative_area_level_2', 'administrative_area_level_1'];
-    for (const level of levels) {
-      const component = components.find((c: any) => c.types.includes(level));
-      if (component) return component.long_name;
-    }
-    return result.formatted_address?.split(',')[0] || 'New Delhi';
-  }
-
-  private fallbackCityDetection(lat: number, lng: number): void {
-    let detectedCity = 'New Delhi';
-    const cities = [
-      { name: 'Mumbai', lat: 19.0760, lng: 72.8777 },
-      { name: 'Bengaluru', lat: 12.9716, lng: 77.5946 },
-      { name: 'Chennai', lat: 13.0827, lng: 80.2707 },
-      { name: 'Kolkata', lat: 22.5726, lng: 88.3639 },
-      { name: 'Hyderabad', lat: 17.3850, lng: 78.4867 },
-      { name: 'Pune', lat: 18.5204, lng: 73.8567 },
-      { name: 'Ahmedabad', lat: 23.0225, lng: 72.5714 },
-      { name: 'Jaipur', lat: 26.9124, lng: 75.7873 },
-      { name: 'Lucknow', lat: 26.8467, lng: 80.9462 },
-      { name: 'New Delhi', lat: 28.6139, lng: 77.2090 }
-    ];
-
-    let minDist = Infinity;
-    for (const city of cities) {
-      const d = Math.sqrt(Math.pow(lat - city.lat, 2) + Math.pow(lng - city.lng, 2));
-      if (d < minDist) {
-        minDist = d;
-        detectedCity = city.name;
-      }
-    }
-
-    this.locationService.setLocation(detectedCity, false, { lat, lng });
-    this.snackbar.show(`Location set to ${detectedCity}`, 'success');
   }
 
   openMapModal(event?: Event) {
@@ -372,8 +299,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     return this.locationService.cleanAddress(loc);
   }
 
-  toggleMenu() { 
-    this.menuOpen = !this.menuOpen; 
+  toggleMenu() {
+    this.menuOpen = !this.menuOpen;
     this.cdr.markForCheck();
   }
 

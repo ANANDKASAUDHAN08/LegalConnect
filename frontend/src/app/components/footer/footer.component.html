@@ -87,32 +87,51 @@
       </div>
     </div>
 
-    <!-- COLUMN 2: LEGAL RESOURCES -->
+    <!-- COLUMN 2: INSTITUTIONAL DIRECTORY & AID -->
     <div class="col-span-6 lg:col-span-2 flex flex-col gap-2">
-      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">Legal
-        Resources</span>
+      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
+        Directory &amp; Aid
+      </span>
+      <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
+        <li><a [routerLink]="['/legal-resources']" [queryParams]="{type: 'Court'}" class="footer-link">Courts Directory</a></li>
+        <li><a [routerLink]="['/legal-resources']" [queryParams]="{type: 'LegalAid'}" class="footer-link">Legal Aid Centers</a></li>
+        <li><a [routerLink]="['/legal-resources']" [queryParams]="{type: 'PoliceStation'}" class="footer-link">Police Stations</a></li>
+        <li><a routerLink="/find-help" class="footer-link">Find Help Near Me</a></li>
+        <li><a routerLink="/legal-resources" class="footer-link">All Institutions</a></li>
+      </ul>
+    </div>
+
+    <!-- COLUMN 3: LEGAL SERVICES & PRACTICE -->
+    <div class="col-span-6 lg:col-span-2 flex flex-col gap-2">
+      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
+        Legal Services
+      </span>
       <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
         <li><a routerLink="/lawyers" class="footer-link">Find Lawyers</a></li>
         <li><a routerLink="/specializations" class="footer-link">Practice Areas</a></li>
         <li><a routerLink="/laws" class="footer-link">Browse Laws</a></li>
-        <li><a routerLink="/dashboard" class="footer-link">Legal Services</a></li>
-        <li><a routerLink="/help" class="footer-link">Help &amp; FAQs</a></li>
+        <li><a routerLink="/laws/templates" class="footer-link">Document Templates</a></li>
+        <li><a routerLink="/dashboard" class="footer-link">Client Portal</a></li>
       </ul>
     </div>
 
-    <!-- COLUMN 3: COMPANY -->
-    <div class="col-span-6 lg:col-span-2 flex flex-col gap-2">
-      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">Company</span>
-      <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
-        <li><a routerLink="/about" class="footer-link">About Us</a></li>
-        <li><a routerLink="/contact" class="footer-link">Contact</a></li>
-      </ul>
-    </div>
-
-    <!-- COLUMN 4: TRUST & SAFETY -->
+    <!-- COLUMN 4: COMPANY & SUPPORT -->
     <div class="col-span-6 lg:col-span-2 flex flex-col gap-2">
       <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
-        Trust &amp; Safety
+        Company &amp; Help
+      </span>
+      <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
+        <li><a routerLink="/about" class="footer-link">About Us</a></li>
+        <li><a routerLink="/help" class="footer-link">Help &amp; FAQs</a></li>
+        <li><a routerLink="/contact" class="footer-link">Contact Support</a></li>
+        <li><a routerLink="/reviews" class="footer-link">Verified Reviews</a></li>
+      </ul>
+    </div>
+
+    <!-- COLUMN 5 (Mobile / Tablet): TRUST & LEGAL (Placed on the right side of Company & Help on mobile) -->
+    <div class="col-span-6 lg:hidden flex flex-col gap-2">
+      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
+        Trust &amp; Legal
       </span>
       <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
         <li><a routerLink="/privacy" class="footer-link">Privacy Policy</a></li>
@@ -121,13 +140,21 @@
       </ul>
     </div>
 
-    <!-- COLUMN 5: RESPONSIVE NEWSLETTER (Mobile: next to Trust & Safety, stacked input/btn; Desktop: rightmost, capsule) -->
-    <div class="col-span-6 lg:col-span-3 flex flex-col gap-3">
-      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
-        Stay Updated
-      </span>
-      <p class="text-sm text-slate-400 leading-normal m-0 hidden sm:block">
-        Subscribe for legal insights and platform updates.
+    <!-- COLUMN 6: RESPONSIVE NEWSLETTER & DESKTOP PILLS -->
+    <div class="col-span-12 lg:col-span-3 flex flex-col gap-3">
+      <div class="flex items-center justify-between">
+        <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white block">
+          Stay Updated
+        </span>
+        <!-- Desktop Pill Badges with Glow & Distinct Hover Color -->
+        <div class="hidden lg:flex items-center gap-1.5">
+          <a routerLink="/privacy" class="legal-compliance-pill">Privacy</a>
+          <a routerLink="/terms" class="legal-compliance-pill">Terms</a>
+          <a routerLink="/cookie-preferences" class="legal-compliance-pill">Cookies</a>
+        </div>
+      </div>
+      <p class="text-xs text-slate-400 leading-normal m-0">
+        Subscribe for Indian legal insights, bare act updates, and platform features.
       </p>
 
       <!-- Mobile Newsletter Form (Stacked: email upper, button below) -->

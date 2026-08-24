@@ -575,6 +575,12 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private onScroll = () => {
+    if (this.showSortDropdown) {
+      this.zone.run(() => {
+        this.showSortDropdown = false;
+        this.cdr.markForCheck();
+      });
+    }
     const scrolled = window.scrollY > 20;
     if (scrolled !== this.isScrolled) {
       this.zone.run(() => {

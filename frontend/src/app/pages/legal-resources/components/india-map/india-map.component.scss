@@ -1,0 +1,236 @@
+.interactive-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 450px;
+}
+
+/* ==========================================================================
+   ADAPTIVE MAP OVERLAYS (Theme-Aware based on active map tiles)
+   ========================================================================== */
+
+.map-glass-card {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.map-ctrl-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: 0.75rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:hover {
+    transform: scale(1.06);
+  }
+
+  &:active {
+    transform: scale(0.94);
+  }
+}
+
+.map-theme-dark {
+  .map-glass-card {
+    background: rgba(15, 23, 42, 0.92);
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    color: #f8fafc;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.55), 0 4px 10px rgba(0, 0, 0, 0.4);
+  }
+
+  .map-ctrl-btn {
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(51, 65, 85, 0.95);
+    color: #cbd5e1;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+
+    &:hover {
+      background: #1e293b;
+      color: #ffffff;
+      border-color: #818cf8;
+    }
+  }
+
+  .map-filter-unselected {
+    background: rgba(30, 41, 59, 0.8);
+    color: #cbd5e1;
+
+    &:hover {
+      background: rgba(51, 65, 85, 0.9);
+      color: #ffffff;
+    }
+  }
+
+  .map-scope-unselected {
+    color: #94a3b8;
+
+    &:hover {
+      color: #818cf8;
+    }
+  }
+}
+
+.map-theme-light {
+  .map-glass-card {
+    background: rgba(255, 255, 255, 0.96);
+    border: 1.5px solid rgba(203, 213, 225, 0.95);
+    color: #0f172a;
+    box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.18), 0 4px 10px rgba(15, 23, 42, 0.08);
+  }
+
+  .map-ctrl-btn {
+    background: #ffffff;
+    border: 1.5px solid #cbd5e1;
+    color: #0f172a;
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+
+    &:hover {
+      background: #f8fafc;
+      color: #4f46e5;
+      border-color: #6366f1;
+    }
+  }
+
+  .map-filter-unselected {
+    background: #f1f5f9;
+    color: #334155;
+
+    &:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+  }
+
+  .map-scope-unselected {
+    color: #475569;
+
+    &:hover {
+      color: #4f46e5;
+    }
+  }
+}
+
+:host ::ng-deep {
+  /* Leaflet Canvas Container */
+  .leaflet-container {
+    font-family: inherit;
+    background-color: transparent;
+    z-index: 10;
+  }
+
+  /* Reset Leaflet's Default White Popups for Custom Glassmorphism */
+  .leaflet-popup-content-wrapper {
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 1rem !important;
+  }
+
+  .leaflet-popup-content {
+    margin: 0 !important;
+    line-height: inherit !important;
+    min-width: 260px;
+    max-width: 320px;
+  }
+
+  .leaflet-popup-tip-container,
+  .leaflet-popup-close-button {
+    display: none !important;
+  }
+
+  /* Reset Leaflet's Default Tooltip Box */
+  .leaflet-tooltip.custom-legal-tooltip {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    white-space: normal !important;
+    width: max-content !important;
+    max-width: 420px !important;
+    overflow: visible !important;
+
+    &::before,
+    &::after {
+      display: none !important;
+    }
+  }
+
+  /* High Z-Index for Tooltips & Popups */
+  .leaflet-tooltip-pane {
+    z-index: 1050 !important;
+  }
+
+  .leaflet-popup-pane {
+    z-index: 1100 !important;
+  }
+
+  /* SVG Marker Pin Geometry */
+  .custom-legal-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.2s ease;
+    cursor: pointer;
+
+    &:hover,
+    &.is-hovered {
+      transform: scale(1.22) translateY(-4px);
+      z-index: 9999 !important;
+    }
+  }
+
+  /* User GPS Beacon Marker */
+  .user-gps-marker {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    .gps-dot {
+      width: 14px;
+      height: 14px;
+      background: #4f46e5;
+      border: 2.5px solid #ffffff;
+      border-radius: 50%;
+      box-shadow: 0 0 12px rgba(79, 70, 229, 0.9);
+      z-index: 2;
+    }
+
+    .gps-pulse {
+      position: absolute;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(79, 70, 229, 0.35);
+      animation: gps-radar-wave 2s infinite ease-out;
+    }
+  }
+}
+
+.live-pulse-dot {
+  animation: pulse-live 1.8s infinite cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+@keyframes pulse-live {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes gps-radar-wave {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.9;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}

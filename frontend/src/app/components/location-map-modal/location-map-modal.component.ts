@@ -6,6 +6,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { getGeoCentroid, INDIAN_GEO_CENTROIDS } from '../../core/constants/legal-resource.constants';
 
 declare var google: any;
 
@@ -37,22 +38,6 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
   private currentLng = 77.2090;
   private mapThemeUnregister: (() => void) | null = null;
 
-  // City center fallbacks
-  private cityCenters: Record<string, [number, number]> = {
-    'new delhi': [28.6139, 77.2090],
-    'delhi': [28.6139, 77.2090],
-    'mumbai': [19.0760, 72.8777],
-    'bengaluru': [12.9716, 77.5946],
-    'bangalore': [12.9716, 77.5946],
-    'chennai': [13.0827, 80.2707],
-    'kolkata': [22.5726, 88.3639],
-    'hyderabad': [17.3850, 78.4867],
-    'pune': [18.5204, 73.8567],
-    'ahmedabad': [23.0225, 72.5714],
-    'jaipur': [26.9124, 75.7873],
-    'lucknow': [26.8467, 80.9462]
-  };
-
   constructor(
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
@@ -60,20 +45,8 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
   ) { }
 
   ngOnInit() {
-    // Center on initial city
-    const key = this.initialCity.toLowerCase();
-    let matched = false;
-    for (const city of Object.keys(this.cityCenters)) {
-      if (key.includes(city)) {
-        [this.currentLat, this.currentLng] = this.cityCenters[city];
-        matched = true;
-        break;
-      }
-    }
-    if (!matched) {
-      // Default to Delhi center
-      [this.currentLat, this.currentLng] = [28.6139, 77.2090];
-    }
+    // Center on initial city using centralized geocoding helper
+    [this.currentLat, this.currentLng] = getGeoCentroid(this.initialCity);
     document.body.style.overflow = 'hidden';
   }
 
@@ -140,7 +113,7 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
 
     // Sync map and pin to the user's initial location if it's a custom/exact address
     const key = this.initialCity.toLowerCase();
-    const isPopular = !!this.cityCenters[key];
+    const isPopular = !!INDIAN_GEO_CENTROIDS[key];
     if (this.initialCity && !isPopular) {
       this.geocoder.geocode({ address: this.initialCity }, (results: any[], status: string) => {
         if (status === 'OK' && results[0] && results[0].geometry?.location) {

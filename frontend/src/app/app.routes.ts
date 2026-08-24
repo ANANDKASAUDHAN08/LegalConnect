@@ -79,6 +79,16 @@ export const routes: Routes = [
     title: 'Free Legal Aid & Emergency Helplines | LegalConnect'
   },
   {
+    path: 'legal-resources',
+    loadComponent: () => import('./pages/legal-resources/legal-resources.component').then(m => m.LegalResourcesComponent),
+    title: 'Legal Resources Directory — Courts, DLSA & Legal Aid | LegalConnect'
+  },
+  {
+    path: 'legal-resources/:id',
+    loadComponent: () => import('./pages/legal-resources/components/resource-detail/resource-detail.component').then(m => m.ResourceDetailComponent),
+    title: 'Resource Details | LegalConnect'
+  },
+  {
     path: 'lawyers',
     loadComponent: () => import('./pages/lawyers/lawyers.component').then(m => m.LawyersComponent),
     title: 'Find Verified Lawyers & Legal Advocates | LegalConnect'
