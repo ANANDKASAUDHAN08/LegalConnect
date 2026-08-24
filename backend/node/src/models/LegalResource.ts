@@ -10,9 +10,63 @@ export interface ILegalResourceFacilities {
   isWheelchairAccessible: boolean;
 }
 
+export type LegalResourceType =
+  | 'LegalAid'
+  | 'Court'
+  | 'GovernmentOffice'
+  | 'PoliceStation'
+  | 'Helpline'
+  | 'Notary'
+  | 'LokAdalat'
+  | 'MediationCenter'
+  | 'BarAssociation';
+
+export interface IResourceFeedbackReason {
+  reason: string;
+  count: number;
+}
+
+export interface IResourceFeedback {
+  upvotes: number;
+  downvotes: number;
+  helpfulnessScore: number;
+  reasons: IResourceFeedbackReason[];
+}
+
+export interface IResourceChangeLog {
+  timestamp: Date;
+  adminEmail: string;
+  action: string;
+  diff?: Record<string, any>;
+}
+
+export interface IResourceSubmitter {
+  name: string;
+  email?: string;
+  phone?: string;
+  role: 'Advocate' | 'CourtOfficial' | 'NGO' | 'Citizen';
+  isGuest: boolean;
+  userId?: string;
+}
+
+export type ResourceFeeType =
+  | 'FreeLegalAid'
+  | 'ProBono'
+  | 'StatutoryNotary'
+  | 'Subsidized'
+  | 'StandardGovt';
+
+export type OperatingDaysType =
+  | 'Mon-Fri'
+  | 'Mon-Sat'
+  | 'AllWeek'
+  | 'WeekendsOnly'
+  | '24x7Emergency';
+
 export interface ILegalResource extends Document {
   name: string;
-  type: 'LegalAid' | 'Court' | 'GovernmentOffice' | 'PoliceStation' | 'Helpline';
+  name_hi?: string;
+  type: LegalResourceType;
   categories: string[];
   subcategories: string[];
   city: string;
@@ -21,15 +75,24 @@ export interface ILegalResource extends Document {
   pincode?: string;
   pincodeCoverage?: string[];
   address: string;
+  address_hi?: string;
   alternateAddress?: string;
   contactNumber?: string[];
   faxNumber?: string[];
   email?: string[];
   website?: string;
   operatingHours?: string;
+  operatingHours_hi?: string;
+  operatingDays?: OperatingDaysType;
   lunchBreak?: string;
+  description_hi?: string;
   isOpenNow: boolean;
   isVerified: boolean;
+  is24x7Emergency?: boolean;
+  feeType?: ResourceFeeType;
+  targetBeneficiaries?: string[];
+  signboardImageUrl?: string;
+  submitter?: IResourceSubmitter;
   languages: string[];
   coordinates: {
     lat: number;
@@ -58,14 +121,30 @@ export interface ILegalResource extends Document {
   verificationExpiry?: Date;
   verifiedByAdmin?: string;
   auditNotes?: string;
+  // Phase 5 Enterprise Extensions
+  feedback?: IResourceFeedback;
+  viewsCount?: number;
+  lastViewedAt?: Date;
+  changeLog?: IResourceChangeLog[];
 }
 
 const LegalResourceSchema = new Schema<ILegalResource>({
   name: { type: String, required: true },
+  name_hi: { type: String },
   type: {
     type: String,
     required: true,
-    enum: ['LegalAid', 'Court', 'GovernmentOffice', 'PoliceStation', 'Helpline']
+    enum: [
+      'LegalAid',
+      'Court',
+      'GovernmentOffice',
+      'PoliceStation',
+      'Helpline',
+      'Notary',
+      'LokAdalat',
+      'MediationCenter',
+      'BarAssociation'
+    ]
   },
   categories: [{ type: String, required: true }],
   subcategories: [{ type: String }],
@@ -75,15 +154,43 @@ const LegalResourceSchema = new Schema<ILegalResource>({
   pincode: { type: String },
   pincodeCoverage: [{ type: String }],
   address: { type: String, required: true },
+  address_hi: { type: String },
   alternateAddress: { type: String },
   contactNumber: [{ type: String }],
   faxNumber: [{ type: String }],
   email: [{ type: String }],
   website: { type: String },
   operatingHours: { type: String, default: '09:30 AM - 05:00 PM (Mon-Sat)' },
+  operatingHours_hi: { type: String },
+  operatingDays: {
+    type: String,
+    enum: ['Mon-Fri', 'Mon-Sat', 'AllWeek', 'WeekendsOnly', '24x7Emergency'],
+    default: 'Mon-Sat'
+  },
   lunchBreak: { type: String, default: '01:30 PM - 02:00 PM' },
+  description_hi: { type: String },
   isOpenNow: { type: Boolean, default: true },
   isVerified: { type: Boolean, default: true },
+  is24x7Emergency: { type: Boolean, default: false },
+  feeType: {
+    type: String,
+    enum: ['FreeLegalAid', 'ProBono', 'StatutoryNotary', 'Subsidized', 'StandardGovt'],
+    default: 'FreeLegalAid'
+  },
+  targetBeneficiaries: [{ type: String }],
+  signboardImageUrl: { type: String },
+  submitter: {
+    name: { type: String },
+    email: { type: String },
+    phone: { type: String },
+    role: {
+      type: String,
+      enum: ['Advocate', 'CourtOfficial', 'NGO', 'Citizen'],
+      default: 'Citizen'
+    },
+    isGuest: { type: Boolean, default: false },
+    userId: { type: String }
+  },
   languages: [{ type: String, default: ['English', 'Hindi'] }],
   coordinates: {
     lat: { type: Number, required: true },
@@ -121,7 +228,22 @@ const LegalResourceSchema = new Schema<ILegalResource>({
   lastAuditDate: { type: Date, default: Date.now },
   verificationExpiry: { type: Date },
   verifiedByAdmin: { type: String, default: 'System Administrator' },
-  auditNotes: { type: String }
+  auditNotes: { type: String },
+  // Phase 5 Enterprise Extensions
+  feedback: {
+    upvotes: { type: Number, default: 0 },
+    downvotes: { type: Number, default: 0 },
+    helpfulnessScore: { type: Number, default: 100 },
+    reasons: [{ reason: { type: String }, count: { type: Number, default: 0 } }]
+  },
+  viewsCount: { type: Number, default: 0 },
+  lastViewedAt: { type: Date },
+  changeLog: [{
+    timestamp: { type: Date, default: Date.now },
+    adminEmail: { type: String, required: true },
+    action: { type: String, required: true },
+    diff: { type: Schema.Types.Mixed }
+  }]
 }, {
   timestamps: true
 });
@@ -133,6 +255,9 @@ LegalResourceSchema.index({ state: 1 });
 LegalResourceSchema.index({ district: 1 });
 LegalResourceSchema.index({ type: 1 });
 LegalResourceSchema.index({ status: 1 });
+LegalResourceSchema.index({ feeType: 1 });
+LegalResourceSchema.index({ 'submitter.role': 1 });
+LegalResourceSchema.index({ targetBeneficiaries: 1 });
 LegalResourceSchema.index({ jurisdictionLevel: 1 });
 LegalResourceSchema.index({ isStateAuthority: 1 });
 LegalResourceSchema.index({ isNationalAuthority: 1 });

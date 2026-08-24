@@ -50,7 +50,7 @@ export async function createResource(data: any) {
 }
 
 export async function updateResource(id: string, data: any) {
-  return await LegalResource.findByIdAndUpdate(id, data, { new: true });
+  return await LegalResource.findByIdAndUpdate(id, data, { returnDocument: 'after' });
 }
 
 export async function deleteResource(id: string) {

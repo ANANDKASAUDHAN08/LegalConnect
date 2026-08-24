@@ -159,7 +159,7 @@ router.put('/helplines/:id', asyncHandler(async (req: Request, res: Response) =>
   const { id } = req.params;
   const updates = { ...req.body, lastVerifiedAt: new Date() };
 
-  const helpline = await HelpHelpline.findByIdAndUpdate(id, updates, { new: true }).lean();
+  const helpline = await HelpHelpline.findByIdAndUpdate(id, updates, { returnDocument: 'after' }).lean();
   if (!helpline) {
     throw AppError.notFound('Helpline not found.');
   }

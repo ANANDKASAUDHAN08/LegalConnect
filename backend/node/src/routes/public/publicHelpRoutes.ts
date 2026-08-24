@@ -7,9 +7,30 @@ import HelpCategory from '../../models/HelpCategory';
 import HelpRoadmap from '../../models/HelpRoadmap';
 import HelpHelpline from '../../models/HelpHelpline';
 import { getCache, setCache, getPlatformStats } from '../../services/statsService';
-import { calculateDistance, resolveCityAndStateFromText } from '../../utils/geoUtils';
+import { calculateDistance, resolveCityAndStateFromText, resolveGeoCentroid, buildCityRegex, GEO_CENTROIDS } from '../../utils/geoUtils';
+import {
+  VALID_RESOURCE_TYPES,
+  VALID_FEE_TYPES,
+  VALID_OPERATING_DAYS,
+  VALID_SUBMITTER_ROLES,
+  isValidResourceType,
+  isValidFeeType,
+  isValidOperatingDays,
+  isValidSubmitterRole,
+  LEGAL_STOP_WORDS,
+  getCategorySpecializationRegex,
+  RESOURCE_VALIDATION_RULES
+} from '../../utils/legalDomainUtils';
 
 const router = Router();
+
+// ── Input Sanitization Helper ───────────────────────────────────────────────
+
+/** Strip HTML tags and clamp string length to prevent XSS and oversized payloads */
+function sanitizeString(str: unknown, maxLength: number): string {
+  if (!str || typeof str !== 'string') return '';
+  return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLength);
+}
 
 // GET /help/stats — Fetch platform counts with Redis cache
 router.get('/help/stats', asyncHandler(async (req: Request, res: Response) => {
@@ -86,24 +107,7 @@ router.get('/help/categories', asyncHandler(async (req: Request, res: Response) 
     }
   }
 
-  // Handle city aliases dynamically
-  let cityPattern = `^${resolvedCity}$`;
-  const cleanedLoc = resolvedCity.trim().toLowerCase();
-  if (cleanedLoc === 'delhi' || cleanedLoc === 'new delhi') {
-    cityPattern = '^(delhi|new delhi)$';
-  } else if (cleanedLoc === 'bengaluru' || cleanedLoc === 'bangalore') {
-    cityPattern = '^(bengaluru|bangalore)$';
-  } else if (cleanedLoc === 'gurgaon' || cleanedLoc === 'gurugram') {
-    cityPattern = '^(gurgaon|gurugram)$';
-  }
-
-  // Include all nearby cities from coordinate resolution
-  if (nearbyCities.size > 1) {
-    const escaped = Array.from(nearbyCities).map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    cityPattern = `^(${escaped.join('|')})$`;
-  }
-
-  const cityRegexp = new RegExp(cityPattern, 'i');
+  const cityRegexp = buildCityRegex(resolvedCity, nearbyCities);
 
   // --- PERFORMANCE ELEVATION: Single Batch Queries ---
   // Drop DB query count from 40 down to 3, achieving massive speedups and reducing server CPU load!
@@ -115,24 +119,7 @@ router.get('/help/categories', asyncHandler(async (req: Request, res: Response) 
 
   // Compute active counts for the given location in memory
   const categoriesWithCounts = dbCategories.map((cat) => {
-    let specQuery: RegExp;
-    if (cat.id === 'Property Dispute') {
-      specQuery = /Property|Real Estate|Civil|Land/i;
-    } else if (cat.id === 'Family Law' || cat.id === 'Domestic Violence') {
-      specQuery = /Family|Divorce|Domestic|Women|Criminal/i;
-    } else if (cat.id === 'Consumer Complaint') {
-      specQuery = /Consumer|Civil|Insurance/i;
-    } else if (cat.id === 'Cyber Crime') {
-      specQuery = /Cyber|Criminal|IT Law|Information Technology/i;
-    } else if (cat.id === 'Labour Issue') {
-      specQuery = /Labour|Employment|Service Law/i;
-    } else if (cat.id === 'Criminal Matter') {
-      specQuery = /Criminal|Bail/i;
-    } else if (cat.id === 'Business Dispute') {
-      specQuery = /Corporate|Commercial|Contract|Business/i;
-    } else {
-      specQuery = new RegExp(cat.id, 'i');
-    }
+    const specQuery = getCategorySpecializationRegex(cat.id);
 
     // In-memory counts for resources
     let legalAid = 0;
@@ -263,40 +250,11 @@ router.get('/help-near-me', asyncHandler(async (req: Request, res: Response) => 
     }
   }
 
-  let specQuery: any = categoryStr;
-  if (categoryStr === 'Property Dispute') {
-    specQuery = /Property|Real Estate|Civil|Land/i;
-  } else if (categoryStr === 'Family Law' || categoryStr === 'Domestic Violence') {
-    specQuery = /Family|Divorce|Domestic|Women|Criminal/i;
-  } else if (categoryStr === 'Consumer Complaint') {
-    specQuery = /Consumer|Civil|Insurance/i;
-  } else if (categoryStr === 'Cyber Crime') {
-    specQuery = /Cyber|Criminal|IT Law|Information Technology/i;
-  } else if (categoryStr === 'Labour Issue') {
-    specQuery = /Labour|Employment|Service Law/i;
-  } else if (categoryStr === 'Criminal Matter') {
-    specQuery = /Criminal|Bail/i;
-  } else if (categoryStr === 'Business Dispute') {
-    specQuery = /Corporate|Commercial|Contract|Business/i;
-  }
-
-  let cityPattern = `^${targetCity}$`;
-  const cleanedLoc = targetCity.trim().toLowerCase();
-  if (cleanedLoc === 'delhi' || cleanedLoc === 'new delhi') {
-    cityPattern = '^(delhi|new delhi)$';
-  } else if (cleanedLoc === 'bengaluru' || cleanedLoc === 'bangalore') {
-    cityPattern = '^(bengaluru|bangalore)$';
-  } else if (cleanedLoc === 'gurgaon' || cleanedLoc === 'gurugram') {
-    cityPattern = '^(gurgaon|gurugram)$';
-  }
-
-  if (nearbyCities.size > 1) {
-    const escaped = Array.from(nearbyCities).map(c => c.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
-    cityPattern = `^(${escaped.join('|')})$`;
-  }
+  const specQuery = getCategorySpecializationRegex(categoryStr);
+  const cityRegexp = buildCityRegex(targetCity, nearbyCities);
 
   const resourceFilter = {
-    city: { $regex: new RegExp(cityPattern, 'i') },
+    city: { $regex: cityRegexp },
     status: 'approved' as const,
     $or: [
       { categories: categoryStr },
@@ -307,7 +265,7 @@ router.get('/help-near-me', asyncHandler(async (req: Request, res: Response) => 
   const [resources, lawyers, dbRoadmap, dbHelplines, slsaResource, nalsaHq] = await Promise.all([
     LegalResource.find(resourceFilter).lean(),
     Lawyer.find({
-      city: { $regex: new RegExp(cityPattern, 'i') },
+      city: { $regex: cityRegexp },
       specializations: { $regex: specQuery },
       isVerified: true
     }).sort({ rating: -1 }).limit(10).lean(),
@@ -391,42 +349,646 @@ router.get('/all-authorities', asyncHandler(async (req: Request, res: Response) 
   res.json({ success: true, data: authorities });
 }));
 
-// User Suggestion Endpoint (Public)
-router.post('/suggest-resource', asyncHandler(async (req: Request, res: Response) => {
-  const { name, type, categories, subcategories, city, state, address, contactNumber, website, languages, coordinates } = req.body;
-  if (!name || !type || !city || !address || !coordinates || !coordinates.lat || !coordinates.lng) {
-    throw AppError.badRequest('Required fields: name, type, city, address, coordinates.');
+// ── In-Memory Directory Metrics Cache (10-minute TTL) ──
+interface DirectoryMetricsCache {
+  stateMetrics: Record<string, number>;
+  typeMetrics: Record<string, number>;
+  total: number;
+  coveredStates: number;
+  lastUpdated: number;
+}
+
+let cachedMetrics: DirectoryMetricsCache | null = null;
+const METRICS_CACHE_TTL_MS = 10 * 60 * 1000;
+
+export async function getDirectoryMetrics(forceRefresh = false): Promise<DirectoryMetricsCache> {
+  const now = Date.now();
+  if (!forceRefresh && cachedMetrics && (now - cachedMetrics.lastUpdated < METRICS_CACHE_TTL_MS)) {
+    return cachedMetrics;
   }
 
-  const newResource = new LegalResource({
-    name,
-    type,
-    categories: categories || ['General'],
-    subcategories: subcategories || [],
-    city,
+  const [stateAggregation, typeAggregation] = await Promise.all([
+    LegalResource.aggregate([
+      { $match: { status: 'approved' } },
+      { $group: { _id: '$state', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]),
+    LegalResource.aggregate([
+      { $match: { status: 'approved' } },
+      { $group: { _id: '$type', count: { $sum: 1 } } }
+    ])
+  ]);
+
+  const stateMetrics: Record<string, number> = {};
+  stateAggregation.forEach((s: any) => {
+    if (s._id) stateMetrics[s._id] = s.count;
+  });
+
+  const typeMetrics: Record<string, number> = {};
+  typeAggregation.forEach((t: any) => {
+    if (t._id) typeMetrics[t._id] = t.count;
+  });
+
+  cachedMetrics = {
+    stateMetrics,
+    typeMetrics,
+    total: stateAggregation.reduce((sum: number, s: any) => sum + s.count, 0),
+    coveredStates: Object.keys(stateMetrics).length,
+    lastUpdated: now
+  };
+
+  return cachedMetrics;
+}
+
+// Invalidate cache helper
+export function invalidateDirectoryMetrics(): void {
+  cachedMetrics = null;
+}
+
+// Haversine distance: use the imported calculateDistance from geoUtils (removed local duplicate)
+
+// GET /resources/districts — Get distinct districts for a state
+router.get('/resources/districts', asyncHandler(async (req: Request, res: Response) => {
+  const { state } = req.query;
+  const match: any = { status: 'approved' };
+  if (state && state !== 'All') {
+    match.state = { $regex: new RegExp(`^${(state as string).trim()}$`, 'i') };
+  }
+  const districts = await LegalResource.aggregate([
+    { $match: match },
+    { $project: { effectiveDistrict: { $ifNull: ['$district', '$city'] } } },
+    { $match: { effectiveDistrict: { $exists: true, $nin: ['', null] } } },
+    { $group: { _id: '$effectiveDistrict', count: { $sum: 1 } } },
+    { $sort: { _id: 1 } }
+  ]);
+  res.set('Cache-Control', 'public, max-age=600, must-revalidate');
+  res.json({
+    success: true,
+    data: districts.map(d => ({ district: d._id, count: d.count }))
+  });
+}));
+
+// Resilient state regex helper that matches variations like '&' vs 'and', optional 'Islands' / 'UT'
+export function buildStateRegex(stateStr: string): RegExp {
+  const trimmed = (stateStr || '').trim();
+  const pattern = trimmed
+    .replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    .replace(/\b(and|&)\b/gi, '(&|and)')
+    .replace(/(\s*islands)?$/i, '(\\s*Islands)?')
+    .replace(/(\s*ut)?$/i, '(\\s*UT)?');
+  return new RegExp(`^${pattern}$`, 'i');
+}
+
+// GET /resources/directory — Paginated, filterable public directory (for /legal-resources page)
+router.get('/resources/directory', asyncHandler(async (req: Request, res: Response) => {
+  const {
     state,
-    address,
+    district,
+    type,
+    jurisdictionLevel,
+    facility,
+    search,
+    pincode,
+    lat,
+    lng,
+    radiusKm,
+    sortBy = 'name',
+    sortOrder = 'asc',
+    page = '1',
+    limit = '20'
+  } = req.query;
+
+  // Always filter to approved resources only
+  const filter: any = { status: 'approved' };
+  const andClauses: any[] = [];
+
+  if (state && state !== 'All') {
+    filter.state = { $regex: buildStateRegex(state as string) };
+  }
+
+  if (district && district !== 'All') {
+    const distEscaped = (district as string).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const distRegex = new RegExp(distEscaped, 'i');
+    andClauses.push({
+      $or: [
+        { district: { $regex: distRegex } },
+        { city: { $regex: distRegex } },
+        { address: { $regex: distRegex } }
+      ]
+    });
+  }
+
+  if (type && type !== 'All') {
+    filter.type = type;
+  }
+  if (jurisdictionLevel && jurisdictionLevel !== 'All') {
+    filter.jurisdictionLevel = jurisdictionLevel;
+  }
+
+  // Facility flags filtering
+  if (facility) {
+    if (facility === 'hasEfiling') filter['facilities.hasEfiling'] = true;
+    else if (facility === 'hasLADCS') filter['facilities.hasLADCS'] = true;
+    else if (facility === 'hasVCRoom') filter['facilities.hasVCRoom'] = true;
+    else if (facility === 'hasLegalAidClinic') filter['facilities.hasLegalAidClinic'] = true;
+    else if (facility === 'isWheelchairAccessible') filter['facilities.isWheelchairAccessible'] = true;
+  }
+
+  if (pincode) {
+    const pin = (pincode as string).trim();
+    andClauses.push({
+      $or: [
+        { pincode: { $regex: new RegExp(pin, 'i') } },
+        { pincodeCoverage: { $in: [pin] } }
+      ]
+    });
+  } else if (search) {
+    const q = (search as string).trim();
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    andClauses.push({
+      $or: [
+        { name: { $regex: new RegExp(escaped, 'i') } },
+        { address: { $regex: new RegExp(escaped, 'i') } },
+        { city: { $regex: new RegExp(escaped, 'i') } },
+        { state: { $regex: new RegExp(escaped, 'i') } },
+        { district: { $regex: new RegExp(escaped, 'i') } },
+        { pincode: { $regex: new RegExp(escaped, 'i') } },
+        { pincodeCoverage: { $in: [q] } }
+      ]
+    });
+  }
+
+  if (andClauses.length > 0) {
+    filter.$and = andClauses;
+  }
+
+  const userLat = lat ? parseFloat(lat as string) : null;
+  const userLng = lng ? parseFloat(lng as string) : null;
+  const isNearMe = userLat !== null && userLng !== null && !isNaN(userLat) && !isNaN(userLng);
+
+  const pageNum = parseInt(page as string, 10) || 1;
+  const limitNum = Math.min(parseInt(limit as string, 10) || 20, 50); // Cap at 50 per page
+  const skip = (pageNum - 1) * limitNum;
+
+  // Sorting
+  const sortDirection = sortOrder === 'asc' ? 1 : -1;
+  const sortConfig: any = {};
+  const sortField = (sortBy as string) || 'name';
+  sortConfig[sortField] = sortDirection;
+
+  // Selected Lean Projections for maximum performance & bandwidth optimization
+  const fieldsToSelect = 'name name_hi type categories city district state pincode pincodeCoverage address address_hi contactNumber email website operatingHours operatingHours_hi lunchBreak isOpenNow isVerified facilities jurisdictionLevel parentAuthorityId isStateAuthority isNationalAuthority lastAuditDate coordinates viewsCount feedback';
+
+  let resources: any[];
+  let allMapPins: any[];
+  let total: number;
+
+  if (isNearMe && sortBy === 'distance') {
+    // 100% Generic Pre-Pagination Geospatial Distance Sorting
+    const [allMatchingRaw, metrics, allMapPinsRaw] = await Promise.all([
+      LegalResource.find(filter).select(fieldsToSelect).lean(),
+      getDirectoryMetrics(),
+      LegalResource.find(filter).select('name name_hi type city district state address contactNumber facilities isVerified lastAuditDate coordinates').lean()
+    ]);
+
+    total = allMatchingRaw.length;
+
+    // Compute precise distance for all matching resources
+    const allWithDistance = allMatchingRaw.map((r: any) => {
+      if (r.coordinates?.lat !== undefined && r.coordinates?.lng !== undefined && !isNaN(r.coordinates.lat) && !isNaN(r.coordinates.lng)) {
+        const dist = calculateDistance(userLat!, userLng!, r.coordinates.lat, r.coordinates.lng);
+        return { ...r, distanceKm: parseFloat(dist.toFixed(2)) };
+      }
+      return { ...r, distanceKm: 99999 };
+    });
+
+    // Sort by distance (nearest first for asc)
+    allWithDistance.sort((a: any, b: any) => {
+      const distA = a.distanceKm ?? 99999;
+      const distB = b.distanceKm ?? 99999;
+      return sortDirection === 1 ? distA - distB : distB - distA;
+    });
+
+    // Paginate after global distance sorting
+    resources = allWithDistance.slice(skip, skip + limitNum);
+
+    // Compute distance for all map pins
+    allMapPins = allMapPinsRaw.map((r: any) => {
+      if (r.coordinates?.lat !== undefined && r.coordinates?.lng !== undefined && !isNaN(r.coordinates.lat) && !isNaN(r.coordinates.lng)) {
+        const dist = calculateDistance(userLat!, userLng!, r.coordinates.lat, r.coordinates.lng);
+        return { ...r, distanceKm: parseFloat(dist.toFixed(2)) };
+      }
+      return r;
+    });
+
+    res.set('Cache-Control', 'public, max-age=60, must-revalidate');
+    return res.json({
+      success: true,
+      data: resources,
+      mapPins: allMapPins,
+      pagination: {
+        total,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(total / limitNum) || 1
+      },
+      metrics: {
+        total: metrics.total,
+        stateMetrics: metrics.stateMetrics,
+        typeMetrics: metrics.typeMetrics,
+        coveredStates: metrics.coveredStates
+      }
+    });
+  }
+
+  // Standard non-distance queries (e.g. sorted by name, type, recently audited)
+  const [resourcesRaw, totalCount, metrics, allMapPinsRaw] = await Promise.all([
+    LegalResource.find(filter).select(fieldsToSelect).sort(sortConfig).skip(skip).limit(limitNum).lean(),
+    LegalResource.countDocuments(filter),
+    getDirectoryMetrics(),
+    LegalResource.find(filter).select('name name_hi type city district state address contactNumber facilities isVerified lastAuditDate coordinates').lean()
+  ]);
+
+  total = totalCount;
+  resources = resourcesRaw;
+  allMapPins = allMapPinsRaw;
+
+  // If user coordinates provided on non-distance sort, attach distance telemetry
+  if (isNearMe) {
+    resources = resources.map((r: any) => {
+      if (r.coordinates?.lat !== undefined && r.coordinates?.lng !== undefined && !isNaN(r.coordinates.lat) && !isNaN(r.coordinates.lng)) {
+        const dist = calculateDistance(userLat!, userLng!, r.coordinates.lat, r.coordinates.lng);
+        return { ...r, distanceKm: parseFloat(dist.toFixed(2)) };
+      }
+      return r;
+    });
+
+    allMapPins = allMapPins.map((r: any) => {
+      if (r.coordinates?.lat !== undefined && r.coordinates?.lng !== undefined && !isNaN(r.coordinates.lat) && !isNaN(r.coordinates.lng)) {
+        const dist = calculateDistance(userLat!, userLng!, r.coordinates.lat, r.coordinates.lng);
+        return { ...r, distanceKm: parseFloat(dist.toFixed(2)) };
+      }
+      return r;
+    });
+  }
+
+  res.set('Cache-Control', 'public, max-age=180, must-revalidate');
+  res.json({
+    success: true,
+    data: resources,
+    mapPins: allMapPins,
+    pagination: {
+      total,
+      page: pageNum,
+      limit: limitNum,
+      pages: Math.ceil(total / limitNum) || 1
+    },
+    metrics: {
+      total: metrics.total,
+      stateMetrics: metrics.stateMetrics,
+      typeMetrics: metrics.typeMetrics,
+      coveredStates: metrics.coveredStates
+    }
+  });
+}));
+
+// Anti-Spam Rate Limiter: Max 20 suggestions per IP in 10 minutes
+const suggestionRateMap = new Map<string, number[]>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  const maxLimit = 20;
+
+  const timestamps = (suggestionRateMap.get(ip) || []).filter(t => now - t < windowMs);
+  if (timestamps.length >= maxLimit) {
+    return false;
+  }
+  timestamps.push(now);
+  suggestionRateMap.set(ip, timestamps);
+  return true;
+}
+
+// Periodic cleanup of stale rate-limit entries (every 5 minutes) to prevent memory leaks
+setInterval(() => {
+  const now = Date.now();
+  const windowMs = 10 * 60 * 1000;
+  for (const [ip, timestamps] of suggestionRateMap.entries()) {
+    const active = timestamps.filter(t => now - t < windowMs);
+    if (active.length === 0) {
+      suggestionRateMap.delete(ip);
+    } else {
+      suggestionRateMap.set(ip, active);
+    }
+  }
+}, 5 * 60 * 1000);
+
+
+
+// GET /check-duplicate-resource - High-precision duplicate check
+router.get('/check-duplicate-resource', asyncHandler(async (req: Request, res: Response) => {
+  const name = sanitizeString(req.query.name as string, 200);
+  const city = sanitizeString(req.query.city as string || req.query.district as string, 100);
+  const state = sanitizeString(req.query.state as string, 60);
+
+  if (!name || name.length < 3) {
+    return res.json({ success: true, data: { hasDuplicate: false, count: 0, matches: [] } });
+  }
+
+  // 1. Extract distinctive non-stop words
+  const distinctiveWords = name
+    .toLowerCase()
+    .split(/[\s,.\-_/]+/)
+    .filter(w => w.length >= 3 && !LEGAL_STOP_WORDS.has(w));
+
+  let filter: any;
+
+  if (distinctiveWords.length === 0) {
+    // If user only entered generic words (e.g. "Police Station" or "Court"), only match exact name
+    filter = {
+      name: { $regex: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}$`, 'i') }
+    };
+  } else {
+    // Search by distinctive keyword patterns (e.g. "Tis Hazari", "Saket", "Kinauli")
+    const regexPattern = distinctiveWords.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+    filter = {
+      name: { $regex: new RegExp(regexPattern, 'i') }
+    };
+  }
+
+  // 2. Geographic Boundary Isolation (Prioritize local matches)
+  if (city) {
+    filter.$or = [
+      { city: { $regex: new RegExp(city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') } },
+      { district: { $regex: new RegExp(city.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i') } }
+    ];
+  } else if (state) {
+    filter.state = { $regex: buildStateRegex(state) };
+  }
+
+  const matches = await LegalResource.find(filter)
+    .select('_id name type city district state address isVerified status')
+    .limit(3)
+    .lean();
+
+  res.json({
+    success: true,
+    data: {
+      hasDuplicate: matches.length > 0,
+      count: matches.length,
+      matches
+    }
+  });
+}));
+
+// POST /suggest-resource - User & Guest Suggestion Endpoint (Public, Sanitized)
+router.post('/suggest-resource', asyncHandler(async (req: Request, res: Response) => {
+  const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIp)) {
+    throw AppError.badRequest('Rate limit exceeded. Please wait a few minutes before submitting another suggestion.');
+  }
+
+  const {
+    categories,
+    subcategories,
+    pincodeCoverage,
     contactNumber,
-    website,
-    languages: languages || ['English', 'Hindi'],
+    email,
+    facilities,
+    languages,
     coordinates,
+    targetBeneficiaries,
+    signboardImageUrl,
+    is24x7Emergency,
+    submitter,
+    auditNotes
+  } = req.body;
+
+  // ── Server-Side Input Sanitization (XSS prevention + length caps) ──
+  const name = sanitizeString(req.body.name, RESOURCE_VALIDATION_RULES.name.max);
+  const type = sanitizeString(req.body.type, RESOURCE_VALIDATION_RULES.type.max);
+  const city = sanitizeString(req.body.city, RESOURCE_VALIDATION_RULES.city.max);
+  const district = sanitizeString(req.body.district, RESOURCE_VALIDATION_RULES.district.max);
+  const state = sanitizeString(req.body.state, RESOURCE_VALIDATION_RULES.state.max);
+  const pincode = sanitizeString(req.body.pincode, RESOURCE_VALIDATION_RULES.pincode.length);
+  const address = sanitizeString(req.body.address, RESOURCE_VALIDATION_RULES.address.max);
+  const website = sanitizeString(req.body.website, RESOURCE_VALIDATION_RULES.website.max);
+  const operatingHours = sanitizeString(req.body.operatingHours, RESOURCE_VALIDATION_RULES.operatingHours.max);
+  const operatingDays = sanitizeString(req.body.operatingDays, RESOURCE_VALIDATION_RULES.operatingDays.max);
+  const lunchBreak = sanitizeString(req.body.lunchBreak, RESOURCE_VALIDATION_RULES.lunchBreak.max);
+  const feeType = sanitizeString(req.body.feeType, RESOURCE_VALIDATION_RULES.feeType.max);
+  const notes = sanitizeString(req.body.notes, RESOURCE_VALIDATION_RULES.notes.max);
+
+  const resolvedCity = (city || district || '').trim();
+  const resolvedDistrict = (district || city || '').trim();
+  const resolvedState = (state || 'Delhi').trim();
+
+  // ── Required Fields Validation ──
+  if (!name || !type || !resolvedCity || !address) {
+    throw AppError.badRequest('Required fields: name, type, city, address.');
+  }
+
+  // ── Enum Validation (reject unknown values) ──
+  if (!isValidResourceType(type)) {
+    throw AppError.badRequest(`Invalid resource type: "${type}". Allowed: ${VALID_RESOURCE_TYPES.join(', ')}`);
+  }
+  if (feeType && !isValidFeeType(feeType)) {
+    throw AppError.badRequest(`Invalid fee type: "${feeType}". Allowed: ${VALID_FEE_TYPES.join(', ')}`);
+  }
+  if (operatingDays && !isValidOperatingDays(operatingDays)) {
+    throw AppError.badRequest(`Invalid operating days: "${operatingDays}". Allowed: ${VALID_OPERATING_DAYS.join(', ')}`);
+  }
+
+  // ── Format Validation ──
+  if (pincode && !/^\d{6}$/.test(pincode)) {
+    throw AppError.badRequest('PIN code must be exactly 6 digits.');
+  }
+
+  // Validate email format if provided (sanitized array or single string)
+  const emailArr = Array.isArray(email) ? email : (email ? [email] : []);
+  for (const e of emailArr) {
+    if (typeof e === 'string' && e.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e.trim())) {
+      throw AppError.badRequest(`Invalid email format: "${sanitizeString(e, 50)}"`);
+    }
+  }
+
+  // Validate coordinates bounds if provided
+  if (coordinates && coordinates.lat !== undefined && coordinates.lng !== undefined) {
+    const lat = Number(coordinates.lat);
+    const lng = Number(coordinates.lng);
+    if (!isNaN(lat) && !isNaN(lng)) {
+      if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+        throw AppError.badRequest('Coordinates out of valid range (lat: -90..90, lng: -180..180).');
+      }
+    }
+  }
+
+  // Validate submitter role if provided
+  if (submitter?.role && !isValidSubmitterRole(submitter.role)) {
+    throw AppError.badRequest(`Invalid submitter role: "${sanitizeString(submitter.role, 20)}". Allowed: ${VALID_SUBMITTER_ROLES.join(', ')}`);
+  }
+
+  // 1. High-Accuracy Coordinates Resolution (GPS -> City Centroid -> State Centroid)
+  let finalCoords: { lat: number; lng: number };
+
+  if (coordinates && coordinates.lat && coordinates.lng && !isNaN(Number(coordinates.lat)) && !isNaN(Number(coordinates.lng)) && (Number(coordinates.lat) !== 0 || Number(coordinates.lng) !== 0)) {
+    finalCoords = {
+      lat: parseFloat(Number(coordinates.lat).toFixed(6)),
+      lng: parseFloat(Number(coordinates.lng).toFixed(6))
+    };
+  } else {
+    // Dynamic Geocoding centroid fallback with slight realistic spatial jitter (~1km)
+    const cityKey = resolvedCity.toLowerCase().trim();
+    const stateKey = resolvedState.toLowerCase().trim();
+    const centroid = GEO_CENTROIDS[cityKey] || GEO_CENTROIDS[stateKey] || { lat: 28.6139, lng: 77.2090 };
+
+    const jitterLat = (Math.random() - 0.5) * 0.02;
+    const jitterLng = (Math.random() - 0.5) * 0.02;
+
+    finalCoords = {
+      lat: parseFloat((centroid.lat + jitterLat).toFixed(6)),
+      lng: parseFloat((centroid.lng + jitterLng).toFixed(6))
+    };
+  }
+
+  // 2. Submitter Profile Metadata & Verification Context
+  const isGuest = submitter ? !!submitter.isGuest : true;
+  const submitterRole = submitter?.role || (isGuest ? 'Citizen' : 'Advocate');
+  const submitterName = submitter?.name?.trim() || (isGuest ? 'Guest Contributor' : 'Verified Member');
+  const submitterEmail = submitter?.email?.trim() || undefined;
+  const submitterPhone = submitter?.phone?.trim() || undefined;
+  const submitterUserId = submitter?.userId || undefined;
+
+  // 3. Construct LegalResource Document
+  // Sanitize submitter fields
+  const sanitizedSubmitterName = sanitizeString(submitter?.name, 100) || (isGuest ? 'Guest Contributor' : 'Verified Member');
+  const sanitizedSubmitterEmail = sanitizeString(submitter?.email, 100) || undefined;
+  const sanitizedSubmitterPhone = sanitizeString(submitter?.phone, 20) || undefined;
+
+  const newResource = new LegalResource({
+    name: name,
+    type: type || 'LegalAid',
+    categories: categories && categories.length ? categories : ['General Legal Assistance'],
+    subcategories: subcategories || [],
+    city: resolvedCity,
+    district: resolvedDistrict,
+    state: resolvedState,
+    pincode: pincode ? pincode.trim() : '',
+    pincodeCoverage: Array.isArray(pincodeCoverage) ? pincodeCoverage : (pincodeCoverage ? [pincodeCoverage] : []),
+    address: address.trim(),
+    contactNumber: Array.isArray(contactNumber) ? contactNumber : (contactNumber ? [contactNumber] : []),
+    email: Array.isArray(email) ? email : (email ? [email] : []),
+    website: website ? website.trim() : '',
+    operatingHours: operatingHours || '09:30 AM - 05:00 PM',
+    operatingDays: operatingDays || 'Mon-Sat',
+    lunchBreak: lunchBreak || '01:30 PM - 02:00 PM',
+    is24x7Emergency: !!is24x7Emergency,
+    feeType: feeType || 'FreeLegalAid',
+    targetBeneficiaries: Array.isArray(targetBeneficiaries) ? targetBeneficiaries : [],
+    signboardImageUrl: signboardImageUrl ? signboardImageUrl.trim() : undefined,
+    submitter: {
+      name: sanitizedSubmitterName,
+      email: sanitizedSubmitterEmail,
+      phone: sanitizedSubmitterPhone,
+      role: submitterRole,
+      isGuest,
+      userId: submitterUserId
+    },
+    facilities: {
+      hasEfiling: facilities?.hasEfiling ?? false,
+      hasLADCS: facilities?.hasLADCS ?? false,
+      hasVCRoom: facilities?.hasVCRoom ?? false,
+      hasLegalAidClinic: facilities?.hasLegalAidClinic ?? true,
+      isWheelchairAccessible: facilities?.isWheelchairAccessible ?? false
+    },
+    languages: languages && languages.length ? languages : ['English', 'Hindi'],
+    coordinates: finalCoords,
     isVerified: false,
     status: 'pending',
-    source: 'user_suggestion'
+    source: isGuest ? 'guest_suggestion' : 'user_suggestion',
+    auditNotes: auditNotes || (notes ? `Public Suggestion: ${notes.trim()}` : `Submitted by ${submitterName} (${submitterRole}${isGuest ? ' - Guest' : ''}) on ${new Date().toLocaleDateString('en-IN')}`)
   });
 
   await newResource.save();
-  res.status(201).json({ success: true, message: 'Resource suggestion submitted successfully for moderation.', data: newResource });
+
+  res.status(201).json({
+    success: true,
+    message: isGuest
+      ? 'Thank you! Your suggestion has been queued for verification by the legal registry team.'
+      : 'Thank you! Your resource contribution has been recorded in the verification pipeline.',
+    data: newResource
+  });
 }));
 
 // GET /resources/:id - Get a single legal resource by ID (Public)
 router.get('/resources/:id', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const resource = await LegalResource.findById(id).lean();
+  const resource: any = await LegalResource.findById(id).lean();
   if (!resource) {
     throw AppError.notFound('Resource not found.');
   }
+  if (!resource.feedback) {
+    resource.feedback = { upvotes: 0, downvotes: 0, helpfulnessScore: 100, reasons: [] };
+  }
+
+  // Populate Parent Authority if hierarchical link exists
+  if (resource.parentAuthorityId) {
+    const parent = await LegalResource.findById(resource.parentAuthorityId)
+      .select('name type city state jurisdictionLevel address contactNumber')
+      .lean();
+    if (parent) {
+      resource.parentAuthority = parent;
+    }
+  }
+
   res.json({ success: true, data: resource });
+}));
+
+// POST /resources/:id/feedback - Record user helpful/not helpful feedback
+router.post('/resources/:id/feedback', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const { isHelpful, reason } = req.body;
+  const resource = await LegalResource.findById(id);
+  if (!resource) {
+    throw AppError.notFound('Resource not found.');
+  }
+
+  if (!resource.feedback) {
+    resource.feedback = { upvotes: 0, downvotes: 0, helpfulnessScore: 100, reasons: [] };
+  }
+
+  if (isHelpful) {
+    resource.feedback.upvotes = (resource.feedback.upvotes || 0) + 1;
+  } else {
+    resource.feedback.downvotes = (resource.feedback.downvotes || 0) + 1;
+    if (reason) {
+      const existingReason = resource.feedback.reasons?.find((r: any) => r.reason === reason);
+      if (existingReason) {
+        existingReason.count = (existingReason.count || 0) + 1;
+      } else {
+        resource.feedback.reasons = resource.feedback.reasons || [];
+        resource.feedback.reasons.push({ reason, count: 1 });
+      }
+    }
+  }
+
+  const totalVotes = (resource.feedback.upvotes || 0) + (resource.feedback.downvotes || 0);
+  resource.feedback.helpfulnessScore = totalVotes > 0
+    ? Math.round(((resource.feedback.upvotes || 0) / totalVotes) * 100)
+    : 100;
+
+  await resource.save();
+  res.json({ success: true, message: 'Feedback submitted successfully', feedback: resource.feedback });
+}));
+
+// POST /resources/:id/view - Record resource view telemetry
+router.post('/resources/:id/view', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  await LegalResource.findByIdAndUpdate(id, {
+    $inc: { viewsCount: 1 },
+    $set: { lastViewedAt: new Date() }
+  });
+  res.json({ success: true, message: 'View telemetry recorded' });
 }));
 
 // GET /helplinesAll - Fetch all emergency helplines (Public)

@@ -103,10 +103,10 @@ router.put('/acts/:shortName', asyncHandler(async (req: Request, res: Response) 
 
   let act;
   if (targetId) {
-    act = await BareAct.findByIdAndUpdate(targetId, updateData, { new: true }).lean();
+    act = await BareAct.findByIdAndUpdate(targetId, updateData, { returnDocument: 'after' }).lean();
   } else {
     const safeShortName = escapeRegExp(shortName);
-    act = await BareAct.findOneAndUpdate({ shortName: new RegExp(`^${safeShortName}$`, 'i') }, updateData, { new: true }).lean();
+    act = await BareAct.findOneAndUpdate({ shortName: new RegExp(`^${safeShortName}$`, 'i') }, updateData, { returnDocument: 'after' }).lean();
   }
 
   if (!act) {

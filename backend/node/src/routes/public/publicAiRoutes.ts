@@ -348,4 +348,103 @@ Title: ${section.title}`;
   });
 }));
 
+// POST /resources/ai-search - Public Natural Language Query to Filter Parser
+router.post('/resources/ai-search', asyncHandler(async (req: Request, res: Response) => {
+  const { query } = req.body;
+  if (!query || typeof query !== 'string') {
+    throw AppError.badRequest('Please provide a search query.');
+  }
+
+  const q = query.toLowerCase();
+  const filters: Record<string, any> = {};
+  const matchedParams: Record<string, any> = {};
+
+  // State detection
+  const STATES = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Delhi', 'Chandigarh', 'Jammu & Kashmir', 'Ladakh', 'Puducherry'
+  ];
+
+  for (const state of STATES) {
+    if (q.includes(state.toLowerCase())) {
+      filters.state = state;
+      matchedParams.state = state;
+      break;
+    }
+  }
+
+  // Type detection
+  if (q.includes('court') || q.includes('high court') || q.includes('district court') || q.includes('tribunal')) {
+    filters.type = 'Court';
+    matchedParams.type = 'Court';
+  } else if (q.includes('legal aid') || q.includes('dlsa') || q.includes('slsa') || q.includes('free lawyer') || q.includes('free help') || q.includes('taluka legal') || q.includes('clinic')) {
+    filters.type = 'LegalAid';
+    matchedParams.type = 'LegalAid';
+  } else if (q.includes('police') || q.includes('thana') || q.includes('station') || q.includes('fir')) {
+    filters.type = 'PoliceStation';
+    matchedParams.type = 'PoliceStation';
+  } else if (q.includes('notary') || q.includes('notaries') || q.includes('affidavit') || q.includes('stamp paper')) {
+    filters.type = 'Notary';
+    matchedParams.type = 'Notary';
+  } else if (q.includes('lok adalat') || q.includes('national lok adalat')) {
+    filters.type = 'LokAdalat';
+    matchedParams.type = 'LokAdalat';
+  } else if (q.includes('mediation') || q.includes('conciliation') || q.includes('settlement')) {
+    filters.type = 'MediationCenter';
+    matchedParams.type = 'MediationCenter';
+  } else if (q.includes('bar association') || q.includes('bar council') || q.includes('advocates association')) {
+    filters.type = 'BarAssociation';
+    matchedParams.type = 'BarAssociation';
+  }
+
+  // Facilities detection
+  if (q.includes('efiling') || q.includes('e-filing') || q.includes('digital filing') || q.includes('online filing')) {
+    filters['facilities.hasEfiling'] = true;
+    matchedParams.facility = 'hasEfiling';
+  }
+  if (q.includes('ladcs') || q.includes('defense counsel') || q.includes('public defender')) {
+    filters['facilities.hasLADCS'] = true;
+    matchedParams.facility = 'hasLADCS';
+  }
+  if (q.includes('vc') || q.includes('video conferencing') || q.includes('virtual hearing')) {
+    filters['facilities.hasVCRoom'] = true;
+    matchedParams.facility = 'hasVCRoom';
+  }
+  if (q.includes('wheelchair') || q.includes('accessible') || q.includes('ramp') || q.includes('disability')) {
+    filters['facilities.isWheelchairAccessible'] = true;
+    matchedParams.facility = 'isWheelchairAccessible';
+  }
+
+  // Pincode detection (6 digits)
+  const pinMatch = query.match(/\b\d{6}\b/);
+  if (pinMatch) {
+    matchedParams.search = pinMatch[0];
+  }
+
+  // Search keyword fallback
+  const remainingSearch = query
+    .replace(/(in|at|with|for|and|or|of|near|find|show|list|me|all|the|where|can|i|get)\b/gi, '')
+    .trim();
+
+  let explanation = 'Identified filters: ';
+  const parts: string[] = [];
+  if (matchedParams.state) parts.push(`State: ${matchedParams.state}`);
+  if (matchedParams.type) parts.push(`Category: ${matchedParams.type}`);
+  if (matchedParams.facility) parts.push(`Facility: ${matchedParams.facility}`);
+  if (matchedParams.search) parts.push(`Keyword: "${matchedParams.search}"`);
+  explanation += parts.length > 0 ? parts.join(' • ') : `Search: "${remainingSearch}"`;
+
+  res.json({
+    success: true,
+    filters,
+    matchedParams,
+    search: matchedParams.search || (parts.length > 0 ? '' : remainingSearch),
+    explanation
+  });
+}));
+
 export default router;

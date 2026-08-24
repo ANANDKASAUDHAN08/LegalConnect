@@ -2,6 +2,8 @@ import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { AppError } from '../../utils/AppError';
 import LegalResource from '../../models/LegalResource';
+import { resolveGeoCentroid } from '../../utils/geoUtils';
+import { buildStateRegex } from '../public/publicHelpRoutes';
 
 const router = Router();
 
@@ -16,19 +18,24 @@ router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
     jurisdictionLevel,
     facility,
     search,
+    hasIssues,
     startDate,
     endDate,
     sortBy = 'createdAt',
     sortOrder = 'desc',
     page = '1',
-    limit = '10'
+    limit = '20'
   } = req.query;
 
   const filter: any = {};
 
-  if (status) filter.status = status;
+  if (hasIssues === 'true') {
+    filter['feedback.downvotes'] = { $gt: 0 };
+  } else if (status) {
+    filter.status = status;
+  }
   if (state && state !== 'All') {
-    filter.state = { $regex: new RegExp(`^${(state as string).trim()}$`, 'i') };
+    filter.state = { $regex: buildStateRegex(state as string) };
   }
   if (district && district !== 'All') {
     filter.district = { $regex: new RegExp((district as string).trim(), 'i') };
@@ -152,6 +159,7 @@ router.post('/resources', asyncHandler(async (req: Request, res: Response) => {
     email = [],
     website,
     operatingHours = '09:30 AM - 05:00 PM (Mon-Sat)',
+    operatingDays = 'Mon-Sat',
     lunchBreak = '01:30 PM - 02:00 PM',
     languages = ['English', 'Hindi'],
     coordinates,
@@ -159,6 +167,11 @@ router.post('/resources', asyncHandler(async (req: Request, res: Response) => {
     jurisdictionLevel = 'District',
     parentAuthorityId,
     facilities = {},
+    feeType = 'FreeLegalAid',
+    targetBeneficiaries = [],
+    signboardImageUrl,
+    is24x7Emergency = false,
+    submitter,
     executiveChairman,
     memberSecretary,
     patronInChief,
@@ -190,7 +203,17 @@ router.post('/resources', asyncHandler(async (req: Request, res: Response) => {
     email: Array.isArray(email) ? email : [email].filter(Boolean),
     website,
     operatingHours,
+    operatingDays,
     lunchBreak,
+    is24x7Emergency: !!is24x7Emergency,
+    feeType,
+    targetBeneficiaries: Array.isArray(targetBeneficiaries) ? targetBeneficiaries : [],
+    signboardImageUrl: signboardImageUrl ? signboardImageUrl.trim() : undefined,
+    submitter: submitter || {
+      name: 'System Administrator',
+      role: 'CourtOfficial',
+      isGuest: false
+    },
     languages,
     coordinates: {
       lat: Number(coordinates.lat) || 28.6139,
@@ -501,6 +524,16 @@ router.patch('/resources/:id/verify-cycle', asyncHandler(async (req: Request, re
   resource.verificationExpiry = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000); // +1 Year
   resource.verifiedByAdmin = verifiedBy;
   resource.auditNotes = notes;
+
+  // Append to changeLog
+  resource.changeLog = resource.changeLog || [];
+  resource.changeLog.push({
+    timestamp: new Date(),
+    adminEmail: (req as any).user?.email || verifiedBy,
+    action: 'verified_cycle',
+    diff: { notes, verificationExpiry: resource.verificationExpiry }
+  });
+
   await resource.save();
 
   res.json({
@@ -510,10 +543,57 @@ router.patch('/resources/:id/verify-cycle', asyncHandler(async (req: Request, re
   });
 }));
 
+// PATCH /resources/:id/resolve-issues - Resolve citizen discrepancy reports and reset feedback
+router.patch('/resources/:id/resolve-issues', asyncHandler(async (req: Request, res: Response) => {
+  const { id } = req.params;
+  const resource = await LegalResource.findById(id);
+  if (!resource) {
+    throw AppError.notFound('Legal resource not found.');
+  }
+
+  const prevDownvotes = resource.feedback?.downvotes || 0;
+  resource.feedback = {
+    upvotes: resource.feedback?.upvotes || 0,
+    downvotes: 0,
+    helpfulnessScore: 100,
+    reasons: []
+  };
+
+  resource.lastAuditDate = new Date();
+  resource.isVerified = true;
+  resource.auditNotes = (resource.auditNotes || '') + ` | Discrepancies reviewed & resolved on ${new Date().toLocaleDateString('en-IN')}`;
+
+  resource.changeLog = resource.changeLog || [];
+  resource.changeLog.push({
+    timestamp: new Date(),
+    adminEmail: (req as any).user?.email || 'admin@legalconnect.org',
+    action: 'RESOLVE_DISCREPANCY_REPORTS',
+    diff: { resolvedDownvotes: prevDownvotes }
+  });
+
+  await resource.save();
+
+  res.json({
+    success: true,
+    message: `Reported issues marked as resolved for "${resource.name}". Verification renewed.`,
+    data: resource
+  });
+}));
+
 // PUT update legal resource
 router.put('/resources/:id', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
-  const updates = { ...req.body, lastAuditDate: new Date() };
+  const updates = { ...req.body };
+
+  // Strip immutable / conflict fields so they don't collide with Mongo update operators
+  delete updates._id;
+  delete updates.id;
+  delete updates.__v;
+  delete updates.createdAt;
+  delete updates.updatedAt;
+  delete updates.changeLog;
+
+  updates.lastAuditDate = new Date();
 
   const resource = await LegalResource.findById(id);
   if (!resource) {
@@ -524,7 +604,22 @@ router.put('/resources/:id', asyncHandler(async (req: Request, res: Response) =>
     updates.isVerified = true;
   }
 
-  const updatedResource = await LegalResource.findByIdAndUpdate(id, updates, { new: true });
+  const changeEntry = {
+    timestamp: new Date(),
+    adminEmail: (req as any).user?.email || 'Administrator',
+    action: updates.status === 'approved' ? 'approved_and_published' : 'updated',
+    diff: updates
+  };
+
+  const updatedResource = await LegalResource.findByIdAndUpdate(
+    id,
+    {
+      $set: updates,
+      $push: { changeLog: changeEntry }
+    },
+    { returnDocument: 'after' }
+  );
+
   res.json({ success: true, message: 'Resource updated successfully.', data: updatedResource });
 }));
 
@@ -548,7 +643,17 @@ router.post('/resources/bulk-status', asyncHandler(async (req: Request, res: Res
   const isVerified = status === 'approved';
   const result = await LegalResource.updateMany(
     { _id: { $in: ids } },
-    { $set: { status, isVerified, lastAuditDate: new Date() } }
+    {
+      $set: { status, isVerified, lastAuditDate: new Date() },
+      $push: {
+        changeLog: {
+          timestamp: new Date(),
+          adminEmail: (req as any).user?.email || 'Bulk Admin Operation',
+          action: 'status_changed',
+          diff: { status }
+        }
+      }
+    }
   );
 
   res.json({
@@ -575,6 +680,14 @@ router.post('/resources/bulk-verify', asyncHandler(async (req: Request, res: Res
         verificationExpiry: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
         verifiedByAdmin: 'Judicial Registry Admin',
         auditNotes: notes
+      },
+      $push: {
+        changeLog: {
+          timestamp: new Date(),
+          adminEmail: (req as any).user?.email || 'Judicial Registry Admin',
+          action: 'bulk_verified_cycle',
+          diff: { notes }
+        }
       }
     }
   );
@@ -599,6 +712,327 @@ router.post('/resources/bulk-delete', asyncHandler(async (req: Request, res: Res
     success: true,
     message: `Deleted ${result.deletedCount} institutional record(s) from registry.`,
     deletedCount: result.deletedCount
+  });
+}));
+
+// ── Phase 5: Enterprise Analytics, Duplicate Detection, Bulk Geocoding, AI Search ──
+
+// GET /resources/analytics - Aggregate usage and registry telemetry
+router.get('/resources/analytics', asyncHandler(async (req: Request, res: Response) => {
+  const [
+    totalResources,
+    approvedCount,
+    pendingCount,
+    typeStats,
+    stateStats,
+    viewsAggregate,
+    feedbackAggregate
+  ] = await Promise.all([
+    LegalResource.countDocuments(),
+    LegalResource.countDocuments({ status: 'approved' }),
+    LegalResource.countDocuments({ status: 'pending' }),
+    LegalResource.aggregate([
+      { $group: { _id: '$type', count: { $sum: 1 } } },
+      { $sort: { count: -1 } }
+    ]),
+    LegalResource.aggregate([
+      { $group: { _id: '$state', count: { $sum: 1 } } },
+      { $sort: { count: -1 } },
+      { $limit: 10 }
+    ]),
+    LegalResource.aggregate([
+      { $group: { _id: null, totalViews: { $sum: '$viewsCount' } } }
+    ]),
+    LegalResource.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalUpvotes: { $sum: '$feedback.upvotes' },
+          totalDownvotes: { $sum: '$feedback.downvotes' }
+        }
+      }
+    ])
+  ]);
+
+  const totalViews = viewsAggregate[0]?.totalViews || 0;
+  const totalUpvotes = feedbackAggregate[0]?.totalUpvotes || 0;
+  const totalDownvotes = feedbackAggregate[0]?.totalDownvotes || 0;
+  const totalFeedback = totalUpvotes + totalDownvotes;
+  const satisfactionRate = totalFeedback > 0 ? Math.round((totalUpvotes / totalFeedback) * 100) : 100;
+
+  // Stale count (>12 months)
+  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+  const staleCount = await LegalResource.countDocuments({
+    status: 'approved',
+    lastAuditDate: { $lt: oneYearAgo }
+  });
+
+  // Top 5 most viewed resources
+  const topViewed = await LegalResource.find({ status: 'approved' })
+    .sort({ viewsCount: -1 })
+    .limit(5)
+    .select('name type city state viewsCount feedback')
+    .lean();
+
+  res.json({
+    success: true,
+    data: {
+      totalResources,
+      approvedCount,
+      pendingCount,
+      staleCount,
+      totalViews,
+      satisfactionRate,
+      totalUpvotes,
+      totalDownvotes,
+      typeDistribution: typeStats.map((t: any) => ({ type: t._id || 'Unknown', count: t.count })),
+      topStates: stateStats.map((s: any) => ({ state: s._id || 'Unspecified', count: s.count })),
+      topViewed
+    }
+  });
+}));
+
+// GET /resources/duplicates - Fuzzy and exact match duplicate detection
+router.get('/resources/duplicates', asyncHandler(async (req: Request, res: Response) => {
+  const resources = await LegalResource.find().select('name address city state district contactNumber type').lean();
+  const duplicatePairs: Array<{
+    primary: any;
+    duplicate: any;
+    similarityScore: number;
+    reason: string;
+  }> = [];
+
+  const cleanStr = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+  for (let i = 0; i < resources.length; i++) {
+    for (let j = i + 1; j < resources.length; j++) {
+      const a = resources[i];
+      const b = resources[j];
+
+      // Exact contact number match
+      const commonPhone = (a.contactNumber || []).some((num: string) =>
+        (b.contactNumber || []).some((bNum: string) => cleanStr(num) === cleanStr(bNum) && cleanStr(num).length >= 8)
+      );
+
+      if (commonPhone && a.type === b.type) {
+        duplicatePairs.push({
+          primary: a,
+          duplicate: b,
+          similarityScore: 95,
+          reason: 'Identical Contact Number and Institutional Type'
+        });
+        continue;
+      }
+
+      // Name similarity within same state and district
+      const nameA = cleanStr(a.name);
+      const nameB = cleanStr(b.name);
+      if (a.state && b.state && a.state.toLowerCase() === b.state.toLowerCase()) {
+        if (nameA === nameB) {
+          duplicatePairs.push({
+            primary: a,
+            duplicate: b,
+            similarityScore: 100,
+            reason: 'Identical Institution Name in Same State'
+          });
+        } else if (nameA.length > 8 && nameB.length > 8 && (nameA.includes(nameB) || nameB.includes(nameA))) {
+          duplicatePairs.push({
+            primary: a,
+            duplicate: b,
+            similarityScore: 85,
+            reason: 'High Name Similarity in Same State'
+          });
+        }
+      }
+    }
+  }
+
+  res.json({
+    success: true,
+    count: duplicatePairs.length,
+    data: duplicatePairs.slice(0, 50)
+  });
+}));
+
+// POST /resources/duplicates/merge - Merge duplicate into primary
+router.post('/resources/duplicates/merge', asyncHandler(async (req: Request, res: Response) => {
+  const { primaryId, duplicateId } = req.body;
+  if (!primaryId || !duplicateId) {
+    throw AppError.badRequest('Both primaryId and duplicateId are required.');
+  }
+
+  const primary = await LegalResource.findById(primaryId);
+  const duplicate = await LegalResource.findById(duplicateId);
+
+  if (!primary || !duplicate) {
+    throw AppError.notFound('One or both resources could not be found.');
+  }
+
+  // Merge contact numbers
+  const contacts = new Set([...(primary.contactNumber || []), ...(duplicate.contactNumber || [])]);
+  primary.contactNumber = Array.from(contacts);
+
+  // Merge emails
+  const emails = new Set([...(primary.email || []), ...(duplicate.email || [])]);
+  primary.email = Array.from(emails);
+
+  // Merge languages
+  const languages = new Set([...(primary.languages || []), ...(duplicate.languages || [])]);
+  primary.languages = Array.from(languages);
+
+  // Merge facilities (if duplicate has facility, primary gets true)
+  if (duplicate.facilities) {
+    primary.facilities = primary.facilities || {} as any;
+    if (duplicate.facilities.hasEfiling) primary.facilities.hasEfiling = true;
+    if (duplicate.facilities.hasLADCS) primary.facilities.hasLADCS = true;
+    if (duplicate.facilities.hasVCRoom) primary.facilities.hasVCRoom = true;
+    if (duplicate.facilities.hasLegalAidClinic) primary.facilities.hasLegalAidClinic = true;
+    if (duplicate.facilities.isWheelchairAccessible) primary.facilities.isWheelchairAccessible = true;
+  }
+
+  // Append to changeLog
+  primary.changeLog = primary.changeLog || [];
+  primary.changeLog.push({
+    timestamp: new Date(),
+    adminEmail: (req as any).user?.email || 'Registry Merge Tool',
+    action: 'merged_duplicate',
+    diff: { mergedWithId: duplicateId, duplicateName: duplicate.name }
+  });
+
+  await primary.save();
+  await LegalResource.findByIdAndDelete(duplicateId);
+
+  res.json({
+    success: true,
+    message: `Merged "${duplicate.name}" into "${primary.name}". Duplicate record removed.`,
+    data: primary
+  });
+}));
+
+// POST /resources/geocode-missing - Batch geocode missing coordinates
+router.post('/resources/geocode-missing', asyncHandler(async (req: Request, res: Response) => {
+  const missingCoords = await LegalResource.find({
+    $or: [
+      { coordinates: { $exists: false } },
+      { 'coordinates.lat': 0, 'coordinates.lng': 0 },
+      { 'coordinates.lat': null }
+    ]
+  });
+
+  let geocodedCount = 0;
+
+  for (const resource of missingCoords) {
+    const coord = resolveGeoCentroid(resource.city || resource.district || resource.state);
+
+    // Apply minor jitter so markers in same city don't completely overlap
+    const jitterLat = coord.lat + (Math.random() - 0.5) * 0.04;
+    const jitterLng = coord.lng + (Math.random() - 0.5) * 0.04;
+
+    resource.coordinates = {
+      lat: parseFloat(jitterLat.toFixed(5)),
+      lng: parseFloat(jitterLng.toFixed(5))
+    };
+
+    await resource.save();
+    geocodedCount++;
+  }
+
+  res.json({
+    success: true,
+    message: `Batch geocoding completed. Resolved ${geocodedCount} record(s).`,
+    geocodedCount
+  });
+}));
+
+// POST /resources/ai-search - Natural language query to filter combination parser
+router.post('/resources/ai-search', asyncHandler(async (req: Request, res: Response) => {
+  const { query } = req.body;
+  if (!query || typeof query !== 'string') {
+    throw AppError.badRequest('Please provide a search query.');
+  }
+
+  const q = query.toLowerCase();
+  const filters: Record<string, any> = {};
+  const matchedParams: Record<string, any> = {};
+
+  // State detection
+  const STATES = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Delhi', 'Chandigarh', 'Jammu & Kashmir', 'Ladakh', 'Puducherry'
+  ];
+
+  for (const state of STATES) {
+    if (q.includes(state.toLowerCase())) {
+      filters.state = state;
+      matchedParams.state = state;
+      break;
+    }
+  }
+
+  // Type detection
+  if (q.includes('court') || q.includes('high court') || q.includes('district court') || q.includes('tribunal')) {
+    filters.type = 'Court';
+    matchedParams.type = 'Court';
+  } else if (q.includes('legal aid') || q.includes('dlsa') || q.includes('slsa') || q.includes('taluka legal')) {
+    filters.type = 'LegalAid';
+    matchedParams.type = 'LegalAid';
+  } else if (q.includes('police') || q.includes('thana') || q.includes('station')) {
+    filters.type = 'PoliceStation';
+    matchedParams.type = 'PoliceStation';
+  } else if (q.includes('notary') || q.includes('notaries') || q.includes('affidavit')) {
+    filters.type = 'Notary';
+    matchedParams.type = 'Notary';
+  } else if (q.includes('lok adalat') || q.includes('national lok adalat')) {
+    filters.type = 'LokAdalat';
+    matchedParams.type = 'LokAdalat';
+  } else if (q.includes('mediation') || q.includes('conciliation')) {
+    filters.type = 'MediationCenter';
+    matchedParams.type = 'MediationCenter';
+  } else if (q.includes('bar association') || q.includes('bar council') || q.includes('advocates association')) {
+    filters.type = 'BarAssociation';
+    matchedParams.type = 'BarAssociation';
+  }
+
+  // Facilities detection
+  if (q.includes('efiling') || q.includes('e-filing') || q.includes('digital filing') || q.includes('online filing')) {
+    filters['facilities.hasEfiling'] = true;
+    matchedParams.facility = 'hasEfiling';
+  }
+  if (q.includes('ladcs') || q.includes('defense counsel') || q.includes('public defender')) {
+    filters['facilities.hasLADCS'] = true;
+    matchedParams.facility = 'hasLADCS';
+  }
+  if (q.includes('vc') || q.includes('video conferencing') || q.includes('virtual hearing')) {
+    filters['facilities.hasVCRoom'] = true;
+    matchedParams.facility = 'hasVCRoom';
+  }
+  if (q.includes('wheelchair') || q.includes('accessible') || q.includes('ramp') || q.includes('disability')) {
+    filters['facilities.isWheelchairAccessible'] = true;
+    matchedParams.facility = 'isWheelchairAccessible';
+  }
+
+  // Search keyword fallback
+  const remainingSearch = query
+    .replace(/(in|at|with|for|and|or|of|near|find|show|list|me|all|the)\b/gi, '')
+    .trim();
+
+  let explanation = 'Extracted filters: ';
+  const parts: string[] = [];
+  if (matchedParams.state) parts.push(`State: ${matchedParams.state}`);
+  if (matchedParams.type) parts.push(`Type: ${matchedParams.type}`);
+  if (matchedParams.facility) parts.push(`Facility: ${matchedParams.facility}`);
+  explanation += parts.length > 0 ? parts.join(', ') : `Keyword Search: "${remainingSearch}"`;
+
+  res.json({
+    success: true,
+    filters,
+    matchedParams,
+    search: parts.length > 0 ? '' : remainingSearch,
+    explanation
   });
 }));
 

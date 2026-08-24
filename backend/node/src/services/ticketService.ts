@@ -58,8 +58,8 @@ export async function updateTicketStatus(id: string, status: string, notesText?:
     return await ContactTicket.findByIdAndUpdate(
       id,
       { $set: updateData, $push: { notes: note } },
-      { new: true }
+      { returnDocument: 'after' }
     );
   }
-  return await ContactTicket.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+  return await ContactTicket.findByIdAndUpdate(id, { $set: updateData }, { returnDocument: 'after' });
 }

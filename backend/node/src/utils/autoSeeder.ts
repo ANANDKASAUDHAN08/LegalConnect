@@ -100,9 +100,8 @@ export const seedFullDatabaseIfEmpty = async () => {
   try {
     // --- 1. Help Categories Seeding ---
     const catCount = await HelpCategory.countDocuments({});
-    if (catCount < 8) {
+    if (catCount === 0) {
       console.log('🌱 Seeding HelpCategory table in MongoDB with Production categories...');
-      await HelpCategory.deleteMany({});
       await HelpCategory.insertMany([
         { id: 'Property Dispute', name: 'Property Dispute', icon: 'home', description: 'Land, Rent, Inheritance, Housing', subcategories: ['Tenant Eviction & Rent', 'Land Partition & Boundary', 'RERA & Builder Delays', 'Property Title Search'] },
         { id: 'Family Law', name: 'Family Law', icon: 'users', description: 'Divorce, Custody, Maintenance', subcategories: ['Mutual & Contested Divorce', 'Child Custody & Guardianship', 'Alimony & Maintenance', 'Domestic Violence Help'] },
@@ -131,9 +130,8 @@ export const seedFullDatabaseIfEmpty = async () => {
     // --- 3. Legal Resources Seeding (from src/data/resources.seed.json) ---
     const resCount = await LegalResource.countDocuments({});
     const resourcesPath = path.resolve(__dirname, '../data/resources.seed.json');
-    if (resCount !== 142 && fs.existsSync(resourcesPath)) {
-      console.log('🌱 Syncing LegalResource table (72 LegalAid, 58 Courts, 12 Police) from resources.seed.json...');
-      await LegalResource.deleteMany({});
+    if (resCount === 0 && fs.existsSync(resourcesPath)) {
+      console.log('🌱 Seeding LegalResource table from resources.seed.json...');
       const seedResources = JSON.parse(fs.readFileSync(resourcesPath, 'utf-8'));
       const approvedResources = seedResources.map((r: any) => ({
         ...r,
@@ -145,9 +143,8 @@ export const seedFullDatabaseIfEmpty = async () => {
     // --- 4. Lawyers Seeding (from src/data/lawyers.seed.json) ---
     const lawyerCount = await Lawyer.countDocuments({});
     const lawyersPath = path.resolve(__dirname, '../data/lawyers.seed.json');
-    if (lawyerCount !== 14 && fs.existsSync(lawyersPath)) {
-      console.log('🌱 Syncing Lawyer table (14 Verified Lawyers) from lawyers.seed.json...');
-      await Lawyer.deleteMany({});
+    if (lawyerCount === 0 && fs.existsSync(lawyersPath)) {
+      console.log('🌱 Seeding Lawyer table from lawyers.seed.json...');
       const seedLawyers = JSON.parse(fs.readFileSync(lawyersPath, 'utf-8'));
       await Lawyer.insertMany(seedLawyers).catch((err) => console.error('Lawyer seed error:', err.message));
     }
