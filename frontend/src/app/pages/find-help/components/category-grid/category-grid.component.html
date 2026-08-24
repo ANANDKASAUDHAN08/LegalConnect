@@ -107,8 +107,7 @@
             AI Help
           </span>
         </div>
-        <svg
-          [ngClass]="activeCategory === cat.id ? 'rotate-90 text-blue-600 dark:text-amber-400' : 'text-slate-400 group-hover:text-blue-500'"
+        <svg [ngClass]="cat.id | categoryClasses:'chevron':(activeCategory === cat.id)"
           class="w-3.5 h-3.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
         </svg>
@@ -528,12 +527,48 @@
                 <p class="text-[10px] leading-relaxed text-slate-500 dark:text-slate-400 mb-3.5">
                   Select a suggested situation below to launch our conversational AI guidance system:
                 </p>
+
+                <!-- AI Analysis Progress Bar (Visible while solver is running) -->
+                <div *ngIf="isAiSolving"
+                  class="p-3 rounded-xl bg-gradient-to-r from-blue-600/10 via-indigo-600/10 to-amber-500/10 border border-blue-500/30 dark:border-amber-400/30 flex items-center gap-3 animate-pulse mb-3.5 shadow-sm">
+                  <div
+                    class="w-7 h-7 rounded-lg bg-blue-600 dark:bg-amber-400 text-white dark:text-slate-950 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class="text-xs font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5">
+                      <span>Consulting Gemini Legal AI...</span>
+                    </div>
+                    <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Formulating resolution roadmap
+                      & matching nearby legal aid centers</div>
+                  </div>
+                </div>
+
                 <div class="flex flex-col gap-2">
                   <button *ngFor="let prompt of (activeCategory | categoryInsights).prompts; trackBy: trackByIndex"
-                    (click)="aiSuggestionTried.emit(prompt)"
-                    class="text-left text-[11px] text-blue-655 dark:text-amber-400 bg-blue-50/20 dark:bg-slate-900/40 hover:bg-blue-50/40 dark:hover:bg-slate-900/80 border border-blue-100/30 dark:border-white/5 px-3.5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer flex items-center justify-between group w-full font-medium">
-                    <span class="truncate font-semibold">"{{prompt}}"</span>
-                    <svg
+                    (click)="onAiPromptClick(prompt)" [disabled]="isAiSolving" [ngClass]="{
+                      'border-blue-500 dark:border-amber-400 bg-blue-50/40 dark:bg-slate-900/90 ring-1 ring-blue-500/20': isAiSolving && activeLoadingPrompt === prompt,
+                      'opacity-50 cursor-not-allowed': isAiSolving && activeLoadingPrompt !== prompt,
+                      'hover:bg-blue-50/40 dark:hover:bg-slate-900/80 cursor-pointer': !isAiSolving
+                    }"
+                    class="text-left text-[11px] text-blue-655 dark:text-amber-400 bg-blue-50/20 dark:bg-slate-900/40 border border-blue-100/30 dark:border-white/5 px-3.5 py-2.5 rounded-xl transition-all duration-200 flex items-center justify-between group w-full font-medium">
+                    <div class="flex items-center gap-2 truncate min-w-0 pr-2">
+                      <!-- Spinner on clicked item -->
+                      <svg *ngIf="isAiSolving && activeLoadingPrompt === prompt"
+                        class="w-3.5 h-3.5 animate-spin text-blue-600 dark:text-amber-400 shrink-0" fill="none"
+                        stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                      </svg>
+                      <span class="truncate font-semibold">
+                        {{ isAiSolving && activeLoadingPrompt === prompt ? 'Analyzing: "' + prompt + '"...' : '"' +
+                        prompt + '"' }}
+                      </span>
+                    </div>
+                    <svg *ngIf="!(isAiSolving && activeLoadingPrompt === prompt)"
                       class="w-3.5 h-3.5 opacity-60 group-hover:opacity-100 transition-all transform translate-x-[-2px] group-hover:translate-x-0 text-blue-600 dark:text-amber-400 shrink-0"
                       fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"

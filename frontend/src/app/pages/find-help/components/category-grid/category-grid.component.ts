@@ -6,6 +6,7 @@ import { CategoryClassesPipe } from '../../pipes/category-classes.pipe';
 import { CategoryDescriptionPipe } from '../../pipes/category-description.pipe';
 import { CategoryInsightsPipe } from '../../pipes/category-insights.pipe';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../components/icon';
 
 @Component({
   selector: 'app-category-grid',
@@ -16,7 +17,8 @@ import { TooltipDirective } from '../../../../directives/tooltip.directive';
     CategoryClassesPipe,
     CategoryDescriptionPipe,
     CategoryInsightsPipe,
-    TooltipDirective
+    TooltipDirective,
+    IconComponent
   ],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './category-grid.component.html',
@@ -27,6 +29,7 @@ export class CategoryGridComponent {
   @Input() activeCategory = '';
   @Input() locationQuery = '';
   @Input() selectedSubcategories: string[] = [];
+  @Input() isAiSolving = false;
 
   @Output() categorySelected = new EventEmitter<string>();
   @Output() subcategoryToggled = new EventEmitter<string>();
@@ -35,10 +38,19 @@ export class CategoryGridComponent {
   @Output() aiSuggestionTried = new EventEmitter<string>();
 
   isDetailsLoading = false;
+  activeLoadingPrompt: string | null = null;
   activeMobileTab: 'search' | 'faqs' | 'ai' = 'search';
   activeFaqIndex: number | null = null;
 
   constructor(private cdr: ChangeDetectorRef) { }
+
+  onAiPromptClick(prompt: string) {
+    if (this.isAiSolving) return;
+    this.activeLoadingPrompt = prompt;
+    this.triggerHaptic();
+    this.aiSuggestionTried.emit(prompt);
+    this.cdr.markForCheck();
+  }
 
   selectCategoryLocal(catId: string) {
     this.triggerHaptic();

@@ -24,11 +24,12 @@
             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 dark:bg-amber-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-blue-600 dark:bg-amber-500"></span>
         </span>
-        ⚖️ National Legal Aid Portal
+        <app-icon name="scale" [size]="13" class="text-blue-600 dark:text-amber-400"></app-icon>
+        <span>National Legal Aid Portal</span>
       </span>
 
       <!-- Title -->
-      <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-850 dark:text-white leading-[1.1] mb-2">
+      <h1 class="text-2xl md:text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.1] mb-2">
         Find
         <span
           class="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-amber-400 dark:to-orange-500 bg-clip-text text-transparent">
@@ -38,7 +39,7 @@
       </h1>
 
       <!-- Description -->
-      <p class="text-slate-655 dark:text-slate-350 text-[11px] md:text-sm mb-2 leading-relaxed max-w-xl mb-2 md:mb-4">
+      <p class="text-slate-600 dark:text-slate-300 text-[11px] md:text-sm mb-2 leading-relaxed max-w-xl md:mb-4">
         Quickly locate free legal aid clinics, courts, helpline numbers, and verified attorneys in your district.
         <span class="hidden md:inline">Use our Keyword Search or describe your situation using the AI Solver.</span>
       </p>
@@ -54,34 +55,24 @@
         <button (click)="locationClicked.emit()"
           [appTooltip]="isLocationEstimated ? 'Location automatically estimated. Click to choose your district manually.' : 'Active search location. Click to search another district.'"
           tooltipPlacement="top"
-          [ngClass]="isLocationEstimated ? 'bg-amber-500/10 text-amber-600 dark:text-amber-455 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 border-emerald-500/20'"
+          [ngClass]="isLocationEstimated ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'"
           class="inline-flex items-center gap-1.5 text-[10px] md:text-[11px] font-bold px-1.5 md:px-2.5 py-1 md:py-1.5 rounded-xl transition-all shadow-xs border cursor-pointer select-none max-w-[62%] xs:max-w-[68%] sm:max-w-none">
           <span class="relative flex h-1.5 w-1.5 shrink-0" *ngIf="isLocationEstimated">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-500"></span>
           </span>
-          <svg *ngIf="!isLocationEstimated" class="w-3 h-3 shrink-0" fill="none" stroke="currentColor"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <app-icon *ngIf="!isLocationEstimated" name="check-circle" [size]="12" class="text-emerald-600"></app-icon>
           <span class="truncate">Near {{ locationQuery }}</span>
-          <svg class="w-2.5 h-2.5 opacity-60 shrink-0 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-          </svg>
+          <app-icon name="edit" [size]="10" class="opacity-60 shrink-0 ml-0.5"></app-icon>
         </button>
 
         <span class="text-slate-300 dark:text-slate-800 text-xs select-none">|</span>
 
         <button (click)="suggestClicked.emit()"
-          appTooltip="Submit a new legal clinic, court, or helpline to our directory" tooltipPlacement="top"
-          class="text-[9px] md:text-[11px] font-bold text-indigo-600 hover:text-indigo-750 dark:text-amber-455 dark:hover:text-amber-400 hover:underline cursor-pointer transition-colors flex items-center gap-1 bg-transparent border-0 py-1">
-          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-              d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          Suggest Resource
+          [appTooltip]="'Submit a new legal clinic, court, or helpline to our directory'" tooltipPlacement="top"
+          class="text-[9px] md:text-[11px] font-bold text-indigo-600 hover:text-indigo-700 dark:text-amber-400 dark:hover:text-amber-300 hover:underline cursor-pointer transition-colors flex items-center gap-1 bg-transparent border-0 py-1">
+          <app-icon name="plus" [size]="12"></app-icon>
+          <span>Suggest Resource</span>
         </button>
       </div>
 

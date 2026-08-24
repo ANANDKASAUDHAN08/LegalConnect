@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../components/icon';
 
 /**
  * Results navigation header bar — breadcrumb trail + view mode switcher.
@@ -10,7 +11,7 @@ import { TooltipDirective } from '../../../../directives/tooltip.directive';
 @Component({
   selector: 'app-results-header',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './results-header.component.html',
   styleUrls: ['./results-header.component.scss']

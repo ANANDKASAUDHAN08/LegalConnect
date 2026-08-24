@@ -24,22 +24,17 @@
       <button *ngIf="!isCasePackSaved" (click)="saveOffline.emit()"
         [appTooltip]="'Save this case roadmap offline to access it anytime without internet'" tooltipPlacement="bottom"
         class="save-offline-btn flex-1 sm:flex-initial sm:w-auto whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1.5 px-2 md:px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-all">
-        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-            d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-        </svg>
+        <app-icon name="download" [size]="12" class="text-slate-500"></app-icon>
         <span>Save Offline</span>
       </button>
 
       <div *ngIf="isCasePackSaved"
         class="offline-badge inline-flex items-center justify-center gap-1 md:gap-2 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 md:px-3 py-1.5 rounded-xl border border-emerald-500/20 text-xs font-bold flex-1 sm:flex-initial sm:w-auto whitespace-nowrap shrink-0">
-        <span>✓ Saved Offline</span>
+        <app-icon name="check" [size]="12" class="text-emerald-600 dark:text-emerald-400"></app-icon>
+        <span>Saved Offline</span>
         <button (click)="removeOffline.emit()" [appTooltip]="'Remove offline cache'" tooltipPlacement="bottom"
-          class="rounded-md text-emerald-600 dark:text-emerald-400 hover:text-rose-600 dark:hover:text-rose-600 hover:bg-rose-500/10 dark:hover:bg-rose-500/20 transition-colors cursor-pointer bg-transparent border-none flex items-center justify-center shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-          </svg>
+          class="rounded-md text-emerald-600 dark:text-emerald-400 hover:text-rose-600 dark:hover:text-rose-600 hover:bg-rose-500/10 dark:hover:bg-rose-500/20 transition-colors cursor-pointer bg-transparent border-none flex items-center justify-center shrink-0 p-0.5">
+          <app-icon name="trash-2" [size]="12"></app-icon>
         </button>
       </div>
 
@@ -47,11 +42,8 @@
       <button (click)="downloadCasePack.emit()"
         [appTooltip]="'Generate and download printable PDF containing roadmap, checklists & contacts'"
         tooltipPlacement="bottom"
-        class="flex-1 sm:flex-initial sm:w-auto whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-0.5 md:gap-1.5 px-2 md:px-3.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all cursor-pointer">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-        </svg>
+        class="flex-1 sm:flex-initial sm:w-auto whitespace-nowrap shrink-0 inline-flex items-center justify-center gap-1 md:gap-1.5 px-2 md:px-3.5 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all cursor-pointer">
+        <app-icon name="printer" [size]="13"></app-icon>
         <span>Download PDF <span class="hidden sm:inline">Case Pack</span></span>
       </button>
     </div>
@@ -62,10 +54,10 @@
     <div class="flex items-center justify-between mb-1.5">
       <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Checklist
         Progress</span>
-      <span class="text-[10px] font-bold"
+      <span class="text-[10px] font-bold inline-flex items-center gap-1"
         [ngClass]="progressPercent === 100 ? 'text-emerald-600 dark:text-emerald-400' : 'text-blue-600 dark:text-blue-400'">
-        {{completedItems}} / {{totalItems}} completed
-        <span *ngIf="progressPercent === 100"> 🎉</span>
+        <span>{{completedItems}} / {{totalItems}} completed</span>
+        <app-icon *ngIf="progressPercent === 100" name="sparkles" [size]="12" class="text-amber-500"></app-icon>
       </span>
     </div>
     <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">

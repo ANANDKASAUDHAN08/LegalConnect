@@ -49,11 +49,11 @@ export class HelplineCardComponent {
 
   getShareText(): string {
     if (!this.helpline) return '';
-    let text = `🚨 ${this.helpline.name}\n`;
+    let text = `${this.helpline.name}\n`;
     text += `----------------------------------------------\n`;
-    text += `📞 Number: ${this.helpline.number}\n`;
+    text += `Phone: ${this.helpline.number}\n`;
     if (this.helpline.description) {
-      text += `ℹ️ Description: ${this.helpline.description}\n`;
+      text += `Details: ${this.helpline.description}\n`;
     }
     return text;
   }

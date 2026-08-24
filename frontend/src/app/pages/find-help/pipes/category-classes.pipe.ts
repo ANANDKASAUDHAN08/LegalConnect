@@ -21,14 +21,14 @@ import { getCategoryMeta } from '../config/category-data.config';
   pure: true
 })
 export class CategoryClassesPipe implements PipeTransform {
-  transform(catId: string, mode: 'card' | 'icon' | 'title' | 'descriptionText' | 'color', isActive: boolean = false): string {
+  transform(catId: string, mode: 'card' | 'icon' | 'title' | 'descriptionText' | 'color' | 'chevron', isActive: boolean = false): string {
     const meta = getCategoryMeta(catId);
     const c = meta.colors;
 
     switch (mode) {
       case 'card':
         if (isActive) {
-          return `${c.activeBorder} ${c.activeBg} ring-2 ring-${this.extractColorToken(c.activeBorder)}/10 shadow-sm`;
+          return `${c.activeBorder} ${c.activeBg} ring-1 ring-${this.extractColorToken(c.activeBorder)}/20 shadow-sm`;
         }
         return `${c.inactiveBorder} ${c.inactiveBg} hover:${c.activeBorder} ${c.bgHover}`;
 
@@ -40,7 +40,6 @@ export class CategoryClassesPipe implements PipeTransform {
           .join(' ');
         return `${c.bg} ${c.text} ${hoverClasses}`;
 
-
       case 'title':
         if (isActive) return 'font-extrabold text-slate-900 dark:text-white';
         return 'font-bold text-slate-700 dark:text-slate-200 group-hover:text-slate-900 dark:group-hover:text-white';
@@ -51,6 +50,12 @@ export class CategoryClassesPipe implements PipeTransform {
         }
         return `${c.text.replace('600', '600').replace('400', '400/80')} group-hover:${c.text.replace('600', '700').replace('400', '300')}`;
 
+      case 'chevron':
+        if (isActive) {
+          return `rotate-90 ${c.text}`;
+        }
+        return `text-slate-400 group-hover:${c.text.split(' ')[0]}`;
+
       case 'color':
         return c.text;
 
@@ -60,8 +65,8 @@ export class CategoryClassesPipe implements PipeTransform {
   }
 
   private extractColorToken(borderClass: string): string {
-    // Extract color from "border-amber-500" → "amber-500"
-    const match = borderClass.match(/border-(\w+-\d+)/);
+    // Extract color from "border-amber-500/50" → "amber-500"
+    const match = borderClass.match(/border-([a-z]+-\d+)/);
     return match ? match[1] : 'blue-500';
   }
 }

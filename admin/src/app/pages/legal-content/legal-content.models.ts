@@ -234,6 +234,7 @@ export interface LegalResourceItem {
   _id?: string;
   id?: string;
   name: string;
+  name_hi?: string;
   type: 'LegalAid' | 'Court' | 'GovernmentOffice' | 'PoliceStation' | 'Helpline' | string;
   categories?: string[];
   subcategories?: string[];
@@ -243,12 +244,24 @@ export interface LegalResourceItem {
   pincode?: string;
   pincodeCoverage?: string[];
   address: string;
+  address_hi?: string;
   alternateAddress?: string;
   contactNumber?: string[] | string;
   faxNumber?: string[] | string;
   email?: string[] | string;
   website?: string;
   operatingHours?: string;
+  operatingHours_hi?: string;
+  description?: string;
+  description_hi?: string;
+  parentAuthorityId?: string;
+  parentAuthority?: any;
+  feedback?: {
+    upvotes: number;
+    downvotes: number;
+    helpfulnessScore: number;
+    reasons?: Array<{ reason: string; count: number }>;
+  };
   lunchBreak?: string;
   isOpenNow?: boolean;
   isVerified?: boolean;
@@ -258,8 +271,8 @@ export interface LegalResourceItem {
     lng: number;
   };
   status?: 'approved' | 'pending' | string;
+  source?: 'admin_dashboard' | 'user_suggestion' | 'bulk_import' | string;
   jurisdictionLevel?: 'National' | 'State' | 'District' | 'Taluka' | 'SpecialTribunal' | string;
-  parentAuthorityId?: string;
   facilities?: LegalResourceFacilities;
   isStateAuthority?: boolean;
   isNationalAuthority?: boolean;

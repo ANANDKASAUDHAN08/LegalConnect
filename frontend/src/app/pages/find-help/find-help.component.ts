@@ -29,6 +29,7 @@ import { SuggestResourceModalComponent } from './components/suggest-resource-mod
 // Directives
 import { JargonTooltipDirective } from '../../directives/jargon-tooltip.directive';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { IconComponent } from '../../components/icon';
 
 // Sub-components
 import { EmergencyTickerComponent } from './components/emergency-ticker/emergency-ticker.component';
@@ -72,7 +73,8 @@ export interface RecentSearch {
     CategoryGridComponent,
     ResultsViewComponent,
     CategoryClassesPipe,
-    CategoryDescriptionPipe
+    CategoryDescriptionPipe,
+    IconComponent
   ],
   templateUrl: './find-help.component.html',
   styleUrls: ['./find-help.component.scss'],

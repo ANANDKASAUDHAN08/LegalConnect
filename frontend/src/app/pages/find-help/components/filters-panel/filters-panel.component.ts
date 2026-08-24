@@ -1,7 +1,8 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FreeAidCheckerComponent } from '../free-aid-checker/free-aid-checker.component';
+import { IconComponent } from '../../../../components/icon';
+import { TooltipDirective } from '../../../../directives/tooltip.directive';
 
 /**
  * Reusable search filters panel — used by both desktop sidebar and mobile bottom sheet.
@@ -44,7 +45,7 @@ interface CategoryConfig {
 @Component({
   selector: 'app-filters-panel',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, IconComponent, TooltipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './filters-panel.component.html',
   styleUrls: ['./filters-panel.component.scss']

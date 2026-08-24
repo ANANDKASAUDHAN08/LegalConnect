@@ -15,14 +15,15 @@ import { environment } from '../../../../environments/environment';
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ResourceDossierComponent {
-  @Input({ required: true }) item: LegalResourceItem | null = null;
-  @Input() activeTab: 'overview' | 'facilities' | 'leadership' | 'audit' = 'overview';
+  @Input({ required: true }) item: any | null = null;
+  @Input() activeTab: 'overview' | 'facilities' | 'leadership' | 'audit' | 'history' = 'overview';
   @Input() isVerifyingCycle = false;
 
   @Output() closed = new EventEmitter<void>();
-  @Output() editRequested = new EventEmitter<LegalResourceItem>();
-  @Output() renewRequested = new EventEmitter<LegalResourceItem>();
-  @Output() activeTabChange = new EventEmitter<'overview' | 'facilities' | 'leadership' | 'audit'>();
+  @Output() editRequested = new EventEmitter<any>();
+  @Output() renewRequested = new EventEmitter<any>();
+  @Output() resolveIssuesRequested = new EventEmitter<any>();
+  @Output() activeTabChange = new EventEmitter<'overview' | 'facilities' | 'leadership' | 'audit' | 'history'>();
 
   constructor(
     private toast: ToastService,
@@ -34,7 +35,7 @@ export class ResourceDossierComponent {
     this.close();
   }
 
-  setTab(tab: 'overview' | 'facilities' | 'leadership' | 'audit'): void {
+  setTab(tab: 'overview' | 'facilities' | 'leadership' | 'audit' | 'history'): void {
     this.activeTab = tab;
     this.activeTabChange.emit(tab);
   }
@@ -52,6 +53,12 @@ export class ResourceDossierComponent {
   onRenew(): void {
     if (this.item) {
       this.renewRequested.emit(this.item);
+    }
+  }
+
+  onResolveIssues(): void {
+    if (this.item) {
+      this.resolveIssuesRequested.emit(this.item);
     }
   }
 

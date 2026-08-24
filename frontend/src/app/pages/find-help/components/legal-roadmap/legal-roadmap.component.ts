@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../components/icon';
 
 @Component({
   selector: 'app-legal-roadmap',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, IconComponent],
   templateUrl: './legal-roadmap.component.html',
   styleUrls: ['./legal-roadmap.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

@@ -36,6 +36,8 @@ import { LegalRoadmapComponent } from '../legal-roadmap/legal-roadmap.component'
 import { LegalAuthoritiesHubComponent } from '../legal-authorities-hub/legal-authorities-hub.component';
 import { QrModalComponent } from '../../../../components/qr-modal/qr-modal.component';
 
+import { IconComponent } from '../../../../components/icon';
+
 // Directives & Pipes
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { CategoryInsightsPipe } from '../../pipes/category-insights.pipe';
@@ -62,7 +64,8 @@ declare var google: any;
     LegalAuthoritiesHubComponent,
     TooltipDirective,
     CategoryInsightsPipe,
-    QrModalComponent
+    QrModalComponent,
+    IconComponent
   ],
   templateUrl: './results-view.component.html',
   styleUrls: ['./results-view.component.scss'],
@@ -112,6 +115,24 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   resourcePage = 1;
   lawyerPage = 1;
   itemsPerPage = 10;
+
+  // Sort Options
+  resourceSortBy: 'nearest' | 'az' | 'verified' | 'facilities' = 'nearest';
+  readonly sortOptions = [
+    { value: 'nearest' as const, label: 'Nearest First', icon: 'map-pin' },
+    { value: 'az' as const, label: 'A — Z', icon: 'arrow-down-a-z' },
+    { value: 'verified' as const, label: 'Recently Verified', icon: 'shield-check' },
+    { value: 'facilities' as const, label: 'Most Facilities', icon: 'landmark' }
+  ];
+
+  onSortChange(sort: 'nearest' | 'az' | 'verified' | 'facilities'): void {
+    this.resourceSortBy = sort;
+    this.resourcePage = 1;
+    this.applySortToResources();
+    this.updateMapMarkers();
+    this.scrollListToTop();
+    this.cdr.markForCheck();
+  }
 
   // Filters State
   filters = {
@@ -204,6 +225,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     return 'all';
   }
   isDropdownOpen = false;
+  isSortDropdownOpen = false;
 
   nearbyFilterOptions = [
     {
@@ -288,6 +310,12 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   @HostListener('document:click')
   closeDropdown(): void {
     this.isDropdownOpen = false;
+    this.isSortDropdownOpen = false;
+  }
+
+  getSortLabel(): string {
+    const active = this.sortOptions.find(o => o.value === this.resourceSortBy);
+    return active ? active.label : 'Nearest First';
   }
 
   trackByKey(index: number, opt: any): string {
@@ -485,72 +513,67 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
       lng
     ).subscribe({
       next: (res: any) => {
-        // Premium 800ms artificial delay to allow smooth, polished skeleton loading animations
-        setTimeout(() => {
-          try {
-            this.isLoading = false;
-            if (res && res.success) {
-              this.roadmap = res.roadmap;
-              this.helplines = res.helplines || [];
-              this.resources = res.resources || [];
-              this.lawyers = res.lawyers || [];
+        try {
+          this.isLoading = false;
+          if (res && res.success) {
+            this.roadmap = res.roadmap;
+            this.helplines = res.helplines || [];
+            this.resources = res.resources || [];
+            this.lawyers = res.lawyers || [];
 
-              // Extract unique subcategories
-              const subSet = new Set<string>();
-              (res.resources || []).forEach((r: any) => {
-                if (r.subcategories) {
-                  r.subcategories.forEach((s: string) => subSet.add(s));
-                }
-              });
-              (res.lawyers || []).forEach((l: any) => {
-                if (l.specializations) {
-                  l.specializations.forEach((s: string) => subSet.add(s));
-                }
-              });
-              this.allSubcategories = Array.from(subSet);
-
-              // Determine mapCenter coordinates based on search location
-              const localResource = (res.resources || []).find((r: any) =>
-                !r.isNationalAuthority && !r.isStateAuthority &&
-                r.coordinates && typeof r.coordinates.lat === 'number'
-              );
-              if (localResource) {
-                this.mapCenter = [localResource.coordinates.lat, localResource.coordinates.lng];
-              } else {
-                const serviceCoords = this.locationService.getCoordinates();
-                if (serviceCoords) {
-                  this.mapCenter = [serviceCoords.lat, serviceCoords.lng];
-                } else {
-                  const city = this.locationService.cleanAddress(this.locationQuery).toLowerCase();
-                  const matched = Object.keys(CITY_COORDINATES).find(k => city.includes(k));
-                  this.mapCenter = matched ? CITY_COORDINATES[matched] : [28.6139, 77.2090];
-                }
+            // Extract unique subcategories
+            const subSet = new Set<string>();
+            (res.resources || []).forEach((r: any) => {
+              if (r.subcategories) {
+                r.subcategories.forEach((s: string) => subSet.add(s));
               }
+            });
+            (res.lawyers || []).forEach((l: any) => {
+              if (l.specializations) {
+                l.specializations.forEach((s: string) => subSet.add(s));
+              }
+            });
+            this.allSubcategories = Array.from(subSet);
 
-              this.applyFilters();
-              this.checkOfflineCasePackStatus();
-              this.isInitialLoad = false;
-              setTimeout(() => {
-                this.initMap();
-                this.cdr.markForCheck();
-              }, 100);
+            // Determine mapCenter coordinates based on search location
+            const localResource = (res.resources || []).find((r: any) =>
+              !r.isNationalAuthority && !r.isStateAuthority &&
+              r.coordinates && typeof r.coordinates.lat === 'number'
+            );
+            if (localResource) {
+              this.mapCenter = [localResource.coordinates.lat, localResource.coordinates.lng];
+            } else {
+              const serviceCoords = this.locationService.getCoordinates();
+              if (serviceCoords) {
+                this.mapCenter = [serviceCoords.lat, serviceCoords.lng];
+              } else {
+                const city = this.locationService.cleanAddress(this.locationQuery).toLowerCase();
+                const matched = Object.keys(CITY_COORDINATES).find(k => city.includes(k));
+                this.mapCenter = matched ? CITY_COORDINATES[matched] : [28.6139, 77.2090];
+              }
             }
-          } catch (err) {
+
+            this.applyFilters();
+            this.checkOfflineCasePackStatus();
             this.isInitialLoad = false;
-            console.error('Error during data processing in next callback:', err);
-            this.isLoading = false;
-          } finally {
-            this.cdr.markForCheck();
+            setTimeout(() => {
+              this.initMap();
+              this.cdr.markForCheck();
+            }, 100);
           }
-        }, 800);
+        } catch (err) {
+          this.isInitialLoad = false;
+          console.error('Error during data processing in next callback:', err);
+          this.isLoading = false;
+        } finally {
+          this.cdr.markForCheck();
+        }
       },
       error: (err) => {
-        setTimeout(() => {
-          this.isLoading = false;
-          this.isInitialLoad = false;
-          console.error('Failed to retrieve nearby help resources', err);
-          this.cdr.markForCheck();
-        }, 800);
+        this.isLoading = false;
+        this.isInitialLoad = false;
+        console.error('Failed to retrieve nearby help resources', err);
+        this.cdr.markForCheck();
       }
     });
   }
@@ -664,22 +687,8 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
         return true;
       });
 
-      // Sort resources: group by type, then nearest first within each group
-      const typeOrder: Record<string, number> = {
-        'LegalAid': 0,
-        'Court': 1,
-        'GovernmentOffice': 2,
-        'PoliceStation': 2
-      };
-      this.filteredResources.sort((a, b) => {
-        const typeA = typeOrder[a.type] ?? 99;
-        const typeB = typeOrder[b.type] ?? 99;
-        if (typeA !== typeB) return typeA - typeB; // group by type first
-        // within same type, sort nearest first
-        if (a.distanceKm === null || a.distanceKm === undefined) return 1;
-        if (b.distanceKm === null || b.distanceKm === undefined) return -1;
-        return a.distanceKm - b.distanceKm;
-      });
+      // Apply user-selected sort
+      this.applySortToResources();
 
       this.filteredLawyers = (this.lawyers || []).filter(lawyer => {
         if (!lawyer) return false;
@@ -751,6 +760,52 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
         this.filterTimeout = null;
       }
       console.error('Error executing applyFilters():', err);
+    }
+  }
+
+  private applySortToResources(): void {
+    switch (this.resourceSortBy) {
+      case 'nearest':
+        // Default: group by type, then nearest first within each group
+        const typeOrder: Record<string, number> = {
+          'LegalAid': 0, 'Court': 1, 'GovernmentOffice': 2, 'PoliceStation': 2
+        };
+        this.filteredResources.sort((a, b) => {
+          const typeA = typeOrder[a.type] ?? 99;
+          const typeB = typeOrder[b.type] ?? 99;
+          if (typeA !== typeB) return typeA - typeB;
+          if (a.distanceKm == null) return 1;
+          if (b.distanceKm == null) return -1;
+          return a.distanceKm - b.distanceKm;
+        });
+        break;
+
+      case 'az':
+        this.filteredResources.sort((a, b) =>
+          (a.name || '').localeCompare(b.name || '', 'en', { sensitivity: 'base' })
+        );
+        break;
+
+      case 'verified':
+        this.filteredResources.sort((a, b) => {
+          const dateA = a.lastAuditDate ? new Date(a.lastAuditDate).getTime() : 0;
+          const dateB = b.lastAuditDate ? new Date(b.lastAuditDate).getTime() : 0;
+          return dateB - dateA; // Most recently verified first
+        });
+        break;
+
+      case 'facilities':
+        this.filteredResources.sort((a, b) => {
+          const countFacilities = (r: any) => {
+            const f = r.facilities;
+            if (!f) return 0;
+            return (f.hasEfiling ? 1 : 0) + (f.hasLADCS ? 1 : 0) +
+              (f.hasVCRoom ? 1 : 0) + (f.hasLegalAidClinic ? 1 : 0) +
+              (f.isWheelchairAccessible ? 1 : 0);
+          };
+          return countFacilities(b) - countFacilities(a);
+        });
+        break;
     }
   }
 
@@ -1018,16 +1073,16 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
             <div class="meta">Category: ${this.activeCategory} | Location: ${this.locationQuery} | Generated: ${new Date().toLocaleDateString()}</div>
           </div>
           
-          <h2>📋 PERSONALIZED LEGAL ROADMAP</h2>
+          <h2>PERSONALIZED LEGAL ROADMAP</h2>
           ${actionStepsHtml}
 
-          <h2>📁 REQUIRED DOCUMENTS CHECKLIST</h2>
+          <h2>REQUIRED DOCUMENTS CHECKLIST</h2>
           <ul>${documentChecklistHtml}</ul>
 
-          <h2>🏢 NEARBY SUPPORT CONTACTS</h2>
+          <h2>NEARBY SUPPORT CONTACTS</h2>
           ${resourceCardsHtml}
 
-          <h2>💡 LOK ADALAT / ADR ADVISORY</h2>
+          <h2>LOK ADALAT / ADR ADVISORY</h2>
           <p style="font-size: 13px; color: #475569;">${this.roadmap.lokAdalatGuidance}</p>
 
           <footer style="margin-top: 50px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center;">

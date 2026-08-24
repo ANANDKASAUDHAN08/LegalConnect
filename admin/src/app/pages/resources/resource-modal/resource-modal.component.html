@@ -128,8 +128,18 @@
           (ngModelChange)="onNameChange($event)" />
       </div>
 
+      <!-- Hindi Name (Regional Language) -->
+      <div class="form-section">
+        <label class="font-semibold text-slate-300 flex items-center justify-between">
+          <span>Hindi Name / हिन्दी नाम <span class="text-slate-500 font-normal text-[10.5px]">(Optional)</span></span>
+        </label>
+        <input type="text"
+          class="form-input bg-slate-950/80 border-slate-700 text-slate-100 rounded-xl px-3.5 py-2 text-xs focus:border-sky-500 transition-all placeholder:text-slate-600"
+          placeholder="उदा. दिल्ली उच्च न्यायालय, तीस हजारी जिला अदालत" [(ngModel)]="formData.name_hi" />
+      </div>
+
       <!-- Type & Hierarchy -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
         <div class="form-section" [adminTooltip]="'Legal or administrative category'" tooltipPosition="top">
           <label class="font-semibold text-slate-300">Type <span class="text-sky-400">*</span></label>
           <admin-select [options]="institutionTypeOptions" [value]="formData.type || 'Court'"
@@ -143,6 +153,16 @@
             (valueChange)="onJurisdictionLevelChange($event)" placeholder="Select Level" width="100%" minWidth="100%"
             height="38px">
           </admin-select>
+        </div>
+
+        <div class="form-section" [adminTooltip]="'Parent Authority ID linking this sub-unit to its parent court/SLSA'" tooltipPosition="top">
+          <label class="font-semibold text-slate-300 flex items-center gap-1.5">
+            <span>Parent Authority ID</span>
+            <span class="text-slate-500 font-normal text-[10px]">(Optional)</span>
+          </label>
+          <input type="text"
+            class="form-input bg-slate-950/80 border-slate-700 text-slate-100 rounded-xl px-3 py-2 text-xs font-mono focus:border-sky-500 h-[38px] transition-all placeholder:text-slate-600"
+            placeholder="e.g. SLSA ID or Parent DLSA" [(ngModel)]="formData.parentAuthorityId" />
         </div>
       </div>
 
@@ -375,6 +395,16 @@
           </div>
         </div>
 
+        <!-- Covered Pincodes (Territorial Jurisdiction Array) -->
+        <div class="form-section">
+          <label class="font-semibold text-slate-300 flex items-center justify-between">
+            <span>Jurisdiction Pincode Coverage <span class="text-slate-500 font-normal text-[10px]">(Comma separated)</span></span>
+          </label>
+          <input type="text"
+            class="form-input bg-slate-950/80 border-slate-700 text-slate-100 font-mono rounded-xl px-3 py-2 text-xs focus:border-sky-500 transition-all placeholder:text-slate-600"
+            placeholder="e.g. 110001, 110002, 110005, 110006" [(ngModel)]="formData.pincodeCoverage" />
+        </div>
+
         <!-- Address -->
         <div class="form-section">
           <div class="flex items-center justify-between">
@@ -412,6 +442,17 @@
             class="form-input bg-slate-950/80 border-slate-700 text-slate-100 rounded-xl p-2.5 text-xs focus:border-sky-500 leading-relaxed transition-all placeholder:text-slate-600"
             rows="2" placeholder="Complete physical street address with landmark..."
             [(ngModel)]="formData.address"></textarea>
+        </div>
+
+        <!-- Hindi Address (Regional) -->
+        <div class="form-section">
+          <label class="font-semibold text-slate-300 flex items-center justify-between">
+            <span>Hindi Address / पता (हिन्दी) <span class="text-slate-500 font-normal text-[10.5px]">(Optional)</span></span>
+          </label>
+          <textarea
+            class="form-input bg-slate-950/80 border-slate-700 text-slate-100 rounded-xl p-2.5 text-xs focus:border-sky-500 leading-relaxed transition-all placeholder:text-slate-600"
+            rows="2" placeholder="पूरा पता हिन्दी में..."
+            [(ngModel)]="formData.address_hi"></textarea>
         </div>
       </div>
 
@@ -460,8 +501,8 @@
             <div
               class="absolute bottom-1.5 left-2 right-2 px-2 py-1 rounded bg-slate-950/90 backdrop-blur-md border border-slate-800/60 text-[9px] text-slate-400 font-mono flex items-center justify-between">
               <div class="flex items-center gap-1.5 truncate">
-                <span class="w-1.5 h-1.5 rounded-full bg-sky-400 shrink-0"></span>
-                <span class="truncate">[{{ formData.lat || 28.6139 }}, {{ formData.lng || 77.2090 }}]</span>
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="(formData.lat && formData.lng) ? 'bg-sky-400' : 'bg-amber-400'"></span>
+                <span class="truncate">{{ (formData.lat && formData.lng) ? ('[' + formData.lat + ', ' + formData.lng + ']') : 'Coordinates Not Set' }}</span>
               </div>
               <span class="text-slate-600 uppercase text-[8px] shrink-0">{{ mapType }}</span>
             </div>

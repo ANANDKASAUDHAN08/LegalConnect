@@ -1,5 +1,5 @@
 <div *ngIf="loading"
-  class="h-full flex flex-col bg-white dark:bg-slate-900 border-solid md:border-y md:border-r md:border-y-slate-200 md:border-r-slate-200 md:dark:border-y-slate-800 md:dark:border-r-slate-800 border-l-4 border-l-slate-200 dark:border-l-slate-800 rounded-2xl p-5 shadow-none md:shadow-sm animate-pulse min-h-[240px] md:min-h-[220px]">
+  class="resource-card-container h-full flex flex-col bg-white dark:bg-slate-900 border-solid md:border-y md:border-r md:border-y-slate-200 md:border-r-slate-200 md:dark:border-y-slate-800 md:dark:border-r-slate-800 border-l-4 border-l-slate-200 dark:border-l-slate-800 rounded-2xl p-5 shadow-none md:shadow-sm animate-pulse min-h-[240px] md:min-h-[220px]">
   <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-start gap-4 flex-1">
     <div class="flex-1 ml-1">
       <!-- Badges -->
@@ -20,7 +20,8 @@
       <div class="h-3 bg-slate-200 dark:bg-slate-800/80 rounded w-1/2"></div>
     </div>
     <!-- Actions -->
-    <div class="flex flex-col sm:flex-col items-stretch sm:items-end justify-between gap-3 pt-3.5 sm:pt-0 border-t border-slate-100 dark:border-slate-800 sm:border-none w-full sm:w-auto">
+    <div
+      class="flex flex-col sm:flex-col items-stretch sm:items-end justify-between gap-3 pt-3.5 sm:pt-0 border-t border-slate-100 dark:border-slate-800 sm:border-none w-full sm:w-auto">
       <div class="flex items-center gap-1.5 w-full sm:w-auto order-2 sm:order-1">
         <div class="flex-1 sm:flex-initial w-16 h-8 bg-slate-200 dark:bg-slate-800/80 rounded-xl"></div>
         <div class="flex-1 sm:flex-initial w-24 h-8 bg-slate-200 dark:bg-slate-800/80 rounded-xl"></div>
@@ -36,51 +37,74 @@
 
 <div *ngIf="!loading" [ngClass]="{
   'bg-purple-500/[0.03] dark:bg-purple-500/[0.05] shadow-md': resource.type === 'LegalAid' && isFreeAidEligible
-}"
+}" [class.active-map-highlight]="isHovered" (mouseenter)="onMouseEnter()" (mouseleave)="onMouseLeave()"
   [style.border-left-color]="resource.type === 'LegalAid' ? 'var(--color-legalaid-border)' : resource.type === 'Court' ? 'var(--color-court-border)' : (resource.type === 'GovernmentOffice' || resource.type === 'PoliceStation') ? 'var(--color-gov-border)' : ''"
-  class="h-full flex flex-col bg-white dark:bg-slate-900 border-solid md:border-y md:border-r md:border-y-slate-200 md:border-r-slate-200 md:dark:border-y-slate-800 md:dark:border-r-slate-800 border-l-4 rounded-2xl p-5 shadow-none md:shadow-sm md:hover:shadow-md transition-all duration-300 animate-scale-up group relative overflow-visible">
+  class="resource-card-container h-full flex flex-col bg-white dark:bg-slate-900 border-solid md:border-y md:border-r md:border-y-slate-200/90 md:border-r-slate-200/90 md:dark:border-y-slate-800/90 md:dark:border-r-slate-800/90 border-l-4 rounded-2xl p-5 shadow-xs md:shadow-sm transition-all duration-300 group relative overflow-visible">
 
-  <!-- Glow effect wrapper to crop the glow bubble while letting dropdowns overflow -->
+  <!-- Glow effect wrapper -->
   <div class="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none z-0">
     <div *ngIf="resource.type === 'LegalAid' && isFreeAidEligible"
       class="absolute -right-16 -top-16 w-32 h-32 bg-purple-500/10 rounded-full blur-xl pointer-events-none"></div>
+    <div
+      class="absolute -left-12 -bottom-12 w-28 h-28 bg-purple-500/10 dark:bg-purple-500/15 rounded-full blur-2xl pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+    </div>
   </div>
 
-  <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-start gap-4 flex-1">
+  <div class="flex flex-col sm:flex-row justify-between items-stretch sm:items-start gap-4 flex-1 relative z-10">
     <div class="flex-1 ml-1">
-      <div class="flex flex-wrap items-center gap-1 md:gap-2 mb-1.5 md:mb-2.5">
+      <!-- Row 1: Badges & Status Indicators -->
+      <div class="flex flex-wrap items-center gap-1.5 md:gap-2 mb-2 md:mb-2.5">
         <!-- Type Badge -->
         <span
-          class="inline-flex items-center px-1.5 md:px-2 py-0.5 rounded-md text-[8px] md:text-[9px] font-black uppercase tracking-wider"
-          [ngClass]="{
-            'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20': resource.type === 'Court',
-            'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20': resource.type === 'LegalAid',
-            'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20': resource.type === 'GovernmentOffice' || resource.type === 'PoliceStation'
-          }">
-          {{resource.type === 'LegalAid' ? 'Legal Aid Center' : resource.type === 'Court' ? 'District Court' :
-          'Government Office'}}
+          class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border shadow-2xs"
+          [ngClass]="getTypeBadgeClass(resource.type)"
+          [appTooltip]="'Institution Category: ' + getTypeLabel(resource.type)" tooltipPlacement="top">
+          {{ getTypeLabel(resource.type) }}
         </span>
 
         <!-- Dynamic Open Status Badge -->
         <span
-          class="inline-flex items-center px-1.5 md:px-2 py-0.5 rounded-md text-[8px] md:text-[9px] font-black uppercase tracking-wider border"
-          [ngClass]="operatingStatus.colorClass">
-          {{ operatingStatus.label }}
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border shadow-2xs"
+          [ngClass]="operatingStatus.colorClass"
+          [appTooltip]="operatingStatus.label + ' • Calculated based on official working schedule (IST)'"
+          tooltipPlacement="top">
+          <span class="w-1.5 h-1.5 rounded-full"
+            [ngClass]="operatingStatus.label.includes('Open') ? 'bg-emerald-500 animate-pulse' : (operatingStatus.label.includes('Lunch') ? 'bg-amber-500' : 'bg-slate-400')"></span>
+          <span>{{ operatingStatus.label }}</span>
         </span>
 
         <!-- Free Aid Eligibility Highlight tag -->
         <span *ngIf="resource.type === 'LegalAid' && isFreeAidEligible"
-          class="inline-flex items-center px-1.5 md:px-2 py-0.5 rounded-md text-[8px] md:text-[9px] font-black uppercase tracking-wider bg-purple-600 text-white animate-pulse">
+          class="inline-flex items-center px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-purple-600 text-white animate-pulse shadow-2xs"
+          [appTooltip]="'You qualify for free legal representation under Legal Services Authorities Act (NALSA)'"
+          tooltipPlacement="top">
           Free Help Eligible
+        </span>
+
+        <!-- Verification Freshness Badge (Only if real lastAuditDate exists) -->
+        <span *ngIf="getVerificationFreshness() as freshness"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[9px] font-bold tracking-wider border shadow-2xs"
+          [ngClass]="freshness.colorClass" [appTooltip]="freshness.tooltip" tooltipPlacement="top">
+          <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          {{ freshness.label }}
         </span>
       </div>
 
-      <h3
-        class="text-sm font-bold text-slate-800 dark:text-slate-100 m-0 group-hover:text-blue-600 dark:group-hover:text-amber-400 transition-colors">
-        {{resource.name}}
+      <!-- Row 2: Title (Gold high contrast in dark mode, Deep Navy in light mode) -->
+      <h3 (click)="navigateToDetail()" [appTooltip]="'View comprehensive dossier & details for ' + resource.name"
+        tooltipPlacement="top"
+        class="text-sm md:text-base font-black text-slate-900 dark:text-amber-300/95 m-0 group-hover:text-indigo-600 dark:group-hover:text-amber-200 transition-colors cursor-pointer hover:underline leading-snug">
+        {{ resource.name }}
       </h3>
 
-      <p class="text-xs text-slate-500 dark:text-slate-400 mt-2 m-0 flex items-start">
+      <!-- Row 3: Address & Distance (Only if real) -->
+      <p *ngIf="resource.address || (resource.city && resource.state)" (click)="copyAddress($event)"
+        class="text-xs text-slate-500 dark:text-slate-400 mt-2 m-0 flex items-start cursor-pointer hover:text-slate-800 dark:hover:text-slate-200 transition-colors"
+        [appTooltip]="isAddressCopied ? 'Address Copied to clipboard!' : 'Click to copy full address'"
+        tooltipPlacement="bottom">
         <svg class="w-3.5 h-3.5 mr-1.5 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor"
           viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
@@ -89,9 +113,11 @@
             d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
         </svg>
         <span class="flex flex-col">
-          <span>{{resource.address}}</span>
-          <span *ngIf="resource.distanceKm !== null && resource.distanceKm !== undefined"
-            class="text-[10px] inline-flex items-center gap-1 font-extrabold text-blue-600 dark:text-amber-400 mt-0.5">
+          <span>{{ resource.address || (resource.city + ', ' + resource.state) }}</span>
+          <!-- Live Real GPS Distance (Only rendered if real calculated distance > 0) -->
+          <span *ngIf="hasValidDistance()"
+            class="text-[10px] inline-flex items-center gap-1 font-extrabold text-blue-600 dark:text-amber-400 mt-0.5"
+            [appTooltip]="'Real-time distance calculated from your current GPS location'" tooltipPlacement="top">
             <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
               <path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
@@ -100,12 +126,12 @@
         </span>
       </p>
 
-      <!-- Website verify link -->
-      <div *ngIf="resource.website" class="text-[11px] mt-1 flex items-center gap-1.5">
+      <!-- Row 4: Official Website Verify Link (Only if real URL exists) -->
+      <div *ngIf="getWebsiteUrl() as websiteUrl" class="text-[11px] mt-1.5 flex items-center gap-1.5 flex-wrap">
         <span class="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider">Official
           Portal:</span>
-        <a [href]="resource.website" target="_blank" [appTooltip]="'Visit official portal: ' + resource.website"
-          tooltipPlacement="top"
+        <a [href]="websiteUrl" target="_blank" rel="noopener"
+          [appTooltip]="'Open verified official portal: ' + websiteUrl" tooltipPlacement="top"
           class="text-blue-600 dark:text-amber-400 hover:underline inline-flex items-center gap-1 font-bold no-underline">
           <span>Verify details directly</span>
           <svg class="w-3.5 h-3.5 stroke-blue-600 dark:stroke-amber-400" fill="none" stroke="currentColor"
@@ -116,50 +142,95 @@
         </a>
       </div>
 
-      <!-- Languages Supported -->
+      <!-- Row 5: Spoken Languages Supported (Only if real data exists) -->
       <div *ngIf="resource.languages && resource.languages.length > 0"
-        class="text-[11px] text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1">
+        class="text-[11px] text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1 flex-wrap">
         <span class="text-[9px] font-black uppercase tracking-wider shrink-0">Languages:</span>
         <span
-          class="font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/60 px-2 py-0.5 rounded-md">{{
-          resource.languages.join(', ') }}</span>
+          class="font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-200/60 dark:border-slate-700/60"
+          [appTooltip]="'Languages spoken by legal aid counsel & desk staff'" tooltipPlacement="top">
+          {{ resource.languages.join(', ') }}
+        </span>
       </div>
 
-      <!-- Data Provenance / Source -->
-      <div *ngIf="resource.source" class="text-[10px] text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1">
+      <!-- Row 6: Real Verified Data Provenance (Only if real source exists) -->
+      <div *ngIf="resource.source"
+        class="text-[10px] text-slate-400 dark:text-slate-500 mt-2 flex items-center gap-1 flex-wrap">
         <span class="font-bold uppercase tracking-wider shrink-0 text-[9px]">Verified Source:</span>
-        <span class="font-semibold italic text-slate-500 dark:text-slate-400">{{ resource.source }}</span>
+        <span class="font-semibold italic text-slate-600 dark:text-slate-400">{{ resource.source }}</span>
         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse ml-0.5"
-          [appTooltip]="'Official Government Database verified content'" tooltipPlacement="top"></span>
+          [appTooltip]="'Verified official government database registry entry'" tooltipPlacement="top"></span>
       </div>
 
-      <!-- Subcategory badges mapping -->
-      <div class="flex flex-wrap gap-1 md:gap-1.5 mt-2 md:mt-3.5">
+      <!-- Row 7: Subcategory Tags (Only if real subcategories exist) -->
+      <div *ngIf="resource.subcategories && resource.subcategories.length > 0"
+        class="flex flex-wrap gap-1 md:gap-1.5 mt-2 md:mt-3">
         <span *ngFor="let sub of resource.subcategories; trackBy: trackBySubcategory"
-          class="text-[9px] bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 text-slate-400 dark:text-slate-500 px-1 md:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-          {{sub}}
+          [appTooltip]="'Legal Service Scope: ' + sub" tooltipPlacement="top"
+          class="text-[9px] bg-slate-50 dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 text-slate-600 dark:text-slate-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
+          {{ sub }}
+        </span>
+      </div>
+
+      <!-- Row 8: Facility Chips with SVG Icons (Only if real facilities exist) -->
+      <div *ngIf="getFacilityChips().length > 0" class="flex flex-wrap gap-1 mt-2.5">
+        <span *ngFor="let chip of getFacilityChips()"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[8px] md:text-[9px] font-bold bg-sky-500/10 dark:bg-sky-500/15 text-sky-700 dark:text-sky-400 border border-sky-500/20 dark:border-sky-500/30 shadow-2xs hover:border-sky-400 transition-colors"
+          [appTooltip]="chip.tooltip" tooltipPlacement="top">
+          <!-- e-Filing SVG -->
+          <svg *ngIf="chip.iconKey === 'efiling'" class="w-2.5 h-2.5 text-indigo-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+          </svg>
+          <!-- LADCS Defense Shield SVG -->
+          <svg *ngIf="chip.iconKey === 'ladcs'" class="w-2.5 h-2.5 text-teal-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+          </svg>
+          <!-- VC Room Camera SVG -->
+          <svg *ngIf="chip.iconKey === 'vcroom'" class="w-2.5 h-2.5 text-purple-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+          <!-- Legal Aid Clinic SVG -->
+          <svg *ngIf="chip.iconKey === 'clinic'" class="w-2.5 h-2.5 text-sky-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+          </svg>
+          <!-- Accessibility Wheelchair SVG -->
+          <svg *ngIf="chip.iconKey === 'accessible'" class="w-2.5 h-2.5 text-cyan-500" fill="none" stroke="currentColor"
+            viewBox="0 0 24 24" stroke-width="2.5">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 2a2 2 0 100 4 2 2 0 000-4zM7 9h6l1 5h4M9 13a4 4 0 104 4" />
+          </svg>
+          <span>{{ chip.label }}</span>
         </span>
       </div>
     </div>
 
+    <!-- Right Side: Top Action Hub & Secondary Toolbar -->
     <div
-      class="flex flex-col sm:flex-col items-stretch sm:items-end justify-between gap-3 pt-3.5 sm:pt-0 border-t border-slate-200 dark:border-slate-800 sm:border-none w-full sm:w-auto">
+      class="flex flex-col sm:flex-col items-stretch sm:items-end justify-between gap-3 pt-3.5 sm:pt-0 border-t border-slate-200 dark:border-slate-800 sm:border-none w-full sm:w-auto shrink-0">
 
-      <!-- Direct Contacts (Primary CTAs) -->
-      <div class="flex items-center gap-1.5 w-full sm:w-auto order-2 sm:order-1">
-        <a *ngIf="resource.contactNumber" href="tel:{{resource.contactNumber}}"
-          [appTooltip]="'Call ' + resource.name + ' directly at ' + resource.contactNumber" tooltipPlacement="top"
-          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 transition-all no-underline">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <!-- Direct Primary Contacts (Call & Directions) -->
+      <div class="flex items-center gap-2 w-full sm:w-auto order-2 sm:order-1">
+        <!-- Direct Phone Dial Button (Only if real phone exists) -->
+        <a *ngIf="getContactNumber() as phone" [href]="'tel:' + phone"
+          [appTooltip]="'Call ' + resource.name + ' directly at ' + phone" tooltipPlacement="top"
+          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 bg-slate-50/80 dark:bg-slate-800/80 hover:bg-indigo-50 dark:hover:bg-slate-750 hover:text-indigo-600 hover:border-indigo-300 dark:hover:border-slate-700 transition-all no-underline shadow-2xs cursor-pointer">
+          <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
               d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
           </svg>
           <span>Call</span>
         </a>
 
+        <!-- Directions Button -->
         <button (click)="onDirectionsClick($event)"
-          [appTooltip]="'Get directions to ' + resource.name + ' in Google Maps'" tooltipPlacement="top"
-          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm hover:shadow transition-all cursor-pointer">
+          [appTooltip]="'Get turn-by-turn navigation to ' + resource.name + ' in Google Maps'" tooltipPlacement="top"
+          class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 text-xs font-black rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-xs hover:shadow-md transition-all cursor-pointer border-0">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2"
               d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
@@ -168,15 +239,30 @@
         </button>
       </div>
 
-      <!-- Sharing, QR & Bookmark Row (Secondary actions) -->
-      <div class="flex items-center gap-1.5 order-1 sm:order-2">
+      <!-- Micro Actions Row: Helpful, Bookmark, QR Code, Share -->
+      <div class="flex items-center gap-1.5 order-1 sm:order-2 justify-end flex-wrap">
+        <!-- Helpful 👍 Upvote Action -->
+        <button (click)="onHelpfulClick($event)"
+          class="cursor-pointer px-2 py-1 rounded-lg border transition-all duration-200 flex items-center gap-1 text-[10.5px] font-bold"
+          [ngClass]="hasUpvoted
+            ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-500/15'
+            : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/60 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 hover:text-emerald-600 dark:hover:text-emerald-400'"
+          [appTooltip]="hasUpvoted ? 'Marked as helpful and accurate' : 'Vote this institutional listing as helpful & verified'"
+          tooltipPlacement="top">
+          <svg class="w-3 h-3 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+          </svg>
+          <span *ngIf="resource.feedback?.upvotes">{{ resource.feedback.upvotes }}</span>
+          <span *ngIf="!resource.feedback?.upvotes && hasUpvoted">1</span>
+        </button>
+
         <!-- Bookmark -->
         <button (click)="onBookmarkClick($event)"
-          class="border cursor-pointer p-1.5 rounded-lg border transition-all duration-200 flex items-center justify-center"
+          class="cursor-pointer p-1.5 rounded-lg border transition-all duration-200 flex items-center justify-center"
           [ngClass]="isSaved()
             ? 'border-amber-400/60 dark:border-amber-500/40 text-amber-500 bg-amber-50/70 dark:bg-amber-400/10'
           : 'border-amber-200/60 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-400/5 hover:bg-amber-100/50 dark:hover:bg-amber-400/15 hover:border-amber-300 dark:hover:border-amber-400/30'"
-          [appTooltip]="isSaved() ? 'Remove from saved bookmarks' : 'Save this legal resource to bookmarks'"
+          [appTooltip]="isSaved() ? 'Remove from saved bookmarks' : 'Save this legal resource to your personal bookmarks'"
           tooltipPlacement="top">
           <!-- Filled bookmark (saved) -->
           <svg *ngIf="isSaved()" class="w-3.5 h-3.5 transition-all duration-200 scale-110" fill="currentColor"
@@ -194,7 +280,7 @@
         <!-- QR Code Display -->
         <button (click)="onQrClick($event)"
           class="p-1.5 rounded-lg border border-amber-200/60 dark:border-amber-500/20 text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-400/5 hover:bg-amber-100/50 dark:hover:bg-amber-400/15 hover:border-amber-300 dark:hover:border-amber-400/30 cursor-pointer transition-all duration-200"
-          [appTooltip]="'Generate QR code to scan and open on mobile'" tooltipPlacement="top">
+          [appTooltip]="'Generate QR code to scan and open on your mobile phone'" tooltipPlacement="top">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
               d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h2M4 8h16" />
@@ -208,7 +294,7 @@
         <app-share-menu [title]="getShareSubject()" [text]="getShareText()" [shareUrl]="getShareUrl()"
           [subject]="getShareSubject()"
           [buttonClass]="'p-1.5 rounded-lg border border-emerald-200/60 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 bg-emerald-50/50 dark:bg-emerald-500/5 hover:bg-emerald-100/50 dark:hover:bg-emerald-500/10 hover:border-emerald-300 dark:hover:border-emerald-500/30 cursor-pointer transition-all duration-200 flex items-center justify-center'"
-          [iconClass]="'w-3.5 h-3.5'" [tooltipText]="'Share center contact details'" tooltipPlacement="top"
+          [iconClass]="'w-3.5 h-3.5'" [tooltipText]="'Share official center details'" tooltipPlacement="top"
           [customActionLabel]="'Copy Contact Info'" [copyLinkLabel]="'Copy Location Link'"
           (customActionClicked)="copyCardDetails()">
         </app-share-menu>

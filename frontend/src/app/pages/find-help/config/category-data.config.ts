@@ -6,6 +6,8 @@
  * When new categories are added, only this file needs updating.
  */
 
+import { INDIAN_STATES_AND_UTS, INDIAN_GEO_CENTROIDS } from '../../../core/constants/legal-resource.constants';
+
 export interface CategoryColorConfig {
   bg: string;
   text: string;
@@ -41,7 +43,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-amber-600 dark:text-amber-400',
       border: 'border-amber-500/20 dark:border-amber-400/20',
       bgHover: 'hover:bg-amber-500/5 dark:hover:bg-amber-400/5',
-      activeBorder: 'border-amber-500 dark:border-amber-400',
+      activeBorder: 'border-amber-500/50 dark:border-amber-400/40',
       activeBg: 'bg-amber-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-amber-500 text-white dark:bg-amber-400 dark:text-slate-950',
       inactiveBg: 'bg-amber-500/[0.01] dark:bg-slate-950',
@@ -67,7 +69,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-rose-600 dark:text-rose-400',
       border: 'border-rose-500/20 dark:border-rose-400/20',
       bgHover: 'hover:bg-rose-500/5 dark:hover:bg-rose-400/5',
-      activeBorder: 'border-rose-500 dark:border-rose-400',
+      activeBorder: 'border-rose-500/50 dark:border-rose-400/40',
       activeBg: 'bg-rose-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-rose-500 text-white dark:bg-rose-400 dark:text-slate-950',
       inactiveBg: 'bg-rose-500/[0.01] dark:bg-slate-950',
@@ -93,7 +95,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-emerald-600 dark:text-emerald-400',
       border: 'border-emerald-500/20 dark:border-emerald-400/20',
       bgHover: 'hover:bg-emerald-500/5 dark:hover:bg-emerald-400/5',
-      activeBorder: 'border-emerald-500 dark:border-emerald-400',
+      activeBorder: 'border-emerald-500/50 dark:border-emerald-400/40',
       activeBg: 'bg-emerald-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-emerald-500 text-white dark:bg-emerald-400 dark:text-slate-950',
       inactiveBg: 'bg-emerald-500/[0.01] dark:bg-slate-950',
@@ -119,7 +121,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-violet-600 dark:text-violet-400',
       border: 'border-violet-500/20 dark:border-violet-400/20',
       bgHover: 'hover:bg-violet-500/5 dark:hover:bg-violet-400/5',
-      activeBorder: 'border-violet-500 dark:border-violet-400',
+      activeBorder: 'border-violet-500/50 dark:border-violet-400/40',
       activeBg: 'bg-violet-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-violet-500 text-white dark:bg-violet-400 dark:text-slate-950',
       inactiveBg: 'bg-violet-500/[0.01] dark:bg-slate-950',
@@ -145,7 +147,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-red-600 dark:text-red-400',
       border: 'border-red-500/20 dark:border-red-400/20',
       bgHover: 'hover:bg-red-500/5 dark:hover:bg-red-400/5',
-      activeBorder: 'border-red-500 dark:border-red-400',
+      activeBorder: 'border-red-500/50 dark:border-red-400/40',
       activeBg: 'bg-red-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-red-500 text-white dark:bg-red-400 dark:text-slate-950',
       inactiveBg: 'bg-red-500/[0.01] dark:bg-slate-950',
@@ -171,7 +173,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-indigo-600 dark:text-indigo-400',
       border: 'border-indigo-500/20 dark:border-indigo-400/20',
       bgHover: 'hover:bg-indigo-500/5 dark:hover:bg-indigo-400/5',
-      activeBorder: 'border-indigo-500 dark:border-indigo-400',
+      activeBorder: 'border-indigo-500/50 dark:border-indigo-400/40',
       activeBg: 'bg-indigo-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-indigo-600 text-white dark:bg-indigo-400 dark:text-slate-950',
       inactiveBg: 'bg-indigo-500/[0.01] dark:bg-slate-950',
@@ -197,7 +199,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-cyan-600 dark:text-cyan-400',
       border: 'border-cyan-500/20 dark:border-cyan-400/20',
       bgHover: 'hover:bg-cyan-500/5 dark:hover:bg-cyan-400/5',
-      activeBorder: 'border-cyan-500 dark:border-cyan-400',
+      activeBorder: 'border-cyan-500/50 dark:border-cyan-400/40',
       activeBg: 'bg-cyan-500/5 dark:bg-slate-900/60',
       activeIconBg: 'bg-cyan-500 text-white dark:bg-cyan-400 dark:text-slate-950',
       inactiveBg: 'bg-cyan-500/[0.01] dark:bg-slate-950',
@@ -223,7 +225,7 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
       text: 'text-blue-600 dark:text-blue-400',
       border: 'border-blue-500/20 dark:border-blue-400/20',
       bgHover: 'hover:bg-blue-500/5 dark:hover:bg-blue-400/5',
-      activeBorder: 'border-blue-600 dark:border-blue-400',
+      activeBorder: 'border-blue-500/50 dark:border-blue-400/40',
       activeBg: 'bg-blue-50/50 dark:bg-slate-900/60',
       activeIconBg: 'bg-blue-600 text-white dark:bg-blue-400 dark:text-slate-950',
       inactiveBg: 'bg-white dark:bg-slate-950',
@@ -294,51 +296,11 @@ export const EMERGENCY_HELPLINES: EmergencyHelpline[] = [
   { label: 'Legal Aid', number: '15100' }
 ];
 
-/** City to coordinates map — used for map centering fallback */
-export const CITY_COORDINATES: Record<string, [number, number]> = {
-  'mumbai': [19.0760, 72.8777],
-  'bengaluru': [12.9716, 77.5946],
-  'bangalore': [12.9716, 77.5946],
-  'chennai': [13.0827, 80.2707],
-  'kolkata': [22.5726, 88.3639],
-  'hyderabad': [17.3850, 78.4867],
-  'pune': [18.5204, 73.8567],
-  'ahmedabad': [23.0225, 72.5714],
-  'jaipur': [26.9124, 75.7873],
-  'lucknow': [26.8467, 80.9462],
-  'ayodhya': [26.7922, 82.1998],
-  'varanasi': [25.3176, 82.9739],
-  'agra': [27.1767, 78.0081],
-  'kanpur': [26.4499, 80.3319],
-  'patna': [25.5941, 85.1376],
-  'bhopal': [23.2599, 77.4126],
-  'indore': [22.7196, 75.8577],
-  'nagpur': [21.1458, 79.0882],
-  'surat': [21.1702, 72.8311],
-  'chandigarh': [30.7333, 76.7794],
-  'new delhi': [28.6139, 77.2090],
-  'delhi': [28.6139, 77.2090],
-  'noida': [28.5355, 77.3910],
-  'gurgaon': [28.4595, 77.0266],
-  'gurugram': [28.4595, 77.0266],
-  'thiruvananthapuram': [8.5241, 76.9366],
-  'kochi': [9.9312, 76.2673],
-  'coimbatore': [11.0168, 76.9558],
-  'visakhapatnam': [17.6868, 83.2185],
-  'dehradun': [30.3165, 78.0322],
-  'ranchi': [23.3441, 85.3096],
-  'guwahati': [26.1445, 91.7362],
-  'raipur': [21.2514, 81.6296],
-};
+/** City to coordinates map — single source of truth from legal-resource.constants */
+export const CITY_COORDINATES: Record<string, [number, number]> = INDIAN_GEO_CENTROIDS;
 
-/** Indian states list — used for state extraction from address */
-export const INDIAN_STATES: string[] = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Goa', 'Gujarat', 'Haryana',
-  'Himachal Pradesh', 'Jammu & Kashmir', 'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
-  'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal', 'Andaman & Nicobar', 'Chandigarh',
-  'Dadra & Nagar Haveli', 'Daman & Diu', 'Delhi', 'Ladakh', 'Lakshadweep', 'Puducherry'
-];
+/** Indian states & UTs list — Canonical 36 States and Union Territories */
+export const INDIAN_STATES: readonly string[] = INDIAN_STATES_AND_UTS;
 
 /** AI fallback keyword → category mapping */
 export const AI_KEYWORD_CATEGORY_MAP: Array<{ keywords: string[]; category: string }> = [

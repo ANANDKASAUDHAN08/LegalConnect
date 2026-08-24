@@ -139,6 +139,10 @@ export class AdminContentService {
     return this.http.patch<ApiResponse<LegalResourceItem>>(`${this.NODE_API}/admin/resources/${id}/verify-cycle`, data);
   }
 
+  resolveResourceIssues(id: string): Observable<ApiResponse<LegalResourceItem>> {
+    return this.http.patch<ApiResponse<LegalResourceItem>>(`${this.NODE_API}/admin/resources/${id}/resolve-issues`, {});
+  }
+
   bulkUpdateResourceStatus(ids: string[], status: string): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/resources/bulk-status`, { ids, status });
   }
@@ -149,6 +153,28 @@ export class AdminContentService {
 
   bulkDeleteResources(ids: string[]): Observable<ApiResponse<void>> {
     return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/resources/bulk-delete`, { ids });
+  }
+
+  // ── Phase 5: Analytics, Duplicates, Geocoding, AI Search ──
+
+  getResourceAnalytics(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.NODE_API}/admin/resources/analytics`);
+  }
+
+  getResourceDuplicates(): Observable<ApiResponse<any>> {
+    return this.http.get<ApiResponse<any>>(`${this.NODE_API}/admin/resources/duplicates`);
+  }
+
+  mergeResourceDuplicates(primaryId: string, duplicateId: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.NODE_API}/admin/resources/duplicates/merge`, { primaryId, duplicateId });
+  }
+
+  geocodeMissingResources(): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.NODE_API}/admin/resources/geocode-missing`, {});
+  }
+
+  aiSearchResources(query: string): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.NODE_API}/admin/resources/ai-search`, { query });
   }
 
   // -- Helplines & Emergency Directories --

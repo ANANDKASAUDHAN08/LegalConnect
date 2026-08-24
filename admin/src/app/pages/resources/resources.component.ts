@@ -22,6 +22,9 @@ import { PhoneDisplayPipe, EmailDisplayPipe } from '../../shared/pipes/contact-d
 import { ResourceDossierComponent } from './resource-dossier/resource-dossier.component';
 import { ResourceModalComponent } from './resource-modal/resource-modal.component';
 import { ResourceImportWizardComponent, BatchImportResult, ValidationReport } from './resource-import-wizard/resource-import-wizard.component';
+import { ResourceMapViewComponent } from './resource-map-view/resource-map-view.component';
+import { ResourceDuplicateModalComponent } from './resource-duplicate-modal/resource-duplicate-modal.component';
+import { ResourceAnalyticsViewComponent } from './resource-analytics-view/resource-analytics-view.component';
 
 import { TableSelection, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
@@ -52,7 +55,10 @@ import { environment } from '../../../environments/environment';
     EmailDisplayPipe,
     ResourceDossierComponent,
     ResourceModalComponent,
-    ResourceImportWizardComponent
+    ResourceImportWizardComponent,
+    ResourceMapViewComponent,
+    ResourceDuplicateModalComponent,
+    ResourceAnalyticsViewComponent
   ],
   templateUrl: './resources.component.html',
   styleUrl: './resources.component.scss',
@@ -60,6 +66,13 @@ import { environment } from '../../../environments/environment';
 })
 export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
   private destroyRef = inject(DestroyRef);
+
+  // View Display Mode ('table' | 'map' | 'analytics')
+  activeDisplayMode: 'table' | 'map' | 'analytics' = 'table';
+
+  duplicatePairs: any[] = [];
+  showDuplicateModal = false;
+  isLoadingDuplicates = false;
 
   // Institutional Directory Data & Loading
   resources: LegalResourceItem[] = [];
@@ -72,6 +85,11 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Search & Filter State
   search = '';
+  searchMode: 'keyword' | 'ai' = 'keyword';
+  aiSearchQuery = '';
+  aiSearchExplanation = '';
+  isAiSearching = false;
+
   selectedState = '';
   selectedDistrict = '';
   selectedType = '';
@@ -80,6 +98,27 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
   selectedStatus = '';
   startDate = '';
   endDate = '';
+
+  setSearchMode(mode: 'keyword' | 'ai'): void {
+    this.searchMode = mode;
+    this.cdr.markForCheck();
+  }
+
+  // Active Management Tab
+  activeTab: 'all' | 'approved' | 'pending' | 'stale' | 'issues' = 'all';
+
+  onTabChange(tab: 'all' | 'approved' | 'pending' | 'stale' | 'issues'): void {
+    this.activeTab = tab;
+    if (tab === 'pending') {
+      this.selectedStatus = 'pending';
+    } else if (tab === 'approved') {
+      this.selectedStatus = 'approved';
+    } else {
+      this.selectedStatus = '';
+    }
+    this.pagination.page = 1;
+    this.fetchResources(true);
+  }
 
   // Sorting
   sortBy = 'createdAt';
@@ -232,7 +271,13 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
       { label: `All Types (${this.summaryMetrics.total || 0})`, value: '', icon: 'info', color: '#38bdf8' },
       { label: `Courts (${this.summaryMetrics.courts || 0})`, value: 'Court', icon: 'briefcase', color: '#818cf8' },
       { label: `Legal Aid / DLSA (${this.summaryMetrics.legalAid || 0})`, value: 'LegalAid', icon: 'award', color: '#38bdf8' },
-      { label: `Police Stations (${this.summaryMetrics.policeStations || 0})`, value: 'PoliceStation', icon: 'shield', color: '#f59e0b' }
+      { label: `Police Stations (${this.summaryMetrics.policeStations || 0})`, value: 'PoliceStation', icon: 'shield', color: '#f59e0b' },
+      { label: 'Government Offices', value: 'GovernmentOffice', icon: 'home', color: '#fb923c' },
+      { label: 'Emergency Helplines', value: 'Helpline', icon: 'phone', color: '#f43f5e' },
+      { label: 'Public Notaries', value: 'Notary', icon: 'user', color: '#2dd4bf' },
+      { label: 'Lok Adalats', value: 'LokAdalat', icon: 'check', color: '#34d399' },
+      { label: 'Mediation Centers', value: 'MediationCenter', icon: 'refresh', color: '#6366f1' },
+      { label: 'Bar Associations', value: 'BarAssociation', icon: 'briefcase', color: '#a855f7' }
     ];
   }
 
@@ -465,7 +510,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Master-Detail Dossier Drawer State
   inspectItem: LegalResourceItem | null = null;
-  activeDossierTab: 'overview' | 'facilities' | 'leadership' | 'audit' = 'overview';
+  activeDossierTab: 'overview' | 'facilities' | 'leadership' | 'audit' | 'history' = 'overview';
   pendingInspectId: string | null = null;
 
   // Create / Edit Modal State
@@ -475,27 +520,31 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   formData = {
     name: '',
+    name_hi: '',
     type: 'Court',
     jurisdictionLevel: 'District',
-    city: 'Delhi',
-    district: 'New Delhi',
-    state: 'Delhi',
-    pincode: '110001',
+    parentAuthorityId: '',
+    city: '',
+    district: '',
+    state: '',
+    pincode: '',
+    pincodeCoverage: '',
     address: '',
+    address_hi: '',
     phone: '',
     fax: '',
     email: '',
     website: '',
-    operatingHours: '09:30 AM - 05:00 PM (Mon-Sat)',
-    lunchBreak: '01:30 PM - 02:00 PM',
+    operatingHours: '',
+    lunchBreak: '',
     status: 'approved',
-    lat: 28.6139,
-    lng: 77.2090,
-    hasEfiling: true,
-    hasLADCS: true,
-    hasVCRoom: true,
-    hasLegalAidClinic: true,
-    isWheelchairAccessible: true,
+    lat: null as number | null,
+    lng: null as number | null,
+    hasEfiling: false,
+    hasLADCS: false,
+    hasVCRoom: false,
+    hasLegalAidClinic: false,
+    isWheelchairAccessible: false,
     patronInChief: '',
     executiveChairman: '',
     memberSecretary: '',
@@ -545,6 +594,95 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     public swrCache: SwrCacheService,
     private cdr: ChangeDetectorRef
   ) { }
+
+  // ── Phase 5 Methods ──
+
+  onAiSearch(): void {
+    if (!this.aiSearchQuery.trim()) return;
+    this.isAiSearching = true;
+    this.cdr.markForCheck();
+
+    this.api.aiSearchResources(this.aiSearchQuery.trim()).subscribe({
+      next: (res) => {
+        this.isAiSearching = false;
+        if (res?.success && res.filters) {
+          const f = res.filters;
+          if (f.state) this.selectedState = f.state;
+          if (f.type) this.selectedType = f.type;
+          if (f.facility) this.selectedFacility = f.facility;
+          if (f.search) this.search = f.search;
+          this.aiSearchExplanation = res.explanation || 'Applied AI natural language search filters.';
+          this.toast.info(this.aiSearchExplanation);
+          this.pagination.page = 1;
+          this.fetchResources(true);
+        } else {
+          this.toast.warning('No specific filters identified from your AI query.');
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isAiSearching = false;
+        this.toast.error('AI search service encountered an error.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  clearAiSearch(): void {
+    this.aiSearchQuery = '';
+    this.aiSearchExplanation = '';
+    this.cdr.markForCheck();
+  }
+
+  onOpenDuplicates(): void {
+    this.isLoadingDuplicates = true;
+    this.showDuplicateModal = true;
+    this.cdr.markForCheck();
+
+    this.api.getResourceDuplicates().subscribe({
+      next: (res) => {
+        this.isLoadingDuplicates = false;
+        this.duplicatePairs = res?.duplicates || [];
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isLoadingDuplicates = false;
+        this.toast.error('Failed to load duplicate detection candidates.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  onCloseDuplicates(): void {
+    this.showDuplicateModal = false;
+    this.duplicatePairs = [];
+    this.cdr.markForCheck();
+  }
+
+  onDuplicatesMerged(): void {
+    this.fetchResources(true);
+  }
+
+  onGeocodeMissing(): void {
+    if (this.isGeocoding) return;
+    this.isGeocoding = true;
+    this.toast.info('Starting batch centroid geocoding calculation...');
+    this.cdr.markForCheck();
+
+    this.api.geocodeMissingResources().subscribe({
+      next: (res) => {
+        this.isGeocoding = false;
+        this.toast.success(res.message || 'Geocoded missing coordinates successfully.');
+        this.fetchResources(true);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isGeocoding = false;
+        this.toast.error('Failed to geocode missing resources.');
+        this.cdr.markForCheck();
+      }
+    });
+  }
 
   ngOnInit(): void {
     // Read initial params from URL
@@ -726,6 +864,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
       jurisdictionLevel: this.selectedJurisdiction || undefined,
       facility: this.selectedFacility || undefined,
       status: this.selectedStatus || undefined,
+      hasIssues: this.activeTab === 'issues' ? true : undefined,
       startDate: this.startDate || undefined,
       endDate: this.endDate || undefined,
       sortBy: this.sortBy,
@@ -902,6 +1041,27 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // Resolve Citizen Reported Issues
+  resolveIssues(item: LegalResourceItem, event?: Event): void {
+    event?.stopPropagation();
+    const targetId = item._id || item.id;
+    if (!targetId) return;
+
+    this.api.resolveResourceIssues(targetId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        this.toast.success(`Discrepancy reports resolved and verification renewed for "${item.name}".`);
+        if (this.inspectItem && (this.inspectItem._id === targetId || this.inspectItem.id === targetId)) {
+          this.inspectItem = res.data;
+        }
+        this.swrCache.invalidate('resources');
+        this.fetchResources(true);
+      },
+      error: (err: any) => {
+        this.toast.error(err?.error?.message || 'Failed to resolve reported issues.');
+      }
+    });
+  }
+
   // Geocoding Auto-Resolver Studio (Google Maps Geocoding / Fallback)
   resolveAddressGis(): void {
     const query = `${this.formData.address}, ${this.formData.city}, ${this.formData.state}, India`.trim();
@@ -955,33 +1115,37 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.editingId = null;
     this.formData = {
       name: '',
+      name_hi: '',
       type: 'Court',
       jurisdictionLevel: 'District',
-      city: 'Delhi',
-      district: 'Central Delhi',
-      state: 'Delhi',
-      pincode: '110001',
+      parentAuthorityId: '',
+      city: '',
+      district: '',
+      state: '',
+      pincode: '',
+      pincodeCoverage: '',
       address: '',
+      address_hi: '',
       phone: '',
       fax: '',
       email: '',
       website: '',
-      operatingHours: '09:30 AM - 05:00 PM (Mon-Sat)',
-      lunchBreak: '01:30 PM - 02:00 PM',
+      operatingHours: '',
+      lunchBreak: '',
       status: 'approved',
-      lat: 28.6139,
-      lng: 77.2090,
-      hasEfiling: true,
-      hasLADCS: true,
-      hasVCRoom: true,
-      hasLegalAidClinic: true,
-      isWheelchairAccessible: true,
+      lat: null,
+      lng: null,
+      hasEfiling: false,
+      hasLADCS: false,
+      hasVCRoom: false,
+      hasLegalAidClinic: false,
+      isWheelchairAccessible: false,
       patronInChief: '',
       executiveChairman: '',
       memberSecretary: '',
       sclscChairman: '',
       sclscSecretary: '',
-      auditNotes: 'Verified compliant with e-Courts Phase III guidelines'
+      auditNotes: ''
     };
     this.isModalOpen = true;
     this.cdr.markForCheck();
@@ -993,30 +1157,35 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     const phoneVal = Array.isArray(item.contactNumber) ? item.contactNumber.join(', ') : (item.contactNumber || '');
     const faxVal = Array.isArray(item.faxNumber) ? item.faxNumber.join(', ') : (item.faxNumber || '');
     const emailVal = Array.isArray(item.email) ? item.email.join(', ') : (item.email || '');
+    const coverageVal = Array.isArray(item.pincodeCoverage) ? item.pincodeCoverage.join(', ') : (item.pincodeCoverage || '');
 
     this.formData = {
       name: item.name || '',
+      name_hi: item.name_hi || '',
       type: item.type || 'Court',
       jurisdictionLevel: item.jurisdictionLevel || 'District',
-      city: item.city || 'Delhi',
-      district: item.district || item.city || 'Delhi',
-      state: item.state || 'Delhi',
+      parentAuthorityId: item.parentAuthorityId || '',
+      city: item.city || '',
+      district: item.district || item.city || '',
+      state: item.state || '',
       pincode: item.pincode || '',
+      pincodeCoverage: coverageVal,
       address: item.address || '',
+      address_hi: item.address_hi || '',
       phone: phoneVal,
       fax: faxVal,
       email: emailVal,
       website: item.website || '',
-      operatingHours: item.operatingHours || '09:30 AM - 05:00 PM (Mon-Sat)',
-      lunchBreak: item.lunchBreak || '01:30 PM - 02:00 PM',
+      operatingHours: item.operatingHours || '',
+      lunchBreak: item.lunchBreak || '',
       status: item.status || 'approved',
-      lat: item.coordinates?.lat || 28.6139,
-      lng: item.coordinates?.lng || 77.2090,
-      hasEfiling: item.facilities?.hasEfiling !== false,
-      hasLADCS: item.facilities?.hasLADCS !== false,
-      hasVCRoom: item.facilities?.hasVCRoom !== false,
-      hasLegalAidClinic: item.facilities?.hasLegalAidClinic !== false,
-      isWheelchairAccessible: item.facilities?.isWheelchairAccessible !== false,
+      lat: (item.coordinates?.lat !== undefined && item.coordinates?.lat !== null) ? item.coordinates.lat : null,
+      lng: (item.coordinates?.lng !== undefined && item.coordinates?.lng !== null) ? item.coordinates.lng : null,
+      hasEfiling: !!item.facilities?.hasEfiling,
+      hasLADCS: !!item.facilities?.hasLADCS,
+      hasVCRoom: !!item.facilities?.hasVCRoom,
+      hasLegalAidClinic: !!item.facilities?.hasLegalAidClinic,
+      isWheelchairAccessible: !!item.facilities?.isWheelchairAccessible,
       patronInChief: item.patronInChief || '',
       executiveChairman: item.executiveChairman || '',
       memberSecretary: item.memberSecretary || '',
@@ -1042,27 +1211,35 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.isSaving = true;
     this.cdr.markForCheck();
 
+    const coverageArray = this.formData.pincodeCoverage
+      ? this.formData.pincodeCoverage.split(',').map(p => p.trim()).filter(Boolean)
+      : [];
+
     const payload: Partial<LegalResourceItem> = {
       name: this.formData.name.trim(),
+      name_hi: this.formData.name_hi.trim() || undefined,
       type: this.formData.type,
       jurisdictionLevel: this.formData.jurisdictionLevel,
+      parentAuthorityId: this.formData.parentAuthorityId || undefined,
       city: this.formData.city.trim(),
       district: this.formData.district.trim(),
       state: this.formData.state,
       pincode: this.formData.pincode.trim(),
+      pincodeCoverage: coverageArray,
       address: this.formData.address.trim(),
-      contactNumber: this.formData.phone ? this.formData.phone.split(',').map(p => p.trim()) : [],
-      faxNumber: this.formData.fax ? this.formData.fax.split(',').map(f => f.trim()) : [],
-      email: this.formData.email ? this.formData.email.split(',').map(e => e.trim()) : [],
+      address_hi: this.formData.address_hi.trim() || undefined,
+      contactNumber: this.formData.phone ? this.formData.phone.split(',').map(p => p.trim()).filter(Boolean) : [],
+      faxNumber: this.formData.fax ? this.formData.fax.split(',').map(f => f.trim()).filter(Boolean) : [],
+      email: this.formData.email ? this.formData.email.split(',').map(e => e.trim()).filter(Boolean) : [],
       website: this.formData.website.trim(),
       operatingHours: this.formData.operatingHours,
       lunchBreak: this.formData.lunchBreak,
       status: this.formData.status,
       isVerified: this.formData.status === 'approved',
-      coordinates: {
-        lat: Number(this.formData.lat) || 28.6139,
-        lng: Number(this.formData.lng) || 77.2090
-      },
+      coordinates: (this.formData.lat !== null && this.formData.lng !== null && this.formData.lat !== undefined && this.formData.lng !== undefined && !isNaN(Number(this.formData.lat)) && !isNaN(Number(this.formData.lng))) ? {
+        lat: Number(this.formData.lat),
+        lng: Number(this.formData.lng)
+      } : undefined,
       facilities: {
         hasEfiling: this.formData.hasEfiling,
         hasLADCS: this.formData.hasLADCS,
@@ -1134,6 +1311,94 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         },
         error: (err: any) => {
           this.toast.error(err?.error?.message || 'Failed to delete resource.');
+        }
+      });
+    }
+  }
+
+  // Staleness & Audit Status Evaluator
+  getStalenessInfo(r: LegalResourceItem): { label: string; colorClass: string; dotClass: string; isStale: boolean; tooltip: string } {
+    if (r.status === 'pending') {
+      return {
+        label: 'User Suggestion',
+        colorClass: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+        dotClass: 'bg-purple-400',
+        isStale: false,
+        tooltip: 'Citizen-submitted suggestion awaiting registry moderation'
+      };
+    }
+    if (!r.lastAuditDate) {
+      return {
+        label: 'Pending Audit',
+        colorClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+        dotClass: 'bg-amber-400',
+        isStale: true,
+        tooltip: 'No audit date recorded — verification required'
+      };
+    }
+    const auditDate = new Date(r.lastAuditDate);
+    const monthsAgo = (Date.now() - auditDate.getTime()) / (1000 * 60 * 60 * 24 * 30.4);
+    if (monthsAgo <= 6) {
+      return {
+        label: 'Audit Current',
+        colorClass: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+        dotClass: 'bg-emerald-400',
+        isStale: false,
+        tooltip: `Audited ${auditDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} — compliant & active`
+      };
+    } else if (monthsAgo <= 12) {
+      return {
+        label: 'Audit Aging',
+        colorClass: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
+        dotClass: 'bg-amber-400',
+        isStale: false,
+        tooltip: `Audited ${auditDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} — renewal recommended within 6 months`
+      };
+    } else {
+      return {
+        label: 'Audit Expired',
+        colorClass: 'bg-red-500/15 text-red-400 border-red-500/30',
+        dotClass: 'bg-red-400',
+        isStale: true,
+        tooltip: `Audited ${auditDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })} — verification expired (>12 months)`
+      };
+    }
+  }
+
+  // Quick Moderation Actions for User Suggestions
+  approveSuggestion(item: LegalResourceItem, event?: Event): void {
+    event?.stopPropagation();
+    const id = item._id || item.id;
+    if (!id) return;
+    this.api.updateResource(id, { ...item, status: 'approved', isVerified: true }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.toast.success(`Approved "${item.name}" — added to verified directory.`);
+        this.swrCache.invalidate('resources');
+        this.fetchResources(true);
+      },
+      error: (err: any) => {
+        this.toast.error(err?.error?.message || 'Failed to approve suggestion.');
+      }
+    });
+  }
+
+  async rejectSuggestion(item: LegalResourceItem, event?: Event): Promise<void> {
+    event?.stopPropagation();
+    const id = item._id || item.id;
+    if (!id) return;
+    const confirmed = await this.dialog.danger(
+      'Reject User Suggestion',
+      `Are you sure you want to reject and remove the user suggestion for "${item.name}"?`
+    );
+    if (confirmed) {
+      this.api.deleteResource(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: () => {
+          this.toast.success(`Rejected and deleted "${item.name}".`);
+          this.swrCache.invalidate('resources');
+          this.fetchResources(true);
+        },
+        error: (err: any) => {
+          this.toast.error(err?.error?.message || 'Failed to reject suggestion.');
         }
       });
     }

@@ -52,6 +52,32 @@
 
         <!-- Secondary Actions Group -->
         <div class="inline-flex rounded-xl bg-slate-900/80 p-0.5 border border-slate-700/80 shadow-md backdrop-blur-md">
+          <!-- Duplicates Detection Button (Phase 5) -->
+          <button
+            class="px-3 py-1.5 text-xs font-semibold text-amber-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
+            (click)="onOpenDuplicates()" [adminTooltip]="'Run duplicate detection matching across judicial entries'"
+            tooltipPosition="top">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="text-amber-400">
+              <path
+                d="M8 7v8a2 2 0 0 0 2 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+            </svg>
+            <span class="hidden sm:inline">Duplicates</span>
+          </button>
+
+          <!-- Batch Geocode Missing (Phase 5) -->
+          <button
+            class="px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
+            (click)="onGeocodeMissing()" [disabled]="isGeocoding"
+            [adminTooltip]="'Batch calculate coordinates for entries missing geo-points'" tooltipPosition="top">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              [class.animate-spin]="isGeocoding" class="text-emerald-400">
+              <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            <span class="hidden sm:inline">Geocode</span>
+          </button>
+
           <button
             class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
             (click)="openImportModal()" [adminTooltip]="'Batch Import Pipeline Wizard with dry-run validation'"
@@ -176,14 +202,144 @@
     <div
       class="glass-card page-filters p-3 rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-2xl overflow-visible">
 
-      <!-- ROW 1: Search Bar on Left, All Filters Grouped on Far Right (via ml-auto) -->
+      <!-- ROW 0: Management View Tabs Strip -->
+      <div class="flex items-center gap-1.5 border-b border-slate-800/80 pb-2 overflow-x-auto scrollbar-none">
+        <button type="button" (click)="onTabChange('all')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          [ngClass]="activeTab === 'all'
+            ? 'bg-sky-500/15 text-sky-300 border-sky-500/40 shadow-sm'
+            : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
+          <span>All Directory</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono"
+            [ngClass]="activeTab === 'all' ? 'bg-sky-500/30 text-sky-200' : 'bg-slate-700/60 text-slate-400'">
+            {{ summaryMetrics.total }}
+          </span>
+        </button>
+
+        <button type="button" (click)="onTabChange('approved')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          [ngClass]="activeTab === 'approved'
+            ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm'
+            : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>Verified Active</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono"
+            [ngClass]="activeTab === 'approved' ? 'bg-emerald-500/30 text-emerald-200' : 'bg-slate-700/60 text-slate-400'">
+            {{ summaryMetrics.verified }}
+          </span>
+        </button>
+
+        <button type="button" (click)="onTabChange('pending')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          [ngClass]="activeTab === 'pending'
+            ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-sm'
+            : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
+          <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+          <span>User Suggestions</span>
+          <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono"
+            [ngClass]="(summaryMetrics.pending || 0) > 0 ? 'bg-purple-500/30 text-purple-200 font-black' : 'bg-slate-700/60 text-slate-400'">
+            {{ summaryMetrics.pending || 0 }}
+          </span>
+        </button>
+
+        <button type="button" (click)="onTabChange('issues')"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          [ngClass]="activeTab === 'issues'
+            ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm'
+            : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
+          <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
+          <span>Reported Issues</span>
+        </button>
+
+        <!-- Display Mode Toggle (Table / GIS Map / Telemetry Analytics) -->
+        <div class="ml-auto flex items-center rounded-xl bg-slate-800/80 p-0.5 border border-slate-700/80 shrink-0">
+          <button type="button" (click)="activeDisplayMode = 'table'"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
+            [ngClass]="activeDisplayMode === 'table' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="3" y1="9" x2="21" y2="9"></line>
+              <line x1="3" y1="15" x2="21" y2="15"></line>
+              <line x1="9" y1="3" x2="9" y2="21"></line>
+            </svg>
+            <span>Table</span>
+          </button>
+          <button type="button" (click)="activeDisplayMode = 'map'"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
+            [ngClass]="activeDisplayMode === 'map' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            <span>GIS Map</span>
+          </button>
+          <button type="button" (click)="activeDisplayMode = 'analytics'"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
+            [ngClass]="activeDisplayMode === 'analytics' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 20V10M12 20V4M6 20v-6"></path>
+            </svg>
+            <span>Analytics</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ROW 1: Unified Search Bar & Filter Group Toolbar -->
       <div class="flex items-center justify-between gap-3 w-full flex-wrap sm:flex-nowrap overflow-visible">
-        <!-- Left Side: Search Input -->
-        <div class="w-full sm:w-[260px] lg:w-[300px] shrink min-w-[180px]">
-          <admin-search-input [value]="search" placeholder="Search court name, DLSA, district, pincode, address..."
-            tooltip="Type query to auto-debounce search by 300ms (Press / to focus)"
-            (searchChange)="onSearchChange($event)">
-          </admin-search-input>
+        <!-- Left Side: Unified Full-Width Search Input with Floating Mode Badge (Pattern 1) -->
+        <div class="relative flex-1 max-w-[420px] min-w-[240px]">
+          <!-- Left Icon -->
+          <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-slate-400">
+            <svg *ngIf="searchMode === 'keyword'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <svg *ngIf="searchMode === 'ai'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400 animate-pulse">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+            </svg>
+          </div>
+
+          <!-- Keyword Search Input -->
+          <input *ngIf="searchMode === 'keyword'" type="text" [(ngModel)]="search" (ngModelChange)="onSearchChange($event)"
+            placeholder="Search court, DLSA, district, pincode, address..."
+            class="w-full pl-9 pr-24 py-1.5 h-[34px] rounded-xl border border-slate-700/80 bg-slate-900/90 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+
+          <!-- AI Search Input -->
+          <input *ngIf="searchMode === 'ai'" type="text" [(ngModel)]="aiSearchQuery" (keydown.enter)="onAiSearch()"
+            placeholder="Ask in plain text: e.g. 'Find all courts with e-filing in Delhi'..."
+            class="w-full pl-9 pr-36 py-1.5 h-[34px] rounded-xl border border-indigo-500/50 bg-slate-950 text-xs text-white placeholder-indigo-300/60 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+
+          <!-- Floating Right-Side Controls (Inside Input) -->
+          <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+            <!-- Keyword Mode: Toggle to AI Badge -->
+            <button *ngIf="searchMode === 'keyword'" type="button" (click)="setSearchMode('ai')"
+              [adminTooltip]="'Switch to Natural Language AI Query'" tooltipPosition="top"
+              class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all cursor-pointer flex items-center gap-1">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+              </svg>
+              <span>AI Query</span>
+            </button>
+
+            <!-- AI Mode: Toggle back to Keyword + Search Button -->
+            <ng-container *ngIf="searchMode === 'ai'">
+              <button type="button" (click)="setSearchMode('keyword')"
+                [adminTooltip]="'Switch to standard keyword search'" tooltipPosition="top"
+                class="px-1.5 py-0.5 rounded-lg text-[10.5px] font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span class="hidden sm:inline">Keyword</span>
+              </button>
+
+              <button type="button" (click)="onAiSearch()" [disabled]="!aiSearchQuery.trim() || isAiSearching"
+                class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-[10.5px] font-bold transition-all cursor-pointer border-0 inline-flex items-center gap-1 shadow-xs">
+                <span>{{ isAiSearching ? '...' : 'Search' }}</span>
+              </button>
+            </ng-container>
+          </div>
         </div>
 
         <!-- Right Side: Filter Dropdowns Cluster (pushed to far right via ml-auto) -->
@@ -453,7 +609,16 @@
       }
     </div>
 
-    <!-- --- Main Legal Resources Data Table --- -->
+    <!-- --- Main Legal Resources Display (GIS Map View vs Data Table vs Telemetry Analytics) --- -->
+    @if (activeDisplayMode === 'map') {
+    <admin-resource-map-view [resources]="resources" [loading]="isLoading" (inspectResource)="openDossier($event)">
+    </admin-resource-map-view>
+    } @else if (activeDisplayMode === 'analytics') {
+    <div
+      class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
+      <admin-resource-analytics-view></admin-resource-analytics-view>
+    </div>
+    } @else {
     <div
       class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
       <div class="data-table-wrapper overflow-x-auto min-h-[400px]">
@@ -690,6 +855,15 @@
                       </span>
                       }
 
+                      @if ((r.feedback?.downvotes || 0) > 0) {
+                      <span
+                        class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0 leading-none flex items-center gap-1"
+                        [adminTooltip]="(r.feedback?.downvotes || 0) + ' citizen discrepancy reports logged'">
+                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                        <span>{{ r.feedback?.downvotes }} Issue(s)</span>
+                      </span>
+                      }
+
                       <span class="text-[11px] text-slate-400 font-medium truncate flex-1 min-w-0 block">
                         {{ r.district || r.city }} <span class="text-slate-600">•</span> {{ r.pincode || 'PIN N/A' }}
                       </span>
@@ -835,17 +1009,14 @@
 
               <!-- 5. Audit Compliance Status -->
               @if (columnVisibility['compliance']) {
-              <td class="px-3 py-2 w-[100px] min-w-[100px] overflow-hidden align-middle">
+              <td class="px-3 py-2 w-[110px] min-w-[110px] overflow-hidden align-middle">
                 <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
                   <span
                     class="px-2 py-1 rounded-full text-[9px] font-semibold border flex items-center gap-1.5 w-fit whitespace-nowrap leading-none"
-                    [ngClass]="r.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/15 text-amber-400 border-amber-500/30'"
-                    [adminTooltip]="r.status === 'approved' ? 'Compliance verified by High Court/DLSA registrar' : 'Pending moderation inspection'"
+                    [ngClass]="getStalenessInfo(r).colorClass" [adminTooltip]="getStalenessInfo(r).tooltip"
                     tooltipPosition="top">
-                    <span class="w-1.5 h-1.5 rounded-full shrink-0"
-                      [ngClass]="r.status === 'approved' ? 'bg-emerald-400' : 'bg-amber-400'"></span>
-                    <span class="whitespace-nowrap">{{ r.status === 'approved' ? 'Audit Verified' : 'Pending Audit'
-                      }}</span>
+                    <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="getStalenessInfo(r).dotClass"></span>
+                    <span class="whitespace-nowrap">{{ getStalenessInfo(r).label }}</span>
                   </span>
                   <span class="text-[9.5px] text-slate-400 font-mono whitespace-nowrap pl-0.5">
                     {{ r.lastAuditDate ? (r.lastAuditDate | date:'mediumDate') : 'Pending Cycle' }}
@@ -855,8 +1026,30 @@
               }
 
               <!-- 6. Actions Cell -->
-              <td class="px-2 py-2 text-center w-[50px] min-w-[50px] align-middle">
-                <div class="flex items-center justify-center">
+              <td class="px-2 py-2 text-center w-[85px] min-w-[85px] align-middle">
+                <div class="flex items-center justify-center gap-1">
+                  @if (r.status === 'pending') {
+                  <!-- Quick Moderation Buttons for Pending Suggestions -->
+                  <button type="button"
+                    class="w-6 h-6 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer"
+                    (click)="approveSuggestion(r, $event)" [adminTooltip]="'Approve and publish to public directory'"
+                    tooltipPosition="top">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                  </button>
+                  <button type="button"
+                    class="w-6 h-6 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer"
+                    (click)="rejectSuggestion(r, $event)" [adminTooltip]="'Reject and delete suggestion'"
+                    tooltipPosition="top">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18"></line>
+                      <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                  </button>
+                  }
                   <button #kebabBtn type="button"
                     class="kebab-btn w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all shadow-sm"
                     [class.active]="openActionMenuId === (r._id || r.id)"
@@ -883,6 +1076,7 @@
         [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onPageSizeChange($event)">
       </admin-pagination>
     </div>
+    }
 
     <!-- ----- Floating Action Dropdown Menu ----- -->
     <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionItem()" [dropdownWidth]="210"
@@ -909,6 +1103,19 @@
         <span>Renew Cycle (+12m)</span>
         <span class="dropdown-item-shortcut">Renew</span>
       </button>
+
+      @if ((getOpenActionItem()?.feedback?.downvotes || 0) > 0) {
+      <!-- Resolve Reported Issues Action -->
+      <button class="dropdown-item" (click)="resolveIssues(getOpenActionItem()!); closeActionMenu()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-rose-400">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <span class="text-rose-300 font-semibold">Resolve Issues ({{ getOpenActionItem()?.feedback?.downvotes }})</span>
+        <span class="dropdown-item-shortcut">Fix</span>
+      </button>
+      }
 
       <!-- 3. Edit Institutional Profile -->
       <button class="dropdown-item" (click)="openEditModal(getOpenActionItem()!); closeActionMenu()">
@@ -983,6 +1190,13 @@
       [visibleColumnKeys]="visibleColumnKeys" (exportRequest)="handleExport($event)"
       (closed)="isExportModalOpen = false">
     </admin-export-modal>
+    }
+
+    <!-- --- 8. Duplicate Detection & Resolution Modal (Phase 5) --- -->
+    @if (showDuplicateModal) {
+    <admin-resource-duplicate-modal [duplicatePairs]="duplicatePairs" [isLoading]="isLoadingDuplicates"
+      (closed)="onCloseDuplicates()" (merged)="onDuplicatesMerged()">
+    </admin-resource-duplicate-modal>
     }
 
   </div>
