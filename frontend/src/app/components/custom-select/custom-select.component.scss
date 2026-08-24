@@ -1,0 +1,64 @@
+/* Custom thin scrollbar for dropdown menu */
+.custom-select-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 4px;
+  }
+}
+
+/* Responsive menu widths with CSS Custom Properties */
+.custom-select-floating-menu {
+  min-width: var(--menu-min-w, 180px);
+  max-width: var(--menu-max-w, 380px);
+
+  @media (min-width: 640px) {
+    min-width: var(--menu-sm-min-w, var(--menu-min-w, 180px));
+    max-width: var(--menu-sm-max-w, var(--menu-max-w, 380px));
+  }
+
+  @media (min-width: 768px) {
+    min-width: var(--menu-md-min-w, var(--menu-sm-min-w, var(--menu-min-w, 180px)));
+    max-width: var(--menu-md-max-w, var(--menu-sm-max-w, var(--menu-max-w, 380px)));
+  }
+}
+
+:host-context(.dark) .custom-select-scrollbar,
+.dark .custom-select-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+/* Keyframe entrance micro-animations */
+@keyframes selectFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes selectFadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

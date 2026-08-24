@@ -99,6 +99,7 @@ export interface Category {
 
 export interface ApiResponse<T> {
   success: boolean;
+  message?: string;
   data: T;
   count?: number;
   pagination?: {
@@ -117,7 +118,7 @@ export class LegalService {
   private actsCache$: Observable<ApiResponse<BareAct[]>> | null = null;
   private actDetailsCache = new Map<string, Observable<ApiResponse<BareAct>>>();
   private actOutlineCache = new Map<string, Observable<ApiResponse<BareAct>>>();
-  
+
   // Singleton cache for search hub queries (5-minute TTL)
   searchCache = new Map<string, { results: any; aiRoadmap: any; timestamp: number }>();
 
@@ -443,6 +444,15 @@ export class LegalService {
     }).join(' ');
   }
 
+  checkDuplicateResource(name: string, city?: string, state?: string): Observable<ApiResponse<{ hasDuplicate: boolean; count: number; matches: any[] }>> {
+    let params: string[] = [`name=${encodeURIComponent(name.trim())}`];
+    if (city) params.push(`city=${encodeURIComponent(city.trim())}`);
+    if (state) params.push(`state=${encodeURIComponent(state.trim())}`);
+    return this.http.get<ApiResponse<{ hasDuplicate: boolean; count: number; matches: any[] }>>(
+      `${this.apiUrl}/check-duplicate-resource?${params.join('&')}`
+    );
+  }
+
   suggestResource(resource: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/suggest-resource`, resource);
   }
@@ -541,7 +551,7 @@ export class LegalService {
     const num = val.section_number;
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is302 = num === '302' || num === '101';
-    
+
     if (is302) {
       return [
         { year: '1860', title: 'Original Enactment', desc: 'Introduced in Macaulay\'s Indian Penal Code.' },
@@ -574,14 +584,14 @@ export class LegalService {
     const isTPA = short === 'TPA' || short.includes('PROPERTY');
 
     return {
-      court: short === 'RENT CONTROL ACT' ? 'Rent Tribunal' : 
-             (short === 'IPC' || short === 'BNS' ? 'Judicial Magistrate Court' : 
-             (short.includes('ARCHITECT') ? 'Council of Architecture / High Court (Writ)' : 'Civil Court (Senior Division)')),
-      fee: is138 ? '10% of bounced cheque value (max 10,000)' : 
-           (short.includes('ARCHITECT') ? 'Standard regulatory appeal fee (Rs. 1,000)' : 'Flat Rs. 200 standard judicial filing stamps'),
-      prep: is138 ? '30-day statutory legal notice served to drawer; 15 days wait period.' : 
-            (isTPA ? 'Serve 15-day prior written notice of termination under Section 106.' :
-            (short.includes('ARCHITECT') ? 'Submit formal representation to the Registrar or Central Government within 30 days.' :
+      court: short === 'RENT CONTROL ACT' ? 'Rent Tribunal' :
+        (short === 'IPC' || short === 'BNS' ? 'Judicial Magistrate Court' :
+          (short.includes('ARCHITECT') ? 'Council of Architecture / High Court (Writ)' : 'Civil Court (Senior Division)')),
+      fee: is138 ? '10% of bounced cheque value (max 10,000)' :
+        (short.includes('ARCHITECT') ? 'Standard regulatory appeal fee (Rs. 1,000)' : 'Flat Rs. 200 standard judicial filing stamps'),
+      prep: is138 ? '30-day statutory legal notice served to drawer; 15 days wait period.' :
+        (isTPA ? 'Serve 15-day prior written notice of termination under Section 106.' :
+          (short.includes('ARCHITECT') ? 'Submit formal representation to the Registrar or Central Government within 30 days.' :
             'Consult statutory compliance guidelines under the governing act.'))
     };
   }
@@ -607,5 +617,105 @@ export class LegalService {
         newText: 'Whoever commits the offense under this section shall be liable to standard prosecution. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Fines have been increased by 100% and provisions for community service have been introduced as alternative punishment.</ins>'
       };
     }
+  }
+
+  // ── Legal Resources Directory API (with SWR Client Cache) ──
+  private directoryCache = new Map<string, { data: any; timestamp: number }>();
+  private readonly DIRECTORY_CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+  getResourceDirectory(params: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    pincode?: string;
+    state?: string;
+    district?: string;
+    type?: string;
+    jurisdictionLevel?: string;
+    facility?: string;
+    lat?: number;
+    lng?: number;
+    sortBy?: string;
+    sortOrder?: string;
+    lang?: string;
+  } = {}, refresh = false): Observable<any> {
+    const queryParams = new URLSearchParams();
+    if (params.page) queryParams.set('page', params.page.toString());
+    if (params.limit) queryParams.set('limit', params.limit.toString());
+    if (params.search) queryParams.set('search', params.search);
+    if (params.pincode) queryParams.set('pincode', params.pincode);
+    if (params.state) queryParams.set('state', params.state);
+    if (params.district) queryParams.set('district', params.district);
+    if (params.type) queryParams.set('type', params.type);
+    if (params.jurisdictionLevel) queryParams.set('jurisdictionLevel', params.jurisdictionLevel);
+    if (params.facility) queryParams.set('facility', params.facility);
+    if (params.lat !== undefined && params.lat !== null) queryParams.set('lat', params.lat.toString());
+    if (params.lng !== undefined && params.lng !== null) queryParams.set('lng', params.lng.toString());
+    if (params.sortBy) queryParams.set('sortBy', params.sortBy);
+    if (params.sortOrder) queryParams.set('sortOrder', params.sortOrder);
+    if (params.lang) queryParams.set('lang', params.lang);
+
+    const queryString = queryParams.toString();
+    const cacheKey = queryString || 'default';
+    const now = Date.now();
+
+    if (!refresh && this.directoryCache.has(cacheKey)) {
+      const cached = this.directoryCache.get(cacheKey)!;
+      if (now - cached.timestamp < this.DIRECTORY_CACHE_TTL && cached.data?.mapPins) {
+        return of(cached.data);
+      }
+    }
+
+    return this.http.get<any>(`${this.apiUrl}/resources/directory?${queryString}`).pipe(
+      map(res => {
+        if (res?.success) {
+          this.directoryCache.set(cacheKey, { data: res, timestamp: Date.now() });
+        }
+        return res;
+      })
+    );
+  }
+
+  aiSearchDirectory(query: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/resources/ai-search`, { query });
+  }
+
+  clearDirectoryCache(): void {
+    this.directoryCache.clear();
+  }
+
+  getDistrictsByState(state?: string): Observable<any> {
+    const query = state ? `?state=${encodeURIComponent(state)}` : '';
+    return this.http.get<any>(`${this.apiUrl}/resources/districts${query}`);
+  }
+
+  // ── Phase 5: Resource Feedback & View Telemetry ──
+
+  submitResourceFeedback(id: string, isHelpful: boolean, reason?: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/resources/${id}/feedback`, { isHelpful, reason });
+  }
+
+  recordResourceView(id: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/resources/${id}/view`, {});
+  }
+
+  getUserLocation(): Promise<{ lat: number; lng: number }> {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        return reject(new Error('Geolocation is not supported by your browser'));
+      }
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          });
+        },
+        (error) => {
+          reject(error);
+        },
+        { timeout: 10000, enableHighAccuracy: true }
+      );
+    });
   }
 }

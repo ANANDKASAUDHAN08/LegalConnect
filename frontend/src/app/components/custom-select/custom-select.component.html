@@ -1,0 +1,198 @@
+<div class="relative inline-block select-none font-sans max-w-full" [class.z-[70]]="isOpen" [style.width]="width"
+  [style.min-width]="minWidth" [style.max-width]="maxWidth" [attr.aria-expanded]="isOpen"
+  [attr.aria-haspopup]="'listbox'" [attr.aria-label]="ariaLabel || placeholder" role="combobox">
+
+  <!-- ── Trigger Button ── -->
+  <div
+    class="flex items-center justify-between gap-2 border font-semibold cursor-pointer max-w-full overflow-hidden outline-none shadow-xs transition-all duration-200"
+    [ngClass]="[
+      roundedClass,
+      size === 'sm' ? 'px-2.5 py-1 text-xs min-h-[32px]' : size === 'lg' ? 'px-4 py-2 text-sm min-h-[44px]' : 'px-3 py-1.5 text-xs sm:text-sm min-h-[38px]',
+      variant === 'glass' ? 'bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl border-slate-200/80 dark:border-slate-800' :
+      variant === 'filled' ? 'bg-slate-100 dark:bg-slate-800/90 border-transparent text-slate-900 dark:text-white' :
+      variant === 'outlined' ? 'bg-transparent border-slate-200 dark:border-slate-700' :
+      'bg-white dark:bg-slate-900/90 backdrop-blur-md border-slate-200 dark:border-slate-800 text-slate-900 dark:text-slate-100',
+      hasValue ? 'bg-amber-500/10 dark:bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-300' : 'hover:border-amber-400/60 dark:hover:border-amber-400/40 hover:bg-slate-50 dark:hover:bg-slate-800/60',
+      isOpen ? 'border-amber-500 ring-2 ring-amber-500/20 dark:ring-amber-500/30' : '',
+      disabled ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800 pointer-events-none' : '',
+      triggerClass || ''
+    ]" [style.height]="height" [style.min-height]="height" [style.border-radius]="customRoundedStyle"
+    [appTooltip]="triggerTooltip" [tooltipPlacement]="tooltipPlacement" tabindex="0" (click)="toggleOpen()">
+
+    <div class="flex items-center gap-2 overflow-hidden min-w-0 flex-1">
+      <!-- Leading Icon -->
+      @if (selectedOption?.icon || icon) {
+      <span class="w-4 h-4 flex items-center justify-center shrink-0"
+        [style.color]="selectedOption?.iconColor || iconColor || ''"
+        [ngClass]="!selectedOption?.iconColor && !iconColor ? 'text-amber-500 dark:text-amber-400' : ''">
+        <app-icon [name]="selectedOption?.icon || icon || ''" [size]="size === 'sm' ? 14 : size === 'lg' ? 18 : 15"
+          [color]="selectedOption?.iconColor || iconColor">
+        </app-icon>
+      </span>
+      }
+
+      <!-- Label Wrapper -->
+      <div class="flex flex-col min-w-0 overflow-hidden text-left">
+        <span class="truncate leading-tight font-semibold"
+          [ngClass]="selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500 font-medium'">
+          {{ (loading || isLoading) && !selectedOption ? loadingText : (selectedOption ? selectedOption.label :
+          placeholder) }}
+        </span>
+        @if (selectedOption?.sublabel && !loading && !isLoading) {
+        <span class="text-[10px] text-slate-400 dark:text-slate-500 truncate leading-tight font-normal">
+          {{ selectedOption?.sublabel }}
+        </span>
+        }
+      </div>
+    </div>
+
+    <!-- Actions (Clear & Chevron / Spinner) -->
+    <div class="flex items-center gap-1 shrink-0 ml-1">
+      @if (clearable && hasValue && !disabled && !loading && !isLoading) {
+      <button type="button"
+        class="w-4 h-4 rounded-full bg-slate-200/80 dark:bg-slate-700/80 text-slate-500 dark:text-slate-400 hover:bg-red-500/20 hover:text-red-500 flex items-center justify-center transition-all cursor-pointer border-0 p-0"
+        (click)="clearSelection($event)" [appTooltip]="'Clear selection'" tooltipPlacement="top"
+        aria-label="Clear selection">
+        <app-icon name="x" [size]="10"></app-icon>
+      </button>
+      }
+
+      <!-- Arrow Chevron or Loading Spinner -->
+      @if (loading || isLoading) {
+      <div class="flex items-center justify-center text-indigo-500 dark:text-indigo-400">
+        <app-icon name="loader" [size]="size === 'sm' ? 12 : 13" [spin]="true"></app-icon>
+      </div>
+      } @else {
+      <div class="flex items-center justify-center text-slate-400 dark:text-slate-500 transition-transform duration-200"
+        [class.rotate-180]="isOpen" [class.text-amber-500]="isOpen">
+        <app-icon name="chevron-down" [size]="size === 'sm' ? 12 : 13"></app-icon>
+      </div>
+      }
+    </div>
+  </div>
+
+  <!-- ── Floating Dropdown Menu Panel ── -->
+  @if (isOpen) {
+  <div
+    class="custom-select-floating-menu absolute z-[100] w-max min-w-full max-w-[calc(100vw-24px)] bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-700/80 shadow-2xl overflow-hidden animate-[selectFadeIn_180ms_cubic-bezier(0.16,1,0.3,1)]"
+    [ngClass]="[
+      menuRoundedClass,
+      alignRight ? 'right-0 origin-top-right' : 'left-0 origin-top-left',
+      dropUp ? 'bottom-[calc(100%+6px)] animate-[selectFadeInUp_180ms_cubic-bezier(0.16,1,0.3,1)]' : 'top-[calc(100%+6px)]',
+      menuClass || ''
+    ]" [style.--menu-min-w]="menuMinWidth" [style.--menu-max-w]="menuMaxWidth"
+    [style.--menu-sm-min-w]="smMenuMinWidth || mdMenuMinWidth"
+    [style.--menu-sm-max-w]="smMenuMaxWidth || mdMenuMaxWidth" [style.--menu-md-min-w]="mdMenuMinWidth"
+    [style.--menu-md-max-w]="mdMenuMaxWidth" [style.border-radius]="customMenuRoundedStyle" role="listbox">
+
+    <!-- Optional Search Input Inside Menu -->
+    @if (searchable) {
+    <div class="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50"
+      (click)="$event.stopPropagation()">
+      <div class="relative flex items-center">
+        <span class="absolute left-2.5 text-slate-400 pointer-events-none flex items-center">
+          <app-icon name="search" [size]="13"></app-icon>
+        </span>
+        <input #searchInput type="text" [(ngModel)]="searchTerm" (ngModelChange)="onSearchInput($event)"
+          [placeholder]="searchPlaceholder"
+          class="w-full pl-7 pr-7 py-1.5 text-xs bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-amber-500 transition-colors" />
+        @if (searchTerm) {
+        <button type="button"
+          class="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 border-0 bg-transparent cursor-pointer flex items-center"
+          (click)="searchTerm = ''; onSearchInput(''); $event.stopPropagation()">
+          <app-icon name="x" [size]="11"></app-icon>
+        </button>
+        }
+      </div>
+    </div>
+    }
+
+    <!-- Options List -->
+    <div class="p-2 flex flex-col gap-0.5 overflow-y-auto max-h-[320px] custom-select-scrollbar"
+      [style.max-height]="maxMenuHeight">
+      <!-- Loading Skeleton Items inside Dropdown -->
+      @if (loading || isLoading) {
+      <div class="py-1 space-y-1.5">
+        <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse">
+          <div class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+          <div class="h-3 w-28 rounded bg-slate-200 dark:bg-slate-700"></div>
+        </div>
+        <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse">
+          <div class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+          <div class="h-3 w-36 rounded bg-slate-200 dark:bg-slate-700"></div>
+        </div>
+        <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse">
+          <div class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
+          <div class="h-3 w-20 rounded bg-slate-200 dark:bg-slate-700"></div>
+        </div>
+      </div>
+      }
+
+      @if (!loading && !isLoading && filteredOptions.length === 0) {
+      <div class="flex items-center justify-center gap-2 py-4 px-3 text-xs text-slate-400 font-medium">
+        <app-icon name="info" [size]="14"></app-icon>
+        <span>No options found</span>
+      </div>
+      }
+
+      @for (opt of filteredOptions; track opt.value; let idx = $index) {
+      <div
+        class="flex items-center justify-between gap-2.5 px-2.5 py-2 sm:py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 hover:text-amber-800 dark:hover:text-amber-300 transition-all duration-150 cursor-pointer select-none"
+        [ngClass]="[
+                isSelected(opt.value) ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : '',
+                focusedIndex === idx ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300' : '',
+                opt.disabled ? 'opacity-40 cursor-not-allowed pointer-events-none' : ''
+              ]" [appTooltip]="opt.tooltip || (opt.sublabel ? (opt.label + ' — ' + opt.sublabel) : opt.label)"
+        [tooltipPlacement]="'right'" role="option" [attr.aria-selected]="isSelected(opt.value)"
+        (click)="selectOption(opt, $event)">
+
+        <div class="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
+          <!-- Option Icon -->
+          @if (opt.icon) {
+          <span class="w-4 h-4 flex items-center justify-center shrink-0" [style.color]="opt.iconColor || ''"
+            [ngClass]="!opt.iconColor ? 'text-amber-500 dark:text-amber-400' : ''">
+            <app-icon [name]="opt.icon" [size]="15" [color]="opt.iconColor"></app-icon>
+          </span>
+          }
+
+          <!-- Option Text -->
+          <div class="flex flex-col min-w-0 overflow-hidden text-left">
+            <span class="truncate font-semibold"
+              [ngClass]="isSelected(opt.value) ? 'text-amber-800 dark:text-amber-300 font-bold' : 'text-slate-800 dark:text-slate-200'">
+              {{ opt.label }}
+            </span>
+            @if (opt.sublabel) {
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 truncate font-normal">
+              {{ opt.sublabel }}
+            </span>
+            }
+          </div>
+        </div>
+
+        <!-- Option Right Badges & Checkmark -->
+        <div class="flex items-center gap-1.5 shrink-0 ml-auto">
+          @if (opt.count !== undefined && opt.count !== null) {
+          <span
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+            {{ opt.count }}
+          </span>
+          }
+          @if (opt.badge) {
+          <span
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded-md bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30"
+            [style.backgroundColor]="opt.badgeColor || ''">
+            {{ opt.badge }}
+          </span>
+          }
+          @if (showCheckmark && isSelected(opt.value)) {
+          <span class="w-4 h-4 shrink-0 text-emerald-500 flex items-center justify-center">
+            <app-icon name="check" [size]="13"></app-icon>
+          </span>
+          }
+        </div>
+      </div>
+      }
+    </div>
+  </div>
+  }
+</div>
