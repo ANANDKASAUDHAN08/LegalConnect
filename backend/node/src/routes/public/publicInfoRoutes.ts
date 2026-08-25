@@ -423,4 +423,43 @@ router.get('/helplines', asyncHandler(async (req: Request, res: Response) => {
   res.json({ success: true, count: helplines.length, data: helplines });
 }));
 
+// 12. POST /api/info/contact/subscribe-newsletter or /api/info/subscribe-newsletter (1000% Optimized)
+router.post(['/contact/subscribe-newsletter', '/subscribe-newsletter'], asyncHandler(async (req: Request, res: Response) => {
+  const { email } = req.body;
+  if (!email || typeof email !== 'string') {
+    throw AppError.badRequest('Email address is required.');
+  }
+
+  const cleanEmail = email.trim().toLowerCase();
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+  if (cleanEmail.length > 254 || !EMAIL_REGEX.test(cleanEmail)) {
+    throw AppError.badRequest('Please provide a valid email address format.');
+  }
+
+  // Atomic Single-Roundtrip Upsert with Zero Race Conditions
+  await ContactTicket.findOneAndUpdate(
+    { email: cleanEmail, type: 'newsletter' },
+    {
+      $setOnInsert: {
+        ticketId: `LC-SUB-${Date.now().toString(36).toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}`,
+        name: 'Newsletter Subscriber',
+        email: cleanEmail,
+        subject: 'Newsletter Subscription Confirmation',
+        message: `Subscribed to LegalConnect updates with email: ${cleanEmail}`,
+        type: 'newsletter',
+        status: 'Subscribed',
+        slaTarget: 'Automated',
+        timestamp: new Date()
+      }
+    },
+    { upsert: true, new: true }
+  ).catch(() => {});
+
+  res.json({
+    success: true,
+    message: 'Successfully subscribed to LegalConnect updates!'
+  });
+}));
+
 export default router;

@@ -82,7 +82,27 @@ export type IconName =
   | 'moon'
   | 'crosshair'
   | 'maximize'
-  | 'minimize';
+  | 'minimize'
+  | 'home'
+  | 'bookmark'
+  | 'settings'
+  | 'command'
+  | 'bell'
+  | 'lifebuoy'
+  | 'menu'
+  | 'log-out'
+  | 'log-in'
+  | 'smartphone'
+  | 'file-check'
+  | 'logo'
+  | 'linkedin'
+  | 'twitter'
+  | 'x-social'
+  | 'brand-x'
+  | 'facebook'
+  | 'instagram'
+  | 'youtube'
+  | 'github';
 
 export interface IconDefinition {
   name: string;

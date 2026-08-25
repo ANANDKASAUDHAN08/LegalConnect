@@ -142,9 +142,7 @@ export class InfoApiService {
    */
   subscribeNewsletter(email: string): Observable<any> {
     const url = `/api/contact/subscribe-newsletter`;
-    return this.http.post(url, { email }).pipe(
-      catchError(() => of({ success: true, message: 'Successfully subscribed to LegalConnect updates!' }))
-    );
+    return this.http.post(url, { email });
   }
 
   /**
