@@ -21,6 +21,11 @@ export interface SelectGroup<T = any> {
   options: SelectOption<T>[];
 }
 
+export interface HighlightPart {
+  text: string;
+  match: boolean;
+}
+
 export type SelectSize = 'sm' | 'md' | 'lg';
 export type SelectVariant = 'default' | 'filled' | 'outlined' | 'glass' | 'minimal';
 export type SelectDropPosition = 'auto' | 'down' | 'up';

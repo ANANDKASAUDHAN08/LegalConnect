@@ -1,25 +1,26 @@
-<div class="relative group">
+<div class="relative user-profile-menu-container" appNavDropdown #profileDropdown="appNavDropdown">
   <!-- Avatar Trigger -->
-  <div
-    class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold flex items-center justify-center cursor-pointer shadow-md select-none border-2 border-white dark:border-slate-900 group-hover:scale-105 transition-transform duration-200">
+  <button appNavDropdownTrigger
+    class="w-9 h-9 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white font-extrabold flex items-center justify-center cursor-pointer shadow-md select-none border-2 border-white dark:border-slate-900 hover:scale-105 transition-transform duration-200"
+    [class.ring-2]="profileDropdown.isOpen" [class.ring-blue-500]="profileDropdown.isOpen">
     {{ (currentUser?.fullName || 'U')[0] | uppercase }}
-  </div>
+  </button>
 
   <!-- Dropdown Card Container -->
-  <div
-    class="absolute right-0 top-full mt-1 w-64 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800/80 rounded-2xl shadow-xl dark:shadow-[0_10px_30px_rgba(0,0,0,0.4)] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 ease-out transform translate-y-2 group-hover:translate-y-0 z-50 p-4 flex flex-col gap-3">
+  <div appNavDropdownPanel
+    class="user-profile-dropdown w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 rounded-2xl shadow-xl dark:shadow-[0_12px_40px_rgba(0,0,0,0.6)] p-3.5 flex flex-col gap-2.5">
 
     <!-- User Info Header -->
-    <div class="flex items-center gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/60">
+    <div class="flex items-center gap-3 pb-2.5 border-b border-slate-100 dark:border-slate-800/80">
       <div
-        class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-black flex items-center justify-center text-sm shadow-inner">
+        class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 text-white font-black flex items-center justify-center text-sm shadow-inner flex-shrink-0">
         {{ (currentUser?.fullName || 'U')[0] | uppercase }}
       </div>
       <div class="flex flex-col min-w-0">
-        <span class="text-[0.88rem] font-bold text-slate-800 dark:text-slate-100 truncate leading-snug">
+        <span class="text-[0.88rem] font-bold text-slate-900 dark:text-slate-100 truncate leading-snug">
           {{ currentUser?.fullName }}
         </span>
-        <span class="text-[0.7rem] text-slate-400 truncate leading-none mt-0.5">
+        <span class="text-[0.72rem] text-slate-500 dark:text-slate-400 truncate leading-none mt-0.5">
           {{ currentUser?.email }}
         </span>
       </div>
@@ -30,81 +31,54 @@
       <!-- Client options -->
       <ng-container *ngIf="currentUser?.role !== 'Lawyer'">
         <a routerLink="/client/portal"
-          class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-300 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="7"></rect>
-            <rect x="14" y="3" width="7" height="7"></rect>
-            <rect x="14" y="14" width="7" height="7"></rect>
-            <rect x="3" y="14" width="7" height="7"></rect>
-          </svg>
-          <span class="text-[0.82rem] font-semibold">My Library</span>
+          class="profile-dropdown-link group flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400">
+          <app-icon name="bookmark" [size]="16"
+            class="text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></app-icon>
+          <span class="text-[0.84rem] font-semibold">My Library</span>
         </a>
       </ng-container>
 
       <!-- Lawyer options -->
       <ng-container *ngIf="currentUser?.role === 'Lawyer'">
         <a routerLink="/lawyer/workstation"
-          class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-300 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect x="3" y="3" width="7" height="9"></rect>
-            <rect x="14" y="3" width="7" height="5"></rect>
-            <rect x="14" y="12" width="7" height="9"></rect>
-            <rect x="3" y="16" width="7" height="5"></rect>
-          </svg>
-          <span class="text-[0.82rem] font-semibold">Advocate Workspace</span>
+          class="profile-dropdown-link group flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400">
+          <app-icon name="layout" [size]="16"
+            class="text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></app-icon>
+          <span class="text-[0.84rem] font-semibold">Advocate Workspace</span>
         </a>
       </ng-container>
 
       <!-- Profile (Shared) -->
       <a routerLink="/profile"
-        class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-300 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span class="text-[0.82rem] font-semibold">Profile</span>
+        class="profile-dropdown-link group flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400">
+        <app-icon name="user" [size]="16"
+          class="text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></app-icon>
+        <span class="text-[0.84rem] font-semibold">Profile</span>
       </a>
 
       <!-- Settings (Shared) -->
       <a routerLink="/settings"
-        class="profile-dropdown-link flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-600 dark:text-slate-300 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50 hover:text-blue-600 dark:hover:text-white">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="3"></circle>
-          <path
-            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
-          </path>
-        </svg>
-        <span class="text-[0.82rem] font-semibold">Settings</span>
+        class="profile-dropdown-link group flex items-center gap-3 px-2.5 py-2 rounded-xl text-slate-700 dark:text-slate-200 no-underline transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/80 hover:text-blue-600 dark:hover:text-blue-400">
+        <app-icon name="settings" [size]="16"
+          class="text-slate-400 dark:text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors"></app-icon>
+        <span class="text-[0.84rem] font-semibold">Settings</span>
       </a>
 
       <!-- Install Desktop App (PWA) -->
       <button *ngIf="!pwaInstall.isStandalone()" (click)="pwaInstall.promptInstall()"
-        class="profile-dropdown-link flex w-full items-center gap-3 px-2.5 py-2 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 no-underline transition-colors bg-transparent border-0 cursor-pointer text-left"
+        class="profile-dropdown-link group flex w-full items-center gap-3 px-2.5 py-2 rounded-xl text-blue-600 dark:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 no-underline transition-colors bg-transparent border-0 cursor-pointer text-left"
         appTooltip="Install LegalConnect application to desktop/phone" tooltipPlacement="left">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-          <line x1="12" y1="18" x2="12.01" y2="18"></line>
-        </svg>
-        <span class="text-[0.82rem] font-bold">Install App</span>
+        <app-icon name="download" [size]="16"></app-icon>
+        <span class="text-[0.84rem] font-bold">Install App</span>
       </button>
 
-      <div class="h-px bg-slate-100 dark:bg-slate-800/60 my-0.5"></div>
+      <div class="h-px bg-slate-100 dark:bg-slate-800/80 my-0.5"></div>
 
       <!-- Logout Button (Common) -->
       <button (click)="logout.emit()"
-        class="profile-dropdown-link flex w-full items-center gap-3 px-2.5 py-2 rounded-xl text-rose-500 hover:bg-rose-50/50 dark:hover:bg-rose-950/20 no-underline transition-colors bg-transparent border-0 cursor-pointer text-left">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
-          stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-          <polyline points="16 17 21 12 16 7"></polyline>
-          <line x1="21" y1="12" x2="9" y2="12"></line>
-        </svg>
-        <span class="text-[0.82rem] font-bold">Sign Out</span>
+        class="profile-dropdown-link group flex w-full items-center gap-3 px-2.5 py-2 rounded-xl text-rose-600 dark:text-rose-400 hover:bg-rose-50/50 dark:hover:bg-rose-950/30 no-underline transition-colors bg-transparent border-0 cursor-pointer text-left">
+        <app-icon name="arrow-right" [size]="16"></app-icon>
+        <span class="text-[0.84rem] font-bold">Sign Out</span>
       </button>
     </div>
   </div>

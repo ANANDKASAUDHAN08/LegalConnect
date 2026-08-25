@@ -1,0 +1,117 @@
+<!-- Backdrop -->
+<div *ngIf="isOpen" class="palette-backdrop" (click)="close()"></div>
+
+<!-- Palette Panel -->
+<div *ngIf="isOpen" class="palette-container">
+    <div class="palette-panel" #palettePanel appFocusTrap>
+        <!-- Search Input -->
+        <div class="palette-input-wrapper">
+            <app-icon name="search" [size]="18" class="palette-search-icon"></app-icon>
+            <input #searchInput type="text" [(ngModel)]="query" (ngModelChange)="onQueryChange()"
+                (keydown)="onInputKeydown($event)" placeholder="Search laws, navigate, or type a command..."
+                class="palette-input" autocomplete="off" spellcheck="false" />
+            <div class="palette-shortcut-badge">
+                <kbd>ESC</kbd>
+            </div>
+        </div>
+
+        <!-- Results List -->
+        <div class="palette-results custom-scrollbar" *ngIf="filteredActions.length > 0 || query.trim()">
+            <!-- Recent Searches -->
+            <div *ngIf="recentActions.length > 0 && !query.trim()">
+                <div class="palette-category-header">
+                    <span>Recent Searches</span>
+                    <button class="palette-clear-btn" (click)="clearRecents($event)">Clear</button>
+                </div>
+                <button *ngFor="let action of recentActions; let i = index; trackBy: trackByActionId" class="palette-item"
+                    [class.palette-item-active]="selectedIndex === i" (click)="executeAction(action)"
+                    (mouseenter)="selectedIndex = i">
+                    <div class="palette-item-icon palette-item-icon-recent">
+                        <app-icon name="clock" [size]="16"></app-icon>
+                    </div>
+                    <span class="palette-item-label">{{ action.label }}</span>
+                    <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
+                </button>
+            </div>
+
+            <!-- Quick Actions (shown when no query) -->
+            <div *ngIf="quickActions.length > 0 && !query.trim()">
+                <div class="palette-category-header">Quick Actions</div>
+                <button *ngFor="let action of quickActions; let i = index; trackBy: trackByActionId" class="palette-item"
+                    [class.palette-item-active]="selectedIndex === (recentActions.length + i)"
+                    (click)="executeAction(action)" (mouseenter)="selectedIndex = recentActions.length + i">
+                    <div class="palette-item-icon">
+                        <app-icon [name]="action.icon" [size]="16"></app-icon>
+                    </div>
+                    <div class="palette-item-content">
+                        <span class="palette-item-label">{{ action.label }}</span>
+                        <span class="palette-item-desc" *ngIf="action.description">{{ action.description }}</span>
+                    </div>
+                    <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
+                </button>
+            </div>
+
+            <!-- Filtered Results (when typing) -->
+            <div *ngIf="query.trim() && filteredActions.length > 0">
+                <div class="palette-category-header">Results</div>
+                <button *ngFor="let action of filteredActions; let i = index; trackBy: trackByActionId" class="palette-item"
+                    [class.palette-item-active]="selectedIndex === i" (click)="executeAction(action)"
+                    (mouseenter)="selectedIndex = i">
+                    <div class="palette-item-icon">
+                        <app-icon [name]="action.icon" [size]="16"></app-icon>
+                    </div>
+                    <div class="palette-item-content">
+                        <span class="palette-item-label">{{ action.label }}</span>
+                        <span class="palette-item-desc" *ngIf="action.description">{{ action.description }}</span>
+                    </div>
+                    <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
+                </button>
+            </div>
+
+            <!-- Search fallback -->
+            <div *ngIf="query.trim()" class="palette-search-fallback">
+                <button class="palette-item" [class.palette-item-active]="selectedIndex === filteredActions.length"
+                    (click)="searchForQuery()" (mouseenter)="selectedIndex = filteredActions.length">
+                    <div class="palette-item-icon palette-item-icon-search">
+                        <app-icon name="search" [size]="16"></app-icon>
+                    </div>
+                    <div class="palette-item-content">
+                        <span class="palette-item-label">Search for "{{ query }}"</span>
+                        <span class="palette-item-desc">Full legal search across all acts & sections</span>
+                    </div>
+                    <kbd class="palette-item-shortcut">↵</kbd>
+                </button>
+            </div>
+        </div>
+
+        <!-- Empty State (no query, no recents) -->
+        <div *ngIf="!query.trim() && recentActions.length === 0 && quickActions.length > 0" class="palette-results">
+            <div class="palette-category-header">Quick Actions</div>
+            <button *ngFor="let action of quickActions; let i = index; trackBy: trackByActionId" class="palette-item"
+                [class.palette-item-active]="selectedIndex === i" (click)="executeAction(action)"
+                (mouseenter)="selectedIndex = i">
+                <div class="palette-item-icon">
+                    <app-icon [name]="action.icon" [size]="16"></app-icon>
+                </div>
+                <div class="palette-item-content">
+                    <span class="palette-item-label">{{ action.label }}</span>
+                    <span class="palette-item-desc" *ngIf="action.description">{{ action.description }}</span>
+                </div>
+                <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
+            </button>
+        </div>
+
+        <!-- Footer -->
+        <div class="palette-footer">
+            <div class="palette-footer-hint">
+                <kbd>↑</kbd><kbd>↓</kbd> navigate
+            </div>
+            <div class="palette-footer-hint">
+                <kbd>↵</kbd> select
+            </div>
+            <div class="palette-footer-hint">
+                <kbd>esc</kbd> close
+            </div>
+        </div>
+    </div>
+</div>

@@ -10,7 +10,9 @@ import { LocationService } from '../../services/location.service';
 import { MobileMenuComponent } from '../mobile-menu/mobile-menu.component';
 import { UserProfileMenuComponent } from '../user-profile-menu/user-profile-menu.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { NAV_DROPDOWN_DIRECTIVES } from '../../directives/nav-dropdown.directive';
 import { LocationMapModalComponent } from '../location-map-modal/location-map-modal.component';
+import { IconComponent } from '../icon/icon.component';
 import { Subscription } from 'rxjs';
 import { ScrollService } from '../../services/scroll.service';
 import { NavigationEnd } from '@angular/router';
@@ -18,6 +20,7 @@ import { filter } from 'rxjs/operators';
 
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { SystemAnnouncementService } from '../../services/system-announcement.service';
+import { CommandPaletteService } from '../../services/command-palette.service';
 
 declare var google: any;
 
@@ -36,7 +39,9 @@ declare var google: any;
     MobileMenuComponent,
     UserProfileMenuComponent,
     TooltipDirective,
-    LocationMapModalComponent
+    NAV_DROPDOWN_DIRECTIVES,
+    LocationMapModalComponent,
+    IconComponent
   ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
@@ -62,6 +67,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
   // Map modal state
   showMapModal = false;
 
+  // Sync / Network state
+  syncStatus: 'synced' | 'syncing' | 'offline' = navigator.onLine ? 'synced' : 'offline';
+  private syncTimeout: any = null;
+
   private locationSub!: Subscription;
   private scrollSub!: Subscription;
   private routerSub!: Subscription;
@@ -77,7 +86,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private locationService: LocationService,
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
-    private scrollService: ScrollService
+    private scrollService: ScrollService,
+    private commandPaletteService: CommandPaletteService
   ) { }
 
   ngOnInit() {
@@ -111,8 +121,28 @@ export class NavbarComponent implements OnInit, OnDestroy {
       filter(event => event instanceof NavigationEnd)
     ).subscribe((event: any) => {
       this.updateProgressBarVisibility(event.urlAfterRedirects || event.url);
+      this.menuOpen = false;
     });
+
+    window.addEventListener('online', this.onOnline);
+    window.addEventListener('offline', this.onOffline);
   }
+
+  private onOnline = () => {
+    this.syncStatus = 'syncing';
+    this.cdr.markForCheck();
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncTimeout = setTimeout(() => {
+      this.syncStatus = 'synced';
+      this.cdr.markForCheck();
+    }, 1800);
+  };
+
+  private onOffline = () => {
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
+    this.syncStatus = 'offline';
+    this.cdr.markForCheck();
+  };
 
   ngOnDestroy() {
     if (this.locationSub) {
@@ -124,6 +154,9 @@ export class NavbarComponent implements OnInit, OnDestroy {
     if (this.routerSub) {
       this.routerSub.unsubscribe();
     }
+    window.removeEventListener('online', this.onOnline);
+    window.removeEventListener('offline', this.onOffline);
+    if (this.syncTimeout) clearTimeout(this.syncTimeout);
   }
 
   private updateProgressBarVisibility(url: string) {
@@ -134,12 +167,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
-    if (this.dropdownOpen) {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.location-selector-container')) {
-        this.dropdownOpen = false;
-        this.cdr.markForCheck();
-      }
+    const target = event.target as HTMLElement;
+    if (this.dropdownOpen && !target.closest('.location-selector-container')) {
+      this.dropdownOpen = false;
+      this.cdr.markForCheck();
     }
   }
 
@@ -147,10 +178,32 @@ export class NavbarComponent implements OnInit, OnDestroy {
   handleKeyboardEvent(event: KeyboardEvent) {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
       event.preventDefault();
-      this.router.navigate(['/search']);
+      this.commandPaletteService.toggle();
+      return;
     }
-    if (event.key === 'Escape' && this.showMapModal) {
-      this.closeMapModal();
+
+    if (event.key === 'Escape') {
+      if (this.showMapModal) {
+        this.closeMapModal();
+      }
+      if (this.dropdownOpen) {
+        this.dropdownOpen = false;
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+
+    const target = event.target as HTMLElement;
+    const isEditing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable || target.tagName === 'SELECT';
+
+    if (!isEditing && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      if ((event.key === 't' || event.key === 'T') && !this.router.url.startsWith('/laws/')) {
+        event.preventDefault();
+        this.themeService.toggleTheme();
+      } else if (event.key === 'h' || event.key === 'H') {
+        event.preventDefault();
+        this.router.navigate(['/home']);
+      }
     }
   }
 

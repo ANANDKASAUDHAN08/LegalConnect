@@ -1,0 +1,51 @@
+<div *ngIf="shortcutService.isOpen()" class="shortcuts-backdrop" (click)="close()"></div>
+
+<div *ngIf="shortcutService.isOpen()" class="shortcuts-container" role="dialog" aria-modal="true"
+  aria-labelledby="shortcuts-title">
+  <div class="shortcuts-panel" appFocusTrap>
+    <!-- Header -->
+    <div class="shortcuts-header">
+      <div class="flex items-center gap-2.5">
+        <div class="header-icon">
+          <svg class="w-5 h-5 text-amber-600 dark:text-amber-400" fill="none" stroke="currentColor" stroke-width="2"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+          </svg>
+        </div>
+        <div>
+          <h2 id="shortcuts-title" class="text-base font-bold text-slate-900 dark:text-white m-0">Keyboard Shortcuts
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 m-0 mt-0.5">Quick navigation & power-user hotkeys</p>
+        </div>
+      </div>
+      <button (click)="close()" class="close-btn" aria-label="Close shortcuts dialog">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Body / Shortcut Groups -->
+    <div class="shortcuts-body custom-scrollbar">
+      <div *ngFor="let group of shortcutService.shortcutGroups" class="shortcut-group">
+        <h3 class="group-title">{{ group.name }}</h3>
+        <div class="shortcut-list">
+          <div *ngFor="let sc of group.shortcuts" class="shortcut-row">
+            <span class="shortcut-desc">{{ sc.description }}</span>
+            <div class="shortcut-keys">
+              <kbd *ngFor="let key of sc.keys">{{ key }}</kbd>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="shortcuts-footer">
+      <span class="text-xs text-slate-500 dark:text-slate-400">Press <kbd class="footer-kbd">?</kbd> anywhere to toggle
+        this panel</span>
+      <button (click)="close()" class="done-btn">Got it</button>
+    </div>
+  </div>
+</div>

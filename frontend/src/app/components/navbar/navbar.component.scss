@@ -8,9 +8,9 @@
   border-bottom: 1px solid rgba(226, 232, 240, 0.4);
   font-family: 'Inter', system-ui, sans-serif;
   transition: padding 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
-              border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   &.scrolled {
     padding-top: 0.5rem !important;
@@ -238,10 +238,48 @@
       opacity: 0;
       transform: translateY(-8px) scale(0.97);
     }
+
     to {
       opacity: 1;
       transform: translateY(0) scale(1);
     }
+  }
+}
+
+/* Nav Hover & Click Dropdowns */
+.nav-dropdown-item {
+  position: relative;
+}
+
+.nav-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  min-width: 280px;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+    visibility 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1050;
+
+  /* Invisible hover bridge */
+  &::before {
+    content: '';
+    position: absolute;
+    top: -12px;
+    left: 0;
+    right: 0;
+    height: 12px;
+  }
+
+  &.is-open {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    transform: translateX(-50%) translateY(0) !important;
   }
 }
 
@@ -294,7 +332,8 @@
     }
   }
 
-  .auth-capsule-login, .auth-capsule-register {
+  .auth-capsule-login,
+  .auth-capsule-register {
     color: #94a3b8;
 
     &:hover:not(.active) {
@@ -335,12 +374,10 @@
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      rgba(255, 255, 255, 0.3),
-      transparent
-    );
+    background: linear-gradient(90deg,
+        transparent,
+        rgba(255, 255, 255, 0.3),
+        transparent);
     transition: 0.5s;
   }
 

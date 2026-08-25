@@ -1,9 +1,10 @@
 <div class="flex flex-col min-h-screen">
+  <a class="skip-nav" href="#main-content">Skip to content</a>
   <app-navbar></app-navbar>
-  <div class="flex-grow flex flex-col">
+  <main id="main-content" class="flex-1 flex flex-col relative w-full" [@routeAnimation]="getRouteAnimationData()">
     <router-outlet></router-outlet>
-  </div>
-  <app-footer></app-footer>
+  </main>
+  <app-footer class="mt-auto block w-full"></app-footer>
 </div>
 <app-bottom-nav></app-bottom-nav>
 <app-whats-new-modal></app-whats-new-modal>
@@ -11,3 +12,5 @@
 <app-pwa-install-banner></app-pwa-install-banner>
 <app-snackbar></app-snackbar>
 <app-consent-banner></app-consent-banner>
+<app-command-palette></app-command-palette>
+<app-keyboard-shortcuts-modal></app-keyboard-shortcuts-modal>
