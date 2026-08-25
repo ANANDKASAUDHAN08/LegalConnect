@@ -396,11 +396,11 @@ export class ProfileComponent implements OnInit, OnDestroy {
       case 'overview':
         return 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 font-extrabold';
       case 'profile-details':
-        return 'text-indigo-650 dark:text-indigo-400 border-b-2 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 font-extrabold';
+        return 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 font-extrabold';
       case 'activity-log':
         return 'text-violet-650 dark:text-violet-400 border-b-2 border-violet-500 bg-violet-50/50 dark:bg-violet-950/30 font-extrabold';
       case 'security':
-        return 'text-red-655 dark:text-red-400 border-b-2 border-red-500 bg-red-50/50 dark:bg-red-950/30 font-extrabold';
+        return 'text-red-600 dark:text-red-400 border-b-2 border-red-500 bg-red-50/50 dark:bg-red-950/30 font-extrabold';
       case 'my-reviews':
         return 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 font-extrabold';
       default:

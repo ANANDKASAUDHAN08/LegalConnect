@@ -5,12 +5,13 @@ import { AuthService } from '../../services/auth.service';
 import { ScrollService } from '../../services/scroll.service';
 import { LawyerService } from '../../services/lawyer.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { IconComponent } from '../icon/icon.component';
 import { Subscription, filter } from 'rxjs';
 
 @Component({
   selector: 'app-bottom-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective],
+  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent],
   templateUrl: './bottom-nav.component.html',
   styleUrls: ['./bottom-nav.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -22,7 +23,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
   initialHeight = window.innerHeight;
   hasUpcomingAppointment = false;
 
-  activeTab: 'home' | 'laws' | 'sos' | 'lawyers' | 'dashboard' = 'home';
+  activeTab: 'home' | 'laws' | 'sos' | 'lawyers' | 'dashboard' | 'none' = 'home';
 
   private scrollSub!: Subscription;
   private routerSub!: Subscription;
@@ -102,17 +103,31 @@ export class BottomNavComponent implements OnInit, OnDestroy {
   }
 
   private updateActiveTab(url: string) {
-    if (url.includes('/home') || url === '/') {
+    const cleanUrl = url.split('?')[0].split('#')[0];
+
+    if (cleanUrl === '/' || cleanUrl === '/home') {
       this.activeTab = 'home';
-    } else if (url.includes('/laws')) {
+    } else if (cleanUrl.startsWith('/laws')) {
       this.activeTab = 'laws';
-    } else if (url.includes('/lawyers') || url.includes('/specializations')) {
+    } else if (cleanUrl.startsWith('/lawyers') || cleanUrl.startsWith('/specializations') || cleanUrl.startsWith('/legal-resources')) {
       this.activeTab = 'lawyers';
-    } else if (url.includes('/dashboard') || url.includes('/portal') || url.includes('/workstation') || url.includes('/profile')) {
+    } else if (
+      cleanUrl.startsWith('/client') ||
+      cleanUrl.startsWith('/lawyer') ||
+      cleanUrl.startsWith('/dashboard') ||
+      cleanUrl.startsWith('/portal') ||
+      cleanUrl.startsWith('/workstation') ||
+      cleanUrl.startsWith('/profile') ||
+      cleanUrl.startsWith('/login') ||
+      cleanUrl.startsWith('/register') ||
+      cleanUrl.startsWith('/settings') ||
+      cleanUrl.startsWith('/notifications')
+    ) {
       this.activeTab = 'dashboard';
+    } else if (cleanUrl.startsWith('/find-help')) {
+      this.activeTab = 'sos';
     } else {
-      // Default fallback
-      this.activeTab = 'home';
+      this.activeTab = 'none';
     }
     this.cdr.markForCheck();
   }

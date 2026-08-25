@@ -81,9 +81,19 @@
       </svg>
       AI Suggested
     </span>
-    <span *ngIf="!isAiSuggested" class="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.06em]">
-      Enacted: {{ act.year }}
-    </span>
+    <div class="flex items-center gap-2">
+      <span *ngIf="isCached"
+        class="badge !text-[8px] md:!text-[9px] font-bold !px-1.5 !py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/50 flex items-center gap-1"
+        [appTooltip]="'Available for offline reading'" tooltipPlacement="top">
+        <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+        </svg>
+        Offline
+      </span>
+      <span *ngIf="!isAiSuggested" class="text-[10px] text-slate-400 font-semibold uppercase tracking-[0.06em]">
+        Enacted: {{ act.year }}
+      </span>
+    </div>
     <span class="text-xs font-bold text-[hsl(35,92%,47%)] flex items-center gap-1">
       Read Statute
       <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

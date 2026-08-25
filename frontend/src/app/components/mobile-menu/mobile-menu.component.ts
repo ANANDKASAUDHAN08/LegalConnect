@@ -9,11 +9,12 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { SystemAnnouncementService } from '../../services/system-announcement.service';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-mobile-menu',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective],
+  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent],
   templateUrl: './mobile-menu.component.html',
   styleUrls: ['./mobile-menu.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -65,9 +66,18 @@ export class MobileMenuComponent implements OnDestroy {
     private cdr: ChangeDetectorRef
   ) { }
 
+  isHomeRouteActive(): boolean {
+    const url = this.router.url.split('?')[0].split('#')[0];
+    return url === '/' || url === '/home';
+  }
+
   isLawsRouteActive(): boolean {
     const url = this.router.url;
-    return url.startsWith('/laws') && !url.startsWith('/laws/templates') && !url.includes('tab=faq');
+    return url.startsWith('/laws') &&
+      !url.startsWith('/laws/templates') &&
+      !url.startsWith('/laws/mapper') &&
+      !url.startsWith('/laws/civil-family') &&
+      !url.includes('tab=faq');
   }
 
   handleImageError() {

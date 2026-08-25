@@ -15,7 +15,8 @@ import { TooltipDirective } from '../../../../directives/tooltip.directive';
 export class ActCardComponent {
   @Input() act!: BareAct;
   @Input() isAiSuggested = false;
+  @Input() isCached = false;
   @Input() cardId = '';
 
-  constructor(public notificationService: NotificationService) {}
+  constructor(public notificationService: NotificationService) { }
 }

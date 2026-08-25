@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="flex items-start gap-3 pb-3 sm:pb-4 border-b border-slate-100 dark:border-slate-800/60">
     <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-900/20 border border-blue-100 dark:border-blue-800/40 flex items-center justify-center flex-shrink-0">
-      <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-blue-650 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+      <svg class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
         <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 14.15v4.25c0 .621-.504 1.125-1.125 1.125H4.875A1.125 1.125 0 013.75 18.4V14.15m16.5 0c0-1.22-.836-2.285-2.05-2.38-2.912-.228-5.83-.228-8.74 0-1.213.095-2.05 1.16-2.05 2.38m12.87-2.38C19.78 8.647 17.51 7.25 15 7.25H9c-2.51 0-4.78 1.397-5.87 3.52m15.35-1.02a2.22 2.22 0 11-4.44 0 2.22 2.22 0 014.44 0zM9 10.75a2.22 2.22 0 11-4.44 0 2.22 2.22 0 014.44 0z" />
       </svg>
     </div>
@@ -43,7 +43,7 @@
       </svg>
     </div>
     <div>
-      <h3 class="text-sm font-bold text-slate-850 dark:text-slate-200">No Inquiries Found</h3>
+      <h3 class="text-sm font-bold text-slate-900 dark:text-slate-200">No Inquiries Found</h3>
       <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">You do not have any active legal inquiries or consultation requests scheduled.</p>
     </div>
   </div>
@@ -51,7 +51,7 @@
   <!-- Cases List -->
   <div *ngIf="!loading && cases.length > 0" class="space-y-4">
     <!-- ── DESKTOP VIEW (sm and up) ── -->
-    <div *ngFor="let c of cases" class="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:border-slate-350 dark:hover:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 items-center justify-between gap-4">
+    <div *ngFor="let c of cases" class="hidden sm:flex p-5 rounded-2xl bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 shadow-sm hover:shadow-md transition-all duration-200 items-center justify-between gap-4">
       <div class="flex items-start gap-4">
         <!-- Icon -->
         <div class="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-amber-500/10 text-blue-600 dark:text-amber-500 flex items-center justify-center border border-blue-500/10 dark:border-amber-500/10 flex-shrink-0">
@@ -70,14 +70,14 @@
             </span>
           </div>
           
-          <p class="text-xs text-slate-550 dark:text-slate-400 font-medium mt-0.5">
-            <span class="text-slate-450 dark:text-slate-500">{{ profile.role === 'Lawyer' ? 'Client:' : 'Lawyer:' }}</span> 
+          <p class="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
+            <span class="text-slate-400 dark:text-slate-500">{{ profile.role === 'Lawyer' ? 'Client:' : 'Lawyer:' }}</span> 
             {{ profile.role === 'Lawyer' ? c.clientName : (c.lawyerName || 'Advocate') }}
-            <span class="text-slate-350 dark:text-slate-700 mx-1.5">|</span>
-            <span class="text-slate-450 dark:text-slate-500">Date:</span> {{ c.createdAt | date:'mediumDate' }}
+            <span class="text-slate-300 dark:text-slate-700 mx-1.5">|</span>
+            <span class="text-slate-400 dark:text-slate-500">Date:</span> {{ c.createdAt | date:'mediumDate' }}
           </p>
           
-          <p class="text-xs text-slate-650 dark:text-slate-300 line-clamp-1 italic max-w-lg mt-1">
+          <p class="text-xs text-slate-600 dark:text-slate-300 line-clamp-1 italic max-w-lg mt-1">
             "{{ c.message }}"
           </p>
         </div>
@@ -154,7 +154,7 @@
 
       <!-- Mobile Description -->
       <div class="bg-slate-50/60 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/60 rounded-xl p-3">
-        <p class="text-xs text-slate-600 dark:text-slate-350 italic leading-relaxed line-clamp-3">
+        <p class="text-xs text-slate-600 dark:text-slate-300 italic leading-relaxed line-clamp-3">
           "{{ c.message }}"
         </p>
       </div>
@@ -164,7 +164,7 @@
         <!-- Status edit for Lawyer on Mobile -->
         <div *ngIf="profile.role === 'Lawyer'" class="relative flex-1 status-dropdown-container">
           <button type="button" (click)="toggleStatusDropdown(c.id, $event)"
-            class="w-full flex items-center justify-between pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-805 dark:text-slate-200 font-bold outline-none focus:border-amber-500 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 cursor-pointer text-left relative">
+            class="w-full flex items-center justify-between pl-3.5 pr-8 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs text-slate-800 dark:text-slate-200 font-bold outline-none focus:border-amber-500 hover:border-slate-300 dark:hover:border-slate-600 transition-all duration-200 cursor-pointer text-left relative">
             <span>{{ c.status }}</span>
             <svg class="w-3.5 h-3.5 text-slate-400 absolute right-2.5 transition-transform duration-200"
               [class.rotate-180]="activeStatusDropdownId === c.id" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

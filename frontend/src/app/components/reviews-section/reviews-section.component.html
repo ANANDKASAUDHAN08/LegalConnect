@@ -1,5 +1,5 @@
 <section
-  class="section reviews-section bg-slate-50/50 dark:bg-slate-950/20 border-t border-slate-150 dark:border-slate-850 py-12 sm:py-20"
+  class="section reviews-section bg-slate-50/50 dark:bg-slate-950/20 border-t border-slate-200 dark:border-slate-800 py-12 sm:py-20"
   id="reviews">
   <div class="container mx-auto px-4 sm:px-6">
     <!-- Header -->
@@ -22,12 +22,12 @@
       <div
         class="grid grid-cols-2 gap-1 p-1 rounded-xl bg-slate-100/60 dark:bg-slate-950/40 border border-slate-200/20 dark:border-slate-800/40 w-full sm:w-auto min-w-[280px]">
         <button (click)="switchTab('client')"
-          [ngClass]="activeTab === 'client' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/10 dark:border-slate-700/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-white'"
+          [ngClass]="activeTab === 'client' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm border border-slate-200/10 dark:border-slate-700/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
           class="py-2 md:px-3 px-2 rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center justify-center gap-1.5">
           <span>Client Success Stories</span>
         </button>
         <button (click)="switchTab('lawyer')"
-          [ngClass]="activeTab === 'lawyer' ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-450 shadow-sm border border-slate-200/10 dark:border-slate-700/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-850 dark:hover:text-white'"
+          [ngClass]="activeTab === 'lawyer' ? 'bg-white dark:bg-slate-800 text-amber-600 dark:text-amber-400 shadow-sm border border-slate-200/10 dark:border-slate-700/10' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'"
           class="py-2 md:px-3 px-2 rounded-xl text-[11px] md:text-xs font-bold transition-all flex items-center justify-center gap-1.5">
           <span>Advocate Endorsements</span>
         </button>
@@ -52,7 +52,7 @@
         </div>
 
         <button [routerLink]="['/reviews']"
-          class="btn btn-outline border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-900 w-full sm:w-auto py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1 rounded-xl transition-all shadow-sm">
+          class="btn btn-outline border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900 w-full sm:w-auto py-2.5 px-4 text-xs font-bold flex items-center justify-center gap-1 rounded-xl transition-all shadow-sm">
           <span>View All</span>
         </button>
 
@@ -98,7 +98,7 @@
         </svg>
       </div>
       <h3 class="font-bold text-slate-800 dark:text-white text-base">No reviews found</h3>
-      <p class="text-xs text-slate-450 max-w-sm">There are no testimonials recorded for this tab yet. Be the first to
+      <p class="text-xs text-slate-400 max-w-sm">There are no testimonials recorded for this tab yet. Be the first to
         share your thoughts!</p>
       <button (click)="openWriteModal()" class="btn btn-outline btn-sm text-xs mt-1">Write a Testimonial</button>
     </div>
@@ -117,7 +117,7 @@
 
       <!-- Close button -->
       <button (click)="closeReadMoreModal()"
-        class="absolute right-4 top-4 text-slate-400 hover:text-slate-650 dark:hover:text-slate-350 p-1 transition-colors outline-none">
+        class="absolute right-4 top-4 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 transition-colors outline-none">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -130,8 +130,8 @@
           {{ selectedReview.authorName.replace('Adv. ', '').substring(0, 2).toUpperCase() }}
         </div>
         <div>
-          <h4 class="font-bold text-slate-850 dark:text-white text-sm">{{ selectedReview.authorName }}</h4>
-          <span class="block text-[9px] text-slate-455 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{{
+          <h4 class="font-bold text-slate-900 dark:text-white text-sm">{{ selectedReview.authorName }}</h4>
+          <span class="block text-[9px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-0.5">{{
             selectedReview.userRole }}</span>
         </div>
       </div>
@@ -143,14 +143,14 @@
           <span [class]="s <= selectedReview.rating ? 'text-amber-400' : 'text-slate-200 dark:text-slate-800'">★</span>
           }
         </div>
-        <span class="text-[9px] font-bold uppercase tracking-widest text-slate-450 dark:text-slate-555">
+        <span class="text-[9px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-555">
           Target: {{ selectedReview.targetName }}
         </span>
       </div>
 
       <!-- Full Review Content -->
       <div
-        class="text-xs text-slate-650 dark:text-slate-350 leading-relaxed font-medium bg-slate-50/50 dark:bg-slate-950/30 p-4 rounded-xl border border-slate-150/30 dark:border-slate-850/30 max-h-[40vh] sm:max-h-[30vh] overflow-y-auto scrollbar-none">
+        class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium bg-slate-50/50 dark:bg-slate-950/30 p-4 rounded-xl border border-slate-200/30 dark:border-slate-800/30 max-h-[40vh] sm:max-h-[30vh] overflow-y-auto scrollbar-none">
         "{{ getFormattedContent(selectedReview.content) }}"
       </div>
 

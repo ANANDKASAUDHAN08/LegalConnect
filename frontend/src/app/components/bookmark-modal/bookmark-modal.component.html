@@ -9,7 +9,7 @@
     <div class="flex justify-between items-start gap-4">
       <div class="min-w-0 flex-1">
         <span
-          class="inline-flex px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/30">
+          class="inline-flex px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 text-[10px] font-extrabold tracking-wider uppercase border border-indigo-100/30">
           {{ actShortName }}
         </span>
         <h3 class="font-serif text-base sm:text-lg font-bold mt-1.5 leading-tight truncate">
@@ -22,7 +22,7 @@
 
       <!-- Close Button -->
       <button (click)="closeModal()"
-        class="p-2 text-slate-450 hover:text-slate-650 dark:text-slate-400 dark:hover:text-white rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center shrink-0 transition-colors">
+        class="p-2 text-slate-400 hover:text-slate-600 dark:text-slate-400 dark:hover:text-white rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center shrink-0 transition-colors">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
           stroke="currentColor" stroke-width="2.5">
           <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -35,14 +35,14 @@
     <div class="space-y-4">
       <!-- Select Folder (Custom Dropdown) -->
       <div class="space-y-1.5 relative">
-        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-550 uppercase tracking-wider block">
+        <label class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block">
           Select Research Folder
         </label>
 
         <div class="relative w-full">
           <!-- Dropdown Trigger Button -->
           <button (click)="toggleDropdown($event)"
-            class="w-full text-left bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl px-4 py-3 flex items-center justify-between outline-none transition-all cursor-pointer bg-transparent">
+            class="w-full text-left bg-slate-50 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl px-4 py-3 flex items-center justify-between outline-none transition-all cursor-pointer bg-transparent">
             <span>{{ selectedFolder === 'Unassigned' ? 'General Reference (Default)' : selectedFolder }}</span>
             <!-- Custom Chevron Down -->
             <svg class="w-4 h-4 text-slate-400 dark:text-slate-500 transition-transform duration-200"
@@ -75,9 +75,9 @@
             <div class="overflow-y-auto flex-1 py-1 max-h-36 scrollbar-none">
               <!-- General Reference -->
               <button (click)="selectedFolder = 'Unassigned'; showFolderDropdown = false" [ngClass]="{
-                        'bg-indigo-50/60 text-indigo-650 dark:bg-indigo-950/20 dark:text-indigo-400': selectedFolder === 'Unassigned'
+                        'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400': selectedFolder === 'Unassigned'
                       }"
-                class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/40 hover:text-indigo-650 dark:hover:bg-indigo-950/15 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-2">
+                class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/40 hover:text-indigo-600 dark:hover:bg-indigo-950/15 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-2">
                 <span class="w-1.5 h-1.5 rounded-full shrink-0" [class.bg-indigo-500]="selectedFolder === 'Unassigned'"
                   [class.bg-transparent]="selectedFolder !== 'Unassigned'"></span>
                 General Reference (Default)
@@ -86,9 +86,9 @@
               <!-- Custom Folders -->
               <button *ngFor="let folder of filteredFolders"
                 (click)="selectedFolder = folder; showFolderDropdown = false" [ngClass]="{
-                        'bg-indigo-50/60 text-indigo-650 dark:bg-indigo-950/20 dark:text-indigo-400': selectedFolder === folder
+                        'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400': selectedFolder === folder
                       }"
-                class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/40 hover:text-indigo-650 dark:hover:bg-indigo-950/15 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-2 truncate">
+                class="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-indigo-50/40 hover:text-indigo-600 dark:hover:bg-indigo-950/15 dark:hover:text-indigo-400 font-semibold transition-colors bg-transparent border-0 cursor-pointer flex items-center gap-2 truncate">
                 <span class="w-1.5 h-1.5 rounded-full shrink-0" [class.bg-indigo-500]="selectedFolder === folder"
                   [class.bg-transparent]="selectedFolder !== folder"></span>
                 <span class="truncate flex-1">{{ folder }}</span>
@@ -96,7 +96,7 @@
 
               <!-- Empty Filter State -->
               <div *ngIf="filteredFolders.length === 0"
-                class="px-4 py-3 text-center text-slate-450 dark:text-slate-500 text-[11px]">
+                class="px-4 py-3 text-center text-slate-400 dark:text-slate-500 text-[11px]">
                 No folders found.
               </div>
             </div>
@@ -107,7 +107,7 @@
 
       <!-- Create New Folder trigger/input -->
       <div
-        class="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-850 p-2 sm:p-3 rounded-xl">
+        class="bg-slate-50/50 dark:bg-slate-950/20 border border-slate-100 dark:border-slate-800 p-2 sm:p-3 rounded-xl">
         <button *ngIf="!showNewFolderInput" (click)="showNewFolderInput = true"
           class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/80 dark:hover:bg-indigo-950/40 px-3 py-2 rounded-lg transition-all duration-200 bg-transparent border-0 cursor-pointer flex items-center gap-1.5 active:scale-95 select-none">
           <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
@@ -146,7 +146,7 @@
       <!-- Left side: Remove button (visible only if bookmarked) -->
       <div>
         <button *ngIf="isBookmarked" (click)="remove()"
-          class="px-3.5 py-2 border border-red-200/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-650 dark:text-red-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+          class="px-3.5 py-2 border border-red-200/50 hover:bg-red-50 dark:hover:bg-red-950/20 text-red-600 dark:text-red-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
           Remove Bookmark
         </button>
       </div>
@@ -154,7 +154,7 @@
       <!-- Right side: Cancel/Save buttons -->
       <div class="flex gap-2 ml-auto">
         <button (click)="closeModal()"
-          class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-650 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
+          class="px-4 py-2 border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-600 dark:text-slate-400 rounded-xl text-xs font-bold transition-all bg-transparent cursor-pointer">
           Cancel
         </button>
         <button (click)="save()"

@@ -32,8 +32,8 @@
 
   <span
     class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider flex items-center gap-1"
-    [class]="variant === 'desktop' ? 'text-xs text-slate-400 dark:text-slate-550 font-semibold flex items-center gap-1.5' : ''">
-    <span class="text-slate-350 dark:text-slate-700 font-bold">&bull;</span>
+    [class]="variant === 'desktop' ? 'text-xs text-slate-400 dark:text-slate-500 font-semibold flex items-center gap-1.5' : ''">
+    <span class="text-slate-300 dark:text-slate-700 font-bold">&bull;</span>
     {{ variant === 'mobile' ? 'English / हिंदी' : 'Ask in English / हिंदी' }}
   </span>
 </div>
@@ -77,14 +77,14 @@
         (click)="languageToggled.emit(voiceLanguage === 'en-IN' ? 'hi-IN' : 'en-IN')"
         [appTooltip]="variant === 'desktop' ? 'Change voice typing language (English / हिंदी)' : ''"
         tooltipPlacement="top"
-        class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-350 px-2.5 py-1 rounded-full text-[10px] font-bold border-0 cursor-pointer select-none transition-colors">
+        class="bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 px-2.5 py-1 rounded-full text-[10px] font-bold border-0 cursor-pointer select-none transition-colors">
         {{ voiceLanguage === 'en-IN' ? 'EN' : 'हिंदी' }}
       </button>
 
       <!-- Clear Button -->
       <button *ngIf="hasQuery" type="button" (click)="cleared.emit()"
         [appTooltip]="variant === 'desktop' ? 'Clear search text' : ''" tooltipPlacement="top"
-        class="text-slate-400 hover:text-slate-600 dark:text-slate-550 dark:hover:text-slate-300 p-2 rounded-full flex items-center justify-center transition-all cursor-pointer border-0 bg-transparent select-none">
+        class="text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 p-2 rounded-full flex items-center justify-center transition-all cursor-pointer border-0 bg-transparent select-none">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
         </svg>
@@ -157,7 +157,7 @@
                 style="width: 18px; height: 18px;">
                 <app-category-icon [icon]="getSuggestionIcon(sug.category)" size="sm"></app-category-icon>
               </div>
-              <span class="font-black text-slate-850 dark:text-slate-100 text-[11px] tracking-wider uppercase"
+              <span class="font-black text-slate-900 dark:text-slate-100 text-[11px] tracking-wider uppercase"
                 [class.text-[12px]]="variant === 'desktop'">
                 {{ sug.category }}
               </span>
@@ -177,7 +177,7 @@
                   [class.text-[14px]]="variant === 'desktop'">
                   {{ sug.subcategory }}
                 </span>
-                <span class="text-[9px] text-slate-450 dark:text-slate-500 font-medium shrink-0"
+                <span class="text-[9px] text-slate-400 dark:text-slate-500 font-medium shrink-0"
                   [class.text-[11px]]="variant === 'desktop'">
                   in {{ sug.category }}
                 </span>

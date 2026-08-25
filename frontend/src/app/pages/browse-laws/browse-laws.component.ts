@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, NgZone, HostListener } from '@angular/cor
 import { Router, RouterLink } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { LegalService, BareAct, ApiResponse } from '../../services/legal.service';
+import { DatabaseService } from '../../services/database.service';
 import { NotificationService } from '../../services/notification.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { FormsModule } from '@angular/forms';
@@ -30,6 +31,7 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
   aiFilteredActsList: BareAct[] = [];
   libraryFilteredActsList: BareAct[] = [];
   libraryPaginatedActsList: BareAct[] = [];
+  cachedActShortNames = new Set<string>();
 
   // Autocomplete Suggestions
   autocompleteSuggestions: BareAct[] = [];
@@ -96,6 +98,7 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
 
   constructor(
     private legalService: LegalService,
+    private db: DatabaseService,
     public notificationService: NotificationService,
     private snackbar: SnackbarService,
     private router: Router,
@@ -104,6 +107,7 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
 
   ngOnInit() {
     this.updateLibraryPageSize(); // Initial check
+    this.loadCachedActsStatus();
 
     this.legalService.getActs()
       .pipe(delay(1000))
@@ -138,6 +142,18 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
         },
         error: () => { this.error = 'Could not load acts from the server.'; this.loading = false; }
       });
+  }
+
+  private loadCachedActsStatus() {
+    this.db.getAllActs().then(acts => {
+      if (acts && acts.length > 0) {
+        this.cachedActShortNames = new Set(acts.map(a => a.shortName));
+      }
+    }).catch(() => { });
+  }
+
+  isCached(shortName: string): boolean {
+    return this.cachedActShortNames.has(shortName);
   }
 
   ngOnDestroy() {

@@ -167,7 +167,7 @@
                     <span class="text-xs font-bold text-white group-hover:text-[hsl(35,92%,47%)] transition-colors">
                       {{ suggestion.actName }}
                     </span>
-                    <span class="text-[10px] text-slate-450 dark:text-slate-400">
+                    <span class="text-[10px] text-slate-400 dark:text-slate-400">
                       {{ suggestion.shortName }} • {{ suggestion.year }}
                     </span>
                   </div>
@@ -314,7 +314,7 @@
                         border border-[hsl(35,92%,47%)]/25 animate-fade-in">
               <!-- Close Button -->
               <button (click)="clearAiAnswer()"
-                class="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-slate-650 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-white/5 border-none bg-transparent cursor-pointer transition-colors"
+                class="absolute top-3 right-3 p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/50 dark:hover:bg-white/5 border-none bg-transparent cursor-pointer transition-colors"
                 [appTooltip]="'Clear AI answer'" tooltipPlacement="top">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -548,14 +548,14 @@
         <ng-container *ngIf="!loading">
           <!-- Keyword Mode: show filteredActs -->
           <ng-container *ngIf="searchMode === 'keyword'">
-            <app-act-card *ngFor="let act of filteredActsList" [act]="act"
+            <app-act-card *ngFor="let act of filteredActsList" [act]="act" [isCached]="cachedActShortNames.has(act.shortName)"
               [isAiSuggested]="isAiSuggested(act.shortName)" [cardId]="'act-' + act.shortName">
             </app-act-card>
           </ng-container>
 
           <!-- AI Mode: show aiFilteredActs (suggested first) -->
           <ng-container *ngIf="searchMode === 'ai'">
-            <app-act-card *ngFor="let act of aiFilteredActsList" [act]="act"
+            <app-act-card *ngFor="let act of aiFilteredActsList" [act]="act" [isCached]="cachedActShortNames.has(act.shortName)"
               [isAiSuggested]="isAiSuggested(act.shortName)" [cardId]="'act-ai-' + act.shortName">
             </app-act-card>
           </ng-container>
@@ -707,7 +707,7 @@
 
         <!-- Loaded Cards -->
         <ng-container *ngIf="!loading">
-          <app-act-card *ngFor="let act of libraryPaginatedActsList" [act]="act" [cardId]="'act-lib-' + act.shortName">
+          <app-act-card *ngFor="let act of libraryPaginatedActsList" [act]="act" [isCached]="cachedActShortNames.has(act.shortName)" [cardId]="'act-lib-' + act.shortName">
           </app-act-card>
         </ng-container>
       </div>

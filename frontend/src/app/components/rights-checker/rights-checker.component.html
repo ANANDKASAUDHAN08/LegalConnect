@@ -15,12 +15,12 @@
     <!-- Responsive Grid: 2 columns on mobile/tablet, 4 on desktop -->
     <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
       <button *ngFor="let card of rightsCards; let idx = index" (click)="toggleRightsCard(idx)"
-        [ngClass]="selectedRightsCard === idx ? 'border-accent bg-accent/5 dark:bg-accent/10 shadow-md text-accent font-bold scale-[1.02]' : 'border-slate-200 dark:border-slate-800 hover:border-slate-350 dark:hover:border-slate-700 bg-white/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300'"
+        [ngClass]="selectedRightsCard === idx ? 'border-accent bg-accent/5 dark:bg-accent/10 shadow-md text-accent font-bold scale-[1.02]' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300'"
         class="p-3.5 sm:p-6 rounded-2xl border flex flex-col items-center justify-center gap-2.5 sm:gap-3.5 text-center transition-all duration-300 hover:-translate-y-0.5 group shadow-sm w-full">
 
         <!-- SVG Icons -->
         <div
-          [ngClass]="selectedRightsCard === idx ? 'text-accent' : 'text-slate-450 group-hover:text-slate-550 dark:group-hover:text-slate-300'"
+          [ngClass]="selectedRightsCard === idx ? 'text-accent' : 'text-slate-400 group-hover:text-slate-500 dark:group-hover:text-slate-300'"
           class="flex-shrink-0 transition-colors w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center">
           <!-- tenant -->
           <svg *ngIf="card.icon === 'tenant'" class="w-7 h-7 sm:w-8 sm:h-8" fill="none" stroke="currentColor"
@@ -63,7 +63,7 @@
           Governing Law: {{ activeRightsCard.lawRef }}
         </span>
         <button (click)="selectedRightsCard = null"
-          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-350 p-1 flex-shrink-0">
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 flex-shrink-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
