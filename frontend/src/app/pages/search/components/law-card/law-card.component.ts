@@ -11,11 +11,12 @@ import { Subscription, Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { FormattingService } from '../../../../services/formatting.service';
 import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
+import { IconComponent } from '../../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-law-card',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective, RouterLink, ShareMenuComponent],
+  imports: [CommonModule, FormsModule, TooltipDirective, RouterLink, ShareMenuComponent, IconComponent],
   templateUrl: './law-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })

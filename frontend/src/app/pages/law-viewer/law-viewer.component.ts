@@ -24,6 +24,7 @@ import { LawViewerCompareComponent } from './law-viewer-compare/law-viewer-compa
 import { LawViewerCompanionComponent } from './law-viewer-companion/law-viewer-companion.component';
 import { ScrollService } from '../../services/scroll.service';
 import { LegalTextParser, ParsedLegalSection } from '../../core/utils/legal-text-parser';
+import { IconComponent } from '../../components/icon/icon.component';
 
 const FULL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*)\s+of\s+the\s+([A-Za-z\s’'\",\-]+Act(?:,\s+\d{4})?))/gi;
 const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/gi;
@@ -44,7 +45,8 @@ const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/g
     LawViewerSidebarComponent,
     LawViewerChatComponent,
     LawViewerCompareComponent,
-    LawViewerCompanionComponent
+    LawViewerCompanionComponent,
+    IconComponent
   ],
   templateUrl: './law-viewer.component.html',
   styleUrls: ['./law-viewer.component.scss'],
@@ -165,6 +167,8 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   private lastSearchQuery = '';
   private searchQueryRegex: RegExp | null = null;
   recentSections: Section[] = [];
+  isActSavedOffline = false;
+  isDownloadingOffline = false;
   private onScroll = () => {
     const scrolled = window.scrollY > 20;
     if (scrolled !== this.isScrolled) {
@@ -391,6 +395,21 @@ export class LawViewerComponent implements OnInit, OnDestroy {
         const secNum = fragment.replace('sec-', '');
         this.loadSectionByNumber(secNum);
       } else {
+        // Check for saved reading position in localStorage
+        const savedPos = this.getSavedReadingPosition();
+        if (savedPos && savedPos.sectionNumber) {
+          const found = this.findSectionAndChapter(savedPos.sectionNumber);
+          if (found) {
+            this.activeChapter = found.ch;
+            this.loadSectionDetails(found.sec);
+            this.snackbar.showWithUndo(
+              `Resumed Section ${savedPos.sectionNumber} from your last reading session`,
+              () => this.resetToFirstSection()
+            );
+            return;
+          }
+        }
+
         if (this.act && this.act.chapters && this.act.chapters.length > 0) {
           this.activeChapter = this.act.chapters[0];
           if (this.activeChapter.sections && this.activeChapter.sections.length > 0) {
@@ -399,6 +418,71 @@ export class LawViewerComponent implements OnInit, OnDestroy {
         }
       }
     });
+
+    this.checkOfflineStatus();
+  }
+
+  private resetToFirstSection() {
+    if (this.act && this.act.chapters && this.act.chapters.length > 0) {
+      this.activeChapter = this.act.chapters[0];
+      if (this.activeChapter.sections && this.activeChapter.sections.length > 0) {
+        this.selectSection(this.activeChapter.sections[0]);
+      }
+    }
+  }
+
+  private saveReadingPosition(sec: Section) {
+    if (!this.shortName || !sec?.section_number) return;
+    try {
+      localStorage.setItem(`lc_reading_pos_${this.shortName}`, JSON.stringify({
+        sectionNumber: sec.section_number,
+        title: sec.title || '',
+        timestamp: Date.now()
+      }));
+    } catch { }
+  }
+
+  private getSavedReadingPosition(): { sectionNumber: string, title: string, timestamp: number } | null {
+    try {
+      const raw = localStorage.getItem(`lc_reading_pos_${this.shortName}`);
+      return raw ? JSON.parse(raw) : null;
+    } catch {
+      return null;
+    }
+  }
+
+  getReadingTime(sec: Section | null): string {
+    if (!sec) return '~1 min read';
+    const text = (sec.content || '') + ' ' + (sec.introduction_text || '') + ' ' + (sec.content_blocks?.map(b => b.text).join(' ') || '');
+    const words = text.trim().split(/\s+/).filter(Boolean).length;
+    const minutes = Math.max(1, Math.ceil(words / 200));
+    return `~${minutes} min read`;
+  }
+
+  async checkOfflineStatus() {
+    try {
+      const cached = await this.db.getActByShortName(this.shortName);
+      this.isActSavedOffline = !!cached;
+      this.cdr.markForCheck();
+    } catch {
+      this.isActSavedOffline = false;
+    }
+  }
+
+  async downloadActForOffline() {
+    if (!this.act || this.isDownloadingOffline) return;
+    this.isDownloadingOffline = true;
+    this.cdr.markForCheck();
+    try {
+      await this.db.syncActs([this.act]);
+      this.isActSavedOffline = true;
+      this.snackbar.show(`"${this.act.actName}" saved for offline reading!`, 'success');
+    } catch (err) {
+      this.snackbar.show('Failed to save act offline. Please try again.', 'error');
+    } finally {
+      this.isDownloadingOffline = false;
+      this.cdr.markForCheck();
+    }
   }
 
   private loadSectionByNumber(secNum: string) {
@@ -453,16 +537,26 @@ export class LawViewerComponent implements OnInit, OnDestroy {
       return;
     }
 
-    if (event.key === 'ArrowLeft') {
+    if (event.key === 'ArrowLeft' || event.key === '[') {
       if (this.hasPrev) {
         event.preventDefault();
         this.goToPrevSection();
       }
-    } else if (event.key === 'ArrowRight') {
+    } else if (event.key === 'ArrowRight' || event.key === ']') {
       if (this.hasNext) {
         event.preventDefault();
         this.goToNextSection();
       }
+    } else if (event.key === 'b' || event.key === 'B') {
+      if (this.activeSection) {
+        event.preventDefault();
+        this.toggleActiveSectionBookmark();
+      }
+    } else if (event.key === 'r' || event.key === 'R') {
+      event.preventDefault();
+      this.activeSectionTab = this.activeSectionTab === 'text' ? 'ai' : 'text';
+      this.snackbar.show(`Switched to ${this.activeSectionTab === 'text' ? 'Statute Text' : 'AI Simplification'} view`, 'info');
+      this.cdr.markForCheck();
     } else if (event.key === 't' || event.key === 'T') {
       event.preventDefault();
       const langs: ('en' | 'hi' | 'parallel')[] = ['en', 'hi', 'parallel'];
@@ -475,12 +569,35 @@ export class LawViewerComponent implements OnInit, OnDestroy {
       this.speakActiveContent();
     } else if (event.key === '/') {
       event.preventDefault();
-      const searchInput = document.querySelector('input[placeholder*="Search sections"]') as HTMLInputElement;
+      const searchInput = document.querySelector('input[placeholder*="Search sections"], input.sidebar-search-input') as HTMLInputElement;
       if (searchInput) {
         searchInput.focus();
         searchInput.select();
       }
     }
+  }
+
+  toggleActiveSectionBookmark() {
+    if (!this.activeSection) return;
+    if (this.isActiveSectionBookmarked) {
+      this.bookmarkService.removeBookmark(this.shortName, this.activeSection.section_number);
+      this.isActiveSectionBookmarked = false;
+      this.snackbar.show('Section removed from bookmarks', 'info');
+    } else {
+      if (this.isLoggedIn) {
+        this.openBookmarkModal(this.activeSection);
+      } else {
+        const sec = {
+          section_number: this.activeSection.section_number,
+          title: this.activeSection.title,
+          content: this.activeSection.content || ''
+        };
+        this.bookmarkService.addBookmark(this.shortName, this.activeChapter?.chapterNumber || 'I', sec, 'Case Packs');
+        this.isActiveSectionBookmarked = true;
+        this.snackbar.show(`Section ${this.activeSection.section_number} saved to Bookmarks`, 'success');
+      }
+    }
+    this.cdr.markForCheck();
   }
 
   @HostListener('mouseover', ['$event'])
@@ -616,6 +733,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
 
     this.router.navigate([], { fragment: 'sec-' + sec.section_number, replaceUrl: true });
 
+    this.saveReadingPosition(sec);
     this.loadSectionDetails(sec);
 
     window.scrollTo({ top: 0, behavior: 'smooth' });

@@ -5,11 +5,12 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { IconComponent } from '../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, IconComponent],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss'],
   animations: [

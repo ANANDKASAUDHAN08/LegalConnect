@@ -216,6 +216,7 @@ button:hover .tab-badge-templates:not(.active-tab-templates *) {
 
 /* Mobile & Touch UX Enhancements */
 @media (max-width: 768px) {
+
   // Edge-to-edge full-bleed breakout for mobile scrolling comfort
   .mobile-bleed-container {
     margin-left: -5.5vw;
@@ -250,11 +251,17 @@ button:hover .tab-badge-templates:not(.active-tab-templates *) {
 }
 
 @media (max-width: 768px) {
+
   // Disable ugly mobile tap highlight outline
-  button, a, label, select, input, [role="button"] {
+  button,
+  a,
+  label,
+  select,
+  input,
+  [role="button"] {
     -webkit-tap-highlight-color: transparent;
     outline: none;
-    
+
     // Smooth haptic-like scale down on active touch
     &:active {
       transform: scale(0.97);
@@ -268,7 +275,7 @@ button:hover .tab-badge-templates:not(.active-tab-templates *) {
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
   }
-  
+
   .snap-start {
     scroll-snap-align: start;
   }
@@ -279,7 +286,7 @@ button:hover .tab-badge-templates:not(.active-tab-templates *) {
     border-radius: 0 !important;
     border-left: none !important;
     border-right: none !important;
-    
+
     .dark & {
       box-shadow: 0 4px 24px -5px rgba(0, 0, 0, 0.4);
     }
@@ -291,4 +298,19 @@ button:hover .tab-badge-templates:not(.active-tab-templates *) {
     padding-bottom: 0.75rem !important;
     min-height: 48px; // Great touch feedback height
   }
+}
+
+/* Keyboard Navigation Active Card Glow */
+:host ::ng-deep .keyboard-active-card {
+  outline: 2px solid var(--color-accent, hsl(35, 92%, 47%)) !important;
+  outline-offset: 3px !important;
+  box-shadow: 0 0 0 5px hsla(35, 92%, 47%, 0.22), 0 10px 25px -5px rgba(0, 0, 0, 0.12) !important;
+  transform: translateY(-2px) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border-radius: 1rem !important;
+}
+
+:host-context(.dark) ::ng-deep .keyboard-active-card {
+  outline-color: hsl(35, 92%, 55%) !important;
+  box-shadow: 0 0 0 5px hsla(35, 92%, 55%, 0.28), 0 10px 30px -5px rgba(0, 0, 0, 0.5) !important;
 }

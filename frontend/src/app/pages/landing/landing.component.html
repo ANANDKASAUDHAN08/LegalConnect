@@ -12,7 +12,7 @@
       <!-- Badge Capsule -->
       <div class="hero-badge">
         <div
-          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-350 shadow-sm transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-600">
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-300 shadow-sm transition-all duration-300 hover:border-slate-300 dark:hover:border-slate-600">
           <span class="flex h-2 w-2 relative">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -67,7 +67,7 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <span
-            class="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-medium text-slate-450 dark:text-slate-500">
+            class="absolute right-4 top-1/2 -translate-y-1/2 hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950/60 text-[10px] font-medium text-slate-400 dark:text-slate-500">
             <span>Enter</span>
           </span>
         </div>
@@ -75,7 +75,7 @@
         <!-- Search suggestions (Fills space under input) -->
         <div
           class="flex flex-wrap items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 mt-2 px-1 justify-center lg:justify-start">
-          <span class="font-medium text-slate-450 dark:text-slate-500">Try searching:</span>
+          <span class="font-medium text-slate-400 dark:text-slate-500">Try searching:</span>
           <a [routerLink]="['/search']" [queryParams]="{q: 'Article 21'}"
             class="hover:text-accent transition-colors underline font-medium">Article 21</a>
           <span class="text-slate-300 dark:text-slate-800">•</span>
@@ -126,7 +126,7 @@
 
       <!-- Trust signals / Verification badges (Fills blank space on the bottom left) -->
       <div
-        class="flex flex-wrap items-center gap-x-6 gap-y-2.5 mt-6 text-[11px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider justify-center lg:justify-start w-full">
+        class="flex flex-wrap items-center gap-x-6 gap-y-2.5 mt-6 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider justify-center lg:justify-start w-full">
         <div class="flex items-center gap-2">
           <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" stroke-width="2.5"
             viewBox="0 0 24 24">
@@ -153,7 +153,8 @@
       <app-guest-navigator *ngIf="!currentUser"></app-guest-navigator>
 
       <!-- Logged-in User Context Panel (Quick Actions & Stats) -->
-      <div *ngIf="(currentUser$ | async) as user" class="w-full max-w-[480px] lg:max-w-none px-1 lg:px-0 flex flex-col gap-5">
+      <div *ngIf="(currentUser$ | async) as user"
+        class="w-full max-w-[480px] lg:max-w-none px-1 lg:px-0 flex flex-col gap-5">
         <!-- Client Context Panel -->
         <div *ngIf="user.role !== 'Lawyer'" class="w-full">
           <!-- Active Bookmarks if they exist -->
@@ -173,19 +174,22 @@
                   class="flex justify-between items-center p-3 rounded-xl bg-slate-50/50 dark:bg-slate-950/20 hover:bg-blue-50/40 dark:hover:bg-blue-950/10 border border-slate-100 dark:border-slate-900/60 no-underline transition-colors group">
                   <div class="min-w-0 pr-4">
                     <span class="text-[0.7rem] font-bold text-accent uppercase">{{ bm.actShortName }}</span>
-                    <p class="text-sm font-semibold text-slate-750 dark:text-slate-350 truncate mt-0.5">Sec {{
+                    <p class="text-sm font-semibold text-slate-750 dark:text-slate-300 truncate mt-0.5">Sec {{
                       bm.section.section_number }}: {{ bm.section.title }}</p>
                   </div>
-                  <svg class="w-3.5 h-3.5 text-slate-450 group-hover:translate-x-1 transition-transform" fill="none"
+                  <svg class="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-1 transition-transform" fill="none"
                     stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
                   </svg>
                 </a>
               </div>
-              
-              <div class="border-t border-slate-200/50 dark:border-slate-800/60 pt-3.5 mt-1 flex justify-between items-center">
-                <span class="text-[10px] text-slate-550 dark:text-slate-450">You have {{ bookmarks.length }} saved sections</span>
-                <a routerLink="/client/portal" class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5">
+
+              <div
+                class="border-t border-slate-200/50 dark:border-slate-800/60 pt-3.5 mt-1 flex justify-between items-center">
+                <span class="text-[10px] text-slate-500 dark:text-slate-400">You have {{ bookmarks.length }} saved
+                  sections</span>
+                <a routerLink="/client/portal"
+                  class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5">
                   <span>View saved library</span>
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
@@ -194,45 +198,68 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Fallback Onboarding template -->
           <ng-template #clientOnboarding>
-            <div class="bg-white/85 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-col gap-4 w-full">
+            <div
+              class="bg-white/85 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-col gap-4 w-full">
               <div>
-                <h4 class="font-bold text-slate-850 dark:text-white text-base">Get Started with LegalConnect</h4>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Quickly access tools designed to guide you through legal procedures.</p>
+                <h4 class="font-bold text-slate-900 dark:text-white text-base">Get Started with LegalConnect</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Quickly access tools designed to guide you
+                  through legal procedures.</p>
               </div>
-              
+
               <div class="grid grid-cols-1 gap-2.5">
-                <a routerLink="/client/portal" class="onboarding-link flex items-center gap-3.5 p-3 rounded-2xl bg-blue-500/[0.04] hover:bg-blue-500/[0.08] border border-blue-500/10 hover:border-blue-500/30 transition-all group">
-                  <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center font-bold text-sm shrink-0">✨</div>
-                  <div class="text-left min-w-0 flex-1">
-                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Ask AI Legal Assistant</span>
-                    <span class="block text-[10px] text-slate-450 mt-0.5 truncate">Upload documents or get instant legal guidance</span>
+                <a routerLink="/client/portal"
+                  class="onboarding-link flex items-center gap-3.5 p-3 rounded-2xl bg-blue-500/[0.04] hover:bg-blue-500/[0.08] border border-blue-500/10 hover:border-blue-500/30 transition-all group">
+                  <div
+                    class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center shrink-0">
+                    <app-icon name="sparkles" [size]="18"></app-icon>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <div class="text-left min-w-0 flex-1">
+                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Ask AI Legal
+                      Assistant</span>
+                    <span class="block text-[10px] text-slate-400 mt-0.5 truncate">Upload documents or get instant legal
+                      guidance</span>
+                  </div>
+                  <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none"
+                    stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </a>
 
-                <a routerLink="/laws" class="onboarding-link flex items-center gap-3.5 p-3 rounded-2xl bg-amber-500/[0.04] hover:bg-amber-500/[0.08] border border-amber-500/10 hover:border-amber-500/30 transition-all group">
-                  <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-555 flex items-center justify-center font-bold text-sm shrink-0">📖</div>
-                  <div class="text-left min-w-0 flex-1">
-                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Browse Bare Acts Library</span>
-                    <span class="block text-[10px] text-slate-450 mt-0.5 truncate">Search 500+ Indian laws and central statutes</span>
+                <a routerLink="/laws"
+                  class="onboarding-link flex items-center gap-3.5 p-3 rounded-2xl bg-amber-500/[0.04] hover:bg-amber-500/[0.08] border border-amber-500/10 hover:border-amber-500/30 transition-all group">
+                  <div
+                    class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center shrink-0">
+                    <app-icon name="book-open" [size]="18"></app-icon>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <div class="text-left min-w-0 flex-1">
+                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Browse Bare Acts
+                      Library</span>
+                    <span class="block text-[10px] text-slate-400 mt-0.5 truncate">Search 500+ Indian laws and central
+                      statutes</span>
+                  </div>
+                  <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none"
+                    stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </a>
 
-                <a routerLink="/lawyers" class="onboarding-link flex items-center gap-3.5 p-3 rounded-2xl bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08] border border-emerald-500/10 hover:border-emerald-500/30 transition-all group">
-                  <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-505 flex items-center justify-center font-bold text-sm shrink-0">⚖️</div>
-                  <div class="text-left min-w-0 flex-1">
-                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Consult Verified Advocates</span>
-                    <span class="block text-[10px] text-slate-450 mt-0.5 truncate">Find and connect with lawyers nearby</span>
+                <a routerLink="/lawyers"
+                  class="onboarding-link flex items-center gap-3.5 p-3 rounded-2xl bg-emerald-500/[0.04] hover:bg-emerald-500/[0.08] border border-emerald-500/10 hover:border-emerald-500/30 transition-all group">
+                  <div
+                    class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center shrink-0">
+                    <app-icon name="scale" [size]="18"></app-icon>
                   </div>
-                  <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                  <div class="text-left min-w-0 flex-1">
+                    <span class="block text-xs font-bold text-slate-800 dark:text-slate-200">Consult Verified
+                      Advocates</span>
+                    <span class="block text-[10px] text-slate-400 mt-0.5 truncate">Find and connect with lawyers
+                      nearby</span>
+                  </div>
+                  <svg class="w-4 h-4 text-slate-400 group-hover:translate-x-0.5 transition-transform" fill="none"
+                    stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
                   </svg>
                 </a>
@@ -243,44 +270,59 @@
 
         <!-- Lawyer Context Panel -->
         <div *ngIf="user.role === 'Lawyer'" class="w-full">
-          <div class="bg-white/85 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-col gap-5">
+          <div
+            class="bg-white/85 dark:bg-slate-900/70 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl p-6 backdrop-blur-xl shadow-xl flex flex-col gap-5">
             <div class="flex justify-between items-start">
               <div>
-                <h4 class="font-bold text-slate-850 dark:text-white text-base">Advocate Workstation</h4>
+                <h4 class="font-bold text-slate-900 dark:text-white text-base">Advocate Workstation</h4>
                 <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Your practice at a glance</p>
               </div>
               <span class="flex h-2 w-2 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
             </div>
 
             <!-- Advocate Stats Grid -->
             <div class="grid grid-cols-2 gap-3.5">
-              <div class="p-3.5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200/20 dark:border-slate-800/40 text-center">
-                <span class="block text-[10px] font-bold text-slate-450 dark:text-slate-550 uppercase tracking-wider">Total Consults</span>
-                <span class="block text-2xl font-extrabold text-slate-800 dark:text-white mt-1">{{ totalInquiriesCount }}</span>
+              <div
+                class="p-3.5 rounded-2xl bg-slate-100/50 dark:bg-slate-950/40 border border-slate-200/20 dark:border-slate-800/40 text-center">
+                <span
+                  class="block text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Total
+                  Consults</span>
+                <span class="block text-2xl font-extrabold text-slate-800 dark:text-white mt-1">{{ totalInquiriesCount
+                  }}</span>
               </div>
-              <div class="p-3.5 rounded-2xl bg-amber-500/[0.04] dark:bg-amber-500/[0.02] border border-amber-500/10 dark:border-amber-500/20 text-center">
-                <span class="block text-[10px] font-bold text-amber-600 dark:text-amber-450 uppercase tracking-wider">Pending Inbox</span>
-                <span class="block text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">{{ pendingInquiriesCount }}</span>
+              <div
+                class="p-3.5 rounded-2xl bg-amber-500/[0.04] dark:bg-amber-500/[0.02] border border-amber-500/10 dark:border-amber-500/20 text-center">
+                <span
+                  class="block text-[10px] font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">Pending
+                  Inbox</span>
+                <span class="block text-2xl font-extrabold text-amber-600 dark:text-amber-400 mt-1">{{
+                  pendingInquiriesCount }}</span>
               </div>
             </div>
 
             <!-- Quick Workstation Links -->
             <div class="flex flex-col gap-2 border-t border-slate-200/50 dark:border-slate-800/60 pt-4">
-              <span class="text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider">Advocate Workstation Actions</span>
+              <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Advocate
+                Workstation Actions</span>
               <div class="grid grid-cols-2 gap-2 mt-1">
-                <a routerLink="/lawyer/workstation" class="btn btn-primary btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
+                <a routerLink="/lawyer/workstation"
+                  class="btn btn-primary btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
                   <span>Open Inbound Inbox</span>
                 </a>
-                <a routerLink="/profile" class="btn btn-outline btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
+                <a routerLink="/profile"
+                  class="btn btn-outline btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
                   <span>Edit Listing Profile</span>
                 </a>
-                <a routerLink="/lawyer/workstation" class="btn btn-outline btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
+                <a routerLink="/lawyer/workstation"
+                  class="btn btn-outline btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
                   <span>Client Messaging</span>
                 </a>
-                <a routerLink="/lawyer/workstation" class="btn btn-outline btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
+                <a routerLink="/lawyer/workstation"
+                  class="btn btn-outline btn-sm flex items-center justify-center gap-1.5 py-2.5 text-[11px] font-bold">
                   <span>Manage Cases</span>
                 </a>
               </div>
@@ -294,8 +336,9 @@
 
 <!-- Full Width Stats Banner (Separates Hero and Features) -->
 <div
-  class="border-t border-b border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/30 backdrop-blur-md py-4 sm:py-6">
-  <div class="container mx-auto px-2 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 text-center">
+  class="stats-banner border-t border-b border-slate-200/50 dark:border-slate-800/80 bg-white/40 dark:bg-slate-900/30 backdrop-blur-md py-4 sm:py-6">
+  <div
+    class="container mx-auto px-2 sm:px-6 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6 text-center content-enter-stagger">
     <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3.5">
       <div
         class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-blue-500/10 dark:bg-blue-500/15 flex items-center justify-center border border-blue-500/20 text-blue-500 flex-shrink-0">
@@ -305,9 +348,10 @@
         </svg>
       </div>
       <div class="text-center sm:text-left min-w-0">
-        <span class="block text-xs sm:text-2xl font-extrabold text-slate-850 dark:text-white truncate">500+</span>
+        <span class="block text-xs sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate">{{ statsAnimated
+          ? displayStats.acts + '+' : '500+' }}</span>
         <span
-          class="block text-[7px] sm:text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate">Bare
+          class="block text-[7px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate">Bare
           Acts</span>
       </div>
     </div>
@@ -321,12 +365,15 @@
         </svg>
       </div>
       <div class="text-center sm:text-left min-w-0">
-        <span class="block text-xs sm:text-2xl font-extrabold text-slate-850 dark:text-white truncate">10K+</span>
+        <span class="block text-xs sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate">{{ statsAnimated
+          ? (displayStats.sections >= 1000 ? (displayStats.sections / 1000 | number:'1.0-0') + 'K+' :
+          displayStats.sections + '+') : '10K+' }}</span>
         <span
-          class="block text-[7px] sm:text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate">Sections</span>
+          class="block text-[7px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate">Sections</span>
       </div>
     </div>
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3.5 border-r sm:border-r-0 border-slate-200/50 dark:border-slate-800/80">
+    <div
+      class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3.5 border-r sm:border-r-0 border-slate-200/50 dark:border-slate-800/80">
       <div
         class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 flex items-center justify-center border border-emerald-500/20 text-emerald-500 flex-shrink-0">
         <svg class="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -335,12 +382,13 @@
         </svg>
       </div>
       <div class="text-center sm:text-left min-w-0">
-        <span class="block text-xs sm:text-2xl font-extrabold text-slate-850 dark:text-white truncate">Verified</span>
+        <span class="block text-xs sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate">Verified</span>
         <span
-          class="block text-[7px] sm:text-[10px] font-bold text-slate-450 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate">Advocates</span>
+          class="block text-[7px] sm:text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-0.5 truncate">Advocates</span>
       </div>
     </div>
-    <a routerLink="/legal-resources" class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3.5 border-l border-slate-200/50 dark:border-slate-800/80 pl-1 sm:pl-4 no-underline group">
+    <a routerLink="/legal-resources"
+      class="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-3.5 border-l border-slate-200/50 dark:border-slate-800/80 pl-1 sm:pl-4 no-underline group">
       <div
         class="w-7 h-7 sm:w-10 sm:h-10 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/15 flex items-center justify-center border border-indigo-500/20 text-indigo-500 flex-shrink-0 group-hover:scale-105 transition-transform">
         <svg class="w-3.5 h-3.5 sm:w-5 sm:h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -349,9 +397,12 @@
         </svg>
       </div>
       <div class="text-center sm:text-left min-w-0">
-        <span class="block text-xs sm:text-2xl font-extrabold text-slate-850 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">160+</span>
         <span
-          class="block text-[7px] sm:text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mt-0.5 truncate">Legal Centers</span>
+          class="block text-xs sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">{{
+          statsAnimated ? displayStats.centers + '+' : '160+' }}</span>
+        <span
+          class="block text-[7px] sm:text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider mt-0.5 truncate">Legal
+          Centers</span>
       </div>
     </a>
   </div>
@@ -359,58 +410,69 @@
 
 <!-- Modular Role-Specific Widgets (Rights Checker or Advocate BNS lookup) -->
 @defer (on viewport) {
-  <app-rights-checker *ngIf="!currentUser || currentUser?.role !== 'Lawyer'" id="rights-checker"></app-rights-checker>
+<app-rights-checker *ngIf="!currentUser || currentUser?.role !== 'Lawyer'" id="rights-checker"></app-rights-checker>
 } @placeholder {
-  <div class="container mx-auto px-4 py-8">
-    <div class="h-48 bg-slate-50/20 dark:bg-slate-900/10 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl animate-pulse flex items-center justify-center">
-      <span class="text-xs text-slate-400">Loading interactive tool...</span>
-    </div>
+<div class="container mx-auto px-4 py-8">
+  <div
+    class="h-48 bg-slate-50/20 dark:bg-slate-900/10 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl animate-pulse flex items-center justify-center">
+    <span class="text-xs text-slate-400">Loading interactive tool...</span>
   </div>
+</div>
 }
 
 @defer (on viewport) {
-  <app-bns-ipc-lookup *ngIf="currentUser?.role === 'Lawyer'" id="bns-lookup"></app-bns-ipc-lookup>
+<app-bns-ipc-lookup *ngIf="currentUser?.role === 'Lawyer'" id="bns-lookup"></app-bns-ipc-lookup>
 } @placeholder {
-  <div class="container mx-auto px-4 py-8">
-    <div class="h-48 bg-slate-50/20 dark:bg-slate-900/10 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl animate-pulse flex items-center justify-center">
-      <span class="text-xs text-slate-400">Loading citation lookup...</span>
-    </div>
+<div class="container mx-auto px-4 py-8">
+  <div
+    class="h-48 bg-slate-50/20 dark:bg-slate-900/10 border border-slate-200/50 dark:border-slate-800/80 rounded-3xl animate-pulse flex items-center justify-center">
+    <span class="text-xs text-slate-400">Loading citation lookup...</span>
   </div>
+</div>
 }
 
 <!-- Split CTA Section (Guest Only) -->
-<section *ngIf="!currentUser" class="py-12 bg-gradient-to-b from-transparent via-slate-50/30 to-transparent dark:via-slate-950/10 border-b border-slate-200/30 dark:border-slate-800/40">
+<section *ngIf="!currentUser"
+  class="py-12 bg-gradient-to-b from-transparent via-slate-50/30 to-transparent dark:via-slate-950/10 border-b border-slate-200/30 dark:border-slate-800/40">
   <div class="container mx-auto px-4 sm:px-6">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
       <!-- Client Value Proposition -->
-      <div class="flex flex-col justify-between p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-500/25 group">
+      <div
+        class="flex flex-col justify-between p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-md hover:border-blue-500/25 group">
         <div class="flex flex-col gap-4">
           <div class="flex items-center gap-3.5 sm:gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl shrink-0">
-              ⚖️
+            <div
+              class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <app-icon name="scale" [size]="24"></app-icon>
             </div>
-            <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-450 transition-colors leading-tight">For Citizens & Clients</h3>
+            <h3
+              class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight">
+              For Citizens &amp; Clients</h3>
           </div>
           <div>
             <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Find qualified legal professionals, check your rights, and access professional legal tools to resolve your disputes with confidence.
+              Find qualified legal professionals, check your rights, and access professional legal tools to resolve your
+              disputes with confidence.
             </p>
           </div>
           <ul class="flex flex-col gap-2.5 mt-2">
-            <li class="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-350">
-              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <li class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              <span>Vetted attorney directory filtered by city & practice area</span>
+              <span>Vetted attorney directory filtered by city &amp; practice area</span>
             </li>
-            <li class="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-350">
-              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <li class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
-              <span>AI-powered plain-language contract summaries & risk logs</span>
+              <span>AI-powered plain-language contract summaries &amp; risk logs</span>
             </li>
-            <li class="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-350">
-              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <li class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               <span>Standard templates for leases, notices, and affidavits</span>
@@ -418,41 +480,50 @@
           </ul>
         </div>
         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-          <a routerLink="/register" [queryParams]="{role: 'Client'}" class="btn btn-primary w-full py-3 text-xs font-bold justify-center transition-all duration-300">
+          <a routerLink="/register" [queryParams]="{role: 'Client'}"
+            class="btn btn-primary w-full py-3 text-xs font-bold justify-center transition-all duration-300">
             Sign Up as Client
           </a>
         </div>
       </div>
 
       <!-- Lawyer Value Proposition -->
-      <div class="flex flex-col justify-between p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-md hover:border-amber-500/25 group">
+      <div
+        class="flex flex-col justify-between p-6 sm:p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800 bg-white/60 dark:bg-slate-900/40 backdrop-blur-md shadow-sm transition-all duration-300 hover:shadow-md hover:border-amber-500/25 group">
         <div class="flex flex-col gap-4">
           <div class="flex items-center gap-3.5 sm:gap-4">
-            <div class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-500 flex items-center justify-center text-2xl shrink-0">
-              💼
+            <div
+              class="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-500 flex items-center justify-center shrink-0">
+              <app-icon name="briefcase" [size]="24"></app-icon>
             </div>
-            <h3 class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-450 transition-colors leading-tight">For Advocates & Lawyers</h3>
+            <h3
+              class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-tight">
+              For Advocates &amp; Lawyers</h3>
           </div>
           <div>
             <p class="text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
-              Expand your reach, streamline your client onboarding, and instantly reference the new BNS statutes using advanced citation utilities.
+              Expand your reach, streamline your client onboarding, and instantly reference the new BNS statutes using
+              advanced citation utilities.
             </p>
           </div>
           <ul class="flex flex-col gap-2.5 mt-2">
-            <li class="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-350">
-              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <li class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               <span>Custom listing profile on a high-traffic public network</span>
             </li>
-            <li class="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-350">
-              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <li class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               <span>Instant IPC to BNS section equivalency lookup search tool</span>
             </li>
-            <li class="flex items-start gap-2.5 text-xs text-slate-650 dark:text-slate-350">
-              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+            <li class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-300">
+              <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" stroke-width="3"
+                viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
               <span>Integrated consultation inbox, workspace & case manager</span>
@@ -460,7 +531,8 @@
           </ul>
         </div>
         <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-          <a routerLink="/register" [queryParams]="{role: 'Lawyer'}" class="btn btn-outline w-full py-3 text-xs font-bold justify-center transition-all duration-300">
+          <a routerLink="/register" [queryParams]="{role: 'Lawyer'}"
+            class="btn btn-outline w-full py-3 text-xs font-bold justify-center transition-all duration-300">
             Join as Advocate
           </a>
         </div>
@@ -486,10 +558,9 @@
       </p>
     </div>
 
-    <div class="features-grid grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6">
+    <div class="features-grid grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-6 content-enter-stagger">
       <a [routerLink]="(f.link && f.link.startsWith('#')) ? null : (isRestricted(f) ? null : (f.link ? [f.link] : null))"
-         [attr.href]="(f.link && f.link.startsWith('#')) ? f.link : null"
-         (click)="onFeatureClick(f, $event)"
+        [attr.href]="(f.link && f.link.startsWith('#')) ? f.link : null" (click)="onFeatureClick(f, $event)"
         class="card feature-card p-3 sm:p-6 flex flex-col items-start gap-2.5 sm:gap-3.5 transition-all duration-300 hover:-translate-y-1 hover:shadow-md border border-slate-200/50 dark:border-slate-800/80 bg-white/70 dark:bg-slate-900/60 backdrop-blur-md rounded-2xl cursor-pointer hover:border-blue-500/30 dark:hover:border-blue-500/30 group no-underline text-left w-full"
         *ngFor="let f of featuresToDisplay">
 
@@ -536,7 +607,7 @@
           </div>
 
           <h3
-            class="feature-title text-[10px] sm:text-base font-extrabold text-text-primary dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-450 transition-colors duration-300 leading-tight">
+            class="feature-title text-[10px] sm:text-base font-extrabold text-text-primary dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors duration-300 leading-tight">
             {{ f.title }}
           </h3>
         </div>
@@ -564,7 +635,7 @@
     </div>
 
     <!-- Responsive Grid: 2 columns on mobile, 3 on desktop -->
-    <div class="acts-grid grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-6">
+    <div class="acts-grid grid grid-cols-2 md:grid-cols-3 gap-3.5 sm:gap-6 content-enter-stagger">
       <!-- Dynamic Acts from Database/Fallbacks -->
       <a *ngFor="let act of keyActs" [routerLink]="['/laws', act.shortName]"
         [ngClass]="act.shortName === 'Constitution' ? 'hover:border-blue-500/30 dark:hover:border-blue-500/30 hover:shadow-blue-500/5' : 'hover:border-amber-500/30 dark:hover:border-amber-500/30 hover:shadow-amber-500/5'"
@@ -617,20 +688,19 @@
 
 <!-- Standalone Reviews and Testimonials Section -->
 @defer (on viewport) {
-  <app-reviews-section [currentUser]="currentUser"></app-reviews-section>
+<app-reviews-section [currentUser]="currentUser"></app-reviews-section>
 } @placeholder {
-  <!-- Clean skeleton placeholder to avoid layout shift -->
-  <div class="py-20 bg-slate-50/20 dark:bg-slate-950/20">
-    <div class="max-w-6xl mx-auto px-4 text-center flex flex-col items-center justify-center h-80 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl animate-pulse">
-      <span class="text-sm font-bold text-slate-400 dark:text-slate-500">Loading Testimonials...</span>
-    </div>
+<!-- Clean skeleton placeholder to avoid layout shift -->
+<div class="py-20 bg-slate-50/20 dark:bg-slate-950/20">
+  <div
+    class="max-w-6xl mx-auto px-4 text-center flex flex-col items-center justify-center h-80 border border-dashed border-slate-200 dark:border-slate-800 rounded-3xl animate-pulse">
+    <span class="text-sm font-bold text-slate-400 dark:text-slate-500">Loading Testimonials...</span>
   </div>
+</div>
 }
 
 <!-- Standalone Premium Feature Preview Modal Component -->
 @defer (when showPreviewModal) {
-  <app-premium-preview-modal 
-    [(show)]="showPreviewModal" 
-    [featureName]="previewModalFeatureName">
-  </app-premium-preview-modal>
+<app-premium-preview-modal [(show)]="showPreviewModal" [featureName]="previewModalFeatureName">
+</app-premium-preview-modal>
 }

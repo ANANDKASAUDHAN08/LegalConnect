@@ -4,11 +4,13 @@ import { RouterLink } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { InfoApiService } from '../../pages/info/services/info-api.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { IconComponent } from '../icon/icon.component';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, IconComponent, TooltipDirective],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })
@@ -39,19 +41,17 @@ export class FooterComponent {
     this.loading.set(true);
 
     this.infoApi.subscribeNewsletter(this.email).subscribe({
-      next: () => {
+      next: (res) => {
         this.subscribed.set(true);
-        this.snackbar.show('Successfully subscribed to LegalConnect updates!', 'success');
+        this.snackbar.show(res?.message || 'Successfully subscribed to LegalConnect updates!', 'success');
         this.email = '';
         this.loading.set(false);
         setTimeout(() => { this.subscribed.set(false); }, 5000);
       },
-      error: () => {
-        this.subscribed.set(true);
-        this.snackbar.show('Successfully subscribed to LegalConnect updates!', 'success');
-        this.email = '';
+      error: (err) => {
         this.loading.set(false);
-        setTimeout(() => { this.subscribed.set(false); }, 5000);
+        const errMsg = err?.error?.message || 'Subscription failed. Please check your email and try again.';
+        this.snackbar.show(errMsg, 'error');
       }
     });
   }

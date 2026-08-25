@@ -1,6 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, ElementRef } from '@angular/core';
 import { RouterLink, Router } from '@angular/router';
-import { NgFor, NgIf, AsyncPipe, NgClass } from '@angular/common';
+import { NgFor, NgIf, AsyncPipe, NgClass, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { BookmarkService, Bookmark } from '../../services/bookmark.service';
@@ -15,6 +15,9 @@ import { BnsIpcLookupComponent } from '../../components/bns-ipc-lookup/bns-ipc-l
 import { PremiumPreviewModalComponent } from '../../components/premium-preview-modal/premium-preview-modal.component';
 import { ReviewsSectionComponent } from '../../components/reviews-section/reviews-section.component';
 
+import { IconComponent } from '../../components/icon/icon.component';
+import { TooltipDirective } from '../../directives/tooltip.directive';
+
 @Component({
   selector: 'app-landing',
   standalone: true,
@@ -25,16 +28,19 @@ import { ReviewsSectionComponent } from '../../components/reviews-section/review
     AsyncPipe,
     FormsModule,
     NgClass,
+    DecimalPipe,
     GuestNavigatorComponent,
     RightsCheckerComponent,
     BnsIpcLookupComponent,
     PremiumPreviewModalComponent,
-    ReviewsSectionComponent
+    ReviewsSectionComponent,
+    IconComponent,
+    TooltipDirective
   ],
   templateUrl: './landing.component.html',
   styleUrls: ['./landing.component.scss']
 })
-export class LandingComponent implements OnInit {
+export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   searchQuery = '';
   currentUser$!: Observable<UserProfile | null>;
   currentUser: UserProfile | null = null;
@@ -42,6 +48,11 @@ export class LandingComponent implements OnInit {
   bookmarks$!: Observable<Bookmark[]>;
   pendingInquiriesCount = 0;
   totalInquiriesCount = 0;
+
+  // Count-up animation state (Enhancement #8d)
+  statsAnimated = false;
+  displayStats = { acts: 0, sections: 0, centers: 0 };
+  private statsObserver?: IntersectionObserver;
 
   // Preview Modal State
   showPreviewModal = false;
@@ -77,7 +88,8 @@ export class LandingComponent implements OnInit {
     public auth: AuthService,
     public bookmarkService: BookmarkService,
     private lawyerService: LawyerService,
-    private legalService: LegalService
+    private legalService: LegalService,
+    private elRef: ElementRef
   ) {}
 
   ngOnInit() {
@@ -93,6 +105,14 @@ export class LandingComponent implements OnInit {
     });
 
     this.loadKeyActs();
+  }
+
+  ngAfterViewInit() {
+    this.initStatsCountUp();
+  }
+
+  ngOnDestroy() {
+    this.statsObserver?.disconnect();
   }
 
   loadKeyActs() {
@@ -175,5 +195,40 @@ export class LandingComponent implements OnInit {
   openPreviewModal(type: 'ai' | 'templates') {
     this.previewModalFeatureName = type;
     this.showPreviewModal = true;
+  }
+
+  /** Count-up animation for stats banner — fires once when scrolled into view */
+  private initStatsCountUp() {
+    const statsBanner = this.elRef.nativeElement.querySelector('.stats-banner');
+    if (!statsBanner) return;
+
+    this.statsObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !this.statsAnimated) {
+          this.statsAnimated = true;
+          this.animateCount('acts', 500, 800);
+          this.animateCount('sections', 10000, 1000);
+          this.animateCount('centers', 160, 700);
+          this.statsObserver?.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.3 });
+
+    this.statsObserver.observe(statsBanner);
+  }
+
+  private animateCount(key: 'acts' | 'sections' | 'centers', target: number, duration: number) {
+    const startTime = performance.now();
+    const step = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // Ease-out cubic for natural deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+      this.displayStats[key] = Math.round(eased * target);
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    };
+    requestAnimationFrame(step);
   }
 }

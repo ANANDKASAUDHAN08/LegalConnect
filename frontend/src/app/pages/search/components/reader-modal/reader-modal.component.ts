@@ -7,11 +7,12 @@ import { SnackbarService } from '../../../../services/snackbar.service';
 import { FormattingService } from '../../../../services/formatting.service';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { BookmarkService, Bookmark } from '../../../../services/bookmark.service';
+import { IconComponent } from '../../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-reader-modal',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, FormsModule],
+  imports: [CommonModule, TooltipDirective, FormsModule, IconComponent],
   templateUrl: './reader-modal.component.html',
   styleUrls: ['./reader-modal.component.scss'],
   encapsulation: ViewEncapsulation.None,

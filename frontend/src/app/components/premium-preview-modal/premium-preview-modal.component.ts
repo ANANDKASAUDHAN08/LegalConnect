@@ -1,11 +1,12 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { NgIf } from '@angular/common';
 import { RouterLink } from '@angular/router';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-premium-preview-modal',
   standalone: true,
-  imports: [NgIf, RouterLink],
+  imports: [NgIf, RouterLink, IconComponent],
   templateUrl: './premium-preview-modal.component.html',
   styleUrls: ['./premium-preview-modal.component.scss']
 })

@@ -76,7 +76,7 @@
         class="text-[9px] font-bold text-slate-400 dark:text-slate-200 uppercase tracking-[0.1em] text-center mb-1">Scens</span>
       <div class="flex flex-col gap-2 items-center w-full px-1">
         <button *ngFor="let topic of laymanTopics; trackBy: trackByTopic" (click)="onTopicClick(topic)"
-          class="w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-sm shrink-0 bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-350 hover:bg-slate-200/60 dark:hover:bg-white/10"
+          class="w-10 h-10 rounded-full flex items-center justify-center border transition-all cursor-pointer shadow-sm shrink-0 bg-slate-100 dark:bg-white/5 border-slate-200/60 dark:border-white/5 text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-white/10"
           [appTooltip]="topic.label + ': ' + topic.description" tooltipPlacement="right"
           [attr.aria-label]="topic.label + ': ' + topic.description">
           <span class="flex items-center justify-center">
@@ -244,7 +244,7 @@
             Clear
           </button>
         </div>
-        <span class="text-xs text-text-secondary dark:text-slate-350">
+        <span class="text-xs text-text-secondary dark:text-slate-300">
           {{ totalFilteredResultsCount }} sections found
         </span>
       </div>
@@ -267,7 +267,7 @@
           </div>
           <button *ngFor="let sec of item.sections; trackBy: trackBySection" (click)="selectSection(sec)"
             class="text-[0.8rem] text-left py-2 px-2.5 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-all cursor-pointer border-none bg-transparent flex flex-col gap-1 w-full"
-            [ngClass]="activeSection === sec ? 'text-accent bg-accent/10 border border-accent/20 font-bold' : 'text-text-secondary dark:text-slate-350'">
+            [ngClass]="activeSection === sec ? 'text-accent bg-accent/10 border border-accent/20 font-bold' : 'text-text-secondary dark:text-slate-300'">
             <div class="flex items-center justify-between gap-1.5 w-full">
               <span class="truncate flex-1"
                 [innerHTML]="highlightSearchQuery('Sec ' + sec.section_number + '. ' + getSectionTitle(sec))"></span>
@@ -312,7 +312,7 @@
           <div class="flex gap-2.5 items-start">
             <span class="ch-num text-[0.75rem] font-bold text-accent w-12 shrink-0 pt-0.5">{{ ch.chapterNumber
               }}</span>
-            <span class="ch-title text-[0.85rem] text-text-secondary dark:text-slate-350 leading-relaxed font-medium"
+            <span class="ch-title text-[0.85rem] text-text-secondary dark:text-slate-300 leading-relaxed font-medium"
               [ngClass]="{'text-accent dark:text-accent-light font-bold': activeChapter === ch}">{{ ch.cleanTitle ||
               ch.title || 'Chapter ' + ch.chapterNumber }}</span>
           </div>
@@ -413,7 +413,7 @@
 
   <!-- BOTTOM PINNED TOGGLE BUTTON -->
   <button (click)="sidebarToggle.emit()"
-    class="w-full h-10 flex items-center justify-center gap-1.5 bg-surface-light dark:bg-surface-dark hover:bg-black/5 dark:hover:bg-white/5 text-text-secondary dark:text-slate-350 hover:text-accent dark:hover:text-white transition-all cursor-pointer border-t border-border-subtle/30 border-x-0 border-b-0 shrink-0 text-xs font-bold"
+    class="w-full h-10 flex items-center justify-center gap-1.5 bg-surface-light dark:bg-surface-dark hover:bg-black/5 dark:hover:bg-white/5 text-text-secondary dark:text-slate-300 hover:text-accent dark:hover:text-white transition-all cursor-pointer border-t border-border-subtle/30 border-x-0 border-b-0 shrink-0 text-xs font-bold"
     [appTooltip]="isSidebarCollapsed ? 'Expand Sidebar' : 'Collapse Sidebar'"
     [tooltipPlacement]="isSidebarCollapsed ? 'right' : 'top'">
     <span *ngIf="isSidebarCollapsed" class="text-xl font-black tracking-tight">&raquo;</span>
@@ -545,7 +545,7 @@
             </div>
           </div>
           <span *ngIf="sidebarSearchQuery"
-            class="text-[10px] text-text-muted dark:text-slate-500 font-normal line-clamp-2 leading-relaxed border-l border-slate-250 dark:border-slate-700 pl-2 mt-0.5 w-full"
+            class="text-[10px] text-text-muted dark:text-slate-500 font-normal line-clamp-2 leading-relaxed border-l border-slate-200 dark:border-slate-700 pl-2 mt-0.5 w-full"
             [innerHTML]="getSearchSnippet(sec.content, sidebarSearchQuery)"></span>
         </button>
       </div>
@@ -569,7 +569,7 @@
         [attr.aria-expanded]="expandedChapter === ch ? 'true' : 'false'">
         <div class="flex gap-2.5 items-start">
           <span class="ch-num text-[11px] font-bold text-accent w-12 shrink-0 pt-0.5">{{ ch.chapterNumber }}</span>
-          <span class="ch-title text-xs text-text-secondary dark:text-slate-350 font-medium"
+          <span class="ch-title text-xs text-text-secondary dark:text-slate-300 font-medium"
             [ngClass]="{'text-accent font-bold': activeChapter === ch}">{{ ch.cleanTitle || ch.title || 'Chapter ' + ch.chapterNumber }}</span>
         </div>
         <svg class="w-3.5 h-3.5 text-text-muted transition-transform duration-300 shrink-0"
@@ -584,7 +584,7 @@
         [class.expanded]="expandedChapter === ch">
         <div class="flex flex-col gap-1 py-1">
           <button *ngFor="let sec of ch.sections; trackBy: trackBySection" (click)="selectSection(sec)"
-            class="text-left text-xs py-2 px-2.5 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-between gap-1.5 w-full text-text-secondary dark:text-slate-450"
+            class="text-left text-xs py-2 px-2.5 rounded hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer border-none bg-transparent flex items-center justify-between gap-1.5 w-full text-text-secondary dark:text-slate-400"
             [ngClass]="activeSection === sec ? 'text-accent font-bold bg-accent/10' : 'text-text-muted dark:text-slate-400'">
             <span class="truncate flex-1">Sec {{ sec.section_number }}. {{ getSectionTitle(sec) }}</span>
             <div class="flex items-center gap-1 shrink-0">
@@ -682,7 +682,7 @@
       <div
         class="flex items-center justify-between mt-1 text-[10px] text-text-muted pt-1.5 border-t border-border-subtle/10">
         <span class="flex items-center gap-1">Est. Reading Time</span>
-        <span class="font-bold text-text-secondary dark:text-slate-350">{{ readingTimeValue }} {{ readingTimeValue === 1 ? 'min' :
+        <span class="font-bold text-text-secondary dark:text-slate-300">{{ readingTimeValue }} {{ readingTimeValue === 1 ? 'min' :
           'mins' }}</span>
       </div>
     </div>
@@ -724,7 +724,7 @@
             <span class="text-[10px] font-bold text-text-primary dark:text-white uppercase tracking-wider">{{ item.term
               }}</span>
           </div>
-          <p class="text-[9.5px] text-text-secondary dark:text-slate-350 leading-relaxed m-0 pl-2.5">{{ item.definition
+          <p class="text-[9.5px] text-text-secondary dark:text-slate-300 leading-relaxed m-0 pl-2.5">{{ item.definition
             }}</p>
         </div>
       </div>
@@ -735,7 +735,7 @@
       <span class="text-[10px] font-bold text-text-muted uppercase tracking-wider">Recently Viewed</span>
       <div class="flex flex-wrap gap-1.5">
         <button *ngFor="let sec of otherRecents" (click)="selectSection(sec)"
-          class="px-2.5 py-1 rounded-full text-[9px] font-bold border border-border-subtle/30 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-text-secondary dark:text-slate-350 hover:text-accent dark:hover:text-white transition-all cursor-pointer shadow-sm">
+          class="px-2.5 py-1 rounded-full text-[9px] font-bold border border-border-subtle/30 bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800 text-text-secondary dark:text-slate-300 hover:text-accent dark:hover:text-white transition-all cursor-pointer shadow-sm">
           Sec {{ sec.section_number }}
         </button>
       </div>

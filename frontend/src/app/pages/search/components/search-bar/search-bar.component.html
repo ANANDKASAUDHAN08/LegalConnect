@@ -16,9 +16,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
         </span>
-        <input type="text" [ngModel]="query" (ngModelChange)="onQueryChange($event)" (focus)="onFocus()"
+        <input id="main-search-input" type="text" [ngModel]="query" (ngModelChange)="onQueryChange($event)" (focus)="onFocus()"
           (keyup.enter)="performSearch()" placeholder="e.g. 'cheque bounce', 'tenant eviction', 'FIR rights'..."
-          class="w-full pl-9 pr-4 md:pr-16 py-1 md:py-2 rounded-xl bg-transparent border-0 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-0">
+          class="main-search-input w-full pl-9 pr-4 md:pr-16 py-1 md:py-2 rounded-xl bg-transparent border-0 text-slate-800 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm focus:outline-none focus:ring-0">
 
         <!-- Voice controls -->
         <div class="hidden md:flex absolute right-2 items-center gap-1.5">
@@ -33,7 +33,7 @@
           <button (click)="toggleVoiceRecording()" [disabled]="isOffline"
             [ngClass]="isRecording ? 
               'bg-red-500 text-white recording-pulse border-transparent' : 
-              (isOffline ? 'bg-red-50/20 dark:bg-red-950/10 text-red-300 dark:text-red-650 opacity-40 border-slate-200/20' : 'bg-red-50/60 dark:bg-red-950/20 text-red-500 dark:text-red-400 border-red-200/50 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-950/50 hover:text-red-600 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-800')"
+              (isOffline ? 'bg-red-50/20 dark:bg-red-950/10 text-red-300 dark:text-red-600 opacity-40 border-slate-200/20' : 'bg-red-50/60 dark:bg-red-950/20 text-red-500 dark:text-red-400 border-red-200/50 dark:border-red-900/40 hover:bg-red-100 dark:hover:bg-red-950/50 hover:text-red-600 dark:hover:text-red-300 hover:border-red-300 dark:hover:border-red-800')"
             class="w-7 h-7 rounded-full flex items-center justify-center border transition-all cursor-pointer animate-fade-in"
             [appTooltip]="isOffline ? 'Requires active internet connection' : 'Voice search'" tooltipPlacement="top">
 
@@ -186,11 +186,11 @@
 
     <!-- 3. Empty State -->
     <div *ngIf="suggestions.length === 0 && !isSearchingSuggestions" class="px-4 py-7 text-center text-slate-500 dark:text-slate-400 flex flex-col items-center justify-center">
-      <svg class="w-8 h-8 text-slate-350 dark:text-slate-650 opacity-55 mb-2" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
+      <svg class="w-8 h-8 text-slate-400 dark:text-slate-500 opacity-55 mb-2" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
       </svg>
       <span class="text-xs font-black">No matching sections found</span>
-      <p class="text-[9px] md:text-[10px] text-slate-450 dark:text-slate-550 mt-1 leading-normal max-w-xs m-0">
+      <p class="text-[9px] md:text-[10px] text-slate-500 dark:text-slate-400 mt-1 leading-normal max-w-xs m-0">
         We couldn't find any sections matching your query. Verify spelling or try typing a code name (e.g. BNS, IPC).
       </p>
     </div>

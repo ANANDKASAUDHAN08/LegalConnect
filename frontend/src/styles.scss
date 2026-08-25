@@ -1157,3 +1157,221 @@ body.mobile-drawer-open .bottom-nav-container {
     height: 0 !important;
   }
 }
+
+/* Button Press Feedback — physical tactile response (Apple, Linear, Notion) */
+.btn:active:not(:disabled) {
+  transform: scale(0.97) !important;
+  transition: transform 80ms ease !important;
+}
+
+/* Enhanced Card Hover — subtle lift with diffused shadow */
+.card {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.25s ease;
+}
+
+/* 8c. Animated Underline — sweeps from left to right on hover (Stripe, Linear style) */
+.animated-underline {
+  text-decoration: none !important;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  background-repeat: no-repeat;
+  transition: background-size 300ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    background-size: 100% 1px;
+  }
+}
+
+/* 8e. Smooth Expand/Collapse — CSS grid height animation trick (no JS needed) */
+.expandable-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 250ms cubic-bezier(0.16, 1, 0.3, 1);
+
+  &.open {
+    grid-template-rows: 1fr;
+  }
+
+  >.expandable-inner {
+    overflow: hidden;
+  }
+}
+
+/* Content enter animation — fade in + subtle slide up */
+@keyframes contentFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Single element fade-in */
+.content-enter {
+  animation: contentFadeIn 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Staggered children fade-in — each child cascades in with 35ms delay */
+.content-enter-stagger > * {
+  animation: contentFadeIn 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@for $i from 1 through 20 {
+  .content-enter-stagger > *:nth-child(#{$i}) {
+    animation-delay: #{($i - 1) * 35}ms;
+  }
+}
+
+.content-enter-stagger > *:nth-child(n + 21) {
+  animation-delay: 700ms;
+}
+
+/* Faster stagger variant for dense lists (20ms interval) */
+.content-enter-stagger-fast > * {
+  animation: contentFadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@for $i from 1 through 20 {
+  .content-enter-stagger-fast > *:nth-child(#{$i}) {
+    animation-delay: #{($i - 1) * 20}ms;
+  }
+}
+
+.content-enter-stagger-fast > *:nth-child(n + 21) {
+  animation-delay: 400ms;
+}
+
+/* Content section slide — for tabbed content transitions */
+@keyframes contentSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.content-slide-in {
+  animation: contentSlideIn 250ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/**
+ * Keyboard-only focus ring — only show visible focus outlines
+ * when navigating via keyboard (Tab). Hidden for mouse/touch.
+ * Uses :focus-visible (supported in all modern browsers).
+ */
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-accent, hsl(35, 92%, 47%));
+  outline-offset: 2px;
+  border-radius: 4px;
+  transition: outline-offset 100ms ease;
+}
+
+/* Dark mode: slightly brighter focus ring */
+.dark *:focus-visible {
+  outline-color: hsl(35, 92%, 55%);
+}
+
+/* Cards, buttons, and interactive elements get a subtle glow on focus */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--color-accent, hsl(35, 92%, 47%));
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px hsla(35, 92%, 47%, 0.15);
+}
+
+.dark button:focus-visible,
+.dark a:focus-visible,
+.dark input:focus-visible,
+.dark select:focus-visible,
+.dark textarea:focus-visible,
+.dark [tabindex]:focus-visible {
+  box-shadow: 0 0 0 4px hsla(35, 92%, 55%, 0.2);
+}
+
+/* Skip Navigation Link — screen-reader accessible, visible on Tab */
+.skip-nav {
+  position: fixed;
+  top: -100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100000;
+  background: var(--color-accent);
+  color: white;
+  padding: 8px 24px;
+  border-radius: 0 0 8px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: top 150ms ease;
+}
+
+.skip-nav:focus {
+  top: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   STICKY FOOTER & LAYOUT STABILITY
+   Prevents the footer from jumping to the middle of the viewport
+   during route transitions and async data loading.
+
+   Root cause: Angular route animations set `position: absolute` on
+   both :enter and :leave components, collapsing #main-content height.
+   Page components also default to `display: inline` in Angular,
+   preventing them from filling the flex container.
+
+   This is the pattern used by Vercel, Linear, and Notion — the content
+   area is guaranteed to fill the remaining viewport height regardless
+   of async loading state or route transition animation phase.
+   ═══════════════════════════════════════════════════════════ */
+
+/* 1. Routed page components fill their container.
+      Angular component elements default to display:inline. This rule forces
+      routed page host elements to be flex column containers that take full
+      width and stretch vertically to fill #main-content. */
+#main-content>router-outlet+*,
+#main-content>*:not(router-outlet) {
+  display: flex;
+  flex-direction: column;
+  flex: 1 0 auto;
+  width: 100%;
+  min-height: 0;
+}
+
+/* 2. Guaranteed sticky footer: #main-content has `flex: 1 1 0%` via `flex-1`
+      and app-footer has `margin-top: auto`. This ensures that even on
+      pages with minimal content or during initial async loading, the footer
+      is permanently pinned to the bottom of the viewport and never jumps. */
+
+/* ═══════════════════════════════════════════════════════════
+   Prefers Reduced Motion — Global animation disable
+   ═══════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

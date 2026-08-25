@@ -69,7 +69,7 @@
           </svg>
         </button>
         <button (click)="closeModal()"
-          class="p-2 text-slate-400 hover:text-slate-650 dark:hover:text-white rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center transition-colors shrink-0"
+          class="p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white rounded-full bg-transparent border-0 cursor-pointer flex items-center justify-center transition-colors shrink-0"
           appTooltip="Close reader view modal" tooltipPlacement="bottom">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -154,10 +154,10 @@
           <button *ngIf="isPlayingSpeech" (click)="pauseTextToSpeech()"
             class="w-7 h-7 rounded flex items-center justify-center border-0 cursor-pointer bg-transparent text-slate-500"
             appTooltip="Pause / Resume Speech playback" tooltipPlacement="top">
-            <svg *ngIf="isPausedSpeech" class="w-3.5 h-3.5 text-slate-550" fill="currentColor" viewBox="0 0 24 24">
+            <svg *ngIf="isPausedSpeech" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
-            <svg *ngIf="!isPausedSpeech" class="w-3.5 h-3.5 text-slate-550" fill="currentColor" viewBox="0 0 24 24">
+            <svg *ngIf="!isPausedSpeech" class="w-3.5 h-3.5 text-slate-500 dark:text-slate-400" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
             </svg>
           </button>
@@ -225,7 +225,7 @@
 
         <!-- Translation Warning Alert Banner -->
         <div *ngIf="!isTranslating && isTranslationFallback()"
-          class="mb-6 p-4 rounded-xl border border-amber-250/60 dark:border-amber-900/50 bg-amber-500/5 text-amber-800 dark:text-amber-300 flex items-start gap-3">
+          class="mb-6 p-4 rounded-xl border border-amber-200/60 dark:border-amber-900/50 bg-amber-500/5 text-amber-800 dark:text-amber-300 flex items-start gap-3">
           <div class="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round"
@@ -343,7 +343,7 @@
             Folder</label>
           <div class="relative w-full">
             <button (click)="showFolderDropdown = !showFolderDropdown; $event.stopPropagation()"
-              class="w-full text-left bg-white dark:bg-slate-950 border border-slate-205/70 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2.5 flex items-center justify-between hover:border-indigo-300 dark:hover:border-slate-700 transition-all select-none bg-transparent cursor-pointer">
+              class="w-full text-left bg-white dark:bg-slate-950 border border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl px-3.5 py-2.5 flex items-center justify-between hover:border-indigo-300 dark:hover:border-slate-700 transition-all select-none bg-transparent cursor-pointer">
               <span>{{ bookmark.collectionName || 'General Reference' }}</span>
               <svg class="w-3.5 h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200"
                 [class.rotate-180]="showFolderDropdown" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -379,7 +379,10 @@
             <!-- Saved / Saving indicators -->
             <div class="absolute bottom-2 right-2 text-[10px] text-slate-400 font-medium">
               <span *ngIf="notesSaveStatus === 'saving'" class="text-indigo-500 animate-pulse">Saving...</span>
-              <span *ngIf="notesSaveStatus === 'saved'" class="text-green-500">Saved ✓</span>
+              <span *ngIf="notesSaveStatus === 'saved'" class="text-green-500 flex items-center gap-1">
+                <app-icon name="check" [size]="11"></app-icon>
+                <span>Saved</span>
+              </span>
             </div>
           </div>
         </div>

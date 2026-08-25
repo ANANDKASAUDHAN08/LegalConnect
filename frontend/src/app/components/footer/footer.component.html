@@ -5,25 +5,17 @@
   <div class="footer-mesh-glow-1"></div>
   <div class="footer-mesh-glow-2"></div>
 
-  <div
+  <nav aria-label="Footer Navigation"
     class="max-w-[1200px] mx-auto px-4 sm:px-6 grid grid-cols-12 gap-4 sm:gap-6 lg:gap-10 pb-8 sm:pb-10 pt-8 sm:pt-12 relative z-10">
 
     <!-- COLUMN 1: BRAND LOGO + DESCRIPTION + SOCIALS -->
     <div class="col-span-12 lg:col-span-3 flex flex-col gap-3">
 
       <!-- Exact same logo block as navbar -->
-      <a routerLink="/" class="flex items-center gap-3 no-underline group w-fit">
+      <a routerLink="/" class="flex items-center gap-3 no-underline group w-fit" aria-label="LegalConnect Home">
         <div
           class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-600 flex items-center justify-center text-white shadow-[0_4px_14px_rgba(79,70,229,0.25)] transition-transform duration-300 group-hover:scale-105">
-          <svg viewBox="0 0 24 24" fill="none" class="w-6 h-6 text-white" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-            <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
-              stroke-linejoin="round" />
-            <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5"
-              stroke-linecap="round" stroke-linejoin="round" />
-            <circle cx="12" cy="11" r="2.2" fill="currentColor" />
-          </svg>
+          <app-icon name="logo" [size]="24" class="text-white"></app-icon>
         </div>
         <div class="flex flex-col">
           <span
@@ -40,7 +32,7 @@
       <!-- Status + Socials (horizontal on mobile, stacked on sm+) -->
       <div class="flex items-center justify-between sm:flex-col sm:items-start sm:gap-3">
         <!-- Heartbeat status -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2" role="status" aria-label="System Status: All Systems Operational">
           <div class="relative flex h-2 w-2">
             <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
@@ -51,67 +43,60 @@
 
         <!-- Social icons (colored, no background, direct hover transition) -->
         <div class="flex gap-4 items-center mt-2 sm:mt-0">
-          <a href="https://linkedin.com" target="_blank"
+          <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
             class="text-[#0a66c2] hover:text-[#0077b5] transition-all duration-200 hover:-translate-y-0.5"
-            aria-label="LinkedIn">
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-            </svg>
+            aria-label="LinkedIn" appTooltip="Follow LegalConnect on LinkedIn" tooltipPlacement="top">
+            <app-icon name="linkedin" [size]="20"></app-icon>
           </a>
-          <a href="https://x.com" target="_blank"
+          <a href="https://x.com" target="_blank" rel="noopener noreferrer"
             class="text-white hover:text-slate-300 transition-all duration-200 hover:-translate-y-0.5"
-            aria-label="X (formerly Twitter)">
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-            </svg>
+            aria-label="X (formerly Twitter)" appTooltip="Follow LegalConnect on X" tooltipPlacement="top">
+            <app-icon name="x-social" [size]="20"></app-icon>
           </a>
-          <a href="https://facebook.com" target="_blank"
+          <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
             class="text-[#1877f2] hover:text-[#4b90f5] transition-all duration-200 hover:-translate-y-0.5"
-            aria-label="Facebook">
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-            </svg>
+            aria-label="Facebook" appTooltip="Like LegalConnect on Facebook" tooltipPlacement="top">
+            <app-icon name="facebook" [size]="20"></app-icon>
           </a>
-          <a href="https://instagram.com" target="_blank"
+          <a href="https://instagram.com" target="_blank" rel="noopener noreferrer"
             class="text-[#e4405f] hover:text-[#ff597a] transition-all duration-200 hover:-translate-y-0.5"
-            aria-label="Instagram">
-            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path
-                d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.051.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
-            </svg>
+            aria-label="Instagram" appTooltip="Follow us on Instagram" tooltipPlacement="top">
+            <app-icon name="instagram" [size]="20"></app-icon>
+          </a>
+          <a href="https://youtube.com" target="_blank" rel="noopener noreferrer"
+            class="text-[#ff0000] hover:text-[#ff3333] transition-all duration-200 hover:-translate-y-0.5"
+            aria-label="YouTube" appTooltip="Watch tutorials on YouTube" tooltipPlacement="top">
+            <app-icon name="youtube" [size]="20"></app-icon>
           </a>
         </div>
       </div>
     </div>
 
-    <!-- COLUMN 2: INSTITUTIONAL DIRECTORY & AID -->
+    <!-- COLUMN 2: LEGAL RESEARCH & CODES -->
     <div class="col-span-6 lg:col-span-2 flex flex-col gap-2">
       <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
-        Directory &amp; Aid
+        Legal Research
       </span>
       <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
-        <li><a [routerLink]="['/legal-resources']" [queryParams]="{type: 'Court'}" class="footer-link">Courts Directory</a></li>
-        <li><a [routerLink]="['/legal-resources']" [queryParams]="{type: 'LegalAid'}" class="footer-link">Legal Aid Centers</a></li>
-        <li><a [routerLink]="['/legal-resources']" [queryParams]="{type: 'PoliceStation'}" class="footer-link">Police Stations</a></li>
-        <li><a routerLink="/find-help" class="footer-link">Find Help Near Me</a></li>
-        <li><a routerLink="/legal-resources" class="footer-link">All Institutions</a></li>
+        <li><a routerLink="/laws" class="footer-link">Browse Laws &amp; Acts</a></li>
+        <li><a routerLink="/laws/mapper" class="footer-link">IPC ↔ BNS Mapper</a></li>
+        <li><a routerLink="/laws/civil-family" class="footer-link">Civil &amp; Family Law</a></li>
+        <li><a routerLink="/laws/templates" class="footer-link">Document Templates</a></li>
+        <li><a routerLink="/search" class="footer-link">Global Legal Search</a></li>
       </ul>
     </div>
 
-    <!-- COLUMN 3: LEGAL SERVICES & PRACTICE -->
+    <!-- COLUMN 3: DIRECTORY & SERVICES -->
     <div class="col-span-6 lg:col-span-2 flex flex-col gap-2">
       <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
-        Legal Services
+        Services &amp; Aid
       </span>
       <ul class="flex flex-col gap-0.5 md:gap-2 list-none p-0 m-0">
         <li><a routerLink="/lawyers" class="footer-link">Find Lawyers</a></li>
         <li><a routerLink="/specializations" class="footer-link">Practice Areas</a></li>
-        <li><a routerLink="/laws" class="footer-link">Browse Laws</a></li>
-        <li><a routerLink="/laws/templates" class="footer-link">Document Templates</a></li>
-        <li><a routerLink="/dashboard" class="footer-link">Client Portal</a></li>
+        <li><a routerLink="/legal-resources" class="footer-link">Legal Aid Directory</a></li>
+        <li><a routerLink="/find-help" class="footer-link footer-link-help">Help Near Me</a></li>
+        <li><a routerLink="/dashboard" class="footer-link">Client &amp; Lawyer Portal</a></li>
       </ul>
     </div>
 
@@ -128,7 +113,7 @@
       </ul>
     </div>
 
-    <!-- COLUMN 5 (Mobile / Tablet): TRUST & LEGAL (Placed on the right side of Company & Help on mobile) -->
+    <!-- COLUMN 5 (Mobile / Tablet): TRUST & LEGAL -->
     <div class="col-span-6 lg:hidden flex flex-col gap-2">
       <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
         Trust &amp; Legal
@@ -140,19 +125,11 @@
       </ul>
     </div>
 
-    <!-- COLUMN 6: RESPONSIVE NEWSLETTER & DESKTOP PILLS -->
+    <!-- COLUMN 6: RESPONSIVE NEWSLETTER -->
     <div class="col-span-12 lg:col-span-3 flex flex-col gap-3">
-      <div class="flex items-center justify-between">
-        <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white block">
-          Stay Updated
-        </span>
-        <!-- Desktop Pill Badges with Glow & Distinct Hover Color -->
-        <div class="hidden lg:flex items-center gap-1.5">
-          <a routerLink="/privacy" class="legal-compliance-pill">Privacy</a>
-          <a routerLink="/terms" class="legal-compliance-pill">Terms</a>
-          <a routerLink="/cookie-preferences" class="legal-compliance-pill">Cookies</a>
-        </div>
-      </div>
+      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white block">
+        Stay Updated
+      </span>
       <p class="text-xs text-slate-400 leading-normal m-0">
         Subscribe for Indian legal insights, bare act updates, and platform features.
       </p>
@@ -160,10 +137,10 @@
       <!-- Mobile Newsletter Form (Stacked: email upper, button below) -->
       <form *ngIf="!subscribed()" (ngSubmit)="onSubscribe()" class="flex flex-col gap-2 lg:hidden">
         <input type="email" [(ngModel)]="email" name="newsletterEmailMobile" placeholder="Your email address"
-          class="w-full bg-slate-900/60 border border-slate-700/60 rounded-xl px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-colors"
-          required aria-label="Email Address">
+          class="w-full bg-slate-900/60 border border-slate-700/60 rounded-xl px-3.5 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-colors outline-none"
+          required aria-label="Email address for legal updates newsletter">
         <button type="submit"
-          class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2 text-xs font-semibold transition-colors focus:outline-none disabled:opacity-50"
+          class="w-full bg-blue-600 hover:bg-blue-500 active:scale-[0.99] text-white rounded-xl py-2.5 text-xs font-semibold transition-colors focus:outline-none disabled:opacity-50 cursor-pointer shadow-sm"
           [disabled]="loading()">
           <span *ngIf="!loading()">Subscribe</span>
           <span *ngIf="loading()"
@@ -175,7 +152,8 @@
       <div class="newsletter-wrapper hidden lg:block">
         <form *ngIf="!subscribed()" (ngSubmit)="onSubscribe()" class="newsletter-form flex items-center gap-2">
           <input type="email" [(ngModel)]="email" name="newsletterEmail" placeholder="Your email address"
-            class="newsletter-input" required aria-label="Email Address">
+            class="newsletter-input focus:outline-none focus:ring-0 focus:border-transparent outline-none ring-0 border-0"
+            required aria-label="Email address for legal updates newsletter">
           <button type="submit" class="newsletter-btn" [disabled]="loading()">
             <span *ngIf="!loading()">Join</span>
             <span *ngIf="loading()"
@@ -213,46 +191,7 @@
         </div>
       </div>
     </div>
-
-    <!-- COMMENTED OUT ORIGINAL NEWSLETTER COLUMN -->
-    <!--
-    <div class="col-span-12 lg:col-span-3 flex flex-col gap-3">
-      <span class="text-[0.72rem] font-bold uppercase tracking-[0.09em] text-white mb-1 block">
-        Stay Updated
-      </span>
-      <p class="text-sm text-slate-400 leading-normal m-0">
-        Subscribe for legal insights and platform updates.
-      </p>
-
-      <div class="newsletter-wrapper">
-        <form *ngIf="!subscribed()" (ngSubmit)="onSubscribe()" class="newsletter-form flex items-center gap-2">
-          <input type="email" [(ngModel)]="email" name="newsletterEmail" placeholder="Your email address"
-            class="newsletter-input" required aria-label="Email Address">
-          <button type="submit" class="newsletter-btn" [disabled]="loading()">
-            <span *ngIf="!loading()">Join</span>
-            <span *ngIf="loading()"
-              class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          </button>
-        </form>
-
-        <div *ngIf="subscribed()" class="newsletter-success-panel">
-          <div
-            class="flex items-center justify-center w-[22px] h-[22px] rounded-full bg-emerald-500 text-white flex-shrink-0">
-            <svg class="w-[13px] h-[13px] animate-bounce" fill="none" stroke="currentColor" stroke-width="3"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5"></path>
-            </svg>
-          </div>
-          <div class="flex flex-col">
-            <span class="text-[0.8rem] font-bold text-emerald-400">Successfully Subscribed!</span>
-            <span class="text-[0.7rem] font-medium text-emerald-300">Thank you for joining our
-              newsletter.</span>
-          </div>
-        </div>
-      </div>
-    </div>
-    -->
-  </div>
+  </nav>
 
   <!-- BOTTOM BAR -->
   <div
@@ -262,14 +201,25 @@
         <p class="text-xs text-slate-400 m-0">
           © 2026 LegalConnect. All rights reserved.
         </p>
+
+        <!-- Desktop Compliance Policy Links (Stripe / Apple MNC Pattern) -->
+        <div class="hidden sm:flex items-center gap-3 text-[0.75rem] text-slate-400">
+          <span class="text-slate-600 dark:text-slate-700">•</span>
+          <a routerLink="/privacy" class="hover:text-white transition-colors no-underline">Privacy</a>
+          <span class="text-slate-600 dark:text-slate-700">•</span>
+          <a routerLink="/terms" class="hover:text-white transition-colors no-underline">Terms</a>
+          <span class="text-slate-600 dark:text-slate-700">•</span>
+          <a routerLink="/cookie-preferences" class="hover:text-white transition-colors no-underline">Cookies</a>
+        </div>
+
         <!-- Language pill — hidden on mobile (SCSS hides it) -->
         <div
-          class="hidden sm:inline-flex items-center gap-[5px] cursor-pointer bg-white/[0.04] border border-white/[0.07] px-[10px] py-[3px] rounded-full hover:bg-white/[0.08] transition-colors duration-200">
-          <span class="text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider">🌐 English
-            (US)</span>
-          <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"></path>
-          </svg>
+          class="hidden sm:inline-flex items-center gap-1.5 cursor-pointer bg-white/[0.04] border border-white/[0.07] px-3 py-1 rounded-full hover:bg-white/[0.08] transition-colors duration-200"
+          tabindex="0" role="button" aria-label="Select platform language" appTooltip="Platform Language: English (US)"
+          tooltipPlacement="top">
+          <app-icon name="globe" [size]="13" class="text-slate-400"></app-icon>
+          <span class="text-[0.7rem] font-bold text-slate-400 uppercase tracking-wider">English (US)</span>
+          <app-icon name="chevron-down" [size]="12" class="text-slate-400"></app-icon>
         </div>
       </div>
 
@@ -277,15 +227,14 @@
         <div class="flex gap-4">
           <a routerLink="/contact"
             class="text-[0.78rem] font-medium text-slate-400 hover:text-white transition-colors no-underline">Support</a>
-          <a routerLink="/contact"
+          <a routerLink="/contact" [queryParams]="{subject: 'Feedback'}"
             class="text-[0.78rem] font-medium text-slate-400 hover:text-white transition-colors no-underline">Feedback</a>
         </div>
 
         <!-- Back to top (hover transform+shadow in SCSS) -->
-        <button (click)="scrollToTop()" class="back-to-top-btn" title="Scroll to top" aria-label="Scroll back to top">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 15.75l7.5-7.5 7.5 7.5"></path>
-          </svg>
+        <button (click)="scrollToTop()" class="back-to-top-btn" aria-label="Scroll back to top" appTooltip="Back to top"
+          tooltipPlacement="top">
+          <app-icon name="chevron-up" [size]="16"></app-icon>
         </button>
       </div>
     </div>

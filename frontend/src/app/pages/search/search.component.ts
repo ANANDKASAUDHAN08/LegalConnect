@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, DestroyRef, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,6 +12,7 @@ import { LocationService } from '../../services/location.service';
 import { BookmarkService } from '../../services/bookmark.service';
 import { FormattingService } from '../../services/formatting.service';
 import { FreeAidService } from '../../services/free-aid.service';
+import { IconComponent } from '../../components/icon/icon.component';
 
 // Standalone sub-components
 import { SearchBarComponent } from './components/search-bar/search-bar.component';
@@ -44,7 +45,8 @@ import { TrafficOffensesWidgetComponent } from './components/traffic-offenses-wi
     CommonQueriesComponent,
     AiRoadmapWidgetComponent,
     EmergencyRightsWidgetComponent,
-    TrafficOffensesWidgetComponent
+    TrafficOffensesWidgetComponent,
+    IconComponent
   ],
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss'],
@@ -74,6 +76,7 @@ export class SearchComponent implements OnInit, OnDestroy {
     this.lastCity = '';
     this.queryStack = [];
     this.isGoingBack = false;
+    this.clearFocusedResult();
     this.router.navigate(['/search']);
   }
 
@@ -290,6 +293,113 @@ export class SearchComponent implements OnInit, OnDestroy {
     window.removeEventListener('offline', this.onOffline);
   }
 
+  // --- Keyboard Shortcuts ---
+  private focusedCardIndex = -1;
+
+  @HostListener('document:keydown', ['$event'])
+  handleKeyboardEvent(event: KeyboardEvent) {
+    const target = event.target as HTMLElement;
+    const isEditing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable || target.tagName === 'SELECT';
+
+    if (!isEditing) {
+      if (event.key === '/') {
+        event.preventDefault();
+        this.focusSearchInput();
+        return;
+      } else if (event.key === 'j' || (event.key === 'ArrowDown' && !this.showReaderModal && !this.showCompareModal && !this.showFreeAidModal)) {
+        event.preventDefault();
+        this.navigateResults(1);
+        return;
+      } else if (event.key === 'k' || (event.key === 'ArrowUp' && !this.showReaderModal && !this.showCompareModal && !this.showFreeAidModal)) {
+        event.preventDefault();
+        this.navigateResults(-1);
+        return;
+      } else if (event.key === 'Enter' && !this.showReaderModal && !this.showCompareModal && !this.showFreeAidModal) {
+        if (this.focusedCardIndex >= 0) {
+          event.preventDefault();
+          this.activateFocusedResult();
+          return;
+        }
+      }
+    }
+
+    if (event.key === 'Escape') {
+      if (this.showReaderModal) {
+        this.closeReaderMode();
+      } else if (this.showCompareModal) {
+        this.closeCompareModal();
+      } else if (this.showFreeAidModal) {
+        this.closeFreeAidModal();
+      } else if (this.focusedCardIndex >= 0) {
+        this.clearFocusedResult();
+      }
+    }
+  }
+
+  private focusSearchInput() {
+    this.clearFocusedResult();
+    const searchInput = document.querySelector('#main-search-input, input.main-search-input, input.search-input, input[type="text"]') as HTMLInputElement;
+    if (searchInput) {
+      searchInput.focus();
+      searchInput.select();
+      searchInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+
+  private getResultCards(): HTMLElement[] {
+    return Array.from(document.querySelectorAll('app-law-card, app-lawyer-card, app-resource-card, .template-result-card')) as HTMLElement[];
+  }
+
+  private navigateResults(direction: 1 | -1) {
+    const cards = this.getResultCards();
+    if (cards.length === 0) return;
+
+    // Clear previous card active state
+    cards.forEach(c => {
+      c.classList.remove('keyboard-active-card');
+      c.querySelector('.card')?.classList.remove('keyboard-active-card');
+    });
+
+    if (this.focusedCardIndex === -1 && direction === -1) {
+      this.focusedCardIndex = cards.length - 1;
+    } else {
+      this.focusedCardIndex = Math.max(0, Math.min(cards.length - 1, this.focusedCardIndex + direction));
+    }
+
+    const targetCard = cards[this.focusedCardIndex];
+    if (targetCard) {
+      targetCard.classList.add('keyboard-active-card');
+      targetCard.querySelector('.card')?.classList.add('keyboard-active-card');
+
+      targetCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      const focusable = targetCard.querySelector('button, a, [tabindex="0"]') as HTMLElement;
+      focusable?.focus({ preventScroll: true });
+    }
+  }
+
+  private activateFocusedResult() {
+    const cards = this.getResultCards();
+    if (this.focusedCardIndex < 0 || this.focusedCardIndex >= cards.length) return;
+
+    const targetCard = cards[this.focusedCardIndex];
+    if (!targetCard) return;
+
+    // Trigger primary interactive action on selected card
+    const primaryBtn = targetCard.querySelector('button.text-left, button.btn-accent, button.btn-primary, button, a') as HTMLElement;
+    if (primaryBtn) {
+      primaryBtn.click();
+    }
+  }
+
+  private clearFocusedResult() {
+    this.focusedCardIndex = -1;
+    const cards = this.getResultCards();
+    cards.forEach(c => {
+      c.classList.remove('keyboard-active-card');
+      c.querySelector('.card')?.classList.remove('keyboard-active-card');
+    });
+  }
+
   // --- Network Status ---
   private onOnline = () => {
     this.isOffline = false;
@@ -360,6 +470,7 @@ export class SearchComponent implements OnInit, OnDestroy {
   }
 
   private async executeGlobalSearch(query: string) {
+    this.clearFocusedResult();
     this.loading = true;
     this.hasSearched = true;
     this.lastQuery = query;

@@ -211,7 +211,7 @@
                   {{ query }}
                 </button>
                 <button (click)="$event.stopPropagation(); removeSearchHistoryItem(query)"
-                  class="w-4 h-4 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-550/10 transition-all cursor-pointer bg-transparent border-0 p-0 shrink-0 opacity-100 md:opacity-0 md:group-hover/chip:opacity-100">
+                  class="w-4 h-4 flex items-center justify-center rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/10 transition-all cursor-pointer bg-transparent border-0 p-0 shrink-0 opacity-100 md:opacity-0 md:group-hover/chip:opacity-100">
                   <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                   </svg>
@@ -440,8 +440,10 @@
           <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Refine Laws &
             Acts</span>
           <button *ngIf="hasActiveFilters" (click)="clearFilters()"
+            appTooltip="Reset all active law filters" tooltipPlacement="top"
             class="text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-transparent border-0 cursor-pointer flex items-center gap-1 transition-colors">
-            Clear Filters ✕
+            <span>Clear Filters</span>
+            <app-icon name="x" [size]="11"></app-icon>
           </button>
         </div>
 
@@ -548,7 +550,7 @@
 
           <!-- Loaded Cards -->
           <ng-container *ngIf="!loading">
-            <div class="flex flex-col gap-2 md:gap-4">
+            <div class="flex flex-col gap-2 md:gap-4 content-enter-stagger-fast">
               <app-law-card
                 *ngFor="let result of (activeTab === 'all' ? filteredLaws.slice(0, 2) : filteredLaws); trackBy: trackBySection"
                 [result]="result" [saved]="isSaved(result)" (compare)="openCompareModal($event)"
@@ -628,7 +630,7 @@
 
           <!-- Loaded Cards -->
           <ng-container *ngIf="!loading">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6 content-enter-stagger-fast">
               <div
                 *ngFor="let lawyer of (activeTab === 'all' ? results.lawyers.slice(0, 2) : results.lawyers); trackBy: trackByLawyer">
                 <app-lawyer-card [lawyer]="lawyer" viewMode="grid"></app-lawyer-card>
@@ -680,7 +682,7 @@
           <!-- Skeleton Cards -->
           <ng-container *ngIf="loading">
             <div *ngIf="activeTab === 'resources'"
-              class="card p-3 md:p-5 border-emerald-250/80 dark:border-emerald-900 bg-gradient-to-r from-emerald-500/[0.03] to-teal-500/[0.03] shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full animate-pulse">
+              class="card p-3 md:p-5 border-emerald-200/80 dark:border-emerald-900 bg-gradient-to-r from-emerald-500/[0.03] to-teal-500/[0.03] shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full animate-pulse">
               <div class="flex items-center gap-2 md:gap-3.5 text-left w-full">
                 <div class="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0"></div>
                 <div class="text-left flex-1 space-y-2">
@@ -701,7 +703,7 @@
           <ng-container *ngIf="!loading">
             <!-- Compact Free Legal Aid Eligibility Banner Card -->
             <div *ngIf="activeTab === 'resources'"
-              class="card p-3 md:p-5 border-emerald-250/80 dark:border-emerald-900 bg-gradient-to-r from-emerald-500/[0.03] to-teal-500/[0.03] shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in w-full">
+              class="card p-3 md:p-5 border-emerald-200/80 dark:border-emerald-900 bg-gradient-to-r from-emerald-500/[0.03] to-teal-500/[0.03] shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-in w-full">
               <!-- Changed flex to grid on mobile, added gap-x and gap-y -->
               <div
                 class="grid grid-cols-[auto_1fr] items-center gap-x-2 gap-y-2 sm:flex sm:items-center sm:gap-3.5 text-left">
@@ -731,7 +733,7 @@
                     <span *ngIf="eligibilityStep === 2 && !isFreeAidEligible">Standard Advocate Fees Apply</span>
                   </h4>
                   <!-- Added col-span-2 on mobile so the paragraph spans the full width below both the icon and heading -->
-                  <p class="text-xs text-slate-550 dark:text-slate-400 mt-1 m-0 col-span-2 sm:col-span-1">
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0 col-span-2 sm:col-span-1">
                     <span *ngIf="eligibilityStep !== 2">Check in 10 seconds if you qualify for free legal representation
                       under NALSA guidelines.</span>
                     <span *ngIf="eligibilityStep === 2 && isFreeAidEligible">Legal Aid centers (if present in the
@@ -980,7 +982,7 @@
 
     <!-- Modal Header -->
     <div
-      class="flex items-center justify-between px-5 py-4 border-b border-slate-150 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/40">
+      class="flex items-center justify-between px-5 py-4 border-b border-slate-200 dark:border-slate-800/60 bg-slate-50 dark:bg-slate-900/40">
       <div class="flex items-center gap-2">
         <div class="w-7 h-7 rounded-lg bg-purple-500/10 flex items-center justify-center shrink-0">
           <svg class="w-4 h-4 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor"
@@ -992,14 +994,13 @@
         <div class="text-left">
           <h3 class="m-0 text-xs sm:text-sm font-black text-slate-800 dark:text-slate-100 tracking-wide uppercase">Free
             Legal Aid Checker</h3>
-          <p class="text-[9px] text-slate-400 dark:text-slate-550 m-0">Under Section 12 of LSA Act 1987</p>
+          <p class="text-[9px] text-slate-400 dark:text-slate-500 m-0">Under Section 12 of LSA Act 1987</p>
         </div>
       </div>
       <button (click)="closeFreeAidModal()"
+        appTooltip="Close free aid checker" tooltipPlacement="top"
         class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-600 dark:hover:text-slate-200 transition-all cursor-pointer border-none bg-transparent flex items-center justify-center">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <app-icon name="x" [size]="16"></app-icon>
       </button>
     </div>
 
