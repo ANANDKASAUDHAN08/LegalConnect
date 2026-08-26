@@ -492,14 +492,120 @@ h6 {
   }
 }
 
+/* ── Universal MNC-Grade Bottom Sheet & Motion System (Apple/Vaul Inspired) ── */
+@keyframes universalSheetSlideUp {
+  0% {
+    transform: translate3d(0, 100%, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes universalSheetSlideDown {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+@keyframes universalDrawerSlideRight {
+  0% {
+    transform: translate3d(100%, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes universalDrawerSlideRightExit {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+@keyframes universalBackdropFadeIn {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes universalBackdropFadeOut {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.animate-universal-sheet-in {
+  will-change: transform;
+  animation: universalSheetSlideUp 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-universal-sheet-out {
+  will-change: transform;
+  animation: universalSheetSlideDown 0.22s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+}
+
+.animate-universal-backdrop-in {
+  animation: universalBackdropFadeIn 0.28s ease-out forwards;
+}
+
+.animate-universal-backdrop-out {
+  animation: universalBackdropFadeOut 0.22s ease-in forwards;
+}
+
+/* Card-Deck Stacking Depth Effect for Nested Sheets (Apple Sheet Scaling) */
+.sheet-card-deck-parent {
+  transform-origin: center top;
+  transition: transform 0.35s cubic-bezier(0.32, 0.72, 0, 1), filter 0.35s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.35s ease;
+
+  &.nested-open,
+  &.sheet-nested-active {
+    transform: scale(0.955) translateY(-8px) !important;
+    filter: brightness(0.85) !important;
+    border-radius: 28px !important;
+    pointer-events: none;
+  }
+}
+
+/* Tactile Drag Handle Pill */
+.sheet-drag-handle {
+  width: 44px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: rgba(148, 163, 184, 0.4);
+  margin: 10px auto 4px auto;
+  cursor: grab;
+  touch-action: none;
+  transition: background-color 0.2s ease, transform 0.15s ease, width 0.2s ease;
+
+  &:active {
+    cursor: grabbing;
+    background-color: rgba(100, 116, 139, 0.8);
+    transform: scale(0.96);
+    width: 48px;
+  }
+}
+
 /* ── Bottom Sheet slide-up ── */
 @keyframes slideUp {
   from {
-    transform: translateY(100%);
+    transform: translate3d(0, 100%, 0);
   }
 
   to {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 

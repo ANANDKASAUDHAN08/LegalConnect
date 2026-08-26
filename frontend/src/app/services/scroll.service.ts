@@ -24,24 +24,47 @@ export class ScrollService implements OnDestroy {
     this.initScrollTracking();
   }
 
+  private accumulatedDown = 0;
+  private accumulatedUp = 0;
+  private readonly HIDE_THRESHOLD = 40; // Must scroll down 40px continuously to hide
+  private readonly SHOW_THRESHOLD = 25; // Must scroll up 25px continuously to show
+
   private initScrollTracking() {
     this.zone.runOutsideAngular(() => {
       this.scrollListener = () => {
         const currentScrollY = window.scrollY;
 
-        // 1. Detect scroll direction
+        // 1. Detect scroll direction with accumulated hysteresis (eliminates micro-jitter)
         const delta = currentScrollY - this.lastScrollY;
         const currentDirection = this.directionSubject.value;
         const docHeight = document.documentElement.scrollHeight - window.innerHeight;
         const isNearBottom = currentScrollY >= docHeight - 80;
 
-        if (Math.abs(delta) > 5) { // threshold of 5px
-          const newDirection = delta > 0 ? 'down' : 'up';
-          if (newDirection !== currentDirection && currentScrollY > 80 && !isNearBottom) {
+        if (currentScrollY <= 50) {
+          // Always show at top of page
+          this.accumulatedDown = 0;
+          this.accumulatedUp = 0;
+          if (currentDirection !== 'up') {
             this.zone.run(() => {
-              this.directionSubject.next(newDirection);
+              this.directionSubject.next('up');
             });
-          } else if (currentScrollY <= 80 && currentDirection !== 'up') {
+          }
+        } else if (delta > 0) {
+          // Scrolling downwards
+          this.accumulatedUp = 0;
+          this.accumulatedDown += delta;
+          if (this.accumulatedDown >= this.HIDE_THRESHOLD && currentDirection !== 'down' && !isNearBottom) {
+            this.accumulatedDown = 0;
+            this.zone.run(() => {
+              this.directionSubject.next('down');
+            });
+          }
+        } else if (delta < 0) {
+          // Scrolling upwards
+          this.accumulatedDown = 0;
+          this.accumulatedUp += Math.abs(delta);
+          if (this.accumulatedUp >= this.SHOW_THRESHOLD && currentDirection !== 'up') {
+            this.accumulatedUp = 0;
             this.zone.run(() => {
               this.directionSubject.next('up');
             });

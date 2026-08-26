@@ -93,6 +93,96 @@ export interface LawyerProfileData {
   updatedAt?: string;
 }
 
+export interface AdvocateTrajectoryPoint {
+  label: string;
+  actual: number;
+  projected: number;
+  views: number;
+  inquiries: number;
+}
+
+export interface PracticeCategorySplit {
+  category: string;
+  count: number;
+  percentage: number;
+}
+
+export interface FunnelMetrics {
+  impressions: number;
+  impressionsDelta: number;
+  inquiries: number;
+  inquiriesDelta: number;
+  consultationsHeld: number;
+  retainersSigned: number;
+  conversionRate: number;
+}
+
+export interface SlaAndReputationMetrics {
+  avgResponseMinutes: number;
+  peerAvgResponseMinutes: number;
+  responseGrade: string;
+  averageRating: number;
+  totalReviews: number;
+  starBreakdown: { stars: number; count: number; percentage: number }[];
+}
+
+export interface AdvocateInsightsData {
+  period: string;
+  grossEarned: number;
+  projectedRetainers: number;
+  revenueDeltaPct: number;
+  trajectory: AdvocateTrajectoryPoint[];
+  practiceBreakdown: PracticeCategorySplit[];
+  funnel: FunnelMetrics;
+  slaAndReputation: SlaAndReputationMetrics;
+  recentInquiries: { id: number; clientName: string; status: string; createdAt: string; estimatedFee: number }[];
+}
+
+export interface ClientSpendMilestone {
+  title: string;
+  amount: number;
+  status: string;
+  date: string;
+}
+
+export interface CasePipelineStep {
+  step: number;
+  title: string;
+  desc: string;
+  status: string;
+  completedAt: string;
+}
+
+export interface DocumentReadiness {
+  totalRequired: number;
+  verifiedCount: number;
+  pendingCount: number;
+  readinessPercentage: number;
+  statusLabel: string;
+  missingDocuments: string[];
+}
+
+export interface CounselSlaMetrics {
+  advocateName: string;
+  avgResponseTime: string;
+  responseGrade: string;
+  daysEngaged: number;
+  activeMattersCount: number;
+}
+
+export interface ClientInsightsData {
+  totalSpend: number;
+  budgetCap: number;
+  isBudgetUserSet: boolean;
+  inEscrow: number;
+  remainingBudget: number;
+  spendDeltaPct: number;
+  spendMilestones: ClientSpendMilestone[];
+  casePipeline: CasePipelineStep[];
+  documentReadiness: DocumentReadiness;
+  counselSla: CounselSlaMetrics;
+}
+
 @Injectable({ providedIn: 'root' })
 export class LawyerService {
   private apiUrl = '/api/lawyers';
@@ -100,7 +190,7 @@ export class LawyerService {
   private consultationApiUrl = '/api/consultation';
   private reviewApiUrl = '/api/review';
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private transformLawyerUrls(lawyer: Lawyer): Lawyer {
     return normalizeObjectMediaUrls(lawyer, ['avatarUrl', 'bannerUrl']);
@@ -197,5 +287,50 @@ export class LawyerService {
 
   getMyAnalytics(): Observable<any> {
     return this.http.get<any>('/api/analytics/my-stats', { withCredentials: true });
+  }
+
+  // --- Enterprise Deep Insights (MNC-grade) ---
+  getAdvocateInsights(range: string = '30d'): Observable<AdvocateInsightsData> {
+    return this.http.get<AdvocateInsightsData>(`/api/analytics/advocate-insights?range=${range}`, { withCredentials: true }).pipe(
+      map(data => {
+        try {
+          localStorage.setItem(`lc_adv_insights_${range}`, JSON.stringify({ timestamp: Date.now(), data }));
+        } catch { /* storage quota ignore */ }
+        return data;
+      })
+    );
+  }
+
+  getClientInsights(): Observable<ClientInsightsData> {
+    return this.http.get<ClientInsightsData>('/api/analytics/client-insights', { withCredentials: true }).pipe(
+      map(data => {
+        try {
+          localStorage.setItem('lc_client_insights', JSON.stringify({ timestamp: Date.now(), data }));
+        } catch { /* storage quota ignore */ }
+        return data;
+      })
+    );
+  }
+
+  getCachedAdvocateInsights(range: string = '30d'): AdvocateInsightsData | null {
+    try {
+      const raw = localStorage.getItem(`lc_adv_insights_${range}`);
+      return raw ? JSON.parse(raw).data : null;
+    } catch {
+      return null;
+    }
+  }
+
+  getCachedClientInsights(): ClientInsightsData | null {
+    try {
+      const raw = localStorage.getItem('lc_client_insights');
+      return raw ? JSON.parse(raw).data : null;
+    } catch {
+      return null;
+    }
+  }
+
+  setLegalBudget(budget: number | null): Observable<any> {
+    return this.http.put<any>('/api/analytics/set-budget', { budget }, { withCredentials: true });
   }
 }

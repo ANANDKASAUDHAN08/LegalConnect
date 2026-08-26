@@ -209,7 +209,8 @@
 // Mobile layout adaptations
 @media (max-width: 767px) {
   .fixed.bottom-0 {
-    animation: slide-up-sheet 0.35s cubic-bezier(0.32, 0.94, 0.6, 1) forwards;
+    will-change: transform;
+    animation: slide-up-sheet 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
   }
 
   .map-sticky-panel {
@@ -223,11 +224,11 @@
 
 @keyframes slide-up-sheet {
   from {
-    transform: translateY(100%);
+    transform: translate3d(0, 100%, 0);
   }
 
   to {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 

@@ -653,6 +653,987 @@ export class DataExportService {
   }
 
   /**
+   * Universal, bulletproof print renderer with popup and iframe fallback.
+   */
+  private printHtmlDocument(htmlContent: string, documentTitle: string, onPopupBlocked?: () => void): boolean {
+    if (typeof window === 'undefined') return false;
+
+    try {
+      const printWindow = window.open('', '_blank', 'width=950,height=800,scrollbars=yes,status=no,menubar=no,toolbar=no');
+      if (printWindow && !printWindow.closed) {
+        printWindow.document.open();
+        printWindow.document.write(htmlContent);
+        printWindow.document.close();
+        return true;
+      }
+    } catch {
+      // If popup blocked or threw error, proceed to iframe fallback
+    }
+
+    // Fallback: Use hidden iframe to trigger print dialog without popup permission
+    try {
+      const existingIframe = document.getElementById('lc-print-iframe');
+      if (existingIframe) existingIframe.remove();
+
+      const iframe = document.createElement('iframe');
+      iframe.id = 'lc-print-iframe';
+      iframe.style.position = 'fixed';
+      iframe.style.right = '0';
+      iframe.style.bottom = '0';
+      iframe.style.width = '0';
+      iframe.style.height = '0';
+      iframe.style.border = '0';
+      document.body.appendChild(iframe);
+
+      const doc = iframe.contentWindow?.document;
+      if (doc) {
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+        setTimeout(() => {
+          iframe.contentWindow?.focus();
+          iframe.contentWindow?.print();
+          setTimeout(() => iframe.remove(), 2000);
+        }, 500);
+        return true;
+      }
+    } catch (err) {
+      console.error('Print failed:', err);
+    }
+
+    if (onPopupBlocked) onPopupBlocked();
+    return false;
+  }
+
+  /**
+   * Generates a Top-Tier MNC Executive Dossier for Advocates & Law Practices.
+   */
+  printAdvocateAnalyticsDossier(advocate: any, data: any, range: string, onPopupBlocked?: () => void): boolean {
+    const e = (val: any) => this.escapeHtml(val);
+    const dateStr = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const refCode = `LC-ADV-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const gross = Number(data?.grossEarned || 0).toLocaleString('en-IN');
+    const retainers = Number(data?.projectedRetainers || 0).toLocaleString('en-IN');
+    const impressions = Number(data?.funnel?.impressions || 0).toLocaleString('en-IN');
+    const inquiries = Number(data?.funnel?.inquiries || 0).toLocaleString('en-IN');
+    const conversion = data?.funnel?.conversionRate || 0;
+    const avgRating = data?.slaAndReputation?.averageRating || 5.0;
+    const avgResponse = data?.slaAndReputation?.avgResponseMinutes || 0;
+    const peerResponse = data?.slaAndReputation?.peerAvgResponseMinutes || 45;
+    const grade = data?.slaAndReputation?.responseGrade || 'Active Practitioner';
+    const practiceBreakdown = data?.practiceBreakdown || [];
+    const trajectory = data?.trajectory || [];
+    const starBreakdown = data?.slaAndReputation?.starBreakdown || [];
+
+    const rangeLabel = range === '7d' ? 'Last 7 Days' : (range === '90d' ? 'Last 90 Days' : (range === '1y' ? 'Past Year' : 'Last 30 Days'));
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>${e(advocate?.fullName || 'Advocate')} - Practice Intelligence Dossier | LegalConnect</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 12mm 15mm 12mm 15mm;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              background: #ffffff;
+              line-height: 1.4;
+              font-size: 12px;
+              margin: 0;
+              padding: 0;
+            }
+            .header-wrap {
+              border-top: 4px solid #b45309;
+              padding: 16px 0 12px 0;
+              border-bottom: 2px solid #0f172a;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 20px;
+            }
+            .brand-logo {
+              font-size: 16px;
+              font-weight: 900;
+              letter-spacing: 0.12em;
+              color: #0f172a;
+              text-transform: uppercase;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+            .brand-logo .crest {
+              background: #0f172a;
+              color: #f59e0b;
+              font-size: 11px;
+              padding: 3px 6px;
+              border-radius: 4px;
+              font-weight: 900;
+            }
+            .doc-title {
+              font-family: Georgia, serif;
+              font-size: 20px;
+              font-weight: 700;
+              color: #0f172a;
+              margin: 4px 0 2px 0;
+            }
+            .doc-subtitle {
+              font-size: 11px;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              font-weight: 600;
+            }
+            .meta-box {
+              text-align: right;
+              font-size: 11px;
+              color: #475569;
+            }
+            .meta-box .ref-tag {
+              font-family: monospace;
+              font-weight: 700;
+              color: #0f172a;
+              background: #f1f5f9;
+              padding: 2px 6px;
+              border-radius: 4px;
+              display: inline-block;
+              margin-bottom: 4px;
+            }
+            .advocate-strip {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 12px 16px;
+              margin-bottom: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .adv-name {
+              font-size: 15px;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .adv-sub {
+              font-size: 11px;
+              color: #64748b;
+              margin-top: 2px;
+            }
+            .badge-verified {
+              background: #ecfdf5;
+              border: 1px solid #10b981;
+              color: #047857;
+              padding: 3px 10px;
+              border-radius: 20px;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+            }
+            .kpi-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 12px;
+              margin-bottom: 22px;
+            }
+            .kpi-card {
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 12px;
+              background: #ffffff;
+              position: relative;
+            }
+            .kpi-card::before {
+              content: '';
+              position: absolute;
+              top: 0; left: 0; right: 0;
+              height: 3px;
+              border-radius: 10px 10px 0 0;
+            }
+            .kpi-card.c-green::before { background: #10b981; }
+            .kpi-card.c-amber::before { background: #f59e0b; }
+            .kpi-card.c-indigo::before { background: #6366f1; }
+            .kpi-card.c-blue::before { background: #0284c7; }
+            .kpi-label {
+              font-size: 9px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              color: #64748b;
+            }
+            .kpi-val {
+              font-size: 18px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-top: 4px;
+            }
+            .kpi-sub {
+              font-size: 10px;
+              color: #64748b;
+              margin-top: 2px;
+            }
+            .section-box {
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 14px;
+              margin-bottom: 18px;
+              page-break-inside: avoid;
+              background: #ffffff;
+            }
+            .section-title {
+              font-size: 12px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: #0f172a;
+              border-bottom: 1px solid #f1f5f9;
+              padding-bottom: 6px;
+              margin-bottom: 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            table.report-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 6px;
+            }
+            table.report-table th {
+              background: #0f172a;
+              color: #ffffff;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              padding: 7px 10px;
+              text-align: left;
+            }
+            table.report-table td {
+              padding: 7px 10px;
+              border-bottom: 1px solid #f1f5f9;
+              font-size: 11px;
+              color: #334155;
+            }
+            table.report-table tr:nth-child(even) td {
+              background: #f8fafc;
+            }
+            .bar-wrap {
+              width: 100%;
+              height: 6px;
+              background: #f1f5f9;
+              border-radius: 4px;
+              overflow: hidden;
+              margin-top: 3px;
+            }
+            .bar-fill {
+              height: 100%;
+              background: #d97706;
+              border-radius: 4px;
+            }
+            .two-col-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 14px;
+            }
+            .footer-strip {
+              border-top: 1px solid #e2e8f0;
+              padding-top: 10px;
+              margin-top: 24px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 9px;
+              color: #94a3b8;
+              page-break-inside: avoid;
+            }
+            .seal-box {
+              border-left: 2px solid #b45309;
+              padding-left: 8px;
+              font-style: italic;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <!-- Executive Header -->
+          <div class="header-wrap">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #4f46e5); display: flex; align-items: center; justify-content: center; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; flex-shrink: 0; box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25);">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; color: white; display: block;">
+                    <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="12" cy="11" r="2.2" fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; line-height: 1.1; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                    Legal<span style="color: #4f46e5;">Connect</span>
+                  </div>
+                  <div style="font-size: 9px; font-weight: 800; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px;">
+                    LEGAL HELP, SIMPLIFIED.
+                  </div>
+                </div>
+              </div>
+              <div class="doc-title">Practice Intelligence &amp; Revenue Dossier</div>
+              <div class="doc-subtitle">Certified Telemetry Report • ${e(rangeLabel)}</div>
+            </div>
+            <div class="meta-box">
+              <div class="ref-tag">${e(refCode)}</div>
+              <div><strong>Generated:</strong> ${e(dateStr)} • ${e(timeStr)}</div>
+              <div><strong>Window:</strong> ${e(rangeLabel)}</div>
+              <div><strong>Status:</strong> Certified Record</div>
+            </div>
+          </div>
+
+          <!-- Advocate Profile Strip -->
+          <div class="advocate-strip">
+            <div>
+              <div class="adv-name">${e(advocate?.fullName || 'Advocate')}</div>
+              <div class="adv-sub">${e(advocate?.email || 'N/A')} • ${e(advocate?.clientCity || advocate?.city || 'India')} • LegalConnect Verified Counsel</div>
+            </div>
+            <div>
+              <span class="badge-verified">✓ Verified Practitioner</span>
+            </div>
+          </div>
+
+          <!-- Top Executive KPI Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card c-green">
+              <div class="kpi-label">Realized Cashflow</div>
+              <div class="kpi-val">₹${e(gross)}</div>
+              <div class="kpi-sub">Invoiced &amp; Settled</div>
+            </div>
+            <div class="kpi-card c-amber">
+              <div class="kpi-label">Projected Retainers</div>
+              <div class="kpi-val">₹${e(retainers)}</div>
+              <div class="kpi-sub">Active Matter Pipeline</div>
+            </div>
+            <div class="kpi-card c-indigo">
+              <div class="kpi-label">Lead Conversion</div>
+              <div class="kpi-val">${e(conversion)}%</div>
+              <div class="kpi-sub">${e(inquiries)} Leads / ${e(impressions)} Views</div>
+            </div>
+            <div class="kpi-card c-blue">
+              <div class="kpi-label">Reputation Index</div>
+              <div class="kpi-val">${e(avgRating)} ★</div>
+              <div class="kpi-sub">${e(avgResponse)}m avg response (${e(grade)})</div>
+            </div>
+          </div>
+
+          <!-- Practice Distribution & Acquisition Funnel (Two Column) -->
+          <div class="two-col-grid">
+            <!-- Left: Practice Areas -->
+            <div class="section-box">
+              <div class="section-title">
+                <span>Practice Area Distribution</span>
+                <span>${practiceBreakdown.length} Categories</span>
+              </div>
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Law Category</th>
+                    <th style="text-align:right;">Matters</th>
+                    <th style="text-align:right;">Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${practiceBreakdown.length > 0 ? practiceBreakdown.map((p: any) => `
+                    <tr>
+                      <td style="font-weight:600;">${e(p.category || 'General Practice')}</td>
+                      <td style="text-align:right;font-family:monospace;">${p.count || 0}</td>
+                      <td style="text-align:right;font-weight:700;">${p.percentage || 0}%</td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="3" style="text-align:center;color:#94a3b8;">General Legal Practice (100%)</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right: Funnel & SLA -->
+            <div class="section-box">
+              <div class="section-title">
+                <span>Acquisition Funnel &amp; Benchmarks</span>
+                <span>${e(grade)}</span>
+              </div>
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Funnel Milestone</th>
+                    <th style="text-align:right;">Volume</th>
+                    <th style="text-align:right;">Benchmark</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>1. Profile Discovery Impressions</td>
+                    <td style="text-align:right;font-weight:700;">${e(impressions)}</td>
+                    <td style="text-align:right;color:#059669;">Top Tier</td>
+                  </tr>
+                  <tr>
+                    <td>2. Consultation Inquiries</td>
+                    <td style="text-align:right;font-weight:700;">${e(inquiries)}</td>
+                    <td style="text-align:right;color:#059669;">${e(conversion)}% Conv.</td>
+                  </tr>
+                  <tr>
+                    <td>3. Advocate Response SLA</td>
+                    <td style="text-align:right;font-weight:700;">${e(avgResponse)} mins</td>
+                    <td style="text-align:right;color:#64748b;">Peer: ${e(peerResponse)}m</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Activity & Trajectory Table (if available) -->
+          ${trajectory.length > 0 ? `
+            <div class="section-box">
+              <div class="section-title">
+                <span>Revenue &amp; Retainer Velocity Timeline</span>
+                <span>${trajectory.length} Timeline Milestones</span>
+              </div>
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Timeline Point</th>
+                    <th style="text-align:right;">Realized Cashflow (₹)</th>
+                    <th style="text-align:right;">Projected Retainers (₹)</th>
+                    <th style="text-align:right;">Discovery Views</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${trajectory.map((t: any) => `
+                    <tr>
+                      <td style="font-weight:600;">${e(t.label)}</td>
+                      <td style="text-align:right;font-family:monospace;font-weight:700;color:#059669;">₹${Number(t.actual || 0).toLocaleString('en-IN')}</td>
+                      <td style="text-align:right;font-family:monospace;color:#b45309;">₹${Number(t.projected || 0).toLocaleString('en-IN')}</td>
+                      <td style="text-align:right;font-family:monospace;">${t.views || 0}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          <!-- Footer -->
+          <div class="footer-strip">
+            <div class="seal-box">
+              Certified LegalConnect Telemetry • Confidential &amp; Attorney-Client Privileged Transcript
+            </div>
+            <div>
+              &copy; ${new Date().getFullYear()} LegalConnect Network Inc. • Document ID: ${e(refCode)}
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 350);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    return this.printHtmlDocument(html, `LegalConnect-Practice-Intelligence-${refCode}`, onPopupBlocked);
+  }
+
+  /**
+   * Generates a Top-Tier MNC Executive Dossier for Clients (Spend & Case Transparency).
+   */
+  printClientInsightsDossier(client: any, data: any, onPopupBlocked?: () => void): boolean {
+    const e = (val: any) => this.escapeHtml(val);
+    const dateStr = new Date().toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const timeStr = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const refCode = `LC-CLI-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+
+    const totalSpend = Number(data?.totalSpend || 0).toLocaleString('en-IN');
+    const inEscrow = Number(data?.inEscrow || 0).toLocaleString('en-IN');
+    const budgetCap = data?.isBudgetUserSet ? `₹${Number(data?.budgetCap || 0).toLocaleString('en-IN')}` : 'Not Configured';
+    const remaining = data?.isBudgetUserSet ? `₹${Number(data?.remainingBudget || 0).toLocaleString('en-IN')}` : '—';
+    const advocateName = data?.counselSla?.advocateName || 'No Advocate Assigned';
+    const avgResponse = data?.counselSla?.avgResponseTime || 'N/A';
+    const daysEngaged = data?.counselSla?.daysEngaged || 0;
+    const prepScore = data?.documentReadiness?.readinessPercentage || 0;
+    const prepLabel = data?.documentReadiness?.statusLabel || 'Not Started';
+    const prepVerified = data?.documentReadiness?.verifiedCount || 0;
+    const prepTotal = data?.documentReadiness?.totalRequired || 6;
+    const milestones = data?.spendMilestones || [];
+    const pipeline = data?.casePipeline || [];
+
+    const html = `
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta charset="utf-8">
+          <title>${e(client?.fullName || 'Client')} - Legal Spend &amp; Case Transparency Dossier | LegalConnect</title>
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 12mm 15mm 12mm 15mm;
+            }
+            * {
+              box-sizing: border-box;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            body {
+              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+              color: #0f172a;
+              background: #ffffff;
+              line-height: 1.4;
+              font-size: 12px;
+              margin: 0;
+              padding: 0;
+            }
+            .header-wrap {
+              border-top: 4px solid #059669;
+              padding: 16px 0 12px 0;
+              border-bottom: 2px solid #0f172a;
+              display: flex;
+              justify-content: space-between;
+              align-items: flex-start;
+              margin-bottom: 20px;
+            }
+            .brand-logo {
+              font-size: 16px;
+              font-weight: 900;
+              letter-spacing: 0.12em;
+              color: #0f172a;
+              text-transform: uppercase;
+              display: flex;
+              align-items: center;
+              gap: 6px;
+            }
+            .brand-logo .crest {
+              background: #059669;
+              color: #ffffff;
+              font-size: 11px;
+              padding: 3px 6px;
+              border-radius: 4px;
+              font-weight: 900;
+            }
+            .doc-title {
+              font-family: Georgia, serif;
+              font-size: 20px;
+              font-weight: 700;
+              color: #0f172a;
+              margin: 4px 0 2px 0;
+            }
+            .doc-subtitle {
+              font-size: 11px;
+              color: #64748b;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              font-weight: 600;
+            }
+            .meta-box {
+              text-align: right;
+              font-size: 11px;
+              color: #475569;
+            }
+            .meta-box .ref-tag {
+              font-family: monospace;
+              font-weight: 700;
+              color: #0f172a;
+              background: #f1f5f9;
+              padding: 2px 6px;
+              border-radius: 4px;
+              display: inline-block;
+              margin-bottom: 4px;
+            }
+            .client-strip {
+              background: #f8fafc;
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 12px 16px;
+              margin-bottom: 20px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            .cli-name {
+              font-size: 15px;
+              font-weight: 700;
+              color: #0f172a;
+            }
+            .cli-sub {
+              font-size: 11px;
+              color: #64748b;
+              margin-top: 2px;
+            }
+            .badge-client {
+              background: #eff6ff;
+              border: 1px solid #3b82f6;
+              color: #1d4ed8;
+              padding: 3px 10px;
+              border-radius: 20px;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+            }
+            .kpi-grid {
+              display: grid;
+              grid-template-columns: repeat(4, 1fr);
+              gap: 12px;
+              margin-bottom: 22px;
+            }
+            .kpi-card {
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 12px;
+              background: #ffffff;
+              position: relative;
+            }
+            .kpi-card::before {
+              content: '';
+              position: absolute;
+              top: 0; left: 0; right: 0;
+              height: 3px;
+              border-radius: 10px 10px 0 0;
+            }
+            .kpi-card.c-green::before { background: #10b981; }
+            .kpi-card.c-amber::before { background: #f59e0b; }
+            .kpi-card.c-slate::before { background: #64748b; }
+            .kpi-card.c-emerald::before { background: #059669; }
+            .kpi-label {
+              font-size: 9px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.08em;
+              color: #64748b;
+            }
+            .kpi-val {
+              font-size: 18px;
+              font-weight: 700;
+              color: #0f172a;
+              margin-top: 4px;
+            }
+            .kpi-sub {
+              font-size: 10px;
+              color: #64748b;
+              margin-top: 2px;
+            }
+            .section-box {
+              border: 1px solid #e2e8f0;
+              border-radius: 10px;
+              padding: 14px;
+              margin-bottom: 18px;
+              page-break-inside: avoid;
+              background: #ffffff;
+            }
+            .section-title {
+              font-size: 12px;
+              font-weight: 800;
+              text-transform: uppercase;
+              letter-spacing: 0.06em;
+              color: #0f172a;
+              border-bottom: 1px solid #f1f5f9;
+              padding-bottom: 6px;
+              margin-bottom: 10px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+            }
+            table.report-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 6px;
+            }
+            table.report-table th {
+              background: #0f172a;
+              color: #ffffff;
+              font-size: 10px;
+              font-weight: 700;
+              text-transform: uppercase;
+              letter-spacing: 0.05em;
+              padding: 7px 10px;
+              text-align: left;
+            }
+            table.report-table td {
+              padding: 7px 10px;
+              border-bottom: 1px solid #f1f5f9;
+              font-size: 11px;
+              color: #334155;
+            }
+            table.report-table tr:nth-child(even) td {
+              background: #f8fafc;
+            }
+            .status-pill {
+              display: inline-block;
+              padding: 2px 7px;
+              border-radius: 4px;
+              font-size: 9px;
+              font-weight: 800;
+              text-transform: uppercase;
+            }
+            .pill-completed { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+            .pill-progress { background: #fffbeb; color: #b45309; border: 1px solid #fde68a; }
+            .pill-upcoming { background: #f1f5f9; color: #64748b; }
+            .two-col-grid {
+              display: grid;
+              grid-template-columns: 1fr 1fr;
+              gap: 14px;
+            }
+            .footer-strip {
+              border-top: 1px solid #e2e8f0;
+              padding-top: 10px;
+              margin-top: 24px;
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              font-size: 9px;
+              color: #94a3b8;
+              page-break-inside: avoid;
+            }
+            .seal-box {
+              border-left: 2px solid #059669;
+              padding-left: 8px;
+              font-style: italic;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <!-- Executive Header -->
+          <div class="header-wrap">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #2563eb, #4f46e5); display: flex; align-items: center; justify-content: center; color: white; -webkit-print-color-adjust: exact; print-color-adjust: exact; flex-shrink: 0; box-shadow: 0 3px 8px rgba(79, 70, 229, 0.25);">
+                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="width: 22px; height: 22px; color: white; display: block;">
+                    <path d="M12 4v16M8 20h8" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    <path d="M5 8h14" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                    <path d="M5 8l-2 5M5 8l2 5M2 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <path d="M19 8l-2 5M19 8l2 5M16 13c0 2 6 2 6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                    <circle cx="12" cy="11" r="2.2" fill="currentColor" />
+                  </svg>
+                </div>
+                <div>
+                  <div style="font-size: 22px; font-weight: 800; color: #0f172a; letter-spacing: -0.03em; line-height: 1.1; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+                    Legal<span style="color: #4f46e5;">Connect</span>
+                  </div>
+                  <div style="font-size: 9px; font-weight: 800; color: #64748b; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px;">
+                    LEGAL HELP, SIMPLIFIED.
+                  </div>
+                </div>
+              </div>
+              <div class="doc-title">Client Legal Spend &amp; Matter Transparency Report</div>
+              <div class="doc-subtitle">Certified Financial &amp; Case Progress Dossier</div>
+            </div>
+            <div class="meta-box">
+              <div class="ref-tag">${e(refCode)}</div>
+              <div><strong>Generated:</strong> ${e(dateStr)} • ${e(timeStr)}</div>
+              <div><strong>Assigned Counsel:</strong> ${e(advocateName)}</div>
+              <div><strong>Status:</strong> Audited &amp; Verified</div>
+            </div>
+          </div>
+
+          <!-- Client Strip -->
+          <div class="client-strip">
+            <div>
+              <div class="cli-name">${e(client?.fullName || 'Client')}</div>
+              <div class="cli-sub">${e(client?.email || 'N/A')} • Primary Counsel: ${e(advocateName)} (${e(avgResponse)} response)</div>
+            </div>
+            <div>
+              <span class="badge-client">Active Legal Client</span>
+            </div>
+          </div>
+
+          <!-- Spend KPI Grid -->
+          <div class="kpi-grid">
+            <div class="kpi-card c-green">
+              <div class="kpi-label">Settled Spend</div>
+              <div class="kpi-val">₹${e(totalSpend)}</div>
+              <div class="kpi-sub">Invoiced &amp; Disbursed</div>
+            </div>
+            <div class="kpi-card c-amber">
+              <div class="kpi-label">In Escrow</div>
+              <div class="kpi-val">₹${e(inEscrow)}</div>
+              <div class="kpi-sub">Retained on Milestones</div>
+            </div>
+            <div class="kpi-card c-slate">
+              <div class="kpi-label">Legal Budget</div>
+              <div class="kpi-val">${e(budgetCap)}</div>
+              <div class="kpi-sub">Client Outlay Ceiling</div>
+            </div>
+            <div class="kpi-card c-emerald">
+              <div class="kpi-label">Remaining Balance</div>
+              <div class="kpi-val">${e(remaining)}</div>
+              <div class="kpi-sub">Uncommitted Reserve</div>
+            </div>
+          </div>
+
+          <!-- Case Pipeline Progression -->
+          ${pipeline.length > 0 ? `
+            <div class="section-box">
+              <div class="section-title">
+                <span>Case Trajectory Pipeline</span>
+                <span>${pipeline.length} Milestones</span>
+              </div>
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Step #</th>
+                    <th>Stage &amp; Description</th>
+                    <th>Status</th>
+                    <th style="text-align:right;">Date / Schedule</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${pipeline.map((p: any) => `
+                    <tr>
+                      <td style="font-weight:700;font-family:monospace;">0${p.step}</td>
+                      <td>
+                        <strong style="color:#0f172a;">${e(p.title)}</strong>
+                        <div style="font-size:10px;color:#64748b;">${e(p.desc)}</div>
+                      </td>
+                      <td>
+                        <span class="status-pill ${p.status === 'Completed' ? 'pill-completed' : (p.status === 'In Progress' ? 'pill-progress' : 'pill-upcoming')}">
+                          ${e(p.status)}
+                        </span>
+                      </td>
+                      <td style="text-align:right;font-family:monospace;font-size:10px;color:#475569;">${e(p.completedAt)}</td>
+                    </tr>
+                  `).join('')}
+                </tbody>
+              </table>
+            </div>
+          ` : ''}
+
+          <!-- Itemized Milestone Invoices & Counsel Commitment (Two Columns) -->
+          <div class="two-col-grid">
+            <!-- Left: Milestone Fee Schedule -->
+            <div class="section-box">
+              <div class="section-title">
+                <span>Milestone Fee Schedule</span>
+                <span>${milestones.length} Invoices</span>
+              </div>
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Milestone Details</th>
+                    <th style="text-align:right;">Fee (₹)</th>
+                    <th style="text-align:right;">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  ${milestones.length > 0 ? milestones.map((m: any) => `
+                    <tr>
+                      <td>
+                        <strong style="color:#0f172a;">${e(m.title)}</strong>
+                        <div style="font-size:10px;color:#64748b;">${e(m.date)}</div>
+                      </td>
+                      <td style="text-align:right;font-family:monospace;font-weight:700;">₹${Number(m.amount || 0).toLocaleString('en-IN')}</td>
+                      <td style="text-align:right;">
+                        <span class="status-pill ${m.status === 'Settled' ? 'pill-completed' : (m.status === 'In Escrow' ? 'pill-progress' : 'pill-upcoming')}">
+                          ${e(m.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  `).join('') : `
+                    <tr>
+                      <td colspan="3" style="text-align:center;color:#94a3b8;">No consultation milestones logged yet.</td>
+                    </tr>
+                  `}
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Right: Research Preparedness & Counsel Commitment -->
+            <div class="section-box">
+              <div class="section-title">
+                <span>Preparedness &amp; Counsel SLA</span>
+                <span>Verified Data</span>
+              </div>
+              <table class="report-table">
+                <thead>
+                  <tr>
+                    <th>Metric</th>
+                    <th style="text-align:right;">Score / Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Research Preparedness Score</td>
+                    <td style="text-align:right;font-weight:700;color:#059669;">${prepScore}% (${e(prepLabel)})</td>
+                  </tr>
+                  <tr>
+                    <td>Knowledge Base Depth</td>
+                    <td style="text-align:right;font-family:monospace;">${prepVerified} of ${prepTotal} items completed</td>
+                  </tr>
+                  <tr>
+                    <td>Assigned Primary Counsel</td>
+                    <td style="text-align:right;font-weight:600;">${e(advocateName)}</td>
+                  </tr>
+                  <tr>
+                    <td>Average Counsel Response SLA</td>
+                    <td style="text-align:right;font-family:monospace;">${e(avgResponse)}</td>
+                  </tr>
+                  <tr>
+                    <td>Engagement Duration</td>
+                    <td style="text-align:right;font-family:monospace;font-weight:700;">${daysEngaged} Days</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="footer-strip">
+            <div class="seal-box">
+              LegalConnect Client Matter Dossier • Certified Itemized Record &amp; Escrow Transparency
+            </div>
+            <div>
+              &copy; ${new Date().getFullYear()} LegalConnect Network Inc. • Document ID: ${e(refCode)}
+            </div>
+          </div>
+
+          <script>
+            window.onload = function() {
+              setTimeout(function() {
+                window.print();
+              }, 350);
+            };
+          </script>
+        </body>
+      </html>
+    `;
+
+    return this.printHtmlDocument(html, `LegalConnect-Client-Dossier-${refCode}`, onPopupBlocked);
+  }
+
+  /**
    * Main entry point for processing export format choices.
    */
   processExport(data: any, format: string, onPopupBlocked?: () => void): { status: string; message: string } {

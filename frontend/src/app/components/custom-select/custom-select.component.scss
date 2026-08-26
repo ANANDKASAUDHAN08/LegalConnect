@@ -81,21 +81,64 @@
   }
 }
 
-@keyframes selectBottomSheetSlideUp {
+@keyframes selectBackdropFadeOut {
   from {
-    opacity: 0.6;
-    transform: translateY(100%);
+    opacity: 1;
   }
   to {
-    opacity: 1;
-    transform: translateY(0);
+    opacity: 0;
+  }
+}
+
+@keyframes selectBottomSheetSlideUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes selectBottomSheetSlideDown {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 100%, 0);
   }
 }
 
 .animate-selectBackdropFadeIn {
-  animation: selectBackdropFadeIn 220ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: selectBackdropFadeIn 250ms ease-out forwards;
+}
+
+.animate-selectBackdropFadeOut {
+  animation: selectBackdropFadeOut 200ms ease-in forwards;
 }
 
 .animate-selectBottomSheetSlideUp {
-  animation: selectBottomSheetSlideUp 280ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+  animation: selectBottomSheetSlideUp 340ms cubic-bezier(0.32, 0.72, 0, 1) forwards;
+}
+
+.animate-selectBottomSheetSlideDown {
+  will-change: transform;
+  animation: selectBottomSheetSlideDown 200ms cubic-bezier(0.32, 0, 0.67, 0) forwards;
+}
+
+.select-sheet-pill {
+  width: 42px;
+  height: 5px;
+  border-radius: 9999px;
+  background-color: rgba(148, 163, 184, 0.4);
+  margin: 8px auto 2px auto;
+  cursor: grab;
+  touch-action: none;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+
+  &:active {
+    cursor: grabbing;
+    background-color: rgba(100, 116, 139, 0.8);
+    transform: scale(0.96);
+  }
 }

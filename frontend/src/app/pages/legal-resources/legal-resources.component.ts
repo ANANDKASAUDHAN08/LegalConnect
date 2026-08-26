@@ -74,8 +74,14 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
   navbarHeight = 68;
   isScrolled = false;
 
-  // Mobile Bottom Sheet Drawer
+  // Mobile Bottom Sheet Drawer States (Single & Nested Support)
   isMobileDrawerOpen = false;
+  isMobileDrawerClosing = false;
+  isNestedSelectOpen = false;
+  drawerTranslateY = 0;
+  private drawerTouchStartY = 0;
+  isDraggingDrawer = false;
+  private nestedSheetListener: ((event: any) => void) | null = null;
 
   // Mobile View Mode Switcher ('list' | 'map') for mobile devices
   mobileViewMode: 'list' | 'map' = 'list';
@@ -369,6 +375,17 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
     this.updateNavbarHeight();
     this.updateScreenSize();
 
+    // Listen for child nested custom-select sheet open/close events to trigger parent card-deck scaling
+    if (typeof window !== 'undefined') {
+      this.nestedSheetListener = (event: any) => {
+        if (event.detail && typeof event.detail.open === 'boolean') {
+          this.isNestedSelectOpen = event.detail.open;
+          this.cdr.markForCheck();
+        }
+      };
+      window.addEventListener('lc-nested-sheet-change', this.nestedSheetListener);
+    }
+
     this.ngZone.runOutsideAngular(() => {
       fromEvent(window, 'resize').pipe(
         debounceTime(150),
@@ -452,6 +469,9 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   ngOnDestroy(): void {
+    if (this.nestedSheetListener && typeof window !== 'undefined') {
+      window.removeEventListener('lc-nested-sheet-change', this.nestedSheetListener);
+    }
     if (this.navResizeObserver) {
       this.navResizeObserver.disconnect();
     }
@@ -760,14 +780,56 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
 
   openMobileDrawer(): void {
     this.isMobileDrawerOpen = true;
+    this.isMobileDrawerClosing = false;
+    this.drawerTranslateY = 0;
+    this.isNestedSelectOpen = false;
     document.body.style.overflow = 'hidden';
     this.cdr.markForCheck();
   }
 
   closeMobileDrawer(): void {
-    this.isMobileDrawerOpen = false;
-    document.body.style.overflow = '';
+    if (!this.isMobileDrawerOpen || this.isMobileDrawerClosing) return;
+    this.isMobileDrawerClosing = true;
     this.cdr.markForCheck();
+
+    setTimeout(() => {
+      this.isMobileDrawerOpen = false;
+      this.isMobileDrawerClosing = false;
+      this.drawerTranslateY = 0;
+      this.isNestedSelectOpen = false;
+      document.body.style.overflow = '';
+      this.cdr.markForCheck();
+    }, 220);
+  }
+
+  // Touch drag-to-dismiss gesture handlers for mobile bottom sheet drawer
+  onDrawerTouchStart(event: TouchEvent): void {
+    if (event.touches && event.touches.length === 1) {
+      this.drawerTouchStartY = event.touches[0].clientY;
+      this.isDraggingDrawer = true;
+    }
+  }
+
+  onDrawerTouchMove(event: TouchEvent): void {
+    if (!this.isDraggingDrawer) return;
+    const currentY = event.touches[0].clientY;
+    const deltaY = currentY - this.drawerTouchStartY;
+    if (deltaY > 0) {
+      // Gentle rubber-band physics
+      this.drawerTranslateY = Math.pow(deltaY, 0.9);
+      this.cdr.markForCheck();
+    }
+  }
+
+  onDrawerTouchEnd(): void {
+    if (!this.isDraggingDrawer) return;
+    this.isDraggingDrawer = false;
+    if (this.drawerTranslateY > 70) {
+      this.closeMobileDrawer();
+    } else {
+      this.drawerTranslateY = 0;
+      this.cdr.markForCheck();
+    }
   }
 
   setHoveredResource(id: string | null): void {

@@ -9,6 +9,8 @@ import { AuthService } from './services/auth.service';
 import { GlobalErrorHandler } from './core/global-error-handler';
 import { firstValueFrom } from 'rxjs';
 
+import { provideLottieOptions } from 'ngx-lottie';
+
 function initializeSession(auth: AuthService): () => Promise<boolean> {
   return () => firstValueFrom(auth.checkSession(), { defaultValue: false });
 }
@@ -24,6 +26,9 @@ export const appConfig: ApplicationConfig = {
     ),
     provideHttpClient(withInterceptors([authInterceptor])),
     provideAnimations(),
+    provideLottieOptions({
+      player: () => import('lottie-web')
+    }),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     {
       provide: APP_INITIALIZER,

@@ -461,40 +461,66 @@
    ========================================================================== */
 
 .filter-drawer-panel {
-  will-change: transform;
-  animation: drawer-slide-up 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  box-shadow: 0 -10px 40px -5px rgba(0, 0, 0, 0.5);
+  will-change: transform, opacity;
+  animation: drawer-slide-up 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+  box-shadow: 0 -16px 50px -5px rgba(0, 0, 0, 0.45);
+
+  &.closing {
+    animation: drawer-slide-down 0.22s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+
+    @media (min-width: 640px) {
+      animation: drawer-slide-right-exit 0.22s cubic-bezier(0.32, 0, 0.67, 0) forwards;
+    }
+  }
 
   @media (min-width: 640px) {
-    animation: drawer-slide-right 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    box-shadow: -12px 0 45px -5px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05);
+    animation: drawer-slide-right 0.35s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+    box-shadow: -14px 0 50px -5px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
 }
 
 @keyframes drawer-slide-up {
   0% {
-    transform: translateY(100%);
-    opacity: 0.7;
+    transform: translate3d(0, 100%, 0);
   }
   100% {
-    transform: translateY(0);
-    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes drawer-slide-down {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(0, 100%, 0);
   }
 }
 
 @keyframes drawer-slide-right {
   0% {
-    transform: translateX(100%);
-    opacity: 0.7;
+    transform: translate3d(100%, 0, 0);
   }
   100% {
-    transform: translateX(0);
-    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes drawer-slide-right-exit {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(100%, 0, 0);
   }
 }
 
 :host-context(.dark) .filter-drawer-panel {
-  box-shadow: -18px 0 55px -5px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  box-shadow: 0 -16px 50px -5px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.06);
+
+  @media (min-width: 640px) {
+    box-shadow: -18px 0 55px -5px rgba(0, 0, 0, 0.85), 0 0 0 1px rgba(255, 255, 255, 0.08);
+  }
 }
 
 /* Card-to-Map Pulse Highlight when map pin is clicked */

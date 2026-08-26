@@ -107,11 +107,17 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
 
   readonly instanceId = `lc-select-${++nextUniqueId}`;
   isOpen = false;
+  isClosing = false;
   dropUp = false;
   alignRight = false;
   searchTerm = '';
   focusedIndex = -1;
   isMobileView = false;
+
+  // Touch drag-down state for mobile bottom sheet
+  sheetTranslateY = 0;
+  private touchStartY = 0;
+  isDraggingSheet = false;
 
   // Fixed coordinates for desktop viewport overlay (break out of overflow:hidden forever)
   floatingStyles: { [key: string]: string } = {};
@@ -216,6 +222,11 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
   }
 
   ngOnDestroy(): void {
+    if (this.isOpen && this.isMobileView && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lc-nested-sheet-change', {
+        detail: { open: false, selectId: this.instanceId }
+      }));
+    }
     this.handleBodyScrollLock(false);
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
@@ -489,6 +500,8 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     if (this.disabled || this.isOpen) return;
     this.checkMobileView();
     this.isOpen = true;
+    this.isClosing = false;
+    this.sheetTranslateY = 0;
     this.searchTerm = '';
 
     if (this.multiple) {
@@ -502,6 +515,11 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
 
     if (this.isMobileView && this.useBottomSheetOnMobile) {
       this.handleBodyScrollLock(true);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lc-nested-sheet-change', {
+          detail: { open: true, selectId: this.instanceId }
+        }));
+      }
     } else {
       this.recalculatePosition();
     }
@@ -509,28 +527,81 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     this.opened.emit();
     this.cdr.markForCheck();
 
-    // Focus search input or scroll selected into view
+    // Desktop only: Focus search input immediately (zero layout penalty on desktop).
+    // On Mobile: DO NOT auto-focus on open to prevent virtual keyboard from violently hijacking 50% of the screen.
     setTimeout(() => {
-      if (this.searchable) {
-        if (this.isMobileView && this.useBottomSheetOnMobile) {
-          this.mobileSearchInputElement?.nativeElement?.focus();
-        } else {
-          this.searchInputElement?.nativeElement?.focus();
-        }
+      if (this.searchable && !this.isMobileView) {
+        this.searchInputElement?.nativeElement?.focus();
       }
       this.scrollFocusedOptionIntoView();
     }, 60);
   }
 
   close(): void {
-    if (!this.isOpen) return;
-    this.isOpen = false;
-    this.searchTerm = '';
-    this.focusedIndex = -1;
-    this.handleBodyScrollLock(false);
-    this.onTouched();
-    this.closed.emit();
-    this.cdr.markForCheck();
+    if (!this.isOpen || this.isClosing) return;
+
+    if (this.isMobileView && this.useBottomSheetOnMobile) {
+      // Smooth 200ms slide-down exit animation for mobile bottom sheet
+      this.isClosing = true;
+      this.onTouched();
+      this.closed.emit();
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('lc-nested-sheet-change', {
+          detail: { open: false, selectId: this.instanceId }
+        }));
+      }
+      this.cdr.markForCheck();
+
+      setTimeout(() => {
+        this.isOpen = false;
+        this.isClosing = false;
+        this.searchTerm = '';
+        this.focusedIndex = -1;
+        this.sheetTranslateY = 0;
+        this.handleBodyScrollLock(false);
+        this.cdr.markForCheck();
+      }, 200);
+    } else {
+      this.isOpen = false;
+      this.isClosing = false;
+      this.searchTerm = '';
+      this.focusedIndex = -1;
+      this.handleBodyScrollLock(false);
+      this.onTouched();
+      this.closed.emit();
+      this.cdr.markForCheck();
+    }
+  }
+
+  // Touch Drag-to-Dismiss Gesture Handlers for Mobile Bottom Sheet
+  onSheetTouchStart(event: TouchEvent): void {
+    if (event.touches && event.touches.length === 1) {
+      this.touchStartY = event.touches[0].clientY;
+      this.isDraggingSheet = true;
+    }
+  }
+
+  onSheetTouchMove(event: TouchEvent): void {
+    if (!this.isDraggingSheet) return;
+    const currentY = event.touches[0].clientY;
+    const deltaY = currentY - this.touchStartY;
+    if (deltaY > 0) {
+      // Soft rubberband resistance curve
+      this.sheetTranslateY = Math.pow(deltaY, 0.9);
+      this.cdr.markForCheck();
+    }
+  }
+
+  onSheetTouchEnd(): void {
+    if (!this.isDraggingSheet) return;
+    this.isDraggingSheet = false;
+    if (this.sheetTranslateY > 65) {
+      this.close();
+    } else {
+      this.sheetTranslateY = 0;
+      this.cdr.markForCheck();
+    }
   }
 
   selectOption(option: SelectOption, event?: Event): void {

@@ -995,16 +995,27 @@
   <div *ngIf="isMobileDrawerOpen"
     class="fixed inset-0 z-[1600] overflow-hidden flex justify-end items-end sm:items-stretch print:hidden"
     aria-modal="true" role="dialog">
-    <!-- Backdrop Overlay -->
-    <div class="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs transition-opacity"
+    <!-- Backdrop Overlay with smooth animated fade -->
+    <div class="fixed inset-0 bg-slate-900/60 dark:bg-black/75 backdrop-blur-xs"
+      [ngClass]="isMobileDrawerClosing ? 'animate-universal-backdrop-out pointer-events-none' : 'animate-universal-backdrop-in'"
       (click)="closeMobileDrawer()"></div>
 
-    <!-- Slide-Over Drawer Panel (Mobile: Bottom Sheet, Desktop: Right-Side Slide-Over) -->
+    <!-- Slide-Over Drawer Panel (Mobile: Bottom Sheet with Card-Deck Depth, Desktop: Right-Side Slide-Over) -->
     <div
-      class="filter-drawer-panel relative z-10 w-full sm:w-[460px] md:w-[480px] max-w-full h-auto max-h-[90vh] sm:max-h-full sm:h-full bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800">
+      class="filter-drawer-panel sheet-card-deck-parent relative z-10 w-full sm:w-[460px] md:w-[480px] max-w-full h-auto max-h-[90dvh] sm:max-h-full sm:h-full bg-white dark:bg-slate-900 rounded-t-[28px] sm:rounded-none sm:rounded-l-3xl shadow-2xl flex flex-col overflow-hidden border-t sm:border-t-0 sm:border-l border-slate-200 dark:border-slate-800"
+      [ngClass]="{
+        'closing': isMobileDrawerClosing,
+        'nested-open': isNestedSelectOpen
+      }"
+      [style.transform]="drawerTranslateY > 0 && !isNestedSelectOpen ? ('translate3d(0, ' + drawerTranslateY + 'px, 0)') : null">
 
-      <!-- Mobile Touch Drag Indicator Handle -->
-      <div class="w-12 h-1.5 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto my-2 shrink-0 sm:hidden"></div>
+      <!-- Mobile Touch Drag Indicator Handle with Gestures -->
+      <div
+        class="w-full pt-2.5 pb-1 flex justify-center cursor-grab active:cursor-grabbing touch-none select-none sm:hidden shrink-0"
+        (touchstart)="onDrawerTouchStart($event)" (touchmove)="onDrawerTouchMove($event)"
+        (touchend)="onDrawerTouchEnd()">
+        <div class="sheet-drag-handle"></div>
+      </div>
 
       <!-- Header (Sticky) -->
       <div
