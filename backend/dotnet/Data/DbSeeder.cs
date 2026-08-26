@@ -49,6 +49,7 @@ namespace CoreApi.Data
                 ("Users", "LastLoginAt", "DATETIME NULL"),
                 ("Users", "LastIpAddress", "VARCHAR(50) NULL"),
                 ("Users", "TwoFactorBackupCodes", "varchar(2000) NULL"),
+                ("Users", "LegalBudget", "DECIMAL(18,2) NULL"),
                 ("Consultations", "AdminRemark", "TEXT NULL"),
                 ("Consultations", "AuditLogJson", "LONGTEXT NULL"),
                 ("LawyerProfiles", "VerificationRemarks", "TEXT NULL"),
@@ -713,7 +714,7 @@ namespace CoreApi.Data
                 var colCount = Convert.ToInt32(checkCmd.ExecuteScalar());
 
                 using var markCmd = conn.CreateCommand();
-                markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4'), ('20260807055827_AddContactSubmissionExtendedFields', '8.0.4');";
+                markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4'), ('20260807055827_AddContactSubmissionExtendedFields', '8.0.4'), ('20260826151857_AddClientLegalBudget', '8.0.4');";
                 markCmd.ExecuteNonQuery();
 
                 if (!wasOpen) conn.Close();

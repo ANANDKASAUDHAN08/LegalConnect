@@ -104,6 +104,14 @@ namespace CoreApi.Models
         [MaxLength(100)]
         public string? GoogleId { get; set; }
 
+        // ── Legal Budget (Client-settable, used in Spend & Insights analytics) ──
+        /// <summary>
+        /// Client's self-declared legal budget ceiling for spend tracking.
+        /// Null means no budget set (UI will show "Set Your Budget" prompt).
+        /// </summary>
+        [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(18,2)")]
+        public decimal? LegalBudget { get; set; }
+
         // ── User Preference / Settings Fields ──────────────────────────────
         [MaxLength(80)]
         public string? PreferredTimezone { get; set; } = "Asia/Kolkata";
