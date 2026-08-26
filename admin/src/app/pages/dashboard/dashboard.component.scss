@@ -1,5 +1,5 @@
 /* ---------------------------------------------------------------
-   LegalConnect Enterprise Admin Dashboard - Page Container Styles
+   LegalConnect Enterprise Admin Dashboard - Premium Control Center
    Tailwind CSS + SCSS Hybrid Architecture
    --------------------------------------------------------------- */
 
@@ -7,4 +7,139 @@
   display: block;
   width: 100%;
   min-height: 100vh;
+}
+
+/* Glassmorphism Surface Elevation */
+.glass-card-elevated {
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-elevated:hover {
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6), 0 0 30px -10px rgba(99, 102, 241, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+/* Subtle Gradient Sheen for Hero Headline */
+.text-gradient-hero {
+  background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 45%, #94a3b8 100%);
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Glowing Telemetry Beacon */
+.telemetry-beacon {
+  position: relative;
+}
+
+.telemetry-beacon::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 9999px;
+  background: inherit;
+  opacity: 0.5;
+  animation: beacon-pulse 2s infinite;
+}
+
+@keyframes beacon-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+
+  70% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+
+  100% {
+    transform: scale(2.2);
+    opacity: 0;
+  }
+}
+
+/* Keyboard Shortcut Keycap */
+.kbd-shortcut {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9px;
+  font-weight: 700;
+  padding: 1.5px 4.5px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #94a3b8;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  line-height: 1;
+}
+
+/* Segmented Timeframe Active Tab Glow */
+.timeframe-pill-active {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: #ffffff !important;
+  box-shadow: 0 2px 8px -1px rgba(99, 102, 241, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+/* Quick Action Hover Lift */
+.quick-action-pill {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quick-action-pill:hover {
+  transform: translateY(-1.5px);
+}
+
+/* Modal Fade-in */
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Printable Executive PDF Report Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  .quick-action-pill,
+  .btn,
+  .kbd-shortcut,
+  app-dashboard-activity-feed,
+  app-quick-verify-modal,
+  app-quick-broadcast-modal,
+  .fixed {
+    display: none !important;
+  }
+
+  .glass-card,
+  .glass-card-elevated {
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+    color: #0f172a !important;
+  }
+
+  h1, h2, h3, h4, th, td {
+    color: #0f172a !important;
+  }
+
+  .text-slate-400,
+  .text-slate-500 {
+    color: #64748b !important;
+  }
 }

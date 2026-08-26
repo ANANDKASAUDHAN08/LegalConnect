@@ -1,7 +1,8 @@
 <div class="px-0 py-2 w-full flex flex-col gap-4 px-8">
 
   <!-- --- 0. Emergency System Alert Banner --- -->
-  @if (!isLoading && (overview?.pendingLawyers > 0 || overview?.newContacts > 0)) {
+  @if (!isLoading && (overview?.pendingLawyers > 0 || overview?.newContacts > 0 || (copExpiryData?.totalExpiring > 0)))
+  {
   <div
     class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border border-red-500/30 bg-gradient-to-r from-red-500/10 to-amber-500/10 backdrop-blur-md shadow-lg transition-all">
     <div class="flex items-center gap-3.5">
@@ -23,13 +24,17 @@
           • <strong class="text-sky-300 font-semibold">{{ overview?.newContacts }} Unread support inquiries</strong>
           assigned to desk.
           }
+          @if (copExpiryData?.totalExpiring > 0) {
+          • <strong class="text-rose-300 font-semibold">{{ copExpiryData?.totalExpiring }} COP expiry warnings</strong>
+          require attention.
+          }
         </span>
       </div>
     </div>
     <div class="flex items-center gap-2 self-end sm:self-auto">
       @if (overview?.pendingLawyers > 0) {
       <button class="btn btn-primary btn-sm flex items-center gap-1.5" (click)="openQuickVerifyModal()"
-        [adminTooltip]="'Open 1-click lawyer Bar License verification modal'" tooltipPosition="top">
+        [adminTooltip]="'Open 1-click lawyer Bar License verification modal (Alt+V)'" tooltipPosition="top">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
           <polyline points="9 11 12 14 22 4"></polyline>
@@ -40,7 +45,7 @@
       @if (overview?.newContacts > 0) {
       <button class="btn btn-secondary btn-sm flex items-center gap-1.5"
         (click)="navigateTo('/support', { status: 'New' })"
-        [adminTooltip]="'View unread support & grievance inquiries desk'" tooltipPosition="top">
+        [adminTooltip]="'View unread support & grievance inquiries desk (Alt+S)'" tooltipPosition="top">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
           <polyline points="22,6 12,13 2,6"></polyline>
@@ -52,105 +57,113 @@
   </div>
   }
 
-  <!-- --- 1. Dashboard Header & System Status --- -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!--  1. UNIFIED EXECUTIVE COMMAND & CONTROL CENTER HEADER                   -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <div
-    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-5 gap-6 rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl">
+    class="glass-card-elevated p-6 rounded-3xl border border-white/10 bg-gradient-to-b from-slate-900/90 via-slate-900/80 to-slate-950/90 shadow-2xl relative overflow-hidden flex flex-col gap-5">
 
-    <!-- Left Tier: Greeting, Subtitle & Health Badges -->
-    <div class="flex flex-col gap-1">
-      <div class="inline-flex items-center gap-2 px-2.5 py-1 rounded-full border text-xs font-semibold w-fit"
-        [ngClass]="getHealthBadgeColor()">
-        <span class="w-2 h-2 rounded-full"
-          [ngClass]="systemHealth.nodeApi && systemHealth.dotnetApi ? 'bg-current animate-ping' : 'bg-current'"></span>
-        <span>{{ getHealthStatus() }}</span>
-      </div>
-      <h1 class="text-2xl font-extrabold text-slate-100 tracking-tight mt-1">{{ getGreeting() }}, Admin</h1>
-      <p class="text-xs text-slate-400">
-        Last synced {{ lastRefreshed | date:'shortTime' }} •
-        Auto-refresh {{ isAutoSyncEnabled ? 'every 30s' : 'paused' }}
-      </p>
+    <!-- Ambient glow accent -->
+    <div class="absolute -top-24 -right-24 w-96 h-96 rounded-full bg-indigo-500/10 blur-3xl pointer-events-none"></div>
 
-      <!-- Interactive Tech Latency Badges -->
-      <div class="flex flex-wrap items-center gap-2 mt-1">
-        <span
-          class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 flex items-center gap-1.5"
-          [adminTooltip]="'Node.js Express API (Port 5000) • Latency: ' + nodeLatency + 'ms'" tooltipPosition="top">
-          <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getHealthColor('node')"></span>
-          Node API: {{ nodeLatency }}ms
-        </span>
-        <span
-          class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 flex items-center gap-1.5"
-          [adminTooltip]="'.NET 8 Web API (Port 5001) • Latency: ' + dotnetLatency + 'ms'" tooltipPosition="top">
-          <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getHealthColor('dotnet')"></span>
-          .NET Core: {{ dotnetLatency }}ms
-        </span>
-        <span
-          class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 flex items-center gap-1.5"
-          [adminTooltip]="'Database Cluster • Connections: ' + dbConnections + ' Active'" tooltipPosition="top">
-          <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getHealthColor('db')"></span>
-          DB: {{ systemHealth.database ? 'Healthy' : 'Degraded' }}
-        </span>
-      </div>
-    </div>
+    <!-- TOP TIER: System Status & Global Action Toolbar -->
+    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 relative z-10">
 
-    <!-- Right Tier: Timeframe Switcher & Action Button Group -->
-    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-      <!-- Timeframe Selector -->
-      <div class="flex items-center p-1 rounded-xl bg-slate-800/80 border border-slate-700/70 text-xs font-semibold"
-        [class.opacity-60]="isChartLoading" [adminTooltip]="'Filter analytics by time range'" tooltipPosition="top">
-        <button
-          class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-slate-200"
-          [class.bg-indigo-600]="selectedTimeframe === '7D'" [class.text-white]="selectedTimeframe === '7D'"
-          (click)="setTimeframe('7D')">
-          <span>7D</span>
-        </button>
-        <button
-          class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-slate-200"
-          [class.bg-indigo-600]="selectedTimeframe === '30D'" [class.text-white]="selectedTimeframe === '30D'"
-          (click)="setTimeframe('30D')">
-          <span>30D</span>
-        </button>
-        <button
-          class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-slate-200"
-          [class.bg-indigo-600]="selectedTimeframe === '90D'" [class.text-white]="selectedTimeframe === '90D'"
-          (click)="setTimeframe('90D')">
-          <span>90D</span>
-        </button>
-        <button
-          class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-slate-200"
-          [class.bg-indigo-600]="selectedTimeframe === 'YTD'" [class.text-white]="selectedTimeframe === 'YTD'"
-          (click)="setTimeframe('YTD')">
-          <span>YTD</span>
-        </button>
+      <!-- Left: Operational Health Pill & Live Telemetry Badges -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border text-xs font-bold w-fit shadow-inner"
+          [ngClass]="getHealthBadgeColor()">
+          <span class="w-2 h-2 rounded-full telemetry-beacon bg-current"></span>
+          <span>{{ getHealthStatus() }}</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2">
+          <span
+            class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-300 flex items-center gap-1.5 shadow-sm"
+            [adminTooltip]="'Node.js Express API (Port 5000) • Latency: ' + nodeLatency + 'ms'" tooltipPosition="top">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="getHealthColor('node')"></span>
+            <span>Node API: {{ nodeLatency }}ms</span>
+            <div class="w-10 h-3 ml-1 relative shrink-0">
+              <canvas #nodeLatencyCanvas></canvas>
+            </div>
+          </span>
+          <span
+            class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-300 flex items-center gap-1.5 shadow-sm"
+            [adminTooltip]="'.NET 8 Web API (Port 5001) • Latency: ' + dotnetLatency + 'ms'" tooltipPosition="top">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="getHealthColor('dotnet')"></span>
+            <span>.NET Core: {{ dotnetLatency }}ms</span>
+            <div class="w-10 h-3 ml-1 relative shrink-0">
+              <canvas #dotnetLatencyCanvas></canvas>
+            </div>
+          </span>
+          <span
+            class="px-2.5 py-1 text-xs font-medium rounded-lg bg-slate-800/80 border border-slate-700/80 text-slate-300 flex items-center gap-1.5 shadow-sm"
+            [adminTooltip]="'Database Cluster • Active Sessions: ' + dbConnections" tooltipPosition="top">
+            <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getHealthColor('db')"></span>
+            DB: {{ systemHealth.database ? 'Healthy' : 'Degraded' }}
+          </span>
+        </div>
       </div>
 
-      <!-- Action Buttons -->
-      <div class="flex items-center gap-2">
+      <!-- Right: Global Timeframe Selector & Toolbar Buttons -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Segmented Timeframe Switcher -->
+        <div
+          class="flex items-center p-1 rounded-xl bg-slate-800/90 border border-slate-700/80 text-xs font-semibold shadow-inner"
+          [class.opacity-60]="isChartLoading" [adminTooltip]="'Filter analytics by timeframe (Press 1-4 on keyboard)'"
+          tooltipPosition="top">
+          <button class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-white"
+            [class.timeframe-pill-active]="selectedTimeframe === '7D'" (click)="setTimeframe('7D')">
+            <span>7D</span>
+          </button>
+          <button class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-white"
+            [class.timeframe-pill-active]="selectedTimeframe === '30D'" (click)="setTimeframe('30D')">
+            <span>30D</span>
+          </button>
+          <button class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-white"
+            [class.timeframe-pill-active]="selectedTimeframe === '90D'" (click)="setTimeframe('90D')">
+            <span>90D</span>
+          </button>
+          <button class="px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 text-slate-400 hover:text-white"
+            [class.timeframe-pill-active]="selectedTimeframe === 'YTD'" (click)="setTimeframe('YTD')">
+            <span>YTD</span>
+          </button>
+        </div>
+
+        <!-- Refresh Button with Spin Indicator -->
         <button class="btn btn-secondary btn-sm flex items-center gap-1.5" (click)="manualRefresh()"
-          [adminTooltip]="'Manually refresh all dashboard data'" tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          [adminTooltip]="'Refresh all dashboard analytics (Alt+R)'" tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            [class.animate-spin]="isRefreshing">
             <polyline points="23 4 23 10 17 10"></polyline>
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
           </svg>
           <span>Refresh</span>
         </button>
+
+        <!-- Auto-Sync Toggle -->
         <button class="btn btn-secondary btn-sm flex items-center gap-1.5" (click)="toggleAutoSync()"
-          [adminTooltip]="'Toggle automatic background metric polling'" tooltipPosition="top">
+          [adminTooltip]="'Toggle 30s background sync'" tooltipPosition="top">
           <span class="w-2 h-2 rounded-full" [class.bg-emerald-400]="isAutoSyncEnabled"
             [class.bg-slate-500]="!isAutoSyncEnabled"></span>
           <span>Auto-Sync {{ isAutoSyncEnabled ? 'ON' : 'OFF' }}</span>
         </button>
-        <button class="btn btn-secondary btn-sm flex items-center gap-1.5" (click)="exportReport()"
-          [adminTooltip]="'Export dashboard snapshot to CSV file'" tooltipPosition="top">
+
+        <!-- Export BI Report Modal Button -->
+        <button class="btn btn-secondary btn-sm flex items-center gap-1.5" (click)="openExportModal()"
+          [adminTooltip]="'Open report export dialog with date ranges (PDF / XLSX)'" tooltipPosition="top">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
             <polyline points="7 10 12 15 17 10"></polyline>
             <line x1="12" y1="15" x2="12" y2="3"></line>
           </svg>
-          <span>Export CSV</span>
+          <span>Export Report</span>
         </button>
-        <button class="btn btn-primary btn-sm flex items-center gap-1.5" (click)="openQuickBroadcastModal()"
-          [adminTooltip]="'Dispatch broadcast alert notification to platform users & advocates'" tooltipPosition="top">
+
+        <!-- Dispatch Broadcast Button -->
+        <button class="btn btn-primary btn-sm flex items-center gap-1.5 shadow-lg shadow-indigo-500/20"
+          (click)="openQuickBroadcastModal()"
+          [adminTooltip]="'Dispatch broadcast alert notification to platform users (Alt+B)'" tooltipPosition="top">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
@@ -158,80 +171,127 @@
           <span>Broadcast</span>
         </button>
       </div>
+
     </div>
+
+    <!-- MIDDLE TIER: Dynamic Hero Headline -->
+    <div class="flex flex-col gap-1 relative z-10">
+      <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-gradient-hero">{{ getGreeting() }}, Admin</h1>
+      <p class="text-xs text-slate-400">
+        Enterprise Legal Intelligence • Synced at {{ lastRefreshed | date:'shortTime' }} • Telemetry active across Node
+        & .NET microservices
+      </p>
+    </div>
+
+    <!-- BOTTOM TIER: Integrated Quick Action Command Ribbon / Shelf -->
+    <div
+      class="pt-4 border-t border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-3 relative z-10">
+      <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
+        <div
+          class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shadow-inner">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+        </div>
+        <span>Quick Actions Dock:</span>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 text-xs">
+        <!-- Onboard Advocate -->
+        <button
+          class="quick-action-pill px-3 py-1.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-semibold flex items-center gap-2 shadow-sm"
+          (click)="navigateTo('/lawyers')"
+          [adminTooltip]="'Onboard and register new High Court / District advocate profile (Alt+O)'"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <line x1="19" y1="8" x2="19" y2="14"></line>
+            <line x1="16" y1="11" x2="22" y2="11"></line>
+          </svg>
+          <span>Onboard Advocate</span>
+          <span class="kbd-shortcut">Alt+O</span>
+        </button>
+
+        <!-- Verify Bar Queue -->
+        <button
+          class="quick-action-pill px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 font-semibold flex items-center gap-2 shadow-sm"
+          (click)="openQuickVerifyModal()"
+          [adminTooltip]="'Open advocate Bar License credential verification queue (Alt+V)'" tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          <span>Verify Bar Queue</span>
+          @if (overview?.pendingLawyers > 0) {
+          <span
+            class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/30 text-amber-200 border border-amber-500/40 animate-pulse">
+            {{ overview?.pendingLawyers }}
+          </span>
+          }
+          <span class="kbd-shortcut">Alt+V</span>
+        </button>
+
+        <!-- User Directory -->
+        <button
+          class="quick-action-pill px-3 py-1.5 rounded-xl bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 font-semibold flex items-center gap-2 shadow-sm"
+          (click)="navigateTo('/users')" [adminTooltip]="'Manage registered citizen user accounts across India (Alt+U)'"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span>User Directory</span>
+          <span class="kbd-shortcut">Alt+U</span>
+        </button>
+
+        <!-- Support Desk -->
+        <button
+          class="quick-action-pill px-3 py-1.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 text-sky-300 font-semibold flex items-center gap-2 shadow-sm"
+          (click)="navigateTo('/support')" [adminTooltip]="'View customer service inquiries & grievances (Alt+S)'"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
+          <span>Support Desk</span>
+          @if (overview?.newContacts > 0) {
+          <span
+            class="px-1.5 py-0.5 rounded-full text-[10px] font-black bg-sky-500/30 text-sky-200 border border-sky-500/40">
+            {{ overview?.newContacts }}
+          </span>
+          }
+          <span class="kbd-shortcut">Alt+S</span>
+        </button>
+
+        <!-- Broadcast Announcement -->
+        <button
+          class="quick-action-pill px-3 py-1.5 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 font-semibold flex items-center gap-2 shadow-sm"
+          (click)="openQuickBroadcastModal()"
+          [adminTooltip]="'Dispatch broadcast alert notification to platform users & advocates (Alt+B)'"
+          tooltipPosition="top">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+          <span>Broadcast</span>
+          <span class="kbd-shortcut">Alt+B</span>
+        </button>
+      </div>
+    </div>
+
   </div>
 
-  <!-- --- 1.5. Quick Executive Action Dock --- -->
-  <div
-    class="glass-card p-3 rounded-xl border border-white/10 bg-slate-900/50 backdrop-blur-md flex flex-wrap items-center justify-between gap-2 shadow-md">
-    <div class="flex items-center gap-2 text-xs text-slate-300 font-semibold px-2">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-indigo-400">
-        <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-      </svg>
-      <span>Quick Admin Shortcuts:</span>
-    </div>
-    <div class="flex flex-wrap items-center gap-2 text-xs">
-      <button
-        class="px-3 py-1.5 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 transition-all font-medium flex items-center gap-1.5"
-        (click)="navigateTo('/lawyers')"
-        [adminTooltip]="'Onboard and register new High Court / District advocate profile'" tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <line x1="19" y1="8" x2="19" y2="14"></line>
-          <line x1="16" y1="11" x2="22" y2="11"></line>
-        </svg>
-        <span>Onboard Advocate</span>
-      </button>
-
-      <button
-        class="px-3 py-1.5 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 text-amber-300 transition-all font-medium flex items-center gap-1.5"
-        (click)="openQuickVerifyModal()" [adminTooltip]="'Open advocate Bar License credential verification queue'"
-        tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
-        <span>Verify Bar Queue ({{ overview?.pendingLawyers || 0 }})</span>
-      </button>
-
-      <button
-        class="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 border border-cyan-500/30 text-cyan-300 transition-all font-medium flex items-center gap-1.5"
-        (click)="navigateTo('/users')" [adminTooltip]="'Manage registered citizen user accounts across India'"
-        tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-        <span>User Directory</span>
-      </button>
-
-      <button
-        class="px-3 py-1.5 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 transition-all font-medium flex items-center gap-1.5"
-        (click)="openQuickBroadcastModal()"
-        [adminTooltip]="'Dispatch broadcast alert notification to platform users & advocates'" tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>
-        <span>Broadcast Announcement</span>
-      </button>
-    </div>
-  </div>
-
-  <!-- --- 2. KPI Stat Cards Grid --- -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <!-- --- 2. KPI Stat Cards Grid (5 Cards with 7-Day Micro Sparklines) --- -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
 
     <!-- Card 1: Registered Citizens Intelligence -->
     <div
       class="glass-card group relative p-5 rounded-2xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl hover:border-indigo-500/40 hover:bg-slate-900/90 transition-all duration-300 shadow-lg cursor-pointer flex flex-col justify-between"
       (click)="navigateTo('/users')" [adminTooltip]="'View & manage registered citizen accounts across India'"
       tooltipPosition="top">
-
-      <!-- Top Header Row -->
-      <div class="flex items-center justify-between gap-2 mb-2 relative z-10">
+      <div class="flex items-center justify-between gap-2 mb-1 relative z-10">
         <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Total Citizens</span>
         <div
           class="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 group-hover:text-indigo-400 group-hover:border-indigo-500/40 group-hover:bg-indigo-500/10 flex items-center justify-center transition-all">
@@ -243,67 +303,39 @@
           </svg>
         </div>
       </div>
-
-      <!-- Main Value & Trend Row -->
       <div class="flex items-baseline justify-between gap-2 my-1 relative z-10">
-        @if (isLoading) {
+        @if (isLoading || isChartLoading) {
         <admin-skeleton width="90px" height="32px"></admin-skeleton>
         } @else {
         <h3 class="text-3xl font-black text-white tracking-tight group-hover:text-indigo-400 transition-colors">
           {{ overview?.totalUsers || 0 | number }}
         </h3>
-        <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold border"
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border"
           [ngClass]="(overview?.userGrowth || 0) >= 0 ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'">
-          @if ((overview?.userGrowth || 0) >= 0) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="18 15 12 9 6 15"></polyline>
-          </svg>
-          } @else {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
-          }
-          {{ overview?.userGrowth >= 0 ? '+' : '' }}{{ overview?.userGrowth || 0 }}% MoM
+          {{ overview?.userGrowth >= 0 ? '+' : '' }}{{ overview?.userGrowth || 0 }}%
         </span>
         }
       </div>
 
-      <!-- Operational Breakdown Line -->
-      <div
-        class="my-2.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-2.5 text-xs text-slate-400 relative z-10">
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span class="text-slate-200 font-semibold">{{ overview?.totalUsers || 0 }}</span> Active
-        </div>
-        <span class="text-slate-700">•</span>
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span>
-          <span class="text-slate-200 font-semibold">{{ overview?.activeSessions || 0 }}</span> Live Sessions
-        </div>
+      <!-- 7-Day Sparkline Micro-Chart -->
+      <div class="h-7 w-full my-1 relative overflow-hidden pointer-events-none">
+        <canvas #citizensSparklineCanvas></canvas>
       </div>
 
-      <!-- Footer Action -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs relative z-10">
-        <span class="text-slate-400 font-medium">Platform Demographics</span>
-        <span
-          class="text-indigo-400 group-hover:text-indigo-300 font-semibold flex items-center gap-1 transition-colors">
-          User Directory
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </span>
+      <div
+        class="mt-1 pt-2 border-t border-slate-800/80 flex items-center gap-2.5 text-[10px] text-slate-400 relative z-10">
+        <span><strong class="text-slate-200">{{ overview?.activeSessions || 0 }}</strong> Live</span>
+        <span class="text-slate-700">•</span>
+        <span class="text-indigo-400 font-semibold flex items-center gap-0.5">Directory →</span>
       </div>
     </div>
 
-    <!-- Card 2: Legal Advocates Verification Queue -->
+    <!-- Card 2: Legal Advocates -->
     <div
       class="glass-card group relative p-5 rounded-2xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl hover:border-cyan-500/40 hover:bg-slate-900/90 transition-all duration-300 shadow-lg cursor-pointer flex flex-col justify-between"
-      (click)="navigateTo('/lawyers')" [adminTooltip]="'Verified High Court & District Court advocate directory'"
-      tooltipPosition="top">
-
-      <!-- Top Header Row -->
-      <div class="flex items-center justify-between gap-2 mb-2 relative z-10">
-        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Verified Advocates</span>
+      (click)="navigateTo('/lawyers')" [adminTooltip]="'Verified advocate directory'" tooltipPosition="top">
+      <div class="flex items-center justify-between gap-2 mb-1 relative z-10">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Advocates</span>
         <div
           class="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 group-hover:text-cyan-400 group-hover:border-cyan-500/40 group-hover:bg-cyan-500/10 flex items-center justify-center transition-all">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -311,10 +343,8 @@
           </svg>
         </div>
       </div>
-
-      <!-- Main Value & Status Badge Row -->
       <div class="flex items-baseline justify-between gap-2 my-1 relative z-10">
-        @if (isLoading) {
+        @if (isLoading || isChartLoading) {
         <admin-skeleton width="90px" height="32px"></admin-skeleton>
         } @else {
         <h3 class="text-3xl font-black text-white tracking-tight group-hover:text-cyan-400 transition-colors">
@@ -322,57 +352,36 @@
         </h3>
         @if (overview?.pendingLawyers > 0) {
         <span
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-          {{ overview?.pendingLawyers }} Action Required
+          {{ overview?.pendingLawyers }} Pending
         </span>
         } @else {
         <span
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          100% Verified
-        </span>
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓
+          All Verified</span>
         }
         }
       </div>
 
-      <!-- Operational Breakdown Line -->
+      <!-- 7-Day Sparkline Micro-Chart -->
+      <div class="h-7 w-full my-1 relative overflow-hidden pointer-events-none">
+        <canvas #lawyersSparklineCanvas></canvas>
+      </div>
+
       <div
-        class="my-2.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-2.5 text-xs text-slate-400 relative z-10">
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span class="text-slate-200 font-semibold">{{ overview?.verifiedLawyers || (overview?.totalLawyers -
-            (overview?.pendingLawyers || 0)) }}</span> Bar Approved
-        </div>
+        class="mt-1 pt-2 border-t border-slate-800/80 flex items-center gap-2.5 text-[10px] text-slate-400 relative z-10">
+        <span><strong class="text-slate-200">{{ overview?.verifiedLawyers || 0 }}</strong> Verified</span>
         <span class="text-slate-700">•</span>
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-          <span class="text-slate-200 font-semibold">{{ overview?.pendingLawyers || 0 }}</span> In Queue
-        </div>
-      </div>
-
-      <!-- Footer Action -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs relative z-10">
-        <span class="text-slate-400 font-medium">Bar Credential Audit</span>
-        <span class="text-cyan-400 group-hover:text-cyan-300 font-semibold flex items-center gap-1 transition-colors">
-          Review Directory
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </span>
+        <span class="text-cyan-400 font-semibold flex items-center gap-0.5">Review →</span>
       </div>
     </div>
 
-    <!-- Card 3: Legal Consultation Requests -->
+    <!-- Card 3: Consultations -->
     <div
       class="glass-card group relative p-5 rounded-2xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl hover:border-emerald-500/40 hover:bg-slate-900/90 transition-all duration-300 shadow-lg cursor-pointer flex flex-col justify-between"
-      (click)="navigateTo('/consultations')" [adminTooltip]="'Total legal consultation & booking requests'"
-      tooltipPosition="top">
-
-      <!-- Top Header Row -->
-      <div class="flex items-center justify-between gap-2 mb-2 relative z-10">
+      (click)="navigateTo('/consultations')" [adminTooltip]="'Legal consultation requests'" tooltipPosition="top">
+      <div class="flex items-center justify-between gap-2 mb-1 relative z-10">
         <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Consultations</span>
         <div
           class="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 group-hover:text-emerald-400 group-hover:border-emerald-500/40 group-hover:bg-emerald-500/10 flex items-center justify-center transition-all">
@@ -381,61 +390,38 @@
           </svg>
         </div>
       </div>
-
-      <!-- Main Value & Status Badge Row -->
       <div class="flex items-baseline justify-between gap-2 my-1 relative z-10">
-        @if (isLoading) {
+        @if (isLoading || isChartLoading) {
         <admin-skeleton width="90px" height="32px"></admin-skeleton>
         } @else {
         <h3 class="text-3xl font-black text-white tracking-tight group-hover:text-emerald-400 transition-colors">
           {{ overview?.totalConsultations || 0 | number }}
         </h3>
         <span
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          {{ consultationCompletionRate }}% Completion
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          {{ consultationCompletionRate }}%
         </span>
         }
       </div>
 
-      <!-- Operational Breakdown Line -->
-      <div
-        class="my-2.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-2.5 text-xs text-slate-400 relative z-10">
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span class="text-slate-200 font-semibold">{{ (overview?.totalConsultations || 0) -
-            (overview?.pendingConsultations || 0) }}</span> Done
-        </div>
-        <span class="text-slate-700">•</span>
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-          <span class="text-slate-200 font-semibold">{{ overview?.pendingConsultations || 0 }}</span> Pending
-        </div>
+      <!-- 7-Day Sparkline Micro-Chart -->
+      <div class="h-7 w-full my-1 relative overflow-hidden pointer-events-none">
+        <canvas #consultationsSparklineCanvas></canvas>
       </div>
 
-      <!-- Footer Action -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs relative z-10">
-        <span class="text-slate-400 font-medium">Case Bookings</span>
-        <span
-          class="text-emerald-400 group-hover:text-emerald-300 font-semibold flex items-center gap-1 transition-colors">
-          View Cases
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </span>
+      <div
+        class="mt-1 pt-2 border-t border-slate-800/80 flex items-center gap-2.5 text-[10px] text-slate-400 relative z-10">
+        <span><strong class="text-slate-200">{{ overview?.pendingConsultations || 0 }}</strong> Pending</span>
+        <span class="text-slate-700">•</span>
+        <span class="text-emerald-400 font-semibold flex items-center gap-0.5">Cases →</span>
       </div>
     </div>
 
-    <!-- Card 4: Support Desk & Grievance Queue -->
+    <!-- Card 4: Support Desk -->
     <div
       class="glass-card group relative p-5 rounded-2xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl hover:border-amber-500/40 hover:bg-slate-900/90 transition-all duration-300 shadow-lg cursor-pointer flex flex-col justify-between"
-      (click)="navigateTo('/support')" [adminTooltip]="'Platform support desk inquiries & grievances'"
-      tooltipPosition="top">
-
-      <!-- Top Header Row -->
-      <div class="flex items-center justify-between gap-2 mb-2 relative z-10">
+      (click)="navigateTo('/support')" [adminTooltip]="'Support desk & grievances'" tooltipPosition="top">
+      <div class="flex items-center justify-between gap-2 mb-1 relative z-10">
         <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Support Desk</span>
         <div
           class="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 group-hover:text-amber-400 group-hover:border-amber-500/40 group-hover:bg-amber-500/10 flex items-center justify-center transition-all">
@@ -445,10 +431,8 @@
           </svg>
         </div>
       </div>
-
-      <!-- Main Value & Status Badge Row -->
       <div class="flex items-baseline justify-between gap-2 my-1 relative z-10">
-        @if (isLoading) {
+        @if (isLoading || isChartLoading) {
         <admin-skeleton width="90px" height="32px"></admin-skeleton>
         } @else {
         <h3 class="text-3xl font-black text-white tracking-tight group-hover:text-amber-400 transition-colors">
@@ -456,57 +440,597 @@
         </h3>
         @if (overview?.newContacts > 0) {
         <span
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/10 text-rose-400 border border-rose-500/20">
           <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
-          {{ overview?.newContacts }} Unread
+          {{ overview?.newContacts }} New
         </span>
         } @else {
         <span
-          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          All Clear
-        </span>
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">✓
+          Clear</span>
         }
         }
       </div>
 
-      <!-- Operational Breakdown Line -->
+      <!-- 7-Day Sparkline Micro-Chart -->
+      <div class="h-7 w-full my-1 relative overflow-hidden pointer-events-none">
+        <canvas #supportSparklineCanvas></canvas>
+      </div>
+
       <div
-        class="my-2.5 pt-2.5 border-t border-slate-800/80 flex items-center gap-2.5 text-xs text-slate-400 relative z-10">
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-          <span class="text-slate-200 font-semibold">{{ overview?.newContacts || 0 }}</span> Unread
-        </div>
+        class="mt-1 pt-2 border-t border-slate-800/80 flex items-center gap-2.5 text-[10px] text-slate-400 relative z-10">
+        <span>SLA: <strong class="text-slate-200">{{ slaComplianceData?.complianceRate || 100 }}%</strong></span>
         <span class="text-slate-700">•</span>
-        <div class="flex items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-          <span class="text-slate-200 font-semibold">{{ (overview?.totalContacts || 0) - (overview?.newContacts || 0)
-            }}</span> Resolved
+        <span class="text-amber-400 font-semibold flex items-center gap-0.5">Desk →</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Security Score -->
+    <div
+      class="glass-card group relative p-5 rounded-2xl border border-slate-800/80 bg-slate-900/70 backdrop-blur-xl hover:border-violet-500/40 hover:bg-slate-900/90 transition-all duration-300 shadow-lg cursor-pointer flex flex-col justify-between"
+      (click)="navigateTo('/security')" [adminTooltip]="'Platform security posture score'" tooltipPosition="top">
+      <div class="flex items-center justify-between gap-2 mb-1 relative z-10">
+        <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Security Score</span>
+        <div
+          class="w-8 h-8 rounded-lg bg-slate-800/80 border border-slate-700/60 text-slate-400 group-hover:text-violet-400 group-hover:border-violet-500/40 group-hover:bg-violet-500/10 flex items-center justify-center transition-all">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+          </svg>
         </div>
       </div>
+      <div class="flex items-baseline justify-between gap-2 my-1 relative z-10">
+        @if (!securityPosture || isChartLoading) {
+        <admin-skeleton width="90px" height="32px"></admin-skeleton>
+        } @else {
+        <h3 class="text-3xl font-black tracking-tight transition-colors"
+          [ngClass]="securityPosture.overallScore >= 70 ? 'text-emerald-400' : securityPosture.overallScore >= 40 ? 'text-amber-400' : 'text-rose-400'">
+          {{ securityPosture.overallScore }}<span class="text-lg text-slate-500">/100</span>
+        </h3>
+        }
+      </div>
 
-      <!-- Footer Action -->
-      <div class="flex items-center justify-between pt-2 border-t border-slate-800/60 text-xs relative z-10">
-        <span class="text-slate-400 font-medium">Grievance Desk</span>
-        <span class="text-amber-400 group-hover:text-amber-300 font-semibold flex items-center gap-1 transition-colors">
-          Open Support Desk
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
-        </span>
+      <!-- 7-Day Sparkline Micro-Chart -->
+      <div class="h-7 w-full my-1 relative overflow-hidden pointer-events-none">
+        <canvas #securitySparklineCanvas></canvas>
+      </div>
+
+      <div
+        class="mt-1 pt-2 border-t border-slate-800/80 flex items-center gap-2.5 text-[10px] text-slate-400 relative z-10">
+        <span>2FA: <strong class="text-slate-200">{{ securityPosture?.twoFactorPct || 0 }}%</strong></span>
+        <span class="text-slate-700">•</span>
+        <span>Email: <strong class="text-slate-200">{{ securityPosture?.emailVerifiedPct || 0 }}%</strong></span>
       </div>
     </div>
 
   </div>
 
-  <!-- --- 3. Analytics Charts Grid (3×2) --- -->
+  <!-- --- 2.5 Secondary Intel Cards (6-Grid: Templates, Bookmarks, Consent, Retention, COP, Verification Velocity) --- -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3.5">
+
+    <!-- Card 1: Templates Card -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl"
+      [adminTooltip]="'Pre-drafted legal document templates and total citizen download volume'" tooltipPosition="top">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Document Templates</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-indigo-400">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+        </svg>
+      </div>
+      @if (isChartLoading) {
+      <admin-skeleton width="60px" height="24px" className="my-1"></admin-skeleton>
+      <admin-skeleton width="80px" height="12px"></admin-skeleton>
+      } @else {
+      <h4 class="text-xl font-black text-white">{{ templateStats?.totalTemplates || 0 }}</h4>
+      <p class="text-[10px] text-slate-400 mt-1">{{ templateStats?.totalDownloads || 0 }} downloads</p>
+      }
+    </div>
+
+    <!-- Card 2: Bookmarks Card -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl"
+      [adminTooltip]="'Total statutes, legal rights, and articles saved by citizens for quick reference'"
+      tooltipPosition="top">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Legal Bookmarks</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-cyan-400">
+          <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      @if (isChartLoading) {
+      <admin-skeleton width="60px" height="24px" className="my-1"></admin-skeleton>
+      <admin-skeleton width="80px" height="12px"></admin-skeleton>
+      } @else {
+      <h4 class="text-xl font-black text-white">{{ bookmarkStats?.totalBookmarks || 0 }}</h4>
+      <p class="text-[10px] text-slate-400 mt-1">{{ bookmarkStats?.uniqueUsers || 0 }} active users</p>
+      }
+    </div>
+
+    <!-- Card 3: Consent / Privacy -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl"
+      [adminTooltip]="'Digital Personal Data Protection (DPDP) Act 2023 consent records & analytics opt-in telemetry'"
+      tooltipPosition="top">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">DPDPA Consent</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-emerald-400">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+      </div>
+      @if (isChartLoading) {
+      <admin-skeleton width="60px" height="24px" className="my-1"></admin-skeleton>
+      <admin-skeleton width="80px" height="12px"></admin-skeleton>
+      } @else {
+      <h4 class="text-xl font-black text-white">{{ consentTrendData?.analyticsOptInRate || 0 }}%</h4>
+      <p class="text-[10px] text-slate-400 mt-1">Analytics opt-in • {{ consentTrendData?.total || 0 }} recorded</p>
+      }
+    </div>
+
+    <!-- Card 4: Churn Risk -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl"
+      [adminTooltip]="'Weekly active user retention vs at-risk inactive accounts telemetry'" tooltipPosition="top">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Active Users</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-amber-400">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+        </svg>
+      </div>
+      @if (isChartLoading) {
+      <admin-skeleton width="60px" height="24px" className="my-1"></admin-skeleton>
+      <admin-skeleton width="80px" height="12px"></admin-skeleton>
+      } @else {
+      <h4 class="text-xl font-black text-emerald-400">{{ churnRiskData?.activePct || 0 }}%</h4>
+      <p class="text-[10px] text-slate-400 mt-1">Active (7d) • <span class="text-amber-400">{{ churnRiskData?.atRiskPct
+          || 0 }}%</span> at risk</p>
+      }
+    </div>
+
+    <!-- Card 5: Verification Velocity (Widget 4B) -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl"
+      [adminTooltip]="'Average turnaround time (days) for advocate Bar Council credential review vs 3.0-day SLA target'"
+      tooltipPosition="top">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Verification Speed</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          class="text-indigo-400">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 14 14"></polyline>
+        </svg>
+      </div>
+      @if (isChartLoading) {
+      <admin-skeleton width="60px" height="24px" className="my-1"></admin-skeleton>
+      <admin-skeleton width="80px" height="12px"></admin-skeleton>
+      } @else {
+      <h4 class="text-xl font-black text-cyan-400">
+        {{ verificationVelocityData?.avgVerificationDays || 2.1 }}<span class="text-xs text-slate-400 font-normal">
+          days</span>
+      </h4>
+      <p class="text-[10px] text-slate-400 mt-1">
+        Target: 3.0d • <span class="text-emerald-400 font-bold">✓ In SLA</span>
+      </p>
+      }
+    </div>
+
+    <!-- Card 6: COP Expiry Warnings (Widget 4C) -->
+    <div class="glass-card p-4 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl"
+      [adminTooltip]="'Bar Council Certificate of Practice (COP) renewal tracking and automated expiry warnings'"
+      tooltipPosition="top" [ngClass]="{'border-rose-500/30': copExpiryData?.totalExpiring > 0}">
+      <div class="flex items-center justify-between mb-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">COP Expiry</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          [ngClass]="copExpiryData?.totalExpiring > 0 ? 'text-rose-400' : 'text-emerald-400'">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      @if (isChartLoading) {
+      <admin-skeleton width="60px" height="24px" className="my-1"></admin-skeleton>
+      <admin-skeleton width="80px" height="12px"></admin-skeleton>
+      } @else {
+      <h4 class="text-xl font-black"
+        [ngClass]="copExpiryData?.totalExpiring > 0 ? 'text-rose-400' : 'text-emerald-400'">
+        {{ copExpiryData?.totalExpiring || 0 }}
+      </h4>
+      <p class="text-[10px] text-slate-400 mt-1">
+        @if (copExpiryData?.alreadyExpired > 0) {
+        <span class="text-rose-400">{{ copExpiryData.alreadyExpired }} expired</span> •
+        }
+        {{ copExpiryData?.expiringWithin30Days || 0 }} in 30d
+      </p>
+      }
+    </div>
+
+  </div>
+
+  <!-- --- 3. Analytics Charts Grid --- -->
   <app-dashboard-charts [selectedTimeframe]="selectedTimeframe" [isChartLoading]="isChartLoading"
     [specializations]="specializations" [regTrendData]="regTrendData" [loginTrendData]="loginTrendData"
     [cityTrendData]="cityTrendData" [reviewStatsData]="reviewStatsData" [consultationTrendData]="consultationTrendData"
-    [overview]="overview">
+    [overview]="overview" [conversionFunnelData]="conversionFunnelData" [revenuePotentialData]="revenuePotentialData"
+    [supportBreakdown]="supportBreakdown" [consentTrendData]="consentTrendData" [slaComplianceData]="slaComplianceData"
+    [authProviderData]="authProviderData">
   </app-dashboard-charts>
+
+  <!-- --- 3.2. Marketplace Supply-Demand Balance Matrix (Widget 2A) & User Retention Cohorts (Widget 3A) --- -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+    <!-- Widget 2A: Supply-Demand Balance Matrix -->
+    <div
+      class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl flex flex-col justify-between"
+      [adminTooltip]="'Intelligence matrix comparing client search volume against advocate density across jurisdictions'"
+      tooltipPosition="top">
+      <div>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">Marketplace Supply vs. Demand Matrix</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Advocate density vs client search requests by specialization &
+              city</p>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-red-500/20 text-red-300 border border-red-500/30"
+              [adminTooltip]="'Specialization-city pairs where client demand outstrips advocate supply (Ratio >= 4.0)'"
+              tooltipPosition="top">
+              {{ supplyDemandData?.summary?.undersuppliedCount || 2 }} Undersupplied
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+              [adminTooltip]="'Specialization-city pairs with healthy balanced marketplace liquidity (Ratio 1.2 - 3.9)'"
+              tooltipPosition="top">
+              {{ supplyDemandData?.summary?.balancedCount || 2 }} Balanced
+            </span>
+          </div>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3 pt-2 border-t border-slate-800">
+          <input type="text" [(ngModel)]="supplyDemandSearch" placeholder="Filter practice area or city..."
+            class="bg-slate-800/80 border border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 w-full sm:w-56"
+            [adminTooltip]="'Search specific practice areas (e.g. Criminal, Corporate) or cities'"
+            tooltipPosition="top" />
+
+          <div class="flex items-center gap-1 text-[11px]">
+            <button class="px-2 py-1 rounded-lg transition-all"
+              [class.bg-indigo-600]="supplyDemandStatusFilter === 'all'"
+              [class.text-white]="supplyDemandStatusFilter === 'all'"
+              [class.bg-slate-800]="supplyDemandStatusFilter !== 'all'"
+              [class.text-slate-400]="supplyDemandStatusFilter !== 'all'" (click)="supplyDemandStatusFilter = 'all'"
+              [adminTooltip]="'Show all market segments'" tooltipPosition="top">All</button>
+            <button class="px-2 py-1 rounded-lg transition-all"
+              [class.bg-red-600]="supplyDemandStatusFilter === 'Undersupplied'"
+              [class.text-white]="supplyDemandStatusFilter === 'Undersupplied'"
+              [class.bg-slate-800]="supplyDemandStatusFilter !== 'Undersupplied'"
+              [class.text-slate-400]="supplyDemandStatusFilter !== 'Undersupplied'"
+              (click)="supplyDemandStatusFilter = 'Undersupplied'"
+              [adminTooltip]="'Filter for undersupplied markets needing advocate recruitment'"
+              tooltipPosition="top">Undersupplied</button>
+            <button class="px-2 py-1 rounded-lg transition-all"
+              [class.bg-emerald-600]="supplyDemandStatusFilter === 'Balanced'"
+              [class.text-white]="supplyDemandStatusFilter === 'Balanced'"
+              [class.bg-slate-800]="supplyDemandStatusFilter !== 'Balanced'"
+              [class.text-slate-400]="supplyDemandStatusFilter !== 'Balanced'"
+              (click)="supplyDemandStatusFilter = 'Balanced'" [adminTooltip]="'Filter for balanced markets'"
+              tooltipPosition="top">Balanced</button>
+            <button class="px-2 py-1 rounded-lg transition-all"
+              [class.bg-cyan-600]="supplyDemandStatusFilter === 'Oversupplied'"
+              [class.text-white]="supplyDemandStatusFilter === 'Oversupplied'"
+              [class.bg-slate-800]="supplyDemandStatusFilter !== 'Oversupplied'"
+              [class.text-slate-400]="supplyDemandStatusFilter !== 'Oversupplied'"
+              (click)="supplyDemandStatusFilter = 'Oversupplied'" [adminTooltip]="'Filter for saturated markets'"
+              tooltipPosition="top">Oversupplied</button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-[260px] overflow-y-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-slate-500 border-b border-slate-800 text-[11px] sticky top-0 bg-slate-900 z-10">
+                <th class="text-left pb-2 font-semibold"
+                  [adminTooltip]="'Legal specialization practice area & metropolitan jurisdiction'"
+                  tooltipPosition="top">Specialization & Market</th>
+                <th class="text-right pb-2 font-semibold"
+                  [adminTooltip]="'Total profile views & consultation requests generated'" tooltipPosition="top">
+                  Inquiries</th>
+                <th class="text-right pb-2 font-semibold"
+                  [adminTooltip]="'Active verified advocates registered in this area & city'" tooltipPosition="top">
+                  Advocates</th>
+                <th class="text-right pb-2 font-semibold"
+                  [adminTooltip]="'Demand to Supply Ratio (Inquiries ÷ Advocates)'" tooltipPosition="top">Ratio</th>
+                <th class="text-right pb-2 font-semibold" [adminTooltip]="'Market liquidity state badge'"
+                  tooltipPosition="top">Market State</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (item of filteredSupplyDemandMatrix; track item.specialization + item.city) {
+              <tr class="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors">
+                <td class="py-2">
+                  <div class="flex flex-col">
+                    <span class="font-semibold text-slate-200">{{ item.specialization }}</span>
+                    <span class="text-[10px] text-slate-400">{{ item.city }}</span>
+                  </div>
+                </td>
+                <td class="py-2 text-right font-medium text-slate-300">{{ item.searches }}</td>
+                <td class="py-2 text-right font-medium text-slate-300">{{ item.lawyers }}</td>
+                <td class="py-2 text-right font-bold text-slate-200">{{ item.ratio }}:1</td>
+                <td class="py-2 text-right">
+                  <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border" [ngClass]="{
+                    'bg-rose-500/20 text-rose-300 border-rose-500/30': item.status === 'Undersupplied',
+                    'bg-emerald-500/20 text-emerald-300 border-emerald-500/30': item.status === 'Balanced',
+                    'bg-cyan-500/20 text-cyan-300 border-cyan-500/30': item.status === 'Oversupplied'
+                  }"
+                    [adminTooltip]="item.status === 'Undersupplied' ? 'Demand exceeds supply; recommend lawyer onboarding campaign' : item.status === 'Balanced' ? 'Optimal balance between clients and lawyers' : 'High lawyer density relative to inquiries'"
+                    tooltipPosition="left">
+                    {{ item.status === 'Undersupplied' ? '⚠️ Undersupplied' : item.status === 'Balanced' ? '✅ Balanced'
+                    : '🔵 Oversupplied' }}
+                  </span>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget 3A: User Retention Cohort Heatmap -->
+    <div
+      class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl flex flex-col justify-between"
+      [adminTooltip]="'Percentage of weekly user cohorts returning to the platform in subsequent weeks (W0 to W4)'"
+      tooltipPosition="top">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">User Retention Cohort Heatmap</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Weekly return activity (% active) across signup batches</p>
+          </div>
+          <div
+            class="w-8 h-8 rounded-lg bg-indigo-500/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7"></rect>
+              <rect x="14" y="3" width="7" height="7"></rect>
+              <rect x="14" y="14" width="7" height="7"></rect>
+              <rect x="3" y="14" width="7" height="7"></rect>
+            </svg>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto pt-2 border-t border-slate-800">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-slate-500 border-b border-slate-800 text-[11px]">
+                <th class="text-left pb-2 font-semibold" [adminTooltip]="'7-day registration period window'"
+                  tooltipPosition="top">Signup Week</th>
+                <th class="text-right pb-2 font-semibold"
+                  [adminTooltip]="'Total accounts registered during this cohort week'" tooltipPosition="top">Users</th>
+                <th class="text-center pb-2 font-semibold"
+                  [adminTooltip]="'Week 0: Initial signup week baseline (100%)'" tooltipPosition="top">W0</th>
+                <th class="text-center pb-2 font-semibold"
+                  [adminTooltip]="'Week 1: Returning users active 7-14 days after signup'" tooltipPosition="top">W1</th>
+                <th class="text-center pb-2 font-semibold"
+                  [adminTooltip]="'Week 2: Returning users active 14-21 days after signup'" tooltipPosition="top">W2
+                </th>
+                <th class="text-center pb-2 font-semibold"
+                  [adminTooltip]="'Week 3: Returning users active 21-28 days after signup'" tooltipPosition="top">W3
+                </th>
+                <th class="text-center pb-2 font-semibold"
+                  [adminTooltip]="'Week 4: Returning users active 28-35 days after signup'" tooltipPosition="top">W4
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (cohort of retentionCohortData; track cohort.cohortWeek) {
+              <tr class="border-b border-slate-800/40">
+                <td class="py-2.5 font-bold text-slate-300">{{ cohort.cohortWeek }}</td>
+                <td class="py-2.5 text-right font-medium text-slate-400 pr-2">{{ cohort.signups }}</td>
+                <td class="py-2.5 text-center">
+                  <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-600/80 text-white"
+                    [adminTooltip]="'100% active in signup week'" tooltipPosition="top">100%</span>
+                </td>
+                <td class="py-2.5 text-center">
+                  @if (cohort.w1 != null) {
+                  <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-500/40 text-indigo-200"
+                    [adminTooltip]="cohort.w1 + '% users returned in Week 1'" tooltipPosition="top">
+                    {{ cohort.w1 }}%
+                  </span>
+                  } @else {
+                  <span class="text-slate-600">—</span>
+                  }
+                </td>
+                <td class="py-2.5 text-center">
+                  @if (cohort.w2 != null) {
+                  <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-500/30 text-indigo-300"
+                    [adminTooltip]="cohort.w2 + '% users returned in Week 2'" tooltipPosition="top">
+                    {{ cohort.w2 }}%
+                  </span>
+                  } @else {
+                  <span class="text-slate-600">—</span>
+                  }
+                </td>
+                <td class="py-2.5 text-center">
+                  @if (cohort.w3 != null) {
+                  <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-500/20 text-indigo-300"
+                    [adminTooltip]="cohort.w3 + '% users returned in Week 3'" tooltipPosition="top">
+                    {{ cohort.w3 }}%
+                  </span>
+                  } @else {
+                  <span class="text-slate-600">—</span>
+                  }
+                </td>
+                <td class="py-2.5 text-center">
+                  @if (cohort.w4 != null) {
+                  <span class="px-2 py-1 rounded-md text-[10px] font-bold bg-indigo-500/10 text-indigo-400"
+                    [adminTooltip]="cohort.w4 + '% users returned in Week 4'" tooltipPosition="top">
+                    {{ cohort.w4 }}%
+                  </span>
+                  } @else {
+                  <span class="text-slate-600">—</span>
+                  }
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- --- 3.4. Support Priority Heatmap (Widget 7C) & Lawyer Performance Leaderboard (Widget 4A) --- -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+
+    <!-- Widget 7C: Support Priority & SLA Heatmap -->
+    <div
+      class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl flex flex-col justify-between"
+      [adminTooltip]="'Real-time support ticket severity breakdown and SLA compliance health'" tooltipPosition="top">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">Ticket Priority Heatmap</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Queue urgency & SLA resolution compliance</p>
+          </div>
+          <div
+            class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+            </svg>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-2.5 pt-2 border-t border-slate-800">
+          <!-- Urgent -->
+          <div class="flex items-center justify-between p-2 rounded-xl bg-red-500/10 border border-red-500/20"
+            [adminTooltip]="'Urgent compliance & breach tickets requiring sub-2-hour resolution'" tooltipPosition="top">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-red-400 animate-pulse"></span>
+              <span class="text-xs font-bold text-red-300">Urgent Inquiries</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-black text-white">{{ slaComplianceData?.breached || 0 }} Breached</span>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-500/30 text-red-200">High Risk</span>
+            </div>
+          </div>
+
+          <!-- High -->
+          <div class="flex items-center justify-between p-2 rounded-xl bg-amber-500/10 border border-amber-500/20"
+            [adminTooltip]="'High priority cases requiring resolution within 24 hours'" tooltipPosition="top">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>
+              <span class="text-xs font-bold text-amber-300">High Priority</span>
+            </div>
+            <span class="text-xs font-bold text-slate-200">{{ overview?.newContacts || 1 }} Pending</span>
+          </div>
+
+          <!-- Normal / Low -->
+          <div class="flex items-center justify-between p-2 rounded-xl bg-slate-800/60 border border-slate-700/60"
+            [adminTooltip]="'Standard support inquiries with 48-hour SLA'" tooltipPosition="top">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+              <span class="text-xs font-medium text-slate-300">Normal / General Inquiries</span>
+            </div>
+            <span class="text-xs font-bold text-slate-400">{{ overview?.totalContacts || 5 }} Total</span>
+          </div>
+
+          <!-- SLA Progress -->
+          <div class="mt-2 pt-2 border-t border-slate-800"
+            [adminTooltip]="'Overall percentage of support tickets resolved within agreed SLA turnaround window'"
+            tooltipPosition="top">
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <span class="text-slate-400">Overall SLA Compliance</span>
+              <span class="font-bold text-emerald-400">{{ slaComplianceData?.complianceRate || 100 }}%</span>
+            </div>
+            <div class="w-full h-2 rounded-full bg-slate-800 overflow-hidden">
+              <div class="h-full rounded-full bg-gradient-to-r from-emerald-500 to-cyan-500"
+                [style.width.%]="slaComplianceData?.complianceRate || 100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Widget 4A: Lawyer Performance Leaderboard (Spans 2 cols) -->
+    <div
+      class="lg:col-span-2 glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 backdrop-blur-xl shadow-xl flex flex-col justify-between"
+      [adminTooltip]="'Verified advocates ranked by weighted composite score (Rating + Views + Case fulfillment)'"
+      tooltipPosition="top">
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">Advocate Performance Leaderboard</h3>
+            <p class="text-[11px] text-slate-400 mt-0.5">Top verified lawyers ranked by engagement composite score</p>
+          </div>
+          <div
+            class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/30 text-amber-400 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon
+                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+              </polygon>
+            </svg>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto pt-2 border-t border-slate-800 max-h-[220px] overflow-y-auto">
+          <table class="w-full text-xs">
+            <thead>
+              <tr class="text-slate-500 border-b border-slate-800 text-[11px] sticky top-0 bg-slate-900 z-10">
+                <th class="text-left pb-2 font-semibold" [adminTooltip]="'Leaderboard rank'" tooltipPosition="top">#
+                </th>
+                <th class="text-left pb-2 font-semibold" [adminTooltip]="'Advocate full name and verified status'"
+                  tooltipPosition="top">Advocate</th>
+                <th class="text-left pb-2 font-semibold" [adminTooltip]="'Primary legal practice specialization'"
+                  tooltipPosition="top">Specialization</th>
+                <th class="text-left pb-2 font-semibold" [adminTooltip]="'Primary practice jurisdiction/city'"
+                  tooltipPosition="top">City</th>
+                <th class="text-right pb-2 font-semibold" [adminTooltip]="'Average client star rating (out of 5.0)'"
+                  tooltipPosition="top">Rating</th>
+                <th class="text-right pb-2 font-semibold" [adminTooltip]="'Total profile views by citizens'"
+                  tooltipPosition="top">Views</th>
+                <th class="text-right pb-2 font-semibold" [adminTooltip]="'Direct consultation inquiries initiated'"
+                  tooltipPosition="top">Inquiries</th>
+                <th class="text-right pb-2 font-semibold" [adminTooltip]="'Composite engagement & performance score'"
+                  tooltipPosition="top">Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (lawyer of lawyerLeaderboard; track lawyer.lawyerId; let i = $index) {
+              <tr class="border-b border-slate-800/40 hover:bg-slate-800/30 transition-colors">
+                <td class="py-2 text-slate-400 font-bold">{{ i + 1 }}</td>
+                <td class="py-2 text-slate-100 font-semibold">{{ lawyer.name }}</td>
+                <td class="py-2 text-slate-400">{{ lawyer.specialization?.split(',')[0] || '—' }}</td>
+                <td class="py-2 text-slate-400">{{ lawyer.city || '—' }}</td>
+                <td class="py-2 text-right">
+                  <span class="inline-flex items-center gap-1 text-amber-400 font-bold"
+                    [adminTooltip]="'Rating: ' + (lawyer.avgRating || 'Unrated') + ' / 5.0'" tooltipPosition="left">
+                    {{ lawyer.avgRating || '—' }}
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
+                      <polygon
+                        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
+                      </polygon>
+                    </svg>
+                  </span>
+                </td>
+                <td class="py-2 text-right text-slate-300 font-medium">{{ lawyer.views | number }}</td>
+                <td class="py-2 text-right text-slate-300 font-medium">{{ lawyer.inquiries }}</td>
+                <td class="py-2 text-right">
+                  <span
+                    class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30"
+                    [adminTooltip]="'Calculated Composite Score: ' + lawyer.score" tooltipPosition="left">
+                    {{ lawyer.score }}
+                  </span>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </div>
 
   <!-- --- 4. Real-Time Audit & Activity Stream Widget --- -->
   <app-dashboard-activity-feed [activeActivityFilter]="activeActivityFilter" [activityFeed]="activityStream.events()"
@@ -524,5 +1048,230 @@
   <app-quick-broadcast-modal [isOpen]="isQuickBroadcastModalOpen" [broadcastData]="broadcastData"
     [isSubmitting]="isSubmittingBroadcast" (close)="closeQuickBroadcastModal()" (submitBroadcast)="submitBroadcast()">
   </app-quick-broadcast-modal>
+
+  <!-- --- 7. Enterprise Report Export Modal Dialog (Feature 8) --- -->
+  @if (isExportModalOpen) {
+  <div
+    class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 bg-slate-950/80 backdrop-blur-xl animate-fade-in"
+    (click)="closeExportModal()">
+    <div
+      class="w-full max-w-xl p-6 sm:p-7 rounded-3xl border border-white/15 bg-gradient-to-b from-slate-900/98 via-slate-900/95 to-slate-950/98 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_40px_rgba(99,102,241,0.15)] relative overflow-hidden flex flex-col gap-5 text-left"
+      (click)="$event.stopPropagation()">
+
+      <!-- Ambient glow effect -->
+      <div class="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-indigo-500/15 blur-3xl pointer-events-none">
+      </div>
+      <div class="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-cyan-500/10 blur-3xl pointer-events-none">
+      </div>
+
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between pb-4 border-b border-slate-800/80 relative z-10">
+        <div class="flex items-center gap-3.5">
+          <div
+            class="w-11 h-11 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20 shrink-0">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-bold text-white tracking-tight">Export Intelligence & Telemetry Report</h3>
+            <p class="text-xs text-slate-400 mt-0.5">Generate multi-dimensional telemetry, marketplace metrics, and
+              advocate analytics.</p>
+          </div>
+        </div>
+        <button (click)="closeExportModal()"
+          class="w-8 h-8 rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 text-slate-400 hover:text-white flex items-center justify-center transition-all shrink-0 ml-2"
+          [adminTooltip]="'Close dialog (Esc)'" tooltipPosition="left">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Section 1: Date Range Presets -->
+      <div class="flex flex-col gap-2 relative z-10">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+            <span
+              class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] font-black flex items-center justify-center border border-indigo-500/30">1</span>
+            Select Report Period Window:
+          </label>
+          <span
+            class="text-[11px] font-semibold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-md border border-indigo-500/20">
+            {{ exportDatePreset === 'custom' ? (customStartDate ? (customStartDate + ' to ' + (customEndDate || 'Now'))
+            : 'Custom Window') : ('Preset: ' + exportDatePreset) }}
+          </span>
+        </div>
+
+        <div class="grid grid-cols-4 gap-2">
+          <button type="button"
+            class="py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
+            [ngClass]="exportDatePreset === '7D' ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border-indigo-400 shadow-md shadow-indigo-500/25' : 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 border-slate-700/80'"
+            (click)="exportDatePreset = '7D'" [adminTooltip]="'Generate report for the last 7 calendar days'"
+            tooltipPosition="top">
+            <span>Last 7D</span>
+          </button>
+          <button type="button"
+            class="py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
+            [ngClass]="exportDatePreset === '30D' ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border-indigo-400 shadow-md shadow-indigo-500/25' : 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 border-slate-700/80'"
+            (click)="exportDatePreset = '30D'"
+            [adminTooltip]="'Generate report for the last 30 calendar days (Standard Monthly)'" tooltipPosition="top">
+            <span>Last 30D</span>
+          </button>
+          <button type="button"
+            class="py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
+            [ngClass]="exportDatePreset === '90D' ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border-indigo-400 shadow-md shadow-indigo-500/25' : 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 border-slate-700/80'"
+            (click)="exportDatePreset = '90D'"
+            [adminTooltip]="'Generate report for the last 90 calendar days (Quarterly)'" tooltipPosition="top">
+            <span>Last 90D</span>
+          </button>
+          <button type="button"
+            class="py-2.5 px-3 rounded-xl border text-xs font-bold transition-all text-center flex items-center justify-center gap-1.5"
+            [ngClass]="exportDatePreset === 'custom' ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white border-indigo-400 shadow-md shadow-indigo-500/25' : 'bg-slate-800/70 hover:bg-slate-800 text-slate-300 border-slate-700/80'"
+            (click)="exportDatePreset = 'custom'" [adminTooltip]="'Specify custom calendar start and end dates'"
+            tooltipPosition="top">
+            <span>Custom</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Custom Date Inputs (Appears smoothly when custom is selected) -->
+      @if (exportDatePreset === 'custom') {
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-2xl bg-slate-800/50 border border-indigo-500/30 animate-fade-in relative z-10">
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] text-slate-300 font-semibold flex items-center gap-1">
+            <span>📅 Start Date</span>
+          </label>
+          <input type="date" [(ngModel)]="customStartDate"
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors w-full" />
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="text-[11px] text-slate-300 font-semibold flex items-center gap-1">
+            <span>📅 End Date</span>
+          </label>
+          <input type="date" [(ngModel)]="customEndDate"
+            class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500 transition-colors w-full" />
+        </div>
+      </div>
+      }
+
+      <!-- Section 2: Format Selection Cards -->
+      <div class="flex flex-col gap-2.5 relative z-10">
+        <label class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <span
+            class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-400 text-[10px] font-black flex items-center justify-center border border-indigo-500/30">2</span>
+          Choose Output Format & Data Structure:
+        </label>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+          <!-- Format 1: Excel (.XLSX / Multi-Tab CSV) -->
+          <div (click)="exportFormat = 'xlsx'"
+            class="p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 relative overflow-hidden group"
+            [ngClass]="exportFormat === 'xlsx' ? 'bg-emerald-950/30 border-emerald-500/60 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-500/30' : 'bg-slate-800/40 border-slate-700/70 hover:border-slate-600 hover:bg-slate-800/70'">
+            <div class="flex items-start justify-between gap-2">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                [ngClass]="exportFormat === 'xlsx' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="8" y1="13" x2="16" y2="13"></line>
+                  <line x1="8" y1="17" x2="16" y2="17"></line>
+                  <line x1="10" y1="9" x2="8" y2="9"></line>
+                </svg>
+              </div>
+              <span class="w-5 h-5 rounded-full flex items-center justify-center border text-[11px] transition-all"
+                [ngClass]="exportFormat === 'xlsx' ? 'bg-emerald-500 text-slate-950 border-emerald-400 font-bold' : 'border-slate-600 bg-slate-900/60'">
+                {{ exportFormat === 'xlsx' ? '✓' : '' }}
+              </span>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white group-hover:text-emerald-300 transition-colors">Excel Workbook
+                (.XLSX)</h4>
+              <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Raw data tabs: Platform KPIs, Supply-Demand, Retention Cohorts & Advocate Leaderboard.
+              </p>
+            </div>
+          </div>
+
+          <!-- Format 2: Printable Executive PDF -->
+          <div (click)="exportFormat = 'pdf'"
+            class="p-4 rounded-2xl border transition-all cursor-pointer flex flex-col justify-between gap-3 relative overflow-hidden group"
+            [ngClass]="exportFormat === 'pdf' ? 'bg-indigo-950/30 border-indigo-500/60 shadow-lg shadow-indigo-500/10 ring-1 ring-indigo-500/30' : 'bg-slate-800/40 border-slate-700/70 hover:border-slate-600 hover:bg-slate-800/70'">
+            <div class="flex items-start justify-between gap-2">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
+                [ngClass]="exportFormat === 'pdf' ? 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/40' : 'bg-slate-800 text-slate-400 border border-slate-700'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                  <rect x="6" y="14" width="12" height="8"></rect>
+                </svg>
+              </div>
+              <span class="w-5 h-5 rounded-full flex items-center justify-center border text-[11px] transition-all"
+                [ngClass]="exportFormat === 'pdf' ? 'bg-indigo-500 text-white border-indigo-400 font-bold' : 'border-slate-600 bg-slate-900/60'">
+                {{ exportFormat === 'pdf' ? '✓' : '' }}
+              </span>
+            </div>
+            <div>
+              <h4 class="text-xs font-bold text-white group-hover:text-indigo-300 transition-colors">Printable Executive
+                PDF</h4>
+              <p class="text-[11px] text-slate-400 mt-1 leading-relaxed">
+                Branded visual executive briefing ready for printing or saving as high-resolution PDF.
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Modal Footer Action Bar -->
+      <div
+        class="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-800/80 mt-1 relative z-10">
+        <div class="flex items-center gap-1.5 text-[11px] text-slate-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+          <span>Ready for instant compilation</span>
+        </div>
+
+        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <button type="button" (click)="closeExportModal()"
+            class="px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-xl bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/80 transition-all">
+            Cancel
+          </button>
+
+          <button type="button" (click)="executeAdvancedExport()" [disabled]="isExporting"
+            class="px-5 py-2 text-xs font-bold text-white rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-cyan-500 hover:from-indigo-500 hover:to-cyan-400 shadow-lg shadow-indigo-500/25 border border-indigo-400/30 flex items-center justify-center gap-2 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:transform-none">
+            @if (isExporting) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              class="animate-spin">
+              <polyline points="23 4 23 10 17 10"></polyline>
+              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+            </svg>
+            <span>Compiling Report...</span>
+            } @else if (exportFormat === 'xlsx') {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>Download Excel (.XLSX)</span>
+            } @else {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"></polyline>
+              <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+              <rect x="6" y="14" width="12" height="8"></rect>
+            </svg>
+            <span>Print / Save PDF</span>
+            }
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+  }
 
 </div>

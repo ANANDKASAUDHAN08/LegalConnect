@@ -4,7 +4,8 @@
       <div class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></div>
       <h3 class="text-base font-extrabold text-white tracking-tight">Real-Time Audit & Activity Stream</h3>
       @if (unreadCount > 0) {
-      <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+      <span
+        class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
         {{ unreadCount }} New
       </span>
       }
@@ -12,11 +13,26 @@
 
     <!-- Category Filter Chips & Actions -->
     <div class="flex flex-wrap items-center gap-1.5 text-xs">
-      <button class="px-2.5 py-1 rounded-lg transition-all font-medium" [class.bg-indigo-600]="activeActivityFilter === 'all'" [class.text-white]="activeActivityFilter === 'all'" [class.bg-slate-800]="activeActivityFilter !== 'all'" [class.text-slate-400]="activeActivityFilter !== 'all'" (click)="setFilter('all')">All Stream</button>
-      <button class="px-2.5 py-1 rounded-lg transition-all font-medium" [class.bg-amber-600]="activeActivityFilter === 'verification_req'" [class.text-white]="activeActivityFilter === 'verification_req'" [class.bg-slate-800]="activeActivityFilter !== 'verification_req'" [class.text-slate-400]="activeActivityFilter !== 'verification_req'" (click)="setFilter('verification_req')">Lawyer Verifications</button>
-      <button class="px-2.5 py-1 rounded-lg transition-all font-medium" [class.bg-red-600]="activeActivityFilter === 'security_alert'" [class.text-white]="activeActivityFilter === 'security_alert'" [class.bg-slate-800]="activeActivityFilter !== 'security_alert'" [class.text-slate-400]="activeActivityFilter !== 'security_alert'" (click)="setFilter('security_alert')">Security Alerts</button>
+      <button class="px-2.5 py-1 rounded-lg transition-all font-medium"
+        [class.bg-indigo-600]="activeActivityFilter === 'all'" [class.text-white]="activeActivityFilter === 'all'"
+        [class.bg-slate-800]="activeActivityFilter !== 'all'" [class.text-slate-400]="activeActivityFilter !== 'all'"
+        (click)="setFilter('all')">All Stream</button>
+      <button class="px-2.5 py-1 rounded-lg transition-all font-medium"
+        [class.bg-amber-600]="activeActivityFilter === 'verification_req'"
+        [class.text-white]="activeActivityFilter === 'verification_req'"
+        [class.bg-slate-800]="activeActivityFilter !== 'verification_req'"
+        [class.text-slate-400]="activeActivityFilter !== 'verification_req'"
+        (click)="setFilter('verification_req')">Lawyer Verifications</button>
+      <button class="px-2.5 py-1 rounded-lg transition-all font-medium"
+        [class.bg-red-600]="activeActivityFilter === 'security_alert'"
+        [class.text-white]="activeActivityFilter === 'security_alert'"
+        [class.bg-slate-800]="activeActivityFilter !== 'security_alert'"
+        [class.text-slate-400]="activeActivityFilter !== 'security_alert'"
+        (click)="setFilter('security_alert')">Security Alerts</button>
       @if (unreadCount > 0) {
-      <button class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-all font-medium border border-slate-700 flex items-center gap-1" (click)="markAllRead()">
+      <button
+        class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-all font-medium border border-slate-700 flex items-center gap-1"
+        (click)="markAllRead()">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="20 6 9 17 4 12"></polyline>
         </svg>
@@ -29,38 +45,40 @@
   <!-- Feed List -->
   <div class="flex flex-col gap-3 max-h-[320px] overflow-y-auto pr-1">
     @if (filteredEvents.length === 0) {
-      <div class="p-8 text-center text-slate-500 text-xs italic">
-        No active stream events matching filter. System operational.
-      </div>
+    <div class="p-8 text-center text-slate-500 text-xs italic">
+      No active stream events matching filter. System operational.
+    </div>
     } @else {
-      @for (event of filteredEvents; track event.id || event.timestamp) {
-        <div class="flex items-start justify-between p-3 rounded-xl bg-slate-800/40 border border-white/5 hover:border-slate-700 transition-all">
-          <div class="flex items-start gap-3">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
-              [class.bg-amber-500-20]="event.type === 'verification_req'"
-              [class.text-amber-400]="event.type === 'verification_req'"
-              [class.bg-red-500-20]="event.type === 'security_alert'"
-              [class.text-red-400]="event.type === 'security_alert'"
-              [class.bg-indigo-500-20]="event.type !== 'verification_req' && event.type !== 'security_alert'"
-              [class.text-indigo-400]="event.type !== 'verification_req' && event.type !== 'security_alert'">
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                @if (event.type === 'verification_req') {
-                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                } @else if (event.type === 'security_alert') {
-                  <circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line>
-                } @else {
-                  <circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline>
-                }
-              </svg>
-            </div>
-            <div class="flex flex-col">
-              <span class="text-xs font-bold text-slate-200">{{ event.title }}</span>
-              <span class="text-[11px] text-slate-400 mt-0.5">{{ event.message }}</span>
-            </div>
-          </div>
-          <span class="text-[10px] font-mono text-slate-500 shrink-0">{{ event.timestamp | date:'shortTime' }}</span>
+    @for (event of filteredEvents; track event.id || event.timestamp) {
+    <div
+      class="flex items-start justify-between p-3 rounded-xl bg-slate-800/40 border border-white/5 hover:border-slate-700 transition-all">
+      <div class="flex items-start gap-3">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5" [ngClass]="{
+                'bg-amber-500/20 text-amber-400': event.type === 'verification_req',
+                'bg-red-500/20 text-red-400': event.type === 'security_alert',
+                'bg-indigo-500/20 text-indigo-400': event.type !== 'verification_req' && event.type !== 'security_alert'
+              }">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            @if (event.type === 'verification_req') {
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+            } @else if (event.type === 'security_alert') {
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            } @else {
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+            }
+          </svg>
         </div>
-      }
+        <div class="flex flex-col">
+          <span class="text-xs font-bold text-slate-200">{{ event.title }}</span>
+          <span class="text-[11px] text-slate-400 mt-0.5">{{ event.message }}</span>
+        </div>
+      </div>
+      <span class="text-[10px] font-mono text-slate-500 shrink-0">{{ event.timestamp | date:'shortTime' }}</span>
+    </div>
+    }
     }
   </div>
 </div>

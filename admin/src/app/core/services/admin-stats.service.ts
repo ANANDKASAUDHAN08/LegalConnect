@@ -107,6 +107,58 @@ export class AdminStatsService {
     return this.bookmarkStatsCache$;
   }
 
+  // ── Tier 2: Advanced Analytics ────────────────────────────────
+
+  getAuthProviderStats(): Observable<any> {
+    return this.http.get(`${this.API}/stats/auth-providers`);
+  }
+
+  getChurnRiskStats(): Observable<any> {
+    return this.http.get(`${this.API}/stats/churn-risk`);
+  }
+
+  getSupportBreakdown(): Observable<any> {
+    return this.http.get(`${this.API}/stats/support-breakdown`);
+  }
+
+  getCopExpiryWarnings(): Observable<any> {
+    return this.http.get(`${this.API}/stats/cop-expiry`);
+  }
+
+  getSecurityPosture(): Observable<any> {
+    return this.http.get(`${this.API}/stats/security-posture`);
+  }
+
+  getSlaCompliance(): Observable<any> {
+    return this.http.get(`${this.API}/stats/sla-compliance`);
+  }
+
+  // ── Tier 3: Computed Analytics ────────────────────────────────
+
+  getConversionFunnel(): Observable<any> {
+    return this.http.get(`${this.API}/stats/conversion-funnel`);
+  }
+
+  getLawyerLeaderboard(): Observable<any> {
+    return this.http.get(`${this.API}/stats/lawyer-leaderboard`);
+  }
+
+  getRevenuePotential(): Observable<any> {
+    return this.http.get(`${this.API}/stats/revenue-potential`);
+  }
+
+  getSupplyDemand(): Observable<any> {
+    return this.http.get(`${this.API}/stats/supply-demand`);
+  }
+
+  getRetentionCohorts(): Observable<any> {
+    return this.http.get(`${this.API}/stats/retention`);
+  }
+
+  getVerificationVelocity(): Observable<any> {
+    return this.http.get(`${this.API}/stats/verification-velocity`);
+  }
+
   getTelemetryStream(): Observable<any> {
     return new Observable(observer => {
       const eventSource = new EventSource('/api/admin/telemetry/stream');

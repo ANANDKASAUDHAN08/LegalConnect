@@ -34,6 +34,20 @@ export class AdminApiService {
   getTemplateStats(): Observable<any> { return this.stats.getTemplateStats(); }
   getBookmarkStats(): Observable<any> { return this.stats.getBookmarkStats(); }
 
+  // -- Tier 2 & 3 Advanced Analytics Delegates --
+  getAuthProviderStats(): Observable<any> { return this.stats.getAuthProviderStats(); }
+  getChurnRiskStats(): Observable<any> { return this.stats.getChurnRiskStats(); }
+  getSupportBreakdown(): Observable<any> { return this.stats.getSupportBreakdown(); }
+  getCopExpiryWarnings(): Observable<any> { return this.stats.getCopExpiryWarnings(); }
+  getSecurityPosture(): Observable<any> { return this.stats.getSecurityPosture(); }
+  getSlaCompliance(): Observable<any> { return this.stats.getSlaCompliance(); }
+  getConversionFunnel(): Observable<any> { return this.stats.getConversionFunnel(); }
+  getLawyerLeaderboard(): Observable<any> { return this.stats.getLawyerLeaderboard(); }
+  getRevenuePotential(): Observable<any> { return this.stats.getRevenuePotential(); }
+  getSupplyDemand(): Observable<any> { return this.stats.getSupplyDemand(); }
+  getRetentionCohorts(): Observable<any> { return this.stats.getRetentionCohorts(); }
+  getVerificationVelocity(): Observable<any> { return this.stats.getVerificationVelocity(); }
+
   // -- User & Lawyer Management Delegates --
   getUsers(params: any = {}): Observable<any> { return this.user.getUsers(params); }
   getUser(id: number): Observable<any> { return this.user.getUser(id); }
