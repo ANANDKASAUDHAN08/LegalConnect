@@ -1,1 +1,40 @@
 /* Advocate Dashboard Styles */
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  /* Hide interactive non-report UI */
+  app-navbar,
+  app-footer,
+  app-bottom-nav,
+  header,
+  nav,
+  button,
+  .no-print,
+  #dashboard-tabs,
+  .border-b-2 {
+    display: none !important;
+  }
+
+  /* Clean up container margins */
+  .min-h-screen {
+    min-height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  /* Prevent awkward card splits */
+  .grid,
+  .p-5,
+  .p-6,
+  app-stat-card,
+  app-review-card,
+  app-trend-chart,
+  app-donut-chart,
+  app-funnel-metric {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+}
