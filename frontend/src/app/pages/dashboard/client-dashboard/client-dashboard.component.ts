@@ -31,6 +31,7 @@ import { PrintDossierComponent } from './components/print-dossier/print-dossier.
 import { CasePackPreviewModalComponent } from '../../find-help/components/case-pack-preview-modal/case-pack-preview-modal.component';
 import { ReaderModeModalComponent } from '../../search/components/reader-modal/reader-modal.component';
 import { QrModalComponent } from '../../../components/qr-modal/qr-modal.component';
+import { AnalyticsTabComponent } from './components/analytics-tab/analytics-tab.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -56,7 +57,8 @@ import { QrModalComponent } from '../../../components/qr-modal/qr-modal.componen
     SavedDirectoryTabComponent,
     PrintDossierComponent,
     CasePackPreviewModalComponent,
-    QrModalComponent
+    QrModalComponent,
+    AnalyticsTabComponent
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss'],

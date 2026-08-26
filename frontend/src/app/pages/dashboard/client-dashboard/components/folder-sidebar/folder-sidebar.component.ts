@@ -34,6 +34,7 @@ export class FolderSidebarComponent {
   @Output() shareFolder = new EventEmitter<string>();
   @Output() selectCasePacks = new EventEmitter<void>();
   @Output() selectSavedContacts = new EventEmitter<void>();
+  @Output() selectAnalytics = new EventEmitter<void>();
 
   selectCasePacksSystemDirectory() {
     this.selectCasePacks.emit();
@@ -41,6 +42,10 @@ export class FolderSidebarComponent {
 
   selectSavedContactsSystemDirectory() {
     this.selectSavedContacts.emit();
+  }
+
+  selectAnalyticsSystemDirectory() {
+    this.selectAnalytics.emit();
   }
 
   get filteredSidebarFolders(): string[] {

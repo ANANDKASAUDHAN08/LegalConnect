@@ -175,6 +175,22 @@
           {{ savedContactsCount }}
         </span>
       </button>
+      <button (click)="selectAnalyticsSystemDirectory()"
+        [class]="activeTab === 'analytics' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+        class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 cursor-pointer mt-1"
+        appTooltip="View Legal Spend & Case Lifecycle Progress">
+        <span class="flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" class="text-emerald-500 shrink-0">
+            <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          Spend & Insights
+        </span>
+        <span
+          class="text-[9px] px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold uppercase tracking-wider">
+          Live
+        </span>
+      </button>
     </div>
   </div>
 </aside>
@@ -255,6 +271,15 @@
         <circle cx="9" cy="7" r="4"></circle>
       </svg>
       Saved Directory ({{ savedContactsCount }})
+    </button>
+    <button (click)="selectAnalyticsSystemDirectory()"
+      [class]="activeTab === 'analytics' ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300'"
+      class="px-4 py-1.5 rounded-full text-xs font-semibold shrink-0 transition-colors border-0 flex items-center gap-1">
+      <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2.5" class="text-emerald-400 shrink-0">
+        <path d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Spend & Insights
     </button>
     <button *ngFor="let folder of filteredSidebarFolders; trackBy: trackByFolder" (click)="selectCollection(folder)"
       [class]="selectedCollection === folder ? 'bg-indigo-600 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'"
