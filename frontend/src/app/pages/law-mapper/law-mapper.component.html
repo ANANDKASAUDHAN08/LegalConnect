@@ -123,8 +123,8 @@
         </button>
 
         <!-- Share Menu -->
-        <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()"
-          [shareUrl]="getShareUrl()" [subject]="getShareSubject()"
+        <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()" [shareUrl]="getShareUrl()"
+          [subject]="getShareSubject()"
           [buttonClass]="'w-8 h-8 rounded-lg flex items-center justify-center cursor-pointer border transition-all shrink-0 bg-emerald-50/50 border-emerald-100/80 text-emerald-600 hover:bg-emerald-100/80 dark:bg-emerald-950/20 dark:border-emerald-500/20 dark:text-emerald-400 dark:hover:bg-emerald-950/40'"
           [tooltipText]="'Share mapping'" [tooltipPlacement]="'bottom'">
         </app-share-menu>
@@ -366,7 +366,8 @@
                     <span class="font-bold shrink-0 text-[11px] md:text-xs text-slate-800 dark:text-slate-200">
                       § {{ s.section }}
                     </span>
-                    <span class="text-slate-500 dark:text-slate-400 text-[11px] md:text-xs truncate flex-1">{{ s.title }}</span>
+                    <span class="text-slate-500 dark:text-slate-400 text-[11px] md:text-xs truncate flex-1">{{ s.title
+                      }}</span>
                   </button>
                 </div>
               </div>
@@ -656,8 +657,7 @@
     <!-- ═══════════════════════════════════════════
          RESULT DISPLAY
          ════════════════════════════════════════════ -->
-    <app-print-container *ngIf="result && !loading && !error" [title]="'Section Transition Report'"
-      [subtitle]="getShareSubject()">
+    <div *ngIf="result && !loading && !error" class="result-display-wrap">
       <div class="result-section flex flex-col gap-5 animate-fade-in" id="result-section">
 
         <!-- Transition Header Bar -->
@@ -1369,7 +1369,7 @@
         </div>
 
       </div>
-    </app-print-container>
+    </div>
 
   </div>
 
@@ -1419,8 +1419,8 @@
 
     <!-- Share Button Dropdown inside Float Dock -->
     <div class="share-btn-wrapper">
-      <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()"
-        [shareUrl]="getShareUrl()" [subject]="getShareSubject()"
+      <app-share-menu [title]="'LegalConnect — Section Mapping'" [text]="getShareText()" [shareUrl]="getShareUrl()"
+        [subject]="getShareSubject()"
         [buttonClass]="'border-none cursor-pointer bg-transparent text-inherit p-0 flex items-center justify-center'"
         [tooltipText]="'Share mapping'" [tooltipPlacement]="'top'">
       </app-share-menu>

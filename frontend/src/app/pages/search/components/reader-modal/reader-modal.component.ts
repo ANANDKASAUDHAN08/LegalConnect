@@ -8,11 +8,12 @@ import { FormattingService } from '../../../../services/formatting.service';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { BookmarkService, Bookmark } from '../../../../services/bookmark.service';
 import { IconComponent } from '../../../../components/icon/icon.component';
+import { ReportTriggerComponent } from '../../../../components/report-modal/report-trigger/report-trigger.component';
 
 @Component({
   selector: 'app-reader-modal',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, FormsModule, IconComponent],
+  imports: [CommonModule, TooltipDirective, FormsModule, IconComponent, ReportTriggerComponent],
   templateUrl: './reader-modal.component.html',
   styleUrls: ['./reader-modal.component.scss'],
   encapsulation: ViewEncapsulation.None,

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { LegalRoadmapComponent } from '../legal-roadmap/legal-roadmap.component';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../components/icon';
  
 /**
  * Case Pack preview modal + print logic — deferred loaded on demand.
@@ -11,7 +12,7 @@ import { TooltipDirective } from '../../../../directives/tooltip.directive';
 @Component({
   selector: 'app-case-pack-preview-modal',
   standalone: true,
-  imports: [CommonModule, RouterLink, LegalRoadmapComponent, TooltipDirective],
+  imports: [CommonModule, RouterLink, LegalRoadmapComponent, TooltipDirective, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './case-pack-preview-modal.component.html',
   styleUrls: ['./case-pack-preview-modal.component.scss']

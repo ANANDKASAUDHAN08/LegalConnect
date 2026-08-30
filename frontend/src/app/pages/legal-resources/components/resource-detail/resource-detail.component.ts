@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, inject
+  Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -12,6 +12,10 @@ import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { IconComponent } from '../../../../components/icon';
 import { LEGAL_RESOURCE_PIPES } from '../../../../pipes/legal-resource.pipe';
 import { getResourceTypeLabel, getResourceTypeBadgeClass } from '../../../../core/constants/legal-resource.constants';
+import { PrintService } from '../../../../services/print.service';
+import { BookmarkButtonComponent } from '../../../../components/bookmark-button/bookmark-button.component';
+import { InteractiveLikeComponent } from '../../../../components/interactive-like/interactive-like.component';
+import { ReportTriggerComponent } from '../../../../components/report-modal/report-trigger/report-trigger.component';
 
 @Component({
   selector: 'app-resource-detail',
@@ -22,7 +26,10 @@ import { getResourceTypeLabel, getResourceTypeBadgeClass } from '../../../../cor
     RouterLink,
     TooltipDirective,
     IconComponent,
-    LEGAL_RESOURCE_PIPES
+    LEGAL_RESOURCE_PIPES,
+    BookmarkButtonComponent,
+    InteractiveLikeComponent,
+    ReportTriggerComponent
   ],
   templateUrl: './resource-detail.component.html',
   styleUrls: ['./resource-detail.component.scss'],
@@ -298,8 +305,18 @@ export class ResourceDetailComponent implements OnInit {
     }
   }
 
+  private printService = inject(PrintService);
+
   printPage(): void {
-    window.print();
+    if (!this.resource) return;
+    const cardHtml = this.printService.buildResourceCards([this.resource]);
+    this.printService.print({
+      title: this.resource.name || 'Legal Resource Detail',
+      subtitle: `Official Institutional Dossier • ${this.printService.getTypeLabel(this.resource.type)}`,
+      content: cardHtml,
+      sealText: 'Verified Registry Entry • National Legal Infrastructure Directory',
+      accentColor: '#4338ca',
+    });
   }
 
   trackById(index: number, item: any): string {

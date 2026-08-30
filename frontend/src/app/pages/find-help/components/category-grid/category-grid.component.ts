@@ -1,19 +1,17 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Category } from '../../../../services/legal.service';
-import { CategoryIconComponent } from '../category-icon/category-icon.component';
 import { CategoryClassesPipe } from '../../pipes/category-classes.pipe';
 import { CategoryDescriptionPipe } from '../../pipes/category-description.pipe';
 import { CategoryInsightsPipe } from '../../pipes/category-insights.pipe';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
-import { IconComponent } from '../../../../components/icon';
+import { IconComponent, IconName } from '../../../../components/icon';
 
 @Component({
   selector: 'app-category-grid',
   standalone: true,
   imports: [
     CommonModule,
-    CategoryIconComponent,
     CategoryClassesPipe,
     CategoryDescriptionPipe,
     CategoryInsightsPipe,
@@ -43,6 +41,21 @@ export class CategoryGridComponent {
   activeFaqIndex: number | null = null;
 
   constructor(private cdr: ChangeDetectorRef) { }
+
+  getCategoryIcon(icon: string): IconName {
+    switch (icon) {
+      case 'home': return 'home';
+      case 'users': return 'users';
+      case 'shopping-cart': return 'shopping-cart';
+      case 'briefcase': return 'briefcase';
+      case 'scale': return 'scale';
+      case 'building': return 'building';
+      case 'shield': return 'shield';
+      case 'question':
+      default:
+        return 'help-circle';
+    }
+  }
 
   onAiPromptClick(prompt: string) {
     if (this.isAiSolving) return;

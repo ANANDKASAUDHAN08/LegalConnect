@@ -12,6 +12,7 @@ import { takeUntil } from 'rxjs/operators';
 import { FormattingService } from '../../../../services/formatting.service';
 import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
 import { IconComponent } from '../../../../components/icon/icon.component';
+import { PrintService } from '../../../../services/print.service';
 
 @Component({
   selector: 'app-law-card',
@@ -27,6 +28,7 @@ export class LawResultCardComponent implements OnDestroy {
   private cdr = inject(ChangeDetectorRef);
   private sanitizer = inject(DomSanitizer);
   public formatter = inject(FormattingService);
+  private printService = inject(PrintService);
 
   private destroy$ = new Subject<void>();
 
@@ -449,184 +451,40 @@ export class LawResultCardComponent implements OnDestroy {
     this.showNotesEditor = false;
   }
 
-  // --- Export to PDF report (Isolated print engine) ---
+  // --- Export to PDF report (Unified PrintService) ---
   exportToPDF() {
     this.snackbar.show('Preparing client report dossier...', 'success');
 
-    // Create a hidden iframe
-    const iframe = document.createElement('iframe');
-    iframe.style.position = 'absolute';
-    iframe.style.width = '0px';
-    iframe.style.height = '0px';
-    iframe.style.border = 'none';
-    iframe.style.visibility = 'hidden';
-    
-    document.body.appendChild(iframe);
+    const actName = this.result.actName || this.result.shortName || 'Act';
+    const casePackHtml = this.printService.buildCasePack({
+      section: this.result,
+      act: { actName, shortName: this.result.shortName, year: this.result.year },
+      severity: this.result.criminalDetails?.severity || 'low',
+      laymanExplanation: this.laymanExplanation,
+      precedents: this.cachedPrecedents,
+      proSeGuide: {
+        forum: this.cachedProSe.court,
+        courtFee: this.cachedProSe.fee,
+        limitation: this.cachedProSe.prep,
+      },
+    });
 
-    const doc = iframe.contentWindow?.document || iframe.contentDocument;
-    if (!doc) {
-      this.snackbar.show('Failed to initialize print engine.', 'error');
-      document.body.removeChild(iframe);
-      return;
-    }
+    const notesHtml = this.noteText
+      ? this.printService.buildSection('Personal Case Notes', `<div style="background:#fffdf5;border:1px solid #fef08a;padding:10px;border-radius:6px;font-style:italic;font-size:11px;color:#713f12">${this.printService.escapeHtml(this.noteText)}</div>`)
+      : '';
 
-    const act = this.result.actName || this.result.shortName;
-    const cleanSnippet = (this.result.snippet || '').replace(/<[^>]*>/g, '');
-
-    let precedentsHtml = '';
-    if (this.cachedPrecedents && this.cachedPrecedents.length > 0) {
-      this.cachedPrecedents.forEach(p => {
-        precedentsHtml += `
-          <div style="margin-bottom: 12px; padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; background: #f8fafc;">
-            <div style="display: flex; justify-content: space-between; font-weight: 600; font-size: 13px; color: #1e293b; margin-bottom: 4px;">
-              <span>${p.caseName}</span>
-              <span style="font-family: monospace; color: #64748b;">${p.citation}</span>
-            </div>
-            <p style="font-size: 12px; color: #475569; margin: 0;"><strong>Holding:</strong> ${p.holding}</p>
-          </div>`;
-      });
-    }
-
-    const proSe = this.cachedProSe;
-
-    const content = `
-      <html>
-        <head>
-          <title>LegalConnect Case Pack - Section ${this.result.section_number}</title>
-          <style>
-            body { 
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-              padding: 40px; 
-              color: #1e293b; 
-              line-height: 1.6; 
-              background: #ffffff;
-            }
-            .header { 
-              border-bottom: 2px solid #4f46e5; 
-              padding-bottom: 14px; 
-              margin-bottom: 24px; 
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-end;
-            }
-            .title-box h1 { font-size: 22px; font-weight: bold; color: #1e3a8a; margin: 0; }
-            .title-box p { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin: 4px 0 0 0; }
-            .date-box { font-size: 11px; color: #64748b; font-family: monospace; }
-            
-            .section-box { 
-              background: #f8fafc; 
-              border: 1px solid #e2e8f0; 
-              border-left: 6px solid #4f46e5; 
-              padding: 18px; 
-              border-radius: 8px; 
-              margin-bottom: 22px; 
-            }
-            .section-box.high { border-left-color: #ef4444; }
-            .section-box.medium { border-left-color: #f59e0b; }
-            .section-box.low { border-left-color: #10b981; }
-            
-            .section-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 10px 0; }
-            .section-text { font-family: monospace; font-size: 12.5px; color: #334155; white-space: pre-wrap; margin: 0; }
-            
-            .subtitle { 
-              font-size: 13px; 
-              font-weight: 700; 
-              text-transform: uppercase; 
-              letter-spacing: 0.5px; 
-              margin-top: 26px; 
-              margin-bottom: 10px; 
-              color: #475569; 
-              border-bottom: 1px solid #e2e8f0; 
-              padding-bottom: 5px; 
-            }
-            .layman-text { font-size: 13px; color: #334155; margin: 0; }
-            
-            .guide-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-            .guide-table td { padding: 9px; border-bottom: 1px solid #f1f5f9; font-size: 12.5px; }
-            .guide-label { font-weight: 600; color: #475569; width: 30%; }
-            .guide-value { color: #334155; }
-            
-            .footer { 
-              margin-top: 40px; 
-              border-top: 1px solid #e2e8f0; 
-              padding-top: 14px; 
-              text-align: center; 
-              font-size: 10px; 
-              color: #94a3b8; 
-            }
-            @media print {
-              body { padding: 10px; }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title-box">
-              <h1>${act}</h1>
-              <p>LegalConnect Case Pack Report</p>
-            </div>
-            <div class="date-box">Printed: ${new Date().toLocaleDateString()}</div>
-          </div>
-          
-          <div class="section-box ${this.result.criminalDetails?.severity || 'low'}">
-            <h2 class="section-title">Section ${this.result.section_number}: ${this.result.title}</h2>
-            <p class="section-text">${cleanSnippet}</p>
-          </div>
-          
-          ${this.laymanExplanation ? `
-            <div class="subtitle">Simplified Layman's Explanation</div>
-            <p class="layman-text">${this.laymanExplanation}</p>
-          ` : ''}
-          
-          ${precedentsHtml ? `
-            <div class="subtitle">Precedents & Landmark Judgments</div>
-            ${precedentsHtml}
-          ` : ''}
-          
-          <div class="subtitle">Pro Se Litigation Guide</div>
-          <table class="guide-table">
-            <tr>
-              <td class="guide-label">Judicial Forum</td>
-              <td class="guide-value">${proSe.court}</td>
-            </tr>
-            <tr>
-              <td class="guide-label">Court Fees</td>
-              <td class="guide-value">${proSe.fee}</td>
-            </tr>
-            <tr>
-              <td class="guide-label">Pre-requisite Rules</td>
-              <td class="guide-value">${proSe.prep}</td>
-            </tr>
-          </table>
-          
-          ${this.noteText ? `
-            <div class="subtitle">Personal Case Notes</div>
-            <div style="background: #fffdf5; border: 1px solid #fef08a; padding: 12px; border-radius: 8px; font-style: italic; font-size: 13px; color: #713f12; margin: 0;">
-              ${this.noteText}
-            </div>
-          ` : ''}
-          
-          <div class="footer">
-            Generated automatically by LegalConnect AI Platform. Private Client Dossier. Confidential.
-          </div>
-        </body>
-      </html>
-    `;
-
-    doc.open();
-    doc.write(content);
-    doc.close();
-
-    // Give iframe short delay to mount, then execute print dialog in isolated context
-    setTimeout(() => {
-      iframe.contentWindow?.focus();
-      iframe.contentWindow?.print();
-      
-      // Remove temporary iframe after printing dialog is closed/canceled
-      setTimeout(() => {
-        document.body.removeChild(iframe);
-      }, 1000);
-    }, 250);
+    this.printService.print({
+      title: `Case Pack: Section ${this.result.section_number}`,
+      subtitle: `${actName} • Section Dossier &amp; Litigation Intelligence`,
+      content: casePackHtml + notesHtml,
+      sealText: 'Confidential Case Pack • LegalConnect AI Platform',
+      accentColor: '#4f46e5',
+      extraMeta: [
+        { label: 'Statute', value: actName },
+        { label: 'Section Number', value: String(this.result.section_number) },
+        { label: 'Classification', value: this.result.criminalDetails?.isCognizable ? 'Cognizable' : 'Standard' },
+      ],
+    });
   }
 
   private getComplexity(val: any): string {

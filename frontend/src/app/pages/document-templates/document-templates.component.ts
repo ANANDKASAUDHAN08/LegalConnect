@@ -1,4 +1,4 @@
-import { Component, OnInit, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
 import { RouterLink, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
@@ -6,6 +6,8 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { DocumentTemplateService, Template, Draft, TemplateField } from '../../services/document-template.service';
+import { PrintService } from '../../services/print.service';
+import { PrintExportService } from '../../services/print-export.service';
 import { Subject } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 
@@ -489,7 +491,9 @@ Address:                             Address:`
     private route: ActivatedRoute,
     private sanitizer: DomSanitizer,
     private templateService: DocumentTemplateService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private printService: PrintService,
+    private printExportService: PrintExportService
   ) { }
 
   ngOnInit() {
@@ -1161,10 +1165,6 @@ Address:                             Address:`
     }, 2000);
   }
 
-  triggerPrint() {
-    window.print();
-  }
-
   onPreviewClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
     const badge = target.closest('[data-field-key]');
@@ -1183,5 +1183,56 @@ Address:                             Address:`
         }
       }
     }
+  }
+
+  triggerPrint() {
+    const t = this.activeTemplate;
+    const title = t?.title || 'Legal Document Draft';
+    const plainText = this.compiledTemplatePlain || '';
+    const formVals = this.formValues[this.activeTemplateId] || {};
+
+    this.printExportService.open({
+      title: `${title} — Instrument Dispatch`,
+      subtitle: 'Export legal instrument as court-ready PDF, plain text execution copy, or JSON values.',
+      formats: ['pdf', 'txt', 'json'],
+      allowWatermark: true,
+      defaultWatermark: 'DRAFT',
+      onExport: async (params) => {
+        if (params.format === 'pdf') {
+          const contentHtml = this.printService.buildLegalDraft(plainText, {
+            hasSignatureBlock: false,
+          });
+          this.printService.print({
+            title: t.title,
+            subtitle: `${(t.category || 'LEGAL').toUpperCase()} • Draft Instrument`,
+            content: contentHtml,
+            watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+            classification: params.watermark !== 'NONE' ? params.watermark : 'DRAFT',
+            sealText: 'Official LegalConnect Document Draft • Non-Notarized Instrument',
+            extraMeta: [
+              { label: 'Template ID', value: t.id },
+              { label: 'Category', value: t.category },
+            ],
+          });
+        } else if (params.format === 'txt') {
+          this.downloadTxtFile();
+        } else if (params.format === 'json') {
+          const jsonStr = JSON.stringify({
+            templateId: t.id,
+            templateTitle: t.title,
+            category: t.category,
+            compiledAt: new Date().toISOString(),
+            formValues: formVals
+          }, null, 2);
+          const blob = new Blob([jsonStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${t.id}-data-${Date.now()}.json`;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+      }
+    });
   }
 }

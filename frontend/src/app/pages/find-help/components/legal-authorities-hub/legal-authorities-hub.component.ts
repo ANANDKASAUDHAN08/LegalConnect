@@ -7,11 +7,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { LocationService } from '../../../../services/location.service';
+import { IconComponent } from '../../../../components/icon';
 
 @Component({
   selector: 'app-legal-authorities-hub',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, IconComponent],
   templateUrl: './legal-authorities-hub.component.html',
   styleUrls: ['./legal-authorities-hub.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

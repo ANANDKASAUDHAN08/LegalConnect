@@ -9,9 +9,11 @@ import { Subject, debounceTime, distinctUntilChanged, takeUntil, switchMap, of, 
 import { LegalService, TransitionMappingResult, MappingSuggestion } from '../../services/legal.service';
 import { FormattingService } from '../../services/formatting.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { PrintService } from '../../services/print.service';
+import { PrintExportService } from '../../services/print-export.service';
+import { DataExportService } from '../../services/data-export.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { ShareMenuComponent } from '../../components/share-menu/share-menu.component';
-import { PrintContainerComponent } from '../../components/print-container/print-container.component';
 
 interface PopularSection {
   act: string;
@@ -45,7 +47,7 @@ interface PinnedEntry {
   standalone: true,
   imports: [
     NgIf, NgFor, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, RouterLink,
-    FormsModule, TooltipDirective, ShareMenuComponent, PrintContainerComponent
+    FormsModule, TooltipDirective, ShareMenuComponent
   ],
   templateUrl: './law-mapper.component.html',
   styleUrls: ['./law-mapper.component.scss'],
@@ -244,7 +246,10 @@ export class LawMapperComponent implements OnInit, OnDestroy {
     public router: Router,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone,
-    public formatter: FormattingService
+    public formatter: FormattingService,
+    private printService: PrintService,
+    private printExportService: PrintExportService,
+    private dataExportService: DataExportService
   ) { }
 
   ngOnInit() {
@@ -516,9 +521,76 @@ export class LawMapperComponent implements OnInit, OnDestroy {
     return 'https://legalconnect-501109.web.app' + this.router.url;
   }
 
-  // ── NEW: Print / Export ──
+  // ── NEW: Print / Export Hub ──
   triggerPrint() {
-    window.print();
+    if (!this.result) {
+      this.printService.print({
+        title: 'Bharatiya Nyaya Sanhita Transition Portal',
+        subtitle: 'Criminal Law Concordance Index',
+        content: '<p style="color:#64748b;font-size:12px">No transition section selected. Please search an enactment code above.</p>',
+        sealText: 'Official Concordance • LegalConnect Law Platform',
+      });
+      return;
+    }
+
+    const oldActName = this.result.oldAct?.shortName || 'Old Act';
+    const newActName = this.result.newAct?.shortName || 'New Act';
+    const oldSecNum = this.result.oldSection?.section_number || '';
+    const newSecNum = this.result.newSection?.section_number || '';
+
+    this.printExportService.open({
+      title: `Statute Concordance: ${oldActName} § ${oldSecNum} ➔ ${newActName} § ${newSecNum}`,
+      subtitle: `Criminal Law Reform Concordance & Substantive Diff Analysis`,
+      formats: ['pdf', 'json', 'txt'],
+      allowWatermark: true,
+      defaultWatermark: 'OFFICIAL COPY',
+      onExport: async (params) => {
+        if (params.format === 'pdf') {
+          const contentHtml = this.printService.buildLawTransition({
+            oldAct: `${this.result!.oldAct?.actName || oldActName} (${oldActName})`,
+            oldSection: this.result!.oldSection,
+            newAct: `${this.result!.newAct?.actName || newActName} (${newActName})`,
+            newSection: this.result!.newSection,
+            similarity: this.diffSimilarity,
+            differencesSummary: (this.result as any)?.differences || `Comparative statutory mapping between ${oldActName} § ${oldSecNum} and ${newActName} § ${newSecNum}.`,
+          });
+
+          this.printService.print({
+            title: `Statute Concordance: ${oldActName} § ${oldSecNum} ➔ ${newActName} § ${newSecNum}`,
+            subtitle: `Criminal Law Reform Concordance & Substantive Diff Analysis`,
+            content: contentHtml,
+            watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+            classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+            sealText: 'Enacted Criminal Law Reform Concordance • LegalConnect Network',
+            extraMeta: [
+              { label: 'Transition Pair', value: `${oldActName} ➔ ${newActName}` },
+              { label: 'Substantive Match', value: `${this.diffSimilarity}% Similarity` },
+              { label: 'Enacted Date', value: this.newActEffectiveDate || 'July 1, 2024' },
+            ],
+          });
+        } else if (params.format === 'txt') {
+          let txt = `========================================================================\n`;
+          txt += `        STATUTORY REFORM CONCORDANCE & TRANSITION DOSSIER\n`;
+          txt += `========================================================================\n\n`;
+          txt += `[COLONIAL LAW] ${oldActName} — Section ${oldSecNum}: ${this.result!.oldSection?.title || ''}\n`;
+          txt += `${this.result!.oldSection?.content || ''}\n\n`;
+          txt += `------------------------------------------------------------------------\n`;
+          txt += `[NEW REFORM] ${newActName} — Section ${newSecNum}: ${this.result!.newSection?.title || ''}\n`;
+          txt += `${this.result!.newSection?.content || ''}\n\n`;
+          this.dataExportService.downloadBlob(
+            txt,
+            'text/plain;charset=utf-8;',
+            `Concordance-${oldSecNum}-to-${newSecNum}-${Date.now()}.txt`
+          );
+        } else if (params.format === 'json') {
+          this.dataExportService.downloadBlob(
+            JSON.stringify(this.result, null, 2),
+            'application/json;charset=utf-8;',
+            `Concordance-${oldSecNum}-to-${newSecNum}-${Date.now()}.json`
+          );
+        }
+      }
+    });
   }
 
   // ── NEW: Reading mode toggle ──

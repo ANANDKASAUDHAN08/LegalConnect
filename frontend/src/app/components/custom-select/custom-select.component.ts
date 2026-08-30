@@ -5,6 +5,7 @@ import {
   EventEmitter,
   OnInit,
   OnDestroy,
+  AfterViewChecked,
   ElementRef,
   HostListener,
   ChangeDetectorRef,
@@ -47,7 +48,7 @@ export interface ProcessedGroup {
   styleUrl: './custom-select.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAccessor {
+export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecked, ControlValueAccessor {
   @Input() options: SelectOption[] = [];
   @Input() groups?: SelectGroup[];
   @Input() value: any = '';
@@ -104,6 +105,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
   @ViewChild('searchInput') searchInputElement?: ElementRef<HTMLInputElement>;
   @ViewChild('mobileSearchInput') mobileSearchInputElement?: ElementRef<HTMLInputElement>;
   @ViewChild('triggerButton') triggerButton?: ElementRef<HTMLDivElement>;
+  @ViewChild('portalContainer') portalContainer?: ElementRef<HTMLDivElement>;
 
   readonly instanceId = `lc-select-${++nextUniqueId}`;
   isOpen = false;
@@ -119,7 +121,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
   private touchStartY = 0;
   isDraggingSheet = false;
 
-  // Fixed coordinates for desktop viewport overlay (break out of overflow:hidden forever)
+  // Precision viewport overlay styles (portaled directly to document.body)
   floatingStyles: { [key: string]: string } = {};
 
   private onChange: (val: any) => void = () => { };
@@ -145,14 +147,21 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
   ngOnInit(): void {
     this.checkMobileView();
 
-    // Global outside click listener
+    // Global outside click listener (with support for body-portaled menu)
     this.clickListener = (event: MouseEvent) => {
       if (!this.isOpen) return;
       const target = event.target as Node;
+      if (!target) return;
+
+      // On mobile bottom sheet, backdrop clicks handle dismissal
       if (this.isMobileView && this.useBottomSheetOnMobile) {
-        return; // Handled by bottom-sheet backdrop overlay
+        return;
       }
-      if (target && !this.elementRef.nativeElement.contains(target)) {
+
+      const clickedTrigger = this.elementRef.nativeElement.contains(target);
+      const clickedPortal = this.portalContainer?.nativeElement?.contains(target);
+
+      if (!clickedTrigger && !clickedPortal) {
         this.zone.run(() => {
           this.close();
         });
@@ -160,14 +169,14 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     };
     window.addEventListener('click', this.clickListener, true);
 
-    // High performance throttled scroll listener (run outside angular zone)
+    // High performance RAF scroll listener
     this.zone.runOutsideAngular(() => {
       this.scrollListener = (event: Event) => {
         if (!this.isOpen || (this.isMobileView && this.useBottomSheetOnMobile)) return;
 
         const target = event.target as Node;
         // Ignore scrolls inside the dropdown menu options list itself
-        if (target && this.elementRef.nativeElement.contains(target)) {
+        if (target && this.portalContainer?.nativeElement?.contains(target)) {
           return;
         }
 
@@ -221,12 +230,35 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     });
   }
 
+  ngAfterViewChecked(): void {
+    // Attach portaled container to document.body to break out of transformed containers forever
+    if (typeof document !== 'undefined' && this.portalContainer?.nativeElement) {
+      const portalEl = this.portalContainer.nativeElement;
+      if ((this.isOpen || this.isClosing) && portalEl.parentElement !== document.body) {
+        document.body.appendChild(portalEl);
+        if (!this.isMobileView || !this.useBottomSheetOnMobile) {
+          this.recalculatePosition();
+          this.cdr.markForCheck();
+        }
+      }
+    }
+  }
+
   ngOnDestroy(): void {
     if (this.isOpen && this.isMobileView && typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('lc-nested-sheet-change', {
         detail: { open: false, selectId: this.instanceId }
       }));
     }
+
+    // Clean up DOM portal from body
+    if (typeof document !== 'undefined' && this.portalContainer?.nativeElement) {
+      const portalEl = this.portalContainer.nativeElement;
+      if (portalEl.parentElement === document.body) {
+        document.body.removeChild(portalEl);
+      }
+    }
+
     this.handleBodyScrollLock(false);
     if (this.rafId !== null) {
       cancelAnimationFrame(this.rafId);
@@ -262,7 +294,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
         document.documentElement.style.overflow = 'hidden';
       }
 
-      // Lock all parent scrollable containers (e.g. parent modals/filter drawers)
+      // Lock all parent scrollable containers
       this.lockedParentElements = [];
       let parent = this.elementRef.nativeElement.parentElement;
       while (parent && parent !== document.body && parent !== document.documentElement) {
@@ -468,6 +500,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     );
   }
 
+  // Display explicit tooltip or fallback to selected option label/placeholder
   get triggerTooltip(): string {
     if (this.isOpen) return '';
     if (this.tooltip) return this.tooltip;
@@ -527,8 +560,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     this.opened.emit();
     this.cdr.markForCheck();
 
-    // Desktop only: Focus search input immediately (zero layout penalty on desktop).
-    // On Mobile: DO NOT auto-focus on open to prevent virtual keyboard from violently hijacking 50% of the screen.
+    // Auto-focus search input immediately on Desktop; skip on mobile to prevent virtual keyboard pop
     setTimeout(() => {
       if (this.searchable && !this.isMobileView) {
         this.searchInputElement?.nativeElement?.focus();
@@ -541,7 +573,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     if (!this.isOpen || this.isClosing) return;
 
     if (this.isMobileView && this.useBottomSheetOnMobile) {
-      // Smooth 200ms slide-down exit animation for mobile bottom sheet
+      // Smooth slide-down exit animation for mobile bottom sheet
       this.isClosing = true;
       this.onTouched();
       this.closed.emit();
@@ -587,8 +619,8 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     const currentY = event.touches[0].clientY;
     const deltaY = currentY - this.touchStartY;
     if (deltaY > 0) {
-      // Soft rubberband resistance curve
-      this.sheetTranslateY = Math.pow(deltaY, 0.9);
+      // Smooth rubberband resistance curve
+      this.sheetTranslateY = Math.pow(deltaY, 0.88);
       this.cdr.markForCheck();
     }
   }
@@ -596,7 +628,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
   onSheetTouchEnd(): void {
     if (!this.isDraggingSheet) return;
     this.isDraggingSheet = false;
-    if (this.sheetTranslateY > 65) {
+    if (this.sheetTranslateY > 60) {
       this.close();
     } else {
       this.sheetTranslateY = 0;
@@ -704,7 +736,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
   private scrollFocusedOptionIntoView(): void {
     if (this.focusedIndex < 0) return;
     setTimeout(() => {
-      const container = this.elementRef.nativeElement.querySelector(
+      const container = (this.portalContainer?.nativeElement || this.elementRef.nativeElement).querySelector(
         this.isMobileView && this.useBottomSheetOnMobile
           ? '.custom-select-mobile-list'
           : '.custom-select-scrollbar'
@@ -721,13 +753,14 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
 
   private recalculatePosition(): void {
     const el = this.triggerButton?.nativeElement || this.elementRef.nativeElement;
-    if (!el) return;
+    if (!el || typeof window === 'undefined') return;
     const rect = el.getBoundingClientRect();
     const viewportHeight = window.innerHeight;
+    const viewportWidth = window.innerWidth;
     const spaceBelow = viewportHeight - rect.bottom;
     const spaceAbove = rect.top;
 
-    // Vertical flip calculation
+    // Intelligent Vertical Flip
     if (this.dropPosition === 'up') {
       this.dropUp = true;
     } else if (this.dropPosition === 'down') {
@@ -736,27 +769,44 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
       this.dropUp = spaceBelow < 260 && spaceAbove > spaceBelow;
     }
 
-    // Horizontal alignment calculation
+    // Intelligent Horizontal Alignment
     if (this.menuAlign === 'right') {
       this.alignRight = true;
     } else if (this.menuAlign === 'left') {
       this.alignRight = false;
     } else {
-      const spaceRight = window.innerWidth - rect.left;
-      this.alignRight = spaceRight < 280 || (rect.right > window.innerWidth - 60);
+      const spaceRight = viewportWidth - rect.left;
+      this.alignRight = spaceRight < 280 || (rect.right > viewportWidth - 60);
     }
 
-    // Position calculation for viewport fixed overlay
+    // Compute pixel-perfect coordinates
     const top = this.dropUp ? (rect.top - 6) : (rect.bottom + 6);
+    
+    // Resolve dynamic width constraints (handle '100%' gracefully)
+    let computedMinWidth = this.menuMinWidth;
+    if (!computedMinWidth || computedMinWidth === '100%') {
+      computedMinWidth = `${Math.max(rect.width, 180)}px`;
+    }
+
+    let computedMaxWidth = this.menuMaxWidth;
+    if (computedMaxWidth === '100%') {
+      computedMaxWidth = `${Math.max(rect.width, 360)}px`;
+    }
+
+    const availableVerticalHeight = this.dropUp ? Math.max(120, rect.top - 20) : Math.max(120, viewportHeight - rect.bottom - 20);
+    const parsedMaxMenuHeight = parseInt(this.maxMenuHeight, 10) || 320;
+    const clampedHeight = Math.min(parsedMaxMenuHeight, availableVerticalHeight);
+
     this.floatingStyles = {
       position: 'fixed',
       top: `${top}px`,
-      left: this.alignRight ? 'auto' : `${Math.max(8, rect.left)}px`,
-      right: this.alignRight ? `${Math.max(8, window.innerWidth - rect.right)}px` : 'auto',
-      minWidth: this.menuMinWidth || `${Math.max(rect.width, 180)}px`,
-      maxWidth: this.menuMaxWidth || '420px',
+      left: this.alignRight ? 'auto' : `${Math.max(8, Math.min(rect.left, viewportWidth - 200))}px`,
+      right: this.alignRight ? `${Math.max(8, viewportWidth - rect.right)}px` : 'auto',
+      minWidth: computedMinWidth,
+      maxWidth: computedMaxWidth || '420px',
+      maxHeight: `${clampedHeight}px`,
       transform: this.dropUp ? 'translateY(-100%)' : 'none',
-      zIndex: '99999'
+      zIndex: '999999'
     };
   }
 
@@ -768,33 +818,8 @@ export class CustomSelectComponent implements OnInit, OnDestroy, ControlValueAcc
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
 
-    // Viewport bounds
-    if (rect.bottom <= 0 || rect.top >= viewportHeight || rect.right <= 0 || rect.left >= viewportWidth) {
-      return true;
-    }
-
-    // Parent overflow container check
-    let parent = el.parentElement;
-    while (parent && parent !== document.body && parent !== document.documentElement) {
-      const style = window.getComputedStyle(parent);
-      const overflowY = style.overflowY;
-      const overflow = style.overflow;
-      if (
-        overflowY === 'auto' ||
-        overflowY === 'scroll' ||
-        overflow === 'auto' ||
-        overflow === 'scroll' ||
-        overflowY === 'hidden'
-      ) {
-        const parentRect = parent.getBoundingClientRect();
-        if (rect.bottom <= parentRect.top || rect.top >= parentRect.bottom) {
-          return true;
-        }
-      }
-      parent = parent.parentElement;
-    }
-
-    return false;
+    // Viewport bounds check
+    return rect.bottom <= 0 || rect.top >= viewportHeight || rect.right <= 0 || rect.left >= viewportWidth;
   }
 
   @HostListener('keydown', ['$event'])

@@ -13,6 +13,7 @@ import { TrendChartComponent, ChartPoint } from '../../../components/analytics/t
 import { DonutChartComponent, DonutCategory } from '../../../components/analytics/donut-chart/donut-chart.component';
 import { FunnelMetricComponent, FunnelStep } from '../../../components/analytics/funnel-metric/funnel-metric.component';
 import { DataExportService } from '../../../services/data-export.service';
+import { PrintExportService } from '../../../services/print-export.service';
 
 export interface AdvocateBasicAnalytics {
   totalViews: number;
@@ -190,6 +191,7 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
     private lawyerService: LawyerService,
     private snackbar: SnackbarService,
     private dataExportService: DataExportService,
+    private printExportService: PrintExportService,
     private router: Router
   ) { }
 
@@ -391,18 +393,114 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
     this.snackbar.show('Exported Practice Analytics to CSV.', 'success');
   }
 
+  triggerPrint() {
+    this.printAnalyticsReport();
+  }
+
   printAnalyticsReport() {
-    const success = this.dataExportService.printAdvocateAnalyticsDossier(
-      this.currentUser,
-      this.activeInsights(),
-      this.selectedRange(),
-      () => {
-        this.snackbar.show('Popups were blocked by your browser. Printing triggered in background.', 'info');
+    const advocateName = this.currentUser?.fullName || 'Advocate';
+    const totalInquiries = this.inquiries().length;
+    const totalReviews = this.reviewsList().length;
+
+    this.printExportService.open({
+      title: 'Senior Counsel Practice Analytics Dossier',
+      subtitle: `Certified Practice Performance & Chambers Intelligence (${advocateName})`,
+      formats: ['pdf', 'csv', 'json', 'txt'],
+      scopes: [
+        {
+          id: 'analytics',
+          label: `Chambers Analytics & Performance Dossier`,
+          count: this.trendPoints().length,
+          description: `Practice revenue, conversion funnels & caseload trajectory (${this.selectedRange().toUpperCase()})`
+        },
+        {
+          id: 'inquiries',
+          label: `Client Consultation & Inquiry Log (${totalInquiries} Records)`,
+          count: totalInquiries,
+          description: 'Itemized client retainers, matters and inquiry ledger'
+        },
+        {
+          id: 'fullAudit',
+          label: `Full Master Chambers Audit Dossier (${totalInquiries + totalReviews} Total Items)`,
+          count: totalInquiries + totalReviews,
+          description: 'Comprehensive practice audit combining analytics, client ledger & verified reviews'
+        }
+      ],
+      defaultScope: 'analytics',
+      allowWatermark: true,
+      defaultWatermark: 'OFFICIAL COPY',
+      allowChartsToggle: true,
+      defaultIncludeCharts: true,
+      onExport: async (params) => {
+        if (params.format === 'pdf') {
+          const chartImages: { label: string; base64: string }[] = [];
+          if (params.includeCharts && typeof document !== 'undefined') {
+            const trendCanvas = document.querySelector('app-trend-chart canvas') as HTMLCanvasElement;
+            if (trendCanvas) {
+              try {
+                chartImages.push({ label: 'Practice Revenue & Retainer Velocity Trajectory', base64: trendCanvas.toDataURL('image/png') });
+              } catch { }
+            }
+            const donutCanvas = document.querySelector('app-donut-chart canvas') as HTMLCanvasElement;
+            if (donutCanvas) {
+              try {
+                chartImages.push({ label: 'Case Load & Practice Category Distribution', base64: donutCanvas.toDataURL('image/png') });
+              } catch { }
+            }
+          }
+
+          this.dataExportService.printAdvocateAnalyticsDossier(
+            this.currentUser,
+            this.activeInsights(),
+            this.selectedRange(),
+            () => {
+              this.snackbar.show('Popups were blocked by your browser. Printing triggered in background.', 'info');
+            },
+            chartImages
+          );
+        } else if (params.format === 'csv') {
+          if (params.scope === 'inquiries') {
+            const rows = this.inquiries().map(i => ({
+              id: i.id,
+              clientName: i.clientName,
+              clientEmail: i.clientEmail,
+              status: i.status,
+              createdAt: i.createdAt,
+              message: i.message
+            }));
+            const headers = [
+              { key: 'id', label: 'Inquiry ID' },
+              { key: 'clientName', label: 'Client Name' },
+              { key: 'clientEmail', label: 'Email' },
+              { key: 'status', label: 'Status' },
+              { key: 'createdAt', label: 'Date' },
+              { key: 'message', label: 'Message' }
+            ];
+            const csv = this.printExportService.convertToCsv(rows, headers);
+            this.dataExportService.downloadBlob(csv, 'text/csv;charset=utf-8;', `Chambers-Inquiries-${Date.now()}.csv`);
+          } else {
+            this.exportToCsv();
+          }
+        } else if (params.format === 'json') {
+          const payload = {
+            advocate: this.currentUser,
+            insights: this.activeInsights(),
+            inquiries: this.inquiries(),
+            reviews: this.reviewsList(),
+            exportedAt: new Date().toISOString()
+          };
+          this.dataExportService.downloadBlob(JSON.stringify(payload, null, 2), 'application/json;charset=utf-8;', `Chambers-Dossier-${Date.now()}.json`);
+        } else if (params.format === 'txt') {
+          const payload = {
+            user: this.currentUser,
+            consultations: this.inquiries(),
+            reviews: this.reviewsList()
+          };
+          const txt = this.dataExportService.generateTxtFormat(payload.user, [], payload.consultations, payload.reviews, new Date().toLocaleDateString(), this.currentUser);
+          this.dataExportService.downloadBlob(txt, 'text/plain;charset=utf-8;', `Chambers-Dossier-${Date.now()}.txt`);
+        }
       }
-    );
-    if (success) {
-      this.snackbar.show('Generating Executive Practice Dossier...', 'info');
-    }
+    });
   }
 
   updateInquiryStatus(id: number, status: string) {

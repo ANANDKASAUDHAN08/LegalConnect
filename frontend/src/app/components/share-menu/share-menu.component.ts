@@ -7,6 +7,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { SnackbarService } from '../../services/snackbar.service';
+import { IconComponent } from '../icon/icon.component';
 
 export interface SharePlatform {
   id: 'whatsapp' | 'facebook' | 'twitter' | 'linkedin' | 'telegram' | 'email';
@@ -22,7 +23,7 @@ export interface SharePlatform {
 @Component({
   selector: 'app-share-menu',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, IconComponent],
   templateUrl: './share-menu.component.html',
   styleUrls: ['./share-menu.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -136,18 +137,36 @@ export class ShareMenuComponent implements OnDestroy {
     }
   };
 
+  private globalClickListener = (event: Event) => {
+    if (!this.showShareDropdown) return;
+    const target = event.target as Node;
+    if (!target) return;
+
+    const isInsideHost = this.elementRef?.nativeElement?.contains(target);
+    const isInsideDesktop = this.desktopDropdownElement?.contains(target);
+    const isInsideMobile = this.mobileSheetElement?.contains(target);
+
+    if (!isInsideHost && !isInsideDesktop && !isInsideMobile) {
+      this.closeShareDropdown();
+    }
+  };
+
   constructor(
     private elementRef: ElementRef,
     private snackbar: SnackbarService,
     private cdr: ChangeDetectorRef
   ) {
     if (typeof window !== 'undefined') {
+      window.addEventListener('click', this.globalClickListener, true);
+      window.addEventListener('pointerdown', this.globalClickListener, true);
       window.addEventListener('scroll', this.scrollListener, true);
     }
   }
 
   ngOnDestroy() {
     if (typeof window !== 'undefined') {
+      window.removeEventListener('click', this.globalClickListener, true);
+      window.removeEventListener('pointerdown', this.globalClickListener, true);
       window.removeEventListener('scroll', this.scrollListener, true);
     }
     this.cleanupElements();
@@ -179,6 +198,8 @@ export class ShareMenuComponent implements OnDestroy {
     this.updateBodyScroll();
     if (this.showShareDropdown) {
       setTimeout(() => this.calculateDropdownPosition(), 0);
+    } else {
+      this.cleanupElements();
     }
     this.cdr.markForCheck();
   }
@@ -266,17 +287,6 @@ export class ShareMenuComponent implements OnDestroy {
         document.body.style.overflow = 'hidden';
       } else {
         document.body.style.overflow = '';
-      }
-    }
-  }
-
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    if (!this.elementRef.nativeElement.contains(event.target)) {
-      if (this.showShareDropdown) {
-        this.showShareDropdown = false;
-        this.updateBodyScroll();
-        this.cdr.markForCheck();
       }
     }
   }

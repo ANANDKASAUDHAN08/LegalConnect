@@ -7,6 +7,9 @@ import { ReviewService, ReviewItem } from '../../services/review.service';
 import { DraftService } from '../../services/draft.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
+import { BookmarkButtonComponent } from '../../components/bookmark-button/bookmark-button.component';
+import { InteractiveLikeComponent } from '../../components/interactive-like/interactive-like.component';
+import { ReportTriggerComponent } from '../../components/report-modal/report-trigger/report-trigger.component';
 
 interface ContactForm {
   name: string;
@@ -24,7 +27,14 @@ interface ReviewForm {
 @Component({
   selector: 'app-lawyer-detail',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink],
+  imports: [
+    CommonModule,
+    FormsModule,
+    RouterLink,
+    BookmarkButtonComponent,
+    InteractiveLikeComponent,
+    ReportTriggerComponent
+  ],
   templateUrl: './lawyer-detail.component.html',
   styleUrls: ['./lawyer-detail.component.scss']
 })

@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { CategoryIconComponent } from '../category-icon/category-icon.component';
-import { getCategoryColorByName } from '../../config/category-data.config';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
+import { IconComponent, IconName } from '../../../../components/icon';
+import { getCategoryColorByName } from '../../config/category-data.config';
 
 export interface SearchSuggestion {
   category: string;
@@ -12,33 +12,10 @@ export interface SearchSuggestion {
   isHeader?: boolean;
 }
 
-/**
- * Unified search bar with AI/Keyword toggle, voice mic, autocomplete dropdown.
- * REUSABLE between mobile hero and desktop dashboard — eliminates ~400 lines of duplication.
- * 
- * Usage:
- *   <app-search-bar
- *     [isAiMode]="isAiMode" [normalSearchQuery]="normalSearchQuery"
- *     [situationQuery]="situationQuery" [voiceLanguage]="voiceLanguage"
- *     [isRecording]="isRecording" [isAiSolving]="isAiSolving"
- *     [filteredSuggestions]="filteredSuggestions"
- *     [variant]="'desktop'"
- *     (aiModeChange)="isAiMode = $event"
- *     (normalSearchQueryChange)="normalSearchQuery = $event"
- *     (situationQueryChange)="situationQuery = $event"
- *     (searchTriggered)="triggerNormalSearch()"
- *     (aiSearchTriggered)="handleAiSearchInput()"
- *     (inputChanged)="handleNormalSearchInput()"
- *     (voiceToggled)="toggleVoiceRecording()"
- *     (languageToggled)="setVoiceLanguage($event)"
- *     (cleared)="clearSearchQuery()"
- *     (suggestionSelected)="selectSuggestion($event)"
- *   />
- */
 @Component({
   selector: 'app-search-bar',
   standalone: true,
-  imports: [CommonModule, FormsModule, CategoryIconComponent, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './search-bar.component.html',
   styleUrls: ['./search-bar.component.scss']
@@ -87,10 +64,21 @@ export class SearchBarComponent {
     return getCategoryColorByName(category).text;
   }
 
-  getSuggestionIcon(categoryName: string): string {
-    if (!this.categories?.length) return 'question';
+  getSuggestionIcon(categoryName: string): IconName {
+    if (!this.categories?.length) return 'help-circle';
     const cat = this.categories.find(c => c.name.toLowerCase() === categoryName.toLowerCase());
-    return cat ? cat.icon : 'question';
+    const icon = cat?.icon;
+    switch (icon) {
+      case 'home': return 'home';
+      case 'users': return 'users';
+      case 'shopping-cart': return 'shopping-cart';
+      case 'briefcase': return 'briefcase';
+      case 'scale': return 'scale';
+      case 'building': return 'building';
+      case 'shield': return 'shield';
+      default:
+        return 'help-circle';
+    }
   }
 
   trackBySuggestion(_: number, item: SearchSuggestion): string {

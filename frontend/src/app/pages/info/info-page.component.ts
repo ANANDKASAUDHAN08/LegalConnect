@@ -12,6 +12,7 @@ import { ScrollService } from '../../services/scroll.service';
 import { FeedbackService } from '../../services/feedback.service';
 import { AuthService } from '../../services/auth.service';
 import { UserProfileService } from '../../services/user-profile.service';
+import { PrintService } from '../../services/print.service';
 import { Subscription } from 'rxjs';
 
 @Component({
@@ -229,7 +230,8 @@ export class InfoPageComponent implements OnInit, OnDestroy {
     private userProfileService: UserProfileService,
     private ngZone: NgZone,
     private titleService: Title,
-    private metaService: Meta
+    private metaService: Meta,
+    private printService: PrintService
   ) { }
 
   ngOnInit() {
@@ -443,9 +445,20 @@ export class InfoPageComponent implements OnInit, OnDestroy {
   }
 
   printDocument() {
-    if (typeof window !== 'undefined') {
-      window.print();
-    }
+    if (typeof window === 'undefined') return;
+    const contentEl = document.querySelector('.prose-custom, .info-content-container, article, main');
+    const contentHtml = contentEl ? contentEl.innerHTML : `<p>Document content for ${this.slug}</p>`;
+    this.printService.print({
+      title: this.pageBadges[this.slug] || 'LegalConnect Official Documentation',
+      subtitle: `${this.currentBadge} • Last Updated: ${this.currentLastUpdated}`,
+      content: this.printService.buildArticleContent(contentHtml),
+      sealText: 'Official Platform Documentation • LegalConnect Compliance',
+      accentColor: '#4f46e5',
+      extraMeta: [
+        { label: 'Document Type', value: this.currentBadge },
+        { label: 'Effective Date', value: this.currentLastUpdated },
+      ],
+    });
   }
 
   private setupIntersectionObserver() {

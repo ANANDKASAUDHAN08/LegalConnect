@@ -125,6 +125,19 @@
           <app-icon name="printer" [size]="16" class="text-slate-500"></app-icon>
           <span>Print</span>
         </button>
+
+        <!-- Save / Bookmark -->
+        <app-bookmark-button targetType="LegalResource" [targetId]="resource._id" [title]="resource.name"
+          [subtitle]="getTypeLabel(resource.type)" variant="button-with-text" size="md">
+        </app-bookmark-button>
+
+        <!-- Helpful / Like Upvote -->
+        <app-interactive-like targetType="LegalResource" [targetId]="resource._id" variant="pill" size="md">
+        </app-interactive-like>
+
+        <!-- Report Issue -->
+        <app-report-trigger targetType="LegalResource" [targetId]="resource._id" [targetTitle]="resource.name">
+        </app-report-trigger>
       </div>
     </div>
 
@@ -287,22 +300,26 @@
             <div
               class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Government ID (Aadhaar / Voter ID / Passport)</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Government ID (Aadhaar / Voter ID /
+                Passport)</span>
             </div>
             <div
               class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Income Certificate / BPL Card (For Free Aid)</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Income Certificate / BPL Card (For Free
+                Aid)</span>
             </div>
             <div
               class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Case FIR / Police Complaint Copy (If any)</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Case FIR / Police Complaint Copy (If
+                any)</span>
             </div>
             <div
               class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
               <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Court Summons / Notice / Previous Orders</span>
+              <span class="text-slate-700 dark:text-slate-300 font-medium">Court Summons / Notice / Previous
+                Orders</span>
             </div>
           </div>
         </div>

@@ -1,13 +1,17 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnInit, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
-import { SavedItemsService } from '../../../../services/saved-items.service';
 import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { LEGAL_RESOURCE_PIPES } from '../../../../pipes/legal-resource.pipe';
 import { getResourceTypeLabel, getResourceTypeBadgeClass } from '../../../../core/constants/legal-resource.constants';
+
+import { BookmarkButtonComponent } from '../../../../components/bookmark-button/bookmark-button.component';
+import { InteractiveLikeComponent } from '../../../../components/interactive-like/interactive-like.component';
+import { ReportTriggerComponent } from '../../../../components/report-modal/report-trigger/report-trigger.component';
+import { IconComponent } from '../../../../components/icon';
 
 @Component({
   selector: 'app-resource-card',
@@ -16,7 +20,11 @@ import { getResourceTypeLabel, getResourceTypeBadgeClass } from '../../../../cor
     CommonModule,
     TooltipDirective,
     ShareMenuComponent,
-    LEGAL_RESOURCE_PIPES
+    LEGAL_RESOURCE_PIPES,
+    BookmarkButtonComponent,
+    InteractiveLikeComponent,
+    ReportTriggerComponent,
+    IconComponent
   ],
   templateUrl: './resource-card.component.html',
   styleUrls: ['./resource-card.component.scss'],
@@ -30,22 +38,15 @@ export class ResourceCardComponent implements OnInit {
   @Input() selectedLanguage: 'en' | 'hi' = 'en';
   @Input() userCoords: { lat: number; lng: number } | null = null;
 
-  @Output() bookmark = new EventEmitter<string>(); // backwards compat
   @Output() directions = new EventEmitter<{ lat: number, lng: number }>();
   @Output() showQr = new EventEmitter<any>();
   @Output() cardHover = new EventEmitter<string | null>();
   @Output() showOnMap = new EventEmitter<any>();
-  @Output() helpfulUpvote = new EventEmitter<any>();
 
   operatingStatus!: { label: string, colorClass: string };
   isAddressCopied = false;
-  hasUpvoted = false;
-
-  // Reactive saved state
-  isSaved = computed(() => this.resource?._id ? this.savedItems.isSavedResource(this.resource._id) : false);
 
   constructor(
-    private savedItems: SavedItemsService,
     private snackbar: SnackbarService,
     private router: Router
   ) { }
@@ -79,25 +80,10 @@ export class ResourceCardComponent implements OnInit {
   copyCardDetails() {
     const text = this.getShareText() + `\nShared via LegalConnect Find-Help Portal`;
     navigator.clipboard.writeText(text).then(() => {
-      this.snackbar.show('Contact details copied to clipboard!');
+      this.snackbar.show('Contact details copied to clipboard!', 'success');
     }).catch(() => {
-      this.snackbar.show('Could not copy contact details.');
+      this.snackbar.show('Could not copy contact details.', 'error');
     });
-  }
-
-  onBookmarkClick(event: Event) {
-    event.stopPropagation();
-    if (this.resource?._id) {
-      this.savedItems.toggleResource(this.resource._id, this.resource.name);
-      this.bookmark.emit(this.resource._id); // backwards compat
-    }
-  }
-
-  onHelpfulClick(event: Event) {
-    event.stopPropagation();
-    if (this.hasUpvoted) return;
-    this.hasUpvoted = true;
-    this.helpfulUpvote.emit(this.resource);
   }
 
   // Dynamic status check based on current time
@@ -126,7 +112,7 @@ export class ResourceCardComponent implements OnInit {
 
         if (currentTime >= startMin && currentTime <= endMin) {
           if (endMin - currentTime <= 30) {
-            return { label: 'Closing Soon', colorClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-450 border-rose-500/20' };
+            return { label: 'Closing Soon', colorClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20' };
           }
           return { label: 'Open Now', colorClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' };
         }

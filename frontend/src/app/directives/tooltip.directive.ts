@@ -66,13 +66,14 @@ export class TooltipDirective implements OnDestroy {
 
     // Tailwind classes for premium UI tooltip design
     const classes = [
-      'fixed', 'z-[9999]', 'pointer-events-none', 'px-2.5', 'py-1', 
+      'fixed', 'z-[9999999]', 'pointer-events-none', 'px-2.5', 'py-1', 
       'text-[11px]', 'font-medium', 'rounded-md', 'shadow-md', 
       'border', 'bg-white', 'text-slate-800', 'border-slate-200/90',
       'dark:bg-slate-950', 'dark:text-slate-200', 'dark:border-slate-800/95',
       'opacity-0', 'transition-all', 'duration-150', 'ease-out', 'transform'
     ];
     classes.forEach(cls => this.renderer.addClass(this.tooltipEl, cls));
+    this.renderer.setStyle(this.tooltipEl, 'z-index', '9999999');
 
     // Add translation offset class based on placement for a premium entrance animation
     let offsetClass = 'translate-y-1';

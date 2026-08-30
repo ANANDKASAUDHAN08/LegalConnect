@@ -1,0 +1,113 @@
+// ═══════════════════════════════════════════════════════════════════
+// Global Print Fallback Styles (for native Ctrl+P / Cmd+P)
+// ═══════════════════════════════════════════════════════════════════
+
+@page {
+  size: A4 portrait;
+  margin: 12mm 14mm 14mm 14mm;
+}
+
+@media print {
+
+  // ── Hide all application navigation & interactive controls ──
+  app-navbar,
+  app-footer,
+  app-snackbar,
+  app-bottom-nav,
+  app-pwa-install-banner,
+  app-consent-banner,
+  app-whats-new-modal,
+  app-command-palette,
+  app-keyboard-shortcuts-modal,
+  .no-print,
+  .floating-action-bar,
+  .drawer-backdrop,
+  .drawer-panel,
+  .filter-drawer-panel,
+  button,
+  .action-btn,
+  .search-container,
+  input,
+  select,
+  textarea {
+    display: none !important;
+  }
+
+  // ── Reset root & body to pristine white print surface ──
+  html,
+  body {
+    visibility: visible !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+    line-height: 1.45 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  // ── Neutralize all dark mode backgrounds & text ──
+  * {
+    background-color: transparent !important;
+    color: #0f172a !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  // ── Card & container structure in fallback print ──
+  .card,
+  .panel,
+  .statute-card,
+  .resource-card,
+  article,
+  section {
+    border: 1px solid #cbd5e1 !important;
+    background: #ffffff !important;
+    border-radius: 6px !important;
+    margin-bottom: 12px !important;
+    padding: 12px !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  // ── Headings ──
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    color: #0f172a !important;
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  // ── Multi-page table headers ──
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  th,
+  td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 6px 8px !important;
+  }
+
+  // ── Links ──
+  a {
+    text-decoration: none !important;
+    color: #0f172a !important;
+  }
+}

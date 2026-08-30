@@ -9,6 +9,9 @@ import { LocationService } from '../../services/location.service';
 import { ThemeService } from '../../services/theme.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { ScrollService } from '../../services/scroll.service';
+import { PrintService } from '../../services/print.service';
+import { PrintExportService } from '../../services/print-export.service';
+import { DataExportService } from '../../services/data-export.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { Meta, Title } from '@angular/platform-browser';
 import { IndiaMapComponent } from './components/india-map/india-map.component';
@@ -366,7 +369,10 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
     private meta: Meta,
     private titleService: Title,
     private ngZone: NgZone,
-    private scrollService: ScrollService
+    private scrollService: ScrollService,
+    private printService: PrintService,
+    private printExportService: PrintExportService,
+    private dataExportService: DataExportService
   ) { }
 
   isDesktop = false;
@@ -1283,7 +1289,170 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
   }
 
   printDirectory(): void {
-    window.print();
+    const state = this.filters.state || 'All India';
+    const totalCount = this.totalResults || this.resources.length;
+    const pageCount = this.resources.length;
+
+    this.printExportService.open({
+      title: 'Official Legal Infrastructure Registry',
+      subtitle: `Export verified courts, DLSA legal aid clinics, and emergency helplines (${state}).`,
+      formats: ['pdf', 'csv', 'json', 'txt'],
+      scopes: [
+        {
+          id: 'page',
+          label: `Current Page (${pageCount} Records)`,
+          count: pageCount,
+          description: `Visible page in current view (Page ${this.currentPage} of ${this.totalPages})`
+        },
+        {
+          id: 'filtered',
+          label: `All Filtered Results (${totalCount} Records)`,
+          count: totalCount,
+          description: `All records matching current filters: ${state}${this.filters.district ? ', ' + this.filters.district : ''}${this.filters.type ? ', ' + this.filters.type : ''}`
+        }
+      ],
+      defaultScope: 'page',
+      allowWatermark: true,
+      defaultWatermark: 'OFFICIAL COPY',
+      allowQrToggle: true,
+      defaultIncludeQr: true,
+      onExport: async (params) => {
+        let records = this.resources;
+
+        // If user wants all filtered results and we have more than 1 page
+        if (params.scope === 'filtered' && totalCount > this.resources.length) {
+          try {
+            const res: any = await this.legalService.getResourceDirectory({
+              page: 1,
+              limit: Math.min(totalCount, 500),
+              search: this.filters.search || undefined,
+              pincode: this.filters.pincode || undefined,
+              state: this.filters.state || undefined,
+              district: this.filters.district || undefined,
+              type: this.filters.type || undefined,
+              jurisdictionLevel: this.filters.jurisdictionLevel || undefined,
+              facility: this.filters.facility || undefined,
+              sortBy: this.filters.sortBy,
+              sortOrder: this.filters.sortOrder,
+              lang: this.selectedLanguage
+            }).toPromise();
+            if (res?.success && Array.isArray(res.data)) {
+              records = res.data;
+            }
+          } catch (err) {
+            console.warn('[LegalResources] Could not fetch complete list, falling back to current page:', err);
+          }
+        }
+
+        const dateStr = new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+        // 1. PDF PRINT
+        if (params.format === 'pdf') {
+          const subtitle = `State: ${state}${this.filters.district ? ' • District: ' + this.filters.district : ''} • ${records.length} Verified Records`;
+          const registryUrl = typeof window !== 'undefined' ? window.location.href : 'https://legalconnect-501109.web.app/legal-resources';
+          const cardsHtml = this.printService.buildResourceCards(records, { showQr: params.includeQr });
+          
+          this.printService.print({
+            title: 'Official Legal Infrastructure Registry — India',
+            subtitle,
+            content: cardsHtml,
+            headerQrData: registryUrl,
+            watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+            classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+            sealText: 'Official Legal Directory Gazette • National Legal Services Authority',
+            accentColor: '#4338ca',
+            extraMeta: [
+              { label: 'Registry Scope', value: state },
+              { label: 'Total Records', value: String(records.length) },
+            ],
+          });
+        }
+        // 2. CSV EXPORT
+        else if (params.format === 'csv') {
+          const csvData = records.map(r => ({
+            name: r.name,
+            type: this.getTypeLabel(r.type),
+            state: r.state || '',
+            district: r.district || '',
+            city: r.city || '',
+            address: r.address || '',
+            pincode: r.pincode || '',
+            phone: r.contactNumber || r.number || '',
+            website: r.website || r.officialPortal || '',
+            efiling: r.facilities?.hasEfiling ? 'YES' : 'NO',
+            ladcs: r.facilities?.hasLADCS ? 'YES' : 'NO',
+            vcRoom: r.facilities?.hasVCRoom ? 'YES' : 'NO',
+            legalAidClinic: r.facilities?.hasLegalAidClinic ? 'YES' : 'NO',
+            accessible: r.facilities?.isWheelchairAccessible ? 'YES' : 'NO',
+            auditDate: r.lastAuditDate || ''
+          }));
+
+          const headers = [
+            { key: 'name', label: 'Institution Name' },
+            { key: 'type', label: 'Category' },
+            { key: 'state', label: 'State' },
+            { key: 'district', label: 'District' },
+            { key: 'city', label: 'City' },
+            { key: 'address', label: 'Full Address' },
+            { key: 'pincode', label: 'Pincode' },
+            { key: 'phone', label: 'Contact Phone' },
+            { key: 'website', label: 'Official Portal' },
+            { key: 'efiling', label: 'e-Filing Available' },
+            { key: 'ladcs', label: 'LADCS Defense System' },
+            { key: 'vcRoom', label: 'VC Hearing Room' },
+            { key: 'legalAidClinic', label: 'Legal Aid Clinic' },
+            { key: 'accessible', label: 'Wheelchair Accessible' },
+            { key: 'auditDate', label: 'Audit Date' }
+          ];
+
+          const csvContent = this.printExportService.convertToCsv(csvData, headers);
+          this.dataExportService.downloadBlob(
+            csvContent,
+            'text/csv;charset=utf-8;',
+            `LegalConnect-Registry-${state.replace(/\s+/g, '-')}-${Date.now()}.csv`
+          );
+        }
+        // 3. JSON EXPORT
+        else if (params.format === 'json') {
+          const exportPayload = {
+            registry: 'National Legal Infrastructure Directory',
+            scope: state,
+            exportedAt: new Date().toISOString(),
+            totalRecords: records.length,
+            records: records
+          };
+          this.dataExportService.downloadBlob(
+            JSON.stringify(exportPayload, null, 2),
+            'application/json;charset=utf-8;',
+            `LegalConnect-Registry-${state.replace(/\s+/g, '-')}-${Date.now()}.json`
+          );
+        }
+        // 4. TXT EXPORT
+        else if (params.format === 'txt') {
+          let txt = `========================================================================\n`;
+          txt += `           LEGALCONNECT NATIONAL LEGAL INFRASTRUCTURE REGISTRY\n`;
+          txt += `========================================================================\n`;
+          txt += `Scope: ${state}\n`;
+          txt += `Generated On: ${dateStr}\n`;
+          txt += `Total Records: ${records.length}\n\n`;
+
+          records.forEach((r, idx) => {
+            txt += `[${idx + 1}] ${r.name.toUpperCase()}\n`;
+            txt += `    Type: ${this.getTypeLabel(r.type)}\n`;
+            txt += `    Address: ${r.address || r.city || ''} ${r.pincode ? '— ' + r.pincode : ''}\n`;
+            if (r.contactNumber) txt += `    Contact: ${r.contactNumber}\n`;
+            if (r.website) txt += `    Portal: ${r.website}\n`;
+            txt += `------------------------------------------------------------------------\n`;
+          });
+
+          this.dataExportService.downloadBlob(
+            txt,
+            'text/plain;charset=utf-8;',
+            `LegalConnect-Registry-${state.replace(/\s+/g, '-')}-${Date.now()}.txt`
+          );
+        }
+      }
+    });
   }
 
 }

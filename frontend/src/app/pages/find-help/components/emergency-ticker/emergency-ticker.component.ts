@@ -1,6 +1,8 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { EMERGENCY_HELPLINES, EmergencyHelpline } from '../../config/category-data.config';
+import { TooltipDirective } from '../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../components/icon';
 
 /**
  * Emergency helpline ticker bar — scrolling marquee on mobile, centered on desktop.
@@ -10,7 +12,7 @@ import { EMERGENCY_HELPLINES, EmergencyHelpline } from '../../config/category-da
 @Component({
   selector: 'app-emergency-ticker',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TooltipDirective, IconComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   templateUrl: './emergency-ticker.component.html',
   styleUrls: ['./emergency-ticker.component.scss']

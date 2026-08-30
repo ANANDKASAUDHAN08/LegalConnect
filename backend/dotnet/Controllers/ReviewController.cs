@@ -302,28 +302,49 @@ namespace CoreApi.Controllers
             }
         }
 
+        /// <summary>
+        /// DEPRECATED: Use POST /api/interaction/toggle instead.
+        /// This facade delegates to the UserInteraction ledger for backward compatibility.
+        /// </summary>
         [HttpPost("{id}/like")]
+        [Authorize]
         public async Task<IActionResult> LikeReview(int id)
         {
+            Response.Headers.Append("X-Deprecated", "true");
+            Response.Headers.Append("X-Migration-Target", "POST /api/interaction/toggle");
+
             try
             {
-                var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                var rateKey = $"{clientIp}:{id}";
-                if (_likeRateLimit.TryGetValue(rateKey, out var lastAction) && DateTime.UtcNow - lastAction < _likeCooldown)
-                {
-                    return StatusCode(429, new { message = "Rate limit exceeded. Please wait before toggling again." });
-                }
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+                    return Unauthorized(new { message = "Authentication required to like reviews." });
 
                 var review = await _context.Reviews.FindAsync(id);
-                if (review == null)
+                if (review == null) return NotFound("Review not found.");
+
+                var targetId = id.ToString();
+                var existing = await _context.UserInteractions
+                    .FirstOrDefaultAsync(i => i.UserId == userId && i.TargetType == "Review" && i.TargetId == targetId);
+
+                if (existing == null)
                 {
-                    return NotFound("Review not found.");
+                    _context.UserInteractions.Add(new UserInteraction
+                    {
+                        UserId = userId,
+                        TargetType = "Review",
+                        TargetId = targetId,
+                        Type = InteractionType.Like,
+                        ClientIp = HttpContext.Connection.RemoteIpAddress?.ToString(),
+                        CreatedAt = DateTime.UtcNow
+                    });
                 }
 
-                review.Likes += 1;
-                await _context.SaveChangesAsync();
-                _likeRateLimit[rateKey] = DateTime.UtcNow;
+                // Sync denormalized counter
+                review.Likes = await _context.UserInteractions
+                    .CountAsync(i => i.TargetType == "Review" && i.TargetId == targetId &&
+                                   (i.Type == InteractionType.Like || i.Type == InteractionType.Helpful)) + (existing == null ? 1 : 0);
 
+                await _context.SaveChangesAsync();
                 return Ok(review);
             }
             catch (Exception ex)
@@ -333,31 +354,41 @@ namespace CoreApi.Controllers
             }
         }
 
+        /// <summary>
+        /// DEPRECATED: Use POST /api/interaction/toggle instead.
+        /// This facade delegates to the UserInteraction ledger for backward compatibility.
+        /// </summary>
         [HttpPost("{id}/unlike")]
+        [Authorize]
         public async Task<IActionResult> UnlikeReview(int id)
         {
+            Response.Headers.Append("X-Deprecated", "true");
+            Response.Headers.Append("X-Migration-Target", "POST /api/interaction/toggle");
+
             try
             {
-                var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
-                var rateKey = $"{clientIp}:{id}";
-                if (_likeRateLimit.TryGetValue(rateKey, out var lastAction) && DateTime.UtcNow - lastAction < _likeCooldown)
-                {
-                    return StatusCode(429, new { message = "Rate limit exceeded. Please wait before toggling again." });
-                }
+                var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userIdClaim == null || !int.TryParse(userIdClaim, out int userId))
+                    return Unauthorized(new { message = "Authentication required." });
 
                 var review = await _context.Reviews.FindAsync(id);
-                if (review == null)
+                if (review == null) return NotFound("Review not found.");
+
+                var targetId = id.ToString();
+                var existing = await _context.UserInteractions
+                    .FirstOrDefaultAsync(i => i.UserId == userId && i.TargetType == "Review" && i.TargetId == targetId);
+
+                if (existing != null)
                 {
-                    return NotFound("Review not found.");
+                    _context.UserInteractions.Remove(existing);
                 }
 
-                if (review.Likes > 0)
-                {
-                    review.Likes -= 1;
-                }
+                // Sync denormalized counter
+                review.Likes = Math.Max(0, await _context.UserInteractions
+                    .CountAsync(i => i.TargetType == "Review" && i.TargetId == targetId &&
+                                   (i.Type == InteractionType.Like || i.Type == InteractionType.Helpful)) - (existing != null ? 1 : 0));
+
                 await _context.SaveChangesAsync();
-                _likeRateLimit[rateKey] = DateTime.UtcNow;
-
                 return Ok(review);
             }
             catch (Exception ex)

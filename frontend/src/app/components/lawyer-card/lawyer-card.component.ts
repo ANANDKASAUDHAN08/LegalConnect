@@ -3,11 +3,13 @@ import { CommonModule } from '@angular/common';
 
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { SavedItemsService } from '../../services/saved-items.service';
+import { BookmarkButtonComponent } from '../bookmark-button/bookmark-button.component';
+import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-lawyer-card',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, BookmarkButtonComponent, IconComponent],
   templateUrl: './lawyer-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {
@@ -33,7 +35,7 @@ export class LawyerCardComponent implements OnInit {
   // Reactive saved state — auto-updates across the page
   isSaved = computed(() => this.savedItems.isSavedLawyer(this.lawyer?._id));
 
-  constructor(private savedItems: SavedItemsService) {}
+  constructor(private savedItems: SavedItemsService) { }
 
   ngOnInit() {
     this.checkMobile();

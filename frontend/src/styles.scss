@@ -57,6 +57,16 @@
     --radius-lg: 20px;
     --radius-xl: 32px;
 
+    /* Interaction & Action Tokens (Like, Bookmark, Report) */
+    --like-color-active: #10b981;
+    --like-bg-active: rgba(16, 185, 129, 0.08);
+    --bookmark-color-active: #4f46e5;
+    --bookmark-bg-active: rgba(79, 70, 229, 0.08);
+    --report-color-hover: #ef4444;
+    --report-bg-hover: rgba(239, 68, 68, 0.08);
+    --bg-tertiary: rgba(241, 245, 249, 0.7);
+    --border-secondary: rgba(226, 232, 240, 0.6);
+
     --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
@@ -80,6 +90,16 @@
     /* Borders */
     --border-subtle: hsla(220, 30%, 95%, 0.08);
     --border-accent: hsla(var(--h-accent), var(--s-accent), var(--l-accent), 0.5);
+
+    /* Interaction & Action Tokens Dark Mode */
+    --like-color-active: #34d399;
+    --like-bg-active: rgba(52, 211, 153, 0.15);
+    --bookmark-color-active: #818cf8;
+    --bookmark-bg-active: rgba(129, 140, 248, 0.15);
+    --report-color-hover: #f87171;
+    --report-bg-hover: rgba(248, 113, 113, 0.15);
+    --bg-tertiary: rgba(30, 41, 59, 0.5);
+    --border-secondary: rgba(51, 65, 85, 0.6);
 
     /* Shadows */
     --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
@@ -497,6 +517,7 @@ h6 {
   0% {
     transform: translate3d(0, 100%, 0);
   }
+
   100% {
     transform: translate3d(0, 0, 0);
   }
@@ -506,6 +527,7 @@ h6 {
   0% {
     transform: translate3d(0, 0, 0);
   }
+
   100% {
     transform: translate3d(0, 100%, 0);
   }
@@ -515,6 +537,7 @@ h6 {
   0% {
     transform: translate3d(100%, 0, 0);
   }
+
   100% {
     transform: translate3d(0, 0, 0);
   }
@@ -524,6 +547,7 @@ h6 {
   0% {
     transform: translate3d(0, 0, 0);
   }
+
   100% {
     transform: translate3d(100%, 0, 0);
   }
@@ -533,6 +557,7 @@ h6 {
   0% {
     opacity: 0;
   }
+
   100% {
     opacity: 1;
   }
@@ -542,6 +567,7 @@ h6 {
   0% {
     opacity: 1;
   }
+
   100% {
     opacity: 0;
   }
@@ -627,67 +653,8 @@ h6 {
   display: none;
 }
 
-/* ── Global Print Settings ── */
-@page {
-  margin: 20mm 15mm;
-  /* Removes browser default header/footer (URL, title, date, page number) */
-}
-
-@media print {
-
-  /* Hide the navbar, footer, snackbar, and any other non-print layouts on the entire page */
-  app-navbar,
-  app-footer,
-  app-snackbar,
-  app-bottom-nav,
-  .no-print {
-    display: none !important;
-  }
-
-  /* Hide standard page elements using visibility so descendants (like .print-area) can override it */
-  body {
-    visibility: hidden !important;
-    background: white !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* Hide any active backdrops, dialogs, drawers or fixed panels */
-  .drawer-backdrop,
-  .drawer-panel {
-    display: none !important;
-  }
-
-  /* Ensure Angular component host wrappers are visible so .print-area inside them can render */
-  app-root,
-  app-document-templates,
-  app-law-viewer,
-  app-client-dashboard {
-    visibility: visible !important;
-    position: static !important;
-    display: block !important;
-  }
-
-  /* Force display of the print-area wrapper and all of its nested children */
-  .print-area,
-  .print-area * {
-    visibility: visible !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-
-  .print-area {
-    display: block !important;
-    position: absolute !important;
-    left: 0 !important;
-    top: 0 !important;
-    width: 100% !important;
-    margin: 0 !important;
-    padding: 24px !important;
-    background: white !important;
-    color: black !important;
-  }
-}
+/* ── Global Print Settings (consolidated in _print.scss) ── */
+@import 'styles/print';
 
 /* ─── Global User Settings Preferences Customizations ─── */
 
@@ -1325,32 +1292,32 @@ body.mobile-drawer-open .bottom-nav-container {
 }
 
 /* Staggered children fade-in — each child cascades in with 35ms delay */
-.content-enter-stagger > * {
+.content-enter-stagger>* {
   animation: contentFadeIn 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @for $i from 1 through 20 {
-  .content-enter-stagger > *:nth-child(#{$i}) {
+  .content-enter-stagger>*:nth-child(#{$i}) {
     animation-delay: #{($i - 1) * 35}ms;
   }
 }
 
-.content-enter-stagger > *:nth-child(n + 21) {
+.content-enter-stagger>*:nth-child(n + 21) {
   animation-delay: 700ms;
 }
 
 /* Faster stagger variant for dense lists (20ms interval) */
-.content-enter-stagger-fast > * {
+.content-enter-stagger-fast>* {
   animation: contentFadeIn 200ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @for $i from 1 through 20 {
-  .content-enter-stagger-fast > *:nth-child(#{$i}) {
+  .content-enter-stagger-fast>*:nth-child(#{$i}) {
     animation-delay: #{($i - 1) * 20}ms;
   }
 }
 
-.content-enter-stagger-fast > *:nth-child(n + 21) {
+.content-enter-stagger-fast>*:nth-child(n + 21) {
   animation-delay: 400ms;
 }
 

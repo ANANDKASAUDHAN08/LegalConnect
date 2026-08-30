@@ -25,6 +25,9 @@ import { LawViewerCompanionComponent } from './law-viewer-companion/law-viewer-c
 import { ScrollService } from '../../services/scroll.service';
 import { LegalTextParser, ParsedLegalSection } from '../../core/utils/legal-text-parser';
 import { IconComponent } from '../../components/icon/icon.component';
+import { PrintService } from '../../services/print.service';
+import { PrintExportService } from '../../services/print-export.service';
+import { DataExportService } from '../../services/data-export.service';
 
 const FULL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*)\s+of\s+the\s+([A-Za-z\s’'\",\-]+Act(?:,\s+\d{4})?))/gi;
 const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/gi;
@@ -227,7 +230,10 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     private ngZone: NgZone,
     public formatter: FormattingService,
     private scrollService: ScrollService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private printService: PrintService,
+    private printExportService: PrintExportService,
+    private dataExportService: DataExportService
   ) { }
 
   adjustFontSize(amount: number) {
@@ -235,8 +241,100 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+
+  printActiveSection(): void {
+    if (!this.activeSection || !this.act) return;
+    const act = this.act;
+    const sec = this.activeSection;
+    const ch = this.activeChapter;
+    const actTitle = act.actName || act.shortName;
+
+    this.printExportService.open({
+      title: `${actTitle} — Section ${sec.section_number}`,
+      subtitle: sec.title || 'Official Statutory Record',
+      formats: ['pdf', 'txt', 'json'],
+      scopes: [
+        {
+          id: 'section',
+          label: `Section ${sec.section_number} Only`,
+          count: 1,
+          description: sec.title || 'Current active statutory section'
+        },
+        ...(ch?.sections && ch.sections.length > 1 ? [{
+          id: 'chapter',
+          label: `Full ${ch.title || 'Chapter'} (${ch.sections.length} Sections)`,
+          count: ch.sections.length,
+          description: `All sections within Chapter ${ch.chapterNumber || ''}`
+        }] : [])
+      ],
+      defaultScope: 'section',
+      allowWatermark: true,
+      defaultWatermark: 'OFFICIAL COPY',
+      onExport: async (params) => {
+        if (params.format === 'pdf') {
+          let contentHtml = '';
+          if (params.scope === 'chapter' && ch?.sections) {
+            for (const s of ch.sections) {
+              contentHtml += this.printService.buildStatuteText(s, act);
+            }
+          } else {
+            contentHtml = this.printService.buildStatuteText(sec, act);
+          }
+
+          this.printService.print({
+            title: `${actTitle} — ${params.scope === 'chapter' ? (ch?.title || 'Chapter') : 'Section ' + sec.section_number}`,
+            subtitle: params.scope === 'chapter' ? `${ch?.sections?.length || 0} Statutory Provisions` : (sec.title || 'Official Statute Record'),
+            content: contentHtml,
+            watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+            classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+            sealText: 'Enacted Statutory Law Record • LegalConnect Repository',
+            extraMeta: [
+              { label: 'Act Code', value: act.shortName || 'N/A' },
+              { label: 'Chapter', value: ch?.title || 'General' },
+            ],
+          });
+        } else if (params.format === 'txt') {
+          let txt = `========================================================================\n`;
+          txt += `             ${actTitle.toUpperCase()}\n`;
+          txt += `========================================================================\n\n`;
+          if (params.scope === 'chapter' && ch?.sections) {
+            txt += `${ch.title || 'CHAPTER'}\n\n`;
+            ch.sections.forEach(s => {
+              txt += `SECTION ${s.section_number}: ${s.title || ''}\n`;
+              txt += `------------------------------------------------------------------------\n`;
+              txt += `${s.content || ''}\n\n`;
+            });
+          } else {
+            txt += `SECTION ${sec.section_number}: ${sec.title || ''}\n`;
+            txt += `------------------------------------------------------------------------\n`;
+            txt += `${sec.content || ''}\n`;
+          }
+          this.dataExportService.downloadBlob(
+            txt,
+            'text/plain;charset=utf-8;',
+            `${act.shortName}-Sec-${sec.section_number}-${Date.now()}.txt`
+          );
+        } else if (params.format === 'json') {
+          const payload = {
+            actName: actTitle,
+            shortName: act.shortName,
+            scope: params.scope,
+            exportedAt: new Date().toISOString(),
+            data: params.scope === 'chapter' ? ch : sec
+          };
+          this.dataExportService.downloadBlob(
+            JSON.stringify(payload, null, 2),
+            'application/json;charset=utf-8;',
+            `${act.shortName}-Sec-${sec.section_number}-${Date.now()}.json`
+          );
+        }
+      }
+    });
+  }
+
   ngOnInit() {
     this.isXlViewport = window.innerWidth >= 1280;
+
     import('./glossary.data').then(m => {
       const sortedGlossary = [...m.GLOSSARY_LIST].sort((a, b) => b.term.length - a.term.length);
       this.glossaryMap = new Map<string, string>(
@@ -1648,7 +1746,19 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   }
 
   printPage() {
-    window.print();
+    if (!this.activeSection || !this.act) return;
+    const statuteHtml = this.printService.buildStatuteText(this.activeSection, this.act);
+    this.printService.print({
+      title: this.act.actName || this.act.shortName || 'Act',
+      subtitle: `${this.act.actName || this.act.shortName || 'Act'} (${this.act.year || ''}) • Section ${this.activeSection.section_number}`,
+      content: statuteHtml,
+      sealText: 'Official Statutory Reference • LegalConnect National Law Library',
+      accentColor: '#4f46e5',
+      extraMeta: [
+        { label: 'Act', value: this.act.actName || this.act.shortName || '' },
+        { label: 'Section', value: String(this.activeSection.section_number) },
+      ],
+    });
   }
 
   shareLink() {

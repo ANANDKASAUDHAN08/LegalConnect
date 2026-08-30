@@ -450,7 +450,7 @@ export class SuggestResourceModalComponent implements OnInit, OnDestroy {
           lng: parseFloat(position.coords.longitude.toFixed(6))
         };
         this.snackbar.show(
-          `📍 GPS Location attached: ${this.coordinates.lat}, ${this.coordinates.lng}`,
+          `GPS Location attached: ${this.coordinates.lat}, ${this.coordinates.lng}`,
           'success'
         );
         this.cdr.markForCheck();

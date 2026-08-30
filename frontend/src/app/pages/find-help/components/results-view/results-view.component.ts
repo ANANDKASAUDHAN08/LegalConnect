@@ -23,6 +23,7 @@ import { LocationService } from '../../../../services/location.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { ThemeService } from '../../../../services/theme.service';
 import { FreeAidService } from '../../../../services/free-aid.service';
+import { PrintService } from '../../../../services/print.service';
 
 // Child Components
 import { FiltersPanelComponent } from '../filters-panel/filters-panel.component';
@@ -330,7 +331,8 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     private legalService: LegalService,
     private locationService: LocationService,
     private snackbar: SnackbarService,
-    public themeService: ThemeService
+    public themeService: ThemeService,
+    private printService: PrintService
   ) { }
 
   ngOnInit() {
@@ -1034,69 +1036,47 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   executePrintProcess() {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    const documentChecklistHtml = this.roadmap.documents.map((d: string) => `<li>[ ] ${d}</li>`).join('');
-    const actionStepsHtml = this.roadmap.steps.map((s: any, i: number) => `
-      <div style="margin-bottom: 15px;">
-        <b style="color: #1e3a8a;">Step ${i + 1}: ${s.title}</b>
-        <p style="margin: 4px 0 0 0; color: #475569; font-size: 13px;">${s.detail}</p>
+    const documentChecklistHtml = (this.roadmap?.documents || []).map((d: string) => `
+      <div style="padding:6px 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px">
+        ${this.printService.getSvg('checkbox', { size: 13, color: '#475569' })}
+        <span style="font-size:11px;color:#334155">${this.printService.escapeHtml(d)}</span>
       </div>
     `).join('');
 
-    const resourceCardsHtml = this.filteredResources.slice(0, 5).map(res => `
-      <div style="border-bottom: 1px solid #e2e8f0; padding: 10px 0;">
-        <b style="font-size: 14px;">${res.name} (${res.type})</b>
-        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">${res.address}</p>
-        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Phone: ${res.contactNumber || 'N/A'} | Hours: ${res.operatingHours}</p>
+    const actionStepsHtml = (this.roadmap?.steps || []).map((s: any, i: number) => `
+      <div style="margin-bottom:12px;padding:10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">
+        <div style="font-weight:700;font-size:12px;color:#1e3a8a;margin-bottom:3px">Step ${i + 1}: ${this.printService.escapeHtml(s.title)}</div>
+        <p style="margin:0;color:#475569;font-size:11px;line-height:1.5">${this.printService.escapeHtml(s.detail)}</p>
       </div>
     `).join('');
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>LegalConnect Case Pack - ${this.activeCategory}</title>
-          <style>
-            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
-            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 20px; }
-            h1 { margin: 0; color: #1e3a8a; font-size: 24px; }
-            h2 { color: #0f172a; border-bottom: 1px solid #cbd5e1; padding-bottom: 6px; font-size: 16px; margin-top: 30px; }
-            .meta { color: #64748b; font-size: 12px; margin-top: 5px; }
-            ul { padding-left: 20px; font-size: 13px; }
-            li { margin-bottom: 6px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>LegalConnect Offline Case Pack</h1>
-            <div class="meta">Category: ${this.activeCategory} | Location: ${this.locationQuery} | Generated: ${new Date().toLocaleDateString()}</div>
-          </div>
-          
-          <h2>PERSONALIZED LEGAL ROADMAP</h2>
-          ${actionStepsHtml}
+    const nearbyCardsHtml = this.printService.buildResourceCards(this.filteredResources.slice(0, 4));
 
-          <h2>REQUIRED DOCUMENTS CHECKLIST</h2>
-          <ul>${documentChecklistHtml}</ul>
+    let contentHtml = '';
+    if (actionStepsHtml) {
+      contentHtml += this.printService.buildSection('Personalized Legal Roadmap', actionStepsHtml, `${(this.roadmap?.steps || []).length} Steps`);
+    }
+    if (documentChecklistHtml) {
+      contentHtml += this.printService.buildSection('Required Documents Checklist', documentChecklistHtml, 'Mandatory Checklist');
+    }
+    if (nearbyCardsHtml) {
+      contentHtml += this.printService.buildSection('Nearby Verified Support Contacts', nearbyCardsHtml, 'Immediate Assistance');
+    }
+    if (this.roadmap?.lokAdalatGuidance) {
+      contentHtml += this.printService.buildSection('Lok Adalat / ADR Advisory', `<p style="font-size:11px;color:#475569;line-height:1.6">${this.printService.escapeHtml(this.roadmap.lokAdalatGuidance)}</p>`);
+    }
 
-          <h2>NEARBY SUPPORT CONTACTS</h2>
-          ${resourceCardsHtml}
-
-          <h2>LOK ADALAT / ADR ADVISORY</h2>
-          <p style="font-size: 13px; color: #475569;">${this.roadmap.lokAdalatGuidance}</p>
-
-          <footer style="margin-top: 50px; font-size: 11px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; text-align: center;">
-            LegalConnect &copy; 2026. This is an informational case pack. Always consult a legal professional before filing suits.
-          </footer>
-          <script>
-            window.onload = () => {
-              window.print();
-            }
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    this.printService.print({
+      title: `Offline Legal Case Pack — ${this.activeCategory || 'Legal Aid'}`,
+      subtitle: `Location Scope: ${this.locationQuery || 'All India'} • Generated Offline Resource Dossier`,
+      content: contentHtml,
+      sealText: 'Official LegalConnect Case Pack • Citizen Legal Aid',
+      accentColor: '#1e40af',
+      extraMeta: [
+        { label: 'Matter Category', value: this.activeCategory || 'General' },
+        { label: 'Target Location', value: this.locationQuery || 'National' },
+      ],
+    });
   }
 
   // Speech synthesis narrator
@@ -1516,7 +1496,7 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
             const lawyer = item.details;
             infoContent = this.buildInfoWindowContent({
               title: lawyer.name || 'Lawyer',
-              tag: `⭐ ${lawyer.rating || 'N/A'}`,
+              tag: `Rating: ${lawyer.rating ? lawyer.rating + ' / 5.0' : 'N/A'}`,
               tagColor: '#d97706',
               subtitle: (lawyer.specializations && lawyer.specializations[0]) || '',
               extra: `Consultation: ₹${lawyer.consultationFee || 0}`

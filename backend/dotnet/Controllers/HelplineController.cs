@@ -41,12 +41,33 @@ namespace CoreApi.Controllers
             return Ok(helplines);
         }
 
-        // Authenticated: GET /api/helpline/favourites — returns saved helpline IDs for the user
+        /// <summary>
+        /// DEPRECATED: Use GET /api/universalbookmark?targetType=Helpline instead.
+        /// </summary>
         [HttpGet("favourites")]
         [Authorize]
         public async Task<IActionResult> GetFavourites()
         {
+            Response.Headers.Append("X-Deprecated", "true");
+            Response.Headers.Append("X-Migration-Target", "GET /api/universalbookmark?targetType=Helpline");
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            // Read from unified first
+            var unified = await _context.UserBookmarks
+                .Where(b => b.UserId == userId && b.TargetType == "Helpline")
+                .OrderByDescending(b => b.SavedAt)
+                .Select(b => new
+                {
+                    helplineId = b.TargetId,
+                    helplineName = b.Title,
+                    savedAt = ((DateTimeOffset)b.SavedAt).ToUnixTimeMilliseconds()
+                })
+                .ToListAsync();
+
+            if (unified.Any()) return Ok(unified);
+
+            // Fallback to legacy
             var saved = await _context.FavouriteHelplines
                 .Where(f => f.ClientId == userId)
                 .OrderByDescending(f => f.SavedAt)
@@ -61,43 +82,78 @@ namespace CoreApi.Controllers
             return Ok(saved);
         }
 
-        // Authenticated: POST /api/helpline/favourites — save a helpline
+        /// <summary>
+        /// DEPRECATED: Use POST /api/universalbookmark/toggle instead.
+        /// </summary>
         [HttpPost("favourites")]
         [Authorize]
         public async Task<IActionResult> AddFavourite([FromBody] AddFavouriteHelplineDto request)
         {
+            Response.Headers.Append("X-Deprecated", "true");
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var exists = await _context.FavouriteHelplines.AnyAsync(f =>
+            // Write to unified
+            var unifiedExists = await _context.UserBookmarks.AnyAsync(b =>
+                b.UserId == userId && b.TargetType == "Helpline" && b.TargetId == request.HelplineId);
+
+            if (!unifiedExists)
+            {
+                _context.UserBookmarks.Add(new UserBookmark
+                {
+                    UserId = userId,
+                    TargetType = "Helpline",
+                    TargetId = request.HelplineId,
+                    Title = request.HelplineName ?? string.Empty,
+                    CollectionName = "General",
+                    SavedAt = DateTime.UtcNow
+                });
+            }
+
+            // Also write to legacy
+            var legacyExists = await _context.FavouriteHelplines.AnyAsync(f =>
                 f.ClientId == userId && f.HelplineId == request.HelplineId);
 
-            if (exists) return BadRequest(new { message = "Helpline already saved." });
-
-            _context.FavouriteHelplines.Add(new FavouriteHelpline
+            if (!legacyExists)
             {
-                ClientId = userId,
-                HelplineId = request.HelplineId,
-                HelplineName = request.HelplineName ?? string.Empty,
-                SavedAt = DateTime.UtcNow
-            });
+                _context.FavouriteHelplines.Add(new FavouriteHelpline
+                {
+                    ClientId = userId,
+                    HelplineId = request.HelplineId,
+                    HelplineName = request.HelplineName ?? string.Empty,
+                    SavedAt = DateTime.UtcNow
+                });
+            }
+
+            if (unifiedExists && legacyExists)
+                return BadRequest(new { message = "Helpline already saved." });
 
             await _context.SaveChangesAsync();
             return Ok(new { message = $"{request.HelplineName} saved to your favourites!" });
         }
 
-        // Authenticated: DELETE /api/helpline/favourites/{helplineId} — remove a helpline
+        /// <summary>
+        /// DEPRECATED: Use POST /api/universalbookmark/toggle instead.
+        /// </summary>
         [HttpDelete("favourites/{helplineId}")]
         [Authorize]
         public async Task<IActionResult> RemoveFavourite(string helplineId)
         {
+            Response.Headers.Append("X-Deprecated", "true");
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var fav = await _context.FavouriteHelplines.FirstOrDefaultAsync(f =>
+            var unified = await _context.UserBookmarks.FirstOrDefaultAsync(b =>
+                b.UserId == userId && b.TargetType == "Helpline" && b.TargetId == helplineId);
+            if (unified != null) _context.UserBookmarks.Remove(unified);
+
+            var legacy = await _context.FavouriteHelplines.FirstOrDefaultAsync(f =>
                 f.ClientId == userId && f.HelplineId == helplineId);
+            if (legacy != null) _context.FavouriteHelplines.Remove(legacy);
 
-            if (fav == null) return NotFound(new { message = "Saved helpline not found." });
+            if (unified == null && legacy == null)
+                return NotFound(new { message = "Saved helpline not found." });
 
-            _context.FavouriteHelplines.Remove(fav);
             await _context.SaveChangesAsync();
             return Ok(new { message = "Helpline removed from favourites." });
         }

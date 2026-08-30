@@ -3,6 +3,9 @@ import { CommonModule } from '@angular/common';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { SnackbarService } from '../../services/snackbar.service';
 import { ShareMenuComponent } from '../share-menu/share-menu.component';
+import { InteractiveLikeComponent } from '../interactive-like/interactive-like.component';
+import { ReportTriggerComponent } from '../report-modal/report-trigger/report-trigger.component';
+import { IconComponent } from '../icon/icon.component';
 
 export interface QuickChip {
   text: string;
@@ -34,7 +37,7 @@ export function formatReviewContent(content: string): string {
 @Component({
   selector: 'app-review-card',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, ShareMenuComponent],
+  imports: [CommonModule, TooltipDirective, ShareMenuComponent, InteractiveLikeComponent, ReportTriggerComponent, IconComponent],
   templateUrl: './review-card.component.html',
   styleUrls: ['./review-card.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -59,7 +62,6 @@ export class ReviewCardComponent implements OnInit, OnChanges {
     return item || index;
   }
 
-  hasLiked = false;
   formattedContent = '';
   isTargetLawyer = false;
   formattedEditDate = '';
@@ -71,9 +73,6 @@ export class ReviewCardComponent implements OnInit, OnChanges {
   ) { }
 
   ngOnInit() {
-    if (this.review?.id) {
-      this.hasLiked = localStorage.getItem(`liked_review_${this.review.id}`) === 'true';
-    }
     this.updateFormattedContent();
   }
 
@@ -111,7 +110,6 @@ export class ReviewCardComponent implements OnInit, OnChanges {
 
   onLike() {
     this.like.emit(this.review);
-    this.hasLiked = !this.hasLiked;
     this.cdr.markForCheck();
   }
 
