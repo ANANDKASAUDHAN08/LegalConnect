@@ -1,0 +1,139 @@
+:host {
+    display: inline-flex;
+}
+
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    height: 30px;
+    border: 1px solid var(--border-secondary, rgba(226, 232, 240, 0.8));
+    border-radius: 0.625rem;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    user-select: none;
+    box-sizing: border-box;
+
+    /* Default: inactive (Clean neutral glassmorphism) */
+    color: var(--text-secondary, #64748b);
+    background: var(--bg-tertiary, rgba(241, 245, 249, 0.7));
+
+    &:hover {
+        color: var(--like-color-active, #10b981);
+        background: var(--like-bg-active, rgba(16, 185, 129, 0.08));
+        border-color: rgba(16, 185, 129, 0.3);
+        transform: translateY(-1px);
+    }
+
+    &.liked {
+        color: var(--like-color-active, #10b981);
+        background: var(--like-bg-active, rgba(16, 185, 129, 0.12));
+        border-color: rgba(16, 185, 129, 0.35);
+        box-shadow: 0 1px 3px rgba(16, 185, 129, 0.15);
+        animation: likePopIn 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+}
+
+/* Size variants */
+:host-context(.like-sm) button,
+button.size-sm {
+    height: 30px;
+    padding: 0.25rem 0.625rem;
+    font-size: 11px;
+    border-radius: 0.625rem;
+}
+
+:host-context(.like-md) button,
+button.size-md {
+    height: 32px;
+    padding: 0.375rem 0.75rem;
+    font-size: 12px;
+    border-radius: 0.625rem;
+}
+
+:host-context(.like-lg) button,
+button.size-lg {
+    height: 36px;
+    padding: 0.5rem 1rem;
+    font-size: 14px;
+    border-radius: 0.75rem;
+}
+
+/* Icon sizes */
+.icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.icon-md {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-lg {
+    width: 18px;
+    height: 18px;
+}
+
+.like-count {
+    line-height: 1;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+/* Icon-only variant */
+button.variant-icon-only {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 0.625rem;
+}
+
+/* Counter badge variant */
+button.variant-counter-badge {
+    border-radius: 0.625rem;
+    height: 30px;
+    padding: 0.25rem 0.625rem;
+}
+
+@keyframes likePopIn {
+    0% {
+        transform: scale(1);
+    }
+    40% {
+        transform: scale(1.25);
+    }
+    60% {
+        transform: scale(0.95);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+:host-context(.dark) button {
+    color: var(--text-secondary, #94a3b8);
+    background: var(--bg-tertiary, rgba(30, 41, 59, 0.45));
+    border-color: var(--border-secondary, rgba(51, 65, 85, 0.6));
+
+    &:hover {
+        color: var(--like-color-active, #34d399);
+        background: var(--like-bg-active, rgba(52, 211, 153, 0.12));
+        border-color: rgba(52, 211, 153, 0.35);
+    }
+
+    &.liked {
+        color: var(--like-color-active, #34d399);
+        background: var(--like-bg-active, rgba(52, 211, 153, 0.18));
+        border-color: rgba(52, 211, 153, 0.45);
+        box-shadow: 0 1px 4px rgba(52, 211, 153, 0.2);
+    }
+}
