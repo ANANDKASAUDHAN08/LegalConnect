@@ -1,0 +1,125 @@
+:host {
+    display: inline-flex;
+}
+
+button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    height: 30px;
+    border: 1px solid var(--border-secondary, rgba(226, 232, 240, 0.8));
+    border-radius: 0.625rem;
+    font-weight: 700;
+    outline: none;
+    cursor: pointer;
+    transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
+    user-select: none;
+    box-sizing: border-box;
+
+    /* Default: inactive (Clean neutral glassmorphism) */
+    color: var(--text-secondary, #64748b);
+    background: var(--bg-tertiary, rgba(241, 245, 249, 0.7));
+
+    &:hover {
+        color: #d97706;
+        background: rgba(245, 158, 11, 0.08);
+        border-color: rgba(245, 158, 11, 0.3);
+        transform: translateY(-1px);
+    }
+
+    &.saved {
+        color: #d97706;
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.35);
+        box-shadow: 0 1px 3px rgba(245, 158, 11, 0.15);
+        animation: bookmarkPop 300ms cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    &:active {
+        transform: scale(0.95);
+    }
+}
+
+/* Variant: icon only (Unified 30px Squircle) */
+button.variant-icon {
+    width: 30px;
+    height: 30px;
+    padding: 0;
+    border-radius: 0.625rem;
+}
+
+/* Variant: pill */
+button.variant-pill {
+    padding: 0.25rem 0.625rem;
+    height: 30px;
+    border-radius: 0.625rem;
+    font-size: 11px;
+}
+
+/* Variant: button-with-text */
+button.variant-button-with-text {
+    padding: 0.375rem 0.875rem;
+    height: 32px;
+    border-radius: 0.625rem;
+    font-size: 12px;
+}
+
+/* Icon sizes */
+.icon-sm {
+    width: 14px;
+    height: 14px;
+}
+
+.icon-md {
+    width: 16px;
+    height: 16px;
+}
+
+.icon-lg {
+    width: 18px;
+    height: 18px;
+}
+
+.bookmark-label {
+    line-height: 1;
+    font-size: 11px;
+}
+
+@keyframes bookmarkPop {
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.2);
+    }
+
+    60% {
+        transform: scale(0.95);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+:host-context(.dark) button {
+    color: var(--text-secondary, #94a3b8);
+    background: var(--bg-tertiary, rgba(30, 41, 59, 0.45));
+    border-color: var(--border-secondary, rgba(51, 65, 85, 0.6));
+
+    &:hover {
+        color: #fbbf24;
+        background: rgba(245, 158, 11, 0.12);
+        border-color: rgba(245, 158, 11, 0.35);
+    }
+
+    &.saved {
+        color: #fbbf24;
+        background: rgba(245, 158, 11, 0.18);
+        border-color: rgba(245, 158, 11, 0.45);
+        box-shadow: 0 1px 4px rgba(245, 158, 11, 0.2);
+    }
+}

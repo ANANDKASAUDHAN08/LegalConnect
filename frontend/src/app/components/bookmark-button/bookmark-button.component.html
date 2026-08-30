@@ -1,0 +1,13 @@
+<button [class]="buttonClasses()" [class.saved]="isSaved()" [attr.aria-pressed]="isSaved()"
+    [attr.aria-label]="ariaLabel()" [appTooltip]="tooltipText()" [tooltipPlacement]="'top'" (click)="onToggle($event)"
+    role="button" tabindex="0" (keydown.enter)="onToggle($event)" (keydown.space)="onToggle($event)">
+
+    <!-- Bookmark Icon -->
+    <app-icon [name]="isSaved() ? 'bookmark-filled' : 'bookmark'" [size]="iconPixelSize"
+        [class]="isSaved() ? 'text-amber-500 fill-current' : 'text-slate-500 dark:text-slate-400'"></app-icon>
+
+    <!-- Text label -->
+    <span *ngIf="variant !== 'icon'" class="bookmark-label">
+        {{ isSaved() ? 'Saved' : 'Save' }}
+    </span>
+</button>

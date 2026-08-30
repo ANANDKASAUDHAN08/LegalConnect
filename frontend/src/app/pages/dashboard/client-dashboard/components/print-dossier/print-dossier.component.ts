@@ -1,11 +1,12 @@
 import { Component, Input, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Bookmark } from '../../../../../services/bookmark.service';
+import { IconComponent } from '../../../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-print-dossier',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, IconComponent],
   templateUrl: './print-dossier.component.html',
   styleUrls: [],
   changeDetection: ChangeDetectionStrategy.OnPush

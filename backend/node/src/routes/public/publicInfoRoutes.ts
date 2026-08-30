@@ -401,7 +401,7 @@ router.post('/contact/withdraw', asyncHandler(async (req: Request, res: Response
       $set: { status: 'Withdrawn by Applicant' },
       $push: { notes: auditNote }
     },
-    { new: true }
+    { returnDocument: 'after' }
   ).lean();
 
   if (!ticket) {
@@ -453,7 +453,7 @@ router.post(['/contact/subscribe-newsletter', '/subscribe-newsletter'], asyncHan
         timestamp: new Date()
       }
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   ).catch(() => {});
 
   res.json({

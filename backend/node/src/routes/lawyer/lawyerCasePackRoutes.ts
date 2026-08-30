@@ -43,7 +43,7 @@ router.post('/case-packs/sync', requireAuth, asyncHandler(async (req: Request, r
         resources: pack.resources || [],
         savedAt: pack.savedAt ? new Date(pack.savedAt) : new Date()
       },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     );
     synced++;
   }

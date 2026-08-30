@@ -10,6 +10,10 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.Controllers
 {
+    /// <summary>
+    /// DEPRECATED: Use UniversalBookmarkController instead.
+    /// Thin backward-compatible facade that dual-writes to legacy + unified tables.
+    /// </summary>
     [Route("api/[controller]")]
     [ApiController]
     [Authorize]
@@ -22,11 +26,27 @@ namespace CoreApi.Controllers
             _context = context;
         }
 
-        // GET /api/favouriteresource — returns list of saved resource IDs for the user
         [HttpGet]
         public async Task<IActionResult> GetFavourites()
         {
+            Response.Headers.Append("X-Deprecated", "true");
+            Response.Headers.Append("X-Migration-Target", "GET /api/universalbookmark?targetType=LegalResource");
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var unified = await _context.UserBookmarks
+                .Where(b => b.UserId == userId && b.TargetType == "LegalResource")
+                .OrderByDescending(b => b.SavedAt)
+                .Select(b => new
+                {
+                    resourceId = b.TargetId,
+                    resourceName = b.Title,
+                    savedAt = ((DateTimeOffset)b.SavedAt).ToUnixTimeMilliseconds()
+                })
+                .ToListAsync();
+
+            if (unified.Any()) return Ok(unified);
+
             var saved = await _context.FavouriteResources
                 .Where(f => f.ClientId == userId)
                 .OrderByDescending(f => f.SavedAt)
@@ -41,41 +61,68 @@ namespace CoreApi.Controllers
             return Ok(saved);
         }
 
-        // POST /api/favouriteresource — save a resource
         [HttpPost]
         public async Task<IActionResult> AddFavourite([FromBody] AddFavouriteResourceDto request)
         {
+            Response.Headers.Append("X-Deprecated", "true");
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var exists = await _context.FavouriteResources.AnyAsync(f =>
+            var unifiedExists = await _context.UserBookmarks.AnyAsync(b =>
+                b.UserId == userId && b.TargetType == "LegalResource" && b.TargetId == request.ResourceId);
+
+            if (!unifiedExists)
+            {
+                _context.UserBookmarks.Add(new UserBookmark
+                {
+                    UserId = userId,
+                    TargetType = "LegalResource",
+                    TargetId = request.ResourceId,
+                    Title = request.ResourceName ?? string.Empty,
+                    CollectionName = "General",
+                    SavedAt = DateTime.UtcNow
+                });
+            }
+
+            var legacyExists = await _context.FavouriteResources.AnyAsync(f =>
                 f.ClientId == userId && f.ResourceId == request.ResourceId);
 
-            if (exists) return BadRequest(new { message = "Resource already saved." });
-
-            _context.FavouriteResources.Add(new FavouriteResource
+            if (!legacyExists)
             {
-                ClientId = userId,
-                ResourceId = request.ResourceId,
-                ResourceName = request.ResourceName ?? string.Empty,
-                SavedAt = DateTime.UtcNow
-            });
+                _context.FavouriteResources.Add(new FavouriteResource
+                {
+                    ClientId = userId,
+                    ResourceId = request.ResourceId,
+                    ResourceName = request.ResourceName ?? string.Empty,
+                    SavedAt = DateTime.UtcNow
+                });
+            }
+
+            if (unifiedExists && legacyExists)
+                return BadRequest(new { message = "Resource already saved." });
 
             await _context.SaveChangesAsync();
             return Ok(new { message = $"{request.ResourceName} saved to your bookmarks!" });
         }
 
-        // DELETE /api/favouriteresource/{resourceId} — remove a saved resource
         [HttpDelete("{resourceId}")]
         public async Task<IActionResult> RemoveFavourite(string resourceId)
         {
+            Response.Headers.Append("X-Deprecated", "true");
+
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
-            var fav = await _context.FavouriteResources.FirstOrDefaultAsync(f =>
+            var unified = await _context.UserBookmarks.FirstOrDefaultAsync(b =>
+                b.UserId == userId && b.TargetType == "LegalResource" && b.TargetId == resourceId);
+            if (unified != null) _context.UserBookmarks.Remove(unified);
+
+            var legacy = await _context.FavouriteResources.FirstOrDefaultAsync(f =>
                 f.ClientId == userId && f.ResourceId == resourceId);
+            if (legacy != null) _context.FavouriteResources.Remove(legacy);
 
-            if (fav == null) return NotFound(new { message = "Saved resource not found." });
+            if (unified == null && legacy == null)
+                return NotFound(new { message = "Saved resource not found." });
 
-            _context.FavouriteResources.Remove(fav);
             await _context.SaveChangesAsync();
             return Ok(new { message = "Resource removed from bookmarks." });
         }

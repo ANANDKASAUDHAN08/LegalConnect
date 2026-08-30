@@ -1023,4 +1023,68 @@ router.post('/resources/batch', asyncHandler(async (req: Request, res: Response)
   res.json({ success: true, data: resources });
 }));
 
+// ═══════════════════════════════════════════════════════════════
+//  BOOKMARK RECONCILIATION — Cross-Database Consistency
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * POST /api/legal/bookmarks/validate
+ * Validates whether bookmarked MongoDB entities still exist.
+ * Used by the Saved Workbench to detect dangling references after
+ * admin deletions or name changes in MongoDB.
+ *
+ * Request: { targetType: "LegalResource" | "Helpline", targetIds: ["id1", "id2"] }
+ * Response: { "id1": { exists: true, currentName: "..." }, "id2": { exists: false } }
+ */
+router.post('/bookmarks/validate', asyncHandler(async (req: Request, res: Response) => {
+  const { targetType, targetIds } = req.body;
+
+  if (!targetType || !Array.isArray(targetIds) || targetIds.length === 0) {
+    throw AppError.badRequest('targetType and targetIds array are required.');
+  }
+
+  // Cap to 100 IDs per request to prevent abuse
+  const ids = targetIds.slice(0, 100);
+  const result: Record<string, { exists: boolean; currentName?: string }> = {};
+
+  if (targetType === 'LegalResource') {
+    const resources = await LegalResource.find(
+      { _id: { $in: ids } },
+      { _id: 1, title: 1, name: 1 }
+    ).lean();
+
+    const found = new Map(resources.map((r: any) => [r._id.toString(), r.title || r.name || 'Untitled']));
+
+    for (const id of ids) {
+      if (found.has(id)) {
+        result[id] = { exists: true, currentName: found.get(id)! };
+      } else {
+        result[id] = { exists: false };
+      }
+    }
+  } else if (targetType === 'Helpline') {
+    const helplines = await HelpHelpline.find(
+      { _id: { $in: ids } },
+      { _id: 1, name: 1, title: 1 }
+    ).lean();
+
+    const found = new Map(helplines.map((h: any) => [h._id.toString(), h.name || h.title || 'Untitled']));
+
+    for (const id of ids) {
+      if (found.has(id)) {
+        result[id] = { exists: true, currentName: found.get(id)! };
+      } else {
+        result[id] = { exists: false };
+      }
+    }
+  } else {
+    // Unknown targetType — mark all as unknown
+    for (const id of ids) {
+      result[id] = { exists: true };
+    }
+  }
+
+  res.json(result);
+}));
+
 export default router;

@@ -178,6 +178,27 @@ namespace CoreApi.Controllers
             };
 
             _context.Bookmarks.Add(bookmark);
+
+            // Dual-write to unified UserBookmarks ledger
+            var unifiedTargetId = $"{request.ActShortName}::{request.SectionNumber}";
+            var unifiedExists = await _context.UserBookmarks.AnyAsync(b =>
+                b.UserId == userId && b.TargetType == "BareActSection" && b.TargetId == unifiedTargetId);
+
+            if (!unifiedExists)
+            {
+                _context.UserBookmarks.Add(new UserBookmark
+                {
+                    UserId = userId,
+                    TargetType = "BareActSection",
+                    TargetId = unifiedTargetId,
+                    Title = string.IsNullOrWhiteSpace(request.SectionTitle) ? $"{request.ActShortName} Section {request.SectionNumber}" : $"{request.ActShortName} S.{request.SectionNumber}: {request.SectionTitle}",
+                    Subtitle = $"Chapter {request.ChapterNumber}",
+                    CustomNotes = request.Notes,
+                    CollectionName = string.IsNullOrWhiteSpace(request.CollectionName) ? "General" : request.CollectionName,
+                    SavedAt = DateTime.UtcNow
+                });
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Section bookmarked successfully!" });
@@ -201,6 +222,17 @@ namespace CoreApi.Controllers
             bookmark.Notes = request.Notes;
             bookmark.CollectionName = request.CollectionName;
 
+            // Sync to unified UserBookmarks
+            var unifiedTargetId = $"{actShortName}::{sectionNumber}";
+            var unified = await _context.UserBookmarks.FirstOrDefaultAsync(b =>
+                b.UserId == userId && b.TargetType == "BareActSection" && b.TargetId == unifiedTargetId);
+
+            if (unified != null)
+            {
+                if (request.Notes != null) unified.CustomNotes = request.Notes;
+                if (!string.IsNullOrWhiteSpace(request.CollectionName)) unified.CollectionName = request.CollectionName;
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Bookmark updated successfully." });
@@ -222,6 +254,17 @@ namespace CoreApi.Controllers
             }
 
             _context.Bookmarks.Remove(bookmark);
+
+            // Remove from unified UserBookmarks as well
+            var unifiedTargetId = $"{actShortName}::{sectionNumber}";
+            var unified = await _context.UserBookmarks.FirstOrDefaultAsync(b =>
+                b.UserId == userId && b.TargetType == "BareActSection" && b.TargetId == unifiedTargetId);
+
+            if (unified != null)
+            {
+                _context.UserBookmarks.Remove(unified);
+            }
+
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Bookmark removed successfully." });

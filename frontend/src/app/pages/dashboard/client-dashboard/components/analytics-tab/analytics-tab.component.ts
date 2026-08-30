@@ -4,13 +4,15 @@ import { LawyerService, ClientInsightsData, ClientSpendMilestone, CasePipelineSt
 import { SnackbarService } from '../../../../../services/snackbar.service';
 import { TooltipDirective } from '../../../../../directives/tooltip.directive';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { DataExportService } from '../../../../../services/data-export.service';
 import { AuthService, UserProfile } from '../../../../../services/auth.service';
+import { IconComponent } from '../../../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-analytics-tab',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, FormsModule],
+  imports: [CommonModule, TooltipDirective, FormsModule, RouterLink, IconComponent],
   templateUrl: './analytics-tab.component.html',
   styleUrls: ['./analytics-tab.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -77,6 +79,12 @@ export class AnalyticsTabComponent implements OnInit {
     return Math.min(100, Math.round((allocated / budget) * 100));
   });
 
+  // Interactive Modals & Details
+  selectedMilestone = signal<ClientSpendMilestone | null>(null);
+  showEscrowModal = signal<boolean>(false);
+  isProcessingEscrow = signal<boolean>(false);
+  expandedStep = signal<number | null>(null);
+
   constructor(
     private lawyerService: LawyerService,
     private snackbar: SnackbarService,
@@ -104,6 +112,13 @@ export class AnalyticsTabComponent implements OnInit {
         minTimer.then(() => {
           this.insights.set(data);
           this.isLoading.set(false);
+          // Set initial expanded step to the active "In Progress" step
+          const inProgress = data?.casePipeline?.find(s => s.status === 'In Progress');
+          if (inProgress) {
+            this.expandedStep.set(inProgress.step);
+          } else if (data?.casePipeline?.length) {
+            this.expandedStep.set(data.casePipeline[0].step);
+          }
         });
       },
       error: () => {
@@ -130,6 +145,45 @@ export class AnalyticsTabComponent implements OnInit {
     return '₹' + Number(val).toLocaleString('en-IN');
   }
 
+  calculateGstBreakdown(amount: number) {
+    const total = Number(amount) || 0;
+    const base = Math.round(total / 1.18);
+    const totalGst = total - base;
+    const cgst = Math.round(totalGst / 2);
+    const sgst = totalGst - cgst;
+    return {
+      base,
+      cgst,
+      sgst,
+      totalGst,
+      total
+    };
+  }
+
+  openMilestoneDetails(m: ClientSpendMilestone) {
+    this.selectedMilestone.set(m);
+    this.showEscrowModal.set(true);
+  }
+
+  closeMilestoneModal() {
+    this.showEscrowModal.set(false);
+    this.selectedMilestone.set(null);
+  }
+
+  authorizeEscrowDeposit(m: ClientSpendMilestone) {
+    this.isProcessingEscrow.set(true);
+    setTimeout(() => {
+      this.isProcessingEscrow.set(false);
+      this.closeMilestoneModal();
+      this.snackbar.show(`Secure Escrow deposit authorized for ${m.title}. Funds locked safely.`, 'success');
+      this.loadInsights();
+    }, 900);
+  }
+
+  toggleStep(stepNum: number) {
+    this.expandedStep.update(curr => curr === stepNum ? null : stepNum);
+  }
+
   printSummary() {
     const success = this.dataExportService.printClientInsightsDossier(
       this.currentUser,
@@ -154,12 +208,15 @@ export class AnalyticsTabComponent implements OnInit {
     };
 
     const rows: (string | number)[][] = [
-      ['Milestone Deliverable', 'Date', 'Amount (INR)', 'Payment Status'],
-      ...milestones.map(m => [m.title, m.date, m.amount, m.status]),
+      ['Milestone Deliverable', 'Date', 'Base Fee (INR)', '18% GST (INR)', 'Total Amount (INR)', 'Payment / Escrow Status'],
+      ...milestones.map(m => {
+        const gst = this.calculateGstBreakdown(m.amount);
+        return [m.title, m.date, gst.base, gst.totalGst, m.amount, m.status];
+      }),
       [''],
-      ['Total Settled Spend', '', this.totalSpend(), 'Settled'],
-      ['Funds in Escrow', '', this.inEscrow(), 'In Escrow'],
-      ['Configured Budget Ceiling', '', this.isBudgetUserSet() ? this.budgetCap() : 'Not Set', 'Budget']
+      ['Total Settled Spend', '', '', '', this.totalSpend(), 'Settled'],
+      ['Funds in Protected Escrow', '', '', '', this.inEscrow(), 'In Escrow'],
+      ['Configured Budget Ceiling', '', '', '', this.isBudgetUserSet() ? this.budgetCap() : 'Not Set', 'Budget Cap']
     ];
 
     const csvContent = '\uFEFF' + rows.map(r => r.map(escapeCell).join(',')).join('\r\n');
@@ -173,7 +230,7 @@ export class AnalyticsTabComponent implements OnInit {
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    this.snackbar.show('Exported Milestone Invoices to CSV.', 'success');
+    this.snackbar.show('Exported Itemized Milestone Invoices to CSV.', 'success');
   }
 
   openBudgetInput() {

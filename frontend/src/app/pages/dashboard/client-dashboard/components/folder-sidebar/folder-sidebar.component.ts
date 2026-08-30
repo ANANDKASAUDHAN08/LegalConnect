@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Bookmark } from '../../../../../services/bookmark.service';
 import { TooltipDirective } from '../../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-folder-sidebar',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, IconComponent],
   templateUrl: './folder-sidebar.component.html',
   styleUrls: ['./folder-sidebar.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -35,6 +36,7 @@ export class FolderSidebarComponent {
   @Output() selectCasePacks = new EventEmitter<void>();
   @Output() selectSavedContacts = new EventEmitter<void>();
   @Output() selectAnalytics = new EventEmitter<void>();
+  @Output() selectReports = new EventEmitter<void>();
 
   selectCasePacksSystemDirectory() {
     this.selectCasePacks.emit();
@@ -46,6 +48,10 @@ export class FolderSidebarComponent {
 
   selectAnalyticsSystemDirectory() {
     this.selectAnalytics.emit();
+  }
+
+  selectReportsSystemDirectory() {
+    this.selectReports.emit();
   }
 
   get filteredSidebarFolders(): string[] {

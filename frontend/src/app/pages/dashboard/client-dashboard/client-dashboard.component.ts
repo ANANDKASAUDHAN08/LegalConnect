@@ -11,6 +11,9 @@ import { LocationService } from '../../../services/location.service';
 import { SavedItemsService } from '../../../services/saved-items.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { InfoApiService } from '../../info/services/info-api.service';
+import { PrintService } from '../../../services/print.service';
+import { PrintExportService } from '../../../services/print-export.service';
+import { DataExportService } from '../../../services/data-export.service';
 import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged, map, switchMap, catchError, of } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
@@ -27,11 +30,12 @@ import { HelplineCardComponent } from '../../find-help/components/helpline-card/
 import { ResourceCardComponent } from '../../find-help/components/resource-card/resource-card.component';
 import { DirectoryDetailDrawerComponent } from './components/directory-detail-drawer/directory-detail-drawer.component';
 import { SavedDirectoryTabComponent } from './components/saved-directory-tab/saved-directory-tab.component';
-import { PrintDossierComponent } from './components/print-dossier/print-dossier.component';
 import { CasePackPreviewModalComponent } from '../../find-help/components/case-pack-preview-modal/case-pack-preview-modal.component';
 import { ReaderModeModalComponent } from '../../search/components/reader-modal/reader-modal.component';
 import { QrModalComponent } from '../../../components/qr-modal/qr-modal.component';
 import { AnalyticsTabComponent } from './components/analytics-tab/analytics-tab.component';
+import { ReportsTabComponent } from './components/reports-tab/reports-tab.component';
+import { IconComponent } from '../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -55,10 +59,11 @@ import { AnalyticsTabComponent } from './components/analytics-tab/analytics-tab.
     ResourceCardComponent,
     DirectoryDetailDrawerComponent,
     SavedDirectoryTabComponent,
-    PrintDossierComponent,
     CasePackPreviewModalComponent,
     QrModalComponent,
-    AnalyticsTabComponent
+    AnalyticsTabComponent,
+    ReportsTabComponent,
+    IconComponent
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss'],
@@ -72,6 +77,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   inquiries = signal<Consultation[]>([]);
   loadingInquiries = signal(false);
   activeTab = signal<string>('bookmarks');
+  showMobileTabSheet = signal<boolean>(false);
 
   // Case Pack Dossiers tab signals
   savedCasePacks = signal<any[]>([]);
@@ -226,7 +232,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         this.directoryDrawerOpen() ||
         this.customConfirmOpen ||
         this.customPromptOpen ||
-        this.showActsFilterModal();
+        this.showActsFilterModal() ||
+        this.showMobileTabSheet();
       if (lock) {
         document.body.classList.add('overflow-hidden');
       } else {
@@ -267,7 +274,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private eRef: ElementRef,
     private cdr: ChangeDetectorRef,
-    private injector: Injector
+    private injector: Injector,
+    private printService: PrintService,
+    private printExportService: PrintExportService,
+    private dataExportService: DataExportService
   ) {
     this.savedLawyersDetails = toSignal(
       toObservable(this.savedItemsService.savedLawyers).pipe(
@@ -737,68 +747,44 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   executePrintProcess(pack: any) {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) {
-      this.snackbarService.show('Please allow popups to download report.', 'error');
-      return;
+    const documentChecklistHtml = (pack.roadmap?.documents || []).map((d: string) => `
+      <div style="padding:6px 0;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px">
+        ${this.printService.getSvg('checkbox', { size: 13, color: '#475569' })}
+        <span style="font-size:11px;color:#334155">${this.printService.escapeHtml(d)}</span>
+      </div>
+    `).join('');
+
+    const actionStepsHtml = (pack.roadmap?.steps || []).map((s: any, i: number) => `
+      <div style="margin-bottom:12px;padding:10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">
+        <div style="font-weight:700;font-size:12px;color:#1e3a8a;margin-bottom:3px">Step ${i + 1}: ${this.printService.escapeHtml(s.title)}</div>
+        <p style="margin:0;color:#475569;font-size:11px;line-height:1.5">${this.printService.escapeHtml(s.detail)}</p>
+      </div>
+    `).join('');
+
+    const resourceCardsHtml = this.printService.buildResourceCards((pack.resources || []).slice(0, 4));
+
+    let contentHtml = '';
+    if (actionStepsHtml) {
+      contentHtml += this.printService.buildSection('Procedural Action Steps', actionStepsHtml, `${(pack.roadmap?.steps || []).length} Steps`);
+    }
+    if (documentChecklistHtml) {
+      contentHtml += this.printService.buildSection('Mandatory Document Checklist', documentChecklistHtml, 'Document Verification');
+    }
+    if (resourceCardsHtml) {
+      contentHtml += this.printService.buildSection('Local Legal Authorities & Help Centers', resourceCardsHtml, 'Nearby Infrastructure');
     }
 
-    const documentChecklistHtml = (pack.roadmap?.documents || []).map((d: string) => `<li>[ ] ${d}</li>`).join('');
-    const actionStepsHtml = (pack.roadmap?.steps || []).map((s: any, i: number) => `
-      <div style="margin-bottom: 15px;">
-        <b style="color: #1e3a8a;">Step ${i + 1}: ${s.title}</b>
-        <p style="margin: 4px 0 0 0; color: #475569; font-size: 13px;">${s.detail}</p>
-      </div>
-    `).join('');
-
-    const resourceCardsHtml = (pack.resources || []).slice(0, 5).map((res: any) => `
-      <div style="border-bottom: 1px solid #e2e8f0; padding: 10px 0;">
-        <b style="font-size: 14px;">${res.name} (${res.type})</b>
-        <p style="margin: 4px 0 0 0; font-size: 12px; color: #475569;">${res.address}</p>
-        <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">Phone: ${res.contactNumber || 'N/A'} | Hours: ${res.operatingHours}</p>
-      </div>
-    `).join('');
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>LegalConnect Case Pack - ${pack.category}</title>
-          <style>
-            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; line-height: 1.5; }
-            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 20px; margin-bottom: 20px; }
-            h1 { color: #1e3a8a; margin: 0; font-size: 24px; }
-            h2 { color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; margin-top: 30px; font-size: 18px; }
-            ul { padding-left: 20px; }
-            li { margin-bottom: 8px; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <h1>LegalConnect Case Pack Dossier</h1>
-            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 14px;">
-              Category: <b>${pack.category}</b> | Location: <b>${pack.location}</b> | Exported: ${new Date().toLocaleDateString()}
-            </p>
-          </div>
-          
-          <h2>📋 Mandatory Document Checklist</h2>
-          <ul>${documentChecklistHtml || '<li>No specific documents registered.</li>'}</ul>
-
-          <h2>⚖️ Procedural Action Steps</h2>
-          ${actionStepsHtml || '<p>No procedural roadmap steps registered.</p>'}
-
-          <h2>📍 Local Legal Authorities & Help Centers</h2>
-          ${resourceCardsHtml || '<p>No local authorities registered.</p>'}
-
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+    this.printService.print({
+      title: `Case Pack Dossier — ${pack.category || 'General'}`,
+      subtitle: `Location: ${pack.location || 'All India'} • Client Case Preparation Dossier`,
+      content: contentHtml,
+      sealText: 'LegalConnect Case Pack • Citizen Legal Aid',
+      accentColor: '#1e40af',
+      extraMeta: [
+        { label: 'Category', value: pack.category || 'General' },
+        { label: 'Location Scope', value: pack.location || 'National' },
+      ],
+    });
   }
 
   removeBookmark(actId: string, secNum: string) {
@@ -1155,21 +1141,258 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  triggerPrint(collectionName: string) {
-    this.printCollectionName = collectionName;
-    this.printDate = new Date();
-    // Brief timeout to let the print template render before dialog opens
-    setTimeout(() => {
-      window.print();
-    }, 150);
+  triggerPrint(collectionName: string = 'All') {
+    const totalBookmarks = this.allBookmarks().length;
+    const totalLawyers = this.savedLawyersDetails().length;
+    const totalResources = this.savedResourcesDetails().length;
+    const totalHelplines = this.savedHelplinesDetails().length;
+    const totalDirectory = totalLawyers + totalResources + totalHelplines;
+
+    this.printExportService.open({
+      title: 'Client Case & Practice Dossier',
+      subtitle: 'Export annotated statute bookmarks, saved legal contacts, or full account archive.',
+      formats: ['pdf', 'json', 'csv', 'txt'],
+      scopes: [
+        {
+          id: 'bookmarks',
+          label: `Legal Research Bookmarks (${totalBookmarks} Items)`,
+          count: totalBookmarks,
+          description: 'Annotated bare act sections and case reference folders'
+        },
+        {
+          id: 'directory',
+          label: `Saved Directory Contacts (${totalDirectory} Items)`,
+          count: totalDirectory,
+          description: 'Saved counsel, verified courts, legal aid centers and hotlines'
+        },
+        {
+          id: 'fullDossier',
+          label: `Full Account Dossier (${totalBookmarks + totalDirectory} Total Items)`,
+          count: totalBookmarks + totalDirectory,
+          description: 'Comprehensive export across all saved research, counsel & institutions'
+        }
+      ],
+      defaultScope: this.activeTab() === 'directory' ? 'directory' : 'bookmarks',
+      allowWatermark: true,
+      defaultWatermark: 'OFFICIAL COPY',
+      allowQrToggle: true,
+      defaultIncludeQr: true,
+      allowChartsToggle: true,
+      defaultIncludeCharts: true,
+      onExport: async (params) => {
+        if (params.format === 'pdf') {
+          if (params.scope === 'directory') {
+            this.executePrintDirectory(params);
+          } else if (params.scope === 'bookmarks') {
+            this.executePrintBookmarks(collectionName, params);
+          } else {
+            this.executePrintFullDossier(params);
+          }
+        } else if (params.format === 'json') {
+          this.dataExportService.exportClientData('json');
+        } else if (params.format === 'csv') {
+          this.dataExportService.exportClientData('csv');
+        } else if (params.format === 'txt') {
+          this.dataExportService.exportClientData('txt');
+        }
+      }
+    });
+  }
+
+  private executePrintBookmarks(collectionName: string, params: any) {
+    const list = this.printedBookmarks;
+    let contentHtml = '';
+
+    if (!list || list.length === 0) {
+      contentHtml = '<p style="color:#64748b;font-size:12px">No saved research bookmarks found in this collection.</p>';
+    } else {
+      for (const bm of list) {
+        contentHtml += this.printService.buildStatuteText(bm.section, {
+          actName: bm.actShortName,
+          shortName: bm.actShortName,
+          year: '',
+        });
+        if (bm.notes) {
+          contentHtml += `<div style="background:#fffbeb;border-left:3px solid #d97706;padding:8px 12px;margin:-6px 0 14px;border-radius:0 6px 6px 0;font-size:11px;color:#78350f">
+            <strong>Notes:</strong> ${this.printService.escapeHtml(bm.notes)}
+          </div>`;
+        }
+      }
+    }
+
+    this.printService.print({
+      title: `Legal Research Dossier — ${collectionName}`,
+      subtitle: `Annotated Statute Repository & Case Reference Pack`,
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'Certified Legal Dossier • LegalConnect Research Archive',
+      extraMeta: [
+        { label: 'Folder', value: collectionName },
+        { label: 'Total Items', value: `${list.length}` },
+      ],
+    });
+  }
+
+  private executePrintDirectory(params: any) {
+    let contentHtml = '';
+    const lawyers = this.savedLawyersDetails();
+    const resources = this.savedResourcesDetails();
+    const helplines = this.savedHelplinesDetails();
+
+    if (lawyers.length > 0) {
+      const rows = lawyers.map((l: any) => ({
+        name: l.name,
+        exp: `${l.experience} Yrs`,
+        rating: `${l.rating || 5.0} ${this.printService.getSvg('star', { size: 10, color: '#f59e0b' })}`,
+        spec: (l.specializations || []).join(', ') || 'General',
+        contact: l.phone || l.officeAddress || 'N/A',
+      }));
+      contentHtml += this.printService.buildTable({
+        title: 'Saved Advocates & Legal Counsel',
+        badge: `${lawyers.length} Counsel`,
+        columns: [
+          { key: 'name', label: 'Advocate Name', bold: true },
+          { key: 'exp', label: 'Experience' },
+          { key: 'rating', label: 'Rating', align: 'center' },
+          { key: 'spec', label: 'Specializations' },
+          { key: 'contact', label: 'Contact / Office' },
+        ],
+        rows,
+      });
+    }
+
+    if (resources.length > 0) {
+      contentHtml += this.printService.buildSection(
+        'Saved Courts & Legal Aid Centers',
+        this.printService.buildResourceCards(resources, { showQr: params.includeQr }),
+        `${resources.length} Centers`
+      );
+    }
+
+    if (helplines.length > 0) {
+      const rows = helplines.map((h: any) => ({
+        name: h.name,
+        desc: h.description || 'Emergency Hotline',
+        number: `<span class="mono" style="font-weight:700;color:#059669">${this.printService.escapeHtml(h.number)}</span>`,
+      }));
+      contentHtml += this.printService.buildTable({
+        title: 'Emergency Legal Helplines',
+        badge: `${helplines.length} Lines`,
+        columns: [
+          { key: 'name', label: 'Helpline Service', bold: true },
+          { key: 'desc', label: 'Coverage Area' },
+          { key: 'number', label: 'Dial Number', align: 'right' },
+        ],
+        rows,
+      });
+    }
+
+    if (!contentHtml) {
+      contentHtml = '<p style="color:#64748b;font-size:12px">No saved directory contacts found.</p>';
+    }
+
+    this.printService.print({
+      title: 'Professional Legal Directory Dossier',
+      subtitle: 'Verified Legal Aid Centers, Counsel & Emergency Helplines',
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'Verified Directory Registry • LegalConnect Network',
+      extraMeta: [
+        { label: 'Total Contacts', value: `${lawyers.length + resources.length + helplines.length}` },
+      ],
+    });
+  }
+
+  private executePrintFullDossier(params: any) {
+    let contentHtml = '';
+    const bookmarks = this.allBookmarks();
+    const lawyers = this.savedLawyersDetails();
+    const resources = this.savedResourcesDetails();
+    const helplines = this.savedHelplinesDetails();
+
+    if (bookmarks.length > 0) {
+      let bmHtml = '';
+      for (const bm of bookmarks) {
+        bmHtml += this.printService.buildStatuteText(bm.section, {
+          actName: bm.actShortName,
+          shortName: bm.actShortName,
+          year: '',
+        });
+        if (bm.notes) {
+          bmHtml += `<div style="background:#fffbeb;border-left:3px solid #d97706;padding:8px 12px;margin:-6px 0 14px;border-radius:0 6px 6px 0;font-size:11px;color:#78350f">
+            <strong>Notes:</strong> ${this.printService.escapeHtml(bm.notes)}
+          </div>`;
+        }
+      }
+      contentHtml += this.printService.buildSection('Annotated Legal Research Bookmarks', bmHtml, `${bookmarks.length} Sections`);
+    }
+
+    if (lawyers.length > 0) {
+      const rows = lawyers.map((l: any) => ({
+        name: l.name,
+        exp: `${l.experience} Yrs`,
+        rating: `${l.rating || 5.0} ${this.printService.getSvg('star', { size: 10, color: '#f59e0b' })}`,
+        spec: (l.specializations || []).join(', ') || 'General',
+        contact: l.phone || l.officeAddress || 'N/A',
+      }));
+      contentHtml += this.printService.buildTable({
+        title: 'Retained & Saved Advocates',
+        badge: `${lawyers.length} Counsel`,
+        columns: [
+          { key: 'name', label: 'Advocate Name', bold: true },
+          { key: 'exp', label: 'Experience' },
+          { key: 'rating', label: 'Rating', align: 'center' },
+          { key: 'spec', label: 'Specializations' },
+          { key: 'contact', label: 'Contact / Office' },
+        ],
+        rows,
+      });
+    }
+
+    if (resources.length > 0) {
+      contentHtml += this.printService.buildSection(
+        'Saved Courts & Legal Aid Centers',
+        this.printService.buildResourceCards(resources, { showQr: params.includeQr }),
+        `${resources.length} Centers`
+      );
+    }
+
+    if (helplines.length > 0) {
+      const rows = helplines.map((h: any) => ({
+        name: h.name,
+        desc: h.description || 'Emergency Hotline',
+        number: `<span class="mono" style="font-weight:700;color:#059669">${this.printService.escapeHtml(h.number)}</span>`,
+      }));
+      contentHtml += this.printService.buildTable({
+        title: 'Emergency Legal Helplines',
+        badge: `${helplines.length} Lines`,
+        columns: [
+          { key: 'name', label: 'Helpline Service', bold: true },
+          { key: 'desc', label: 'Coverage Area' },
+          { key: 'number', label: 'Dial Number', align: 'right' },
+        ],
+        rows,
+      });
+    }
+
+    this.printService.print({
+      title: 'Complete Client Case & Practice Dossier',
+      subtitle: 'Official Comprehensive Legal Archive & Saved Directory',
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'Comprehensive Legal Dossier • LegalConnect Platform',
+      extraMeta: [
+        { label: 'Total Saved Sections', value: `${bookmarks.length}` },
+        { label: 'Total Directory Items', value: `${lawyers.length + resources.length + helplines.length}` },
+      ],
+    });
   }
 
   triggerPrintDirectory() {
-    this.printDate = new Date();
-    // Brief timeout to let the print template render before dialog opens
-    setTimeout(() => {
-      window.print();
-    }, 150);
+    this.triggerPrint();
   }
 
   trackByInquiry(index: number, item: Consultation): number {
@@ -1180,7 +1403,39 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     return item._id || index.toString();
   }
 
+  openMobileTabSheet() {
+    this.showMobileTabSheet.set(true);
+    this.updateScrollLock();
+  }
+
+  closeMobileTabSheet() {
+    this.showMobileTabSheet.set(false);
+    this.updateScrollLock();
+  }
+
+  getActiveTabMeta() {
+    switch (this.activeTab()) {
+      case 'bookmarks':
+        return { name: 'Research Library', count: this.bookmarks().length, icon: 'bookmark', color: 'text-amber-500 dark:text-amber-400' };
+      case 'case-packs':
+        return { name: 'Case Pack Dossiers', count: this.savedCasePacks().length, icon: 'folder', color: 'text-indigo-500 dark:text-indigo-400' };
+      case 'saved-directory':
+        return { name: 'Professional Directory', count: this.totalSavedContactsCount(), icon: 'users', color: 'text-purple-500 dark:text-purple-400' };
+      case 'inquiries':
+        return { name: 'Consult Requests', count: this.inquiries().length, icon: 'mail' as any, color: 'text-sky-500 dark:text-sky-400' };
+      case 'analytics':
+        return { name: 'Spend & Insights', count: null, icon: 'circle-dollar' as any, color: 'text-emerald-500 dark:text-emerald-400' };
+      case 'reports':
+        return { name: 'My Reports & Feedback', count: null, icon: 'shield' as any, color: 'text-amber-500 dark:text-amber-400' };
+      default:
+        return { name: 'Research Library', count: this.bookmarks().length, icon: 'bookmark' as any, color: 'text-amber-500 dark:text-amber-400' };
+    }
+  }
+
   setActiveTab(tab: string) {
+    this.showMobileTabSheet.set(false);
+    this.updateScrollLock();
+
     if (this.activeTab() === tab) return;
     this.isTabLoading.set(true);
     this.activeTab.set(tab);
@@ -1203,13 +1458,24 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.scrollToTabs();
   }
 
-  private scrollToTabs() {
+  private scrollToTabs(delayMs = 60) {
+    if (typeof window === 'undefined') return;
     setTimeout(() => {
-      const tabsEl = document.getElementById('dashboard-tabs');
-      if (tabsEl) {
-        tabsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const isMobile = window.innerWidth < 1024;
+      const targetId = isMobile ? 'mobile-tab-switcher' : 'dashboard-tabs';
+      const el = document.getElementById(targetId) || document.getElementById('content-section');
+      if (el) {
+        // Offset for top fixed navbar: ~65px on mobile, ~80px on desktop
+        const headerOffset = isMobile ? 65 : 80;
+        const elementPosition = el.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.scrollY - headerOffset;
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth'
+        });
       }
-    }, 100);
+    }, delayMs);
   }
 
   openDirectoryDrawer(type: 'lawyer' | 'resource' | 'helpline', data: any) {

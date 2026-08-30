@@ -47,7 +47,7 @@ router.post('/drafts', requireAuth, asyncHandler(async (req: AuthenticatedReques
       customBody,
       updatedAt: new Date()
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   ).lean();
 
   res.json({
@@ -139,7 +139,7 @@ router.post('/templates', requireAuth, asyncHandler(async (req: AuthenticatedReq
       body,
       updatedAt: new Date()
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   ).lean();
 
   res.json({
