@@ -26,6 +26,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.Converters.Add(new UtcDateTimeConverter());
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
     });
 
 builder.Services.AddResponseCompression(options =>
@@ -272,7 +273,79 @@ app.MapControllers();
 app.MapHub<AdminNotificationHub>("/hubs/notifications");
 app.MapHub<AdminNotificationHub>("/hubs/admin/notifications");
 
-app.Run();
+// ── Enterprise Database Migration Engine (MNC Standard: Resilient, Async & Non-Blocking) ──
+await ApplyDatabaseMigrationsAsync(app);
+
+await app.RunAsync();
+
+static async Task ApplyDatabaseMigrationsAsync(WebApplication app)
+{
+    var autoMigrate = app.Configuration.GetValue("Database:AutoMigrate", true);
+    if (!autoMigrate && !app.Environment.IsDevelopment())
+    {
+        return;
+    }
+
+    using var scope = app.Services.CreateScope();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    const int maxRetries = 3;
+    for (int attempt = 1; attempt <= maxRetries; attempt++)
+    {
+        try
+        {
+            var db = services.GetRequiredService<AppDbContext>();
+            var pendingMigrations = (await db.Database.GetPendingMigrationsAsync()).ToList();
+
+            if (pendingMigrations.Count > 0)
+            {
+                logger.LogInformation(
+                    "🔄 [Database Migration] Found {Count} pending migration(s): {Migrations}. Applying updates...",
+                    pendingMigrations.Count,
+                    string.Join(", ", pendingMigrations)
+                );
+
+                var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+                await db.Database.MigrateAsync();
+                stopwatch.Stop();
+
+                logger.LogInformation(
+                    "✅ [Database Migration] Schema successfully synchronized in {ElapsedMs}ms.",
+                    stopwatch.ElapsedMilliseconds
+                );
+            }
+            else
+            {
+                logger.LogDebug("⚡ [Database Migration] Schema is fully up-to-date. Zero migrations required.");
+            }
+
+            break; // Migration check / execution completed successfully
+        }
+        catch (Exception ex) when (attempt < maxRetries)
+        {
+            logger.LogWarning(
+                ex,
+                "⚠️ [Database Migration] Attempt {Attempt}/{MaxRetries} failed. Retrying in 2 seconds (database warming up)...",
+                attempt,
+                maxRetries
+            );
+            await Task.Delay(2000);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(
+                ex,
+                "❌ [Database Migration] Critical error applying database migrations after {MaxRetries} attempts.",
+                maxRetries
+            );
+            if (!app.Environment.IsDevelopment())
+            {
+                throw; // In production, fail-fast if DB schema cannot be verified
+            }
+        }
+    }
+}
 
 public class UtcDateTimeConverter : System.Text.Json.Serialization.JsonConverter<DateTime>
 {

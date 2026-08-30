@@ -55,6 +55,11 @@ export const routes: Routes = [
         title: 'Review Moderation | LegalConnect Admin'
       },
       {
+        path: 'moderation',
+        loadComponent: () => import('./pages/moderation/moderation.component').then(m => m.ModerationComponent),
+        title: 'Content Moderation Desk | LegalConnect Admin'
+      },
+      {
         path: 'consultations',
         loadComponent: () => import('./pages/consultations/consultations.component').then(m => m.ConsultationsComponent),
         title: 'Consultations Tracking | LegalConnect Admin'

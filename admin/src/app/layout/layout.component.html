@@ -161,6 +161,19 @@
         </span>
         @if (!isCollapsed) { <span class="nav-text flex-1">Review Moderation</span> }
       </a>
+      <a routerLink="/moderation" routerLinkActive="active" class="nav-item cat-ops"
+        [adminTooltip]="'Content Moderation: User reports, flags & trust & safety desk'" tooltipPosition="right">
+        <span class="nav-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+        </span>
+        @if (!isCollapsed) {
+        <span class="nav-text flex-1">Moderation Desk</span>
+        <span
+          class="px-1.5 py-0.5 text-[9px] font-bold rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30">Safety</span>
+        }
+      </a>
 
       <!-- SECTION 3: LEGAL RESOURCES -->
       @if (isCollapsed) {

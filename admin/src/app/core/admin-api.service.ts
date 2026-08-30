@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { AdminStatsService } from './services/admin-stats.service';
 import { AdminUserService } from './services/admin-user.service';
 import { AdminContentService } from './services/admin-content.service';
+import { AdminModerationService } from './services/admin-moderation.service';
 import { BareAct, CreateActPayload, EditMetaPayload } from '../pages/legal-content/legal-content.models';
 
 /**
@@ -14,7 +15,8 @@ export class AdminApiService {
   constructor(
     public stats: AdminStatsService,
     public user: AdminUserService,
-    public content: AdminContentService
+    public content: AdminContentService,
+    public moderation: AdminModerationService
   ) { }
 
   // -- Telemetry SSE Stream Delegate --

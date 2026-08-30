@@ -33,6 +33,9 @@ namespace CoreApi.Data
         public DbSet<AdminNotification> AdminNotifications { get; set; }
         public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
         public DbSet<AdminSavedView> AdminSavedViews { get; set; }
+        public DbSet<UserInteraction> UserInteractions { get; set; }
+        public DbSet<UserBookmark> UserBookmarks { get; set; }
+        public DbSet<ContentReport> ContentReports { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -209,6 +212,27 @@ namespace CoreApi.Data
 
             modelBuilder.Entity<ReviewAuditLog>()
                 .HasIndex(al => new { al.ReviewId, al.CreatedAt });
+
+            // Configure UserInteraction relationships & indexes
+            modelBuilder.Entity<UserInteraction>()
+                .HasOne(i => i.User)
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure UserBookmark relationships & indexes
+            modelBuilder.Entity<UserBookmark>()
+                .HasOne(b => b.User)
+                .WithMany()
+                .HasForeignKey(b => b.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure ContentReport relationships & indexes
+            modelBuilder.Entity<ContentReport>()
+                .HasOne(r => r.ReporterUser)
+                .WithMany()
+                .HasForeignKey(r => r.ReporterUserId)
+                .OnDelete(DeleteBehavior.SetNull);
         }
     }
 }

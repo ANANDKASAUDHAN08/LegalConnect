@@ -7,7 +7,7 @@ import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { AdminReviewItem } from '../../core/models/admin.models';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { Subscription } from 'rxjs';
 import { smartLoading } from '../../core/utils/smart-loading.operator';
@@ -28,7 +28,7 @@ import { AdminSavedViewsComponent } from '../../shared/components/saved-views/sa
   selector: 'admin-reviews',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent,
+    CommonModule, FormsModule, RouterLink, SkeletonComponent, TooltipDirective, SelectComponent,
     ActionMenuComponent, PaginationComponent, ColumnCustomizerComponent,
     AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent,
     ExportModalComponent, AdminSavedViewsComponent

@@ -1,0 +1,134 @@
+<!-- Backdrop -->
+<div *ngIf="reportService.isModalOpen()" class="report-backdrop" (click)="onBackdropClick($event)" role="dialog"
+    aria-modal="true" [attr.aria-label]="'Report ' + (reportService.currentTarget()?.targetTitle || 'content')">
+
+    <!-- Modal Container -->
+    <div class="report-modal" (click)="$event.stopPropagation()">
+        <!-- Drag handle for mobile bottom sheet -->
+        <div class="drag-handle"></div>
+
+        <!-- Header -->
+        <div class="report-header">
+            <div class="report-header-text">
+                <h3 class="report-title">Report an Issue</h3>
+                <p class="report-subtitle">{{ reportService.currentTarget()?.targetTitle || '' }}</p>
+            </div>
+            <button class="report-close" (click)="onClose()" [appTooltip]="'Close (Esc)'" [tooltipPlacement]="'bottom'"
+                aria-label="Close report modal">
+                <app-icon name="x" [size]="18"></app-icon>
+            </button>
+        </div>
+
+        <!-- Step Indicator -->
+        <div class="step-indicator">
+            <div *ngFor="let s of [1, 2, 3]" class="step-dot" [class.active]="step() >= s"
+                [class.current]="step() === s"
+                [appTooltip]="s === 1 ? 'Step 1: Select Reason' : (s === 2 ? 'Step 2: Provide Details' : 'Step 3: Contact & Submit')"
+                [tooltipPlacement]="'bottom'">
+            </div>
+        </div>
+
+        <!-- Step 1: Select Reason -->
+        <div *ngIf="step() === 1" class="report-step">
+            <p class="step-label">What's the issue?</p>
+            <div class="reason-grid">
+                <button *ngFor="let reason of reasons()" class="reason-pill"
+                    [class.selected]="selectedReason() === reason.key" (click)="selectReason(reason)"
+                    [appTooltip]="'Select ' + reason.label + ' as report reason'" [tooltipPlacement]="'top'">
+                    <span class="reason-severity" [class]="'severity-' + reason.severity.toLowerCase()"></span>
+                    <span>{{ reason.label }}</span>
+                </button>
+            </div>
+            <div class="step-actions">
+                <button class="btn-secondary" (click)="onClose()" [appTooltip]="'Discard and close'"
+                    [tooltipPlacement]="'top'">Cancel</button>
+                <button class="btn-primary" [disabled]="!selectedReason()" (click)="nextStep()"
+                    [appTooltip]="selectedReason() ? 'Proceed to details' : 'Please select a reason to continue'"
+                    [tooltipPlacement]="'top'">Continue</button>
+            </div>
+        </div>
+
+        <!-- Step 2: Description + Evidence -->
+        <div *ngIf="step() === 2" class="report-step">
+            <p class="step-label">Provide details</p>
+            <div class="textarea-wrapper">
+                <textarea [(ngModel)]="description" placeholder="Describe the issue in detail..." rows="4"
+                    maxlength="2000" class="report-textarea">
+            </textarea>
+                <span class="char-count">{{ description.length }} / 2000</span>
+            </div>
+
+            <div class="evidence-row">
+                <label class="evidence-label"
+                    [appTooltip]="'Attach screenshots, documents, or logs supporting your report (optional)'"
+                    [tooltipPlacement]="'top'">
+                    <app-icon name="paperclip" [size]="15" class="text-indigo-500 dark:text-indigo-400"></app-icon>
+                    <span>Attach evidence (optional)</span>
+                </label>
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-secondary" (click)="prevStep()" [appTooltip]="'Return to reason selection'"
+                    [tooltipPlacement]="'top'">Back</button>
+                <button class="btn-primary" [disabled]="description.trim().length < 10" (click)="nextStep()"
+                    [appTooltip]="description.trim().length >= 10 ? 'Proceed to contact step' : 'Please enter at least 10 characters describing the issue'"
+                    [tooltipPlacement]="'top'">Continue</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Contact + Submit -->
+        <div *ngIf="step() === 3" class="report-step">
+            <p class="step-label">Contact information</p>
+
+            <div class="contact-options">
+                <label class="contact-option"
+                    [appTooltip]="'Your identity and profile will remain completely confidential'"
+                    [tooltipPlacement]="'top'">
+                    <input type="radio" name="contactType" value="anonymous" [checked]="contactType === 'anonymous'"
+                        (change)="contactType = 'anonymous'">
+                    <div class="option-content">
+                        <strong>Submit anonymously</strong>
+                        <span>No contact information will be shared</span>
+                    </div>
+                </label>
+                <label class="contact-option"
+                    [appTooltip]="'Allow moderation team to reach out via email for follow-up'"
+                    [tooltipPlacement]="'top'">
+                    <input type="radio" name="contactType" value="contact" [checked]="contactType === 'contact'"
+                        (change)="contactType = 'contact'">
+                    <div class="option-content">
+                        <strong>Include my contact</strong>
+                        <span>We may follow up for additional details</span>
+                    </div>
+                </label>
+            </div>
+
+            <div *ngIf="contactType === 'contact'" class="contact-fields">
+                <input type="text" [(ngModel)]="reporterName" placeholder="Your name" class="report-input">
+                <input type="email" [(ngModel)]="reporterEmail" placeholder="Your email" class="report-input">
+            </div>
+
+            <div class="step-actions">
+                <button class="btn-secondary" (click)="prevStep()" [appTooltip]="'Return to details step'"
+                    [tooltipPlacement]="'top'">Back</button>
+                <button class="btn-primary btn-submit" [disabled]="isSubmitting()" (click)="submitReport()"
+                    [appTooltip]="'Send your report directly to the moderation queue'" [tooltipPlacement]="'top'">
+                    {{ isSubmitting() ? 'Submitting...' : 'Submit Report' }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 4: Success -->
+        <div *ngIf="step() === 4" class="report-step success-step">
+            <div class="success-icon">
+                <app-icon name="check-circle" [size]="48" class="text-emerald-500"></app-icon>
+            </div>
+            <h4 class="success-title">Report Submitted</h4>
+            <p class="success-message">{{ successMessage() }}</p>
+            <p *ngIf="referenceId()" class="reference-id">Reference: <strong>{{ referenceId() }}</strong></p>
+            <p *ngIf="estimatedTime()" class="sla-estimate">Estimated review: {{ estimatedTime() }}</p>
+            <button class="btn-primary" (click)="onClose()" [appTooltip]="'Close and return'"
+                [tooltipPlacement]="'top'">Done</button>
+        </div>
+    </div>
+</div>

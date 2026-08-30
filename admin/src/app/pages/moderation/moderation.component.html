@@ -1,0 +1,482 @@
+<div class="moderation-page p-6 max-w-[1800px] mx-auto space-y-6">
+
+  <!-- Header & KPI Bar -->
+  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            class="text-amber-400">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+          </svg>
+          Content Moderation Desk
+        </h1>
+        <span
+          class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+          Trust & Safety
+        </span>
+      </div>
+      <p class="text-xs text-slate-400 mt-1">Review flagged content, citizen disputes, inaccurate institutional
+        directories, and safety violations</p>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="flex items-center gap-2">
+      <button (click)="loadQueue(); loadStats()"
+        class="btn-refresh inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
+        </svg>
+        <span>Refresh Queue</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- KPI Metric Cards Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+    <!-- Pending Card -->
+    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+      <div
+        class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+      </div>
+      <div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Pending Review</span>
+        <span class="text-2xl font-black text-white leading-none">{{ stats?.pendingCount || 0 }}</span>
+      </div>
+    </div>
+
+    <!-- Critical Pending Card -->
+    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+      <div
+        class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+          <line x1="12" y1="9" x2="12" y2="13"></line>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Critical / PII</span>
+        <span class="text-2xl font-black text-rose-400 leading-none">{{ stats?.criticalPendingCount || 0 }}</span>
+      </div>
+    </div>
+
+    <!-- Resolved Today Card -->
+    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+      <div
+        class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Resolved Today</span>
+        <span class="text-2xl font-black text-emerald-400 leading-none">{{ stats?.resolvedTodayCount || 0 }}</span>
+      </div>
+    </div>
+
+    <!-- SLA Time Card -->
+    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+      <div
+        class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+        </svg>
+      </div>
+      <div>
+        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Avg Resolution SLA</span>
+        <span class="text-2xl font-black text-indigo-400 leading-none">{{ stats?.averageResolutionMinutes ?
+          stats!.averageResolutionMinutes + ' min' : '< 15 min' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filter & Bulk Actions Bar -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
+    <div class="flex flex-wrap items-center justify-between gap-3">
+      <!-- Left Filters -->
+      <div class="flex flex-wrap items-center gap-2.5">
+        <!-- Status Tabs -->
+        <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800">
+          <button (click)="selectedStatus = 'Pending'; onFilterChange()"
+            [class.active-tab]="selectedStatus === 'Pending'" class="filter-tab">Pending</button>
+          <button (click)="selectedStatus = 'UnderReview'; onFilterChange()"
+            [class.active-tab]="selectedStatus === 'UnderReview'" class="filter-tab">In Review</button>
+          <button (click)="selectedStatus = 'Resolved'; onFilterChange()"
+            [class.active-tab]="selectedStatus === 'Resolved'" class="filter-tab">Resolved</button>
+          <button (click)="selectedStatus = 'Dismissed'; onFilterChange()"
+            [class.active-tab]="selectedStatus === 'Dismissed'" class="filter-tab">Dismissed</button>
+          <button (click)="selectedStatus = ''; onFilterChange()" [class.active-tab]="selectedStatus === ''"
+            class="filter-tab">All</button>
+        </div>
+
+        <!-- Target Type Select -->
+        <select [(ngModel)]="selectedType" (change)="onFilterChange()" class="filter-select">
+          <option value="">All Entity Types</option>
+          <option value="Review">Reviews / Disputes</option>
+          <option value="LegalResource">Legal Resources</option>
+          <option value="Lawyer">Lawyer Profiles</option>
+          <option value="Helpline">Helplines</option>
+          <option value="BareActSection">Bare Acts</option>
+          <option value="Template">Templates</option>
+        </select>
+
+        <!-- Severity Select -->
+        <select [(ngModel)]="selectedSeverity" (change)="onFilterChange()" class="filter-select">
+          <option value="">All Severities</option>
+          <option value="Critical">Critical</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+        </select>
+      </div>
+
+      <!-- Right: Search -->
+      <div class="w-full sm:w-72">
+        <admin-search-input [placeholder]="'Search reference, user, or reason...'" [value]="searchQuery"
+          (searchChange)="onSearch($event)"></admin-search-input>
+      </div>
+    </div>
+
+    <!-- Bulk Action Strip -->
+    @if (selectedReportIds.size > 0) {
+    <div
+      class="flex items-center justify-between p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-800/60 animate-fadeIn">
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-bold text-indigo-300">{{ selectedReportIds.size }} items selected</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button (click)="bulkResolve()" class="btn-bulk btn-resolve">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="20 6 9 17 4 12"></polyline>
+          </svg>
+          <span>Bulk Resolve</span>
+        </button>
+        <button (click)="bulkDismiss()" class="btn-bulk btn-dismiss">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+          <span>Bulk Dismiss</span>
+        </button>
+      </div>
+    </div>
+    }
+  </div>
+
+  <!-- Data Table Container -->
+  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+    @if (isLoading) {
+    <div class="p-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
+      <div class="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
+      <span class="text-xs font-semibold">Loading moderation queue...</span>
+    </div>
+    } @else if (reports.length === 0) {
+    <div class="p-16 text-center">
+      <admin-empty-state [title]="'Queue is Clean'"
+        [message]="'No reports matching your active filters. All flagged items have been handled.'">
+      </admin-empty-state>
+    </div>
+    } @else {
+    <div class="overflow-x-auto">
+      <table class="w-full text-left text-xs text-slate-300">
+        <thead
+          class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+          <tr>
+            <th class="p-3.5 w-10 text-center">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
+                class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+            </th>
+            <admin-sort-header [label]="'Reference'" [key]="'reportRef'" [currentSort]="sortBy"
+              [currentOrder]="sortOrder" (sortChange)="onSortHeader($event)"></admin-sort-header>
+            <th class="p-3.5">Target Entity</th>
+            <th class="p-3.5">Reason & Severity</th>
+            <th class="p-3.5">Reporter</th>
+            <admin-sort-header [label]="'Duplicates'" [key]="'duplicateCount'" [currentSort]="sortBy"
+              [currentOrder]="sortOrder" (sortChange)="onSortHeader($event)"></admin-sort-header>
+            <admin-sort-header [label]="'Status'" [key]="'status'" [currentSort]="sortBy" [currentOrder]="sortOrder"
+              (sortChange)="onSortHeader($event)"></admin-sort-header>
+            <admin-sort-header [label]="'Reported At'" [key]="'createdAt'" [currentSort]="sortBy"
+              [currentOrder]="sortOrder" (sortChange)="onSortHeader($event)"></admin-sort-header>
+            <th class="p-3.5 text-right">Actions</th>
+          </tr>
+        </thead>
+
+        <tbody class="divide-y divide-slate-800/60">
+          @for (report of reports; track report.id) {
+          <tr (click)="openDrawer(report)" class="hover:bg-slate-800/50 cursor-pointer transition-colors"
+            [class.critical-flagged]="report.severity === 'Critical'">
+
+            <!-- Checkbox -->
+            <td class="p-3.5 text-center" (click)="$event.stopPropagation()">
+              <input type="checkbox" [checked]="selectedReportIds.has(report.id)"
+                (change)="toggleSelect(report.id, $event)"
+                class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+            </td>
+
+            <!-- Reference -->
+            <td class="p-3.5 font-mono font-bold text-indigo-400 whitespace-nowrap">
+              #{{ report.reportRef }}
+            </td>
+
+            <!-- Target Entity -->
+            <td class="p-3.5">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span
+                  class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                  {{ report.targetType }}
+                </span>
+                <span class="font-bold text-white max-w-[200px] truncate" [title]="report.targetTitle">
+                  {{ report.targetTitle }}
+                </span>
+              </div>
+            </td>
+
+            <!-- Reason & Severity -->
+            <td class="p-3.5">
+              <div class="flex items-center gap-2">
+                <span class="px-2 py-0.5 rounded-md text-[9px] font-bold border"
+                  [class]="getSeverityClass(report.severity)">
+                  {{ report.severity }}
+                </span>
+                <span class="text-slate-300 font-semibold">{{ report.reasonCategory }}</span>
+              </div>
+              <p class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{{ report.description }}</p>
+            </td>
+
+            <!-- Reporter -->
+            <td class="p-3.5 text-slate-400 whitespace-nowrap">
+              @if (report.reporterName) {
+              <span class="text-slate-300 font-medium block">{{ report.reporterName }}</span>
+              } @else {
+              <span class="text-slate-500 italic block">Anonymous Guest</span>
+              }
+            </td>
+
+            <!-- Duplicate Count -->
+            <td class="p-3.5 text-center whitespace-nowrap">
+              @if (report.duplicateCount > 1) {
+              <span
+                class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                × {{ report.duplicateCount }} flags
+              </span>
+              } @else {
+              <span class="text-slate-500 font-mono">1</span>
+              }
+            </td>
+
+            <!-- Status -->
+            <td class="p-3.5 whitespace-nowrap">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border"
+                [class]="getStatusClass(report.status)">
+                {{ report.status }}
+              </span>
+            </td>
+
+            <!-- Date -->
+            <td class="p-3.5 text-slate-400 whitespace-nowrap">
+              {{ report.createdAt | date:'short' }}
+            </td>
+
+            <!-- Actions -->
+            <td class="p-3.5 text-right whitespace-nowrap" (click)="$event.stopPropagation()">
+              <div class="flex items-center justify-end gap-1.5">
+                @if (report.status === 'Pending' || report.status === 'UnderReview') {
+                <button (click)="openResolveModal(report, $event)" [adminTooltip]="'Resolve Report'"
+                  class="btn-row-action text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                  </svg>
+                </button>
+                <button (click)="openDismissModal(report, $event)" [adminTooltip]="'Dismiss / False Alarm'"
+                  class="btn-row-action text-slate-400 hover:bg-slate-700/50 border-slate-700">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+                }
+                <button (click)="openDrawer(report)" [adminTooltip]="'Inspect Dossier'"
+                  class="btn-row-action text-indigo-400 hover:bg-indigo-500/20 border-indigo-500/30">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    }
+
+    <!-- Pagination -->
+    <div class="p-4 border-t border-slate-800 flex items-center justify-between">
+      <span class="text-xs text-slate-400">Total: <strong>{{ pagination.total }}</strong> reports</span>
+      <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
+        [pages]="pagination.pages" (pageChange)="onPageChange($event)"></admin-pagination>
+    </div>
+  </div>
+
+  <!-- Action Modal -->
+  @if (showActionModal) {
+  <div class="modal-backdrop" (click)="closeActionModal()">
+    <div class="modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h3 class="text-lg font-black text-white flex items-center gap-2">
+          @if (actionModalMode === 'resolve') {
+          <span class="text-emerald-400">Resolve Report</span>
+          } @else {
+          <span class="text-slate-400">Dismiss Report</span>
+          }
+          <span class="font-mono text-indigo-400">#{{ activeReport?.reportRef }}</span>
+        </h3>
+        <button (click)="closeActionModal()" class="text-slate-400 hover:text-white">&times;</button>
+      </div>
+
+      <div class="modal-body space-y-4">
+        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs">
+          <span class="text-slate-400 block mb-1">Target Entity:</span>
+          <strong class="text-white text-sm">[{{ activeReport?.targetType }}] {{ activeReport?.targetTitle }}</strong>
+          <p class="text-amber-300/90 mt-1">Reason: {{ activeReport?.reasonCategory }}</p>
+          <p class="text-slate-400 mt-0.5">{{ activeReport?.description }}</p>
+        </div>
+
+        @if (actionModalMode === 'resolve') {
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-300">Resolution Action:</label>
+          <select [(ngModel)]="resolutionAction" class="w-full filter-select">
+            @for (act of resolutionActions; track act.value) {
+            <option [value]="act.value">{{ act.label }}</option>
+            }
+          </select>
+        </div>
+        }
+
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-300">Moderator Audit Notes:</label>
+          <textarea [(ngModel)]="moderatorNotes" rows="3"
+            placeholder="Explain the action taken or rationale for audit trail..."
+            class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"></textarea>
+        </div>
+      </div>
+
+      <div class="modal-footer flex items-center justify-end gap-2">
+        <button (click)="closeActionModal()"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Cancel</button>
+        <button (click)="submitAction()" [disabled]="isProcessingAction"
+          class="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all"
+          [class.bg-emerald-600]="actionModalMode === 'resolve'" [class.bg-slate-700]="actionModalMode === 'dismiss'">
+          {{ isProcessingAction ? 'Submitting...' : (actionModalMode === 'resolve' ? 'Confirm Resolution' : 'Confirm
+          Dismissal') }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+  <!-- Detail Drawer -->
+  @if (drawerReport) {
+  <div class="drawer-backdrop" (click)="closeDrawer()">
+    <div class="drawer-panel" (click)="$event.stopPropagation()">
+      <div class="drawer-header flex items-center justify-between p-4 border-b border-slate-800">
+        <div>
+          <h3 class="text-base font-black text-white flex items-center gap-2">
+            <span>Report Dossier</span>
+            <span class="font-mono text-indigo-400">#{{ drawerReport.reportRef }}</span>
+          </h3>
+          <span class="text-xs text-slate-400">Detailed Evidence & Audit Trail</span>
+        </div>
+        <button (click)="closeDrawer()" class="text-slate-400 hover:text-white p-1">&times;</button>
+      </div>
+
+      <div class="drawer-body p-6 space-y-6 overflow-y-auto">
+        <!-- Target Info -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Target Content</span>
+          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded text-[9px] font-black bg-indigo-500/20 text-indigo-300">{{
+                drawerReport.targetType }}</span>
+              <span class="font-bold text-white text-sm">{{ drawerReport.targetTitle }}</span>
+            </div>
+            <span class="text-xs font-mono text-slate-500 block">ID: {{ drawerReport.targetId }}</span>
+          </div>
+        </div>
+
+        <!-- Severity & Category -->
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">Severity</span>
+            <span class="px-3 py-1 rounded-xl text-xs font-bold border inline-block"
+              [class]="getSeverityClass(drawerReport.severity)">
+              {{ drawerReport.severity }}
+            </span>
+          </div>
+          <div>
+            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">Category</span>
+            <span class="text-xs font-bold text-white block">{{ drawerReport.reasonCategory }}</span>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Reporter's Narrative</span>
+          <p class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed">{{
+            drawerReport.description }}</p>
+        </div>
+
+        <!-- Reporter Metadata -->
+        <div class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Reporter Dossier</span>
+          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
+            <div class="flex justify-between"><span class="text-slate-500">Name:</span> <strong class="text-white">{{
+                drawerReport.reporterName || 'Anonymous' }}</strong></div>
+            <div class="flex justify-between"><span class="text-slate-500">Email:</span> <span
+                class="text-slate-300 font-mono">{{ drawerReport.reporterEmail || 'N/A' }}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">IP Address:</span> <span
+                class="text-slate-300 font-mono">{{ drawerReport.reporterIp || 'N/A' }}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Report Count:</span> <span
+                class="text-amber-400 font-bold">{{ drawerReport.duplicateCount }} duplicate flags combined</span></div>
+          </div>
+        </div>
+
+        <!-- Resolution State -->
+        @if (drawerReport.status === 'Resolved' || drawerReport.status === 'Dismissed') {
+        <div class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Resolution Record</span>
+          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
+            <div class="flex justify-between"><span class="text-slate-500">Status:</span> <strong
+                class="text-emerald-400">{{ drawerReport.status }}</strong></div>
+            <div class="flex justify-between"><span class="text-slate-500">Action:</span> <span class="text-white">{{
+                drawerReport.resolutionAction || 'None' }}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Notes:</span> <span
+                class="text-slate-300 italic">{{ drawerReport.moderatorNotes || 'No notes' }}</span></div>
+            <div class="flex justify-between"><span class="text-slate-500">Reviewed At:</span> <span
+                class="text-slate-400">{{ drawerReport.reviewedAt | date:'medium' }}</span></div>
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="drawer-footer p-4 border-t border-slate-800 flex items-center justify-end gap-2">
+        <button (click)="closeDrawer()"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Close</button>
+        @if (drawerReport.status === 'Pending' || drawerReport.status === 'UnderReview') {
+        <button (click)="openResolveModal(drawerReport)"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white">Resolve
+          Issue</button>
+        }
+      </div>
+    </div>
+  </div>
+  }
+
+</div>
