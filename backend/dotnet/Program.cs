@@ -320,6 +320,16 @@ static async Task ApplyDatabaseMigrationsAsync(WebApplication app)
                 logger.LogDebug("⚡ [Database Migration] Schema is fully up-to-date. Zero migrations required.");
             }
 
+            // Ensure EvidenceUrl column in MySQL is LONGTEXT (to support multi-modal base64 proofs)
+            try
+            {
+                await db.Database.ExecuteSqlRawAsync("ALTER TABLE `ContentReports` MODIFY COLUMN `EvidenceUrl` LONGTEXT NULL;");
+            }
+            catch (Exception ex)
+            {
+                logger.LogDebug("EvidenceUrl column schema verification: {Message}", ex.Message);
+            }
+
             break; // Migration check / execution completed successfully
         }
         catch (Exception ex) when (attempt < maxRetries)

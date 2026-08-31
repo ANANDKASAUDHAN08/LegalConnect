@@ -28,8 +28,61 @@ namespace CoreApi.Controllers
             return claim != null && int.TryParse(claim, out int uid) ? uid : null;
         }
 
+        // ── Reason Taxonomy Single Source of Truth ──
+        public class ReasonItemDto
+        {
+            public string Key { get; set; } = string.Empty;
+            public string Label { get; set; } = string.Empty;
+            public string Icon { get; set; } = string.Empty;
+            public string Severity { get; set; } = "Medium";
+        }
+
+        private static readonly Dictionary<string, List<ReasonItemDto>> TaxonomyMap = new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Review"] = new()
+            {
+                new() { Key = "SPAM", Label = "Spam or Fake Review", Icon = "shield-alert", Severity = "High" },
+                new() { Key = "ABUSIVE_LANGUAGE", Label = "Abusive or Hateful Language", Icon = "message-circle-warning", Severity = "High" },
+                new() { Key = "PII_LEAK", Label = "Contains Personal Information (Aadhaar, Phone, etc.)", Icon = "eye-off", Severity = "Critical" },
+                new() { Key = "FAKE_REVIEW", Label = "Fake or Misleading Review", Icon = "user-x", Severity = "High" },
+                new() { Key = "IRRELEVANT", Label = "Irrelevant or Off-Topic", Icon = "x-circle", Severity = "Low" },
+            },
+            ["LegalResource"] = new()
+            {
+                new() { Key = "CLOSED_PERMANENTLY", Label = "Permanently Closed or Shifted", Icon = "building", Severity = "High" },
+                new() { Key = "WRONG_ADDRESS", Label = "Incorrect Address or Coordinates", Icon = "map-pin", Severity = "Medium" },
+                new() { Key = "WRONG_PHONE", Label = "Wrong or Disconnected Phone Number", Icon = "phone", Severity = "Medium" },
+                new() { Key = "BRIBERY_ALLEGATION", Label = "Corruption / Bribery Demand", Icon = "alert-triangle", Severity = "Critical" },
+                new() { Key = "FACILITIES_CHANGED", Label = "Facilities Information Outdated", Icon = "refresh-cw", Severity = "Low" },
+            },
+            ["Lawyer"] = new()
+            {
+                new() { Key = "FAKE_REGISTRATION", Label = "Fake Bar Council Registration", Icon = "user-x", Severity = "Critical" },
+                new() { Key = "NOT_PRACTICING", Label = "No Longer Practicing", Icon = "briefcase", Severity = "Medium" },
+                new() { Key = "MISCONDUCT", Label = "Professional Misconduct", Icon = "gavel", Severity = "High" },
+                new() { Key = "WRONG_SPECIALIZATION", Label = "Incorrect Specialization Listed", Icon = "file-text", Severity = "Medium" },
+            },
+            ["BareActSection"] = new()
+            {
+                new() { Key = "INCORRECT_TEXT", Label = "Incorrect Section Text", Icon = "file-text", Severity = "High" },
+                new() { Key = "OUTDATED_AMENDMENT", Label = "Outdated — New Amendment Exists", Icon = "calendar", Severity = "Medium" },
+                new() { Key = "WRONG_SECTION_NUMBER", Label = "Wrong Section Number", Icon = "hash", Severity = "Medium" },
+            },
+            ["Helpline"] = new()
+            {
+                new() { Key = "WRONG_PHONE", Label = "Number Not Working or Changed", Icon = "phone", Severity = "High" },
+                new() { Key = "WRONG_CATEGORY", Label = "Wrong Category Assignment", Icon = "tag", Severity = "Low" },
+                new() { Key = "CLOSED_PERMANENTLY", Label = "Service Discontinued", Icon = "building", Severity = "High" },
+            },
+            ["Template"] = new()
+            {
+                new() { Key = "INCORRECT_TEXT", Label = "Contains Legal Errors", Icon = "file-text", Severity = "High" },
+                new() { Key = "OUTDATED_AMENDMENT", Label = "Uses Outdated Law References", Icon = "calendar", Severity = "Medium" },
+            }
+        };
+
         // ── Auto-severity mapping based on reason category ──
-        private static readonly Dictionary<string, ReportSeverity> SeverityMap = new()
+        private static readonly Dictionary<string, ReportSeverity> SeverityMap = new(StringComparer.OrdinalIgnoreCase)
         {
             // Critical
             ["PII_LEAK"] = ReportSeverity.Critical,
@@ -54,7 +107,29 @@ namespace CoreApi.Controllers
             ["IRRELEVANT"] = ReportSeverity.Low,
             ["FACILITIES_CHANGED"] = ReportSeverity.Low,
             ["TYPO"] = ReportSeverity.Low,
+            ["WRONG_CATEGORY"] = ReportSeverity.Low,
         };
+
+        /// <summary>
+        /// GET /api/contentreport/reasons?targetType=LegalResource
+        /// Returns the official reason taxonomy for a given target entity type.
+        /// Backend is the single source of truth.
+        /// </summary>
+        [HttpGet("reasons")]
+        public IActionResult GetReasons([FromQuery] string? targetType)
+        {
+            if (string.IsNullOrWhiteSpace(targetType))
+            {
+                return Ok(TaxonomyMap);
+            }
+
+            if (TaxonomyMap.TryGetValue(targetType.Trim(), out var reasons))
+            {
+                return Ok(reasons);
+            }
+
+            return Ok(new List<ReasonItemDto>());
+        }
 
         /// <summary>
         /// POST /api/contentreport
@@ -109,8 +184,16 @@ namespace CoreApi.Controllers
                     return Ok(new
                     {
                         success = true,
-                        message = "Your report has been merged with an existing investigation. Thank you for confirming this issue.",
+                        message = "Your report has been merged with an active investigation. Thank you for confirming this issue.",
                         referenceId = $"LC-REP-{existingReport.CreatedAt:yyyy}-{existingReport.Id:D4}",
+                        severity = existingReport.Severity.ToString(),
+                        estimatedReviewTime = existingReport.Severity switch
+                        {
+                            ReportSeverity.Critical => "Within 2 hours",
+                            ReportSeverity.High => "Within 24 hours",
+                            ReportSeverity.Medium => "Within 3 business days",
+                            _ => "Within 7 business days"
+                        },
                         isDuplicate = true
                     });
                 }
@@ -187,7 +270,7 @@ namespace CoreApi.Controllers
             var userId = GetUserId();
             if (userId == null) return Unauthorized();
 
-            var query = _context.ContentReports.Where(r => r.ReporterUserId == userId.Value);
+            var query = _context.ContentReports.Where(r => r.ReporterUserId == userId.Value && r.Status != ReportStatus.Dismissed);
             var total = await query.CountAsync();
 
             var items = await query
@@ -213,6 +296,59 @@ namespace CoreApi.Controllers
 
             return Ok(new { data = items, total, page, limit });
         }
+
+        /// <summary>
+        /// POST /api/contentreport/withdraw
+        /// Allows a user to withdraw an active pending/investigating report by targetType & targetId.
+        /// </summary>
+        [HttpPost("withdraw")]
+        public async Task<IActionResult> Withdraw([FromBody] WithdrawReportDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.TargetType) || string.IsNullOrWhiteSpace(dto.TargetId))
+                return BadRequest(new { message = "TargetType and TargetId are required." });
+
+            var userId = GetUserId();
+            var clientIp = HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+            var query = _context.ContentReports.Where(r =>
+                r.TargetType == dto.TargetType.Trim() &&
+                r.TargetId == dto.TargetId.Trim() &&
+                r.Status != ReportStatus.Resolved &&
+                r.Status != ReportStatus.Dismissed);
+
+            if (userId != null)
+            {
+                query = query.Where(r => r.ReporterUserId == userId.Value);
+            }
+            else
+            {
+                if (!string.IsNullOrWhiteSpace(dto.ClientFingerprint))
+                {
+                    query = query.Where(r => r.ClientFingerprint == dto.ClientFingerprint.Trim() || r.ClientIp == clientIp);
+                }
+                else
+                {
+                    query = query.Where(r => r.ClientIp == clientIp);
+                }
+            }
+
+            var reports = await query.ToListAsync();
+            if (!reports.Any())
+            {
+                return Ok(new { success = true, message = "No active report found to withdraw." });
+            }
+
+            foreach (var r in reports)
+            {
+                r.Status = ReportStatus.Dismissed;
+                r.AdminResolutionNotes = "Withdrawn by reporter.";
+                r.ResolvedAt = DateTime.UtcNow;
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { success = true, message = "Report withdrawn successfully." });
+        }
     }
 
     // ── DTOs ──
@@ -227,6 +363,13 @@ namespace CoreApi.Controllers
         public string? EvidenceUrl { get; set; }
         public string? ReporterName { get; set; }
         public string? ReporterEmail { get; set; }
+        public string? ClientFingerprint { get; set; }
+    }
+
+    public class WithdrawReportDto
+    {
+        public string TargetType { get; set; } = string.Empty;
+        public string TargetId { get; set; } = string.Empty;
         public string? ClientFingerprint { get; set; }
     }
 }

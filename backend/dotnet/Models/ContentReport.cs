@@ -86,9 +86,9 @@ namespace CoreApi.Models
         public string Description { get; set; } = string.Empty;
 
         /// <summary>
-        /// URL to uploaded evidence (photo, document proof).
+        /// URL to uploaded evidence (photo, document proof or data URL).
         /// </summary>
-        [MaxLength(500)]
+        [Column(TypeName = "longtext")]
         public string? EvidenceUrl { get; set; }
 
         public ReportSeverity Severity { get; set; } = ReportSeverity.Medium;

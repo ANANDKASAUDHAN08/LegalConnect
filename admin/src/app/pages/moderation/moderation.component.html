@@ -429,9 +429,40 @@
         <!-- Description -->
         <div class="space-y-2">
           <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Reporter's Narrative</span>
-          <p class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed">{{
+          <p class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed whitespace-pre-line">{{
             drawerReport.description }}</p>
         </div>
+
+        <!-- Attached Evidence Proof -->
+        @if (drawerReport.evidenceUrl) {
+        <div class="space-y-2">
+          <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400">Attached Evidence / Proof</span>
+          <div class="p-4 rounded-2xl bg-slate-950 border border-indigo-950/60 space-y-3">
+            @if (drawerReport.evidenceUrl.startsWith('data:application/pdf')) {
+            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
+              <div class="flex items-center gap-2">
+                <span class="text-red-400 font-bold text-xs">PDF Document</span>
+                <span class="text-slate-400 text-xs">Attached by citizen</span>
+              </div>
+              <a [href]="drawerReport.evidenceUrl" download="evidence-document.pdf" target="_blank"
+                class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold no-underline">
+                Open PDF
+              </a>
+            </div>
+            } @else {
+            <div class="rounded-xl overflow-hidden border border-slate-800 max-h-80 bg-slate-900 flex items-center justify-center">
+              <img [src]="drawerReport.evidenceUrl" alt="Evidence proof" class="max-h-80 w-auto object-contain rounded-lg" />
+            </div>
+            <div class="flex justify-end">
+              <a [href]="drawerReport.evidenceUrl" target="_blank" download="evidence-proof.png"
+                class="text-xs text-indigo-400 hover:text-indigo-300 font-bold no-underline">
+                View Full Size / Download &rarr;
+              </a>
+            </div>
+            }
+          </div>
+        </div>
+        }
 
         <!-- Reporter Metadata -->
         <div class="space-y-2">

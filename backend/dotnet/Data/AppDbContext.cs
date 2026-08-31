@@ -233,6 +233,10 @@ namespace CoreApi.Data
                 .WithMany()
                 .HasForeignKey(r => r.ReporterUserId)
                 .OnDelete(DeleteBehavior.SetNull);
+
+            modelBuilder.Entity<ContentReport>()
+                .Property(r => r.EvidenceUrl)
+                .HasColumnType("longtext");
         }
     }
 }
