@@ -3,14 +3,14 @@
     role="button" tabindex="0" (keydown.enter)="onToggle($event)" (keydown.space)="onToggle($event)">
 
     <!-- Thumbs Up variant -->
-    <app-icon *ngIf="variant === 'pill' || variant === 'icon-only' || variant === 'counter-badge'"
+    <app-icon *ngIf="variant() === 'pill' || variant() === 'icon-only' || variant() === 'counter-badge'"
         [name]="state().liked ? 'thumbs-up-filled' : 'thumbs-up'" [size]="iconPixelSize"
         [class]="state().liked ? 'text-emerald-600 dark:text-emerald-400 fill-current' : 'text-slate-500 dark:text-slate-400'"></app-icon>
 
     <!-- Heart variant -->
-    <app-icon *ngIf="variant === 'thumbs'" name="heart" [size]="iconPixelSize"
+    <app-icon *ngIf="variant() === 'thumbs'" name="heart" [size]="iconPixelSize"
         [class]="state().liked ? 'text-rose-500 fill-current' : 'text-slate-500 dark:text-slate-400'"></app-icon>
 
     <!-- Count label -->
-    <span *ngIf="variant !== 'icon-only'" class="like-count">{{ state().count || 0 }}</span>
+    <span *ngIf="variant() !== 'icon-only'" class="like-count">{{ state().count || 0 }}</span>
 </button>

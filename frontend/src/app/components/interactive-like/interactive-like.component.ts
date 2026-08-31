@@ -1,9 +1,9 @@
 import {
-  Component, Input, ChangeDetectionStrategy, inject, computed,
-  OnInit, OnDestroy, ElementRef, ViewChild
+  Component, ChangeDetectionStrategy, inject, computed, input, effect,
+  OnDestroy, ElementRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { InteractionService, InteractionState } from '../../services/interaction.service';
+import { InteractionService } from '../../services/interaction.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { IconComponent } from '../icon/icon.component';
 
@@ -11,7 +11,7 @@ import { IconComponent } from '../icon/icon.component';
  * <app-interactive-like> — Universal Like/Vote Button
  *
  * Zero-configuration: injects InteractionService and auto-hydrates state.
- * Supports multiple visual variants and sizes for different contexts.
+ * Uses Angular 17+ Signal Inputs for reactive route parameter navigation.
  *
  * Usage:
  *   <app-interactive-like targetType="Review" [targetId]="review.id.toString()" />
@@ -25,19 +25,22 @@ import { IconComponent } from '../icon/icon.component';
   templateUrl: './interactive-like.component.html',
   styleUrls: ['./interactive-like.component.scss']
 })
-export class InteractiveLikeComponent implements OnInit, OnDestroy {
-  @Input({ required: true }) targetType!: string;
-  @Input({ required: true }) targetId!: string;
-  @Input() variant: 'icon-only' | 'pill' | 'counter-badge' | 'thumbs' = 'pill';
-  @Input() size: 'sm' | 'md' | 'lg' = 'sm';
+export class InteractiveLikeComponent implements OnDestroy {
+  targetType = input.required<string>();
+  targetId = input.required<string>();
+  variant = input<'icon-only' | 'pill' | 'counter-badge' | 'thumbs'>('pill');
+  size = input<'sm' | 'md' | 'lg'>('sm');
 
   private interactionService = inject(InteractionService);
   private observer: IntersectionObserver | null = null;
   private elementRef = inject(ElementRef);
 
-  // Computed state from service signals
+  // Computed state from service signals - reacts whenever targetId() or interactions change
   state = computed(() => {
-    return this.interactionService.getState(this.targetType, this.targetId);
+    const type = this.targetType();
+    const id = this.targetId();
+    if (!type || !id) return { liked: false, count: 0 };
+    return this.interactionService.getState(type, id);
   });
 
   ariaLabel = computed(() => {
@@ -52,12 +55,12 @@ export class InteractiveLikeComponent implements OnInit, OnDestroy {
   });
 
   buttonClasses = computed(() => {
-    const classes = [`size-${this.size}`, `variant-${this.variant}`];
+    const classes = [`size-${this.size()}`, `variant-${this.variant()}`];
     return classes.join(' ');
   });
 
   get iconPixelSize(): number {
-    switch (this.size) {
+    switch (this.size()) {
       case 'sm': return 14;
       case 'md': return 16;
       case 'lg': return 18;
@@ -65,29 +68,34 @@ export class InteractiveLikeComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnInit(): void {
-    // Register for lazy batch hydration via IntersectionObserver
-    if (typeof IntersectionObserver !== 'undefined') {
-      this.observer = new IntersectionObserver((entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            this.interactionService.registerForHydration(this.targetType, this.targetId);
-            this.observer?.unobserve(entry.target);
-          }
+  constructor() {
+    // Automatically register hydration whenever targetId changes or element becomes visible
+    effect(() => {
+      const type = this.targetType();
+      const id = this.targetId();
+      if (type && id) {
+        if (typeof IntersectionObserver !== 'undefined') {
+          this.observer?.disconnect();
+          this.observer = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
+              if (entry.isIntersecting) {
+                this.interactionService.registerForHydration(type, id);
+                this.observer?.unobserve(entry.target);
+              }
+            }
+          }, { threshold: 0.1 });
+          this.observer.observe(this.elementRef.nativeElement);
+        } else {
+          this.interactionService.registerForHydration(type, id);
         }
-      }, { threshold: 0.1 });
-
-      this.observer.observe(this.elementRef.nativeElement);
-    } else {
-      // Fallback: register immediately
-      this.interactionService.registerForHydration(this.targetType, this.targetId);
-    }
+      }
+    });
   }
 
   onToggle(event: Event): void {
     event.stopPropagation();
     event.preventDefault();
-    this.interactionService.toggle(this.targetType, this.targetId);
+    this.interactionService.toggle(this.targetType(), this.targetId());
   }
 
   ngOnDestroy(): void {

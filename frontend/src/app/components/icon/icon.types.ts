@@ -122,6 +122,8 @@ export type IconName =
   | 'whatsapp'
   | 'telegram'
   | 'thumbs-up-filled'
+  | 'more-horizontal'
+  | 'more-vertical'
   | 'code';
 
 export interface IconDefinition {

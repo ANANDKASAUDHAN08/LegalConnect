@@ -1,134 +1,564 @@
 <!-- Backdrop -->
-<div *ngIf="reportService.isModalOpen()" class="report-backdrop" (click)="onBackdropClick($event)" role="dialog"
-    aria-modal="true" [attr.aria-label]="'Report ' + (reportService.currentTarget()?.targetTitle || 'content')">
+<div *ngIf="reportService.isModalOpen()"
+    class="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-slate-950/65 backdrop-blur-sm p-0 sm:p-4 animate-fade-in"
+    (click)="onBackdropClick($event)" role="dialog" aria-modal="true"
+    [attr.aria-label]="'Report ' + (reportService.currentTarget()?.targetTitle || 'content')">
 
     <!-- Modal Container -->
-    <div class="report-modal" (click)="$event.stopPropagation()">
+    <div [formGroup]="reportForm"
+        class="w-full sm:max-w-[560px] bg-white dark:bg-slate-900 border-t sm:border border-slate-200/90 dark:border-slate-800 rounded-t-3xl sm:rounded-2xl p-5 sm:p-6 shadow-2xl max-h-[92vh] sm:max-h-[86vh] overflow-y-auto custom-state-scroll animate-slide-up"
+        (click)="$event.stopPropagation()">
+
         <!-- Drag handle for mobile bottom sheet -->
-        <div class="drag-handle"></div>
+        <div class="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mb-3 block sm:hidden"></div>
 
         <!-- Header -->
-        <div class="report-header">
-            <div class="report-header-text">
-                <h3 class="report-title">Report an Issue</h3>
-                <p class="report-subtitle">{{ reportService.currentTarget()?.targetTitle || '' }}</p>
+        <div class="flex items-start justify-between gap-3 mb-4">
+            <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="text-base sm:text-lg font-black text-slate-900 dark:text-white tracking-tight m-0">
+                        Report an Issue
+                    </h3>
+                    <span *ngIf="selectedReasonObj()"
+                        class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider border"
+                        [appTooltip]="'Assigned review priority: ' + selectedReasonObj()?.severity"
+                        tooltipPlacement="bottom" [ngClass]="{
+              'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20': selectedReasonObj()?.severity === 'Critical',
+              'bg-orange-500/10 text-orange-600 dark:text-orange-400 border-orange-500/20': selectedReasonObj()?.severity === 'High',
+              'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20': selectedReasonObj()?.severity === 'Medium',
+              'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700': selectedReasonObj()?.severity === 'Low'
+            }">
+                        {{ selectedReasonObj()?.severity }} Priority
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[280px] sm:max-w-[380px] m-0"
+                    [title]="reportService.currentTarget()?.targetTitle || ''">
+                    {{ reportService.currentTarget()?.targetTitle || '' }}
+                </p>
             </div>
-            <button class="report-close" (click)="onClose()" [appTooltip]="'Close (Esc)'" [tooltipPlacement]="'bottom'"
-                aria-label="Close report modal">
-                <app-icon name="x" [size]="18"></app-icon>
+
+            <!-- Close Button -->
+            <button (click)="onClose()" [appTooltip]="'Close report modal (Esc)'" tooltipPlacement="bottom"
+                class="w-8 h-8 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 flex items-center justify-center border-0 cursor-pointer transition-all shrink-0">
+                <app-icon name="x" [size]="16"></app-icon>
             </button>
         </div>
 
-        <!-- Step Indicator -->
-        <div class="step-indicator">
-            <div *ngFor="let s of [1, 2, 3]" class="step-dot" [class.active]="step() >= s"
-                [class.current]="step() === s"
-                [appTooltip]="s === 1 ? 'Step 1: Select Reason' : (s === 2 ? 'Step 2: Provide Details' : 'Step 3: Contact & Submit')"
-                [tooltipPlacement]="'bottom'">
+        <!-- Step Indicator (Only during creation wizard) -->
+        <div *ngIf="!isViewingStatus() && step() < 4" class="flex items-center justify-center gap-2 mb-4">
+            @for (s of [1, 2, 3]; track s) {
+            <div class="w-2 h-2 rounded-full transition-all duration-200 cursor-pointer" [ngClass]="{
+                      'bg-indigo-600 dark:bg-indigo-500': step() >= s,
+                      'bg-slate-200 dark:bg-slate-700': step() < s,
+                      'scale-125 ring-2 ring-indigo-500/30': step() === s
+                    }"
+                [appTooltip]="s === 1 ? 'Step 1: Select reason category' : (s === 2 ? 'Step 2: Provide details & proof' : 'Step 3: Identity & privacy controls')"
+                tooltipPlacement="bottom">
+            </div>
+            }
+        </div>
+
+        <!-- ═════════════════ ACTIVE REPORT STATUS VIEW (Anti-Duplicate MNC Standard) ═════════════════ -->
+        <div *ngIf="isViewingStatus() && existingReport()" class="space-y-4 animate-fade-in">
+            <!-- Active Status Header Banner -->
+            <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                <app-icon name="shield-alert" [size]="18" class="text-amber-500 shrink-0 mt-0.5"></app-icon>
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
+                            Active Moderation Dossier
+                        </span>
+                        <span
+                            class="px-2 py-0.5 rounded-md text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/20">
+                            {{ existingReport()?.status === 'resolved' ? 'Resolved' : 'Under Review' }}
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-700 dark:text-slate-300 mt-1 leading-relaxed m-0">
+                        You have already submitted a report for this listing. Our compliance and moderation desk is
+                        actively investigating.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Report Details Summary Card -->
+            <div
+                class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ticket Reference</span>
+                    <button type="button" (click)="copyReferenceId()" [appTooltip]="'Click to copy ticket reference'"
+                        tooltipPlacement="top"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-500 transition-all">
+                        <app-icon name="copy" [size]="12"></app-icon>
+                        <span>{{ existingReport()?.referenceId }}</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Category</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200">{{ existingReport()?.reasonCategory
+                            }}</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 block text-[10px] uppercase font-bold">Submitted Date</span>
+                        <span class="font-bold text-slate-800 dark:text-slate-200">{{
+                            formatReportDate(existingReport()?.createdAt) }}</span>
+                    </div>
+                </div>
+
+                <div *ngIf="existingReport()?.estimatedReviewTime"
+                    class="pt-2 border-t border-slate-200 dark:border-slate-700 flex items-center justify-between text-xs">
+                    <span class="text-slate-400 font-medium">Estimated Review SLA:</span>
+                    <span class="font-bold text-emerald-600 dark:text-emerald-400">{{
+                        existingReport()?.estimatedReviewTime }}</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="space-y-2 pt-2">
+                <button type="button" (click)="startNewReport()"
+                    class="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold border-0 shadow-md shadow-indigo-600/25 transition-all cursor-pointer">
+                    <app-icon name="plus" [size]="14"></app-icon>
+                    <span>Submit Another Report with Different Reason</span>
+                </button>
+
+                <div class="flex items-center gap-2">
+                    <button type="button" (click)="onWithdrawClick()"
+                        [appTooltip]="'Withdraw active report tracking'" tooltipPlacement="top"
+                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-bold border border-rose-500/20 transition-all cursor-pointer">
+                        <app-icon name="trash" [size]="13"></app-icon>
+                        <span>Withdraw</span>
+                    </button>
+
+                    <button type="button" (click)="onClose()"
+                        class="flex-1 inline-flex items-center justify-center py-2 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold border-0 transition-all cursor-pointer">
+                        Close
+                    </button>
+                </div>
             </div>
         </div>
 
-        <!-- Step 1: Select Reason -->
-        <div *ngIf="step() === 1" class="report-step">
-            <p class="step-label">What's the issue?</p>
-            <div class="reason-grid">
-                <button *ngFor="let reason of reasons()" class="reason-pill"
-                    [class.selected]="selectedReason() === reason.key" (click)="selectReason(reason)"
-                    [appTooltip]="'Select ' + reason.label + ' as report reason'" [tooltipPlacement]="'top'">
-                    <span class="reason-severity" [class]="'severity-' + reason.severity.toLowerCase()"></span>
-                    <span>{{ reason.label }}</span>
+        <!-- ═════════════════ STEP 1: SELECT REASON ═════════════════ -->
+        <div *ngIf="!isViewingStatus() && step() === 1" class="space-y-4 animate-fade-in">
+            <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5 m-0">
+                    What's the issue with this listing?
+                </p>
+
+                <!-- Skeleton loader when reasons are loading -->
+                <div *ngIf="isLoadingReasons()" class="flex flex-wrap gap-2 animate-pulse">
+                    <div class="h-9 w-44 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                    <div class="h-9 w-56 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                    <div class="h-9 w-36 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                    <div class="h-9 w-48 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+                </div>
+
+                <!-- Real Reason Taxonomy Pills -->
+                <div *ngIf="!isLoadingReasons()" class="flex flex-wrap gap-2">
+                    @for (reason of reasons(); track reason.key) {
+                    <button type="button" (click)="selectReason(reason)"
+                        [appTooltip]="'Report as: ' + reason.label + ' (' + reason.severity + ' Priority)'"
+                        tooltipPlacement="top"
+                        class="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold border cursor-pointer transition-all"
+                        [ngClass]="reasonCategoryControl.value === reason.key
+              ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm shadow-indigo-600/25'
+              : 'bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-indigo-400 dark:hover:border-indigo-500'">
+                        <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="{
+                    'bg-rose-500': reason.severity === 'Critical',
+                    'bg-orange-500': reason.severity === 'High',
+                    'bg-amber-500': reason.severity === 'Medium',
+                    'bg-slate-400': reason.severity === 'Low'
+                  }">
+                        </span>
+                        <span>{{ reason.label }}</span>
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button type="button" (click)="onClose()" [appTooltip]="'Discard report and close modal'"
+                    tooltipPlacement="top"
+                    class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer border-0 transition-all">
+                    Cancel
+                </button>
+                <button type="button" [disabled]="!reasonCategoryControl.value" (click)="nextStep()"
+                    [appTooltip]="reasonCategoryControl.value ? 'Proceed to details & evidence' : 'Please select a reason category first'"
+                    tooltipPlacement="top"
+                    class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer border-0 shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span>Continue</span>
+                    <app-icon name="chevron-right" [size]="14"></app-icon>
                 </button>
             </div>
-            <div class="step-actions">
-                <button class="btn-secondary" (click)="onClose()" [appTooltip]="'Discard and close'"
-                    [tooltipPlacement]="'top'">Cancel</button>
-                <button class="btn-primary" [disabled]="!selectedReason()" (click)="nextStep()"
-                    [appTooltip]="selectedReason() ? 'Proceed to details' : 'Please select a reason to continue'"
-                    [tooltipPlacement]="'top'">Continue</button>
-            </div>
         </div>
 
-        <!-- Step 2: Description + Evidence -->
-        <div *ngIf="step() === 2" class="report-step">
-            <p class="step-label">Provide details</p>
-            <div class="textarea-wrapper">
-                <textarea [(ngModel)]="description" placeholder="Describe the issue in detail..." rows="4"
-                    maxlength="2000" class="report-textarea">
-            </textarea>
-                <span class="char-count">{{ description.length }} / 2000</span>
+        <!-- ═════════════════ STEP 2: DETAILS + ADAPTIVE FIELDS + MULTI-MODAL EVIDENCE ═════════════════ -->
+        <div *ngIf="!isViewingStatus() && step() === 2" class="space-y-3.5 animate-fade-in">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 m-0">
+                Provide details &amp; evidence
+            </p>
+
+            <!-- Adaptive: Wrong Phone -->
+            <div *ngIf="isPhoneReason"
+                class="p-3 rounded-xl bg-indigo-500/5 dark:bg-indigo-500/10 border-l-4 border-indigo-600 border border-indigo-500/15 space-y-1.5">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                    <app-icon name="phone" [size]="13" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+                    <span>Suggested active phone number (optional)</span>
+                </div>
+                <input type="text" formControlName="adaptiveCorrection" placeholder="e.g. 011-23456789 or 9876543210"
+                    [appTooltip]="'Provide the active working phone number for this listing'" tooltipPlacement="top"
+                    maxlength="100"
+                    class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900/60 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition" />
             </div>
 
-            <div class="evidence-row">
-                <label class="evidence-label"
-                    [appTooltip]="'Attach screenshots, documents, or logs supporting your report (optional)'"
-                    [tooltipPlacement]="'top'">
-                    <app-icon name="paperclip" [size]="15" class="text-indigo-500 dark:text-indigo-400"></app-icon>
-                    <span>Attach evidence (optional)</span>
-                </label>
+            <!-- Adaptive: Wrong Address -->
+            <div *ngIf="isAddressReason"
+                class="p-3 rounded-xl bg-indigo-500/5 dark:bg-indigo-500/10 border-l-4 border-indigo-600 border border-indigo-500/15 space-y-1.5">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                    <app-icon name="map-pin" [size]="13" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+                    <span>Correct address or nearest landmark (optional)</span>
+                </div>
+                <input type="text" formControlName="adaptiveCorrection"
+                    placeholder="e.g. Shifted to Room 14, 2nd Floor, District Court Complex" maxlength="250"
+                    [appTooltip]="'Provide the updated physical address or landmark'" tooltipPlacement="top"
+                    class="w-full px-3 py-2 rounded-lg bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-900/60 text-xs text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-indigo-500 transition" />
             </div>
 
-            <div class="step-actions">
-                <button class="btn-secondary" (click)="prevStep()" [appTooltip]="'Return to reason selection'"
-                    [tooltipPlacement]="'top'">Back</button>
-                <button class="btn-primary" [disabled]="description.trim().length < 10" (click)="nextStep()"
-                    [appTooltip]="description.trim().length >= 10 ? 'Proceed to contact step' : 'Please enter at least 10 characters describing the issue'"
-                    [tooltipPlacement]="'top'">Continue</button>
+            <!-- Adaptive: Permanent Closure -->
+            <div *ngIf="isClosureReason"
+                class="p-3 rounded-xl bg-indigo-500/5 dark:bg-indigo-500/10 border-l-4 border-indigo-600 border border-indigo-500/15 space-y-1.5">
+                <div class="flex items-center gap-1.5 text-xs font-bold text-indigo-900 dark:text-indigo-200">
+                    <app-icon name="building" [size]="13" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+                    <span>Status clarification (optional)</span>
+                </div>
+                <div class="flex gap-1.5 flex-wrap pt-0.5">
+                    <label [appTooltip]="'Select if the center has shifted to a new address'" tooltipPlacement="top"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer transition-all"
+                        [ngClass]="reportForm.get('adaptiveStatus')?.value === 'Relocated' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+                        <input type="radio" formControlName="adaptiveStatus" value="Relocated" class="hidden" />
+                        <span>Shifted Location</span>
+                    </label>
+                    <label [appTooltip]="'Select if operations have ceased permanently'" tooltipPlacement="top"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer transition-all"
+                        [ngClass]="reportForm.get('adaptiveStatus')?.value === 'Closed Permanently' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+                        <input type="radio" formControlName="adaptiveStatus" value="Closed Permanently"
+                            class="hidden" />
+                        <span>Ceased Operations</span>
+                    </label>
+                    <label [appTooltip]="'Select if merged with another institutional department'"
+                        tooltipPlacement="top"
+                        class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border cursor-pointer transition-all"
+                        [ngClass]="reportForm.get('adaptiveStatus')?.value === 'Merged' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+                        <input type="radio" formControlName="adaptiveStatus" value="Merged" class="hidden" />
+                        <span>Merged</span>
+                    </label>
+                </div>
             </div>
-        </div>
 
-        <!-- Step 3: Contact + Submit -->
-        <div *ngIf="step() === 3" class="report-step">
-            <p class="step-label">Contact information</p>
+            <!-- Tailored Context Advisory Banner (MNC Standard) -->
+            <div class="flex items-start gap-2.5 p-3 rounded-xl border text-xs" [ngClass]="{
+                  'bg-rose-500/10 border-rose-500/25 text-rose-800 dark:text-rose-300': isVigilanceReason,
+                  'bg-emerald-500/10 border-emerald-500/25 text-emerald-800 dark:text-emerald-300': isPhoneReason,
+                  'bg-indigo-500/10 border-indigo-500/25 text-indigo-800 dark:text-indigo-300': isAddressReason,
+                  'bg-amber-500/10 border-amber-500/25 text-amber-800 dark:text-amber-300': isClosureReason,
+                  'bg-slate-100 dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300': !isVigilanceReason && !isPhoneReason && !isAddressReason && !isClosureReason
+                }">
+                <app-icon
+                    [name]="isVigilanceReason ? 'shield-alert' : (isPhoneReason ? 'phone' : (isAddressReason ? 'map-pin' : (isClosureReason ? 'building' : 'info')))"
+                    [size]="15" class="shrink-0 mt-0.5" [ngClass]="{
+                      'text-rose-600 dark:text-rose-400': isVigilanceReason,
+                      'text-emerald-600 dark:text-emerald-400': isPhoneReason,
+                      'text-indigo-600 dark:text-indigo-400': isAddressReason,
+                      'text-amber-600 dark:text-amber-400': isClosureReason,
+                      'text-slate-500': !isVigilanceReason && !isPhoneReason && !isAddressReason && !isClosureReason
+                    }">
+                </app-icon>
+                <div class="leading-relaxed text-[11px]">
+                    <strong>{{ reasonAdvisoryTitle() }}:</strong>
+                    <span> {{ reasonAdvisoryText() }}</span>
+                </div>
+            </div>
 
-            <div class="contact-options">
-                <label class="contact-option"
-                    [appTooltip]="'Your identity and profile will remain completely confidential'"
-                    [tooltipPlacement]="'top'">
-                    <input type="radio" name="contactType" value="anonymous" [checked]="contactType === 'anonymous'"
-                        (change)="contactType = 'anonymous'">
-                    <div class="option-content">
-                        <strong>Submit anonymously</strong>
-                        <span>No contact information will be shared</span>
+            <!-- Narrative Textarea with Dynamic Context Placeholder -->
+            <div class="relative">
+                <textarea formControlName="description" [placeholder]="contextPlaceholder()" rows="4" maxlength="2000"
+                    [appTooltip]="'Provide detailed context (min 10 characters)'" tooltipPlacement="top"
+                    class="w-full p-3 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500 transition resize-y min-h-[96px]">
+                </textarea>
+                <span
+                    class="absolute bottom-2.5 right-3 text-[10px] text-slate-400 dark:text-slate-500 bg-white/80 dark:bg-slate-800/80 px-1 rounded">
+                    {{ descriptionLength }} / 2000
+                </span>
+            </div>
+
+            <!-- Multi-Modal Evidence Upload Dropzone & Processing Skeleton -->
+            <div>
+                <input #fileInput type="file" (change)="onFileSelected($event)"
+                    accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" class="hidden" />
+
+                <!-- 1. Processing File Skeleton Loader -->
+                <div *ngIf="isProcessingFile()"
+                    class="flex items-center gap-3 p-3 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 animate-pulse">
+                    <div class="w-10 h-10 rounded-lg bg-slate-300 dark:bg-slate-700 shrink-0"></div>
+                    <div class="min-w-0 flex-1 space-y-1.5">
+                        <div class="h-3.5 bg-slate-300 dark:bg-slate-700 rounded w-2/3"></div>
+                        <div class="h-2.5 bg-slate-200 dark:bg-slate-800 rounded w-1/3"></div>
                     </div>
-                </label>
-                <label class="contact-option"
-                    [appTooltip]="'Allow moderation team to reach out via email for follow-up'"
-                    [tooltipPlacement]="'top'">
-                    <input type="radio" name="contactType" value="contact" [checked]="contactType === 'contact'"
-                        (change)="contactType = 'contact'">
-                    <div class="option-content">
-                        <strong>Include my contact</strong>
-                        <span>We may follow up for additional details</span>
+                    <span class="text-xs text-slate-400 font-medium shrink-0">Processing proof...</span>
+                </div>
+
+                <!-- 2. Dropzone (when no file attached and not processing) -->
+                <div *ngIf="!evidencePreview() && !isProcessingFile()" (dragover)="onDragOver($event)"
+                    (dragleave)="onDragLeave($event)" (drop)="onFileDropped($event)" (click)="fileInput.click()"
+                    [appTooltip]="'Click to browse files, drag & drop, or paste screenshot (Ctrl+V)'"
+                    tooltipPlacement="top"
+                    class="flex items-center gap-3 p-3 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-indigo-500 dark:hover:border-indigo-400 bg-slate-50/60 dark:bg-slate-800/40 cursor-pointer transition-all select-none"
+                    [class.border-indigo-600]="isDragging()" [class.bg-indigo-50]="isDragging()">
+
+                    <div
+                        class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                        <app-icon name="paperclip" [size]="15"></app-icon>
                     </div>
-                </label>
+
+                    <div class="min-w-0 flex-1">
+                        <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                            Attach screenshot or document proof <span
+                                class="text-slate-400 font-normal">(optional)</span>
+                        </div>
+                        <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                            Click to browse, drag &amp; drop, or press <kbd
+                                class="px-1.5 py-0.5 text-[10px] bg-slate-200 dark:bg-slate-700 rounded font-mono font-bold text-slate-700 dark:text-slate-300">Ctrl+V</kbd>
+                            to paste
+                        </div>
+                    </div>
+
+                    <span class="text-[10px] font-semibold text-slate-400 shrink-0">PNG, JPG, PDF &le; 5MB</span>
+                </div>
+
+                <!-- 3. Evidence Preview Card (when file attached) -->
+                <div *ngIf="evidencePreview() && !isProcessingFile()"
+                    class="flex items-center justify-between gap-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700">
+                    <div class="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div
+                            class="w-10 h-10 rounded-lg overflow-hidden border border-slate-300 dark:border-slate-600 shrink-0 bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                            <img *ngIf="evidenceFileType() === 'image'" [src]="evidencePreview()" alt="Proof preview"
+                                class="w-full h-full object-cover" />
+                            <app-icon *ngIf="evidenceFileType() === 'pdf'" name="file-text" [size]="18"
+                                class="text-red-500"></app-icon>
+                        </div>
+
+                        <div class="min-w-0 flex-1">
+                            <span class="text-xs font-bold text-slate-900 dark:text-white truncate block"
+                                [title]="evidenceFileName()">
+                                {{ evidenceFileName() }}
+                            </span>
+                            <div
+                                class="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1.5 mt-0.5">
+                                <span>{{ evidenceFileSize() }}</span>
+                                <span class="text-emerald-600 dark:text-emerald-400 font-medium">• Proof attached</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" (click)="removeEvidence()" [appTooltip]="'Remove attached evidence proof'"
+                        tooltipPlacement="left"
+                        class="p-1.5 rounded-lg text-rose-500 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950/40 border-0 bg-transparent cursor-pointer transition">
+                        <app-icon name="trash-2" [size]="14"></app-icon>
+                    </button>
+                </div>
             </div>
 
-            <div *ngIf="contactType === 'contact'" class="contact-fields">
-                <input type="text" [(ngModel)]="reporterName" placeholder="Your name" class="report-input">
-                <input type="email" [(ngModel)]="reporterEmail" placeholder="Your email" class="report-input">
-            </div>
-
-            <div class="step-actions">
-                <button class="btn-secondary" (click)="prevStep()" [appTooltip]="'Return to details step'"
-                    [tooltipPlacement]="'top'">Back</button>
-                <button class="btn-primary btn-submit" [disabled]="isSubmitting()" (click)="submitReport()"
-                    [appTooltip]="'Send your report directly to the moderation queue'" [tooltipPlacement]="'top'">
-                    {{ isSubmitting() ? 'Submitting...' : 'Submit Report' }}
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button type="button" (click)="prevStep()" [appTooltip]="'Go back to reason selection'"
+                    tooltipPlacement="top"
+                    class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer border-0 transition-all">
+                    Back
+                </button>
+                <button type="button" [disabled]="descriptionControl.invalid" (click)="nextStep()"
+                    [appTooltip]="descriptionControl.valid ? 'Proceed to privacy & submit' : 'Please enter at least 10 characters describing the issue'"
+                    tooltipPlacement="top"
+                    class="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer border-0 shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <span>Continue</span>
+                    <app-icon name="chevron-right" [size]="14"></app-icon>
                 </button>
             </div>
         </div>
 
-        <!-- Step 4: Success -->
-        <div *ngIf="step() === 4" class="report-step success-step">
-            <div class="success-icon">
-                <app-icon name="check-circle" [size]="48" class="text-emerald-500"></app-icon>
+        <!-- ═════════════════ STEP 3: IDENTITY & PRIVACY CONTROLS ═════════════════ -->
+        <div *ngIf="!isViewingStatus() && step() === 3" class="space-y-3.5 animate-fade-in">
+            <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 m-0">
+                Reporter information &amp; privacy
+            </p>
+
+            <div class="space-y-2.5">
+                <!-- Anonymous option -->
+                <label (click)="setContactType('anonymous')"
+                    [appTooltip]="'Submit without attaching your identity (Zero PII stored)'" tooltipPlacement="top"
+                    class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all" [ngClass]="contactTypeControl.value === 'anonymous'
+            ? 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-600 dark:border-indigo-500 shadow-xs'
+            : 'bg-slate-50/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300'">
+                    <input type="radio" formControlName="contactType" value="anonymous"
+                        (change)="setContactType('anonymous')" class="mt-0.5 text-indigo-600" />
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">Submit anonymously</strong>
+                            <span
+                                class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300">Zero
+                                PII</span>
+                        </div>
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">No identity or contact
+                            info will be linked to this report</span>
+                    </div>
+                </label>
+
+                <!-- Authenticated / Contact option -->
+                <label (click)="setContactType('contact')"
+                    [appTooltip]="'Attach your account details to receive moderation updates'" tooltipPlacement="top"
+                    class="flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-all" [ngClass]="contactTypeControl.value === 'contact'
+            ? 'bg-indigo-50/50 dark:bg-indigo-950/30 border-indigo-600 dark:border-indigo-500 shadow-xs'
+            : 'bg-slate-50/60 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700 hover:border-slate-300'">
+                    <input type="radio" formControlName="contactType" value="contact"
+                        (change)="setContactType('contact')" class="mt-0.5 text-indigo-600" />
+                    <div class="min-w-0 flex-1">
+                        <div class="flex items-center gap-1.5">
+                            <strong class="text-xs font-bold text-slate-900 dark:text-white">Include contact
+                                details</strong>
+                            <span *ngIf="isLoggedIn"
+                                class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">Verified
+                                Account</span>
+                        </div>
+                        <span class="text-[11px] text-slate-500 dark:text-slate-400 block mt-0.5">Receive resolution
+                            notifications and help verify center corrections</span>
+                    </div>
+                </label>
             </div>
-            <h4 class="success-title">Report Submitted</h4>
-            <p class="success-message">{{ successMessage() }}</p>
-            <p *ngIf="referenceId()" class="reference-id">Reference: <strong>{{ referenceId() }}</strong></p>
-            <p *ngIf="estimatedTime()" class="sla-estimate">Estimated review: {{ estimatedTime() }}</p>
-            <button class="btn-primary" (click)="onClose()" [appTooltip]="'Close and return'"
-                [tooltipPlacement]="'top'">Done</button>
+
+            <!-- Contact input fields -->
+            <div *ngIf="contactTypeControl.value === 'contact'" class="space-y-2.5 pt-1 animate-fade-in">
+                <div>
+                    <label
+                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 block">Your
+                        Name</label>
+                    <input type="text" formControlName="reporterName" placeholder="e.g. Adv. Rahul Sharma or Citizen"
+                        [appTooltip]="'Your public or legal name'" tooltipPlacement="top"
+                        class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-2 focus:ring-indigo-500 transition" />
+                </div>
+                <div>
+                    <label
+                        class="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1 block">Your
+                        Email</label>
+                    <input type="email" formControlName="reporterEmail" placeholder="e.g. yourname@example.com"
+                        [appTooltip]="'Your contact email for moderation ticket resolution'" tooltipPlacement="top"
+                        class="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/80 border text-xs text-slate-900 dark:text-slate-100 outline-none focus:ring-2 transition"
+                        [ngClass]="reporterEmailControl.invalid && reporterEmailControl.touched ? 'border-rose-400 focus:ring-rose-500' : 'border-slate-200 dark:border-slate-700 focus:ring-indigo-500'" />
+                    <span *ngIf="reporterEmailControl.invalid && reporterEmailControl.touched"
+                        class="text-[10px] text-rose-500 mt-1 block">
+                        Please provide a valid email address so our moderation desk can follow up.
+                    </span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex items-center justify-between gap-3 pt-2">
+                <button type="button" (click)="prevStep()" [appTooltip]="'Return to details & evidence'"
+                    tooltipPlacement="top"
+                    class="inline-flex items-center justify-center px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold cursor-pointer border-0 transition-all">
+                    Back
+                </button>
+                <button type="button" [disabled]="reportForm.invalid || isSubmitting()" (click)="submitReport()"
+                    [appTooltip]="reportForm.valid ? 'Submit report to the moderation triage queue' : 'Please check required fields'"
+                    tooltipPlacement="top"
+                    class="flex-1 inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold cursor-pointer border-0 shadow-md shadow-indigo-600/20 transition-all disabled:opacity-50">
+                    <app-icon *ngIf="isSubmitting()" name="loader" [size]="14" [spin]="true"></app-icon>
+                    <app-icon *ngIf="!isSubmitting()" name="send" [size]="13"></app-icon>
+                    <span>{{ isSubmitting() ? 'Submitting to Triage Desk...' : 'Submit Report' }}</span>
+                </button>
+            </div>
         </div>
+
+        <!-- ═════════════════ STEP 4: SUCCESS & SLA TRACKING ═════════════════ -->
+        <div *ngIf="!isViewingStatus() && step() === 4" class="text-center py-2 space-y-3.5 animate-fade-in">
+            <div
+                class="w-14 h-14 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center mx-auto shadow-inner">
+                <app-icon name="check-circle" [size]="36"></app-icon>
+            </div>
+
+            <div>
+                <h4 class="text-base font-black text-slate-900 dark:text-white m-0">Report Submitted to Moderation Queue
+                </h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1 leading-relaxed m-0">
+                    {{ successMessage() }}
+                </p>
+            </div>
+
+            <!-- 1-Click Copy Reference Ticket -->
+            <div *ngIf="referenceId()" (click)="copyReferenceId()"
+                [appTooltip]="'Click to copy tracking ticket ID to clipboard'" tooltipPlacement="top"
+                class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/90 border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-indigo-400 transition max-w-sm mx-auto">
+                <div class="flex items-center gap-2">
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">Tracking Ref:</span>
+                    <span class="font-mono text-xs font-black text-indigo-600 dark:text-indigo-400">{{ referenceId()
+                        }}</span>
+                </div>
+                <button type="button"
+                    class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold border-0 cursor-pointer transition"
+                    [ngClass]="isCopiedRef() ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200'">
+                    <app-icon [name]="isCopiedRef() ? 'check' : 'copy'" [size]="11"></app-icon>
+                    <span>{{ isCopiedRef() ? 'Copied' : 'Copy' }}</span>
+                </button>
+            </div>
+
+            <!-- SLA Review Time Estimate -->
+            <div *ngIf="estimatedTime()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 text-xs text-indigo-700 dark:text-indigo-300 font-medium">
+                <app-icon name="clock" [size]="12" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+                <span>Estimated review time: <strong>{{ estimatedTime() }}</strong></span>
+            </div>
+
+            <!-- 3-Step Next Steps Guide -->
+            <div
+                class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 max-w-sm mx-auto text-left">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-2">What happens
+                    next?</span>
+                <div class="grid grid-cols-3 gap-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                    <div class="flex items-center gap-1.5">
+                        <span
+                            class="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">1</span>
+                        <span class="truncate">Triage</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span
+                            class="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">2</span>
+                        <span class="truncate">Audit</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span
+                            class="w-4 h-4 rounded-full bg-indigo-600 text-white text-[9px] font-bold flex items-center justify-center shrink-0">3</span>
+                        <span class="truncate">Resolved</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pt-2">
+                <button type="button" (click)="onClose()" [appTooltip]="'Close and return to page'"
+                    tooltipPlacement="top"
+                    class="w-full py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-indigo-600 dark:hover:bg-indigo-500 text-white text-xs font-bold cursor-pointer border-0 shadow-md transition-all">
+                    Done &amp; Return
+                </button>
+            </div>
+        </div>
+
     </div>
+
+    <!-- Custom Confirmation Modal for Withdrawing Report -->
+    <app-confirm-dialog
+        [isOpen]="showWithdrawConfirm()"
+        title="Withdraw Moderation Report?"
+        message="Are you sure you want to withdraw your report for this listing? This will remove the tracking ticket from your active queue."
+        type="danger"
+        icon="trash"
+        (confirm)="onConfirmWithdraw()"
+        (cancel)="onCancelWithdraw()">
+    </app-confirm-dialog>
 </div>
