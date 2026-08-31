@@ -643,6 +643,242 @@ body{
     return parts.join('');
   }
 
+  /**
+   * Build a comprehensive, official institutional dossier for a Legal Resource
+   * (Court, DLSA/SLSA Legal Aid Center, Government Office, Police Station, etc.)
+   * Includes complete contact details, Section 12 eligibility, 4-step application procedure,
+   * citizen document checklist, facilities, and deep GPS QR navigation.
+   */
+  buildResourceDossier(r: any): string {
+    if (!r) return '';
+    const e = this.escapeHtml.bind(this);
+    const parts: string[] = [];
+
+    // 1. Institutional Subject Strip
+    parts.push(this.buildSubjectStrip({
+      name: r.name,
+      subtitle: `${r.address ? e(r.address) + ' • ' : ''}${r.state ? e(r.state) + ' Registry • ' : ''}${e(this.getTypeLabel(r.type))}`,
+      badge: 'Verified Official Registry Entry'
+    }));
+
+    // 2. KPI Metrics Strip
+    const kpis: KpiCard[] = [
+      {
+        label: 'Institutional Body',
+        value: this.getTypeLabel(r.type),
+        sub: 'Statutory Legal Facility',
+        accent: 'indigo'
+      },
+      {
+        label: 'Jurisdiction Level',
+        value: r.jurisdictionLevel || 'State / District',
+        sub: `${r.state || 'National'} Registry`,
+        accent: 'blue'
+      },
+      {
+        label: 'Citizen Legal Fee',
+        value: '₹0.00',
+        sub: '100% Free Defense Aid',
+        accent: 'emerald'
+      },
+      {
+        label: 'Desk Hours',
+        value: r.operatingHours ? r.operatingHours.split('(')[0].trim() : '10 AM - 5 PM',
+        sub: 'Mon - Sat (Court Days)',
+        accent: 'amber'
+      }
+    ];
+    parts.push(this.buildKpiGrid(kpis));
+
+    // 3. Contact & Navigation Block
+    const mapPinSvg = this.getSvg('map-pin', { size: 12, color: '#4f46e5', style: 'margin-right:4px;' });
+    const phoneSvg = this.getSvg('phone', { size: 12, color: '#059669', style: 'margin-right:4px;' });
+    const clockSvg = this.getSvg('clock', { size: 12, color: '#b45309', style: 'margin-right:4px;' });
+    const globeSvg = this.getSvg('globe', { size: 12, color: '#2563eb', style: 'margin-right:4px;' });
+    const mailSvg = this.getSvg('mail', { size: 12, color: '#7c3aed', style: 'margin-right:4px;' });
+
+    const phones = r.contactNumber && r.contactNumber.length > 0
+      ? r.contactNumber.join(' • ')
+      : (r.number || r.alternateNumber || 'N/A');
+
+    const emails = r.email && r.email.length > 0 ? r.email.join(', ') : 'N/A';
+    const website = r.website || r.officialPortal || 'https://services.ecourts.gov.in';
+
+    const mapsUrl = this.getResourceMapsUrl(r);
+    const qrUrl = this.generateQrUrl(mapsUrl, 100);
+
+    const contactHtml = `
+      <div style="display:flex;gap:16px;align-items:flex-start;">
+        <div style="flex:1;">
+          <table class="lc-table" style="margin-top:0;">
+            <tbody>
+              <tr>
+                <td style="width:26%;font-weight:700;color:#475569;">${mapPinSvg} Postal Address</td>
+                <td style="color:#0f172a;font-weight:600;">${e(r.address || [r.district, r.city, r.state].filter(Boolean).join(', '))}${r.pincode ? ' — ' + e(r.pincode) : ''}</td>
+              </tr>
+              <tr>
+                <td style="font-weight:700;color:#475569;">${phoneSvg} Direct Helplines</td>
+                <td style="color:#0f172a;font-weight:700;">${e(phones)}</td>
+              </tr>
+              <tr>
+                <td style="font-weight:700;color:#475569;">${clockSvg} Working Hours</td>
+                <td style="color:#334155;">${e(r.operatingHours || '10:00 AM - 5:00 PM (Monday to Saturday)')}${r.lunchBreak ? ' &bull; <em>Lunch: ' + e(r.lunchBreak) + '</em>' : ''} &bull; <span style="color:#64748b;">Closed 2nd/4th Saturdays &amp; Holidays</span></td>
+              </tr>
+              <tr>
+                <td style="font-weight:700;color:#475569;">${mailSvg} Official Email</td>
+                <td style="color:#334155;">${e(emails)}</td>
+              </tr>
+              <tr>
+                <td style="font-weight:700;color:#475569;">${globeSvg} Official Portal</td>
+                <td><a href="${e(website)}" style="color:#2563eb;text-decoration:none;font-weight:600;">${e(website)}</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="text-align:center;flex-shrink:0;padding:8px 12px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;">
+          <img src="${qrUrl}" alt="GPS QR" width="90" height="90" style="display:block;border-radius:4px;border:1px solid #cbd5e1;">
+          <div style="font-size:8px;font-weight:700;color:#0f172a;margin-top:4px;">Scan for GPS Route</div>
+          <div style="font-size:7px;color:#64748b;">Live Google Maps</div>
+        </div>
+      </div>
+    `;
+    parts.push(this.buildSection('Institutional Contact &amp; GPS Location', contactHtml));
+
+    // 4. Section 12 Statutory Free Legal Aid Eligibility Matrix
+    const scaleSvg = this.getSvg('scale', { size: 12, color: '#4f46e5', style: 'margin-right:4px;' });
+    const checkSvg = this.getSvg('check', { size: 10, color: '#059669', style: 'margin-right:4px;' });
+
+    const eligibilityHtml = `
+      <div style="font-size:10px;color:#64748b;margin-bottom:8px;">
+        ${scaleSvg} <strong>Legal Services Authorities Act, 1987 (Section 12):</strong> Qualified citizens receive 100% free legal defense representation with ₹0 fees in all court proceedings.
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 1. Women &amp; Children</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">All women &amp; children irrespective of annual income or social background.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 2. Scheduled Castes &amp; Scheduled Tribes</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Members of SC/ST communities receive 100% free legal defense in all courts.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 3. Persons in Custody / Undertrials</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Anyone in police lockup, judicial custody, or jail is entitled to a free defense lawyer.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 4. Persons with Disabilities (PwD)</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Citizens with physical disabilities, blindness, or mental illness under the PwD Act.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 5. Victims of Trafficking &amp; Begar</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Victims of human trafficking, forced bonded labor, or commercial exploitation.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 6. Disaster &amp; Violence Victims</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Victims of mass disasters, ethnic/caste violence, floods, or industrial accidents.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 7. Industrial Laborers &amp; Workmen</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Factory workers, construction laborers, and unorganized sector employees.</div>
+        </div>
+        <div style="padding:6px 8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <strong style="color:#0f172a;font-size:11px;">${checkSvg} 8. Low Income Citizens (&lt; ₹3 Lakh/yr)</strong>
+          <div style="font-size:9.5px;color:#475569;margin-top:1px;">Annual family income below statutory state ceiling (₹3,00,000/yr in UP).</div>
+        </div>
+      </div>
+    `;
+    parts.push(this.buildSection('Section 12 Free Legal Aid Eligibility (Statutory)', eligibilityHtml, '100% Free Defense'));
+
+    // 5. 4-Step Standard Legal Aid Application Procedure
+    const stepsHtml = `
+      <div style="display:grid;grid-template-columns:repeat(4, 1fr);gap:8px;">
+        <div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <div style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#4f46e5;color:#fff;text-align:center;font-size:10px;font-weight:800;line-height:18px;margin-bottom:4px;">1</div>
+          <div style="font-weight:700;font-size:10.5px;color:#0f172a;">Walk-in / Online</div>
+          <div style="font-size:9px;color:#475569;margin-top:2px;">Visit Front Office at ADR Center or submit on NALSA portal.</div>
+        </div>
+        <div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <div style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#4f46e5;color:#fff;text-align:center;font-size:10px;font-weight:800;line-height:18px;margin-bottom:4px;">2</div>
+          <div style="font-weight:700;font-size:10.5px;color:#0f172a;">Eligibility Check</div>
+          <div style="font-size:9px;color:#475569;margin-top:2px;">Secretary / Paralegal checks papers &amp; Section 12 criteria.</div>
+        </div>
+        <div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <div style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#4f46e5;color:#fff;text-align:center;font-size:10px;font-weight:800;line-height:18px;margin-bottom:4px;">3</div>
+          <div style="font-weight:700;font-size:10.5px;color:#0f172a;">Counsel Assigned</div>
+          <div style="font-size:9px;color:#475569;margin-top:2px;">Panel advocate (LADCS) assigned within 24-48 hours.</div>
+        </div>
+        <div style="padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc;">
+          <div style="display:inline-block;width:18px;height:18px;border-radius:50%;background:#4f46e5;color:#fff;text-align:center;font-size:10px;font-weight:800;line-height:18px;margin-bottom:4px;">4</div>
+          <div style="font-weight:700;font-size:10.5px;color:#0f172a;">Court Defense</div>
+          <div style="font-size:9px;color:#475569;margin-top:2px;">Assigned lawyer drafts, files petitions &amp; argues case (₹0 fee).</div>
+        </div>
+      </div>
+    `;
+    parts.push(this.buildSection('Standard 4-Step Application Procedure', stepsHtml, 'Official NALSA Flow'));
+
+    // 6. Citizen Preparation Checklist & Visitor Security Protocol
+    const checklistHtml = `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div>
+          <strong style="font-size:10.5px;color:#0f172a;display:block;margin-bottom:4px;">Bring Original + 2 Self-Attested Photocopies:</strong>
+          <ul style="list-style:none;padding-left:0;font-size:9.5px;color:#334155;line-height:1.6;">
+            <li><span style="font-family:monospace;font-weight:700;color:#059669;">[ &check; ]</span> <strong>Govt Photo ID:</strong> Aadhaar Card, Voter ID, or Passport</li>
+            <li><span style="font-family:monospace;font-weight:700;color:#059669;">[ &check; ]</span> <strong>Income Proof:</strong> BPL Card or Salary Slip (Not required for Women, SC/ST, Custody)</li>
+            <li><span style="font-family:monospace;font-weight:700;color:#059669;">[ &check; ]</span> <strong>Case Papers:</strong> FIR copy, Police notice, Court summons, or previous orders</li>
+            <li><span style="font-family:monospace;font-weight:700;color:#059669;">[ &check; ]</span> <strong>Brief Grievance:</strong> Written complaint summary (Paralegal volunteers assist on-site)</li>
+          </ul>
+        </div>
+        <div style="padding:8px 10px;border-left:3px solid #f59e0b;background:#fffbeb;border-radius:4px;font-size:9.5px;color:#92400e;line-height:1.5;">
+          <strong style="color:#78350f;font-size:10px;display:block;margin-bottom:2px;">Campus Visitor Security Protocol:</strong>
+          &bull; Valid Government Photo ID required at security checkpoint.<br>
+          &bull; Mobile phones must remain on silent mode in ADR / Court rooms.<br>
+          &bull; <strong>Statutory Notice:</strong> DLSA / Legal Aid application and defense counsel assignment are 100% free (₹0.00). No fee or bribe shall be demanded.
+        </div>
+      </div>
+    `;
+    parts.push(this.buildSection('Citizen Document Preparation Checklist &amp; Protocol', checklistHtml));
+
+    // 7. Facilities & Digital Amenities
+    const facilityTags = this.getResourceFacilityTags(r);
+    if (facilityTags.length > 0 || (r.languages && r.languages.length > 0)) {
+      const facilityParts: string[] = [];
+      if (facilityTags.length > 0) {
+        facilityParts.push(`<div><strong>Digital Amenities &amp; Infrastructure:</strong> `);
+        for (const tag of facilityTags) {
+          facilityParts.push(`<span class="lc-res-tag" style="margin-right:4px;">${this.getSvg('badge-check', { size: 8, color: '#0369a1' })} ${e(tag)}</span>`);
+        }
+        facilityParts.push(`</div>`);
+      }
+      if (r.languages && r.languages.length > 0) {
+        facilityParts.push(`<div style="margin-top:6px;"><strong>Languages Spoken at Desk:</strong> ${e(r.languages.join(', '))}</div>`);
+      }
+      parts.push(this.buildSection('Campus Facilities &amp; Desk Languages', facilityParts.join('')));
+    }
+
+    // 8. Judicial Leadership (if available)
+    if (r.patronInChief || r.executiveChairman || r.memberSecretary) {
+      const leadershipRows: string[] = [];
+      if (r.patronInChief) leadershipRows.push(`<tr><td style="font-weight:700;color:#475569;width:30%;">Patron-in-Chief</td><td style="color:#0f172a;font-weight:600;">${e(r.patronInChief)}</td></tr>`);
+      if (r.executiveChairman) leadershipRows.push(`<tr><td style="font-weight:700;color:#475569;">Executive Chairman</td><td style="color:#0f172a;font-weight:600;">${e(r.executiveChairman)}</td></tr>`);
+      if (r.memberSecretary) leadershipRows.push(`<tr><td style="font-weight:700;color:#475569;">Member Secretary</td><td style="color:#0f172a;font-weight:600;">${e(r.memberSecretary)}</td></tr>`);
+      parts.push(this.buildSection('Judicial Leadership &amp; Administrative Officers', `<table class="lc-table"><tbody>${leadershipRows.join('')}</tbody></table>`));
+    }
+
+    // 9. 24x7 National Legal Aid Helpline Banner
+    const helplineHtml = `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;">
+        <div style="font-size:10px;color:#991b1b;font-weight:700;">
+          ${this.getSvg('phone', { size: 11, color: '#dc2626', style: 'margin-right:3px;' })}
+          24x7 National Legal Aid Toll-Free Helpline: <strong>15100</strong> (NALSA Tele-Law) &bull; National Emergency: <strong>112</strong>
+        </div>
+        <div style="font-size:9px;color:#7f1d1d;font-weight:600;">e-Courts Status: services.ecourts.gov.in</div>
+      </div>
+    `;
+    parts.push(helplineHtml);
+
+    return parts.join('');
+  }
+
   /** Build robust Google Maps directions / search URL from resource */
   private getResourceMapsUrl(r: any): string {
     const lat = r.coordinates?.lat ?? r.lat ?? (Array.isArray(r.location?.coordinates) ? r.location.coordinates[1] : null);

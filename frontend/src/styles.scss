@@ -1435,6 +1435,31 @@ textarea:focus-visible,
       is permanently pinned to the bottom of the viewport and never jumps. */
 
 /* ═══════════════════════════════════════════════════════════
+   GLOBAL SHIMMER WAVE — Skeleton loader utility
+   Used across multiple standalone components (legal-resources, etc.)
+   ═══════════════════════════════════════════════════════════ */
+.shimmer-wave {
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.6) 0%, rgba(241, 245, 249, 0.9) 50%, rgba(226, 232, 240, 0.6) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-anim 1.8s ease-in-out infinite;
+}
+
+.dark .shimmer-wave {
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(51, 65, 85, 0.8) 50%, rgba(30, 41, 59, 0.6) 100%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer-anim {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
    Prefers Reduced Motion — Global animation disable
    ═══════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {

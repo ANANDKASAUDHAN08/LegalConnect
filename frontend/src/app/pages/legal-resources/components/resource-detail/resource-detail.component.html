@@ -1,490 +1,863 @@
 <!-- Resource Detail Page -->
-<div class="min-h-screen bg-[var(--bg-base)] detail-ambient-wrapper">
+<div class="min-h-screen bg-[var(--bg-base)] detail-ambient-wrapper transition-[padding-top] duration-200"
+  [style.paddingTop.px]="navbarHeight">
 
-  <!-- Loading State (Skeleton Loader) -->
-  <div *ngIf="isLoading" class="max-w-5xl mx-auto px-4 sm:px-6 py-12">
-    <div class="h-4 w-48 rounded-lg shimmer-wave mb-6"></div>
-    <div class="h-10 w-2/3 rounded-xl shimmer-wave mb-4"></div>
-    <div class="h-5 w-1/3 rounded-lg shimmer-wave mb-8"></div>
-    <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
-      <div class="space-y-6">
-        <div class="h-48 rounded-3xl glass-panel shimmer-wave"></div>
-        <div class="h-32 rounded-3xl glass-panel shimmer-wave"></div>
-        <div class="h-40 rounded-3xl glass-panel shimmer-wave"></div>
+  <!-- Loading State (Content-Aware Wide Skeleton) -->
+  <div *ngIf="isLoading" class="w-[95%] max-w-[1400px] mx-auto px-3.5 sm:px-6 py-6 sm:py-10">
+    <div class="h-4 w-48 rounded-lg shimmer-wave hidden sm:block mb-4"></div>
+    <div class="flex items-center justify-between gap-2 mb-4">
+      <div class="flex items-center gap-1.5 overflow-hidden">
+        <div class="h-6 w-24 rounded-lg shimmer-wave shrink-0"></div>
+        <div class="h-6 w-16 rounded-lg shimmer-wave shrink-0"></div>
+        <div class="h-6 w-24 rounded-lg shimmer-wave shrink-0 hidden sm:block"></div>
       </div>
-      <div class="h-80 rounded-3xl glass-panel shimmer-wave"></div>
+      <div class="h-6 sm:h-7 w-14 sm:w-28 rounded-xl shimmer-wave shrink-0 ml-auto"></div>
+    </div>
+    <div class="h-10 sm:h-14 w-4/5 sm:w-2/3 rounded-2xl shimmer-wave mb-6"></div>
+    <div class="flex items-center gap-3 mb-8 flex-wrap">
+      <div class="h-11 w-32 rounded-2xl shimmer-wave"></div>
+      <div class="h-11 w-32 rounded-2xl shimmer-wave"></div>
+      <div class="h-11 w-24 rounded-2xl shimmer-wave"></div>
+    </div>
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+      <div class="lg:col-span-7 space-y-6">
+        <div class="h-48 rounded-3xl shimmer-wave"></div>
+        <div class="h-48 rounded-3xl shimmer-wave"></div>
+      </div>
+      <div class="lg:col-span-5">
+        <div class="h-96 rounded-3xl shimmer-wave"></div>
+      </div>
     </div>
   </div>
 
-  <!-- Not Found -->
-  <div *ngIf="!isLoading && notFound" class="max-w-5xl mx-auto px-4 sm:px-6 py-20 text-center">
+  <!-- Not Found State -->
+  <div *ngIf="!isLoading && notFound" class="w-[95%] max-w-[1400px] mx-auto px-4 py-20 text-center">
     <div class="w-16 h-16 mx-auto mb-4 rounded-2xl bg-red-500/10 flex items-center justify-center shadow-xs">
       <app-icon name="alert-circle" [size]="32" class="text-red-500"></app-icon>
     </div>
-    <h2 class="text-xl font-black text-slate-800 dark:text-slate-200 mb-2">Resource Not Found</h2>
-    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6">The legal resource you're looking for doesn't exist or
-      has been removed.</p>
+    <h2 class="text-2xl font-black text-slate-800 dark:text-slate-200 mb-2">Resource Not Found</h2>
+    <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 max-w-md mx-auto">
+      The legal resource or authority you're looking for doesn't exist or was removed from the directory.
+    </p>
     <a routerLink="/legal-resources"
-      class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold no-underline shadow-md transition-all">
+      class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold no-underline shadow-md shadow-indigo-600/20 transition-all">
       <app-icon name="arrow-left" [size]="16"></app-icon>
-      <span>Back to Directory</span>
+      <span>Back to National Directory</span>
     </a>
   </div>
 
-  <!-- Resource Detail Content -->
-  <div *ngIf="!isLoading && !notFound && resource" class="max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-12">
+  <!-- Main Resource Detail Canvas -->
+  <div *ngIf="!isLoading && !notFound && resource"
+    class="w-[95%] max-w-[1400px] mx-auto px-3 sm:px-6 py-3 sm:py-4 pb-8">
 
-    <!-- Top Navigation & Language Selector Bar -->
-    <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-      <!-- Breadcrumb -->
-      <nav class="flex items-center gap-2 text-xs text-slate-400 dark:text-slate-500 flex-wrap">
-        <a routerLink="/"
-          class="hover:text-indigo-600 dark:hover:text-indigo-400 no-underline transition-colors">Home</a>
-        <app-icon name="chevron-right" [size]="12"></app-icon>
-        <a routerLink="/legal-resources"
-          class="hover:text-indigo-600 dark:hover:text-indigo-400 no-underline transition-colors">Legal Resources</a>
-        <app-icon name="chevron-right" [size]="12"></app-icon>
-        <span *ngIf="resource.state">
-          <a [routerLink]="['/legal-resources']" [queryParams]="{state: resource.state}"
-            class="hover:text-indigo-600 dark:hover:text-indigo-400 no-underline transition-colors">{{ resource.state
-            }}</a>
-          <app-icon name="chevron-right" [size]="12" class="inline mx-1"></app-icon>
-        </span>
-        <span class="font-bold text-slate-700 dark:text-slate-300 truncate max-w-xs">{{ (selectedLanguage === 'hi' &&
-          resource.name_hi) ? resource.name_hi : resource.name }}</span>
-      </nav>
-
-      <!-- Language Toggle Pill -->
-      <div class="inline-flex items-center glass-panel p-1 rounded-2xl shadow-xs">
-        <button (click)="setLanguage('en')" [appTooltip]="'View details in English'" tooltipPlacement="bottom"
-          [ngClass]="selectedLanguage === 'en' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-          class="px-3 py-1 rounded-xl text-xs transition-all cursor-pointer border-0 bg-transparent">
-          English
-        </button>
-        <button (click)="setLanguage('hi')" [appTooltip]="'हिन्दी में विवरण देखें'" tooltipPlacement="bottom"
-          [ngClass]="selectedLanguage === 'hi' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
-          class="px-3 py-1 rounded-xl text-xs transition-all cursor-pointer border-0 bg-transparent">
-          हिन्दी
-        </button>
-      </div>
+    <!-- Top Breadcrumb Navigation (Desktop only) -->
+    <div class="hidden sm:flex items-center gap-1.5 text-xs text-slate-400 dark:text-slate-500 mb-3 flex-wrap">
+      <a routerLink="/"
+        class="hover:text-indigo-600 dark:hover:text-indigo-400 no-underline transition-colors font-medium">Home</a>
+      <app-icon name="chevron-right" [size]="11"></app-icon>
+      <a routerLink="/legal-resources"
+        class="hover:text-indigo-600 dark:hover:text-indigo-400 no-underline transition-colors font-medium">Directory</a>
+      <app-icon name="chevron-right" [size]="11"></app-icon>
+      <span *ngIf="resource.state">
+        <a [routerLink]="['/legal-resources']" [queryParams]="{state: resource.state}"
+          class="hover:text-indigo-600 dark:hover:text-indigo-400 no-underline transition-colors font-medium">{{
+          resource.state }}</a>
+        <app-icon name="chevron-right" [size]="11" class="inline mx-1"></app-icon>
+      </span>
+      <span class="font-bold text-slate-700 dark:text-slate-300 truncate max-w-xs md:max-w-md">
+        {{ (selectedLanguage === 'hi' && resource.name_hi) ? resource.name_hi : resource.name }}
+      </span>
     </div>
 
-    <!-- Header & Value Proposition -->
-    <div class="mb-10">
-      <div class="flex flex-wrap items-center gap-2 mb-3">
-        <span
-          class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-black uppercase tracking-wider border shadow-2xs"
-          [ngClass]="getTypeColor(resource.type)">
-          {{ getTypeLabel(resource.type) }}
-        </span>
-        <span *ngIf="resource.jurisdictionLevel"
-          class="inline-flex items-center px-3 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
-          {{ resource.jurisdictionLevel }}
-        </span>
-        <span *ngIf="getVerificationFreshness() as vf"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-bold border shadow-2xs"
-          [ngClass]="vf.colorClass" [appTooltip]="vf.tooltip" tooltipPlacement="top">
-          <app-icon name="badge-check" [size]="12"></app-icon>
-          <span>{{ vf.label }}</span>
-        </span>
-        <span *ngIf="resource.isOpenNow"
-          class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[10px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 live-pulse-dot"></span> Open Now
-        </span>
+    <!-- Tier-1 MNC Hero Header (Borderless Canvas Flow) -->
+    <header class="pb-6 sm:pb-8 border-b border-slate-200/80 dark:border-slate-800/80">
+      <!-- Single-Line Badges & Language Bar (Swipeable, Zero Blank Space, Zero Vertical Bloat) -->
+      <div class="flex items-center justify-between gap-2 mb-2.5 sm:mb-3">
+        <!-- Badges on Left (Swipeable/Scrollable Chips) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 flex-nowrap shrink min-w-0">
+          <span
+            class="inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] sm:text-[10.5px] font-black uppercase tracking-wider border shadow-2xs shrink-0"
+            [ngClass]="getTypeColor(resource.type)">
+            {{ getTypeLabel(resource.type) }}
+          </span>
+          <span *ngIf="resource.isOpenNow"
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] sm:text-[10.5px] font-bold bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 live-pulse-dot"></span>
+            <span>{{ selectedLanguage === 'hi' ? 'खुला है' : 'Open' }}</span>
+          </span>
+          <span *ngIf="verificationBadge"
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-lg text-[10px] sm:text-[10.5px] font-bold border shadow-2xs shrink-0"
+            [ngClass]="verificationBadge.colorClass" [appTooltip]="verificationBadge.tooltip" tooltipPlacement="top">
+            <app-icon name="badge-check" [size]="11"></app-icon>
+            <span>{{ verificationBadge.label }}</span>
+          </span>
+          <span *ngIf="resource.jurisdictionLevel"
+            class="inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] sm:text-[10.5px] font-bold uppercase tracking-wider bg-slate-100 dark:bg-slate-800/90 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+            {{ resource.jurisdictionLevel }}
+          </span>
+        </div>
+
+        <!-- Language Toggle Pill on Far Right (Compact on Mobile, Full on Desktop) -->
+        <div
+          class="inline-flex items-center bg-slate-200/60 dark:bg-slate-800/80 p-0.5 sm:p-1 rounded-xl sm:rounded-2xl shadow-2xs shrink-0 ml-1">
+          <button (click)="setLanguage('en')" [appTooltip]="'View details in English'" tooltipPlacement="bottom"
+            [ngClass]="selectedLanguage === 'en' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+            class="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer border-0 bg-transparent">
+            <span class="sm:hidden">EN</span>
+            <span class="hidden sm:inline">English</span>
+          </button>
+          <button (click)="setLanguage('hi')" [appTooltip]="'हिन्दी में विवरण देखें'" tooltipPlacement="bottom"
+            [ngClass]="selectedLanguage === 'hi' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'"
+            class="px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg sm:rounded-xl text-[11px] sm:text-xs transition-all cursor-pointer border-0 bg-transparent">
+            <span class="sm:hidden">हि</span>
+            <span class="hidden sm:inline">हिन्दी</span>
+          </button>
+        </div>
       </div>
 
-      <h1 class="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-3">
+      <!-- Grand Title -->
+      <h1 class="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white tracking-tight leading-tight mb-2">
         {{ (selectedLanguage === 'hi' && resource.name_hi) ? resource.name_hi : resource.name }}
       </h1>
 
+      <!-- Location Subtitle -->
+      <div class="flex items-center gap-1.5 text-sm sm:text-base text-slate-600 dark:text-slate-300 font-medium mb-5">
+        <app-icon name="map-pin" [size]="15" class="text-indigo-600 dark:text-indigo-400 shrink-0"></app-icon>
+        <span>{{ resource.district || resource.city }}, {{ resource.state }} — {{ getTypeLabel(resource.type) }}</span>
+      </div>
+
       <p *ngIf="selectedLanguage === 'hi' && resource.description_hi"
-        class="text-sm sm:text-base text-slate-600 dark:text-slate-300 mt-2 leading-relaxed max-w-3xl">
+        class="text-sm text-slate-600 dark:text-slate-300 mb-5 leading-relaxed max-w-4xl">
         {{ resource.description_hi }}
       </p>
 
-      <!-- Quick Actions Dock -->
-      <div class="flex items-center gap-2.5 mt-6 flex-wrap">
-        <a *ngIf="resource.contactNumber?.length" href="tel:{{ resource.contactNumber[0] }}"
-          [appTooltip]="'Call primary contact ' + resource.contactNumber[0]" tooltipPlacement="bottom"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl glass-panel text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 no-underline transition-all shadow-2xs">
-          <app-icon name="phone" [size]="16" class="text-indigo-600 dark:text-indigo-400"></app-icon>
-          <span>{{ resource.contactNumber[0] }}</span>
+      <!-- Mobile Action Row (Apple/Google Places 5-Pill Layout: 100% visible, Zero Scroll) -->
+      <div class="flex sm:hidden items-center gap-2">
+        <!-- 1. Call Button -->
+        <a *ngIf="resource.contactNumber?.length" href="tel:{{ resource.contactNumber?.[0] }}"
+          class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-2xl bg-indigo-600 active:bg-indigo-700 text-white text-xs font-bold no-underline shadow-sm active:scale-95">
+          <app-icon name="phone" [size]="14"></app-icon>
+          <span>Call</span>
         </a>
-        <button (click)="openDirections()" [appTooltip]="'Navigate using Google Maps'" tooltipPlacement="bottom"
-          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold cursor-pointer border-0 shadow-md transition-all">
-          <app-icon name="navigation" [size]="16"></app-icon>
-          <span>Get Directions</span>
+
+        <!-- 2. Directions Button -->
+        <button (click)="openDirections()"
+          class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold border-0 active:scale-95 cursor-pointer">
+          <app-icon name="navigation" [size]="14" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+          <span class="truncate">{{ selectedLanguage === 'hi' ? 'रास्ता' : 'Directions' }}</span>
         </button>
-        <button (click)="shareResource()" [appTooltip]="'Share or copy link to this resource'" tooltipPlacement="bottom"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl glass-panel text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-all shadow-2xs">
-          <app-icon name="share" [size]="16" class="text-slate-500"></app-icon>
-          <span>Share</span>
+
+        <!-- 3. Native Share Button -->
+        <button (click)="shareResource()" [appTooltip]="'Share link'"
+          class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 border-0 active:scale-95 cursor-pointer">
+          <app-icon name="share" [size]="15"></app-icon>
         </button>
-        <button (click)="printPage()" [appTooltip]="'Print official listing dossier'" tooltipPlacement="bottom"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl glass-panel text-sm font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer transition-all no-print shadow-2xs">
-          <app-icon name="printer" [size]="16" class="text-slate-500"></app-icon>
+
+        <!-- 4. Universal Bookmark Button -->
+        <div class="shrink-0 flex items-center justify-center">
+          <app-bookmark-button targetType="LegalResource" [targetId]="resource._id" [title]="resource.name"
+            [subtitle]="getTypeLabel(resource.type)" variant="icon" size="md">
+          </app-bookmark-button>
+        </div>
+
+        <!-- 5. More Actions (3-Dots Bottom Sheet Trigger) -->
+        <button (click)="toggleMobileOverflow()" [appTooltip]="'More actions'"
+          class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 border-0 active:scale-95 cursor-pointer">
+          <app-icon name="more-horizontal" [size]="16"></app-icon>
+        </button>
+      </div>
+
+      <!-- Desktop Action Strip (Full Inline Utility Row) -->
+      <div class="hidden sm:flex items-center gap-2.5 flex-wrap">
+        <!-- 1. Call Button -->
+        <a *ngIf="resource.contactNumber?.length" href="tel:{{ resource.contactNumber?.[0] }}"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-bold no-underline shadow-md shadow-indigo-600/25 transition-all hover:scale-[1.02] active:scale-95">
+          <app-icon name="phone" [size]="15"></app-icon>
+          <span>{{ resource.contactNumber?.[0] }}</span>
+        </a>
+
+        <!-- 2. Directions Button -->
+        <button (click)="openDirections()"
+          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs sm:text-sm font-bold cursor-pointer border-0 transition-all hover:scale-[1.02] active:scale-95">
+          <app-icon name="navigation" [size]="15" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+          <span>{{ selectedLanguage === 'hi' ? 'दिशा-निर्देश' : 'Directions' }}</span>
+        </button>
+
+        <!-- 3. QR Code (Mobile Handoff) -->
+        <button (click)="openQrModal()" [appTooltip]="'Scan QR for Mobile Route'"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold cursor-pointer border-0 transition-all hover:scale-[1.02] active:scale-95">
+          <app-icon name="maximize" [size]="14"></app-icon>
+          <span>QR Code</span>
+        </button>
+
+        <!-- 4. Custom Share Menu (Desktop Dropdown) -->
+        <app-share-menu [title]="shareSubject" [text]="shareText" [shareUrl]="shareUrl" [subject]="shareSubject"
+          [label]="'Share'"
+          [buttonClass]="'inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold cursor-pointer border-0 transition-all hover:scale-[1.02] active:scale-95'"
+          [iconClass]="'w-3.5 h-3.5'" [tooltipText]="'Share official center details'" [tooltipPlacement]="'bottom'"
+          [customActionLabel]="'Copy Address'" [copyLinkLabel]="'Copy Listing Link'"
+          (customActionClicked)="copyAddress()">
+        </app-share-menu>
+
+        <!-- 5. Print Dossier -->
+        <button (click)="printPage()" [appTooltip]="'Print official listing dossier'"
+          class="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs sm:text-sm font-bold cursor-pointer border-0 transition-all no-print hover:scale-[1.02] active:scale-95">
+          <app-icon name="printer" [size]="14"></app-icon>
           <span>Print</span>
         </button>
 
-        <!-- Save / Bookmark -->
+        <!-- 6. Bookmark -->
         <app-bookmark-button targetType="LegalResource" [targetId]="resource._id" [title]="resource.name"
           [subtitle]="getTypeLabel(resource.type)" variant="button-with-text" size="md">
         </app-bookmark-button>
 
-        <!-- Helpful / Like Upvote -->
+        <!-- 7. Like / Upvote -->
         <app-interactive-like targetType="LegalResource" [targetId]="resource._id" variant="pill" size="md">
         </app-interactive-like>
 
-        <!-- Report Issue -->
+        <!-- 8. Report Trigger -->
         <app-report-trigger targetType="LegalResource" [targetId]="resource._id" [targetTitle]="resource.name">
         </app-report-trigger>
       </div>
+    </header>
+
+    <!-- Emergency Helpline Alert Strip (Single Subtle Bar) -->
+    <div
+      class="py-4 border-b border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+          <app-icon name="shield" [size]="16"></app-icon>
+        </div>
+        <div>
+          <span class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-wider">
+            {{ selectedLanguage === 'hi' ? '24x7 राष्ट्रीय विधिक सहायता हेल्पलाइन' : '24x7 National Legal Aid Helpline'
+            }}:
+          </span>
+          <span class="text-xs text-slate-500 dark:text-slate-400 ml-1">
+            {{ selectedLanguage === 'hi' ? 'निःशुल्क टेली-लॉ परामर्श हेतु 15100 पर कॉल करें' : 'Toll-free tele-legal
+            counseling' }}
+          </span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <a href="tel:15100"
+          class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold no-underline shadow-2xs transition-all">
+          <app-icon name="phone" [size]="12"></app-icon>
+          <span>NALSA: 15100</span>
+        </a>
+        <a href="tel:112"
+          class="inline-flex items-center justify-center px-3 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold no-underline hover:bg-slate-200 dark:hover:bg-slate-700 transition-all">
+          <span>112 (Emergency)</span>
+        </a>
+      </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8 items-start">
+    <!-- Main Content 12-Column Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start pt-6">
 
-      <!-- Left Column -->
-      <div class="space-y-6">
+      <!-- Left Column (Spans 7 columns on Desktop) -->
+      <div class="lg:col-span-7 space-y-8">
 
-        <!-- Contact & Address -->
-        <div class="glass-panel rounded-3xl p-6 shadow-sm">
-          <h2
-            class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-5 flex items-center gap-2">
-            <app-icon name="map-pin" [size]="16" class="text-indigo-600 dark:text-indigo-400"></app-icon>
-            <span>Contact & Location Details</span>
-          </h2>
+        <!-- 1. Contact & Essentials (Clean Edge-to-Edge List Format) -->
+        <section>
+          <div class="flex items-center justify-between mb-4">
+            <h2
+              class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2 m-0">
+              <app-icon name="map-pin" [size]="14" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+              <span>{{ selectedLanguage === 'hi' ? 'संपर्क एवं स्थान विवरण' : 'Contact & Location' }}</span>
+            </h2>
+            <span class="text-xs font-bold text-slate-400 dark:text-slate-500">{{ resource.state }} Registry</span>
+          </div>
 
-          <div class="space-y-4">
-            <div class="flex items-start gap-3">
-              <app-icon name="map-pin" [size]="16" class="text-slate-400 shrink-0 mt-0.5"></app-icon>
-              <div>
-                <div class="text-sm text-slate-800 dark:text-slate-200 font-medium">
+          <div class="divide-y divide-slate-100 dark:divide-slate-800/80">
+            <!-- Official Postal Address -->
+            <div class="py-3.5 flex items-start gap-3.5">
+              <div
+                class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                <app-icon name="map-pin" [size]="15"></app-icon>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  {{ selectedLanguage === 'hi' ? 'आधिकारिक डाक पता' : 'Postal Address' }}
+                </div>
+                <div class="text-sm text-slate-800 dark:text-slate-200 font-semibold leading-relaxed mt-0.5">
                   {{ (selectedLanguage === 'hi' && resource.address_hi) ? resource.address_hi : resource.address }}
                 </div>
-                <button (click)="copyAddress()"
-                  class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer bg-transparent border-0 mt-1.5 inline-flex items-center gap-1">
-                  <app-icon name="copy" [size]="12"></app-icon>
-                  <span>Copy Official Address</span>
-                </button>
-              </div>
-            </div>
-
-            <div *ngIf="resource.contactNumber?.length"
-              class="flex items-start gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <app-icon name="phone" [size]="16" class="text-slate-400 shrink-0 mt-0.5"></app-icon>
-              <div class="flex flex-wrap gap-2">
-                <a *ngFor="let phone of resource.contactNumber" [href]="'tel:' + phone"
-                  class="text-sm text-indigo-600 dark:text-indigo-400 font-bold no-underline hover:underline">{{ phone
-                  }}</a>
-              </div>
-            </div>
-
-            <div *ngIf="resource.email?.length"
-              class="flex items-start gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <app-icon name="mail" [size]="16" class="text-slate-400 shrink-0 mt-0.5"></app-icon>
-              <div class="flex flex-wrap gap-2">
-                <a *ngFor="let email of resource.email" [href]="'mailto:' + email"
-                  class="text-sm text-indigo-600 dark:text-indigo-400 font-bold no-underline hover:underline break-all">{{
-                  email }}</a>
-              </div>
-            </div>
-
-            <div *ngIf="resource.website"
-              class="flex items-start gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <app-icon name="globe" [size]="16" class="text-slate-400 shrink-0 mt-0.5"></app-icon>
-              <a [href]="resource.website" target="_blank" rel="noopener noreferrer"
-                class="text-sm text-indigo-600 dark:text-indigo-400 font-bold no-underline hover:underline break-all">{{
-                resource.website }}</a>
-            </div>
-
-            <div *ngIf="resource.operatingHours"
-              class="flex items-start gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
-              <app-icon name="clock" [size]="16" class="text-slate-400 shrink-0 mt-0.5"></app-icon>
-              <div>
-                <div class="text-sm text-slate-800 dark:text-slate-200 font-medium">
-                  {{ (selectedLanguage === 'hi' && resource.operatingHours_hi) ? resource.operatingHours_hi :
-                  resource.operatingHours }}
+                <div class="flex items-center gap-3 mt-1.5">
+                  <button (click)="copyAddress()"
+                    class="text-xs text-indigo-600 dark:text-indigo-400 font-bold hover:underline cursor-pointer bg-transparent border-0 p-0 inline-flex items-center gap-1">
+                    <app-icon name="copy" [size]="12"></app-icon>
+                    <span>{{ selectedLanguage === 'hi' ? 'पता कॉपी करें' : 'Copy Address' }}</span>
+                  </button>
+                  <span class="text-slate-300 dark:text-slate-700">•</span>
+                  <button (click)="copyCoordinates()"
+                    class="text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-medium cursor-pointer bg-transparent border-0 p-0 inline-flex items-center gap-1">
+                    <span>GPS Coords</span>
+                  </button>
                 </div>
-                <div *ngIf="resource.lunchBreak" class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
-                  Lunch: {{ resource.lunchBreak }}
+              </div>
+            </div>
+
+            <!-- Operating Hours -->
+            <div class="py-3.5 flex items-start gap-3.5">
+              <div
+                class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                <app-icon name="clock" [size]="15"></app-icon>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  {{ selectedLanguage === 'hi' ? 'कार्य समय' : 'Operating Hours' }}
+                </div>
+                <div class="text-sm text-slate-800 dark:text-slate-200 font-bold mt-0.5">
+                  {{ (selectedLanguage === 'hi' && resource.operatingHours_hi) ? resource.operatingHours_hi :
+                  (resource.operatingHours || '10:00 AM - 5:00 PM (Monday - Saturday)') }}
+                </div>
+                <div class="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-2 flex-wrap">
+                  <span *ngIf="resource.lunchBreak" class="text-amber-600 dark:text-amber-400 font-medium">
+                    Lunch: {{ resource.lunchBreak }}
+                  </span>
+                  <span class="text-slate-400">• Closed on 2nd/4th Saturdays & Court Holidays</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Helplines -->
+            <div *ngIf="resource.contactNumber?.length" class="py-3.5 flex items-start gap-3.5">
+              <div
+                class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 mt-0.5">
+                <app-icon name="phone" [size]="15"></app-icon>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
+                  {{ selectedLanguage === 'hi' ? 'सीधे हेल्पलाइन नंबर' : 'Helpline Numbers' }}
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  @for (phone of resource.contactNumber; track phone) {
+                  <a [href]="'tel:' + phone"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-xs font-bold no-underline transition-colors border border-emerald-500/20">
+                    <app-icon name="phone" [size]="11"></app-icon>
+                    <span>{{ phone }}</span>
+                  </a>
+                  }
+                </div>
+              </div>
+            </div>
+
+            <!-- Official Website & Email -->
+            <div *ngIf="resource.website || resource.email?.length" class="py-3.5 flex items-start gap-3.5">
+              <div
+                class="w-8 h-8 rounded-xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 mt-0.5">
+                <app-icon name="globe" [size]="15"></app-icon>
+              </div>
+              <div class="min-w-0 flex-1 space-y-2">
+                <div *ngIf="resource.website">
+                  <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {{ selectedLanguage === 'hi' ? 'आधिकारिक पोर्टल' : 'Official Portal' }}
+                  </div>
+                  <a [href]="resource.website" target="_blank" rel="noopener noreferrer"
+                    class="text-xs text-indigo-600 dark:text-indigo-400 font-bold no-underline hover:underline break-all inline-flex items-center gap-1 mt-0.5">
+                    <span>{{ resource.website }}</span>
+                    <app-icon name="external-link" [size]="11"></app-icon>
+                  </a>
+                </div>
+                <div *ngIf="resource.email?.length">
+                  <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    {{ selectedLanguage === 'hi' ? 'ईमेल पूछताछ' : 'Official Email' }}
+                  </div>
+                  <div class="flex flex-wrap gap-2 mt-0.5">
+                    @for (email of resource.email; track email) {
+                    <a [href]="'mailto:' + email"
+                      class="text-xs text-indigo-600 dark:text-indigo-400 font-bold no-underline hover:underline break-all">{{
+                      email }}</a>
+                    }
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </section>
 
-        <!-- Facilities & Infrastructure (SVG Icons) -->
-        <div *ngIf="getFacilityChips().length > 0" class="glass-panel rounded-3xl p-6 shadow-sm">
+        <!-- 2. Section 12 Free Legal Aid Eligibility (Subtle Left-Accent Card) -->
+        <section class="p-5 sm:p-6 rounded-2xl bg-indigo-500/5 dark:bg-indigo-500/10 border-l-4 border-indigo-600">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-sm sm:text-base font-black text-slate-900 dark:text-white m-0">
+                  {{ selectedLanguage === 'hi' ? 'निःशुल्क कानूनी सहायता पात्रता (धारा 12)' : 'Section 12 Free Legal Aid
+                  Eligibility' }}
+                </h2>
+                <span
+                  class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-700 dark:text-emerald-300">
+                  100% Free Lawyer
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">
+                {{ selectedLanguage === 'hi' ? 'विधिक सेवा प्राधिकरण अधिनियम, 1987 के तहत पात्र नागरिकों को ₹0 में
+                सरकारी वकील मिलता है' : 'Under the Legal Services Authorities Act, 1987, qualified citizens receive full
+                representation with ₹0 fees' }}
+              </p>
+            </div>
+            <button (click)="toggleEligibility()"
+              class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline bg-transparent border-0 cursor-pointer p-0 shrink-0 inline-flex items-center gap-1">
+              <span>{{ showEligibilityDetails ? (selectedLanguage === 'hi' ? 'संक्षिप्त करें' : 'Show Less') :
+                (selectedLanguage === 'hi' ? 'सभी 8 श्रेणियां देखें' : 'View All 8 Categories') }}</span>
+              <app-icon [name]="showEligibilityDetails ? 'chevron-up' : 'chevron-down'" [size]="13"></app-icon>
+            </button>
+          </div>
+
+          <!-- Eligibility List -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3 pt-3 border-t border-indigo-500/15">
+            @for (cat of (showEligibilityDetails ? ELIGIBILITY_CATEGORIES : ELIGIBILITY_CATEGORIES.slice(0, 4)); track
+            cat.id) {
+            <div class="flex items-start gap-2.5 py-1">
+              <app-icon [name]="cat.icon" [size]="14"
+                class="text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5"></app-icon>
+              <div class="min-w-0">
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {{ selectedLanguage === 'hi' ? cat.titleHi : cat.titleEn }}
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  {{ selectedLanguage === 'hi' ? cat.descHi : cat.descEn }}
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </section>
+
+        <!-- 3. How to Apply (4-Step Flow) -->
+        <section>
           <h2
-            class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-5 flex items-center gap-2">
-            <app-icon name="building" [size]="16" class="text-indigo-600 dark:text-indigo-400"></app-icon>
-            <span>Facilities & Infrastructure</span>
+            class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
+            <app-icon name="file-text" [size]="14" class="text-emerald-500"></app-icon>
+            <span>{{ selectedLanguage === 'hi' ? 'सहायता प्राप्त करने की प्रक्रिया' : 'How to Apply for Legal Aid (4
+              Steps)' }}</span>
           </h2>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div *ngFor="let chip of getFacilityChips()"
-              class="flex items-start gap-3 p-4 rounded-2xl bg-white/60 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
+            @for (step of APPLICATION_STEPS; track step.step) {
+            <div
+              class="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-start gap-3">
               <div
-                class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5 shadow-2xs">
-                <app-icon *ngIf="chip.iconKey === 'efiling'" name="zap" [size]="16"></app-icon>
-                <app-icon *ngIf="chip.iconKey === 'ladcs'" name="shield" [size]="16"></app-icon>
-                <app-icon *ngIf="chip.iconKey === 'vcroom'" name="video" [size]="16"></app-icon>
-                <app-icon *ngIf="chip.iconKey === 'clinic'" name="plus" [size]="16"></app-icon>
-                <app-icon *ngIf="chip.iconKey === 'accessible'" name="accessibility" [size]="16"></app-icon>
+                class="w-6 h-6 rounded-lg bg-indigo-600 text-white font-black text-xs flex items-center justify-center shrink-0 mt-0.5">
+                {{ step.step }}
               </div>
-              <div>
+              <div class="min-w-0">
+                <div class="text-xs font-black text-slate-800 dark:text-slate-200">
+                  {{ selectedLanguage === 'hi' ? step.titleHi : step.titleEn }}
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+                  {{ selectedLanguage === 'hi' ? step.descHi : step.descEn }}
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </section>
+
+        <!-- 4. Facilities & Digital Amenities Grid -->
+        <section *ngIf="facilityChips.length > 0">
+          <h2
+            class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-4">
+            <app-icon name="building" [size]="14" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+            <span>{{ selectedLanguage === 'hi' ? 'उपलब्ध सुविधाएं एवं डिजिटल बुनियादी ढांचा' : 'Facilities & Digital
+              Amenities' }}</span>
+          </h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            @for (chip of facilityChips; track chip.label) {
+            <div
+              class="flex items-start gap-3 p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80">
+              <div
+                class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 mt-0.5">
+                <app-icon *ngIf="chip.iconKey === 'efiling'" name="zap" [size]="15"></app-icon>
+                <app-icon *ngIf="chip.iconKey === 'ladcs'" name="shield" [size]="15"></app-icon>
+                <app-icon *ngIf="chip.iconKey === 'vcroom'" name="video" [size]="15"></app-icon>
+                <app-icon *ngIf="chip.iconKey === 'clinic'" name="plus" [size]="15"></app-icon>
+                <app-icon *ngIf="chip.iconKey === 'accessible'" name="accessibility" [size]="15"></app-icon>
+              </div>
+              <div class="min-w-0">
                 <div class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ chip.label }}</div>
                 <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">{{ chip.description
                   }}</div>
               </div>
             </div>
+            }
           </div>
-        </div>
+        </section>
 
-        <!-- Leadership & Officials -->
-        <div *ngIf="resource.executiveChairman || resource.memberSecretary || resource.patronInChief"
-          class="glass-panel rounded-3xl p-6 shadow-sm">
+        <!-- 5. Citizen "Before You Visit" Document Checklist -->
+        <section>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h2
+                class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2 m-0">
+                <app-icon name="file-text" [size]="14" class="text-emerald-500"></app-icon>
+                <span>{{ selectedLanguage === 'hi' ? 'दस्तावेज़ चेकलिस्ट (आगमन से पूर्व)' : 'Document Preparation
+                  Checklist' }}</span>
+              </h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                {{ completedChecklistCount }} / {{ documentChecklist.length }} Ready
+              </span>
+              <button *ngIf="completedChecklistCount > 0" (click)="resetChecklist()"
+                class="text-[11px] text-slate-400 hover:text-slate-600 bg-transparent border-0 cursor-pointer">
+                Reset
+              </button>
+            </div>
+          </div>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
+            {{ selectedLanguage === 'hi' ? 'शीघ्र प्रसंस्करण हेतु कृपया मूल प्रति एवं 2 छायाप्रतियां साथ लाएं:' : 'Bring
+            physical originals and 2 self-attested photocopies:' }}
+          </p>
+
+          <div
+            class="divide-y divide-slate-100 dark:divide-slate-800/80 border-t border-b border-slate-200/80 dark:border-slate-800/80">
+            @for (item of documentChecklist; track item.id) {
+            <div (click)="toggleChecklistItem(item)" class="py-3 flex items-start gap-3 cursor-pointer select-none">
+              <div class="w-5 h-5 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors"
+                [ngClass]="item.checked ? 'bg-emerald-500 text-white' : 'border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-800 text-transparent'">
+                <app-icon name="check" [size]="12"></app-icon>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200" [class.line-through]="item.checked">
+                  {{ selectedLanguage === 'hi' ? item.labelHi : item.labelEn }}
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  {{ selectedLanguage === 'hi' ? item.noteHi : item.noteEn }}
+                </div>
+              </div>
+            </div>
+            }
+          </div>
+        </section>
+
+        <!-- 6. Court Rules Notice Strip -->
+        <section
+          class="p-4 rounded-2xl bg-amber-500/5 dark:bg-amber-500/10 border border-amber-500/15 flex items-start gap-3">
+          <app-icon name="info" [size]="16" class="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"></app-icon>
+          <div class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
+            <strong class="text-slate-900 dark:text-white">Visitor Protocol:</strong>
+            {{ selectedLanguage === 'hi' ? 'प्रवेश द्वार पर फोटो पहचान पत्र अनिवार्य है • न्यायालय कक्षों में फोन
+            साइलेंट रखें • डीएलएसए आवेदन पूर्णतः निःशुल्क हैं।' : 'Valid Photo ID required for gate security • Mobile
+            phones must stay on silent • DLSA application has ₹0 fee.' }}
+          </div>
+        </section>
+
+        <!-- 7. Leadership & Executive Officers (If Available) -->
+        <section *ngIf="resource.executiveChairman || resource.memberSecretary || resource.patronInChief">
           <h2
-            class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-5 flex items-center gap-2">
-            <app-icon name="user" [size]="16" class="text-amber-500"></app-icon>
-            <span>Leadership & Officials</span>
+            class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center gap-2 mb-3">
+            <app-icon name="user" [size]="14" class="text-amber-500"></app-icon>
+            <span>{{ selectedLanguage === 'hi' ? 'न्यायिक नेतृत्व एवं अधिकारी' : 'Judicial Leadership & Officers'
+              }}</span>
           </h2>
-          <div class="space-y-4">
-            <div *ngIf="resource.patronInChief" class="flex items-center gap-3">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+            <div *ngIf="resource.patronInChief"
+              class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-3">
               <div
-                class="w-9 h-9 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-400 text-xs font-black shadow-2xs">
+                class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 font-bold text-xs flex items-center justify-center shrink-0">
                 PC</div>
-              <div>
-                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">
-                  Patron-in-Chief</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ resource.patronInChief }}</div>
+              <div class="min-w-0">
+                <div class="text-[9px] font-bold text-slate-400 uppercase">Patron-in-Chief</div>
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ resource.patronInChief }}
+                </div>
               </div>
             </div>
             <div *ngIf="resource.executiveChairman"
-              class="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-3">
               <div
-                class="w-9 h-9 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-xs font-black shadow-2xs">
+                class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 font-bold text-xs flex items-center justify-center shrink-0">
                 EC</div>
-              <div>
-                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Executive
-                  Chairman</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ resource.executiveChairman }}</div>
+              <div class="min-w-0">
+                <div class="text-[9px] font-bold text-slate-400 uppercase">Executive Chairman</div>
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ resource.executiveChairman
+                  }}</div>
               </div>
             </div>
             <div *ngIf="resource.memberSecretary"
-              class="flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              class="p-3 rounded-2xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80 flex items-center gap-3">
               <div
-                class="w-9 h-9 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400 text-xs font-black shadow-2xs">
+                class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-bold text-xs flex items-center justify-center shrink-0">
                 MS</div>
-              <div>
-                <div class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Member
-                  Secretary</div>
-                <div class="text-sm font-bold text-slate-800 dark:text-slate-200">{{ resource.memberSecretary }}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Before You Visit: Citizen Document Checklist -->
-        <div class="glass-panel rounded-3xl p-6 shadow-sm border border-slate-200/80 dark:border-slate-800">
-          <h2
-            class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <app-icon name="file-text" [size]="16" class="text-emerald-500"></app-icon>
-            <span>Before You Visit: Document Preparation Checklist</span>
-          </h2>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-3">
-            To ensure swift processing at this {{ getTypeLabel(resource.type) }}, please bring physical originals and 2
-            self-attested photocopies of:
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-            <div
-              class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-              <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Government ID (Aadhaar / Voter ID /
-                Passport)</span>
-            </div>
-            <div
-              class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-              <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Income Certificate / BPL Card (For Free
-                Aid)</span>
-            </div>
-            <div
-              class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-              <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Case FIR / Police Complaint Copy (If
-                any)</span>
-            </div>
-            <div
-              class="flex items-center gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800">
-              <app-icon name="check" [size]="14" class="text-emerald-500 shrink-0"></app-icon>
-              <span class="text-slate-700 dark:text-slate-300 font-medium">Court Summons / Notice / Previous
-                Orders</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hierarchical Parent Authority Reference (If Available) -->
-        <div *ngIf="resource.parentAuthority"
-          class="glass-panel rounded-3xl p-5 shadow-sm border border-slate-200/80 dark:border-slate-800">
-          <h3
-            class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-            <app-icon name="award" [size]="13" class="text-sky-500"></app-icon>
-            <span>Parent Judicial / Administrative Authority</span>
-          </h3>
-          <a [routerLink]="['/legal-resources', resource.parentAuthority._id]"
-            class="flex items-center justify-between p-3 rounded-2xl bg-sky-500/10 hover:bg-sky-500/20 text-sky-800 dark:text-sky-300 border border-sky-500/25 transition-all no-underline">
-            <div>
-              <div class="text-xs font-extrabold">{{ resource.parentAuthority.name }}</div>
-              <div class="text-[10px] text-slate-500 mt-0.5">{{ resource.parentAuthority.city ||
-                resource.parentAuthority.district }}, {{ resource.parentAuthority.state }}</div>
-            </div>
-            <span class="text-xs font-bold text-sky-600 dark:text-sky-400">View Parent Authority →</span>
-          </a>
-        </div>
-
-        <!-- User Feedback & Helpfulness Widget -->
-        <div class="glass-panel rounded-3xl p-6 shadow-sm">
-          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h2 class="text-sm font-bold text-slate-800 dark:text-slate-100 m-0">Was this institutional information
-                helpful?</h2>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 m-0">
-                <span *ngIf="resource?.feedback?.upvotes !== undefined">
-                  {{ resource?.feedback?.helpfulnessScore || 100 }}% of citizens found this accurate ({{
-                  resource?.feedback?.upvotes || 0 }} upvotes)
-                </span>
-                <span *ngIf="!resource?.feedback || resource?.feedback?.upvotes === undefined">
-                  Your feedback helps verify national directory accuracy.
-                </span>
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <button (click)="onUpvote()" [disabled]="userVote === 'up'" [appTooltip]="'Vote helpful and accurate'"
-                tooltipPlacement="top"
-                [ngClass]="userVote === 'up' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20'"
-                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border-0">
-                <app-icon name="thumbs-up" [size]="15"></app-icon>
-                <span>Helpful</span>
-              </button>
-              <button (click)="onDownvote()" [appTooltip]="'Report incorrect or outdated info'" tooltipPlacement="top"
-                [ngClass]="userVote === 'down' ? 'bg-rose-600 text-white shadow-xs' : 'bg-rose-500/10 text-rose-700 dark:text-rose-300 hover:bg-rose-500/20'"
-                class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border-0">
-                <app-icon name="thumbs-down" [size]="15"></app-icon>
-                <span>Report Issue</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Nearby Alternatives -->
-        <div *ngIf="nearbyResources.length > 0" class="glass-panel rounded-3xl p-6 shadow-sm">
-          <h2 class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-4">
-            Other {{ getTypeLabel(resource.type) }}s in {{ resource.state }}
-          </h2>
-          <div class="space-y-2.5">
-            <a *ngFor="let nearby of nearbyResources; trackBy: trackById"
-              [routerLink]="['/legal-resources', nearby._id]"
-              class="flex items-center justify-between p-3.5 rounded-2xl bg-white/60 dark:bg-slate-900/60 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 transition-all no-underline group border border-slate-200/80 dark:border-slate-800">
               <div class="min-w-0">
-                <div
-                  class="text-sm font-bold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
-                  {{ nearby.name }}
-                </div>
-                <div class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 truncate">
-                  {{ nearby.city || nearby.district }}, {{ nearby.state }}
-                </div>
+                <div class="text-[9px] font-bold text-slate-400 uppercase">Member Secretary</div>
+                <div class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{{ resource.memberSecretary
+                  }}</div>
               </div>
-              <app-icon name="chevron-right" [size]="15"
-                class="text-slate-300 dark:text-slate-600 group-hover:text-indigo-500 group-hover:translate-x-0.5 transition-all shrink-0 ml-3"></app-icon>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. Parent Authority & Nearby Resources -->
+        <section *ngIf="nearbyResources.length > 0 || resource.parentAuthority">
+          <h2 class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">
+            {{ selectedLanguage === 'hi' ? 'संबंधित प्राधिकरण एवं निकटवर्ती केंद्र' : 'Institutional Network &
+            Alternatives' }}
+          </h2>
+          <div class="space-y-2">
+            <a *ngIf="resource.parentAuthority" [routerLink]="['/legal-resources', resource.parentAuthority._id]"
+              class="flex items-center justify-between p-3.5 rounded-xl bg-sky-500/10 hover:bg-sky-500/15 border border-sky-500/20 text-sky-800 dark:text-sky-300 no-underline transition-colors">
+              <div>
+                <div class="text-xs font-black uppercase tracking-wider text-sky-600 dark:text-sky-400">Parent Judicial
+                  Authority</div>
+                <div class="text-sm font-bold mt-0.5">{{ resource.parentAuthority.name }}</div>
+              </div>
+              <app-icon name="chevron-right" [size]="14"></app-icon>
             </a>
+            @for (nearby of nearbyResources; track nearby._id || $index) {
+            <div>
+              <a [routerLink]="['/legal-resources', nearby._id]"
+                class="flex items-center justify-between py-3 px-6 rounded-xl bg-slate-50 dark:bg-slate-900/60 hover:bg-indigo-50 dark:hover:bg-slate-800 border border-slate-200/60 dark:border-slate-800/80 no-underline transition-colors">
+                <div>
+                  <div class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ nearby.name }}</div>
+                  <div class="text-[11px] text-slate-400">{{ nearby.city || nearby.district }}, {{ nearby.state }}</div>
+                </div>
+                <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
+              </a>
+            </div>
+            }
           </div>
-          <a [routerLink]="['/legal-resources']" [queryParams]="{state: resource.state, type: resource.type}"
-            class="inline-flex items-center gap-1.5 mt-4 text-xs font-bold text-indigo-600 dark:text-indigo-400 no-underline hover:underline">
-            <span>View all {{ getTypeLabel(resource.type) }}s in {{ resource.state }}</span>
-            <app-icon name="chevron-right" [size]="13"></app-icon>
-          </a>
-        </div>
+        </section>
+
+        <!-- 9. Accuracy Feedback Rating (Custom Unified Components) -->
+        <section
+          class="p-4 sm:p-5 rounded-xl bg-slate-100/70 dark:bg-slate-900/70 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <div class="text-xs font-bold text-slate-800 dark:text-slate-200">Was this listing information accurate?
+            </div>
+            <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+              Community verified listing • Submit correction to moderation desk if needed
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <!-- Like Button -->
+            <app-interactive-like targetType="LegalResource" [targetId]="resource._id" variant="pill" size="md">
+            </app-interactive-like>
+
+            <!-- Report Trigger -->
+            <app-report-trigger targetType="LegalResource" [targetId]="resource._id" [targetTitle]="resource.name"
+              [showLabel]="true">
+            </app-report-trigger>
+          </div>
+        </section>
+
       </div>
 
-      <!-- Right Column: Interactive Map & Languages -->
-      <div class="space-y-6">
+      <!-- Right Column (Sticky on Desktop, Clean Flow on Mobile) -->
+      <div class="lg:col-span-5 space-y-4 lg:sticky lg:top-[calc(var(--navbar-height,68px)+1.5rem)] self-start">
+
+        <!-- Unified Interactive Map Card -->
         <div
-          class="glass-panel rounded-3xl overflow-hidden sticky top-4 shadow-sm border border-slate-200/80 dark:border-slate-800/80">
-          <iframe [src]="safeMapUrl" class="w-full h-72 lg:h-80 border-0" loading="lazy" allowfullscreen></iframe>
-          <div class="p-4 border-t border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60">
+          class="rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-md bg-white dark:bg-slate-900">
+          <!-- Map Preview Window -->
+          <div class="relative bg-slate-100 dark:bg-slate-950">
+            <div *ngIf="!isMapLoaded" class="w-full h-64 sm:h-72 lg:h-80 shimmer-wave"></div>
+            <iframe *ngIf="sanitizedMapUrl" [src]="sanitizedMapUrl" class="w-full h-64 sm:h-72 lg:h-80 border-0"
+              [class.hidden]="!isMapLoaded" loading="lazy" allowfullscreen (load)="onMapLoad()"></iframe>
+          </div>
+
+          <!-- Actions & Spoken Languages -->
+          <div class="p-4 sm:p-5 space-y-3.5">
             <button (click)="openDirections()"
-              class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold cursor-pointer border-0 shadow-md transition-all">
-              <app-icon name="navigation" [size]="16"></app-icon>
-              <span>Open in Google Maps</span>
+              class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white text-xs sm:text-sm font-bold cursor-pointer border-0 shadow-md shadow-indigo-600/25 transition-all hover:scale-[1.01] active:scale-95">
+              <app-icon name="navigation" [size]="15"></app-icon>
+              <span>{{ selectedLanguage === 'hi' ? 'गूगल मैप्स में रास्ता देखें' : 'Get Live Route in Google Maps'
+                }}</span>
             </button>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button (click)="openQrModal()"
+                class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border-0 cursor-pointer">
+                <app-icon name="maximize" [size]="13"></app-icon>
+                <span>Mobile QR</span>
+              </button>
+              <button (click)="copyAddress()"
+                class="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 transition-colors border-0 cursor-pointer">
+                <app-icon name="copy" [size]="13"></app-icon>
+                <span>Copy Address</span>
+              </button>
+            </div>
+
+            <!-- Spoken Languages Tags -->
+            <div *ngIf="resource.languages?.length" class="pt-3 border-t border-slate-100 dark:border-slate-800/80">
+              <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                <app-icon name="globe" [size]="11" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+                <span>Languages Spoken at Desk</span>
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                @for (lang of resource.languages; track lang) {
+                <span
+                  class="px-2.5 py-0.5 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {{ lang }}
+                </span>
+                }
+              </div>
+            </div>
+
+            <!-- External e-Courts Case Status Portal Link -->
+            <div class="pt-2 border-t border-slate-100 dark:border-slate-800/80">
+              <button (click)="openECourts()"
+                class="w-full flex items-center justify-between p-2.5 rounded-xl bg-indigo-500/10 hover:bg-indigo-500/15 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors cursor-pointer border-0 text-left">
+                <div class="flex items-center gap-2">
+                  <app-icon name="scale" [size]="13"></app-icon>
+                  <span>e-Courts Case Status Lookup</span>
+                </div>
+                <app-icon name="external-link" [size]="11"></app-icon>
+              </button>
+            </div>
+
+            <!-- Report Discrepancy Link -->
+            <div class="pt-1 text-center">
+              <button (click)="openReportModal()"
+                class="text-[11px] text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 font-medium cursor-pointer bg-transparent border-0 inline-flex items-center gap-1 transition-colors">
+                <app-icon name="alert-circle" [size]="12"></app-icon>
+                <span>Suggest an edit / Report incorrect info</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        <!-- Languages Spoken -->
-        <div *ngIf="resource.languages?.length" class="glass-panel rounded-3xl p-5 shadow-sm">
-          <h3
-            class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
-            <app-icon name="globe" [size]="13" class="text-indigo-600 dark:text-indigo-400"></app-icon>
-            <span>Languages Spoken</span>
-          </h3>
-          <div class="flex flex-wrap gap-1.5">
-            <span *ngFor="let lang of resource.languages"
-              class="px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
-              {{ lang }}
-            </span>
-          </div>
-        </div>
-
-        <!-- Incorrect Information Report Box -->
-        <div class="glass-panel rounded-3xl p-5 no-print shadow-sm">
-          <h3 class="text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">Notice Any
-            Discrepancy?</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4 leading-relaxed">
-            Help maintain registry integrity. If any phone number, address, or operating hours are incorrect, submit a
-            correction.
-          </p>
-          <button (click)="onDownvote()"
-            class="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl border border-amber-200 dark:border-amber-500/20 text-xs font-bold text-amber-700 dark:text-amber-300 bg-amber-50/80 dark:bg-amber-500/10 hover:bg-amber-100 dark:hover:bg-amber-500/20 cursor-pointer transition-all">
-            <app-icon name="alert-circle" [size]="14"></app-icon>
-            <span>Report Incorrect Info</span>
-          </button>
-        </div>
       </div>
+
     </div>
 
   </div>
+
+  <!-- Mobile Sticky Bottom Quick-Action Bar (Active only when main bottom navigation bar hides on scroll) -->
+  <div *ngIf="!isLoading && !notFound && resource && !isBottomNavVisible"
+    class="sm:hidden fixed bottom-0 inset-x-0 z-40 bg-slate-900/95 backdrop-blur-md px-4 py-3 border-t border-slate-800 shadow-2xl flex items-center gap-2.5 animate-slide-up">
+    <!-- Call -->
+    <a *ngIf="resource.contactNumber?.length" href="tel:{{ resource.contactNumber?.[0] }}"
+      class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold no-underline border border-slate-700 active:scale-95">
+      <app-icon name="phone" [size]="14" class="text-indigo-400"></app-icon>
+      <span class="truncate">Call Office</span>
+    </a>
+    <!-- Directions -->
+    <button (click)="openDirections()"
+      class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold border-0 shadow-md shadow-indigo-600/30 active:scale-95 cursor-pointer">
+      <app-icon name="navigation" [size]="14"></app-icon>
+      <span>Directions</span>
+    </button>
+  </div>
+
 </div>
 
-<!-- Negative Feedback Reason Modal -->
-<div *ngIf="showFeedbackModal"
-  class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm animate-fade-in"
-  role="dialog" aria-modal="true">
+<!-- QR Code Modal -->
+<app-qr-modal [isOpen]="showQrModal" [qrData]="qrModalData" (closed)="closeQrModal()"></app-qr-modal>
+
+<!-- Mobile Overflow Bottom Sheet (MNC-Grade Actions Sheet) -->
+<div *ngIf="showMobileOverflow"
+  class="fixed inset-0 z-[2000] flex items-end sm:hidden bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+  (click)="closeMobileOverflow()" role="dialog" aria-modal="true">
   <div
-    class="glass-panel bg-white/95 dark:bg-slate-900/95 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl animate-scale-up">
-    <div class="flex items-center justify-between mb-4">
-      <h3 class="text-base font-bold text-slate-900 dark:text-white m-0">What is inaccurate?</h3>
-      <button (click)="closeFeedbackModal()"
-        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer bg-transparent border-0 p-1 inline-flex items-center">
-        <app-icon name="x" [size]="18"></app-icon>
+    class="w-full bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl p-5 shadow-2xl animate-slide-up max-h-[85vh] overflow-y-auto"
+    (click)="$event.stopPropagation()">
+    <!-- Pull Pill Handle -->
+    <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mb-4"></div>
+
+    <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+      <div>
+        <h3 class="text-sm font-bold text-slate-900 dark:text-white m-0">
+          {{ selectedLanguage === 'hi' ? 'अतिरिक्त क्रियाएं' : 'More Actions' }}
+        </h3>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[260px] m-0">
+          {{ resource?.name }}
+        </p>
+      </div>
+      <button (click)="closeMobileOverflow()"
+        class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 flex items-center justify-center border-0 cursor-pointer">
+        <app-icon name="x" [size]="16"></app-icon>
       </button>
     </div>
-    <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">Please select the issue you encountered with {{
-      resource.name }}:</p>
-    <div class="space-y-2 mb-6">
-      <label *ngFor="let reason of FEEDBACK_REASONS"
-        class="flex items-center gap-3 p-3 rounded-2xl border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/80 cursor-pointer transition-all text-xs font-medium text-slate-700 dark:text-slate-300">
-        <input type="radio" name="feedbackReason" [value]="reason" [(ngModel)]="selectedReason"
-          class="accent-indigo-600">
-        <span>{{ reason }}</span>
-      </label>
-    </div>
-    <div class="flex items-center justify-end gap-2">
-      <button (click)="closeFeedbackModal()"
-        class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 bg-transparent border-0 cursor-pointer">Cancel</button>
-      <button (click)="submitDownvoteWithReason()" [disabled]="!selectedReason || isSubmittingFeedback"
-        class="px-5 py-2.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-700 text-white cursor-pointer border-0 shadow-md disabled:opacity-50 disabled:cursor-not-allowed transition-all">
-        {{ isSubmittingFeedback ? 'Submitting...' : 'Submit Report' }}
+
+    <!-- Action Sheet List -->
+    <div class="space-y-1.5">
+      <!-- 1. Helpful / Upvote -->
+      <button (click)="onUpvote(); closeMobileOverflow()"
+        class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+            <app-icon name="thumbs-up" [size]="15"></app-icon>
+          </div>
+          <div>
+            <div class="text-xs font-bold">{{ selectedLanguage === 'hi' ? 'सहायक / सही जानकारी (लाइक)' : 'Mark as
+              Helpful & Accurate' }}</div>
+            <div class="text-[10px] text-slate-400">{{ resource?.feedback?.upvotes || 0 }} citizens verified this</div>
+          </div>
+        </div>
+        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg">
+          +1 Like
+        </span>
+      </button>
+
+      <!-- 2. Report Issue / Inaccurate Info -->
+      <button (click)="closeMobileOverflow(); openReportModal()"
+        class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0">
+            <app-icon name="flag" [size]="15"></app-icon>
+          </div>
+          <div>
+            <div class="text-xs font-bold">{{ selectedLanguage === 'hi' ? 'गलत जानकारी रिपोर्ट करें' : 'Report
+              Inaccuracy / Closed' }}</div>
+            <div class="text-[10px] text-slate-400">Suggest correction for moderation desk</div>
+          </div>
+        </div>
+        <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
+      </button>
+
+      <!-- 3. Print Official Dossier -->
+      <button (click)="closeMobileOverflow(); printPage()"
+        class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+            <app-icon name="printer" [size]="15"></app-icon>
+          </div>
+          <div>
+            <div class="text-xs font-bold">{{ selectedLanguage === 'hi' ? 'आधिकारिक दस्तावेज़ प्रिंट करें' : 'Print
+              Official Dossier' }}</div>
+            <div class="text-[10px] text-slate-400">Formatted summary PDF / Print</div>
+          </div>
+        </div>
+        <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
+      </button>
+
+      <!-- 4. Mobile QR Code -->
+      <button (click)="closeMobileOverflow(); openQrModal()"
+        class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+            <app-icon name="qr-code" [size]="15"></app-icon>
+          </div>
+          <div>
+            <div class="text-xs font-bold">{{ selectedLanguage === 'hi' ? 'क्यूआर कोड देखें' : 'Show Location QR Code'
+              }}</div>
+            <div class="text-[10px] text-slate-400">Scan to open on other devices</div>
+          </div>
+        </div>
+        <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
+      </button>
+
+      <!-- 5. Copy Full Address -->
+      <button (click)="closeMobileOverflow(); copyAddress()"
+        class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
+        <div class="flex items-center gap-3">
+          <div
+            class="w-8 h-8 rounded-xl bg-slate-200/60 dark:bg-slate-700/60 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0">
+            <app-icon name="copy" [size]="15"></app-icon>
+          </div>
+          <div>
+            <div class="text-xs font-bold">{{ selectedLanguage === 'hi' ? 'पूरा पता कॉपी करें' : 'Copy Full Address' }}
+            </div>
+            <div class="text-[10px] text-slate-400 truncate max-w-[220px]">{{ resource?.address }}</div>
+          </div>
+        </div>
+        <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
       </button>
     </div>
   </div>

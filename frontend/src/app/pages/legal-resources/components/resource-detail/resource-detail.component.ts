@@ -1,9 +1,9 @@
 import {
-  Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef, inject
+  Component, OnInit, AfterViewInit, OnDestroy, HostListener, ChangeDetectionStrategy, ChangeDetectorRef, inject, DestroyRef
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LegalService } from '../../../../services/legal.service';
 import { ThemeService } from '../../../../services/theme.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
@@ -16,51 +16,87 @@ import { PrintService } from '../../../../services/print.service';
 import { BookmarkButtonComponent } from '../../../../components/bookmark-button/bookmark-button.component';
 import { InteractiveLikeComponent } from '../../../../components/interactive-like/interactive-like.component';
 import { ReportTriggerComponent } from '../../../../components/report-modal/report-trigger/report-trigger.component';
+import { QrModalComponent } from '../../../../components/qr-modal/qr-modal.component';
+import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
+import { ModerationReportService } from '../../../../services/moderation-report.service';
+import { ScrollService } from '../../../../services/scroll.service';
+import {
+  LegalResourceDetail,
+  DocumentChecklistItem,
+  EligibilityCategory,
+  ApplicationStep,
+  FacilityChip,
+  VerificationBadge,
+  ELIGIBILITY_CATEGORIES,
+  APPLICATION_STEPS,
+  DEFAULT_DOCUMENT_CHECKLIST
+} from './resource-detail.constants';
 
 @Component({
   selector: 'app-resource-detail',
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     RouterLink,
     TooltipDirective,
     IconComponent,
     LEGAL_RESOURCE_PIPES,
     BookmarkButtonComponent,
     InteractiveLikeComponent,
-    ReportTriggerComponent
+    ReportTriggerComponent,
+    QrModalComponent,
+    ShareMenuComponent
   ],
   templateUrl: './resource-detail.component.html',
   styleUrls: ['./resource-detail.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ResourceDetailComponent implements OnInit {
-  resource: any = null;
+export class ResourceDetailComponent implements OnInit, AfterViewInit, OnDestroy {
+  resource: LegalResourceDetail | null = null;
   isLoading = true;
   notFound = false;
-  mapType: 'roadmap' | 'satellite' = 'roadmap';
+
+  // Bottom Nav synchronization (Hide action bar when bottom navbar is visible)
+  isBottomNavVisible = true;
+  private scrollService = inject(ScrollService);
+
+  // Dynamic Navbar Height synchronization for mobile & desktop
+  navbarHeight = 68;
+  private navResizeObserver?: ResizeObserver;
+  private destroyRef = inject(DestroyRef);
 
   // Language support (Bilingual English / Hindi)
   selectedLanguage: 'en' | 'hi' = 'en';
 
   // Feedback State
   userVote: 'up' | 'down' | null = null;
-  showFeedbackModal = false;
-  selectedReason = '';
-  isSubmittingFeedback = false;
 
-  readonly FEEDBACK_REASONS = [
-    'Incorrect Contact Number',
-    'Permanently Closed or Shifted',
-    'Wrong Address / Coordinates',
-    'Inaccurate Operating Hours',
-    'Facilities Information Outdated'
-  ];
+  // Section 12 Free Legal Aid Eligibility Categories (Statutory under Legal Services Authorities Act, 1987)
+  showEligibilityDetails = false;
+  readonly ELIGIBILITY_CATEGORIES: EligibilityCategory[] = ELIGIBILITY_CATEGORIES;
+
+  // Interactive Document Checklist
+  documentChecklist: DocumentChecklistItem[] = JSON.parse(JSON.stringify(DEFAULT_DOCUMENT_CHECKLIST));
+
+  // 4-Step Application Procedure Steps
+  readonly APPLICATION_STEPS: ApplicationStep[] = APPLICATION_STEPS;
+
+  // QR Modal State
+  showQrModal = false;
+  qrModalData: any = null;
 
   // Nearby resources
   nearbyResources: any[] = [];
   isLoadingNearby = false;
+
+  // Cached template bindings
+  sanitizedMapUrl: SafeResourceUrl | null = null;
+  isMapLoaded = false;
+  facilityChips: FacilityChip[] = [];
+  verificationBadge: VerificationBadge | null = null;
+
+  // Mobile overflow menu
+  showMobileOverflow = false;
 
   constructor(
     private route: ActivatedRoute,
@@ -74,45 +110,127 @@ export class ResourceDetailComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    const id = this.route.snapshot.paramMap.get('id');
-    if (id) {
-      this.loadResource(id);
-      this.recordView(id);
-    } else {
-      this.notFound = true;
-      this.isLoading = false;
+    // Synchronize bottom nav scroll visibility
+    this.scrollService.scrollDirection$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(dir => {
+        this.isBottomNavVisible = dir === 'up';
+        this.cdr.markForCheck();
+      });
+
+    // Reactive route parameter listener (re-loads resource when navigating between nearby resources)
+    this.route.paramMap
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(params => {
+        const id = params.get('id');
+        if (id) {
+          this.isLoading = true;
+          this.notFound = false;
+          this.userVote = null;
+          this.documentChecklist = JSON.parse(JSON.stringify(DEFAULT_DOCUMENT_CHECKLIST));
+          this.loadResource(id);
+          this.recordView(id);
+          if (typeof window !== 'undefined') {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+          }
+        } else {
+          this.notFound = true;
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        }
+      });
+  }
+
+  ngAfterViewInit(): void {
+    this.updateNavbarHeight();
+    if (typeof document !== 'undefined') {
+      const nav = document.querySelector('nav') || document.querySelector('app-navbar nav');
+      if (nav && typeof ResizeObserver !== 'undefined') {
+        this.navResizeObserver = new ResizeObserver(() => {
+          this.updateNavbarHeight();
+        });
+        this.navResizeObserver.observe(nav);
+      }
+    }
+    setTimeout(() => {
+      this.updateNavbarHeight();
+    }, 0);
+  }
+
+  ngOnDestroy(): void {
+    this.navResizeObserver?.disconnect();
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('overflow-hidden');
+    }
+  }
+
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    this.updateNavbarHeight();
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown(event: KeyboardEvent): void {
+    const target = event.target as HTMLElement;
+    if (target && ['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) return;
+
+    if (event.key === 'p' || event.key === 'P') {
+      this.printPage();
+    } else if (event.key === 'd' || event.key === 'D') {
+      this.openDirections();
+    } else if (event.key === 'Escape') {
+      if (this.showQrModal) this.closeQrModal();
+      if (this.showMobileOverflow) this.closeMobileOverflow();
+    }
+  }
+
+  private updateNavbarHeight(): void {
+    if (typeof document === 'undefined') return;
+    const nav = document.querySelector('nav') || document.querySelector('app-navbar nav');
+    if (nav) {
+      const height = nav.offsetHeight;
+      if (height > 0 && height !== this.navbarHeight) {
+        this.navbarHeight = height;
+        this.cdr.markForCheck();
+      }
     }
   }
 
   private loadResource(id: string): void {
-    this.legalService.getResourceById(id).subscribe({
-      next: (res: any) => {
-        if (res?.success && res.data) {
-          this.resource = res.data;
-          this.updateSEO();
-          this.loadNearbyResources();
-        } else {
+    this.legalService.getResourceById(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res: any) => {
+          if (res?.success && res.data) {
+            this.resource = res.data;
+            this.buildCachedProperties();
+            this.updateSEO();
+            this.loadNearbyResources();
+          } else {
+            this.notFound = true;
+          }
+          this.isLoading = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
           this.notFound = true;
+          this.isLoading = false;
+          this.cdr.markForCheck();
         }
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.notFound = true;
-        this.isLoading = false;
-        this.cdr.markForCheck();
-      }
-    });
+      });
   }
 
   private recordView(id: string): void {
-    this.legalService.recordResourceView(id).subscribe({
-      error: () => { /* Silent fallback for telemetry */ }
-    });
+    this.legalService.recordResourceView(id)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        error: () => { /* Silent fallback for telemetry */ }
+      });
   }
 
   private updateSEO(): void {
     const r = this.resource;
+    if (!r) return;
     this.titleService.setTitle(`${r.name} — ${this.getTypeLabel(r.type)} | LegalConnect`);
     this.meta.updateTag({
       name: 'description',
@@ -128,21 +246,23 @@ export class ResourceDetailComponent implements OnInit {
       type: this.resource.type,
       limit: 4,
       page: 1
-    }).subscribe({
-      next: (res: any) => {
-        if (res?.success) {
-          this.nearbyResources = (res.data || [])
-            .filter((r: any) => r._id !== this.resource._id)
-            .slice(0, 3);
+    })
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res: any) => {
+          if (res?.success) {
+            this.nearbyResources = (res.data || [])
+              .filter((r: any) => r._id !== this.resource?._id)
+              .slice(0, 3);
+          }
+          this.isLoadingNearby = false;
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.isLoadingNearby = false;
+          this.cdr.markForCheck();
         }
-        this.isLoadingNearby = false;
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.isLoadingNearby = false;
-        this.cdr.markForCheck();
-      }
-    });
+      });
   }
 
   setLanguage(lang: 'en' | 'hi'): void {
@@ -150,76 +270,122 @@ export class ResourceDetailComponent implements OnInit {
     this.cdr.markForCheck();
   }
 
-  // Feedback Handlers
+  // Interactive Checklist Controls
+  toggleChecklistItem(item: DocumentChecklistItem): void {
+    item.checked = !item.checked;
+    this.cdr.markForCheck();
+  }
+
+  get completedChecklistCount(): number {
+    return this.documentChecklist.filter(i => i.checked).length;
+  }
+
+  resetChecklist(): void {
+    this.documentChecklist.forEach(i => i.checked = false);
+    this.cdr.markForCheck();
+  }
+
+  // Eligibility Details Toggle
+  toggleEligibility(): void {
+    this.showEligibilityDetails = !this.showEligibilityDetails;
+    this.cdr.markForCheck();
+  }
+
+  // Feedback Handlers with Verified Auth/Network Guard
   onUpvote(): void {
-    if (this.userVote === 'up') return;
-    this.userVote = 'up';
-    this.legalService.submitResourceFeedback(this.resource._id, true).subscribe({
-      next: (res) => {
-        if (res?.feedback) {
-          this.resource.feedback = res.feedback;
+    if (!this.resource || this.userVote === 'up') return;
+    this.legalService.submitResourceFeedback(this.resource._id, true)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
+          this.userVote = 'up';
+          if (res?.feedback && this.resource) {
+            this.resource.feedback = res.feedback;
+          }
+          this.snackbar.show('Thank you! Your feedback helps verify national directory accuracy.', 'success');
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          this.snackbar.show('Please sign in or try again later to submit feedback.', 'warning');
         }
-        this.snackbar.show('Thank you! Your feedback helps keep this directory reliable.', 'success');
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.snackbar.show('Could not submit feedback at this moment.', 'error');
-      }
-    });
+      });
   }
 
-  onDownvote(): void {
-    this.showFeedbackModal = true;
+  openReportModal(): void {
+    if (!this.resource) return;
+    this.reportService.openReport('LegalResource', this.resource._id, this.resource.name);
+  }
+
+  // QR Modal
+  openQrModal(): void {
+    if (!this.resource) return;
+    this.qrModalData = {
+      name: this.resource.name,
+      address: `${this.resource.address}, ${this.resource.city || ''}, ${this.resource.state || ''}`,
+      contactNumber: this.resource.contactNumber?.[0] || 'N/A'
+    };
+    this.showQrModal = true;
+    if (typeof document !== 'undefined') {
+      document.body.classList.add('overflow-hidden');
+    }
     this.cdr.markForCheck();
   }
 
-  submitDownvoteWithReason(): void {
-    if (this.isSubmittingFeedback) return;
-    this.isSubmittingFeedback = true;
-    this.userVote = 'down';
-
-    this.legalService.submitResourceFeedback(this.resource._id, false, this.selectedReason).subscribe({
-      next: (res) => {
-        if (res?.feedback) {
-          this.resource.feedback = res.feedback;
-        }
-        this.showFeedbackModal = false;
-        this.isSubmittingFeedback = false;
-        this.snackbar.show('Report received. Our moderation team will verify this listing.', 'info');
-        this.cdr.markForCheck();
-      },
-      error: () => {
-        this.showFeedbackModal = false;
-        this.isSubmittingFeedback = false;
-        this.snackbar.show('Could not submit report at this moment.', 'error');
-        this.cdr.markForCheck();
-      }
-    });
-  }
-
-  closeFeedbackModal(): void {
-    this.showFeedbackModal = false;
-    this.selectedReason = '';
+  closeQrModal(): void {
+    this.showQrModal = false;
+    this.qrModalData = null;
+    if (typeof document !== 'undefined' && !this.showMobileOverflow) {
+      document.body.classList.remove('overflow-hidden');
+    }
     this.cdr.markForCheck();
   }
 
-  // Map
-  get safeMapUrl(): SafeResourceUrl {
+  // Build all cached properties after resource data arrives
+  private buildCachedProperties(): void {
+    this.buildMapUrl();
+    this.facilityChips = this.computeFacilityChips();
+    this.verificationBadge = this.computeVerificationFreshness();
+  }
+
+  // Map URL
+  private buildMapUrl(): void {
+    if (!this.resource) return;
     let query: string;
-    if (this.resource?.coordinates?.lat && this.resource?.coordinates?.lng) {
+    if (this.resource.coordinates?.lat && this.resource.coordinates?.lng) {
       query = `${this.resource.coordinates.lat},${this.resource.coordinates.lng}`;
     } else {
       query = encodeURIComponent(`${this.resource?.address || ''}, ${this.resource?.city || ''}, ${this.resource?.state || ''}`.trim());
     }
     const url = `https://maps.google.com/maps?q=${query}&hl=en&z=16&output=embed`;
-    return this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    this.sanitizedMapUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
   }
 
-  toggleMapType(): void {
-    this.mapType = this.mapType === 'roadmap' ? 'satellite' : 'roadmap';
+  onMapLoad(): void {
+    this.isMapLoaded = true;
+    this.cdr.markForCheck();
   }
 
-  // Helpers (Delegates to centralized Single Source of Truth)
+  toggleMobileOverflow(): void {
+    this.showMobileOverflow = !this.showMobileOverflow;
+    if (typeof document !== 'undefined') {
+      if (this.showMobileOverflow) {
+        document.body.classList.add('overflow-hidden');
+      } else if (!this.showQrModal) {
+        document.body.classList.remove('overflow-hidden');
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  closeMobileOverflow(): void {
+    this.showMobileOverflow = false;
+    if (typeof document !== 'undefined' && !this.showQrModal) {
+      document.body.classList.remove('overflow-hidden');
+    }
+    this.cdr.markForCheck();
+  }
+
+  // Helpers
   getTypeLabel(type: string): string {
     return getResourceTypeLabel(type, this.selectedLanguage);
   }
@@ -228,7 +394,7 @@ export class ResourceDetailComponent implements OnInit {
     return getResourceTypeBadgeClass(type);
   }
 
-  getVerificationFreshness(): { label: string; colorClass: string; tooltip: string } | null {
+  private computeVerificationFreshness(): { label: string; colorClass: string; tooltip: string } | null {
     if (!this.resource?.lastAuditDate) return null;
     const auditDate = new Date(this.resource.lastAuditDate);
     const now = new Date();
@@ -255,15 +421,15 @@ export class ResourceDetailComponent implements OnInit {
     };
   }
 
-  getFacilityChips(): { label: string; iconKey: string; description: string }[] {
+  private computeFacilityChips(): { label: string; iconKey: string; description: string }[] {
     const f = this.resource?.facilities;
     if (!f) return [];
     const chips: { label: string; iconKey: string; description: string }[] = [];
-    if (f.hasEfiling) chips.push({ label: 'e-Filing', iconKey: 'efiling', description: 'e-Sewa Kendra digital filing desk available for electronic case filing' });
-    if (f.hasLADCS) chips.push({ label: 'LADCS', iconKey: 'ladcs', description: 'Legal Aid Defense Counsel System — free defense counsel assignment' });
-    if (f.hasVCRoom) chips.push({ label: 'VC Room', iconKey: 'vcroom', description: 'Video conferencing room for remote hearings and remand proceedings' });
-    if (f.hasLegalAidClinic) chips.push({ label: 'Legal Aid Clinic', iconKey: 'clinic', description: 'On-site free legal aid clinic with walk-in consultations' });
-    if (f.isWheelchairAccessible) chips.push({ label: 'Accessible', iconKey: 'accessible', description: 'Wheelchair ramps, accessible toilets, and lift facilities available' });
+    if (f.hasEfiling) chips.push({ label: 'e-Filing Kendra', iconKey: 'efiling', description: 'Digital e-Sewa filing desk for rapid electronic case registration' });
+    if (f.hasLADCS) chips.push({ label: 'LADCS Defense', iconKey: 'ladcs', description: 'Legal Aid Defense Counsel System — free full-time defense representation' });
+    if (f.hasVCRoom) chips.push({ label: 'VC Hearing Room', iconKey: 'vcroom', description: 'Dedicated video conferencing facility for virtual court hearings & remands' });
+    if (f.hasLegalAidClinic) chips.push({ label: 'Legal Aid Clinic', iconKey: 'clinic', description: 'Free walk-in consultation desk with panel advocates on duty' });
+    if (f.isWheelchairAccessible) chips.push({ label: 'Accessible Campus', iconKey: 'accessible', description: 'Wheelchair ramps, accessible restrooms, and barrier-free elevators' });
     return chips;
   }
 
@@ -281,18 +447,46 @@ export class ResourceDetailComponent implements OnInit {
   copyAddress(): void {
     if (this.resource?.address) {
       navigator.clipboard.writeText(this.resource.address).then(() => {
-        this.snackbar.show('Address copied to clipboard!', 'success');
+        this.snackbar.show('Official address copied to clipboard!', 'success');
       }).catch(() => {
         this.snackbar.show('Could not copy address.', 'error');
       });
     }
   }
 
+  copyCoordinates(): void {
+    if (this.resource?.coordinates?.lat && this.resource?.coordinates?.lng) {
+      const coords = `${this.resource.coordinates.lat}, ${this.resource.coordinates.lng}`;
+      navigator.clipboard.writeText(coords).then(() => {
+        this.snackbar.show(`Coordinates ${coords} copied!`, 'success');
+      }).catch(() => {
+        this.snackbar.show('Could not copy coordinates.', 'error');
+      });
+    } else {
+      this.copyAddress();
+    }
+  }
+
+  get shareUrl(): string {
+    return typeof window !== 'undefined' ? window.location.href : '';
+  }
+
+  get shareSubject(): string {
+    return this.resource ? `${this.resource.name} — ${this.getTypeLabel(this.resource.type)}` : 'Legal Resource';
+  }
+
+  get shareText(): string {
+    if (!this.resource) return '';
+    const phone = this.resource.contactNumber?.[0] || 'N/A';
+    return `🏛️ ${this.resource.name}\n📍 ${this.resource.address}, ${this.resource.city || ''}, ${this.resource.state || ''}\n📞 Phone: ${phone}\n🕒 Hours: ${this.resource.operatingHours || '10:00 AM - 5:00 PM'}`;
+  }
+
   shareResource(): void {
+    if (!this.resource) return;
     const url = window.location.href;
-    const title = `${this.resource?.name} — ${this.getTypeLabel(this.resource?.type)}`;
+    const title = `${this.resource.name} — ${this.getTypeLabel(this.resource.type)}`;
     if (navigator.share) {
-      navigator.share({ title, text: title, url }).then(() => {
+      navigator.share({ title, text: `${title}\n${this.resource.address}`, url }).then(() => {
         this.snackbar.show('Shared successfully!', 'success');
       }).catch(() => {
         navigator.clipboard.writeText(url);
@@ -305,21 +499,27 @@ export class ResourceDetailComponent implements OnInit {
     }
   }
 
+  openECourts(): void {
+    window.open('https://services.ecourts.gov.in/', '_blank', 'noopener,noreferrer');
+  }
+
   private printService = inject(PrintService);
+  private reportService = inject(ModerationReportService);
 
   printPage(): void {
     if (!this.resource) return;
-    const cardHtml = this.printService.buildResourceCards([this.resource]);
+    const dossierHtml = this.printService.buildResourceDossier(this.resource);
     this.printService.print({
       title: this.resource.name || 'Legal Resource Detail',
       subtitle: `Official Institutional Dossier • ${this.printService.getTypeLabel(this.resource.type)}`,
-      content: cardHtml,
+      content: dossierHtml,
       sealText: 'Verified Registry Entry • National Legal Infrastructure Directory',
       accentColor: '#4338ca',
+      classification: 'OFFICIAL REGISTRY DOSSIER'
     });
   }
 
   trackById(index: number, item: any): string {
-    return item._id;
+    return item._id || index.toString();
   }
 }

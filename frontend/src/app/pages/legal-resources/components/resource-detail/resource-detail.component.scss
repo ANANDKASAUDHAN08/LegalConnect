@@ -4,28 +4,13 @@
 
 .detail-ambient-wrapper {
   position: relative;
-  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.07) 0%, rgba(99, 102, 241, 0) 60%),
-    radial-gradient(circle at 90% 10%, rgba(16, 185, 129, 0.05) 0%, transparent 40%);
+  padding-top: 68px;
+  background: radial-gradient(circle at 50% 0%, rgba(99, 102, 241, 0.04) 0%, transparent 50%);
 }
 
 :host-context(.dark) .detail-ambient-wrapper {
-  background: radial-gradient(circle at 50% -10%, rgba(99, 102, 241, 0.15) 0%, rgba(99, 102, 241, 0) 60%),
-    radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
-    linear-gradient(180deg, rgba(15, 23, 42, 0.6) 0%, rgba(11, 15, 25, 1) 100%);
-}
-
-.glass-panel {
-  background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(226, 232, 240, 0.85);
-  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
-}
-
-:host-context(.dark) .glass-panel {
-  background: rgba(15, 23, 42, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  background: radial-gradient(circle at 50% -5%, rgba(99, 102, 241, 0.1) 0%, transparent 50%),
+    linear-gradient(180deg, rgba(15, 23, 42, 0.4) 0%, rgba(11, 15, 25, 1) 100%);
 }
 
 .live-pulse-dot {
@@ -46,6 +31,15 @@
   }
 }
 
+/* Hide scrollbars for swipeable chip bars */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 @keyframes live-beacon {
   0% {
     transform: scale(1);
@@ -56,5 +50,88 @@
   100% {
     transform: scale(2.4);
     opacity: 0;
+  }
+}
+
+/* Shimmer Wave Animation for Skeletons */
+.shimmer-wave {
+  background: linear-gradient(90deg, rgba(226, 232, 240, 0.6) 0%, rgba(241, 245, 249, 0.9) 50%, rgba(226, 232, 240, 0.6) 100%);
+  background-size: 200% 100%;
+  animation: shimmer-anim 1.8s ease-in-out infinite;
+}
+
+:host-context(.dark) .shimmer-wave {
+  background: linear-gradient(90deg, rgba(30, 41, 59, 0.6) 0%, rgba(51, 65, 85, 0.8) 50%, rgba(30, 41, 59, 0.6) 100%);
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer-anim {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Scale-up animation for overflow menu / modals */
+.animate-scale-up {
+  animation: scale-up 0.15s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes scale-up {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Fade-in animation for modal backdrop */
+.animate-fade-in {
+  animation: fade-in 0.2s ease-out forwards;
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Slide-up animation for mobile bottom bar */
+.animate-slide-up {
+  animation: slide-up 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Print optimizations */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  .detail-ambient-wrapper {
+    background: white !important;
+    padding-top: 0 !important;
   }
 }
