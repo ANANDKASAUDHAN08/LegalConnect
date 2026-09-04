@@ -21,6 +21,7 @@ export class FolderSidebarComponent {
   @Input() unassignedCount = 0;
   @Input() casePacksCount = 0;
   @Input() savedContactsCount = 0;
+  @Input() reportsCount = 0;
   @Input() sidebarFolderSearchQuery = '';
   @Input() showMobileFolderSearch = false;
   @Input() activeTab: any = 'bookmarks';

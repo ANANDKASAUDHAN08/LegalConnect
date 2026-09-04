@@ -7,6 +7,7 @@ import { BookmarkService } from '../../../../services/bookmark.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { IconComponent } from '../../../../components/icon/icon.component';
+import { CasePackExportService } from '../../../../services/case-pack-export.service';
 
 export type BookmarkTypeFilter = 'ALL' | 'BareActSection' | 'Lawyer' | 'LegalResource' | 'Helpline';
 
@@ -22,6 +23,7 @@ export class SavedLawsTabComponent implements OnInit {
   private universalBookmarks = inject(UniversalBookmarkService);
   private legacyBookmarkService = inject(BookmarkService);
   private snackbar = inject(SnackbarService);
+  private casePackExport = inject(CasePackExportService);
   private cdr = inject(ChangeDetectorRef);
 
   // Filter & Search Signals
@@ -208,5 +210,15 @@ export class SavedLawsTabComponent implements OnInit {
       },
       error: () => { /* Silent failure — non-blocking */ }
     });
+  }
+
+  // ── 1-Click Universal Case Pack Export (Delegated to CasePackExportService) ──
+
+  openExportHub(): void {
+    this.casePackExport.openExportHub(
+      this.filteredBookmarks(),
+      this.allBookmarks(),
+      this.selectedCollection()
+    );
   }
 }

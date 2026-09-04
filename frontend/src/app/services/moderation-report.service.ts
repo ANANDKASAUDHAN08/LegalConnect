@@ -215,7 +215,7 @@ export class ModerationReportService {
   /**
    * Withdraw / dismiss an active report record on both client and backend database.
    */
-  withdrawReport(targetType: string, targetId: string): void {
+  async withdrawReport(targetType: string, targetId: string): Promise<any> {
     // 1. Instantly delete from local reactive signal store & localStorage
     this.reportsStore.update(map => {
       const next = new Map(map);
@@ -225,18 +225,18 @@ export class ModerationReportService {
     this.saveReportsToStorage();
 
     // 2. Call backend withdraw endpoint to permanently mark report as Dismissed
-    this.http.post(`${this.apiUrl}/withdraw`, {
-      targetType,
-      targetId,
-      clientFingerprint: this.generateFingerprint()
-    }, { withCredentials: true }).subscribe({
-      next: () => {
-        // Successfully synced withdrawal with backend
-      },
-      error: () => {
-        // Optimistic offline mode - local withdrawal persists
-      }
-    });
+    try {
+      return await firstValueFrom(
+        this.http.post<any>(`${this.apiUrl}/withdraw`, {
+          targetType,
+          targetId,
+          clientFingerprint: this.generateFingerprint()
+        }, { withCredentials: true })
+      );
+    } catch {
+      // Optimistic offline mode - local withdrawal persists
+      return { success: true };
+    }
   }
 
   // ── Fallback Reason Taxonomy (Resilience for Offline / Error state) ──
@@ -373,6 +373,15 @@ export class ModerationReportService {
       params: { page: page.toString(), limit: limit.toString() },
       withCredentials: true
     });
+  }
+
+  /**
+   * Appeal or request re-review for a closed ticket with additional explanation.
+   */
+  async appealReport(referenceId: string, appealReason: string, evidenceUrl?: string): Promise<any> {
+    return firstValueFrom(
+      this.http.post<any>(`${this.apiUrl}/appeal`, { referenceId, appealReason, evidenceUrl }, { withCredentials: true })
+    );
   }
 
   /**

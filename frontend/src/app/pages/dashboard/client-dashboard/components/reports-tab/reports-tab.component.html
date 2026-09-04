@@ -1,226 +1,437 @@
-<div class="space-y-6 animate-fade-in">
+<div class="space-y-3 animate-fade-in">
 
-  <!-- Summary Stats Overview -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3.5">
-    <div
-      class="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs flex flex-col justify-between">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-500 dark:text-slate-400">Total Reports</span>
-        <div
-          class="w-7 h-7 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
+  <!-- ── 1. UNIFIED INTERACTIVE KPI & FILTER CARDS ── -->
+  <section class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5" role="tablist" aria-label="Report status filters">
+
+    <!-- Card 1: All Reports (Rose) -->
+    <button type="button" role="tab" [attr.aria-selected]="statusFilter() === 'ALL'" (click)="setFilter('ALL')"
+      [appTooltip]="'Filter by all reports (' + totalCount() + ' submissions)'" tooltipPlacement="top"
+      class="group relative p-3 sm:p-4 rounded-2xl text-left transition-all duration-200 border cursor-pointer select-none active:scale-[0.98] flex flex-col justify-between"
+      [class]="statusFilter() === 'ALL'
+        ? 'bg-white dark:bg-slate-900 border-rose-500/80 dark:border-rose-400 shadow-md ring-2 ring-rose-500/20'
+        : 'bg-white/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800/60 hover:border-rose-500/80 dark:hover:border-rose-400 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm'">
+
+      <div class="flex items-center justify-between w-full">
+        <span class="text-xs font-bold transition-colors"
+          [class]="statusFilter() === 'ALL' ? 'text-rose-600 dark:text-rose-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400'">
+          All Reports
+        </span>
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+          [class]="statusFilter() === 'ALL' ? 'bg-rose-600 text-white' : 'bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 group-hover:bg-rose-500/20'">
           <app-icon name="shield" [size]="14"></app-icon>
         </div>
       </div>
-      <div class="mt-2.5">
-        <span class="text-xl font-black text-slate-900 dark:text-white">{{ totalCount() }}</span>
-        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">All time submissions</p>
-      </div>
-    </div>
 
-    <div
-      class="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs flex flex-col justify-between">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-amber-600 dark:text-amber-400">Under Review</span>
-        <div
-          class="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+      <div class="mt-2.5 sm:mt-3 flex items-baseline justify-between w-full">
+        <div>
+          <span class="text-2xl font-black tracking-tight text-slate-900 dark:text-white">{{ totalCount() }}</span>
+          <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">All time submissions</p>
+        </div>
+        <span *ngIf="statusFilter() === 'ALL'"
+          class="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-rose-500/10 text-rose-600 dark:text-rose-400">
+          Selected
+        </span>
+      </div>
+    </button>
+
+    <!-- Card 2: Under Review (Amber) -->
+    <button type="button" role="tab" [attr.aria-selected]="statusFilter() === 'ACTIVE'" (click)="setFilter('ACTIVE')"
+      [appTooltip]="'Filter by pending moderation (' + pendingCount() + ' in review)'" tooltipPlacement="top"
+      class="group relative p-3 sm:p-4 rounded-2xl text-left transition-all duration-200 border cursor-pointer select-none active:scale-[0.98] flex flex-col justify-between"
+      [class]="statusFilter() === 'ACTIVE'
+        ? 'bg-white dark:bg-slate-900 border-amber-500/80 dark:border-amber-400 shadow-md ring-2 ring-amber-500/20'
+        : 'bg-white/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800/60 hover:border-amber-500/80 dark:hover:border-amber-400 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm'">
+
+      <div class="flex items-center justify-between w-full">
+        <span class="text-xs font-bold transition-colors"
+          [class]="statusFilter() === 'ACTIVE' ? 'text-amber-600 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-amber-600 dark:group-hover:text-amber-400'">
+          Under Review
+        </span>
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+          [class]="statusFilter() === 'ACTIVE' ? 'bg-amber-500 text-white' : 'bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500/20'">
           <app-icon name="clock" [size]="14"></app-icon>
         </div>
       </div>
-      <div class="mt-2.5">
-        <span class="text-xl font-black text-amber-600 dark:text-amber-400">{{ pendingCount() }}</span>
-        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">Pending moderation</p>
-      </div>
-    </div>
 
-    <div
-      class="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs flex flex-col justify-between">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400">Action Taken</span>
-        <div
-          class="w-7 h-7 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+      <div class="mt-2.5 sm:mt-3 flex items-baseline justify-between w-full">
+        <div>
+          <span class="text-2xl font-black tracking-tight text-amber-600 dark:text-amber-400">{{ pendingCount()
+            }}</span>
+          <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Pending moderation</p>
+        </div>
+        <span *ngIf="statusFilter() === 'ACTIVE'"
+          class="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          Selected
+        </span>
+      </div>
+    </button>
+
+    <!-- Card 3: Action Taken (Emerald) -->
+    <button type="button" role="tab" [attr.aria-selected]="statusFilter() === 'RESOLVED'"
+      (click)="setFilter('RESOLVED')" [appTooltip]="'Filter by resolved changes (' + resolvedCount() + ' updated)'"
+      tooltipPlacement="top"
+      class="group relative p-3 sm:p-4 rounded-2xl text-left transition-all duration-200 border cursor-pointer select-none active:scale-[0.98] flex flex-col justify-between"
+      [class]="statusFilter() === 'RESOLVED'
+        ? 'bg-white dark:bg-slate-900 border-emerald-500/80 dark:border-emerald-400 shadow-md ring-2 ring-emerald-500/20'
+        : 'bg-white/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800/60 hover:border-emerald-500/80 dark:hover:border-emerald-400 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm'">
+
+      <div class="flex items-center justify-between w-full">
+        <span class="text-xs font-bold transition-colors"
+          [class]="statusFilter() === 'RESOLVED' ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400'">
+          Action Taken
+        </span>
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+          [class]="statusFilter() === 'RESOLVED' ? 'bg-emerald-500 text-white' : 'bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20'">
           <app-icon name="check-circle" [size]="14"></app-icon>
         </div>
       </div>
-      <div class="mt-2.5">
-        <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">{{ resolvedCount() }}</span>
-        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">Resolved & updated</p>
-      </div>
-    </div>
 
-    <div
-      class="p-4 rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs flex flex-col justify-between">
-      <div class="flex items-center justify-between">
-        <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Verified Compliant</span>
-        <div
-          class="w-7 h-7 rounded-lg bg-slate-500/10 dark:bg-slate-500/20 text-slate-600 dark:text-slate-400 flex items-center justify-center">
+      <div class="mt-2.5 sm:mt-3 flex items-baseline justify-between w-full">
+        <div>
+          <span class="text-2xl font-black tracking-tight text-emerald-600 dark:text-emerald-400">{{ resolvedCount()
+            }}</span>
+          <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Changes applied</p>
+        </div>
+        <span *ngIf="statusFilter() === 'RESOLVED'"
+          class="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+          Selected
+        </span>
+      </div>
+    </button>
+
+    <!-- Card 4: Verified Compliant (Sky) -->
+    <button type="button" role="tab" [attr.aria-selected]="statusFilter() === 'DISMISSED'"
+      (click)="setFilter('DISMISSED')"
+      [appTooltip]="'Filter by verified compliant (' + dismissedCount() + ' accurate records)'" tooltipPlacement="top"
+      class="group relative p-3 sm:p-4 rounded-2xl text-left transition-all duration-200 border cursor-pointer select-none active:scale-[0.98] flex flex-col justify-between"
+      [class]="statusFilter() === 'DISMISSED'
+        ? 'bg-white dark:bg-slate-900 border-sky-500/80 dark:border-sky-400 shadow-md ring-2 ring-sky-500/20'
+        : 'bg-white/70 dark:bg-slate-900/60 border-slate-200/70 dark:border-slate-800/60 hover:border-sky-500/80 dark:hover:border-sky-400 hover:bg-white dark:hover:bg-slate-900 hover:shadow-sm'">
+
+      <div class="flex items-center justify-between w-full">
+        <span class="text-xs font-bold transition-colors"
+          [class]="statusFilter() === 'DISMISSED' ? 'text-sky-600 dark:text-sky-400' : 'text-slate-500 dark:text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400'">
+          Verified Compliant
+        </span>
+        <div class="w-7 h-7 rounded-lg flex items-center justify-center transition-colors"
+          [class]="statusFilter() === 'DISMISSED' ? 'bg-sky-600 text-white' : 'bg-sky-500/10 dark:bg-sky-500/20 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500/20'">
           <app-icon name="shield-check" [size]="14"></app-icon>
         </div>
       </div>
-      <div class="mt-2.5">
-        <span class="text-xl font-black text-slate-700 dark:text-slate-300">{{ dismissedCount() }}</span>
-        <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5 font-medium">No violation found</p>
+
+      <div class="mt-2.5 sm:mt-3 flex items-baseline justify-between w-full">
+        <div>
+          <span class="text-2xl font-black tracking-tight text-sky-600 dark:text-sky-400">{{ dismissedCount() }}</span>
+          <p class="text-[10px] text-slate-400 dark:text-slate-500 font-medium mt-0.5">Verified accurate</p>
+        </div>
+        <span *ngIf="statusFilter() === 'DISMISSED'"
+          class="text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400">
+          Selected
+        </span>
+      </div>
+    </button>
+
+  </section>
+
+  <!-- ── SUBTLE & PREMIUM LINE DIVIDER (Mobile & Desktop) ── -->
+  <div class="relative" aria-hidden="true">
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-200/90 dark:via-slate-800/90 to-transparent">
+    </div>
+  </div>
+
+  <!-- ── 2. TOOLBAR: SEARCH & ACTIONS (Floating Seamless Single-Line) ── -->
+  <div class="flex items-center justify-between gap-2 sm:gap-3 py-0.5 sm:py-1">
+
+    <!-- Search Box with Debounce & Quick-Clear -->
+    <div class="relative flex-1 min-w-0">
+      <app-icon *ngIf="!isSearching()" name="search" [size]="14"
+        class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none transition-opacity"></app-icon>
+      <div *ngIf="isSearching()"
+        class="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 border-2 border-rose-500 border-t-transparent rounded-full animate-spin">
+      </div>
+
+      <input #searchInput type="text" [value]="searchQuery()" (input)="onSearchInput($any($event.target).value)"
+        (keydown)="onSearchKeydown($event)" placeholder="Search tickets, entities, reasons, notes..."
+        class="w-full pl-9 pr-14 sm:pr-16 py-2 sm:py-2.5 text-xs sm:text-sm rounded-xl bg-slate-100/90 dark:bg-slate-800/70 border border-slate-200/70 dark:border-slate-700/60 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 transition-all" />
+
+      <!-- Quick Clear Button (Esc) -->
+      <button *ngIf="searchQuery()" (click)="clearSearch()" [appTooltip]="'Clear search query (Esc)'"
+        tooltipPlacement="top"
+        class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border-0 bg-transparent cursor-pointer p-1">
+        <app-icon name="x" [size]="12"></app-icon>
+      </button>
+    </div>
+
+    <!-- Match Counter Badge (Shown when filtered or searching) -->
+    <span *ngIf="debouncedQuery() || statusFilter() !== 'ALL'"
+      class="hidden lg:inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shrink-0 select-none">
+      {{ filteredReports().length }} of {{ totalCount() }}
+    </span>
+
+    <!-- Sort Order Toggle Button with Distinct Icons for Newest / Oldest / Severity -->
+    <button type="button" (click)="cycleSortOrder()"
+      [appTooltip]="sortOrder() === 'newest' ? 'Sorted by Newest First (Click to cycle)' : sortOrder() === 'oldest' ? 'Sorted by Oldest First (Click to cycle)' : 'Sorted by Highest Severity (Click to cycle)'"
+      tooltipPlacement="top"
+      class="shrink-0 inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-2 sm:py-2.5 rounded-xl text-xs font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors border-0 cursor-pointer active:scale-95">
+      <app-icon [name]="getSortIcon()" [size]="12"></app-icon>
+      <span class="hidden md:inline">{{ sortOrder() === 'newest' ? 'Newest' : sortOrder() === 'oldest' ? 'Oldest' :
+        'Severity' }}</span>
+    </button>
+
+    <!-- Filter Reset Chip (Shown when filtered or searching) -->
+    <button *ngIf="statusFilter() !== 'ALL' || searchQuery() || debouncedQuery()" (click)="resetFilters()"
+      [appTooltip]="'Reset all active filters and search query'" tooltipPlacement="top"
+      class="shrink-0 inline-flex items-center gap-1 sm:gap-1.5 px-2.5 py-2 sm:py-2.5 rounded-xl text-xs font-semibold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-900/60 transition-colors border-0 cursor-pointer active:scale-95">
+      <app-icon name="rotate-ccw" [size]="11"></app-icon>
+      <span class="hidden sm:inline">Reset</span>
+    </button>
+
+    <!-- Primary Action: Report an Issue -->
+    <button (click)="openNewReportModal()"
+      [appTooltip]="'Submit a report about inaccurate or outdated legal information'" tooltipPlacement="top"
+      class="shrink-0 inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs hover:shadow transition-all border-0 cursor-pointer active:scale-95 whitespace-nowrap">
+      <app-icon name="plus" [size]="13" class="text-white shrink-0"></app-icon>
+      <span>Report<span class="hidden sm:inline"> an Issue</span></span>
+    </button>
+
+  </div>
+
+  <!-- ── Error Banner (Network / Server Failure) ── -->
+  <div *ngIf="hasError() && !isLoading()"
+    class="p-4 text-center rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400">
+    <p class="text-xs font-semibold">Unable to sync moderation reports. Please check your connection.</p>
+    <button (click)="loadReports()" [appTooltip]="'Retry fetching moderation reports'" tooltipPlacement="top"
+      class="mt-2.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white border-0 cursor-pointer transition-colors">
+      Retry
+    </button>
+  </div>
+
+  <!-- ── 3. LOADING SKELETON ── -->
+  <div *ngIf="isLoading()" class="space-y-3.5 sm:space-y-4">
+    <div *ngFor="let i of [1, 2]"
+      class="p-3.5 sm:p-5 rounded-2xl bg-white/70 dark:bg-slate-900/70 border border-slate-200/60 dark:border-slate-800/60 animate-pulse space-y-3">
+      <!-- Row 1: Status & Ref -->
+      <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/70">
+        <div class="h-5 sm:h-6 w-24 sm:w-32 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+        <div class="h-5 sm:h-6 w-28 sm:w-36 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
+      </div>
+
+      <!-- Row 2: Target Meta & Headline -->
+      <div class="pt-1 space-y-2">
+        <div class="flex items-center gap-2">
+          <div class="h-4 w-16 sm:w-20 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+          <div class="h-3.5 w-24 sm:w-28 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+          <div class="h-4 w-14 sm:w-16 bg-slate-200 dark:bg-slate-800 rounded-md ml-auto"></div>
+        </div>
+        <div class="h-5 sm:h-6 w-4/5 sm:w-3/5 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+      </div>
+
+      <!-- Row 3: Citizen Feedback Note -->
+      <div class="p-3 sm:p-3.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 space-y-2">
+        <div class="h-3 w-28 sm:w-32 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+        <div class="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+        <div class="h-3.5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+      </div>
+
+      <!-- Row 4: Timeline (Desktop) / Stepper (Mobile) -->
+      <div class="hidden sm:flex pt-3 border-t border-slate-100 dark:border-slate-800/60 justify-between items-center">
+        <div class="h-3.5 w-28 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+        <div class="h-1 flex-1 mx-3 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+        <div class="h-3.5 w-28 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+        <div class="h-1 flex-1 mx-3 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+        <div class="h-3.5 w-28 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+      </div>
+      <div
+        class="flex sm:hidden pt-2.5 border-t border-slate-100 dark:border-slate-800/60 justify-between items-center">
+        <div class="h-3.5 w-28 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+        <div class="h-3 w-20 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+      </div>
+
+      <!-- Row 5: Action Buttons Footer -->
+      <div
+        class="pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+        <div class="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+          <div class="h-8 sm:h-9 flex-1 sm:w-28 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+          <div class="h-8 sm:h-9 flex-1 sm:w-36 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+        </div>
+        <div class="h-3 w-40 bg-slate-200 dark:bg-slate-800 rounded-md mx-auto sm:mx-0"></div>
       </div>
     </div>
   </div>
 
-  <!-- Filters & Search Toolbar -->
-  <div
-    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-3 rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs">
-
-    <!-- Filter Pills -->
-    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-      <button (click)="statusFilter.set('ALL')"
-        [class]="statusFilter() === 'ALL' ? 'bg-indigo-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-semibold'"
-        class="px-3 py-1.5 rounded-xl text-xs transition-all border-none cursor-pointer shrink-0">
-        All Reports ({{ totalCount() }})
-      </button>
-
-      <button (click)="statusFilter.set('ACTIVE')"
-        [class]="statusFilter() === 'ACTIVE' ? 'bg-amber-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-semibold'"
-        class="px-3 py-1.5 rounded-xl text-xs transition-all border-none cursor-pointer shrink-0 flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-        Under Review ({{ pendingCount() }})
-      </button>
-
-      <button (click)="statusFilter.set('RESOLVED')"
-        [class]="statusFilter() === 'RESOLVED' ? 'bg-emerald-600 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-semibold'"
-        class="px-3 py-1.5 rounded-xl text-xs transition-all border-none cursor-pointer shrink-0 flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-        Action Taken ({{ resolvedCount() }})
-      </button>
-
-      <button (click)="statusFilter.set('DISMISSED')"
-        [class]="statusFilter() === 'DISMISSED' ? 'bg-slate-700 text-white font-bold shadow-xs' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 font-semibold'"
-        class="px-3 py-1.5 rounded-xl text-xs transition-all border-none cursor-pointer shrink-0">
-        Compliant ({{ dismissedCount() }})
-      </button>
-    </div>
-
-    <!-- Search Input -->
-    <div class="relative w-full sm:w-64 shrink-0">
-      <app-icon name="search" [size]="13" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></app-icon>
-      <input type="text" [(ngModel)]="searchQuery" placeholder="Search reference, target..."
-        class="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/50 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all">
-    </div>
-  </div>
-
-  <!-- Loading State -->
-  <div *ngIf="isLoading()" class="space-y-3">
-    <div *ngFor="let i of [1,2,3]"
-      class="p-5 rounded-2xl bg-white/50 dark:bg-slate-900/40 border border-slate-200/50 dark:border-slate-800/40 animate-pulse flex flex-col gap-3">
-      <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
-      <div class="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
-      <div class="h-8 bg-slate-200 dark:bg-slate-800 rounded w-full"></div>
-    </div>
-  </div>
-
-  <!-- Empty State -->
-  <div *ngIf="!isLoading() && filteredReports().length === 0"
-    class="p-10 text-center rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs">
+  <!-- ── 4. EMPTY STATES ── -->
+  <!-- Total Empty (0 reports submitted ever) -->
+  <div *ngIf="!isLoading() && !hasError() && totalCount() === 0"
+    class="p-8 sm:p-12 text-center rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs">
     <div
-      class="w-14 h-14 mx-auto rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-3.5">
+      class="w-14 h-14 mx-auto rounded-2xl bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3.5">
       <app-icon name="shield-check" [size]="28"></app-icon>
     </div>
-    <h3 class="text-sm font-bold text-slate-900 dark:text-white">No Reports Found</h3>
+    <h3 class="text-base font-bold text-slate-900 dark:text-white">No Reports Submitted Yet</h3>
     <p class="text-xs text-slate-500 dark:text-slate-400 max-w-md mx-auto mt-1 leading-relaxed">
-      {{ searchQuery() ? 'No reports match your search query.' : 'You have not submitted any content reports yet. When
-      you report outdated info or inaccuracies on LegalConnect, track their resolution status here.' }}
+      Help keep LegalConnect 100% accurate. If you notice outdated lawyer contact info, incorrect court addresses, or
+      stale helpline numbers, submit an issue to track its verified resolution here.
     </p>
+    <button (click)="openNewReportModal()" [appTooltip]="'Submit a report to verify legal information'"
+      tooltipPlacement="top"
+      class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 text-white shadow-sm hover:bg-rose-500 transition-all border-0 cursor-pointer active:scale-95">
+      <app-icon name="plus" [size]="13"></app-icon>
+      <span>Submit Your First Report</span>
+    </button>
   </div>
 
-  <!-- Report Items List -->
-  <div *ngIf="!isLoading() && filteredReports().length > 0" class="space-y-3.5">
-    <div *ngFor="let rep of filteredReports(); trackBy: trackByReportId"
-      class="p-5 rounded-2xl bg-white/85 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/70 shadow-xs hover:shadow-md transition-all">
+  <!-- Filter/Search Empty (Has reports, but active view has 0 items) -->
+  <div *ngIf="!isLoading() && !hasError() && totalCount() > 0 && filteredReports().length === 0"
+    class="p-8 text-center rounded-2xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-md border border-slate-200/70 dark:border-slate-800/60 shadow-xs">
+    <div
+      class="w-12 h-12 mx-auto rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-400 flex items-center justify-center mb-3">
+      <app-icon name="filter" [size]="22"></app-icon>
+    </div>
+    <h3 class="text-sm font-bold text-slate-900 dark:text-white">No Reports Match This View</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto mt-1">
+      {{ (debouncedQuery() || searchQuery()) ? 'No reports matched "' + (debouncedQuery() || searchQuery()) + '". Try
+      clearing your search.' : 'You have no tickets currently under this status filter.' }}
+    </p>
+    <button (click)="resetFilters()" [appTooltip]="'Clear active filters and view all ' + totalCount() + ' reports'"
+      tooltipPlacement="top"
+      class="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-slate-200/80 dark:bg-slate-800 text-slate-800 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors border-0 cursor-pointer">
+      <app-icon name="rotate-ccw" [size]="12"></app-icon>
+      <span>View All Reports ({{ totalCount() }})</span>
+    </button>
+  </div>
 
-      <!-- Top Row: Reference, Target Badge, Status -->
-      <div
-        class="flex flex-wrap items-center justify-between gap-2.5 pb-3 border-b border-slate-100 dark:border-slate-800/60">
-        <div class="flex items-center gap-2 flex-wrap">
-          <!-- Reference Tag with Click to Copy -->
-          <button (click)="copyRef(rep.referenceId, $event)" [appTooltip]="'Click to copy ticket reference'"
-            tooltipPlacement="top"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 hover:bg-indigo-50 hover:text-indigo-600 dark:hover:bg-indigo-950/30 dark:hover:text-indigo-400 transition-colors border-0 cursor-pointer">
-            <span>{{ rep.referenceId || ('#REP-' + rep.id) }}</span>
-            <app-icon name="copy" [size]="11" class="opacity-60"></app-icon>
-          </button>
+  <!-- ── 5. REPORT ITEMS LIST (ENTERPRISE ACTIONABLE CARDS) ── -->
+  <div *ngIf="!isLoading() && filteredReports().length > 0" class="space-y-3.5 sm:space-y-4">
+    <article *ngFor="let rep of filteredReports(); trackBy: trackByReportId"
+      class="p-3.5 sm:p-5 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-md transition-all">
 
-          <!-- Target Type Badge -->
-          <span [class]="getTargetBadgeClass(rep.targetType)"
-            class="px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider">
-            {{ rep.targetType }}
-          </span>
+      <!-- ── ROW 1: STATUS & REFERENCE ID (GUARANTEED NO OVERLAP / NO WRAP) ── -->
+      <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/70">
 
-          <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate max-w-xs">
-            {{ rep.targetTitle }}
-          </span>
-        </div>
-
-        <!-- Status Badge -->
-        <div class="flex items-center gap-2">
-          <!-- Pending / Under Review -->
+        <!-- Left: Status Badge -->
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-bold border whitespace-nowrap shrink-0"
+          [class]="getDisplayStatus(rep).badgeClass">
           <span *ngIf="rep.status === 'Pending' || rep.status === 'UnderReview'"
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-            Under Review
-          </span>
+            class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <app-icon *ngIf="rep.status !== 'Pending' && rep.status !== 'UnderReview'" [name]="getDisplayStatus(rep).icon"
+            [size]="12"></app-icon>
+          <span class="sm:hidden">{{ getDisplayStatus(rep).shortLabel }}</span>
+          <span class="hidden sm:inline">{{ getDisplayStatus(rep).label }}</span>
+        </span>
 
-          <!-- Resolved / Action Taken -->
-          <span *ngIf="rep.status === 'Resolved' || rep.status === 'ActionTaken'"
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            <app-icon name="check" [size]="12"></app-icon>
-            Action Taken & Resolved
-          </span>
+        <!-- Right: Click to Copy Monospace Ticket Reference -->
+        <button type="button" (click)="copyRef(rep.referenceId, $event)"
+          [appTooltip]="'Click to copy ticket reference #' + (rep.referenceId || rep.id)" tooltipPlacement="top"
+          class="inline-flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-mono font-bold bg-slate-100 dark:bg-slate-800/90 text-slate-700 dark:text-slate-300 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 active:scale-[0.98] transition-all border-0 cursor-pointer whitespace-nowrap shrink-0">
+          <span class="whitespace-nowrap">{{ rep.referenceId || ('#REP-' + rep.id) }}</span>
+          <app-icon name="copy" [size]="11" class="opacity-60"></app-icon>
+        </button>
 
-          <!-- Dismissed -->
-          <span *ngIf="rep.status === 'Dismissed'"
-            class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
-            <app-icon name="shield-check" [size]="12"></app-icon>
-            Verified Compliant
-          </span>
-        </div>
       </div>
 
-      <!-- Report Details -->
-      <div class="py-3 text-xs space-y-2">
-        <div class="flex items-center gap-2 text-slate-500 dark:text-slate-400">
-          <span class="font-bold text-slate-700 dark:text-slate-300">Category:</span>
-          <span class="font-semibold text-slate-800 dark:text-slate-200">{{ formatReason(rep.reasonCategory) }}</span>
-          <span class="text-slate-300 dark:text-slate-700">•</span>
-          <span>Submitted on {{ rep.createdAt | date:'mediumDate' }}</span>
+      <!-- ── ROW 2: TARGET HEADLINE & ENTITY TYPE METADATA ── -->
+      <div class="pt-2.5">
+
+        <!-- Subrow: Target Type Pill + Submission Date + Severity -->
+        <div class="flex items-center gap-2 flex-wrap mb-1 text-xs">
+          <!-- Target Entity Type Pill -->
+          <span [class]="getTargetBadgeClass(rep.targetType)"
+            class="px-2 py-0.5 rounded-md text-[10px] font-bold border uppercase tracking-wider shrink-0 whitespace-nowrap">
+            {{ formatTargetType(rep.targetType) }}
+          </span>
+
+          <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700 inline-block"></span>
+
+          <span class="text-[11px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+            Submitted {{ rep.createdAt | date:'mediumDate' }}
+          </span>
+
+          <div *ngIf="rep.severity" class="ml-auto shrink-0">
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md border uppercase tracking-wider"
+              [class]="rep.severity === 'Critical' ? 'bg-rose-500/10 text-rose-600 border-rose-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700'">
+              {{ rep.severity }}
+            </span>
+          </div>
         </div>
 
+        <!-- Clickable Entity Title (Deep-Link) -->
+        <button type="button" (click)="viewTarget(rep, $event)"
+          [appTooltip]="'Open ' + rep.targetTitle + ' in full detail view'" tooltipPlacement="top"
+          class="group inline-flex items-center gap-1.5 text-left border-0 bg-transparent cursor-pointer p-0 w-full mt-0.5">
+          <span
+            class="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-rose-600 dark:group-hover:text-rose-400 underline decoration-transparent group-hover:decoration-rose-500/50 transition-colors leading-snug break-words">
+            {{ rep.targetTitle }}
+          </span>
+          <app-icon name="external-link" [size]="13"
+            class="shrink-0 text-slate-400 group-hover:text-rose-500 transition-colors mt-0.5"></app-icon>
+        </button>
+
+      </div>
+
+      <!-- ── ROW 3: CITIZEN FEEDBACK & SUBMISSION DETAILS ── -->
+      <div
+        class="mt-2.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800/60">
+        <div
+          class="flex items-center gap-1.5 mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          <app-icon name="message-square" [size]="11"></app-icon>
+          <span>Category:</span>
+          <span class="text-slate-700 dark:text-slate-300 font-semibold normal-case text-[11px]">
+            {{ formatReason(rep.reasonCategory) }}
+          </span>
+        </div>
         <p
-          class="text-slate-600 dark:text-slate-300 bg-slate-50/70 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-100 dark:border-slate-800/50 leading-relaxed font-normal">
+          class="text-xs sm:text-[13px] text-slate-700 dark:text-slate-200 leading-relaxed font-normal break-words m-0">
           {{ rep.description }}
         </p>
       </div>
 
-      <!-- Resolution Feedback Box (If Moderator Note or Resolution Exists) -->
-      <div *ngIf="rep.adminResolutionNotes || rep.resolvedAt"
-        class="mt-2 p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-800/40">
-        <div class="flex items-center justify-between text-xs font-bold text-emerald-700 dark:text-emerald-300 mb-1">
-          <span class="flex items-center gap-1.5">
-            <app-icon name="shield" [size]="13" class="text-emerald-600"></app-icon>
-            Trust & Safety Resolution Note
+      <!-- ── ROW 4: ATTACHED EVIDENCE (IF PROVIDED) ── -->
+      <div *ngIf="rep.evidenceUrl" class="mt-2">
+        <button type="button" (click)="openEvidencePreview(rep.evidenceUrl, $event)"
+          [appTooltip]="'View uploaded verification proof screenshot'" tooltipPlacement="top"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50/80 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 border border-rose-200/60 dark:border-rose-800/40 hover:bg-rose-100 dark:hover:bg-rose-900/60 active:scale-[0.98] transition-all cursor-pointer">
+          <app-icon name="paperclip" [size]="12"></app-icon>
+          <span>View Attached Evidence / Proof</span>
+        </button>
+      </div>
+
+      <!-- ── ROW 5: TRUST & SAFETY RESOLUTION OUTCOME ── -->
+      <div *ngIf="rep.status !== 'Pending' && rep.status !== 'UnderReview'"
+        class="mt-3 p-3.5 rounded-xl border transition-colors" [class]="isDismissedOrNoAction(rep)
+          ? 'bg-sky-50/70 dark:bg-sky-950/25 border-sky-200/70 dark:border-sky-800/50'
+          : 'bg-emerald-50/70 dark:bg-emerald-950/25 border-emerald-200/70 dark:border-emerald-800/50'">
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 mb-2 pb-1.5 border-b"
+          [class]="isDismissedOrNoAction(rep) ? 'border-sky-200/50 dark:border-sky-800/40' : 'border-emerald-200/50 dark:border-emerald-800/40'">
+          <span class="inline-flex items-center gap-1.5 text-xs font-bold"
+            [class]="isDismissedOrNoAction(rep) ? 'text-sky-900 dark:text-sky-300' : 'text-emerald-900 dark:text-emerald-300'">
+            <app-icon [name]="isDismissedOrNoAction(rep) ? 'shield-check' : 'check-circle'" [size]="13"
+              [class]="isDismissedOrNoAction(rep) ? 'text-sky-600 dark:text-sky-400' : 'text-emerald-600 dark:text-emerald-400'"></app-icon>
+            Trust &amp; Safety Verification Outcome
           </span>
-          <span *ngIf="rep.resolvedAt" class="text-[10px] font-normal text-emerald-600/80 dark:text-emerald-400/80">
-            Resolved {{ rep.resolvedAt | date:'mediumDate' }}
+          <span *ngIf="rep.resolvedAt" class="text-[10px] sm:text-[11px] font-medium"
+            [class]="isDismissedOrNoAction(rep) ? 'text-sky-700/80 dark:text-sky-400/80' : 'text-emerald-700/80 dark:text-emerald-400/80'">
+            Resolved on {{ rep.resolvedAt | date:'mediumDate' }}
           </span>
         </div>
-        <p class="text-xs text-emerald-800 dark:text-emerald-200/90 leading-relaxed">
-          {{ rep.adminResolutionNotes || 'The reported issue has been verified and appropriate updates have been applied
-          by the compliance team.' }}
+
+        <p class="text-xs sm:text-[13px] leading-relaxed m-0"
+          [class]="isDismissedOrNoAction(rep) ? 'text-sky-950 dark:text-sky-100' : 'text-emerald-950 dark:text-emerald-100'">
+          {{ getHumanResolutionNote(rep) }}
         </p>
       </div>
 
-      <!-- 3-Stage Progress Timeline -->
+      <!-- ── ROW 6: 3-STAGE PROGRESS TIMELINE (DESKTOP) ── -->
       <div
-        class="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px]">
+        class="hidden sm:flex mt-4 pt-3 border-t border-slate-100 dark:border-slate-800/60 items-center justify-between text-[11px]">
+
+        <!-- Step 1: Report Submitted -->
         <div class="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-bold">
-          <div class="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center text-[9px]">1
+          <div class="w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center">
+            <app-icon name="check" [size]="9" class="text-white"></app-icon>
           </div>
-          <span>Report Submitted</span>
+          <span>1. Report Submitted</span>
         </div>
 
         <div class="h-0.5 flex-1 mx-3 bg-slate-200 dark:bg-slate-800 relative">
@@ -228,29 +439,224 @@
             class="h-full transition-all"></div>
         </div>
 
+        <!-- Step 2: Investigation -->
         <div class="flex items-center gap-1.5"
           [class]="rep.status !== 'Pending' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-amber-600 dark:text-amber-400 font-bold'">
           <div [class]="rep.status !== 'Pending' ? 'bg-emerald-500 text-white' : 'bg-amber-500 text-white'"
-            class="w-4 h-4 rounded-full flex items-center justify-center text-[9px]">2</div>
-          <span>Moderator Investigation</span>
+            class="w-4 h-4 rounded-full flex items-center justify-center text-[9px]">
+            <app-icon *ngIf="rep.status !== 'Pending'" name="check" [size]="9" class="text-white"></app-icon>
+            <span *ngIf="rep.status === 'Pending'">2</span>
+          </div>
+          <span>2. Moderator Review</span>
         </div>
 
         <div class="h-0.5 flex-1 mx-3 bg-slate-200 dark:bg-slate-800 relative">
           <div
-            [class]="(rep.status === 'Resolved' || rep.status === 'ActionTaken' || rep.status === 'Dismissed') ? 'w-full bg-emerald-500' : 'w-0'"
+            [class]="(rep.status === 'Resolved' || rep.status === 'ActionTaken' || isDismissedOrNoAction(rep)) ? 'w-full bg-emerald-500' : 'w-0'"
             class="h-full transition-all"></div>
         </div>
 
+        <!-- Step 3: Resolution -->
         <div class="flex items-center gap-1.5"
-          [class]="(rep.status === 'Resolved' || rep.status === 'ActionTaken' || rep.status === 'Dismissed') ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-400 font-medium'">
+          [class]="(rep.status === 'Resolved' || rep.status === 'ActionTaken' || isDismissedOrNoAction(rep)) ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-slate-400 font-medium'">
           <div
-            [class]="(rep.status === 'Resolved' || rep.status === 'ActionTaken' || rep.status === 'Dismissed') ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'"
-            class="w-4 h-4 rounded-full flex items-center justify-center text-[9px]">3</div>
-          <span>Resolution Published</span>
+            [class]="(rep.status === 'Resolved' || rep.status === 'ActionTaken' || isDismissedOrNoAction(rep)) ? 'bg-emerald-500 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-500'"
+            class="w-4 h-4 rounded-full flex items-center justify-center text-[9px]">
+            <app-icon *ngIf="rep.status === 'Resolved' || rep.status === 'ActionTaken' || isDismissedOrNoAction(rep)"
+              name="check" [size]="9" class="text-white"></app-icon>
+            <span *ngIf="rep.status === 'Pending' || rep.status === 'UnderReview'">3</span>
+          </div>
+          <span>3. Resolution Published</span>
         </div>
+
       </div>
 
-    </div>
+      <!-- ── ROW 7: COMPACT PROGRESS ROW (MOBILE VIEWPORT STANDARD) ── -->
+      <div
+        class="flex sm:hidden mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60 items-center justify-between text-[11px] text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full"
+            [class]="rep.status === 'Pending' || rep.status === 'UnderReview' ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'"></span>
+          <span class="font-bold text-slate-700 dark:text-slate-200">
+            {{ rep.status === 'Pending' || rep.status === 'UnderReview' ? 'Phase 2/3: Reviewing' : 'Phase 3/3:
+            Completed' }}
+          </span>
+        </div>
+        <span class="text-[10px] font-medium opacity-80">
+          {{ rep.resolvedAt ? ('Resolved ' + (rep.resolvedAt | date:'shortDate')) : 'Avg. resolution: 48h' }}
+        </span>
+      </div>
+
+      <!-- ── ROW 8: ACTION FOOTER BUTTONS ── -->
+      <div
+        class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+
+        <!-- Action Buttons: Full-width responsive row on mobile, inline on desktop -->
+        <div class="flex items-center gap-2 w-full sm:w-auto">
+
+          <!-- View Listing CTA -->
+          <button type="button" (click)="viewTarget(rep, $event)"
+            [appTooltip]="'Navigate to this ' + formatTargetType(rep.targetType)" tooltipPlacement="top"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 transition-all border-0 cursor-pointer active:scale-[0.98]">
+            <app-icon name="eye" [size]="13"></app-icon>
+            <span>View Listing</span>
+          </button>
+
+          <!-- Withdraw Report (Pending Only) -->
+          <button *ngIf="rep.status === 'Pending' || rep.status === 'UnderReview'" (click)="promptWithdraw(rep, $event)"
+            [appTooltip]="'Withdraw ticket #' + (rep.referenceId || rep.id) + ' and cancel investigation'"
+            tooltipPlacement="top"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-900/40 transition-all border-0 cursor-pointer active:scale-[0.98]">
+            <app-icon name="x" [size]="13"></app-icon>
+            <span>Withdraw</span>
+          </button>
+
+          <!-- Request Re-Review / Appeal (Resolved / Closed Only) -->
+          <button *ngIf="rep.status !== 'Pending' && rep.status !== 'UnderReview'"
+            (click)="openAppealModal(rep, $event)"
+            [appTooltip]="'Submit an appeal with updated documentation for re-review'" tooltipPlacement="top"
+            class="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold text-rose-600 dark:text-rose-400 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/50 transition-all border border-rose-200/60 dark:border-rose-800/50 cursor-pointer active:scale-[0.98]">
+            <app-icon name="rotate-ccw" [size]="12"></app-icon>
+            <span>Request Re-Review</span>
+          </button>
+
+        </div>
+
+        <!-- Security & Integrity Footnote -->
+        <div [appTooltip]="'Tamper-evident, cryptographically signed citizen moderation audit trail'"
+          tooltipPlacement="top"
+          class="flex items-center justify-center sm:justify-end gap-1.5 text-[10px] text-slate-400 dark:text-slate-500 font-medium cursor-help">
+          <app-icon name="lock" [size]="10" class="opacity-60"></app-icon>
+          <span>Encrypted Audit Trail • Citizen Integrity Record</span>
+        </div>
+
+      </div>
+
+    </article>
   </div>
 
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL 1: APPEAL / RE-REVIEW DIALOG                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="showAppealModal()"
+  class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+  (click)="closeAppealModal()">
+
+  <div
+    class="w-full max-w-lg rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden p-6 animate-scale-up"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+      <div class="flex items-center gap-2">
+        <div
+          class="w-8 h-8 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center">
+          <app-icon name="shield" [size]="16"></app-icon>
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Request Re-Review</h3>
+          <p class="text-[11px] text-slate-400 font-mono">{{ selectedReportForAppeal()?.referenceId }}</p>
+        </div>
+      </div>
+      <button (click)="closeAppealModal()" [appTooltip]="'Close window (Esc)'" tooltipPlacement="top"
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-lg border-0 bg-transparent cursor-pointer">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <div class="py-4 space-y-3 text-xs">
+      <div class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700/60">
+        <span class="font-bold text-slate-700 dark:text-slate-300">Target:</span>
+        <span class="font-medium text-slate-900 dark:text-white ml-1.5">{{ selectedReportForAppeal()?.targetTitle
+          }}</span>
+      </div>
+
+      <p class="text-slate-500 dark:text-slate-400 leading-relaxed">
+        If this record remains inaccurate or you have newer official verification documents (gazette notification, court
+        circular, official DLSA letter), explain below for our Trust &amp; Safety compliance officers:
+      </p>
+
+      <textarea [(ngModel)]="appealReason" rows="4" placeholder="Provide additional details or updated information..."
+        class="w-full p-3 rounded-xl bg-slate-100/80 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700 text-slate-900 dark:text-white text-xs placeholder-slate-400 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500 resize-none"></textarea>
+    </div>
+
+    <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100 dark:border-slate-800">
+      <button (click)="closeAppealModal()"
+        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-0 cursor-pointer">
+        Cancel
+      </button>
+      <button (click)="submitAppeal()" [disabled]="isSubmittingAppeal() || !appealReason().trim()"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white shadow-xs transition-all border-0 cursor-pointer">
+        <app-icon *ngIf="isSubmittingAppeal()" name="loader" [spin]="true" [size]="13"></app-icon>
+        <span>{{ isSubmittingAppeal() ? 'Submitting...' : 'Submit Appeal' }}</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL 2: WITHDRAW CONFIRMATION DIALOG                                     -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="confirmWithdrawTarget()"
+  class="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-fade-in"
+  (click)="cancelWithdraw()">
+
+  <div
+    class="w-full max-w-md rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 animate-scale-up"
+    (click)="$event.stopPropagation()">
+
+    <div
+      class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center mb-3">
+      <app-icon name="alert-triangle" [size]="22"></app-icon>
+    </div>
+
+    <h3 class="text-sm font-bold text-slate-900 dark:text-white">Withdraw Active Report?</h3>
+    <p class="text-xs text-slate-500 dark:text-slate-400 mt-1.5 leading-relaxed">
+      Are you sure you want to withdraw ticket <span class="font-mono font-bold">{{ confirmWithdrawTarget()?.referenceId
+        }}</span>? This will cancel the ongoing moderator investigation. You can always submit a new issue in the
+      future.
+    </p>
+
+    <div class="flex items-center justify-end gap-2.5 mt-5">
+      <button (click)="cancelWithdraw()"
+        class="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-0 cursor-pointer">
+        Keep Active
+      </button>
+      <button (click)="executeWithdraw()" [disabled]="isWithdrawing()"
+        class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 text-white shadow-xs transition-all border-0 cursor-pointer">
+        <app-icon *ngIf="isWithdrawing()" name="loader" [spin]="true" [size]="13"></app-icon>
+        <span>{{ isWithdrawing() ? 'Withdrawing...' : 'Yes, Withdraw Ticket' }}</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<!-- MODAL 3: EVIDENCE LIGHTBOX PREVIEW                                        -->
+<!-- ═══════════════════════════════════════════════════════════════════════════ -->
+<div *ngIf="previewEvidenceUrl()"
+  class="fixed inset-0 z-[2100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-xs animate-fade-in"
+  (click)="closeEvidencePreview()">
+
+  <div
+    class="relative max-w-2xl max-h-[85vh] overflow-hidden rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2"
+    (click)="$event.stopPropagation()">
+
+    <div class="flex items-center justify-between pb-2 px-2 text-xs font-bold text-white border-b border-slate-800">
+      <span>Attached Evidence Proof</span>
+      <button (click)="closeEvidencePreview()" [appTooltip]="'Close window (Esc)'" tooltipPlacement="top"
+        class="text-slate-400 hover:text-white p-1 rounded-lg border-0 bg-transparent cursor-pointer">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <div class="p-2 flex items-center justify-center max-h-[75vh] overflow-auto">
+      <img [src]="previewEvidenceUrl()" alt="Report Proof Evidence"
+        class="max-w-full max-h-[70vh] rounded-lg object-contain" />
+    </div>
+
+  </div>
 </div>

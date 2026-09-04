@@ -832,7 +832,8 @@ html[data-text-spacing="extra"] {
 
 /* Hide scrollbar for custom select lists and dropdowns */
 .max-h-60,
-[class*="dropdown"] {
+[class*="dropdown"],
+.custom-select-no-scrollbar {
   -ms-overflow-style: none !important;
   /* IE and Edge */
   scrollbar-width: none !important;
@@ -840,7 +841,68 @@ html[data-text-spacing="extra"] {
   /* Firefox */
   &::-webkit-scrollbar {
     display: none !important;
+    width: 0 !important;
+    height: 0 !important;
     /* Chrome, Safari and Opera */
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+/* Modern, sleek custom-select dropdown scrollbar & flex container */
+.custom-select-floating-menu {
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.custom-select-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.4) transparent !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+
+  &::-webkit-scrollbar {
+    width: 5px !important;
+    height: 5px !important;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent !important;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35) !important;
+    border-radius: 9999px !important;
+
+    &:hover {
+      background: rgba(148, 163, 184, 0.65) !important;
+    }
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent !important;
+  }
+}
+
+.dark .custom-select-scrollbar {
+  scrollbar-color: rgba(255, 255, 255, 0.25) transparent !important;
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25) !important;
+
+    &:hover {
+      background: rgba(255, 255, 255, 0.5) !important;
+    }
   }
 }
 

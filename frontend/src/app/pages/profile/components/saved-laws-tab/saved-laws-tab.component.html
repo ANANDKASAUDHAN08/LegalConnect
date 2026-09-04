@@ -18,6 +18,14 @@
 
     <!-- Quick Link Actions -->
     <div class="flex items-center gap-2 flex-wrap">
+      <!-- 1-Click Universal Case Pack Export Button -->
+      <button (click)="openExportHub()"
+        class="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl font-bold transition-all border-none cursor-pointer flex items-center gap-1.5 shadow-sm active:scale-95"
+        [appTooltip]="'Export this case pack dossier as PDF, CSV, JSON or plain text'" tooltipPlacement="bottom">
+        <app-icon name="printer" [size]="14"></app-icon>
+        <span>Export Case Pack</span>
+      </button>
+
       <a routerLink="/laws"
         class="text-xs bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/25 px-3 py-1.5 rounded-xl font-bold transition-all no-underline flex items-center gap-1 shadow-sm">
         <span>Browse Laws</span>
