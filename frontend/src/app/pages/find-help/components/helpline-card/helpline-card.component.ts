@@ -6,6 +6,7 @@ import { ShareMenuComponent } from '../../../../components/share-menu/share-menu
 import { SnackbarService } from '../../../../services/snackbar.service';
 
 import { BookmarkButtonComponent } from '../../../../components/bookmark-button/bookmark-button.component';
+import { InteractiveLikeComponent } from '../../../../components/interactive-like/interactive-like.component';
 import { ReportTriggerComponent } from '../../../../components/report-modal/report-trigger/report-trigger.component';
 import { IconComponent } from '../../../../components/icon';
 
@@ -17,6 +18,7 @@ import { IconComponent } from '../../../../components/icon';
     TooltipDirective,
     ShareMenuComponent,
     BookmarkButtonComponent,
+    InteractiveLikeComponent,
     ReportTriggerComponent,
     IconComponent
   ],

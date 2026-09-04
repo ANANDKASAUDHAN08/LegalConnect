@@ -34,6 +34,7 @@ namespace CoreApi.Data
         public DbSet<SecurityAuditLog> SecurityAuditLogs { get; set; }
         public DbSet<AdminSavedView> AdminSavedViews { get; set; }
         public DbSet<UserInteraction> UserInteractions { get; set; }
+        public DbSet<InteractionCounter> InteractionCounters { get; set; }
         public DbSet<UserBookmark> UserBookmarks { get; set; }
         public DbSet<ContentReport> ContentReports { get; set; }
 

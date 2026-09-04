@@ -153,11 +153,14 @@
           </span>
         </div>
 
-        <!-- Bookmark button — Grid (always) + Mobile list -->
-        <app-bookmark-button *ngIf="viewMode !== 'list' || isMobile" targetType="Lawyer"
-          [targetId]="lawyer.id || lawyer._id" [title]="lawyer.name" [subtitle]="lawyer.specializations?.join(', ')"
-          variant="icon" size="sm">
-        </app-bookmark-button>
+        <!-- Action buttons — Grid (always) + Mobile list -->
+        <div class="flex items-center gap-1.5" *ngIf="viewMode !== 'list' || isMobile">
+          <app-interactive-like targetType="Lawyer" [targetId]="lawyer.id || lawyer._id" variant="pill" size="sm">
+          </app-interactive-like>
+          <app-bookmark-button targetType="Lawyer" [targetId]="lawyer.id || lawyer._id" [title]="lawyer.name"
+            [subtitle]="lawyer.specializations?.join(', ')" variant="icon" size="sm">
+          </app-bookmark-button>
+        </div>
       </div>
     </div>
 
@@ -203,7 +206,10 @@
               Fee</span>
           </div>
 
-          <!-- Bookmark button — desktop list view -->
+          <!-- Like & Bookmark buttons — desktop list view -->
+          <app-interactive-like targetType="Lawyer" [targetId]="lawyer.id || lawyer._id" variant="pill" size="sm">
+          </app-interactive-like>
+          
           <app-bookmark-button targetType="Lawyer" [targetId]="lawyer.id || lawyer._id" [title]="lawyer.name"
             [subtitle]="lawyer.specializations?.join(', ')" variant="icon" size="md">
           </app-bookmark-button>

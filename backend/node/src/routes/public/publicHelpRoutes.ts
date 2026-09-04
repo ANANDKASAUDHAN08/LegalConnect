@@ -21,6 +21,7 @@ import {
   getCategorySpecializationRegex,
   RESOURCE_VALIDATION_RULES
 } from '../../utils/legalDomainUtils';
+import { enrichEntityWithInteractions } from '../../services/interactionEnrichmentService';
 
 const router = Router();
 
@@ -920,7 +921,7 @@ router.post('/suggest-resource', asyncHandler(async (req: Request, res: Response
   });
 }));
 
-// GET /resources/:id - Get a single legal resource by ID (Public)
+// GET /resources/:id - Get a single legal resource by ID (Public, enriched with interaction stats)
 router.get('/resources/:id', asyncHandler(async (req: Request, res: Response) => {
   const { id } = req.params;
   const resource: any = await LegalResource.findById(id).lean();
@@ -940,6 +941,10 @@ router.get('/resources/:id', asyncHandler(async (req: Request, res: Response) =>
       resource.parentAuthority = parent;
     }
   }
+
+  // Server-Side Enrichment: fetch like count, isLiked, isBookmarked in a single pass
+  const interaction = await enrichEntityWithInteractions('LegalResource', id as string, req.headers.authorization);
+  resource.interaction = interaction;
 
   res.json({ success: true, data: resource });
 }));

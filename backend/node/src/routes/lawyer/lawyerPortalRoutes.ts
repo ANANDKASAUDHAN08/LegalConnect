@@ -9,6 +9,7 @@ import {
   syncLawyerProfile,
   deleteSyncedLawyer
 } from '../../services/lawyerService';
+import { enrichEntityWithInteractions } from '../../services/interactionEnrichmentService';
 
 const router = Router();
 
@@ -39,14 +40,22 @@ router.post('/batch', asyncHandler(async (req: Request, res: Response) => {
   res.json({ success: true, count: lawyers.length, data: lawyers });
 }));
 
-// GET /api/lawyers/:id - Get a single lawyer by ID
+// GET /api/lawyers/:id - Get a single lawyer by ID (enriched with interaction stats)
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id as string;
-  const lawyer = await getLawyerById(id);
+  const lawyer: any = await getLawyerById(id);
   if (!lawyer) {
     throw AppError.notFound('Lawyer not found.');
   }
-  res.json({ success: true, data: lawyer });
+
+  // Convert to plain object if Mongoose document
+  const lawyerObj = lawyer.toObject ? lawyer.toObject() : { ...lawyer };
+
+  // Server-Side Enrichment: fetch like count, isLiked, isBookmarked in a single pass
+  const interaction = await enrichEntityWithInteractions('Lawyer', id, req.headers.authorization);
+  lawyerObj.interaction = interaction;
+
+  res.json({ success: true, data: lawyerObj });
 }));
 
 // PUT /api/lawyers/sync - Sync advocate profile from .NET Core API (MySQL) to MongoDB

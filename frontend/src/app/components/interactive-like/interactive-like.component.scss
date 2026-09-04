@@ -89,6 +89,27 @@ button.size-lg {
     font-weight: 800;
 }
 
+.count-shimmer {
+    display: inline-block;
+    width: 12px;
+    height: 10px;
+    border-radius: 3px;
+    background: linear-gradient(90deg, var(--bg-tertiary, #e2e8f0) 25%, var(--bg-secondary, #f1f5f9) 50%, var(--bg-tertiary, #e2e8f0) 75%);
+    background-size: 200% 100%;
+    animation: shimmerPulse 1.2s ease-in-out infinite;
+    vertical-align: middle;
+}
+
+@keyframes shimmerPulse {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
 /* Icon-only variant */
 button.variant-icon-only {
     width: 30px;
@@ -108,12 +129,15 @@ button.variant-counter-badge {
     0% {
         transform: scale(1);
     }
+
     40% {
         transform: scale(1.25);
     }
+
     60% {
         transform: scale(0.95);
     }
+
     100% {
         transform: scale(1);
     }
@@ -136,4 +160,9 @@ button.variant-counter-badge {
         border-color: rgba(52, 211, 153, 0.45);
         box-shadow: 0 1px 4px rgba(52, 211, 153, 0.2);
     }
+}
+
+:host-context(.dark) .count-shimmer {
+    background: linear-gradient(90deg, rgba(30, 41, 59, 0.6) 25%, rgba(51, 65, 85, 0.4) 50%, rgba(30, 41, 59, 0.6) 75%);
+    background-size: 200% 100%;
 }

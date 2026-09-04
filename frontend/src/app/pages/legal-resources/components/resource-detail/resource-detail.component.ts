@@ -20,6 +20,8 @@ import { QrModalComponent } from '../../../../components/qr-modal/qr-modal.compo
 import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
 import { ModerationReportService } from '../../../../services/moderation-report.service';
 import { ScrollService } from '../../../../services/scroll.service';
+import { InteractionService } from '../../../../services/interaction.service';
+import { UniversalBookmarkService } from '../../../../services/universal-bookmark.service';
 import {
   LegalResourceDetail,
   DocumentChecklistItem,
@@ -59,6 +61,8 @@ export class ResourceDetailComponent implements OnInit, AfterViewInit, OnDestroy
   // Bottom Nav synchronization (Hide action bar when bottom navbar is visible)
   isBottomNavVisible = true;
   private scrollService = inject(ScrollService);
+  private interactionService = inject(InteractionService);
+  private bookmarkService = inject(UniversalBookmarkService);
 
   // Dynamic Navbar Height synchronization for mobile & desktop
   navbarHeight = 68;
@@ -203,6 +207,20 @@ export class ResourceDetailComponent implements OnInit, AfterViewInit, OnDestroy
         next: (res: any) => {
           if (res?.success && res.data) {
             this.resource = res.data;
+
+            // Server-Side Enrichment Pre-Seeding: 0ms Frame 0 Display
+            const inter = res.data.interaction;
+            if (inter) {
+              this.interactionService.seedState('LegalResource', res.data._id, {
+                count: inter.count || 0,
+                liked: Boolean(inter.liked),
+                type: inter.liked ? 'Like' : null
+              });
+              if (inter.saved) {
+                this.bookmarkService.seedBookmark('LegalResource', res.data._id, true);
+              }
+            }
+
             this.buildCachedProperties();
             this.updateSEO();
             this.loadNearbyResources();

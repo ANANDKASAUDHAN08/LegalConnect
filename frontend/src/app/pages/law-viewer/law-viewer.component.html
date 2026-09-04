@@ -550,6 +550,19 @@
                   <span class="hidden md:inline">Compare with {{ equivalentActName }}</span>
                   <span class="inline md:hidden">Compare</span>
                 </button>
+
+                <!-- Section Helpful Endorsement & Discrepancy Report Triggers -->
+                <div class="inline-flex items-center gap-1.5 ml-auto sm:ml-0" *ngIf="activeSection">
+                  <!-- Vote Helpful on Statutory Provision -->
+                  <app-interactive-like targetType="BareActSection" [targetId]="getActiveSectionTargetId()"
+                    variant="pill" size="sm">
+                  </app-interactive-like>
+
+                  <!-- Report Discrepancy / Typo / Outdated Amendment Trigger -->
+                  <app-report-trigger targetType="BareActSection" [targetId]="getActiveSectionTargetId()"
+                    [targetTitle]="getActiveSectionTitle()" [showLabel]="false">
+                  </app-report-trigger>
+                </div>
               </div>
 
               <!-- Tab Content 1: Statute Text -->
@@ -1370,6 +1383,31 @@
                         </div>
                       </button>
                     </div>
+                  </div>
+                </div>
+
+                <!-- Statutory Integrity & Community Review Card -->
+                <div *ngIf="activeSection"
+                  class="p-3.5 md:p-4 bg-slate-50/40 dark:bg-slate-950/20 md:bg-slate-50 md:dark:bg-slate-950/35 border border-slate-200/50 dark:border-slate-800/50 md:border-slate-200 md:dark:border-slate-800 rounded-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div class="flex flex-col gap-0.5">
+                    <span class="text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5">
+                      <app-icon name="shield-check" [size]="15" class="text-accent"></app-icon>
+                      Statutory Integrity & Community Review
+                    </span>
+                    <span class="text-[11px] text-slate-500 dark:text-slate-400">
+                      Vote on this provision's helpfulness or submit discrepancy reports for legal editorial review.
+                    </span>
+                  </div>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <!-- Like Button -->
+                    <app-interactive-like targetType="BareActSection" [targetId]="getActiveSectionTargetId()"
+                      variant="pill" size="sm">
+                    </app-interactive-like>
+
+                    <!-- Report Button -->
+                    <app-report-trigger targetType="BareActSection" [targetId]="getActiveSectionTargetId()"
+                      [targetTitle]="getActiveSectionTitle()">
+                    </app-report-trigger>
                   </div>
                 </div>
 

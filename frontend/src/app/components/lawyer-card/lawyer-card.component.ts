@@ -4,12 +4,13 @@ import { CommonModule } from '@angular/common';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { SavedItemsService } from '../../services/saved-items.service';
 import { BookmarkButtonComponent } from '../bookmark-button/bookmark-button.component';
+import { InteractiveLikeComponent } from '../interactive-like/interactive-like.component';
 import { IconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'app-lawyer-card',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, BookmarkButtonComponent, IconComponent],
+  imports: [CommonModule, TooltipDirective, BookmarkButtonComponent, InteractiveLikeComponent, IconComponent],
   templateUrl: './lawyer-card.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   host: {

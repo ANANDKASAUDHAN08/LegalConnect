@@ -7,11 +7,14 @@ import { Subject, Subscription, takeUntil, debounceTime } from 'rxjs';
 import { LegalService, BareAct, Chapter, Section, ContentBlock } from '../../services/legal.service';
 import { FormattingService } from '../../services/formatting.service';
 import { BookmarkService } from '../../services/bookmark.service';
+import { UniversalBookmarkService } from '../../services/universal-bookmark.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { NoteService } from '../../services/note.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { BookmarkModalComponent } from '../../components/bookmark-modal/bookmark-modal.component';
 import { ShareMenuComponent } from '../../components/share-menu/share-menu.component';
+import { InteractiveLikeComponent } from '../../components/interactive-like/interactive-like.component';
+import { ReportTriggerComponent } from '../../components/report-modal/report-trigger/report-trigger.component';
 import { DatabaseService } from '../../services/database.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { JargonTooltipDirective } from '../../directives/jargon-tooltip.directive';
@@ -42,6 +45,8 @@ const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/g
     NgClass,
     BookmarkModalComponent,
     ShareMenuComponent,
+    InteractiveLikeComponent,
+    ReportTriggerComponent,
     FormsModule,
     TooltipDirective,
     JargonTooltipDirective,
@@ -221,6 +226,7 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     private router: Router,
     private legalService: LegalService,
     public bookmarkService: BookmarkService,
+    public universalBookmarks: UniversalBookmarkService,
     public noteService: NoteService,
     private authService: AuthService,
     private snackbar: SnackbarService,
@@ -675,14 +681,38 @@ export class LawViewerComponent implements OnInit, OnDestroy {
     }
   }
 
+  getActiveSectionTargetId(): string {
+    if (!this.shortName || !this.activeSection) return '';
+    return `${this.shortName}::${this.activeSection.section_number}`;
+  }
+
+  getActiveSectionTitle(): string {
+    if (!this.shortName || !this.activeSection) return 'Statutory Provision';
+    const num = this.activeSection.section_number;
+    const title = this.activeSection.title ? ` - ${this.activeSection.title}` : '';
+    return `${this.shortName} Section ${num}${title}`;
+  }
+
   toggleActiveSectionBookmark() {
     if (!this.activeSection) return;
+    const targetId = this.getActiveSectionTargetId();
+    const title = this.getActiveSectionTitle();
+    const subtitle = this.act?.actName || this.shortName;
+
     if (this.isActiveSectionBookmarked) {
       this.bookmarkService.removeBookmark(this.shortName, this.activeSection.section_number);
+      if (this.isLoggedIn && this.universalBookmarks.isSaved('BareActSection', targetId)) {
+        this.universalBookmarks.toggleBookmark('BareActSection', targetId, title);
+      }
       this.isActiveSectionBookmarked = false;
       this.snackbar.show('Section removed from bookmarks', 'info');
     } else {
       if (this.isLoggedIn) {
+        this.universalBookmarks.toggleBookmark('BareActSection', targetId, title, subtitle, 'Case Packs', JSON.stringify({
+          actShortName: this.shortName,
+          sectionNumber: this.activeSection.section_number,
+          routeUrl: `/laws/${this.shortName}/${this.activeSection.section_number}`
+        }));
         this.openBookmarkModal(this.activeSection);
       } else {
         const sec = {
@@ -1819,12 +1849,19 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   onBinderChange(folder: string) {
     if (!this.activeSection || !this.act) return;
 
+    const targetId = this.getActiveSectionTargetId();
+    const title = this.getActiveSectionTitle();
+    const subtitle = this.act?.actName || this.shortName;
+
     if (!this.isLoggedIn && folder !== 'none') {
       this.snackbar.show('Please log in to save sections and organize Research Binders. Local guest bookmarks are not backed up.', 'warning');
     }
 
     if (folder === 'none') {
       this.bookmarkService.removeBookmark(this.shortName, this.activeSection.section_number);
+      if (this.isLoggedIn && this.universalBookmarks.isSaved('BareActSection', targetId)) {
+        this.universalBookmarks.toggleBookmark('BareActSection', targetId, title);
+      }
       this.snackbar.show('Section removed from Research Binders.', 'info');
     } else {
       const collectionName = folder === 'unassigned' ? undefined : folder;
@@ -1845,6 +1882,14 @@ export class LawViewerComponent implements OnInit, OnDestroy {
           collectionName
         );
         this.snackbar.show(`Section added to binder: ${folder === 'unassigned' ? 'Unassigned' : folder}`, 'success');
+      }
+
+      if (this.isLoggedIn) {
+        this.universalBookmarks.toggleBookmark('BareActSection', targetId, title, subtitle, folder === 'unassigned' ? 'General' : folder, JSON.stringify({
+          actShortName: this.shortName,
+          sectionNumber: this.activeSection.section_number,
+          routeUrl: `/laws/${this.shortName}/${this.activeSection.section_number}`
+        }));
       }
     }
     this.updateActiveSectionBookmarkStatus();

@@ -54,10 +54,17 @@ export class InteractionService {
   private hydrationTimer: any = null;
   private readonly HYDRATION_DEBOUNCE_MS = 50;
   private readonly HYDRATION_BATCH_SIZE = 20;
+  private readonly STORAGE_CACHE_KEY = 'lc_interactions_cache';
 
   private isLoggedIn = false;
 
   constructor() {
+    // 0ms Synchronous Cache Pre-warming from Session
+    const cached = this.loadCacheFromSession();
+    if (cached && cached.size > 0) {
+      this.stateMap.set(cached);
+    }
+
     // Initialize BroadcastChannel for cross-tab sync
     if (typeof BroadcastChannel !== 'undefined') {
       this.channel = new BroadcastChannel('lc-interactions');
@@ -93,6 +100,15 @@ export class InteractionService {
    */
   getStateSignal() {
     return this.stateMap.asReadonly();
+  }
+
+  /**
+   * Pre-seed interaction state from server-side enriched payload.
+   * Bypasses secondary HTTP calls completely for 0ms Frame 0 rendering.
+   */
+  seedState(targetType: string, targetId: string, state: InteractionState): void {
+    if (!targetType || !targetId || !state) return;
+    this.updateState(targetType, targetId, state, false);
   }
 
   // ── Public API: Optimistic Toggle ──
@@ -184,6 +200,18 @@ export class InteractionService {
   }
 
   /**
+   * Force-hydrate a specific target immediately with ZERO timer delay.
+   * Crucial for detail pages (Lawyer detail, Resource detail) where waiting 50ms for a batch is pointless.
+   */
+  hydrateImmediately(targetType: string, targetId: string): void {
+    if (!targetType || !targetId) return;
+    const key = `${targetType}::${targetId}`;
+    if (this.stateMap().has(key)) return; // Already hydrated in memory
+
+    this.hydrateBatch(targetType, [targetId]);
+  }
+
+  /**
    * Force-hydrate a specific set of IDs immediately (useful for page load).
    */
   hydrateBatch(targetType: string, targetIds: string[]): void {
@@ -268,6 +296,8 @@ export class InteractionService {
       return updated;
     });
 
+    this.persistCacheToSession();
+
     // Broadcast to other tabs
     if (broadcast && this.channel) {
       try {
@@ -286,6 +316,34 @@ export class InteractionService {
       }
       return updated;
     });
+    this.persistCacheToSession();
+  }
+
+  // ── Session Cache Helpers (0ms Stale-While-Revalidate) ──
+
+  private loadCacheFromSession(): Map<string, InteractionState> | null {
+    if (typeof sessionStorage === 'undefined') return null;
+    try {
+      const raw = sessionStorage.getItem(this.STORAGE_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return new Map(Object.entries(parsed));
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  private persistCacheToSession(): void {
+    if (typeof sessionStorage === 'undefined') return;
+    try {
+      // Limit cache size to the most recent 100 items to avoid quota overhead
+      const entries = Array.from(this.stateMap().entries()).slice(-100);
+      const obj = Object.fromEntries(entries);
+      sessionStorage.setItem(this.STORAGE_CACHE_KEY, JSON.stringify(obj));
+    } catch { /* Quota exceeded or private browsing */ }
   }
 
   ngOnDestroy(): void {

@@ -16,6 +16,7 @@ import { IconComponent } from '../icon/icon.component';
  * Usage:
  *   <app-interactive-like targetType="Review" [targetId]="review.id.toString()" />
  *   <app-interactive-like targetType="LegalResource" [targetId]="resource._id" variant="thumbs" size="md" />
+ *   <app-interactive-like targetType="Lawyer" [targetId]="lawyer._id" [eager]="true" />
  */
 @Component({
   selector: 'app-interactive-like',
@@ -30,6 +31,7 @@ export class InteractiveLikeComponent implements OnDestroy {
   targetId = input.required<string>();
   variant = input<'icon-only' | 'pill' | 'counter-badge' | 'thumbs'>('pill');
   size = input<'sm' | 'md' | 'lg'>('sm');
+  eager = input<boolean>(false);
 
   private interactionService = inject(InteractionService);
   private observer: IntersectionObserver | null = null;
@@ -41,6 +43,15 @@ export class InteractiveLikeComponent implements OnDestroy {
     const id = this.targetId();
     if (!type || !id) return { liked: false, count: 0 };
     return this.interactionService.getState(type, id);
+  });
+
+  // Whether the interaction state has been fetched from the server
+  isHydrated = computed(() => {
+    const type = this.targetType();
+    const id = this.targetId();
+    if (!type || !id) return false;
+    const key = `${type}::${id}`;
+    return this.interactionService.getStateSignal()().has(key);
   });
 
   ariaLabel = computed(() => {
@@ -74,7 +85,13 @@ export class InteractiveLikeComponent implements OnDestroy {
       const type = this.targetType();
       const id = this.targetId();
       if (type && id) {
-        if (typeof IntersectionObserver !== 'undefined') {
+        // If already hydrated from server-side enriched payload or cache, bypass network call completely!
+        if (this.isHydrated()) return;
+
+        if (this.eager()) {
+          // Detail page: hydrate immediately with 0ms timer delay
+          this.interactionService.hydrateImmediately(type, id);
+        } else if (typeof IntersectionObserver !== 'undefined') {
           this.observer?.disconnect();
           this.observer = new IntersectionObserver((entries) => {
             for (const entry of entries) {

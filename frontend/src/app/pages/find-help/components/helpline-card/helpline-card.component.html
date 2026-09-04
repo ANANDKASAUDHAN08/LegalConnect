@@ -34,8 +34,12 @@
       <span>Call</span>
     </a>
 
-    <!-- Quick Actions (Save / WhatsApp Share / QR Display) -->
+    <!-- Quick Actions (Like / Save / WhatsApp Share / QR Display) -->
     <div class="flex items-center gap-1.5">
+      <!-- Like / Endorse Button -->
+      <app-interactive-like targetType="Helpline" [targetId]="helpline._id || helpline.id" variant="pill" size="sm">
+      </app-interactive-like>
+
       <!-- Save / Bookmark Button (New Unified Component) -->
       <app-bookmark-button targetType="Helpline" [targetId]="helpline._id || helpline.id" [title]="helpline.name"
         [subtitle]="helpline.number" variant="icon" size="sm">

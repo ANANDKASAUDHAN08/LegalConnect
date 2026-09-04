@@ -10,6 +10,8 @@ import { AuthService, UserProfile } from '../../services/auth.service';
 import { BookmarkButtonComponent } from '../../components/bookmark-button/bookmark-button.component';
 import { InteractiveLikeComponent } from '../../components/interactive-like/interactive-like.component';
 import { ReportTriggerComponent } from '../../components/report-modal/report-trigger/report-trigger.component';
+import { InteractionService } from '../../services/interaction.service';
+import { UniversalBookmarkService } from '../../services/universal-bookmark.service';
 
 interface ContactForm {
   name: string;
@@ -74,7 +76,6 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
   // Image preview state
   previewImageUrl: string | null = null;
   previewIsBanner = false;
-  private loadingTimeout: any;
 
   constructor(
     private route: ActivatedRoute,
@@ -83,7 +84,9 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
     private reviewService: ReviewService,
     private draft: DraftService,
     private snackbar: SnackbarService,
-    private auth: AuthService
+    private auth: AuthService,
+    private interactionService: InteractionService,
+    private bookmarkService: UniversalBookmarkService
   ) { }
 
   ngOnInit() {
@@ -104,38 +107,41 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     clearInterval(this.autoSaveInterval);
-    if (this.loadingTimeout) {
-      clearTimeout(this.loadingTimeout);
-    }
     document.body.classList.remove('overflow-hidden');
   }
 
   loadLawyerData() {
     this.loading = true;
     this.error = '';
-    if (this.loadingTimeout) {
-      clearTimeout(this.loadingTimeout);
-    }
     this.lawyerService.getLawyerById(this.lawyerId).subscribe({
       next: (res) => {
-        this.loadingTimeout = setTimeout(() => {
-          this.lawyer = res.data;
-          this.loading = false;
-          if (this.lawyer) {
-            this.initializeTimeSlots();
-            this.loadReviews();
-            this.animateStats();
-            this.lawyerService.trackProfileView(this.lawyer.email).subscribe({
-              error: () => { /* ignore tracking errors silently */ }
+        this.lawyer = res.data;
+        this.loading = false;
+        if (this.lawyer) {
+          // Server-Side Enrichment Pre-Seeding: 0ms Frame 0 Display
+          const inter = (this.lawyer as any).interaction;
+          if (inter) {
+            this.interactionService.seedState('Lawyer', this.lawyer._id, {
+              count: inter.count || 0,
+              liked: Boolean(inter.liked),
+              type: inter.liked ? 'Like' : null
             });
+            if (inter.saved) {
+              this.bookmarkService.seedBookmark('Lawyer', this.lawyer._id, true);
+            }
           }
-        }, 500);
+
+          this.initializeTimeSlots();
+          this.loadReviews();
+          this.animateStats();
+          this.lawyerService.trackProfileView(this.lawyer.email).subscribe({
+            error: () => { /* ignore tracking errors silently */ }
+          });
+        }
       },
       error: (err) => {
-        this.loadingTimeout = setTimeout(() => {
-          this.error = 'Could not find the attorney profile. It may have been removed or deactivated.';
-          this.loading = false;
-        }, 500);
+        this.error = 'Could not find the attorney profile. It may have been removed or deactivated.';
+        this.loading = false;
       }
     });
   }

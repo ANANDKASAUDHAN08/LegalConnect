@@ -60,11 +60,20 @@ export class UniversalBookmarkService {
   // ── IndexedDB for offline ──
   private readonly DB_NAME = 'lc-bookmarks';
   private readonly STORE_NAME = 'items';
+  private readonly STORAGE_CACHE_KEY = 'lc_bookmarks_cache';
   private db: IDBDatabase | null = null;
 
   private isLoggedIn = false;
 
   constructor() {
+    // 0ms Synchronous Cache Hydration (Stale-While-Revalidate)
+    // Populate state on frame 0 before any template renders
+    const cached = this.loadFromStorageCache();
+    if (cached && cached.length > 0) {
+      this.bookmarks.set(cached);
+      this.initialLoadComplete.set(true);
+    }
+
     // Init BroadcastChannel
     if (typeof BroadcastChannel !== 'undefined') {
       this.channel = new BroadcastChannel('lc-bookmarks');
@@ -81,11 +90,19 @@ export class UniversalBookmarkService {
     this.auth.isLoggedIn$.subscribe(loggedIn => {
       this.isLoggedIn = loggedIn;
       if (loggedIn) {
+        if (this.bookmarks().length === 0) {
+          const cachedItems = this.loadFromStorageCache();
+          if (cachedItems && cachedItems.length > 0) {
+            this.bookmarks.set(cachedItems);
+            this.initialLoadComplete.set(true);
+          }
+        }
         this.loadBookmarks();
         this.loadCollections();
       } else {
         this.bookmarks.set([]);
         this.collections.set([]);
+        this.clearStorageCache();
         this.initialLoadComplete.set(true);
       }
     });
@@ -108,6 +125,27 @@ export class UniversalBookmarkService {
     if (targetType) result = result.filter(b => b.targetType === targetType);
     if (collectionName) result = result.filter(b => b.collectionName === collectionName);
     return result;
+  }
+
+  /**
+   * Pre-seed bookmark existence from server-side enriched payload.
+   * Ensures 0ms instant display even if full user bookmark list is still fetching.
+   */
+  seedBookmark(targetType: string, targetId: string, isSaved: boolean): void {
+    if (!targetType || !targetId) return;
+    const currentSaved = this.isSaved(targetType, targetId);
+    if (isSaved && !currentSaved) {
+      const placeholder: UnifiedBookmark = {
+        id: -Date.now(),
+        targetType,
+        targetId,
+        title: '',
+        collectionName: 'General',
+        savedAt: Date.now()
+      };
+      this.bookmarks.update(list => [placeholder, ...list]);
+      this.persistToStorageCache(this.bookmarks());
+    }
   }
 
   // ── Public API: Toggle ──
@@ -176,6 +214,7 @@ export class UniversalBookmarkService {
             2500
           );
           this.broadcastChange();
+          this.persistToStorageCache(this.bookmarks());
           this.persistToIndexedDB();
           this.loadCollections();
         }
@@ -246,6 +285,7 @@ export class UniversalBookmarkService {
       next: () => {
         this.snackbar.show('Bookmark removed', 'info', 2000);
         this.broadcastChange();
+        this.persistToStorageCache(this.bookmarks());
         this.persistToIndexedDB();
         this.loadCollections();
       },
@@ -294,7 +334,11 @@ export class UniversalBookmarkService {
   private loadBookmarks(): void {
     if (!this.isLoggedIn) return;
 
-    this.initialLoadComplete.set(false);
+    // Only set loading to false if we don't have a cache in memory
+    if (this.bookmarks().length === 0) {
+      this.initialLoadComplete.set(false);
+    }
+
     this.http.get<any>(this.apiUrl, { withCredentials: true }).subscribe({
       next: (res) => {
         const items = (res?.data || res || []).sort(
@@ -302,14 +346,45 @@ export class UniversalBookmarkService {
         );
         this.bookmarks.set(items);
         this.initialLoadComplete.set(true);
+        this.persistToStorageCache(items);
         this.persistToIndexedDB();
       },
       error: () => {
-        // Try loading from IndexedDB cache
-        this.loadFromIndexedDB();
+        // Try loading from IndexedDB cache if memory is still empty
+        if (this.bookmarks().length === 0) {
+          this.loadFromIndexedDB();
+        }
         this.initialLoadComplete.set(true);
       }
     });
+  }
+
+  // ── Storage Cache Helpers (0ms Stale-While-Revalidate) ──
+
+  private loadFromStorageCache(): UnifiedBookmark[] | null {
+    if (typeof localStorage === 'undefined') return null;
+    try {
+      const raw = localStorage.getItem(this.STORAGE_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  private persistToStorageCache(items: UnifiedBookmark[]): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.setItem(this.STORAGE_CACHE_KEY, JSON.stringify(items));
+    } catch { /* Quota exceeded or private browsing */ }
+  }
+
+  private clearStorageCache(): void {
+    if (typeof localStorage === 'undefined') return;
+    try {
+      localStorage.removeItem(this.STORAGE_CACHE_KEY);
+    } catch { /* Silent */ }
   }
 
   private loadCollections(): void {
