@@ -551,24 +551,38 @@ export class DataExportService {
   }
 
   /**
-   * Universal client dossier exporter.
+   * Universal client dossier exporter with dynamic scope awareness.
    */
-  exportClientData(format: 'json' | 'csv' | 'txt', data?: any): void {
+  exportClientData(format: 'json' | 'csv' | 'txt', data?: any, scopeName: string = 'Dossier'): void {
     const payload = data || {
       exportedAt: new Date().toISOString(),
       platform: 'LegalConnect Platform'
     };
     const dateFileStr = new Date().toISOString().slice(0, 10);
+    const sanitizedScope = scopeName.replace(/[^a-zA-Z0-9_-]/g, '-');
+
     if (format === 'json') {
-      this.downloadBlob(JSON.stringify(payload, null, 2), 'application/json;charset=utf-8;', `LegalConnect-Client-Dossier-${dateFileStr}.json`);
+      this.downloadBlob(
+        JSON.stringify(payload, null, 2),
+        'application/json;charset=utf-8;',
+        `LegalConnect-${sanitizedScope}-${dateFileStr}.json`
+      );
     } else if (format === 'csv') {
       const rows = Array.isArray(payload) ? payload : [payload];
       const headerRow = Object.keys(rows[0] || { export: 'Data' }).join(',');
       const dataRows = rows.map(r => Object.values(r).map(v => `"${String(v || '').replace(/"/g, '""')}"`).join(',')).join('\n');
-      this.downloadBlob(`${headerRow}\n${dataRows}`, 'text/csv;charset=utf-8;', `LegalConnect-Client-Dossier-${dateFileStr}.csv`);
+      this.downloadBlob(
+        `${headerRow}\n${dataRows}`,
+        'text/csv;charset=utf-8;',
+        `LegalConnect-${sanitizedScope}-${dateFileStr}.csv`
+      );
     } else {
-      const txt = this.generateTxtFormat(payload.user || {}, payload.bookmarks || [], payload.consultations || [], payload.reviews || [], new Date().toLocaleDateString());
-      this.downloadBlob(txt, 'text/plain;charset=utf-8;', `LegalConnect-Client-Dossier-${dateFileStr}.txt`);
+      if (typeof payload === 'string') {
+        this.downloadBlob(payload, 'text/plain;charset=utf-8;', `LegalConnect-${sanitizedScope}-${dateFileStr}.txt`);
+      } else {
+        const txt = this.generateTxtFormat(payload.user || {}, payload.bookmarks || [], payload.consultations || [], payload.reviews || [], new Date().toLocaleDateString());
+        this.downloadBlob(txt, 'text/plain;charset=utf-8;', `LegalConnect-${sanitizedScope}-${dateFileStr}.txt`);
+      }
     }
   }
 }

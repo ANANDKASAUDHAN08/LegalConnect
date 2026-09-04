@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ElementRef, effect, untracked, ChangeDetectionStrategy, ChangeDetectorRef, signal, computed, Injector, Signal } from '@angular/core';
 import { toSignal, toObservable } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { RouterLink, ActivatedRoute } from '@angular/router';
+import { RouterLink, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { BookmarkService, Bookmark } from '../../../services/bookmark.service';
 import { AuthService, UserProfile } from '../../../services/auth.service';
@@ -14,6 +14,7 @@ import { InfoApiService } from '../../info/services/info-api.service';
 import { PrintService } from '../../../services/print.service';
 import { PrintExportService } from '../../../services/print-export.service';
 import { DataExportService } from '../../../services/data-export.service';
+import { ModerationReportService } from '../../../services/moderation-report.service';
 import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged, map, switchMap, catchError, of } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
@@ -85,6 +86,9 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   selectedCasePack = signal<any | null>(null);
   showRoadmapPreviewModal = signal(false);
 
+  // User Reports tab signal
+  userReports = signal<any[]>([]);
+
   // QR Modal signals
   showQrModal = signal<boolean>(false);
   qrModalItem = signal<any>(null);
@@ -121,6 +125,78 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   activeInquiriesCount = computed(() => {
     return this.inquiries().filter(i => i.status === 'Pending' || i.status === 'Contacted').length;
+  });
+
+  // Dynamic Global Export Metadata (Changes per Tab & Content)
+  globalExportMeta = computed(() => {
+    const tab = this.activeTab();
+    const collection = this.selectedCollection();
+    const bookmarksCount = this.bookmarks().length;
+    const directoryCount = this.totalSavedContactsCount();
+    const casePacksCount = this.savedCasePacks().length;
+    const inquiriesCount = this.inquiries().length;
+    const reportsCount = this.userReports().length;
+
+    switch (tab) {
+      case 'bookmarks':
+        return {
+          label: collection && collection !== 'All'
+            ? `Export ${collection}`
+            : 'Export Research Dossier',
+          mobileLabel: 'Export',
+          count: bookmarksCount,
+          tooltip: `Export ${bookmarksCount} research bookmarks as PDF, CSV, JSON or TXT`,
+          badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+        };
+      case 'saved-directory':
+        return {
+          label: 'Export Directory Dossier',
+          mobileLabel: 'Export',
+          count: directoryCount,
+          tooltip: `Export ${directoryCount} saved advocates & helplines as PDF, CSV or JSON`,
+          badgeClass: 'bg-purple-500/20 text-purple-300 border-purple-500/30'
+        };
+      case 'case-packs':
+        return {
+          label: 'Export Case Packs',
+          mobileLabel: 'Export',
+          count: casePacksCount,
+          tooltip: `Export ${casePacksCount} case pack dossiers & roadmaps`,
+          badgeClass: 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'
+        };
+      case 'inquiries':
+        return {
+          label: 'Export Consult Inquiries',
+          mobileLabel: 'Export',
+          count: inquiriesCount,
+          tooltip: `Export ${inquiriesCount} consultation requests and appointment timeline`,
+          badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-500/30'
+        };
+      case 'analytics':
+        return {
+          label: 'Export Spend & Insights',
+          mobileLabel: 'Export',
+          count: null,
+          tooltip: 'Export Client Spend & Case Transparency Executive Dossier',
+          badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+        };
+      case 'reports':
+        return {
+          label: 'Export Platform Reports',
+          mobileLabel: 'Export',
+          count: reportsCount,
+          tooltip: `Export ${reportsCount} platform community feedback and incident reports`,
+          badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+        };
+      default:
+        return {
+          label: 'Export Dossier',
+          mobileLabel: 'Export',
+          count: null,
+          tooltip: 'Export platform dossier as PDF, CSV or JSON',
+          badgeClass: 'bg-white/20 text-white border-white/30'
+        };
+    }
   });
 
   newCollectionName = signal('');
@@ -272,12 +348,14 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private locationService: LocationService,
     private infoApi: InfoApiService,
     private route: ActivatedRoute,
+    private router: Router,
     private eRef: ElementRef,
     private cdr: ChangeDetectorRef,
     private injector: Injector,
     private printService: PrintService,
     private printExportService: PrintExportService,
-    private dataExportService: DataExportService
+    private dataExportService: DataExportService,
+    private moderationService: ModerationReportService
   ) {
     this.savedLawyersDetails = toSignal(
       toObservable(this.savedItemsService.savedLawyers).pipe(
@@ -450,6 +528,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         if (user) {
           this.loadInquiries();
           this.loadSyncedCasePacks();
+          this.loadUserReports();
         }
       })
     );
@@ -1147,10 +1226,31 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     const totalResources = this.savedResourcesDetails().length;
     const totalHelplines = this.savedHelplinesDetails().length;
     const totalDirectory = totalLawyers + totalResources + totalHelplines;
+    const totalCasePacks = this.savedCasePacks().length;
+    const totalInquiries = this.inquiries().length;
+    const totalReports = this.userReports().length;
+    const grandTotal = totalBookmarks + totalDirectory + totalCasePacks + totalInquiries + totalReports;
+
+    // Auto-select scope matching the active tab
+    let defaultScope = 'bookmarks';
+    const currentTab = this.activeTab();
+    if (currentTab === 'saved-directory') {
+      defaultScope = 'directory';
+    } else if (currentTab === 'case-packs') {
+      defaultScope = 'casePacks';
+    } else if (currentTab === 'inquiries') {
+      defaultScope = 'inquiries';
+    } else if (currentTab === 'analytics') {
+      defaultScope = 'analytics';
+    } else if (currentTab === 'reports') {
+      defaultScope = 'reports';
+    } else {
+      defaultScope = 'bookmarks';
+    }
 
     this.printExportService.open({
       title: 'Client Case & Practice Dossier',
-      subtitle: 'Export annotated statute bookmarks, saved legal contacts, or full account archive.',
+      subtitle: 'Export annotated statute bookmarks, saved legal contacts, dossiers, and platform records.',
       formats: ['pdf', 'json', 'csv', 'txt'],
       scopes: [
         {
@@ -1166,13 +1266,37 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           description: 'Saved counsel, verified courts, legal aid centers and hotlines'
         },
         {
+          id: 'casePacks',
+          label: `Case Pack Dossiers (${totalCasePacks} Items)`,
+          count: totalCasePacks,
+          description: 'Procedural case roadmaps, document checklists and preparation packs'
+        },
+        {
+          id: 'inquiries',
+          label: `Consultation Inquiries (${totalInquiries} Items)`,
+          count: totalInquiries,
+          description: 'Advocate consultations, legal inquiries and appointment timeline'
+        },
+        {
+          id: 'analytics',
+          label: `Spend & Matter Lifecycle Insights`,
+          count: 1,
+          description: 'Client legal spend, active retainers, case transparency & ledger'
+        },
+        {
+          id: 'reports',
+          label: `Platform Reports & Feedback (${totalReports} Items)`,
+          count: totalReports,
+          description: 'Community statutory integrity reports and moderation review tickets'
+        },
+        {
           id: 'fullDossier',
-          label: `Full Account Dossier (${totalBookmarks + totalDirectory} Total Items)`,
-          count: totalBookmarks + totalDirectory,
-          description: 'Comprehensive export across all saved research, counsel & institutions'
+          label: `Full Account Dossier (${grandTotal} Total Items)`,
+          count: grandTotal,
+          description: 'Comprehensive export across all saved research, counsel, roadmaps & matters'
         }
       ],
-      defaultScope: this.activeTab() === 'directory' ? 'directory' : 'bookmarks',
+      defaultScope,
       allowWatermark: true,
       defaultWatermark: 'OFFICIAL COPY',
       allowQrToggle: true,
@@ -1183,20 +1307,195 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         if (params.format === 'pdf') {
           if (params.scope === 'directory') {
             this.executePrintDirectory(params);
+          } else if (params.scope === 'casePacks') {
+            this.executePrintCasePacks(params);
+          } else if (params.scope === 'inquiries') {
+            this.executePrintInquiries(params);
+          } else if (params.scope === 'analytics') {
+            this.executePrintAnalytics(params);
+          } else if (params.scope === 'reports') {
+            this.executePrintReports(params);
           } else if (params.scope === 'bookmarks') {
             this.executePrintBookmarks(collectionName, params);
           } else {
             this.executePrintFullDossier(params);
           }
-        } else if (params.format === 'json') {
-          this.dataExportService.exportClientData('json');
-        } else if (params.format === 'csv') {
-          this.dataExportService.exportClientData('csv');
-        } else if (params.format === 'txt') {
-          this.dataExportService.exportClientData('txt');
+        } else {
+          this.executeExportRaw(params);
         }
       }
     });
+  }
+
+  private executeExportRaw(params: any) {
+    const scope = params.scope || 'fullDossier';
+    const format = params.format as 'json' | 'csv' | 'txt';
+    let scopeData: any;
+    let scopeLabel = 'Client-Dossier';
+
+    if (scope === 'bookmarks') {
+      scopeLabel = 'Legal-Research-Bookmarks';
+      const bms = this.allBookmarks();
+      scopeData = bms.map((b: any) => ({
+        Act: b.actShortName || 'Statute',
+        Section: b.section || '',
+        Title: b.sectionTitle || b.title || '',
+        Notes: b.notes || '',
+        Folder: b.collection || 'General',
+        SavedDate: b.createdAt || '',
+      }));
+    } else if (scope === 'directory') {
+      scopeLabel = 'Saved-Legal-Directory';
+      const rows: any[] = [];
+      this.savedLawyersDetails().forEach((l: any) => {
+        rows.push({
+          Category: 'Advocate Counsel',
+          Name: l.name,
+          Experience: `${l.experience || 0} Years`,
+          Specialization: (l.specializations || []).join('; '),
+          Contact: l.phone || l.officeAddress || 'N/A',
+          Rating: l.rating || '5.0',
+        });
+      });
+      this.savedResourcesDetails().forEach((r: any) => {
+        rows.push({
+          Category: 'Legal Aid / Court Center',
+          Name: r.name,
+          Experience: 'Statutory Facility',
+          Specialization: r.category || 'DLSA / Legal Aid',
+          Contact: r.contactNumber || r.address || 'N/A',
+          Rating: 'Official Registry',
+        });
+      });
+      this.savedHelplinesDetails().forEach((h: any) => {
+        rows.push({
+          Category: 'Emergency Helpline',
+          Name: h.name,
+          Experience: '24x7 Statutory Line',
+          Specialization: h.description || 'Emergency Helpline',
+          Contact: h.number || 'N/A',
+          Rating: 'Toll-Free Verified',
+        });
+      });
+      scopeData = rows.length > 0 ? rows : [{ Status: 'No saved directory contacts' }];
+    } else if (scope === 'casePacks') {
+      scopeLabel = 'Case-Pack-Roadmaps';
+      scopeData = this.savedCasePacks().map((cp: any) => ({
+        DossierTitle: cp.title || 'Case Pack',
+        Jurisdiction: cp.jurisdiction || 'General',
+        StageCount: cp.stages?.length || 0,
+        EvidenceCount: cp.evidenceCount || 0,
+        Status: cp.status || 'Active',
+      }));
+    } else if (scope === 'inquiries') {
+      scopeLabel = 'Consultation-Inquiries';
+      scopeData = this.inquiries().map((inq: any) => ({
+        AdvocateName: inq.lawyerName || 'Counsel',
+        Subject: inq.subject || inq.caseType || 'Consultation Inquiry',
+        Status: inq.status || 'Pending',
+        PreferredDate: inq.preferredDate || 'N/A',
+        UpdatedDate: inq.updatedAt || inq.createdAt || 'N/A',
+      }));
+    } else if (scope === 'reports') {
+      scopeLabel = 'Platform-Reports';
+      scopeData = this.userReports().map((rep: any) => ({
+        ReferenceId: rep.referenceId || 'N/A',
+        TargetEntity: rep.targetTitle || 'Entity',
+        Category: rep.reasonCategory || 'General',
+        Severity: rep.severity || 'Medium',
+        Status: rep.status || 'Pending',
+        SubmittedAt: rep.createdAt || 'N/A',
+      }));
+    } else {
+      scopeLabel = 'Full-Account-Dossier';
+      if (format === 'json') {
+        scopeData = {
+          exportedAt: new Date().toISOString(),
+          client: {
+            name: this.currentUser()?.fullName || 'Client',
+            email: this.currentUser()?.email || 'N/A',
+          },
+          summary: {
+            totalBookmarks: this.allBookmarks().length,
+            totalLawyers: this.savedLawyersDetails().length,
+            totalResources: this.savedResourcesDetails().length,
+            totalHelplines: this.savedHelplinesDetails().length,
+            totalCasePacks: this.savedCasePacks().length,
+            totalInquiries: this.inquiries().length,
+            totalReports: this.userReports().length,
+          },
+          bookmarks: this.allBookmarks(),
+          directory: {
+            lawyers: this.savedLawyersDetails(),
+            resources: this.savedResourcesDetails(),
+            helplines: this.savedHelplinesDetails(),
+          },
+          casePacks: this.savedCasePacks(),
+          inquiries: this.inquiries(),
+          reports: this.userReports(),
+        };
+      } else {
+        // Uniform Tabular Ledger for CSV / Excel
+        const ledger: any[] = [];
+        this.allBookmarks().forEach((b: any) => {
+          ledger.push({
+            Domain: 'Statutory Research',
+            Identifier: b.section || 'Sec',
+            Title: b.actShortName || 'Statute',
+            Detail: b.notes || 'Saved statute reference',
+            Status: 'Archived',
+          });
+        });
+        this.savedLawyersDetails().forEach((l: any) => {
+          ledger.push({
+            Domain: 'Retained Counsel',
+            Identifier: `Adv. ${l.name}`,
+            Title: (l.specializations || []).join(', ') || 'Advocate',
+            Detail: `${l.experience} Yrs Exp • ${l.phone || l.officeAddress || 'Office'}`,
+            Status: 'Verified',
+          });
+        });
+        this.savedResourcesDetails().forEach((r: any) => {
+          ledger.push({
+            Domain: 'Legal Aid & Center',
+            Identifier: r.name,
+            Title: r.category || 'DLSA Center',
+            Detail: r.address || 'Statutory Facility',
+            Status: 'Active',
+          });
+        });
+        this.savedCasePacks().forEach((cp: any) => {
+          ledger.push({
+            Domain: 'Case Pack Roadmap',
+            Identifier: cp.title || 'Case Brief',
+            Title: cp.jurisdiction || 'Jurisdiction',
+            Detail: `${cp.stages?.length || 0} Stages, ${cp.evidenceCount || 0} Documents`,
+            Status: cp.status || 'Active',
+          });
+        });
+        this.inquiries().forEach((inq: any) => {
+          ledger.push({
+            Domain: 'Consultation Inquiry',
+            Identifier: inq.lawyerName || 'Counsel',
+            Title: inq.subject || 'Inquiry',
+            Detail: `Preferred: ${inq.preferredDate || 'Flexible'}`,
+            Status: inq.status || 'Pending',
+          });
+        });
+        this.userReports().forEach((rep: any) => {
+          ledger.push({
+            Domain: 'Moderation Ticket',
+            Identifier: rep.referenceId || 'Report',
+            Title: rep.targetTitle || 'Reported Target',
+            Detail: `${rep.reasonCategory} (${rep.severity})`,
+            Status: rep.status || 'Pending',
+          });
+        });
+        scopeData = ledger.length > 0 ? ledger : [{ Status: 'Empty Account Dossier' }];
+      }
+    }
+
+    this.dataExportService.exportClientData(format, scopeData, scopeLabel);
   }
 
   private executePrintBookmarks(collectionName: string, params: any) {
@@ -1207,16 +1506,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       contentHtml = '<p style="color:#64748b;font-size:12px">No saved research bookmarks found in this collection.</p>';
     } else {
       for (const bm of list) {
-        contentHtml += this.printService.buildStatuteText(bm.section, {
-          actName: bm.actShortName,
-          shortName: bm.actShortName,
-          year: '',
-        });
-        if (bm.notes) {
-          contentHtml += `<div style="background:#fffbeb;border-left:3px solid #d97706;padding:8px 12px;margin:-6px 0 14px;border-radius:0 6px 6px 0;font-size:11px;color:#78350f">
-            <strong>Notes:</strong> ${this.printService.escapeHtml(bm.notes)}
-          </div>`;
-        }
+        contentHtml += this.printService.buildStatuteText(
+          bm.section,
+          {
+            actName: bm.actShortName,
+            shortName: bm.actShortName,
+            year: '',
+          },
+          bm.notes
+        );
       }
     }
 
@@ -1265,7 +1563,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     if (resources.length > 0) {
       contentHtml += this.printService.buildSection(
         'Saved Courts & Legal Aid Centers',
-        this.printService.buildResourceCards(resources, { showQr: params.includeQr }),
+        this.printService.buildResourceCards(resources, { showQr: params.includeQr, compact: true }),
         `${resources.length} Centers`
       );
     }
@@ -1306,29 +1604,119 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
   }
 
   private executePrintFullDossier(params: any) {
-    let contentHtml = '';
     const bookmarks = this.allBookmarks();
     const lawyers = this.savedLawyersDetails();
     const resources = this.savedResourcesDetails();
     const helplines = this.savedHelplinesDetails();
+    const casePacks = this.savedCasePacks();
+    const inquiries = this.inquiries();
 
+    const user = this.currentUser();
+    const clientName = user?.fullName || 'Anand Kasaudhan';
+    const clientEmail = user?.email || 'Verified Client Account';
+    const refCode = this.printService.generateRefCode('DOSSIER');
+
+    const totalBookmarks = bookmarks.length;
+    const totalLawyers = lawyers.length;
+    const totalResources = resources.length;
+    const totalHelplines = helplines.length;
+    const totalCasePacks = casePacks.length;
+    const totalInquiries = inquiries.length;
+    const grandTotal = totalBookmarks + totalLawyers + totalResources + totalHelplines + totalCasePacks + totalInquiries;
+
+    // 1. Executive Cover Page (Page 1) — Fortune 500 / Top MNC LegalTech Standard
+    const coverPageHtml = this.printService.buildExecutiveCoverPage({
+      title: 'Complete Client Case & Practice Dossier',
+      subtitle: 'Consolidated Master Archive • Statutory Research, Retained Counsel, Legal Aid & Active Proceedings',
+      refCode,
+      clientName,
+      clientEmail,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'ATTORNEY-CLIENT PRIVILEGED // STRICTLY CONFIDENTIAL',
+      kpis: [
+        {
+          label: 'Statutory Research',
+          value: `${totalBookmarks} Provisions`,
+          sub: 'Annotated Criminal & Civil Codes',
+          accent: 'indigo',
+        },
+        {
+          label: 'Retained Counsel',
+          value: `${totalLawyers} Advocate`,
+          sub: 'Verified Practice Counsel',
+          accent: 'emerald',
+        },
+        {
+          label: 'Legal Aid & Courts',
+          value: `${totalResources} Centers`,
+          sub: 'DLSA & Statutory Registries',
+          accent: 'blue',
+        },
+        {
+          label: 'Active Proceedings',
+          value: `${totalCasePacks + totalInquiries} Matters`,
+          sub: `${totalInquiries} Inquiries &bull; ${totalCasePacks} Roadmaps`,
+          accent: 'amber',
+        },
+      ],
+      tableOfContents: [
+        {
+          section: 'PART I',
+          title: 'Annotated Legal Research Bookmarks',
+          count: `${totalBookmarks} Provisions`,
+          desc: 'Direct statutory citations, penal provisions and procedural mandates saved to client archive',
+        },
+        {
+          section: 'PART II',
+          title: 'Retained Advocates & Legal Counsel',
+          count: `${totalLawyers} Counsel`,
+          desc: 'Retained legal counsel, court practice areas and verified contact details',
+        },
+        {
+          section: 'PART III',
+          title: 'Saved Courts & Statutory Legal Aid Centers',
+          count: `${totalResources} Centers`,
+          desc: 'DLSA front desks, legal aid clinics, operating hours and GPS routing',
+        },
+        {
+          section: 'PART IV',
+          title: 'Procedural Case Pack Roadmaps & Preparation Briefs',
+          count: `${totalCasePacks} Dossiers`,
+          desc: 'Jurisdictional roadmaps, evidence checklists and procedural guides',
+        },
+        {
+          section: 'PART V',
+          title: 'Active & Historical Consultation Inquiries',
+          count: `${totalInquiries} Inquiries`,
+          desc: 'Advocate consultation logs, engagement scopes and status ledger',
+        },
+      ],
+      notice: 'This comprehensive dossier is compiled from user-curated legal research, active consultations, and verified practice directories on the LegalConnect platform. The contents hereof contain confidential, proprietary, and legally privileged work product. Any unauthorized dissemination, copying, distribution, or action taken in reliance on the contents of this information is strictly prohibited under the Advocates Act, 1961, the Bar Council of India Rules, and the Digital Personal Data Protection (DPDP) Act, 2023.',
+    });
+
+    let contentHtml = '';
+
+    // ── PART I: STATUTORY BOOKMARKS ──
     if (bookmarks.length > 0) {
-      let bmHtml = '';
+      contentHtml += `
+        <div class="lc-part-header">
+          <span class="lc-part-title">Part I &bull; Annotated Legal Research Bookmarks</span>
+          <span class="lc-part-badge">${bookmarks.length} Statutory Provisions</span>
+        </div>
+      `;
       for (const bm of bookmarks) {
-        bmHtml += this.printService.buildStatuteText(bm.section, {
-          actName: bm.actShortName,
-          shortName: bm.actShortName,
-          year: '',
-        });
-        if (bm.notes) {
-          bmHtml += `<div style="background:#fffbeb;border-left:3px solid #d97706;padding:8px 12px;margin:-6px 0 14px;border-radius:0 6px 6px 0;font-size:11px;color:#78350f">
-            <strong>Notes:</strong> ${this.printService.escapeHtml(bm.notes)}
-          </div>`;
-        }
+        contentHtml += this.printService.buildStatuteText(
+          bm.section,
+          {
+            actName: bm.actShortName,
+            shortName: bm.actShortName,
+            year: '',
+          },
+          bm.notes
+        );
       }
-      contentHtml += this.printService.buildSection('Annotated Legal Research Bookmarks', bmHtml, `${bookmarks.length} Sections`);
     }
 
+    // ── PART II: RETAINED ADVOCATES ──
     if (lawyers.length > 0) {
       const rows = lawyers.map((l: any) => ({
         name: l.name,
@@ -1337,9 +1725,13 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         spec: (l.specializations || []).join(', ') || 'General',
         contact: l.phone || l.officeAddress || 'N/A',
       }));
+      contentHtml += `
+        <div class="lc-part-header">
+          <span class="lc-part-title">Part II &bull; Retained Advocates &amp; Legal Counsel</span>
+          <span class="lc-part-badge">${lawyers.length} Counsel</span>
+        </div>
+      `;
       contentHtml += this.printService.buildTable({
-        title: 'Retained & Saved Advocates',
-        badge: `${lawyers.length} Counsel`,
         columns: [
           { key: 'name', label: 'Advocate Name', bold: true },
           { key: 'exp', label: 'Experience' },
@@ -1351,14 +1743,21 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       });
     }
 
+    // ── PART III: SAVED COURTS & LEGAL AID CENTERS ──
     if (resources.length > 0) {
-      contentHtml += this.printService.buildSection(
-        'Saved Courts & Legal Aid Centers',
-        this.printService.buildResourceCards(resources, { showQr: params.includeQr }),
-        `${resources.length} Centers`
-      );
+      contentHtml += `
+        <div class="lc-part-header">
+          <span class="lc-part-title">Part III &bull; Saved Courts &amp; Statutory Legal Aid Centers</span>
+          <span class="lc-part-badge">${resources.length} Verified Centers</span>
+        </div>
+      `;
+      contentHtml += this.printService.buildResourceCards(resources, {
+        showQr: params.includeQr,
+        compact: true,
+      });
     }
 
+    // ── HELPLINES (if any) ──
     if (helplines.length > 0) {
       const rows = helplines.map((h: any) => ({
         name: h.name,
@@ -1377,18 +1776,239 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       });
     }
 
+    // ── PART IV: CASE PACK ROADMAPS ──
+    if (casePacks.length > 0) {
+      contentHtml += `
+        <div class="lc-part-header">
+          <span class="lc-part-title">Part IV &bull; Saved Case Pack Roadmaps &amp; Preparation Briefs</span>
+          <span class="lc-part-badge">${casePacks.length} Dossiers</span>
+        </div>
+      `;
+      let cpHtml = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:8px;margin-bottom:12px;">';
+      for (const pack of casePacks) {
+        cpHtml += `
+          <div style="padding:10px 12px;border:1px solid #e2e8f0;border-left:3px solid #1e3a8a;border-radius:6px;background:#f8fafc;break-inside:avoid;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <strong style="font-size:11.5px;color:#1e3a8a;">${this.printService.escapeHtml(pack.category || 'General Matter')}</strong>
+              <span style="font-size:8px;font-weight:700;background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;">Active Pack</span>
+            </div>
+            <div style="font-size:9.5px;color:#64748b;margin-top:3px;">Scope: ${this.printService.escapeHtml(pack.location || 'All India')}</div>
+          </div>
+        `;
+      }
+      cpHtml += '</div>';
+      contentHtml += cpHtml;
+    }
+
+    // ── PART V: CONSULTATION INQUIRIES ──
+    if (inquiries.length > 0) {
+      contentHtml += `
+        <div class="lc-part-header">
+          <span class="lc-part-title">Part V &bull; Active &amp; Historical Consultation Inquiries</span>
+          <span class="lc-part-badge">${inquiries.length} Inquiries</span>
+        </div>
+      `;
+      const rows = inquiries.map((inq: any) => ({
+        id: `#${inq.id || inq._id}`,
+        lawyer: inq.lawyerName ? `Adv. ${inq.lawyerName}` : 'Counsel',
+        subject: inq.subject || inq.caseType || 'Consultation',
+        status: `<span class="lc-pill lc-pill-${inq.status === 'Completed' || inq.status === 'Confirmed' ? 'success' : (inq.status === 'Cancelled' ? 'danger' : 'warning')}">${this.printService.escapeHtml(inq.status || 'Pending')}</span>`,
+      }));
+      contentHtml += this.printService.buildTable({
+        columns: [
+          { key: 'id', label: 'Ref #', mono: true, bold: true },
+          { key: 'lawyer', label: 'Advocate' },
+          { key: 'subject', label: 'Subject / Scope' },
+          { key: 'status', label: 'Status', align: 'center' },
+        ],
+        rows,
+      });
+    }
+
     this.printService.print({
       title: 'Complete Client Case & Practice Dossier',
       subtitle: 'Official Comprehensive Legal Archive & Saved Directory',
+      coverPage: coverPageHtml,
+      suppressDefaultHeader: true,
       content: contentHtml,
       watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
       classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
       sealText: 'Comprehensive Legal Dossier • LegalConnect Platform',
       extraMeta: [
-        { label: 'Total Saved Sections', value: `${bookmarks.length}` },
-        { label: 'Total Directory Items', value: `${lawyers.length + resources.length + helplines.length}` },
+        { label: 'Client', value: clientName },
+        { label: 'Total Audited Items', value: `${grandTotal}` },
       ],
     });
+  }
+
+  private executePrintCasePacks(params: any) {
+    const packs = this.savedCasePacks();
+    let contentHtml = '';
+
+    if (!packs || packs.length === 0) {
+      contentHtml = '<p style="color:#64748b;font-size:12px">No saved case pack dossiers found.</p>';
+    } else {
+      for (const pack of packs) {
+        const steps = (pack.roadmap?.steps || []).map((s: any, idx: number) => `
+          <div style="margin-bottom:8px;padding:8px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">
+            <strong style="font-size:11px;color:#1e3a8a">Step ${idx + 1}: ${this.printService.escapeHtml(s.title || '')}</strong>
+            <p style="margin:2px 0 0;font-size:10px;color:#475569">${this.printService.escapeHtml(s.detail || '')}</p>
+          </div>
+        `).join('');
+
+        const docs = (pack.roadmap?.documents || []).map((d: string) => `
+          <li style="font-size:11px;color:#334155">${this.printService.escapeHtml(d)}</li>
+        `).join('');
+
+        contentHtml += `
+          <div style="margin-bottom:18px;padding:14px;border:1px solid #cbd5e1;border-radius:8px">
+            <h3 style="margin:0 0 4px;font-size:14px;color:#0f172a">${this.printService.escapeHtml(pack.category || 'General Practice')}</h3>
+            <p style="margin:0 0 10px;font-size:11px;color:#64748b">Jurisdiction / Scope: ${this.printService.escapeHtml(pack.location || 'All India')}</p>
+            ${docs ? `<div style="margin-bottom:8px"><strong style="font-size:11px;color:#334155">Required Document Checklist:</strong><ul style="margin:4px 0 8px 16px;padding:0">${docs}</ul></div>` : ''}
+            ${steps ? `<div><strong style="font-size:11px;color:#334155">Procedural Roadmap:</strong><div style="margin-top:6px">${steps}</div></div>` : ''}
+          </div>
+        `;
+      }
+    }
+
+    this.printService.print({
+      title: 'Saved Case Pack Dossiers',
+      subtitle: 'Client Procedural Roadmaps, Document Checklists & Practice Briefs',
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'LegalConnect Case Pack Repository',
+      extraMeta: [
+        { label: 'Total Dossiers', value: `${packs.length}` }
+      ]
+    });
+  }
+
+  private executePrintInquiries(params: any) {
+    const list = this.inquiries();
+    let contentHtml = '';
+
+    if (!list || list.length === 0) {
+      contentHtml = '<p style="color:#64748b;font-size:12px">No consultation inquiries found in your account.</p>';
+    } else {
+      const rows = list.map((inq: any) => ({
+        id: `#${inq.id || inq._id}`,
+        lawyer: inq.lawyerName ? `Adv. ${inq.lawyerName}` : 'Legal Counsel',
+        subject: inq.subject || inq.caseType || inq.title || 'Legal Consultation',
+        date: inq.date || inq.createdAt ? new Date(inq.date || inq.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Recent',
+        status: `<span style="font-weight:bold;color:${inq.status === 'Completed' || inq.status === 'Confirmed' ? '#059669' : (inq.status === 'Cancelled' ? '#e11d48' : '#d97706')}">${this.printService.escapeHtml(inq.status || 'Pending')}</span>`,
+        fee: inq.fee ? `₹${inq.fee}` : 'Standard Consultation',
+      }));
+
+      contentHtml += this.printService.buildTable({
+        title: 'Advocate Consultation Inquiries & Appointments',
+        badge: `${list.length} Inquiries`,
+        columns: [
+          { key: 'id', label: 'Ref #' },
+          { key: 'lawyer', label: 'Advocate Counsel', bold: true },
+          { key: 'subject', label: 'Case / Matter Scope' },
+          { key: 'date', label: 'Inquiry Date' },
+          { key: 'status', label: 'Status', align: 'center' },
+          { key: 'fee', label: 'Consult Fee', align: 'right' },
+        ],
+        rows,
+      });
+
+      const withNotes = list.filter((i: any) => i.message || i.description || i.notes);
+      if (withNotes.length > 0) {
+        const briefsHtml = withNotes.map((i: any) => `
+          <div style="margin-bottom:12px;padding:10px;border:1px solid #e2e8f0;border-radius:6px;background:#f8fafc">
+            <div style="font-weight:700;font-size:11px;color:#1e3a8a;margin-bottom:3px">Ref #${i.id || i._id} — ${this.printService.escapeHtml(i.lawyerName || 'Counsel')}: ${this.printService.escapeHtml(i.subject || 'Consultation Request')}</div>
+            <p style="margin:0;color:#475569;font-size:10px;line-height:1.5">${this.printService.escapeHtml(i.message || i.description || i.notes || '')}</p>
+          </div>
+        `).join('');
+        contentHtml += this.printService.buildSection('Consultation Briefs & Message Logs', briefsHtml, `${withNotes.length} Messages`);
+      }
+    }
+
+    this.printService.print({
+      title: 'Consultation Inquiries & Timeline Dossier',
+      subtitle: 'Client Legal Inquiries, Retainer Requests & Appointment Records',
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'Certified Consultation Registry • LegalConnect',
+      extraMeta: [
+        { label: 'Total Inquiries', value: `${list.length}` },
+      ],
+    });
+  }
+
+  private executePrintAnalytics(params: any) {
+    this.dataExportService.printClientInsightsDossier(
+      {
+        totalSpend: 0,
+        pendingAmount: 0,
+        closedMattersCount: 0,
+        activeRetainersCount: 0,
+        monthlyRunRate: 0,
+        categoryBreakdown: []
+      },
+      this.inquiries()
+    );
+  }
+
+  private executePrintReports(params: any) {
+    const list = this.userReports();
+    let contentHtml = '';
+
+    if (!list || list.length === 0) {
+      contentHtml = '<p style="color:#64748b;font-size:12px">No platform feedback or moderation reports recorded.</p>';
+    } else {
+      const rows = list.map((r: any) => ({
+        ref: r.referenceId || `#${r.id}`,
+        target: `${r.targetType || 'Statute'}: ${r.targetTitle || r.targetId || 'N/A'}`,
+        category: r.reasonCategory || 'Text Correction',
+        severity: r.severity || 'Medium',
+        status: `<span style="font-weight:bold;color:${r.status === 'Resolved' || r.status === 'ActionTaken' ? '#059669' : '#d97706'}">${this.printService.escapeHtml(r.status || 'Pending')}</span>`,
+        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : 'Recent',
+      }));
+
+      contentHtml += this.printService.buildTable({
+        title: 'User Feedback & Statutory Integrity Reports',
+        badge: `${list.length} Tickets`,
+        columns: [
+          { key: 'ref', label: 'Ticket Ref' },
+          { key: 'target', label: 'Reported Entity', bold: true },
+          { key: 'category', label: 'Issue Category' },
+          { key: 'severity', label: 'Severity' },
+          { key: 'status', label: 'Resolution Status', align: 'center' },
+          { key: 'date', label: 'Reported Date', align: 'right' },
+        ],
+        rows,
+      });
+    }
+
+    this.printService.print({
+      title: 'Platform Reports & Feedback Audit Dossier',
+      subtitle: 'Statutory Accuracy, Community Reviews & Incident Tickets',
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'LegalConnect Integrity & Moderation Registry',
+      extraMeta: [
+        { label: 'Total Reports', value: `${list.length}` },
+      ],
+    });
+  }
+
+  loadUserReports() {
+    this.moderationService.getMyReports(1, 50).subscribe({
+      next: (res: any) => {
+        const items = res?.data || [];
+        this.userReports.set(items);
+      },
+      error: () => { }
+    });
+  }
+
+  onGlobalExportClick() {
+    this.triggerPrint(this.selectedCollection());
   }
 
   triggerPrintDirectory() {
@@ -1483,6 +2103,35 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     this.directoryDrawerData.set(data);
     this.directoryDrawerOpen.set(true);
     this.updateScrollLock();
+  }
+
+  handleReportTargetNavigation(event: { type: string; id: string; title: string }) {
+    if (!event || !event.type) return;
+    const type = event.type.toLowerCase();
+
+    if (type.includes('resource')) {
+      const found = this.savedResourcesDetails().find((r: any) => (r.id || r._id)?.toString() === event.id);
+      if (found) {
+        this.openDirectoryDrawer('resource', found);
+      } else {
+        this.router.navigate(['/legal-resources', event.id]);
+      }
+    } else if (type.includes('lawyer')) {
+      const found = this.savedLawyersDetails().find((l: any) => (l.id || l._id)?.toString() === event.id);
+      if (found) {
+        this.openDirectoryDrawer('lawyer', found);
+      } else {
+        this.router.navigate(['/lawyers', event.id]);
+      }
+    } else if (type.includes('helpline')) {
+      this.router.navigate(['/find-help']);
+    } else if (type.includes('act') || type.includes('section') || type.includes('statute')) {
+      this.router.navigate(['/laws', event.id]);
+    } else if (type.includes('template')) {
+      this.router.navigate(['/laws/templates']);
+    } else {
+      this.snackbarService.show(`Navigating to ${event.title || 'entity'}`, 'info');
+    }
   }
 
   openQrModal(item: any) {

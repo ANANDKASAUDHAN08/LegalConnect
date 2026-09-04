@@ -17,6 +17,8 @@ export interface PrintConfig {
   headerQrData?: string;
   extraMeta?: { label: string; value: string }[];
   onPopupBlocked?: () => void;
+  coverPage?: string;
+  suppressDefaultHeader?: boolean;
 }
 
 export interface KpiCard {
@@ -57,6 +59,7 @@ export interface TableConfig {
    6. Automatic Image-Load Verification Before Print Trigger
    7. Hidden Iframe Fallback for Popup Blockers
    8. QR Code Verification & Deep GPS Directions
+   9. Institutional Executive Cover Page & TOC Architecture
    ═══════════════════════════════════════════════════════════════════ */
 
 @Injectable({ providedIn: 'root' })
@@ -187,7 +190,7 @@ export class PrintService {
 *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
-  color:#0f172a;background:#fff;line-height:1.5;font-size:12px;
+  color:#0f172a;background:#fff;line-height:1.5;font-size:11.5px;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
   position:relative;
 }
@@ -195,36 +198,85 @@ body{
 /* ── Watermark ── */
 .lc-watermark{
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
-  font-size:4rem;font-weight:900;color:rgba(15,23,42,0.035);
+  font-size:4.2rem;font-weight:900;color:rgba(15,23,42,0.032);
   text-transform:uppercase;letter-spacing:0.18em;pointer-events:none;z-index:0;
   white-space:nowrap;user-select:none;
 }
 
 /* ── Classification Pill ── */
 .lc-class-badge{
-  display:inline-block;font-size:8px;font-weight:800;letter-spacing:0.1em;
+  display:inline-flex;align-items:center;gap:3px;font-size:8px;font-weight:800;letter-spacing:0.08em;
   text-transform:uppercase;padding:2px 8px;border-radius:4px;
   background:#fee2e2;color:#991b1b;border:1px solid #fecaca;margin-bottom:4px;
 }
 
+/* ── Executive Cover Page ── */
+.lc-cover-page{
+  page-break-after:always!important;break-after:page!important;
+  box-sizing:border-box;padding:4px 0 10px;position:relative;z-index:1;
+}
+.lc-cover-header{
+  border-bottom:2px solid #0f172a;padding-bottom:12px;margin-bottom:14px;
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.lc-cover-title{
+  font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:800;
+  color:#0f172a;letter-spacing:-0.02em;line-height:1.2;margin:10px 0 4px;
+}
+.lc-cover-sub{
+  font-size:10.5px;font-weight:600;color:#475569;letter-spacing:0.03em;
+  text-transform:uppercase;line-height:1.4;
+}
+.lc-meta-matrix{
+  display:grid;grid-template-columns:1fr 1fr;gap:8px;
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
+  padding:10px 14px;margin-bottom:14px;
+}
+.lc-meta-item{display:flex;flex-direction:column;gap:2px}
+.lc-meta-label{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#64748b}
+.lc-meta-val{font-size:10.5px;font-weight:700;color:#0f172a}
+.lc-toc-wrap{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:14px}
+.lc-toc-title{
+  background:#0f172a;color:#fff;font-size:8.5px;font-weight:800;
+  letter-spacing:0.08em;text-transform:uppercase;padding:7px 12px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+.lc-toc-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 12px;border-bottom:1px solid #f1f5f9;font-size:9.5px;
+}
+.lc-toc-row:last-child{border-bottom:none}
+.lc-toc-row:nth-child(even){background:#f8fafc}
+.lc-toc-sec{font-weight:700;color:#1e3a8a;width:75px;flex-shrink:0}
+.lc-toc-name{font-weight:600;color:#1e293b;flex:1}
+.lc-toc-count{font-size:8.5px;font-weight:700;color:#475569;background:#e2e8f0;padding:1px 7px;border-radius:10px}
+.lc-privilege-notice{
+  border:1px solid #cbd5e1;border-left:4px solid #475569;background:#f8fafc;
+  border-radius:6px;padding:8px 12px;font-size:8px;color:#475569;line-height:1.5;
+}
+.lc-privilege-title{
+  font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:0.06em;
+  margin-bottom:2px;display:flex;align-items:center;gap:4px;
+}
+
 /* ── Header ── */
 .lc-header{
-  border-top:4px solid ${accentColor};padding:14px 0 12px;border-bottom:2px solid #0f172a;
-  display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;
+  border-top:4px solid ${accentColor};padding:12px 0 10px;border-bottom:2px solid #0f172a;
+  display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;
   position:relative;z-index:1;
 }
 .lc-brand{display:flex;align-items:center;gap:10px}
 .lc-brand-icon{
-  width:36px;height:36px;border-radius:50%;
+  width:34px;height:34px;border-radius:50%;
   background:linear-gradient(135deg,#2563eb,${accentColor});
   display:flex;align-items:center;justify-content:center;color:#fff;flex-shrink:0;
 }
-.lc-brand-name{font-size:20px;font-weight:800;color:#0f172a;letter-spacing:-0.03em;line-height:1.1}
+.lc-brand-name{font-size:19px;font-weight:800;color:#0f172a;letter-spacing:-0.03em;line-height:1.1}
 .lc-brand-name span{color:${accentColor}}
-.lc-brand-tag{font-size:8px;font-weight:800;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px}
-.lc-doc-title{font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:700;color:#0f172a;margin:6px 0 2px;break-after:avoid;page-break-after:avoid}
-.lc-doc-sub{font-size:10px;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;font-weight:600}
-.lc-meta{text-align:right;font-size:10px;color:#475569}
+.lc-brand-tag{font-size:7.5px;font-weight:800;color:#64748b;letter-spacing:0.1em;text-transform:uppercase;margin-top:1px}
+.lc-doc-title{font-family:Georgia,'Times New Roman',serif;font-size:17px;font-weight:700;color:#0f172a;margin:5px 0 2px;break-after:avoid;page-break-after:avoid}
+.lc-doc-sub{font-size:9.5px;color:#64748b;text-transform:uppercase;letter-spacing:0.07em;font-weight:600}
+.lc-meta{text-align:right;font-size:9.5px;color:#475569}
 .lc-ref{
   font-family:'Courier New',monospace;font-weight:700;color:#0f172a;
   background:#f1f5f9;padding:2px 6px;border-radius:4px;display:inline-block;margin-bottom:3px;
@@ -232,7 +284,7 @@ body{
 
 /* ── Footer ── */
 .lc-footer{
-  border-top:1px solid #e2e8f0;padding-top:10px;margin-top:28px;
+  border-top:1px solid #e2e8f0;padding-top:10px;margin-top:24px;
   display:flex;justify-content:space-between;align-items:center;
   font-size:8px;color:#94a3b8;page-break-inside:avoid;break-inside:avoid;
   position:relative;z-index:1;
@@ -242,23 +294,24 @@ body{
 /* ── Subject Strip ── */
 .lc-subject{
   background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
-  padding:10px 14px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;
+  padding:10px 14px;margin-bottom:16px;display:flex;justify-content:space-between;align-items:center;
   position:relative;z-index:1;page-break-inside:avoid;break-inside:avoid;
 }
-.lc-subject-name{font-size:14px;font-weight:700;color:#0f172a}
-.lc-subject-sub{font-size:10px;color:#64748b;margin-top:2px}
+.lc-subject-name{font-size:13.5px;font-weight:700;color:#0f172a}
+.lc-subject-sub{font-size:9.5px;color:#64748b;margin-top:2px}
 .lc-subject-badge{
   background:#ecfdf5;border:1px solid #10b981;color:#047857;
-  padding:3px 10px;border-radius:20px;font-size:9px;font-weight:700;
+  padding:3px 10px;border-radius:20px;font-size:8.5px;font-weight:700;
   text-transform:uppercase;letter-spacing:0.05em;display:inline-flex;align-items:center;gap:4px;
 }
 
-/* ── Section ── */
+/* ── Section & Part Headers ── */
 .lc-section{
-  border:1px solid #e2e8f0;border-radius:8px;padding:14px;
-  margin-bottom:16px;background:#fff;page-break-inside:avoid;break-inside:avoid;
+  border:1px solid #e2e8f0;border-radius:8px;padding:12px;
+  margin-bottom:14px;background:#fff;page-break-inside:auto;break-inside:auto;
   position:relative;z-index:1;
 }
+.lc-section.keep-together{page-break-inside:avoid;break-inside:avoid}
 .lc-section-title{
   font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.06em;
   color:#0f172a;border-bottom:1px solid #f1f5f9;padding-bottom:6px;margin-bottom:10px;
@@ -266,12 +319,20 @@ body{
   break-after:avoid;page-break-after:avoid;
 }
 .lc-section-badge{font-size:9px;font-weight:600;color:#64748b;text-transform:none;letter-spacing:normal}
+.lc-part-header{
+  background:#0f172a;color:#fff;padding:7px 12px;border-radius:6px;
+  margin:16px 0 10px;display:flex;justify-content:space-between;align-items:center;
+  break-after:avoid;page-break-after:avoid;position:relative;z-index:1;
+}
+.lc-part-title{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em}
+.lc-part-badge{font-size:8.5px;font-weight:600;background:rgba(255,255,255,0.2);padding:1px 7px;border-radius:4px}
+.lc-page-break{page-break-before:always;break-before:page}
 
 /* ── KPI Grid ── */
-.lc-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;position:relative;z-index:1}
+.lc-kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;position:relative;z-index:1}
 @media print{.lc-kpi-grid{grid-template-columns:repeat(4,1fr)!important}}
-.lc-kpi{border:1px solid #e2e8f0;border-radius:8px;padding:10px;position:relative;background:#fff;page-break-inside:avoid;break-inside:avoid}
-.lc-kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:8px 8px 0 0}
+.lc-kpi{border:1px solid #e2e8f0;border-radius:6px;padding:8px 10px;position:relative;background:#fff;page-break-inside:avoid;break-inside:avoid}
+.lc-kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;border-radius:6px 6px 0 0}
 .lc-kpi.green::before{background:#10b981}
 .lc-kpi.amber::before{background:#f59e0b}
 .lc-kpi.indigo::before{background:#6366f1}
@@ -279,9 +340,9 @@ body{
 .lc-kpi.emerald::before{background:#059669}
 .lc-kpi.slate::before{background:#64748b}
 .lc-kpi.rose::before{background:#f43f5e}
-.lc-kpi-label{font-size:8px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#64748b}
-.lc-kpi-val{font-size:17px;font-weight:700;color:#0f172a;margin-top:3px;display:flex;align-items:center;gap:4px}
-.lc-kpi-sub{font-size:9px;color:#64748b;margin-top:2px}
+.lc-kpi-label{font-size:7.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.07em;color:#64748b}
+.lc-kpi-val{font-size:15px;font-weight:700;color:#0f172a;margin-top:2px;display:flex;align-items:center;gap:4px}
+.lc-kpi-sub{font-size:8.5px;color:#64748b;margin-top:1px}
 
 /* ── Tables with Multi-Page Repeating Headers ── */
 .lc-table{width:100%;border-collapse:collapse;margin-top:6px}
@@ -289,10 +350,10 @@ body{
 .lc-table tfoot{display:table-footer-group}
 .lc-table tr{page-break-inside:avoid;break-inside:avoid}
 .lc-table th{
-  background:#0f172a;color:#fff;font-size:9px;font-weight:700;
-  text-transform:uppercase;letter-spacing:0.05em;padding:6px 8px;text-align:left;
+  background:#0f172a;color:#fff;font-size:8.5px;font-weight:700;
+  text-transform:uppercase;letter-spacing:0.05em;padding:5px 8px;text-align:left;
 }
-.lc-table td{padding:6px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#334155}
+.lc-table td{padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:9.5px;color:#334155}
 .lc-table tr:nth-child(even) td{background:#f8fafc}
 .lc-table .mono{font-family:'Courier New',monospace}
 .lc-table .bold{font-weight:700}
@@ -302,7 +363,7 @@ body{
 /* ── Resource Cards ── */
 .lc-res-card{
   border:1px solid #e2e8f0;border-left:4px solid #64748b;border-radius:8px;
-  padding:12px 14px;margin-bottom:10px;display:flex;gap:14px;
+  padding:10px 12px;margin-bottom:10px;display:flex;gap:12px;
   justify-content:space-between;page-break-inside:avoid;break-inside:avoid;position:relative;z-index:1;
 }
 .lc-res-card.type-legal-aid{border-left-color:#7c3aed}
@@ -311,36 +372,129 @@ body{
 .lc-res-card.type-police{border-left-color:#dc2626}
 .lc-res-body{flex:1;min-width:0}
 .lc-res-type{
-  display:inline-block;font-size:8px;font-weight:800;text-transform:uppercase;
-  letter-spacing:0.06em;padding:2px 6px;border-radius:4px;margin-bottom:5px;
+  display:inline-block;font-size:7.5px;font-weight:800;text-transform:uppercase;
+  letter-spacing:0.06em;padding:2px 5px;border-radius:3px;margin-bottom:4px;
 }
 .lc-res-type.legal-aid{background:#f3e8ff;color:#6d28d9}
 .lc-res-type.court{background:#fef3c7;color:#92400e}
 .lc-res-type.gov{background:#e0f2fe;color:#0c4a6e}
 .lc-res-type.police{background:#fee2e2;color:#991b1b}
-.lc-res-name{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:3px}
-.lc-res-addr{font-size:10px;color:#475569;line-height:1.4;display:flex;align-items:flex-start;gap:4px}
-.lc-res-contact{font-size:10px;margin-top:4px;color:#334155;display:flex;align-items:center;gap:4px}
+.lc-res-name{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:2px}
+.lc-res-addr{font-size:9.5px;color:#475569;line-height:1.4;display:flex;align-items:flex-start;gap:4px}
+.lc-res-contact{font-size:9.5px;margin-top:3px;color:#334155;display:flex;align-items:center;gap:4px}
 .lc-res-contact strong{font-weight:700;color:#0f172a}
-.lc-res-url{font-size:9px;color:#2563eb;word-break:break-all;margin-top:3px;display:flex;align-items:center;gap:4px}
-.lc-res-tags{margin-top:5px;display:flex;flex-wrap:wrap;gap:3px}
+.lc-res-url{font-size:8.5px;color:#2563eb;word-break:break-all;margin-top:2px;display:flex;align-items:center;gap:4px}
+.lc-res-tags{margin-top:4px;display:flex;flex-wrap:wrap;gap:3px}
 .lc-res-tag{
-  font-size:8px;font-weight:700;padding:2px 5px;border-radius:3px;
+  font-size:7.5px;font-weight:700;padding:1px 4px;border-radius:3px;
   background:#f0f9ff;color:#0369a1;border:1px solid #bae6fd;
   display:inline-flex;align-items:center;gap:2px;
 }
-.lc-res-qr{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:3px}
-.lc-res-qr img{width:80px;height:80px;border:1px solid #e2e8f0;border-radius:4px}
-.lc-res-qr span{font-size:7px;color:#94a3b8;text-align:center;max-width:80px}
+.lc-res-qr{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:2px}
+.lc-res-qr img{width:70px;height:70px;border:1px solid #e2e8f0;border-radius:4px}
+.lc-res-qr span{font-size:6.5px;color:#94a3b8;text-align:center;max-width:70px}
 
-/* ── Statute Text ── */
-.lc-statute{
-  background:#f8fafc;border:1px solid #e2e8f0;border-left:5px solid ${accentColor};
-  border-radius:8px;padding:16px;margin-bottom:14px;page-break-inside:avoid;break-inside:avoid;position:relative;z-index:1;
+/* ── Compact Resource Grid (2-Column in Print) ── */
+.lc-res-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;position:relative;z-index:1}
+@media print{.lc-res-grid{display:grid!important;grid-template-columns:1fr 1fr!important;gap:8px!important}}
+.lc-res-card.compact{
+  padding:8px 10px;margin-bottom:0;gap:8px;page-break-inside:avoid;break-inside:avoid;
 }
-.lc-statute-num{font-size:10px;font-weight:800;color:${accentColor};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px;display:flex;align-items:center;gap:4px}
-.lc-statute-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:8px}
-.lc-statute-body{font-size:11px;color:#334155;line-height:1.7;white-space:pre-wrap}
+.lc-res-card.compact .lc-res-qr img{width:50px;height:50px}
+.lc-res-card.compact .lc-res-qr span{font-size:6.5px;max-width:50px}
+.lc-res-card.compact .lc-res-name{font-size:11px;margin-bottom:2px}
+.lc-res-card.compact .lc-res-addr,.lc-res-card.compact .lc-res-contact,.lc-res-card.compact .lc-res-url{font-size:8.5px;margin-top:2px}
+
+/* ── Statute Text (Flows naturally across pages) ── */
+.lc-statute{
+  background:#f8fafc;border:1px solid #e2e8f0;border-left:4px solid ${accentColor};
+  border-radius:0!important;padding:8px 12px;margin-bottom:10px;
+  page-break-inside:auto!important;break-inside:auto!important;
+  -webkit-box-decoration-break:slice!important;box-decoration-break:slice!important;
+  position:relative;z-index:1;
+}
+.lc-statute-num{
+  font-size:9.5px;font-weight:800;color:${accentColor};text-transform:uppercase;
+  letter-spacing:0.06em;margin-bottom:2px;display:flex;align-items:center;gap:4px;
+  break-after:avoid!important;page-break-after:avoid!important;
+}
+.lc-statute-title{
+  font-size:12px;font-weight:700;color:#0f172a;margin-bottom:4px;
+  break-after:avoid!important;page-break-after:avoid!important;
+}
+.lc-statute-body{
+  font-size:10px;color:#334155;line-height:1.5;white-space:pre-line!important;
+  word-break:break-word;orphans:2;widows:2;
+}
+.lc-statute-note{
+  background:#fffbeb;border-left:3px solid #d97706;padding:4px 8px;
+  margin-top:4px;border-radius:0!important;font-size:9px;color:#78350f;
+  page-break-inside:avoid;break-inside:avoid;
+}
+
+/* ── Comparative Transition Grid (Law Mapper) ── */
+.lc-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;position:relative;z-index:1}
+.lc-compare-card{border:1px solid #e2e8f0;border-radius:6px;padding:10px 12px;background:#f8fafc;page-break-inside:avoid;break-inside:avoid}
+.lc-compare-card.old-act{border-top:3px solid #64748b}
+.lc-compare-card.new-act{border-top:3px solid ${accentColor}}
+.lc-compare-tag{font-size:8.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:3px}
+.lc-compare-title{font-size:12px;font-weight:700;color:#0f172a;margin-bottom:5px}
+.lc-compare-content{font-size:10px;color:#334155;line-height:1.55}
+
+/* ── Legal Document Draft Formatting (Document Templates) ── */
+.lc-legal-draft{
+  font-family:Georgia,'Times New Roman',serif;font-size:11.5px;line-height:1.75;
+  color:#1e293b;padding:8px 4px;white-space:pre-wrap;text-align:justify;position:relative;z-index:1;
+}
+.lc-legal-draft h1,.lc-legal-draft h2,.lc-legal-draft h3{font-family:inherit;text-align:center;margin:14px 0 8px;text-transform:uppercase}
+.lc-sig-block{display:flex;justify-content:space-between;margin-top:36px;page-break-inside:avoid;break-inside:avoid}
+.lc-sig-line{width:180px;border-top:1px solid #0f172a;text-align:center;padding-top:5px;font-size:9.5px;font-weight:700}
+
+/* ── Profile Card ── */
+.lc-profile{
+  background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;
+  padding:10px 12px;margin-bottom:14px;display:flex;gap:10px;align-items:center;
+  page-break-inside:avoid;break-inside:avoid;position:relative;z-index:1;
+}
+.lc-profile-info{flex:1}
+.lc-profile-name{font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:5px}
+.lc-profile-detail{font-size:9.5px;color:#64748b;margin-top:2px}
+
+/* ── Chart Image ── */
+.lc-chart-img{width:100%;max-width:100%;border-radius:6px;margin-top:6px;page-break-inside:avoid;break-inside:avoid}
+
+/* ── Progress Bar ── */
+.lc-bar-wrap{width:100%;height:6px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-top:3px}
+.lc-bar-fill{height:100%;border-radius:4px}
+
+/* ── Severity Indicators ── */
+.lc-severity-high{border-left-color:#ef4444!important}
+.lc-severity-medium{border-left-color:#f59e0b!important}
+.lc-severity-low{border-left-color:#10b981!important}
+
+/* ── Status Pills ── */
+.lc-pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:8px;font-weight:800;text-transform:uppercase}
+.lc-pill-success{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
+.lc-pill-warning{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
+.lc-pill-danger{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5}
+.lc-pill-neutral{background:#f1f5f9;color:#64748b}
+
+/* ── Utility ── */
+.lc-mt{margin-top:12px}
+.lc-mb{margin-bottom:12px}
+.lc-text-sm{font-size:9.5px}
+.lc-text-muted{color:#64748b}
+.lc-text-bold{font-weight:700}
+.lc-text-mono{font-family:'Courier New',monospace}
+.lc-text-green{color:#059669}
+.lc-text-amber{color:#b45309}
+.lc-text-red{color:#dc2626}
+.lc-divider{border:none;border-top:1px solid #e2e8f0;margin:10px 0}
+
+@media print{
+  body{margin:0;background:#fff!important;color:#0f172a!important}
+  .no-print{display:none!important}
+}
 
 /* ── Comparative Transition Grid (Law Mapper) ── */
 .lc-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;position:relative;z-index:1}
@@ -404,6 +558,10 @@ body{
 @media print{
   body{margin:0;background:#fff!important;color:#0f172a!important}
   .no-print{display:none!important}
+  .lc-statute,.lc-section,.lc-res-card,.lc-kpi,.lc-meta-matrix,.lc-toc-wrap,.lc-privilege-notice{
+    border-radius:0!important;
+    box-shadow:none!important;
+  }
 }`;
   }
 
@@ -561,19 +719,144 @@ body{
     return tableHtml;
   }
 
+  /**
+   * Builds an Executive Cover Page (Page 1) formatted according to top MNC legaltech standards
+   * (Thomson Reuters, LexisNexis, Ironclad). Includes master classification pill, formal seal,
+   * metadata identification matrix, 4-metric executive KPI cards, Table of Contents, and
+   * Attorney-Client Privilege / DPDP Act statutory compliance warning.
+   */
+  buildExecutiveCoverPage(config: {
+    title: string;
+    subtitle?: string;
+    refCode: string;
+    classification?: string;
+    clientName: string;
+    clientEmail?: string;
+    clientRole?: string;
+    kpis: KpiCard[];
+    tableOfContents: { section: string; title: string; count: string | number; desc?: string }[];
+    notice?: string;
+    accentColor?: string;
+  }): string {
+    const e = this.escapeHtml.bind(this);
+    const { dateStr, timeStr } = this.getTimestamp();
+    const classification = config.classification || 'ATTORNEY-CLIENT PRIVILEGED // STRICTLY CONFIDENTIAL';
+    const shieldSvg = this.getSvg('shield', { size: 13, color: '#1e3a8a', style: 'margin-right:5px;' });
+    const checkSvg = this.getSvg('badge-check', { size: 12, color: '#059669', style: 'margin-right:4px;' });
+    const lockSvg = this.getSvg('lock', { size: 11, color: '#b91c1c', style: 'margin-right:4px;' });
+
+    const parts: string[] = [];
+    parts.push(`<div class="lc-cover-page">`);
+
+    // Top Row: Header & Security Classification
+    parts.push(`<div>`);
+    parts.push(`<div class="lc-cover-header">`);
+    parts.push(`<div class="lc-brand">`);
+    parts.push(`<div class="lc-brand-icon" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);">${this.BRAND_SVG}</div>`);
+    parts.push(`<div>`);
+    parts.push(`<div class="lc-brand-name">Legal<span>Connect</span></div>`);
+    parts.push(`<div class="lc-brand-tag">NATIONAL LEGAL REPOSITORY &amp; PRACTICE INFRASTRUCTURE</div>`);
+    parts.push(`</div></div>`);
+    parts.push(`<div style="text-align:right;">`);
+    parts.push(`<div class="lc-class-badge" style="background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;font-size:8.5px;padding:3px 8px;">${lockSvg}${e(classification)}</div>`);
+    parts.push(`<div class="lc-ref" style="margin-top:4px;">${e(config.refCode)}</div>`);
+    parts.push(`</div></div>`);
+
+    // Main Title & Subtitle
+    parts.push(`<div style="margin:16px 0 14px;">`);
+    parts.push(`<div style="font-size:9px;font-weight:800;letter-spacing:0.12em;text-transform:uppercase;color:#2563eb;margin-bottom:4px;">EXECUTIVE LEGAL BRIEF &bull; MASTER CLIENT DOSSIER</div>`);
+    parts.push(`<h1 class="lc-cover-title">${e(config.title)}</h1>`);
+    if (config.subtitle) {
+      parts.push(`<div class="lc-cover-sub">${e(config.subtitle)}</div>`);
+    }
+    parts.push(`</div>`);
+
+    // Metadata Identification Matrix
+    parts.push(`<div class="lc-meta-matrix">`);
+    parts.push(`<div class="lc-meta-item">
+      <span class="lc-meta-label">Client / Matter Principal</span>
+      <span class="lc-meta-val">${e(config.clientName)}</span>
+    </div>`);
+    parts.push(`<div class="lc-meta-item">
+      <span class="lc-meta-label">Client Account / Contact</span>
+      <span class="lc-meta-val">${e(config.clientEmail || 'Verified Platform User')}</span>
+    </div>`);
+    parts.push(`<div class="lc-meta-item">
+      <span class="lc-meta-label">Date &amp; Time of Issuance</span>
+      <span class="lc-meta-val">${e(dateStr)} &bull; ${e(timeStr)}</span>
+    </div>`);
+    parts.push(`<div class="lc-meta-item">
+      <span class="lc-meta-label">Statutory Jurisdiction</span>
+      <span class="lc-meta-val">Republic of India &bull; Central &amp; State Codes</span>
+    </div>`);
+    parts.push(`<div class="lc-meta-item">
+      <span class="lc-meta-label">Document Security Grade</span>
+      <span class="lc-meta-val" style="color:#991b1b;">Class A &bull; Privileged Legal Work Product</span>
+    </div>`);
+    parts.push(`<div class="lc-meta-item">
+      <span class="lc-meta-label">Platform Verification</span>
+      <span class="lc-meta-val" style="color:#059669;">${checkSvg} Tamper-Sealed Official Snapshot</span>
+    </div>`);
+    parts.push(`</div>`);
+
+    // Executive Metrics Strip
+    if (config.kpis && config.kpis.length > 0) {
+      parts.push(`<div style="margin-bottom:14px;">`);
+      parts.push(this.buildKpiGrid(config.kpis));
+      parts.push(`</div>`);
+    }
+
+    // Table of Contents
+    if (config.tableOfContents && config.tableOfContents.length > 0) {
+      parts.push(`<div class="lc-toc-wrap">`);
+      parts.push(`<div class="lc-toc-title"><span>Dossier Index &amp; Procedural Sections</span><span>Status / Units</span></div>`);
+      for (const item of config.tableOfContents) {
+        parts.push(`<div class="lc-toc-row">
+          <span class="lc-toc-sec">${e(item.section)}</span>
+          <div style="flex:1;">
+            <div class="lc-toc-name">${e(item.title)}</div>
+            ${item.desc ? `<div style="font-size:8.5px;color:#64748b;margin-top:1px;">${e(item.desc)}</div>` : ''}
+          </div>
+          <span class="lc-toc-count">${e(String(item.count))}</span>
+        </div>`);
+      }
+      parts.push(`</div>`);
+    }
+    parts.push(`</div>`); // end top block
+
+    // Bottom Block: Legal Privilege Notice & Bottom Bar
+    parts.push(`<div>`);
+    parts.push(`<div class="lc-privilege-notice">
+      <div class="lc-privilege-title">${shieldSvg} PRIVILEGED &amp; CONFIDENTIAL ATTORNEY-CLIENT WORK PRODUCT</div>
+      <div>${e(config.notice || 'This comprehensive dossier is compiled from user-curated legal research, active consultations, and verified practice directories on the LegalConnect platform. The contents hereof contain confidential, proprietary, and legally privileged work product. Any unauthorized dissemination, copying, distribution, or action taken in reliance on the contents of this information is strictly prohibited under the Advocates Act, 1961, the Bar Council of India Rules, and the Digital Personal Data Protection (DPDP) Act, 2023.')}</div>
+    </div>`);
+
+    parts.push(`<div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0;font-size:8px;color:#94a3b8;">
+      <div>&copy; ${new Date().getFullYear()} ${this.BRAND_NAME} Legal Technologies Inc. &bull; Page 1 of Executive Dossier</div>
+      <div style="font-family:'Courier New',monospace;font-weight:700;color:#64748b;">AUTHENTICITY KEY: ${e(config.refCode)}</div>
+    </div>`);
+    parts.push(`</div>`); // end bottom block
+
+    parts.push(`</div>`); // end .lc-cover-page
+    return parts.join('');
+  }
+
   /** Build a list of print-optimized resource cards with optional GPS QR codes */
-  buildResourceCards(resources: any[], options: { showQr?: boolean } = {}): string {
+  buildResourceCards(resources: any[], options: { showQr?: boolean; compact?: boolean } = {}): string {
     if (!resources || resources.length === 0) return '';
     const shouldShowQr = options.showQr != null ? options.showQr : resources.length <= 10;
+    const isCompact = !!options.compact;
     const parts: string[] = [];
+    if (isCompact) parts.push('<div class="lc-res-grid">');
     for (const r of resources) {
-      parts.push(this.buildSingleResourceCard(r, shouldShowQr));
+      parts.push(this.buildSingleResourceCard(r, shouldShowQr, isCompact));
     }
+    if (isCompact) parts.push('</div>');
     return parts.join('');
   }
 
   /** Build a single resource card for print */
-  private buildSingleResourceCard(r: any, showQr = true): string {
+  private buildSingleResourceCard(r: any, showQr = true, isCompact = false): string {
     const e = this.escapeHtml.bind(this);
     const type = r.type || '';
     const typeClass = type === 'LegalAid' ? 'legal-aid' :
@@ -587,8 +870,9 @@ body{
     const globeSvg = this.getSvg('globe', { size: 11, color: '#2563eb', style: 'margin-right:4px;' });
     const mapPinSvg = this.getSvg('map-pin', { size: 11, color: '#64748b', style: 'margin-right:4px;' });
 
+    const compactClass = isCompact ? 'compact' : '';
     const parts: string[] = [];
-    parts.push(`<div class="lc-res-card ${cardClass}">`);
+    parts.push(`<div class="lc-res-card ${cardClass} ${compactClass}">`);
     parts.push(`<div class="lc-res-body">`);
 
     // Type badge
@@ -632,9 +916,10 @@ body{
     // QR code for GPS directions (renders when showQr is enabled)
     if (showQr) {
       const mapsUrl = this.getResourceMapsUrl(r);
-      const qrUrl = this.generateQrUrl(mapsUrl, 75);
+      const qrSize = isCompact ? 50 : 75;
+      const qrUrl = this.generateQrUrl(mapsUrl, qrSize);
       parts.push(`<div class="lc-res-qr">`);
-      parts.push(`<img src="${qrUrl}" alt="GPS QR" width="75" height="75">`);
+      parts.push(`<img src="${qrUrl}" alt="GPS QR" width="${qrSize}" height="${qrSize}">`);
       parts.push(`<span>Scan for GPS</span>`);
       parts.push(`</div>`);
     }
@@ -903,17 +1188,44 @@ body{
     return tags;
   }
 
-  /** Build statute/law section text with scale SVG */
-  buildStatuteText(section: any, act: any): string {
+  /** Build statute/law section text with scale SVG and optional research notes */
+  buildStatuteText(section: any, act: any, notes?: string): string {
     const e = this.escapeHtml.bind(this);
-    const content = section?.content || section?.introduction_text || section?.snippet || '';
-    const cleanContent = String(content).replace(/<[^>]*>/g, '');
+    let rawContent = section?.content || section?.introduction_text || section?.snippet || '';
+    let cleanContent = '';
+
+    if (Array.isArray(rawContent)) {
+      cleanContent = rawContent
+        .map((item: any) => (typeof item === 'string' ? item : (item?.text || item?.content || '')))
+        .filter(Boolean)
+        .join('\n\n');
+    } else if (typeof rawContent === 'object' && rawContent !== null) {
+      cleanContent = rawContent.text || rawContent.content || '';
+    } else {
+      cleanContent = String(rawContent).replace(/<[^>]*>/g, '').trim();
+    }
+
+    if (cleanContent.includes('[object Object]') && section?.content_blocks && Array.isArray(section.content_blocks)) {
+      cleanContent = section.content_blocks.map((b: any) => b.text || '').filter(Boolean).join('\n\n');
+    }
+    if (cleanContent.includes('[object Object]')) {
+      cleanContent = cleanContent.replace(/\[object Object\]/g, '').replace(/\n{3,}/g, '\n\n').trim();
+    }
+
     const scaleSvg = this.getSvg('scale', { size: 12, color: '#4f46e5', style: 'margin-right:4px;' });
-    return `<div class="lc-statute">
-      <div class="lc-statute-num">${scaleSvg} Section ${e(section?.section_number)} — ${e(act?.actName || act?.shortName || '')}, ${e(act?.year || '')}</div>
-      <div class="lc-statute-title">${e(section?.title || '')}</div>
-      <div class="lc-statute-body">${e(cleanContent)}</div>
-    </div>`;
+    const yearPart = act?.year ? `, ${e(act.year)}` : '';
+    const parts: string[] = [];
+    parts.push(`<div class="lc-statute">`);
+    parts.push(`<div class="lc-statute-num">${scaleSvg} Section ${e(section?.section_number)} — ${e(act?.actName || act?.shortName || '')}${yearPart}</div>`);
+    if (section?.title) {
+      parts.push(`<div class="lc-statute-title">${e(section.title)}</div>`);
+    }
+    parts.push(`<div class="lc-statute-body">${e(cleanContent)}</div>`);
+    if (notes) {
+      parts.push(`<div class="lc-statute-note"><strong>Research Notes:</strong> ${e(notes)}</div>`);
+    }
+    parts.push(`</div>`);
+    return parts.join('');
   }
 
   /** Build a profile card (for data exports) */
@@ -1101,16 +1413,23 @@ body{
       parts.push(`<div class="lc-watermark">${this.escapeHtml(config.watermark)}</div>`);
     }
 
-    // Header
-    parts.push(this.buildHeader({
-      title: config.title,
-      subtitle: config.subtitle,
-      refCode,
-      accentColor: accent,
-      classification: config.classification,
-      headerQrData: config.headerQrData,
-      extraMeta: config.extraMeta,
-    }));
+    // Cover Page (if specified)
+    if (config.coverPage) {
+      parts.push(config.coverPage);
+    }
+
+    // Header (if not suppressed by cover page)
+    if (!config.suppressDefaultHeader) {
+      parts.push(this.buildHeader({
+        title: config.title,
+        subtitle: config.subtitle,
+        refCode,
+        accentColor: accent,
+        classification: config.classification,
+        headerQrData: config.headerQrData,
+        extraMeta: config.extraMeta,
+      }));
+    }
 
     // Subject strip (optional)
     if (config.subjectStrip) {
@@ -1162,6 +1481,7 @@ body{
       if (pw && !pw.closed) {
         pw.document.open();
         pw.document.write(htmlContent);
+        pw.document.title = documentTitle;
         pw.document.close();
         return true;
       }

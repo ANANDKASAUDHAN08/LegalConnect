@@ -6,13 +6,12 @@
     <div *ngIf="isPageLoading()" class="space-y-4 md:space-y-6 animate-pulse">
 
       <!-- Skeleton: Header -->
-      <div
-        class="flex items-start justify-between gap-2 md:gap-4 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
-        <div class="space-y-2.5 flex-1 min-w-0">
+      <div class="pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div class="flex items-center justify-between gap-3">
           <div class="skeleton-bar h-7 sm:h-9 w-32 sm:w-56 rounded-xl"></div>
-          <div class="skeleton-bar h-4 max-w-xs sm:max-w-sm w-full rounded-lg"></div>
+          <div class="skeleton-bar h-8 w-16 sm:h-9 sm:w-36 rounded-xl shrink-0"></div>
         </div>
-        <div class="skeleton-bar h-8 w-16 sm:h-9 sm:w-36 rounded-xl shrink-0"></div>
+        <div class="skeleton-bar h-3.5 sm:h-4 max-w-md w-full rounded-lg mt-1 sm:mt-1.5"></div>
       </div>
 
       <!-- Skeleton: Stats Cards -->
@@ -114,35 +113,50 @@
     <div *ngIf="currentUser() && !isPageLoading()" class="space-y-4 md:space-y-6">
 
       <!-- Premium Workspace Header -->
-      <header
-        class="flex flex-row items-start justify-between gap-2 md:gap-4 pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
-        <div class="flex-1 min-w-0">
+      <header class="pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+        <!-- Row 1: Heading & Print Button in one line -->
+        <div class="flex items-center justify-between gap-2 sm:gap-4">
           <h1
-            class="font-serif text-2xl sm:text-3xl md:text-4xl font-light text-slate-950 dark:text-white flex items-center gap-3">
+            class="font-serif text-xl sm:text-3xl md:text-4xl font-light text-slate-950 dark:text-white leading-tight flex items-center gap-3">
             My Workspace
           </h1>
-          <p class="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400 mt-1.5">
-            Manage your legal research, custom collections, and client consult inquiries.
-          </p>
+
+          <!-- ── UNIFIED GLOBAL EXPORT BUTTON (Dynamic Text, Count & Theme across all Tabs) ── -->
+          <button (click)="onGlobalExportClick()"
+            class="group relative inline-flex items-center gap-1.5 sm:gap-2 px-2.5 py-1.5 sm:px-4 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all shadow-md hover:shadow-lg active:scale-95 shrink-0 border border-slate-700/60 dark:border-slate-700/80 cursor-pointer"
+            [appTooltip]="globalExportMeta().tooltip">
+
+            <!-- Printer icon with soft glow on hover -->
+            <app-icon name="printer" [size]="15"
+              class="shrink-0 text-slate-300 group-hover:text-white transition-colors"></app-icon>
+
+            <!-- Dynamic Label Text -->
+            <span class="hidden min-[480px]:inline font-bold tracking-tight">
+              {{ globalExportMeta().label }}
+            </span>
+            <span class="min-[480px]:hidden font-bold tracking-tight">
+              {{ globalExportMeta().mobileLabel }}
+            </span>
+
+            <!-- Dynamic Count Pill -->
+            <span *ngIf="globalExportMeta().count !== null && globalExportMeta().count !== undefined"
+              class="px-1.5 py-0.5 rounded-full text-[10px] font-extrabold border leading-none"
+              [class]="globalExportMeta().badgeClass">
+              {{ globalExportMeta().count }}
+            </span>
+
+            <!-- PDF Badge Chip (Desktop only) -->
+            <span
+              class="hidden lg:inline-flex text-[9px] uppercase tracking-wider font-extrabold px-1.5 py-0.5 rounded bg-white/10 text-slate-300 group-hover:text-white transition-colors">
+              PDF
+            </span>
+          </button>
         </div>
 
-        <!-- Print / PDF Dossier Button for Research Library -->
-        <button *ngIf="activeTab() === 'bookmarks'" (click)="triggerPrint(selectedCollection())"
-          class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95 shrink-0 mt-0.5 sm:mt-1"
-          appTooltip="Export current folder contents as a printable dossier PDF">
-          <app-icon name="printer" [size]="15" class="shrink-0"></app-icon>
-          <span class="hidden min-[450px]:inline">Export Dossier (PDF)</span>
-          <span class="min-[450px]:hidden">Export</span>
-        </button>
-
-        <!-- Print / PDF Dossier Button for Professional Directory -->
-        <button *ngIf="activeTab() === 'saved-directory'" (click)="triggerPrintDirectory()"
-          class="inline-flex items-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 bg-slate-900 hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 text-white rounded-xl text-[10px] sm:text-xs font-bold transition-all shadow-md active:scale-95 shrink-0 mt-0.5 sm:mt-1"
-          appTooltip="Export saved professional contacts and helplines as a PDF dossier">
-          <app-icon name="printer" [size]="15" class="shrink-0"></app-icon>
-          <span class="hidden min-[450px]:inline">Export Directory (PDF)</span>
-          <span class="min-[450px]:hidden">Export</span>
-        </button>
+        <!-- Row 2: Subheading spanning 100% width with minimal gap -->
+        <p class="text-[11px] sm:text-sm text-slate-500 dark:text-slate-400 mt-1 sm:mt-1.5 w-full">
+          Manage your legal research, custom collections, and client consult inquiries.
+        </p>
       </header>
 
       <!-- Statistics Dashboard Summary Bar -->
@@ -177,8 +191,8 @@
           [allBookmarks]="generalBookmarks()" [unassignedCount]="unassignedCount()"
           [casePacksCount]="totalCasePacksCount()" (selectCasePacks)="setActiveTab('case-packs')"
           [savedContactsCount]="totalSavedContactsCount()" (selectSavedContacts)="setActiveTab('saved-directory')"
-          (selectAnalytics)="setActiveTab('analytics')" (selectReports)="setActiveTab('reports')"
-          [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
+          [reportsCount]="userReports().length" (selectAnalytics)="setActiveTab('analytics')"
+          (selectReports)="setActiveTab('reports')" [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
           (sidebarFolderSearchQueryChange)="sidebarFolderSearchQuery.set($event)"
           [showMobileFolderSearch]="showMobileFolderSearch()"
           (showMobileFolderSearchChange)="showMobileFolderSearch.set($event)"
@@ -277,13 +291,13 @@
               Spend & Insights
             </button>
 
-            <!-- My Reports Tab (Amber) -->
+            <!-- My Reports Tab (Rose) -->
             <button (click)="setActiveTab('reports')"
-              [class]="activeTab() === 'reports' ? 'border-b-2 border-amber-500 dark:border-amber-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+              [class]="activeTab() === 'reports' ? 'border-b-2 border-rose-500 dark:border-rose-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
               class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
               appTooltip="Track submitted content reports and moderator resolutions">
-              <app-icon name="shield" [size]="15" class="text-amber-500 dark:text-amber-400 shrink-0"></app-icon>
-              My Reports
+              <app-icon name="shield" [size]="15" class="text-rose-500 dark:text-rose-400 shrink-0"></app-icon>
+              My Reports ({{ userReports().length }})
             </button>
           </div>
 
@@ -293,8 +307,8 @@
             [allBookmarks]="generalBookmarks()" [unassignedCount]="unassignedCount()"
             [casePacksCount]="totalCasePacksCount()" (selectCasePacks)="setActiveTab('case-packs')"
             [savedContactsCount]="totalSavedContactsCount()" (selectSavedContacts)="setActiveTab('saved-directory')"
-            (selectAnalytics)="setActiveTab('analytics')" (selectReports)="setActiveTab('reports')"
-            [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
+            [reportsCount]="userReports().length" (selectAnalytics)="setActiveTab('analytics')"
+            (selectReports)="setActiveTab('reports')" [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
             (sidebarFolderSearchQueryChange)="sidebarFolderSearchQuery.set($event)"
             [showMobileFolderSearch]="showMobileFolderSearch()"
             (showMobileFolderSearchChange)="showMobileFolderSearch.set($event)"
@@ -370,7 +384,7 @@
             </div>
 
             <!-- 2. Consult Requests Tab Skeleton -->
-            <div *ngIf="activeTab() === 'inquiries'" class="space-y-5 mt-4">
+            <div *ngIf="activeTab() === 'inquiries'" class="space-y-3 mt-4">
               <div *ngFor="let i of [1,2]" class="skeleton-card p-5 rounded-2xl space-y-4 relative overflow-hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-200 dark:bg-slate-800"></div>
                 <div
@@ -396,30 +410,107 @@
               </div>
             </div>
 
-            <!-- 3. Professional Directory Tab Skeleton -->
-            <div *ngIf="activeTab() === 'saved-directory'" class="space-y-8 pt-4">
-              <div class="space-y-3" *ngFor="let sec of [1,2,3]">
-                <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/60">
-                  <div class="flex items-center gap-3">
-                    <div class="skeleton-bar w-8 h-8 rounded-lg"></div>
-                    <div class="space-y-1.5">
-                      <div class="skeleton-bar h-4 w-36 rounded-md"></div>
-                      <div class="skeleton-bar h-3 w-44 rounded-md"></div>
+            <!-- 3. Professional Directory Tab Skeleton (Pixel-perfect mirror of saved-directory-tab) -->
+            <div *ngIf="activeTab() === 'saved-directory'" class="space-y-4 sm:space-y-6 mt-0 md:mt-2">
+              <!-- 1. Header Skeleton -->
+              <div
+                class="flex items-center justify-between gap-3 pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div class="skeleton-bar w-8 h-8 sm:w-10 sm:h-10 rounded-xl sm:rounded-2xl shrink-0"></div>
+                  <div class="space-y-1.5 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <div class="skeleton-bar h-4 sm:h-5 w-40 sm:w-48 rounded-md"></div>
+                      <div class="skeleton-bar h-4 w-7 rounded-full"></div>
+                    </div>
+                    <div class="hidden sm:block skeleton-bar h-3 w-64 rounded-md"></div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <div class="skeleton-bar h-7 w-16 sm:w-20 rounded-xl"></div>
+                  <div class="skeleton-bar h-7 w-16 sm:w-20 rounded-xl"></div>
+                </div>
+              </div>
+
+              <!-- 2. Segmented Filter Pills & Search Bar Skeleton -->
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                <div class="flex items-center gap-1.5 overflow-x-auto pb-0.5 sm:pb-0 scrollbar-none">
+                  <div class="skeleton-bar h-7 sm:h-8 w-18 sm:w-20 rounded-xl shrink-0"></div>
+                  <div class="skeleton-bar h-7 sm:h-8 w-22 sm:w-24 rounded-xl shrink-0"></div>
+                  <div class="skeleton-bar h-7 sm:h-8 w-28 sm:w-32 rounded-xl shrink-0"></div>
+                  <div class="skeleton-bar h-7 sm:h-8 w-18 sm:w-20 rounded-xl shrink-0"></div>
+                </div>
+                <div class="skeleton-bar h-8 w-full sm:w-64 rounded-xl"></div>
+              </div>
+
+              <!-- 3. Section 1: Advocates Skeleton -->
+              <div class="space-y-2.5">
+                <div
+                  class="flex items-center justify-between gap-2 pb-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-blue-500/40"></div>
+                    <div class="skeleton-bar h-3.5 w-40 sm:w-48 rounded-md"></div>
+                  </div>
+                  <div class="skeleton-bar h-3 w-14 rounded-md"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div *ngFor="let card of [1,2]"
+                    class="skeleton-card p-3.5 sm:p-4 rounded-xl flex flex-col justify-between gap-3">
+                    <!-- Top Row -->
+                    <div class="flex items-start justify-between gap-2.5">
+                      <div class="flex items-start gap-3 min-w-0 flex-1">
+                        <div class="skeleton-bar w-10 h-10 sm:w-11 sm:h-11 rounded-2xl shrink-0"></div>
+                        <div class="space-y-2 flex-1 min-w-0">
+                          <div class="flex items-center gap-1.5">
+                            <div class="skeleton-bar h-3.5 w-28 rounded-md"></div>
+                            <div class="skeleton-bar h-3 w-14 rounded-md"></div>
+                          </div>
+                          <div class="skeleton-bar h-2.5 w-36 rounded-md"></div>
+                          <div class="skeleton-bar h-2.5 w-24 rounded-md"></div>
+                        </div>
+                      </div>
+                      <div class="skeleton-bar w-8 h-8 rounded-xl shrink-0"></div>
+                    </div>
+                    <!-- Action Row: 2-column grid -->
+                    <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/60">
+                      <div class="skeleton-bar h-7 sm:h-8 rounded-xl"></div>
+                      <div class="skeleton-bar h-7 sm:h-8 rounded-xl"></div>
                     </div>
                   </div>
-                  <div class="skeleton-bar h-6 w-16 rounded-lg"></div>
                 </div>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-3">
+              </div>
+
+              <!-- 4. Section 2: Legal Aid Skeleton -->
+              <div class="space-y-2.5">
+                <div
+                  class="flex items-center justify-between gap-2 pb-1 border-b border-slate-100 dark:border-slate-800/60">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 rounded-full bg-purple-500/40"></div>
+                    <div class="skeleton-bar h-3.5 w-48 sm:w-56 rounded-md"></div>
+                  </div>
+                  <div class="skeleton-bar h-3 w-14 rounded-md"></div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                   <div *ngFor="let card of [1,2]"
-                    class="skeleton-card p-3 md:p-4 rounded-xl flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3 flex-1 min-w-0">
-                      <div class="skeleton-bar w-10 h-10 rounded-full shrink-0"></div>
-                      <div class="space-y-2 flex-1 min-w-0">
-                        <div class="skeleton-bar h-3.5 w-24 rounded-md"></div>
-                        <div class="skeleton-bar h-2.5 w-32 rounded-md"></div>
+                    class="skeleton-card p-3.5 sm:p-4 rounded-xl flex flex-col justify-between gap-3">
+                    <div class="flex items-start justify-between gap-2.5">
+                      <div class="flex items-start gap-3 min-w-0 flex-1">
+                        <div class="skeleton-bar w-10 h-10 sm:w-11 sm:h-11 rounded-2xl shrink-0"></div>
+                        <div class="space-y-2 flex-1 min-w-0">
+                          <div class="skeleton-bar h-3.5 w-36 rounded-md"></div>
+                          <div class="flex items-center gap-1.5">
+                            <div class="skeleton-bar h-3 w-16 rounded-md"></div>
+                            <div class="skeleton-bar h-2.5 w-24 rounded-md"></div>
+                          </div>
+                        </div>
                       </div>
+                      <div class="skeleton-bar w-8 h-8 rounded-xl shrink-0"></div>
                     </div>
-                    <div class="skeleton-bar h-7 w-16 rounded-lg shrink-0"></div>
+                    <div class="grid grid-cols-2 gap-2 pt-2.5 border-t border-slate-100 dark:border-slate-800/60">
+                      <div class="skeleton-bar h-7 sm:h-8 rounded-xl"></div>
+                      <div class="skeleton-bar h-7 sm:h-8 rounded-xl"></div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -583,6 +674,87 @@
               </div>
             </div>
 
+            <!-- 6. My Reports & Resolutions Tab Skeleton (Pixel-Perfect Mirror of reports-tab) -->
+            <div *ngIf="activeTab() === 'reports'" class="space-y-4 sm:space-y-5 pt-1">
+              <!-- KPI Cards Skeleton -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
+                <div *ngFor="let i of [1, 2, 3, 4]"
+                  class="skeleton-card p-3 sm:p-4 rounded-2xl flex flex-col justify-between h-[96px] sm:h-[112px]">
+                  <div class="flex items-center justify-between w-full">
+                    <div class="skeleton-bar h-3 sm:h-3.5 w-18 sm:w-22 rounded-md"></div>
+                    <div class="skeleton-bar w-7 h-7 rounded-lg shrink-0"></div>
+                  </div>
+                  <div class="mt-2 sm:mt-3 flex items-baseline justify-between w-full">
+                    <div class="space-y-1">
+                      <div class="skeleton-bar h-5 sm:h-7 w-8 sm:w-12 rounded-md"></div>
+                      <div class="skeleton-bar h-2.5 w-20 sm:w-26 rounded-md"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Toolbar Skeleton (Search & Action) -->
+              <div class="flex items-center justify-between gap-2 sm:gap-3 py-0.5 sm:py-1">
+                <div class="skeleton-bar h-9 sm:h-10 flex-1 rounded-xl"></div>
+                <div class="skeleton-bar h-9 sm:h-10 w-9 sm:w-16 rounded-xl shrink-0"></div>
+                <div class="skeleton-bar h-9 sm:h-10 w-22 sm:w-32 rounded-xl shrink-0"></div>
+              </div>
+
+              <!-- Ticket Cards Skeleton (2 cards) -->
+              <div class="space-y-3.5 sm:space-y-4">
+                <div *ngFor="let card of [1, 2]" class="skeleton-card p-3.5 sm:p-5 rounded-2xl space-y-3">
+                  <!-- Row 1: Status & Ref -->
+                  <div
+                    class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/70">
+                    <div class="skeleton-bar h-5 sm:h-6 w-24 sm:w-32 rounded-full"></div>
+                    <div class="skeleton-bar h-5 sm:h-6 w-28 sm:w-36 rounded-lg"></div>
+                  </div>
+
+                  <!-- Row 2: Target Meta & Headline -->
+                  <div class="pt-1 space-y-2">
+                    <div class="flex items-center gap-2">
+                      <div class="skeleton-bar h-4 w-16 sm:w-20 rounded-md"></div>
+                      <div class="skeleton-bar h-3.5 w-24 sm:w-28 rounded-md"></div>
+                      <div class="skeleton-bar h-4 w-14 sm:w-16 rounded-md ml-auto"></div>
+                    </div>
+                    <div class="skeleton-bar h-5 sm:h-6 w-4/5 sm:w-3/5 rounded-md"></div>
+                  </div>
+
+                  <!-- Row 3: Citizen Feedback Note -->
+                  <div class="p-3 sm:p-3.5 rounded-xl bg-slate-100/60 dark:bg-slate-800/40 space-y-2">
+                    <div class="skeleton-bar h-3 w-28 sm:w-32 rounded-md"></div>
+                    <div class="skeleton-bar h-3.5 w-full rounded-md"></div>
+                    <div class="skeleton-bar h-3.5 w-3/4 rounded-md"></div>
+                  </div>
+
+                  <!-- Row 4: Timeline (Desktop) / Stepper (Mobile) -->
+                  <div
+                    class="hidden sm:flex pt-3 border-t border-slate-100 dark:border-slate-800/60 justify-between items-center">
+                    <div class="skeleton-bar h-3.5 w-28 rounded-md"></div>
+                    <div class="skeleton-bar h-1 flex-1 mx-3 rounded-full"></div>
+                    <div class="skeleton-bar h-3.5 w-28 rounded-md"></div>
+                    <div class="skeleton-bar h-1 flex-1 mx-3 rounded-full"></div>
+                    <div class="skeleton-bar h-3.5 w-28 rounded-md"></div>
+                  </div>
+                  <div
+                    class="flex sm:hidden pt-2.5 border-t border-slate-100 dark:border-slate-800/60 justify-between items-center">
+                    <div class="skeleton-bar h-3.5 w-28 rounded-md"></div>
+                    <div class="skeleton-bar h-3 w-20 rounded-md"></div>
+                  </div>
+
+                  <!-- Row 5: Action Buttons Footer -->
+                  <div
+                    class="pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div class="grid grid-cols-2 sm:flex gap-2 w-full sm:w-auto">
+                      <div class="skeleton-bar h-8 sm:h-9 flex-1 sm:w-28 rounded-xl"></div>
+                      <div class="skeleton-bar h-8 sm:h-9 flex-1 sm:w-36 rounded-xl"></div>
+                    </div>
+                    <div class="skeleton-bar h-3 w-40 rounded-md mx-auto sm:mx-0"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
 
           <!-- TAB 1: BOOKMARKS GRID -->
@@ -631,7 +803,8 @@
           <!-- TAB 6: MY REPORTS & RESOLUTIONS -->
           @defer (when activeTab() === 'reports') {
           <div *ngIf="!isTabLoading() && activeTab() === 'reports'" class="pt-3 sm:pt-4 w-full">
-            <app-reports-tab></app-reports-tab>
+            <app-reports-tab (reportsChange)="userReports.set($event)"
+              (openTarget)="handleReportTargetNavigation($event)"></app-reports-tab>
           </div>
           }
         </main>
@@ -869,12 +1042,12 @@
 
       <!-- 6. My Reports & Feedback -->
       <button (click)="setActiveTab('reports')"
-        [class]="activeTab() === 'reports' ? 'bg-amber-500/10 border-amber-500/30 dark:bg-amber-950/20 ring-1 ring-amber-500/20' : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800/50'"
+        [class]="activeTab() === 'reports' ? 'bg-rose-500/10 border-rose-500/30 dark:bg-rose-950/20 ring-1 ring-rose-500/20' : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800/50'"
         class="w-full p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer">
         <div class="flex items-center gap-3 min-w-0">
           <div
-            class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
-            <app-icon name="shield" [size]="18" class="text-amber-500 dark:text-amber-400"></app-icon>
+            class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center shrink-0">
+            <app-icon name="shield" [size]="18" class="text-rose-500 dark:text-rose-400"></app-icon>
           </div>
           <div class="min-w-0">
             <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">My Reports &amp; Feedback</h4>
@@ -883,11 +1056,15 @@
           </div>
         </div>
         <div class="flex items-center gap-2 shrink-0">
-          <span
-            class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 uppercase tracking-wider">
+          <span *ngIf="userReports().length > 0"
+            class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+            {{ userReports().length }}
+          </span>
+          <span *ngIf="userReports().length === 0"
+            class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 uppercase tracking-wider">
             Track
           </span>
-          <app-icon *ngIf="activeTab() === 'reports'" name="check-circle" [size]="15" class="text-amber-500"></app-icon>
+          <app-icon *ngIf="activeTab() === 'reports'" name="check-circle" [size]="15" class="text-rose-500"></app-icon>
         </div>
       </button>
 
