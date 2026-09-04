@@ -4,21 +4,64 @@
   vertical-align: middle;
 }
 
+/* Host container when portaled into body */
+.custom-select-portal-host {
+  position: relative;
+  z-index: 1000000;
+}
+
 /* Custom thin scrollbar for dropdown menu with overscroll-behavior contain */
 .custom-select-scrollbar,
 .custom-select-mobile-list {
   scrollbar-width: thin;
-  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
     width: 4px;
+    height: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
   }
 
   &::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.3);
-    border-radius: 4px;
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
+
+    &:hover {
+      background: rgba(148, 163, 184, 0.6);
+    }
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  &::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* Invisible scrollbar utility for sleek non-distracting scrolling */
+.custom-select-no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+
+  &::-webkit-scrollbar-button {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
   }
 }
 

@@ -81,13 +81,15 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   @Input() isLoading: boolean = false;
   @Input() loadingText: string = 'Loading...';
   @Input() showCheckmark: boolean = true;
-  @Input() searchable: boolean = false;
+  @Input() searchable: boolean | 'auto' = 'auto';
+  @Input() searchThreshold: number = 6;
   @Input() searchPlaceholder: string = 'Search...';
   @Input() emptyText: string = 'No options found';
   @Input() clearable: boolean = false;
   @Input() closeOnScroll: boolean = false;
   @Input() required: boolean = false;
   @Input() ariaLabel?: string;
+  @Input() hideScrollbar: boolean = false;
   @Input() useBottomSheetOnMobile: boolean = true;
   @Input() sheetTitle?: string;
 
@@ -457,8 +459,16 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     return this.groupedOptions.length > 1 || (this.groupedOptions.length === 1 && !!this.groupedOptions[0].name);
   }
 
+  get isSearchable(): boolean {
+    if (this.searchable === true) return true;
+    if (this.searchable === 'auto') {
+      return this.allOptions.length >= this.searchThreshold;
+    }
+    return false;
+  }
+
   private filterOptionList(list: SelectOption[]): SelectOption[] {
-    if (!this.searchable || !this.searchTerm.trim()) {
+    if (!this.isSearchable || !this.searchTerm.trim()) {
       return list;
     }
     const term = this.searchTerm.toLowerCase().trim();
@@ -562,7 +572,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
 
     // Auto-focus search input immediately on Desktop; skip on mobile to prevent virtual keyboard pop
     setTimeout(() => {
-      if (this.searchable && !this.isMobileView) {
+      if (this.isSearchable && !this.isMobileView) {
         this.searchInputElement?.nativeElement?.focus();
       }
       this.scrollFocusedOptionIntoView();
@@ -766,7 +776,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     } else if (this.dropPosition === 'down') {
       this.dropUp = false;
     } else {
-      this.dropUp = spaceBelow < 260 && spaceAbove > spaceBelow;
+      this.dropUp = spaceBelow < 320 && spaceAbove > spaceBelow;
     }
 
     // Intelligent Horizontal Alignment
@@ -781,7 +791,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
 
     // Compute pixel-perfect coordinates
     const top = this.dropUp ? (rect.top - 6) : (rect.bottom + 6);
-    
+
     // Resolve dynamic width constraints (handle '100%' gracefully)
     let computedMinWidth = this.menuMinWidth;
     if (!computedMinWidth || computedMinWidth === '100%') {
@@ -793,8 +803,10 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
       computedMaxWidth = `${Math.max(rect.width, 360)}px`;
     }
 
-    const availableVerticalHeight = this.dropUp ? Math.max(120, rect.top - 20) : Math.max(120, viewportHeight - rect.bottom - 20);
-    const parsedMaxMenuHeight = parseInt(this.maxMenuHeight, 10) || 320;
+    const availableVerticalHeight = this.dropUp
+      ? Math.max(160, rect.top - 16)
+      : Math.max(160, viewportHeight - rect.bottom - 16);
+    const parsedMaxMenuHeight = parseInt(this.maxMenuHeight, 10) || 360;
     const clampedHeight = Math.min(parsedMaxMenuHeight, availableVerticalHeight);
 
     this.floatingStyles = {
@@ -806,7 +818,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
       maxWidth: computedMaxWidth || '420px',
       maxHeight: `${clampedHeight}px`,
       transform: this.dropUp ? 'translateY(-100%)' : 'none',
-      zIndex: '999999'
+      zIndex: '1000001'
     };
   }
 
@@ -874,7 +886,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
       }
 
       case 'Home': {
-        if (!this.searchable || event.target !== this.searchInputElement?.nativeElement) {
+        if (!this.isSearchable || event.target !== this.searchInputElement?.nativeElement) {
           event.preventDefault();
           this.focusedIndex = 0;
           this.scrollFocusedOptionIntoView();
@@ -884,7 +896,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
       }
 
       case 'End': {
-        if (!this.searchable || event.target !== this.searchInputElement?.nativeElement) {
+        if (!this.isSearchable || event.target !== this.searchInputElement?.nativeElement) {
           event.preventDefault();
           this.focusedIndex = opts.length - 1;
           this.scrollFocusedOptionIntoView();
@@ -897,7 +909,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
         event.preventDefault();
         if (this.focusedIndex >= 0 && this.focusedIndex < opts.length) {
           this.selectOption(opts[this.focusedIndex]);
-        } else if (opts.length === 1 && this.searchable && this.searchTerm) {
+        } else if (opts.length === 1 && this.isSearchable && this.searchTerm) {
           this.selectOption(opts[0]);
         } else {
           this.close();
@@ -911,7 +923,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
 
       default:
         // Typeahead jump if not inside search input
-        if (!this.searchable && event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
+        if (!this.isSearchable && event.key.length === 1 && !event.ctrlKey && !event.altKey && !event.metaKey) {
           this.handleTypeahead(event.key);
         }
         break;

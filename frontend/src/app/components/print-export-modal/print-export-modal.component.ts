@@ -1,4 +1,4 @@
-import { Component, ChangeDetectionStrategy, HostListener, OnDestroy, inject, signal, effect } from '@angular/core';
+import { Component, ChangeDetectionStrategy, HostListener, OnDestroy, inject, signal, effect, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PrintExportService, ExportFormat, ExportExecutionParams } from '../../services/print-export.service';
@@ -33,6 +33,37 @@ export class PrintExportModalComponent implements OnDestroy {
     { value: 'DRAFT', label: 'Draft Instrument', sublabel: 'Non-final review copy', icon: 'edit' },
     { value: 'ATTORNEY-CLIENT PRIVILEGED', label: 'Privileged', sublabel: 'Protected legal work product', icon: 'scale' },
   ];
+
+  scopeOptions = computed<SelectOption[]>(() => {
+    const scopes = this.exportService.config()?.scopes || [];
+    return scopes.map(s => {
+      let icon: any = 'layers';
+      if (s.id === 'bookmarks') icon = 'bookmark';
+      else if (s.id === 'directory') icon = 'users';
+      else if (s.id === 'casePacks') icon = 'folder';
+      else if (s.id === 'inquiries') icon = 'mail';
+      else if (s.id === 'analytics') icon = 'circle-dollar';
+      else if (s.id === 'reports') icon = 'shield';
+      else if (s.id === 'fullDossier') icon = 'layers';
+
+      return {
+        value: s.id,
+        label: s.label,
+        sublabel: s.description,
+        icon,
+        count: s.count
+      };
+    });
+  });
+
+  selectedScopeMeta = computed(() => {
+    const currentId = this.selectedScope();
+    return this.scopeOptions().find(o => o.value === currentId) || null;
+  });
+
+  currentScopeCount = computed(() => {
+    return this.selectedScopeMeta()?.count;
+  });
 
   constructor() {
     // Body scroll lock effect

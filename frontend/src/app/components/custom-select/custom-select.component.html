@@ -4,7 +4,7 @@
 
   <!-- ── Trigger Button ── -->
   <div #triggerButton
-    class="flex items-center justify-between gap-2 border border-slate-200/90 dark:border-slate-700/80 font-semibold cursor-pointer max-w-full overflow-hidden outline-none shadow-2xs transition-all duration-200 rounded-xl"
+    class="flex items-center justify-between gap-2 border border-slate-200/90 dark:border-slate-700/80 font-semibold cursor-pointer max-w-full overflow-hidden outline-none shadow-2xs transition-all duration-200"
     [ngClass]="[
       roundedClass,
       size === 'sm' ? 'px-2.5 py-1 text-xs min-h-[32px]' : size === 'lg' ? 'px-4 py-2 text-sm min-h-[44px]' : 'px-3 py-1.5 text-xs sm:text-sm min-h-[38px]',
@@ -104,7 +104,7 @@
     <!-- ── Desktop Fixed Overlay Menu (≥ 640px or useBottomSheetOnMobile=false) ── -->
     @if (isOpen && (!isMobileView || !useBottomSheetOnMobile)) {
     <div [id]="instanceId + '-listbox'"
-      class="custom-select-floating-menu bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-2xl overflow-hidden animate-[selectFadeIn_180ms_cubic-bezier(0.16,1,0.3,1)]"
+      class="custom-select-floating-menu z-[1000001] flex flex-col bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200/90 dark:border-slate-700/80 shadow-2xl overflow-hidden animate-[selectFadeIn_180ms_cubic-bezier(0.16,1,0.3,1)]"
       [ngClass]="[
         menuRoundedClass,
         alignRight ? 'origin-top-right' : 'origin-top-left',
@@ -114,9 +114,9 @@
       (click)="$event.stopPropagation()">
 
       <!-- Search Input Inside Menu -->
-      @if (searchable) {
+      @if (isSearchable) {
       <div
-        class="p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-md"
+        class="shrink-0 p-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900/70 backdrop-blur-md"
         (click)="$event.stopPropagation()">
         <div class="relative flex items-center">
           <span class="absolute left-2.5 text-slate-400 pointer-events-none flex items-center">
@@ -139,7 +139,7 @@
       <!-- Multi-Select Action Bar -->
       @if (multiple && filteredOptions.length > 0) {
       <div
-        class="flex items-center justify-between px-3 py-1.5 bg-slate-100/60 dark:bg-slate-800/60 border-b border-slate-200/50 dark:border-slate-700/50 text-[11px]">
+        class="shrink-0 flex items-center justify-between px-3 py-1.5 bg-slate-100/60 dark:bg-slate-800/60 border-b border-slate-200/50 dark:border-slate-700/50 text-[11px]">
         <button type="button"
           class="font-bold text-amber-600 dark:text-amber-400 hover:underline border-0 bg-transparent p-0 cursor-pointer"
           (click)="selectAll(); $event.stopPropagation()">
@@ -155,16 +155,16 @@
 
       <!-- Options List with Smooth Scroll & Overscroll Containment -->
       <div
-        class="p-1.5 sm:p-2 flex flex-col gap-0.5 overflow-y-auto max-h-[250px] sm:max-h-[320px] custom-select-scrollbar overscroll-contain"
-        [style.max-height]="maxMenuHeight">
+        class="flex-1 min-h-0 p-1.5 sm:p-2 flex flex-col gap-0.5 overflow-y-auto custom-select-scrollbar overscroll-contain"
+        [class.custom-select-no-scrollbar]="hideScrollbar || (menuClass && menuClass.includes('no-scrollbar'))">
         <!-- Loading Skeleton Items -->
         @if (loading || isLoading) {
         <div class="py-1 space-y-1.5">
-          <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse">
+          <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800/60 animate-pulse">
             <div class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
             <div class="h-3 w-28 rounded bg-slate-200 dark:bg-slate-700"></div>
           </div>
-          <div class="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800/60 animate-pulse">
+          <div class="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-slate-100 dark:bg-slate-800/60 animate-pulse">
             <div class="w-3.5 h-3.5 rounded-full bg-slate-200 dark:bg-slate-700"></div>
             <div class="h-3 w-36 rounded bg-slate-200 dark:bg-slate-700"></div>
           </div>
@@ -192,7 +192,7 @@
 
         @for (opt of grp.options; track opt.value; let idx = $index) {
         <div [id]="instanceId + '-opt-' + idx"
-          class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-xl text-xs text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 hover:text-amber-800 dark:hover:text-amber-300 transition-all duration-150 cursor-pointer select-none"
+          class="flex items-center justify-between gap-2 px-2.5 py-2 rounded-lg text-xs text-slate-700 dark:text-slate-300 hover:bg-amber-500/10 dark:hover:bg-amber-500/15 hover:text-amber-800 dark:hover:text-amber-300 transition-all duration-150 cursor-pointer select-none"
           [ngClass]="[
               isSelected(opt.value) ? 'bg-amber-500/15 dark:bg-amber-500/20 text-amber-800 dark:text-amber-300 font-bold' : '',
               focusedIndex === idx ? 'bg-amber-500/10 dark:bg-amber-500/15 text-amber-800 dark:text-amber-300 ring-1 ring-amber-500/30' : '',
@@ -278,13 +278,13 @@
     <!-- ── Mobile Bottom Sheet Action Sheet (< 640px) ── -->
     @if (isMobileView && useBottomSheetOnMobile) {
     <!-- Backdrop Blur Overlay with Touch Event Shield -->
-    <div class="fixed inset-0 z-[2000] bg-slate-950/70 backdrop-blur-xs touch-none"
+    <div class="fixed inset-0 z-[1000000] bg-slate-950/70 backdrop-blur-xs touch-none"
       [ngClass]="isClosing ? 'animate-selectBackdropFadeOut pointer-events-none' : 'animate-selectBackdropFadeIn'"
       (click)="close()" (touchmove)="$event.preventDefault(); $event.stopPropagation()" aria-hidden="true"></div>
 
     <!-- Bottom Sheet Drawer -->
     <div [id]="instanceId + '-listbox'"
-      class="fixed inset-x-0 bottom-0 z-[2010] max-h-[85dvh] sm:max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-[28px] shadow-[0_-16px_50px_rgba(0,0,0,0.5)] border-t border-slate-200/80 dark:border-slate-800 flex flex-col overflow-hidden overscroll-contain"
+      class="fixed inset-x-0 bottom-0 z-[1000001] max-h-[85dvh] sm:max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-[28px] shadow-[0_-16px_50px_rgba(0,0,0,0.5)] border-t border-slate-200/80 dark:border-slate-800 flex flex-col overflow-hidden overscroll-contain"
       [ngClass]="isClosing ? 'animate-selectBottomSheetSlideDown' : 'animate-selectBottomSheetSlideUp'"
       [style.transform]="sheetTranslateY > 0 ? ('translate3d(0, ' + sheetTranslateY + 'px, 0)') : null" role="listbox"
       (click)="$event.stopPropagation()">
@@ -323,7 +323,7 @@
       </div>
 
       <!-- Pinned Search Bar for Mobile -->
-      @if (searchable) {
+      @if (isSearchable) {
       <div
         class="px-4 py-2.5 bg-slate-50/90 dark:bg-slate-900/90 border-b border-slate-100 dark:border-slate-800 shrink-0">
         <div class="relative flex items-center">
@@ -364,6 +364,7 @@
       <!-- Options List (Mobile Finger-Friendly, min-h 48px per item) -->
       <div
         class="custom-select-mobile-list p-3 flex flex-col gap-1.5 overflow-y-auto overscroll-contain flex-1 max-h-[55vh]"
+        [class.custom-select-no-scrollbar]="hideScrollbar || (menuClass && menuClass.includes('no-scrollbar'))"
         (touchmove)="$event.stopPropagation()">
         <!-- Loading Skeletons -->
         @if (loading || isLoading) {
