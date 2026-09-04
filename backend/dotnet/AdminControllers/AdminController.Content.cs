@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -150,11 +151,6 @@ namespace CoreApi.Controllers
 
             await _context.SaveChangesAsync();
             return Ok(new { success = true, message = "Review content sanitized successfully.", data = review });
-        }
-
-        public class AutoSanitizeRequestDto
-        {
-            public string? Content { get; set; }
         }
 
         [Authorize(Roles = "Admin")]

@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -126,11 +127,5 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Resource removed from bookmarks." });
         }
-    }
-
-    public class AddFavouriteResourceDto
-    {
-        public string ResourceId { get; set; } = string.Empty;
-        public string? ResourceName { get; set; }
     }
 }

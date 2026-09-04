@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CoreApi.DTOs.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -453,11 +454,5 @@ namespace CoreApi.Controllers
                 message = $"Automated Certificate of Practice (COP) renewal reminder email dispatched to {lawyer.Email}."
             });
         }
-    }
-
-    public class AdminBulkVerifyLawyersDto
-    {
-        public System.Collections.Generic.List<int> LawyerIds { get; set; } = new();
-        public bool IsVerified { get; set; }
     }
 }

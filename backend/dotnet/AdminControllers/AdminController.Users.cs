@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -506,16 +507,5 @@ namespace CoreApi.Controllers
                 redirectUrl = $"http://localhost:4200/auth/impersonate?token={impersonationToken}"
             });
         }
-    }
-
-    public class AdminRoleDto
-    {
-        public string Role { get; set; } = string.Empty;
-    }
-
-    public class AdminBulkStatusDto
-    {
-        public System.Collections.Generic.List<int> UserIds { get; set; } = new();
-        public bool IsActive { get; set; }
     }
 }

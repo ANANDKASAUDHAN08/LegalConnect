@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace CoreApi.Controllers
+namespace CoreApi.DTOs.Admin
 {
     public class AdminUpdateTicketDto
     {
@@ -51,5 +51,10 @@ namespace CoreApi.Controllers
         public string Template { get; set; } = string.Empty;
         public string Recipient { get; set; } = string.Empty;
         public string? CustomMessage { get; set; }
+    }
+
+    public class AutoSanitizeRequestDto
+    {
+        public string? Content { get; set; }
     }
 }

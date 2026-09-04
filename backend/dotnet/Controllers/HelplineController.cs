@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -157,11 +158,5 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
             return Ok(new { message = "Helpline removed from favourites." });
         }
-    }
-
-    public class AddFavouriteHelplineDto
-    {
-        public string HelplineId { get; set; } = string.Empty;
-        public string? HelplineName { get; set; }
     }
 }

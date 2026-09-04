@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -118,10 +119,5 @@ namespace CoreApi.Controllers
 
             return Ok(new { message = "Note deleted successfully." });
         }
-    }
-
-    public class SaveNoteDto
-    {
-        public string NoteText { get; set; } = string.Empty;
     }
 }

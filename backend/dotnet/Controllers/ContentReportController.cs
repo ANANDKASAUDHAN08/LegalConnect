@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,14 +30,6 @@ namespace CoreApi.Controllers
         }
 
         // ── Reason Taxonomy Single Source of Truth ──
-        public class ReasonItemDto
-        {
-            public string Key { get; set; } = string.Empty;
-            public string Label { get; set; } = string.Empty;
-            public string Icon { get; set; } = string.Empty;
-            public string Severity { get; set; } = "Medium";
-        }
-
         private static readonly Dictionary<string, List<ReasonItemDto>> TaxonomyMap = new(StringComparer.OrdinalIgnoreCase)
         {
             ["Review"] = new()
@@ -270,7 +263,7 @@ namespace CoreApi.Controllers
             var userId = GetUserId();
             if (userId == null) return Unauthorized();
 
-            var query = _context.ContentReports.Where(r => r.ReporterUserId == userId.Value && r.Status != ReportStatus.Dismissed);
+            var query = _context.ContentReports.Where(r => r.ReporterUserId == userId.Value);
             var total = await query.CountAsync();
 
             var items = await query
@@ -286,6 +279,7 @@ namespace CoreApi.Controllers
                     r.TargetTitle,
                     r.ReasonCategory,
                     r.Description,
+                    r.EvidenceUrl,
                     severity = r.Severity.ToString(),
                     status = r.Status.ToString(),
                     r.AdminResolutionNotes,
@@ -295,6 +289,64 @@ namespace CoreApi.Controllers
                 .ToListAsync();
 
             return Ok(new { data = items, total, page, limit });
+        }
+
+        /// <summary>
+        /// POST /api/contentreport/appeal
+        /// Allows a reporter to appeal a closed/reviewed report with additional context or evidence.
+        /// </summary>
+        [HttpPost("appeal")]
+        [Authorize]
+        public async Task<IActionResult> Appeal([FromBody] AppealReportDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.ReferenceId) || string.IsNullOrWhiteSpace(dto.AppealReason))
+                return BadRequest(new { message = "ReferenceId and AppealReason are required." });
+
+            var userId = GetUserId();
+            if (userId == null) return Unauthorized();
+
+            // Extract Id from LC-REP-YYYY-0004 or parse directly
+            long reportId = 0;
+            if (dto.ReferenceId.StartsWith("LC-REP-"))
+            {
+                var parts = dto.ReferenceId.Split('-');
+                if (parts.Length == 4 && long.TryParse(parts[3], out var parsedId))
+                {
+                    reportId = parsedId;
+                }
+            }
+            else if (long.TryParse(dto.ReferenceId, out var directId))
+            {
+                reportId = directId;
+            }
+
+            var report = await _context.ContentReports
+                .FirstOrDefaultAsync(r => (r.Id == reportId || r.Id.ToString() == dto.ReferenceId) && r.ReporterUserId == userId.Value);
+
+            if (report == null)
+            {
+                return NotFound(new { message = "Report not found or does not belong to you." });
+            }
+
+            // Re-open report for moderation review
+            report.Status = ReportStatus.Pending;
+            report.AdminResolutionNotes = string.IsNullOrWhiteSpace(report.AdminResolutionNotes)
+                ? $"[Citizen Appeal]: {dto.AppealReason.Trim()}"
+                : $"{report.AdminResolutionNotes}\n[Citizen Appeal on {DateTime.UtcNow:dd-MMM-yyyy}]: {dto.AppealReason.Trim()}";
+
+            if (!string.IsNullOrWhiteSpace(dto.EvidenceUrl))
+            {
+                report.EvidenceUrl = dto.EvidenceUrl.Trim();
+            }
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                success = true,
+                message = "Appeal submitted successfully. Our Trust & Safety team will re-review your ticket.",
+                referenceId = $"LC-REP-{report.CreatedAt:yyyy}-{report.Id:D4}"
+            });
         }
 
         /// <summary>
@@ -349,27 +401,5 @@ namespace CoreApi.Controllers
 
             return Ok(new { success = true, message = "Report withdrawn successfully." });
         }
-    }
-
-    // ── DTOs ──
-
-    public class CreateReportDto
-    {
-        public string TargetType { get; set; } = string.Empty;
-        public string TargetId { get; set; } = string.Empty;
-        public string? TargetTitle { get; set; }
-        public string ReasonCategory { get; set; } = string.Empty;
-        public string Description { get; set; } = string.Empty;
-        public string? EvidenceUrl { get; set; }
-        public string? ReporterName { get; set; }
-        public string? ReporterEmail { get; set; }
-        public string? ClientFingerprint { get; set; }
-    }
-
-    public class WithdrawReportDto
-    {
-        public string TargetType { get; set; } = string.Empty;
-        public string TargetId { get; set; } = string.Empty;
-        public string? ClientFingerprint { get; set; }
     }
 }

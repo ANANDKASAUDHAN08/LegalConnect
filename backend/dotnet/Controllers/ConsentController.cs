@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -196,12 +197,5 @@ namespace CoreApi.Controllers
         {
             return dt.HasValue ? DateTime.SpecifyKind(dt.Value, DateTimeKind.Utc) : null;
         }
-    }
-
-    public class SaveConsentDto
-    {
-        public string AnonymousId { get; set; } = string.Empty;
-        public bool AnalyticsConsent { get; set; }
-        public bool MarketingConsent { get; set; }
     }
 }

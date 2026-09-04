@@ -6,6 +6,7 @@ using System.Net.Http.Json;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -521,30 +522,5 @@ namespace CoreApi.Controllers
                 Console.WriteLine($"Error syncing rating to MongoDB: {ex.Message}");
             }
         }
-    }
-
-    public class CreateReviewDto
-    {
-        public int Rating { get; set; }
-        public string Content { get; set; } = string.Empty;
-        public string? TargetName { get; set; }
-        public string? AuthorName { get; set; } // Only utilized for Guests
-    }
-
-    public class UpdateReviewDto
-    {
-        public int Rating { get; set; }
-        public string Content { get; set; } = string.Empty;
-        public string? TargetName { get; set; }
-    }
-
-    public class FlagReviewDto
-    {
-        public string? Reason { get; set; }
-    }
-
-    public class DisputeReviewDto
-    {
-        public string? Reason { get; set; }
     }
 }

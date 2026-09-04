@@ -170,7 +170,7 @@ namespace CoreApi.Controllers
 
         [Authorize]
         [HttpPut("change-password")]
-        public async Task<IActionResult> ChangePassword([FromBody] CoreApi.Models.ChangePasswordDto request)
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var result = await _profileService.ChangePasswordAsync(userId, request);

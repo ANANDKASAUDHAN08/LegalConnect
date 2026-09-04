@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -269,22 +270,5 @@ namespace CoreApi.Controllers
 
             return Ok(new { message = "Bookmark removed successfully." });
         }
-    }
-
-    public class AddBookmarkDto
-    {
-        public string ActShortName { get; set; } = string.Empty;
-        public string ChapterNumber { get; set; } = string.Empty;
-        public string SectionNumber { get; set; } = string.Empty;
-        public string SectionTitle { get; set; } = string.Empty;
-        public string SectionContent { get; set; } = string.Empty;
-        public string? Notes { get; set; }
-        public string? CollectionName { get; set; }
-    }
-
-    public class UpdateBookmarkDto
-    {
-        public string? Notes { get; set; }
-        public string? CollectionName { get; set; }
     }
 }

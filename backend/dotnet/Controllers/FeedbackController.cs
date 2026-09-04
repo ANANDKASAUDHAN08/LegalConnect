@@ -3,6 +3,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -79,11 +80,5 @@ namespace CoreApi.Controllers
                 updatedAt = DateTime.UtcNow
             });
         }
-    }
-
-    public class SubmitFeedbackDto
-    {
-        public string PageSlug { get; set; } = string.Empty;
-        public bool IsHelpful { get; set; }
     }
 }

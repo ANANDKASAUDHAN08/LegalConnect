@@ -1,7 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 
-namespace CoreApi.Models
+using CoreApi.Models;
+
+namespace CoreApi.DTOs
 {
     public class CreateAnnouncementDto
     {

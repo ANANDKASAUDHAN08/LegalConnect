@@ -4,6 +4,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using CoreApi.Models.Admin;
 using Microsoft.AspNetCore.Authorization;
@@ -343,33 +344,5 @@ namespace CoreApi.Controllers
 
             return Ok(new { success = true, data = logs });
         }
-    }
-
-    // ── DTOs ──
-
-    public class ResolveReportRequestDto
-    {
-        public long ReportId { get; set; }
-        public string Action { get; set; } = "ContentRemoved";
-        public string? Notes { get; set; }
-    }
-
-    public class DismissReportRequestDto
-    {
-        public long ReportId { get; set; }
-        public string? Notes { get; set; }
-    }
-
-    public class BulkResolveRequestDto
-    {
-        public List<long> ReportIds { get; set; } = new();
-        public string Action { get; set; } = "ContentRemoved";
-        public string? Notes { get; set; }
-    }
-
-    public class BulkDismissRequestDto
-    {
-        public List<long> ReportIds { get; set; } = new();
-        public string? Notes { get; set; }
     }
 }

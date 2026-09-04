@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using CoreApi.Models.Admin;
 using CoreApi.Services;
@@ -120,18 +121,5 @@ namespace CoreApi.Controllers
 
             return Ok(new { message = "Successfully subscribed to LegalConnect updates!" });
         }
-    }
-
-    public class SubscribeNewsletterDto
-    {
-        public string Email { get; set; } = string.Empty;
-    }
-
-    public class SubmitContactDto
-    {
-        public string FullName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Subject { get; set; } = string.Empty;
-        public string Message { get; set; } = string.Empty;
     }
 }

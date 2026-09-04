@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using CoreApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +30,7 @@ namespace CoreApi.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPut("account/password")]
-        public async Task<IActionResult> ChangeOwnPassword([FromBody] ChangePasswordDto dto)
+        public async Task<IActionResult> ChangeOwnPassword([FromBody] AdminChangePasswordDto dto)
         {
             if (string.IsNullOrEmpty(dto.CurrentPassword) || string.IsNullOrEmpty(dto.NewPassword))
                 return BadRequest(new { message = "Current password and new password are required." });
@@ -119,7 +120,7 @@ namespace CoreApi.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost("account/2fa/verify")]
-        public async Task<IActionResult> Verify2FA([FromBody] Verify2FADto dto)
+        public async Task<IActionResult> Verify2FA([FromBody] AdminVerify2FADto dto)
         {
             if (string.IsNullOrEmpty(dto.Code))
                 return BadRequest(new { message = "Verification code is required." });
@@ -151,7 +152,7 @@ namespace CoreApi.Controllers
 
         [Authorize(Roles = "Admin")]
         [HttpPost("account/2fa/disable")]
-        public async Task<IActionResult> Disable2FA([FromBody] Disable2FADto dto)
+        public async Task<IActionResult> Disable2FA([FromBody] AdminDisable2FADto dto)
         {
             if (string.IsNullOrEmpty(dto.Password))
                 return BadRequest(new { message = "Password is required to disable 2FA." });
@@ -349,23 +350,5 @@ namespace CoreApi.Controllers
             }
             return new string(code);
         }
-    }
-
-    // ─── DTOs ────────────────────────────────────────────────────────
-
-    public class ChangePasswordDto
-    {
-        public string CurrentPassword { get; set; } = string.Empty;
-        public string NewPassword { get; set; } = string.Empty;
-    }
-
-    public class Verify2FADto
-    {
-        public string Code { get; set; } = string.Empty;
-    }
-
-    public class Disable2FADto
-    {
-        public string Password { get; set; } = string.Empty;
     }
 }

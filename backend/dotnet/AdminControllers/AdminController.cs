@@ -4,6 +4,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using CoreApi.Data;
+using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using CoreApi.Services;
 using Microsoft.AspNetCore.Hosting;
@@ -117,60 +118,5 @@ namespace CoreApi.Controllers
                 // Client disconnected
             }
         }
-    }
-
-    // ═══════════════════════════════════════════════════════════════
-    //  ADMIN DTOs
-    // ═══════════════════════════════════════════════════════════════
-
-    public class AdminUpdateUserDto
-    {
-        public string? FullName { get; set; }
-        public string? Email { get; set; }
-        public string? Role { get; set; }
-        public string? Phone { get; set; }
-        public string? ClientCity { get; set; }
-        public string? ClientState { get; set; }
-        public bool? IsActive { get; set; }
-        public bool? IsEmailVerified { get; set; }
-    }
-
-    public class AdminUpdateStatusDto
-    {
-        public string Status { get; set; } = string.Empty;
-    }
-
-    public class AnnouncementCreateDto
-    {
-        public string Version { get; set; } = "1.0.0";
-        public string Title { get; set; } = string.Empty;
-        public string Summary { get; set; } = string.Empty;
-        public string? DetailsMarkdown { get; set; }
-        public AnnouncementType Type { get; set; } = AnnouncementType.MajorRelease;
-        public bool IsModalTrigger { get; set; } = true;
-        public bool IsActive { get; set; } = true;
-        public DateTime? PublishedAt { get; set; }
-    }
-
-    public class AdminVerifyLawyerDto
-    {
-        public bool IsVerified { get; set; }
-        public string? Remarks { get; set; }
-    }
-
-    public class AdminUpdateLawyerProfileDto
-    {
-        public string? BarCouncilNumber { get; set; }
-        public string? Specialization { get; set; }
-        public int? ExperienceYears { get; set; }
-        public string? City { get; set; }
-        public decimal? ConsultationFee { get; set; }
-        public decimal? InPersonFee { get; set; }
-        public string? OfficeAddress { get; set; }
-        public string? Bio { get; set; }
-        public string? ActiveCourts { get; set; }
-        public string? VerificationRemarks { get; set; }
-        public bool? IsAvailable { get; set; }
-        public bool? IsVerified { get; set; }
     }
 }

@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -269,30 +270,5 @@ namespace CoreApi.Controllers
 
             return Ok(result);
         }
-    }
-
-    // ── DTOs ──
-
-    public class ToggleBookmarkDto
-    {
-        public string TargetType { get; set; } = string.Empty;
-        public string TargetId { get; set; } = string.Empty;
-        public string? Title { get; set; }
-        public string? Subtitle { get; set; }
-        public string? CollectionName { get; set; }
-        public string? MetadataJson { get; set; }
-    }
-
-    public class UpdateUniversalBookmarkDto
-    {
-        public string? CustomNotes { get; set; }
-        public string? CollectionName { get; set; }
-        public string? MetadataJson { get; set; }
-    }
-
-    public class BookmarkBatchStatusDto
-    {
-        public string TargetType { get; set; } = string.Empty;
-        public List<string> TargetIds { get; set; } = new();
     }
 }
