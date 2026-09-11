@@ -487,10 +487,14 @@ namespace CoreApi.Controllers
 
             var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
                 _configuration.GetSection("Jwt:Key").Value!));
-
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
+            var issuer = _configuration["Jwt:Issuer"] ?? _configuration["Jwt__Issuer"] ?? "LegalConnect-API";
+            var audience = _configuration["Jwt:Audience"] ?? _configuration["Jwt__Audience"] ?? "LegalConnect-Admin";
+
             var token = new System.IdentityModel.Tokens.Jwt.JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
                 claims: claims,
                 expires: DateTime.UtcNow.AddMinutes(15),
                 signingCredentials: creds

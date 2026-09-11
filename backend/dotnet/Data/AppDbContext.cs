@@ -238,6 +238,15 @@ namespace CoreApi.Data
             modelBuilder.Entity<ContentReport>()
                 .Property(r => r.EvidenceUrl)
                 .HasColumnType("longtext");
+
+            modelBuilder.Entity<ContentReport>()
+                .HasIndex(r => new { r.Status, r.Severity, r.CreatedAt });
+
+            modelBuilder.Entity<ContentReport>()
+                .HasIndex(r => new { r.TargetType, r.TargetId });
+
+            modelBuilder.Entity<ContentReport>()
+                .HasIndex(r => r.AssignedAdminEmail);
         }
     }
 }

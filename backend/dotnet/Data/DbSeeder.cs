@@ -101,6 +101,17 @@ namespace CoreApi.Data
             var existingAdmin = context.Users.FirstOrDefault(u => u.Email.ToLower() == adminEmail);
             if (existingAdmin == null)
             {
+                var isProduction = string.Equals(Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"), "Production", StringComparison.OrdinalIgnoreCase);
+                if (isProduction && adminPassword == "Admin@123!")
+                {
+                    throw new InvalidOperationException("CRITICAL SECURITY ERROR: Refusing to seed default admin password 'Admin@123!' in production environment. Configure ADMIN_SEED_PASSWORD environment variable.");
+                }
+
+                if (adminPassword == "Admin@123!")
+                {
+                    Console.WriteLine("⚠️ [Security Warning] Default fallback admin password 'Admin@123!' was used to seed initial admin. Configure ADMIN_SEED_PASSWORD in production!");
+                }
+
                 var admin = new User
                 {
                     FullName = configuration["AdminSeed:FullName"] ?? "System Administrator",
@@ -110,6 +121,7 @@ namespace CoreApi.Data
                     IsEmailVerified = true,
                     IsPhoneVerified = true,
                     IsActive = true,
+                    MustChangePassword = (adminPassword == "Admin@123!"),
                     CreatedAt = DateTime.UtcNow
                 };
                 context.Users.Add(admin);
@@ -120,9 +132,16 @@ namespace CoreApi.Data
             {
                 existingAdmin.Role = "Admin";
                 existingAdmin.IsActive = true;
-                existingAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+
+                // Do NOT overwrite existing admin password on every restart unless explicitly commanded via environment
+                if (string.Equals(Environment.GetEnvironmentVariable("RESET_ADMIN_SEED_PASSWORD"), "true", StringComparison.OrdinalIgnoreCase))
+                {
+                    existingAdmin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword);
+                    Console.WriteLine($"⚠️ Admin password reset via RESET_ADMIN_SEED_PASSWORD: {adminEmail}");
+                }
+
                 context.SaveChanges();
-                Console.WriteLine($"✅ Admin user password hash & role synchronized: {adminEmail}");
+                Console.WriteLine($"✅ Admin user verified & role synchronized: {adminEmail}");
             }
 
             string? jsonContent = null;
@@ -649,6 +668,19 @@ namespace CoreApi.Data
             }
         }
 
+        /// <summary>
+        /// Backward-compatible schema evolution via raw SQL ALTER TABLE.
+        /// 
+        /// This method bypasses EF Core migrations to dynamically add missing columns
+        /// at startup. This pattern is intentional for the following reasons:
+        ///   1. Supports zero-downtime deployments where migrations haven't run yet
+        ///   2. Handles development environments with divergent schema states
+        ///   3. Uses information_schema introspection to avoid duplicate column errors
+        /// 
+        /// WARNING: This is a MySQL-specific pattern. The backtick-quoted identifiers
+        /// and information_schema query will not work on SQL Server or PostgreSQL.
+        /// If migrating databases, this method must be adapted.
+        /// </summary>
         private static void EnsureColumnsBatch(AppDbContext context, List<(string Table, string Column, string Definition)> columns)
         {
             try

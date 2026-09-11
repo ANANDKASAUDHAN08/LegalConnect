@@ -59,6 +59,11 @@ namespace CoreApi.Models
         [MaxLength(2000)]
         public string? TwoFactorBackupCodes { get; set; }
 
+        /// <summary>
+        /// Flag indicating the user (e.g. seeded administrator) must change their password on next login.
+        /// </summary>
+        public bool MustChangePassword { get; set; } = false;
+
         [MaxLength(50)]
         public string AuthProvider { get; set; } = "Email + Password";
 

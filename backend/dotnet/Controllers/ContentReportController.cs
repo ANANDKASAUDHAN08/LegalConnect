@@ -191,6 +191,11 @@ namespace CoreApi.Controllers
                     });
                 }
 
+                if (!IsValidEvidenceUrl(dto.EvidenceUrl))
+                {
+                    return BadRequest(new { message = "Invalid evidence URL format. Must be an HTTP(S) link or valid image data URI (PNG, JPEG, WebP, GIF) under 64KB." });
+                }
+
                 // Auto-assign severity based on reason category
                 var severity = SeverityMap.GetValueOrDefault(dto.ReasonCategory, ReportSeverity.Medium);
 
@@ -336,6 +341,10 @@ namespace CoreApi.Controllers
 
             if (!string.IsNullOrWhiteSpace(dto.EvidenceUrl))
             {
+                if (!IsValidEvidenceUrl(dto.EvidenceUrl))
+                {
+                    return BadRequest(new { message = "Invalid evidence URL format. Must be an HTTP(S) link or valid image data URI (PNG, JPEG, WebP, GIF) under 64KB." });
+                }
                 report.EvidenceUrl = dto.EvidenceUrl.Trim();
             }
 
@@ -400,6 +409,31 @@ namespace CoreApi.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { success = true, message = "Report withdrawn successfully." });
+        }
+
+        private static bool IsValidEvidenceUrl(string? url)
+        {
+            if (string.IsNullOrWhiteSpace(url)) return true;
+            if (url.Length > 65536) return false;
+
+            var trimmed = url.Trim();
+            if (trimmed.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
+            {
+                return Uri.TryCreate(trimmed, UriKind.Absolute, out var uri) &&
+                       (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+            }
+
+            if (trimmed.StartsWith("data:image/png;base64,", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.StartsWith("data:image/jpeg;base64,", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.StartsWith("data:image/jpg;base64,", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.StartsWith("data:image/webp;base64,", StringComparison.OrdinalIgnoreCase) ||
+                trimmed.StartsWith("data:image/gif;base64,", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

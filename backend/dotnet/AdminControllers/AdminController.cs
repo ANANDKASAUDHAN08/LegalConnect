@@ -7,6 +7,7 @@ using CoreApi.Data;
 using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using CoreApi.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -14,6 +15,9 @@ using Microsoft.IdentityModel.Tokens;
 
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+
+using Microsoft.AspNetCore.SignalR;
+using CoreApi.Hubs.Admin;
 
 namespace CoreApi.Controllers
 {
@@ -29,6 +33,7 @@ namespace CoreApi.Controllers
         private readonly ILogger<AdminController> _logger;
         private readonly IMemoryCache _cache;
         private readonly IPiiSanitizerService _piiSanitizer;
+        private readonly IHubContext<AdminNotificationHub>? _hubContext;
 
         public AdminController(
             AppDbContext context,
@@ -38,7 +43,8 @@ namespace CoreApi.Controllers
             IHttpClientFactory httpClientFactory,
             ILogger<AdminController> logger,
             IMemoryCache cache,
-            IPiiSanitizerService piiSanitizer)
+            IPiiSanitizerService piiSanitizer,
+            IHubContext<AdminNotificationHub>? hubContext = null)
         {
             _context = context;
             _configuration = configuration;
@@ -48,6 +54,7 @@ namespace CoreApi.Controllers
             _logger = logger;
             _cache = cache;
             _piiSanitizer = piiSanitizer;
+            _hubContext = hubContext;
         }
 
         // ═══════════════════════════════════════════════════════════════
@@ -63,14 +70,20 @@ namespace CoreApi.Controllers
                 new Claim(ClaimTypes.Role, user.Role),
                 new Claim(ClaimTypes.Name, user.FullName),
                 new Claim("SessionId", sessionId),
-                new Claim("IsAdmin", "true")
+                new Claim("IsAdmin", "true"),
+                new Claim("MustChangePassword", user.MustChangePassword ? "true" : "false")
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-                _configuration.GetSection("Jwt:Key").Value!));
+                _configuration["Jwt:Key"] ?? _configuration.GetSection("Jwt:Key").Value!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
 
+            var issuer = _configuration["Jwt:Issuer"] ?? _configuration["Jwt__Issuer"] ?? "LegalConnect-API";
+            var audience = _configuration["Jwt:Audience"] ?? _configuration["Jwt__Audience"] ?? "LegalConnect-Admin";
+
             var token = new JwtSecurityToken(
+                issuer: issuer,
+                audience: audience,
                 claims: claims,
                 expires: DateTime.UtcNow.AddHours(4),
                 signingCredentials: creds
@@ -80,6 +93,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpGet("telemetry/stream")]
+        [Authorize(Roles = "Admin")]
         public async Task StreamTelemetry(System.Threading.CancellationToken cancellationToken)
         {
             Response.Headers.Append("Content-Type", "text/event-stream");

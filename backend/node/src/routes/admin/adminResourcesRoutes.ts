@@ -24,7 +24,7 @@ router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
     sortBy = 'createdAt',
     sortOrder = 'desc',
     page = '1',
-    limit = '20'
+    limit = '10'
   } = req.query;
 
   const filter: any = {};
@@ -72,15 +72,19 @@ router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
 
   if (search) {
     const q = (search as string).trim();
-    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    filter.$or = [
-      { name: { $regex: new RegExp(escaped, 'i') } },
-      { address: { $regex: new RegExp(escaped, 'i') } },
-      { city: { $regex: new RegExp(escaped, 'i') } },
-      { state: { $regex: new RegExp(escaped, 'i') } },
-      { district: { $regex: new RegExp(escaped, 'i') } },
-      { pincode: { $regex: new RegExp(escaped, 'i') } }
-    ];
+    if (q.length >= 2 && /^[\w\s-]+$/.test(q)) {
+      // Utilize MongoDB compound text index on { name, city, state, district, address }
+      filter.$text = { $search: q };
+    } else {
+      const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      // Prefix-anchored regex leverages B-tree indexes on indexed fields (name, city, district)
+      filter.$or = [
+        { name: { $regex: new RegExp(`^${escaped}`, 'i') } },
+        { city: { $regex: new RegExp(`^${escaped}`, 'i') } },
+        { district: { $regex: new RegExp(`^${escaped}`, 'i') } },
+        { pincode: escaped }
+      ];
+    }
   }
 
   const pageNum = parseInt(page as string, 10) || 1;

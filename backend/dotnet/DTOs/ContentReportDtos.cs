@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace CoreApi.DTOs
 {
     public class ReasonItemDto
@@ -15,6 +17,7 @@ namespace CoreApi.DTOs
         public string? TargetTitle { get; set; }
         public string ReasonCategory { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        [MaxLength(65536, ErrorMessage = "Evidence URL or base64 payload must not exceed 64KB.")]
         public string? EvidenceUrl { get; set; }
         public string? ReporterName { get; set; }
         public string? ReporterEmail { get; set; }
@@ -25,6 +28,7 @@ namespace CoreApi.DTOs
     {
         public string ReferenceId { get; set; } = string.Empty;
         public string AppealReason { get; set; } = string.Empty;
+        [MaxLength(65536, ErrorMessage = "Evidence URL or base64 payload must not exceed 64KB.")]
         public string? EvidenceUrl { get; set; }
     }
 

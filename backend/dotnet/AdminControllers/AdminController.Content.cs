@@ -24,7 +24,7 @@ namespace CoreApi.Controllers
         [HttpGet("reviews")]
         public async Task<IActionResult> GetReviews(
             [FromQuery] int page = 1,
-            [FromQuery] int limit = 15,
+            [FromQuery] int limit = 10,
             [FromQuery] int? rating = null,
             [FromQuery] string? role = null,
             [FromQuery] string? moderationStatus = null,
@@ -68,7 +68,16 @@ namespace CoreApi.Controllers
                 .Take(limit)
                 .ToListAsync();
 
-            return Ok(new { success = true, data = reviews, pagination = new { total, page, limit } });
+            return Ok(new { 
+                success = true, 
+                data = reviews, 
+                pagination = new { 
+                    total, 
+                    page, 
+                    limit, 
+                    pages = limit > 0 ? (int)Math.Ceiling((double)total / limit) : 1 
+                } 
+            });
         }
 
         [Authorize(Roles = "Admin")]
@@ -235,7 +244,7 @@ namespace CoreApi.Controllers
         [HttpGet("consultations")]
         public async Task<IActionResult> GetConsultations(
             [FromQuery] int page = 1,
-            [FromQuery] int limit = 15,
+            [FromQuery] int limit = 10,
             [FromQuery] string? status = null,
             [FromQuery] string? search = null,
             [FromQuery] string? sla = null,
@@ -364,7 +373,12 @@ namespace CoreApi.Controllers
             return Ok(new {
                 success = true,
                 data = consultationsList,
-                pagination = new { total, page, limit },
+                pagination = new { 
+                    total, 
+                    page, 
+                    limit, 
+                    pages = limit > 0 ? (int)Math.Ceiling((double)total / limit) : 1 
+                },
                 metrics = new { total = allCount, pending, contacted, closed }
             });
         }
@@ -599,93 +613,20 @@ namespace CoreApi.Controllers
         [HttpGet("contacts")]
         public async Task<IActionResult> GetContactSubmissions(
             [FromQuery] int page = 1,
-            [FromQuery] int limit = 20,
+            [FromQuery] int limit = 10,
             [FromQuery] string? status = null,
             [FromQuery] string? priority = null,
             [FromQuery] string? category = null,
             [FromQuery] string? assignedAgent = null,
             [FromQuery] DateTime? startDate = null,
             [FromQuery] DateTime? endDate = null,
-            [FromQuery] string? search = null)
+            [FromQuery] string? search = null,
+            [FromQuery] string? source = null)
         {
-            var contactsList = new List<object>();
+            if (page < 1) page = 1;
+            if (limit < 1 || limit > 100) limit = 10;
 
-            // 1. Fetch real MongoDB tickets from Node backend if configured
-            try
-            {
-                var nodeBaseUrl = _configuration["NodeServices:BaseUrl"];
-                if (string.IsNullOrEmpty(nodeBaseUrl) && _env.IsDevelopment())
-                {
-                    nodeBaseUrl = "http://localhost:5000";
-                }
-
-                if (!string.IsNullOrEmpty(nodeBaseUrl) && !nodeBaseUrl.Contains("localhost:5000") || _env.IsDevelopment())
-                {
-                    using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(800));
-                    var httpClient = _httpClientFactory.CreateClient();
-                    var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets", cts.Token);
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(cancellationToken: cts.Token);
-                    if (json.TryGetProperty("tickets", out var ticketsProp) && ticketsProp.ValueKind == System.Text.Json.JsonValueKind.Array)
-                    {
-                        foreach (var t in ticketsProp.EnumerateArray())
-                        {
-                            var tStatus = t.TryGetProperty("status", out var st) ? st.GetString() ?? "New" : "New";
-                            if (!string.IsNullOrEmpty(status) && !tStatus.Equals(status, StringComparison.OrdinalIgnoreCase))
-                                continue;
-
-                            var tPriority = t.TryGetProperty("priority", out var pr) ? pr.GetString() ?? "Normal" : "Normal";
-                            if (!string.IsNullOrEmpty(priority) && !tPriority.Equals(priority, StringComparison.OrdinalIgnoreCase))
-                                continue;
-
-                            var tCategory = t.TryGetProperty("category", out var cat) ? cat.GetString() ?? "General" : "General";
-                            if (!string.IsNullOrEmpty(category) && !tCategory.Equals(category, StringComparison.OrdinalIgnoreCase))
-                                continue;
-
-                            var tName = t.TryGetProperty("name", out var n) ? n.GetString() ?? "User" : "User";
-                            var tEmail = t.TryGetProperty("email", out var e) ? e.GetString() ?? "" : "";
-                            var tSubject = t.TryGetProperty("subject", out var s) ? s.GetString() ?? "Inquiry" : "Inquiry";
-                            var tMsg = t.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
-
-                            var tsStr = t.TryGetProperty("timestamp", out var ts) ? ts.GetString() : null;
-                            if (DateTime.TryParse(tsStr, out var ticketDt))
-                            {
-                                var ticketUtc = ticketDt.ToUniversalTime();
-                                if (startDate.HasValue && ticketUtc < startDate.Value.ToUniversalTime()) continue;
-                                if (endDate.HasValue && ticketUtc > endDate.Value.ToUniversalTime().Date.AddDays(1)) continue;
-                            }
-
-                            if (!string.IsNullOrWhiteSpace(search))
-                            {
-                                var q = search.Trim().ToLower();
-                                if (!tName.ToLower().Contains(q) && !tEmail.ToLower().Contains(q) && !tSubject.ToLower().Contains(q) && !tMsg.ToLower().Contains(q))
-                                    continue;
-                            }
-
-                            contactsList.Add(new
-                            {
-                                id = t.TryGetProperty("ticketId", out var tid) ? tid.GetString() : Guid.NewGuid().ToString("N"),
-                                fullName = tName,
-                                email = tEmail,
-                                subject = tSubject,
-                                message = tMsg,
-                                status = tStatus,
-                                priority = tPriority,
-                                category = tCategory,
-                                source = "MongoDB Desk",
-                                assignedAgent = t.TryGetProperty("assignedAgent", out var ag) ? ag.GetString() : "",
-                                slaTarget = t.TryGetProperty("slaTarget", out var sla) ? sla.GetString() : "24 Hours",
-                                createdAt = tsStr ?? DateTime.UtcNow.ToString("o")
-                            });
-                        }
-                    }
-                }
-            }
-            }
-            catch {}
-
-            // 2. Fetch MySQL ContactSubmissions
+            // 1. Build optimized SQL query
             var query = _context.ContactSubmissions.AsQueryable();
             if (startDate.HasValue)
                 query = query.Where(c => c.CreatedAt >= startDate.Value.ToUniversalTime());
@@ -705,8 +646,132 @@ namespace CoreApi.Controllers
                 query = query.Where(c => c.FullName.ToLower().Contains(q) || c.Email.ToLower().Contains(q) || c.Subject.ToLower().Contains(q) || c.Message.ToLower().Contains(q));
             }
 
+            // If caller explicitly requests SQL only, bypass dual-source HTTP fetch and page 100% in database
+            if (string.Equals(source, "sql", StringComparison.OrdinalIgnoreCase))
+            {
+                var sqlTotal = await query.CountAsync();
+                var sqlPaged = await query
+                    .OrderByDescending(c => c.CreatedAt)
+                    .Skip((page - 1) * limit)
+                    .Take(limit)
+                    .Select(c => new
+                    {
+                        id = c.Id.ToString(),
+                        fullName = c.FullName,
+                        email = c.Email,
+                        subject = c.Subject,
+                        message = c.Message,
+                        status = c.Status,
+                        priority = c.Priority ?? "Normal",
+                        category = c.Category ?? "General",
+                        source = "SQL Contact Desk",
+                        assignedAgent = c.AssignedAgent ?? "",
+                        slaDueDate = c.SlaDueDate.HasValue ? c.SlaDueDate.Value.ToString("o") : null,
+                        resolutionNote = c.ResolutionNote ?? "",
+                        internalNotesJson = c.InternalNotesJson ?? "[]",
+                        createdAt = c.CreatedAt.ToString("o")
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = sqlPaged,
+                    pagination = new
+                    {
+                        total = sqlTotal,
+                        page,
+                        limit,
+                        pages = limit > 0 ? (int)Math.Ceiling((double)sqlTotal / limit) : 1
+                    }
+                });
+            }
+
+            var contactsList = new List<object>();
+
+            // 2. Fetch real MongoDB tickets from Node backend if configured (unless source == "sql")
+            if (!string.Equals(source, "sql", StringComparison.OrdinalIgnoreCase))
+            {
+                try
+                {
+                    var nodeBaseUrl = _configuration["NodeServices:BaseUrl"];
+                    if (string.IsNullOrEmpty(nodeBaseUrl) && _env.IsDevelopment())
+                    {
+                        nodeBaseUrl = "http://localhost:5000";
+                    }
+
+                    if (!string.IsNullOrEmpty(nodeBaseUrl) && !nodeBaseUrl.Contains("localhost:5000") || _env.IsDevelopment())
+                    {
+                        using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(800));
+                        var httpClient = _httpClientFactory.CreateClient();
+                        var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets", cts.Token);
+                        if (response.IsSuccessStatusCode)
+                        {
+                            var json = await response.Content.ReadFromJsonAsync<System.Text.Json.JsonElement>(cancellationToken: cts.Token);
+                            if (json.TryGetProperty("tickets", out var ticketsProp) && ticketsProp.ValueKind == System.Text.Json.JsonValueKind.Array)
+                            {
+                                foreach (var t in ticketsProp.EnumerateArray())
+                                {
+                                    var tStatus = t.TryGetProperty("status", out var st) ? st.GetString() ?? "New" : "New";
+                                    if (!string.IsNullOrEmpty(status) && !tStatus.Equals(status, StringComparison.OrdinalIgnoreCase))
+                                        continue;
+
+                                    var tPriority = t.TryGetProperty("priority", out var pr) ? pr.GetString() ?? "Normal" : "Normal";
+                                    if (!string.IsNullOrEmpty(priority) && !tPriority.Equals(priority, StringComparison.OrdinalIgnoreCase))
+                                        continue;
+
+                                    var tCategory = t.TryGetProperty("category", out var cat) ? cat.GetString() ?? "General" : "General";
+                                    if (!string.IsNullOrEmpty(category) && !tCategory.Equals(category, StringComparison.OrdinalIgnoreCase))
+                                        continue;
+
+                                    var tName = t.TryGetProperty("name", out var n) ? n.GetString() ?? "User" : "User";
+                                    var tEmail = t.TryGetProperty("email", out var e) ? e.GetString() ?? "" : "";
+                                    var tSubject = t.TryGetProperty("subject", out var s) ? s.GetString() ?? "Inquiry" : "Inquiry";
+                                    var tMsg = t.TryGetProperty("message", out var m) ? m.GetString() ?? "" : "";
+
+                                    var tsStr = t.TryGetProperty("timestamp", out var ts) ? ts.GetString() : null;
+                                    if (DateTime.TryParse(tsStr, out var ticketDt))
+                                    {
+                                        var ticketUtc = ticketDt.ToUniversalTime();
+                                        if (startDate.HasValue && ticketUtc < startDate.Value.ToUniversalTime()) continue;
+                                        if (endDate.HasValue && ticketUtc > endDate.Value.ToUniversalTime().Date.AddDays(1)) continue;
+                                    }
+
+                                    if (!string.IsNullOrWhiteSpace(search))
+                                    {
+                                        var q = search.Trim().ToLower();
+                                        if (!tName.ToLower().Contains(q) && !tEmail.ToLower().Contains(q) && !tSubject.ToLower().Contains(q) && !tMsg.ToLower().Contains(q))
+                                            continue;
+                                    }
+
+                                    contactsList.Add(new
+                                    {
+                                        id = t.TryGetProperty("ticketId", out var tid) ? tid.GetString() : Guid.NewGuid().ToString("N"),
+                                        fullName = tName,
+                                        email = tEmail,
+                                        subject = tSubject,
+                                        message = tMsg,
+                                        status = tStatus,
+                                        priority = tPriority,
+                                        category = tCategory,
+                                        source = "MongoDB Desk",
+                                        assignedAgent = t.TryGetProperty("assignedAgent", out var ag) ? ag.GetString() : "",
+                                        slaTarget = t.TryGetProperty("slaTarget", out var sla) ? sla.GetString() : "24 Hours",
+                                        createdAt = tsStr ?? DateTime.UtcNow.ToString("o")
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+                catch { }
+            }
+
+            // 3. For unified merge, take a bounded window (up to current page limit buffer)
+            var fetchLimit = Math.Min(1000, page * limit + 50);
             var sqlContacts = await query
                 .OrderByDescending(c => c.CreatedAt)
+                .Take(fetchLimit)
                 .Select(c => new
                 {
                     id = c.Id.ToString(),
@@ -731,7 +796,18 @@ namespace CoreApi.Controllers
             var total = contactsList.Count;
             var paged = contactsList.Skip((page - 1) * limit).Take(limit).ToList();
 
-            return Ok(new { success = true, data = paged, pagination = new { total, page, limit } });
+            return Ok(new
+            {
+                success = true,
+                data = paged,
+                pagination = new
+                {
+                    total,
+                    page,
+                    limit,
+                    pages = limit > 0 ? (int)Math.Ceiling((double)total / limit) : 1
+                }
+            });
         }
 
         [Authorize(Roles = "Admin")]

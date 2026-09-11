@@ -10,6 +10,7 @@ using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using CoreApi.Services;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -61,11 +62,25 @@ namespace CoreApi.Controllers
                 return BadRequest(new { message = "New password must be different from the current password." });
 
             user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword, 12);
+            user.MustChangePassword = false;
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("[Security Audit] Admin (Id: {AdminId}) successfully changed their password.", userId);
 
-            return Ok(new { success = true, message = "Password changed successfully." });
+            // Re-issue fresh admin JWT with MustChangePassword: false and refresh HttpOnly cookie
+            var sessionId = User.FindFirst("SessionId")?.Value ?? Guid.NewGuid().ToString("N");
+            var newToken = CreateAdminToken(user, sessionId);
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
+            Response.Cookies.Append("lc_admin_token", newToken, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = isSecure ? SameSiteMode.Strict : SameSiteMode.Lax,
+                Expires = DateTime.UtcNow.AddHours(4),
+                Path = "/"
+            });
+
+            return Ok(new { success = true, token = newToken, message = "Password changed successfully." });
         }
 
         // ─── 2FA Setup: Generate TOTP Secret + Backup Codes ──────────

@@ -177,7 +177,7 @@ namespace CoreApi.Controllers
             {
                 HttpOnly = true,
                 Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
+                SameSite = isSecure ? SameSiteMode.Strict : SameSiteMode.Lax,
                 Expires = DateTime.UtcNow.AddHours(4),
                 Path = "/"
             });
@@ -191,7 +191,8 @@ namespace CoreApi.Controllers
                     user.FullName,
                     user.Email,
                     user.Role,
-                    user.AvatarUrl
+                    user.AvatarUrl,
+                    user.MustChangePassword
                 },
                 message = "Admin login successful."
             });
@@ -217,7 +218,7 @@ namespace CoreApi.Controllers
             {
                 HttpOnly = true,
                 Secure = isSecure,
-                SameSite = SameSiteMode.Lax,
+                SameSite = isSecure ? SameSiteMode.Strict : SameSiteMode.Lax,
                 Path = "/"
             });
 
@@ -281,6 +282,7 @@ namespace CoreApi.Controllers
                 user.AvatarUrl,
                 user.CreatedAt,
                 user.IsTwoFactorEnabled,
+                user.MustChangePassword,
                 lastLoginAt,
                 lastIpAddress = string.IsNullOrWhiteSpace(lastIpAddress) ? null : lastIpAddress,
                 backupCodeCount

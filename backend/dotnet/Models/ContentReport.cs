@@ -29,6 +29,7 @@ namespace CoreApi.Models
 
     [Index(nameof(TargetType), nameof(TargetId))]
     [Index(nameof(Status), nameof(Severity))]
+    [Index(nameof(Status), nameof(Severity), nameof(CreatedAt))]
     [Index(nameof(CreatedAt))]
     public class ContentReport
     {
@@ -108,6 +109,14 @@ namespace CoreApi.Models
         public string? ResolvedByAdminEmail { get; set; }
 
         public DateTime? ResolvedAt { get; set; }
+
+        /// <summary>
+        /// Admin who claimed/is investigating this ticket (separate from who resolved it).
+        /// </summary>
+        [MaxLength(100)]
+        public string? AssignedAdminEmail { get; set; }
+
+        public DateTime? AssignedAt { get; set; }
 
         [MaxLength(45)]
         public string? ClientIp { get; set; }

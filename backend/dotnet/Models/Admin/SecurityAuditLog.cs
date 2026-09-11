@@ -1,9 +1,13 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
+using Microsoft.EntityFrameworkCore;
 
 namespace CoreApi.Models.Admin
 {
+    [Index(nameof(RelatedReportId))]
+    [Index(nameof(EventType))]
     public class SecurityAuditLog
     {
         [Key]
@@ -34,6 +38,9 @@ namespace CoreApi.Models.Admin
 
         /// <summary>JSON blob for extra context (e.g. old role, new role, affected user ID).</summary>
         public string? Metadata { get; set; }
+
+        /// <summary>Optional FK to ContentReport for efficient audit trail lookups (avoids Description.Contains scans).</summary>
+        public long? RelatedReportId { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

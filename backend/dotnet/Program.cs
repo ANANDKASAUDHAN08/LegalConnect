@@ -1,11 +1,6 @@
 using System;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Threading.RateLimiting;
-using System.Threading.Tasks;
 using CoreApi.Converters;
 using CoreApi.Data;
 using CoreApi.Extensions;
@@ -13,26 +8,24 @@ using CoreApi.Hubs.Admin;
 using CoreApi.Services;
 using CoreApi.Services.Admin;
 using LegalConnect.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
-using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── 0. Enterprise Server Hardening (Anti-Slowloris & Fingerprinting) ──
+builder.WebHost.ConfigureKestrelHardening();
 
 // Load optional local configuration (git-ignored for private keys)
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
-// ── 1. Core Services & Controllers ──
-builder.Services.AddHealthChecks();
+// ── 1. Core Services & JSON Serialization ──
+builder.Services.AddAppHealthChecks();
 builder.Services.AddMemoryCache();
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
@@ -63,6 +56,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddHostedService<ProfileSyncWorker>();
 builder.Services.AddHostedService<AdminNotificationDigestService>();
 builder.Services.AddHostedService<AdminNotificationSyncWorker>();
+builder.Services.AddHostedService<ModerationSlaEscalationWorker>();
 
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();
@@ -93,47 +87,8 @@ builder.Services.AddCors(options =>
     });
 });
 
-// ── 6. Tiered Rate Limiting Policies ──
-builder.Services.AddRateLimiter(options =>
-{
-    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-    options.OnRejected = async (context, cancellationToken) =>
-    {
-        context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
-        context.HttpContext.Response.ContentType = "application/json";
-        await context.HttpContext.Response.WriteAsync(
-            "{\"message\":\"Too many requests in a short time. Please wait a minute before trying again.\"}",
-            cancellationToken);
-    };
-
-    // IP-partitioned rate limit for sensitive auth actions (login, register, reset password)
-    options.AddPolicy("AuthPolicy", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString()
-                ?? httpContext.Request.Headers["X-Forwarded-For"].ToString()
-                ?? "anonymous",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 30, // 30 login/auth attempts per minute per IP
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
-
-    // IP-partitioned rate limit for session maintenance (token refresh, logout)
-    options.AddPolicy("AuthSessionPolicy", httpContext =>
-        RateLimitPartition.GetFixedWindowLimiter(
-            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString()
-                ?? httpContext.Request.Headers["X-Forwarded-For"].ToString()
-                ?? "anonymous",
-            factory: _ => new FixedWindowRateLimiterOptions
-            {
-                PermitLimit = 120, // 120 refresh/logout requests per minute per IP
-                Window = TimeSpan.FromMinutes(1),
-                QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                QueueLimit = 0
-            }));
-});
+// ── 6. Tiered Rate Limiting Policies (Configured via RateLimitingExtensions) ──
+builder.Services.AddAppRateLimiting(builder.Configuration);
 
 // ── 7. Database Context with Resilient Connection Pooling ──
 var envConnStr = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection")
@@ -157,76 +112,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
             maxRetryDelay: TimeSpan.FromSeconds(10),
             errorNumbersToAdd: null)));
 
-// ── 8. JWT Authentication & Sliding Session Verification ──
-builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        var jwtKey = builder.Configuration["Jwt:Key"]
-            ?? builder.Configuration["Jwt__Key"];
-
-        if (string.IsNullOrEmpty(jwtKey))
-        {
-            throw new InvalidOperationException("Required configuration 'Jwt:Key' is missing.");
-        }
-
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            ValidateIssuer = false,
-            ValidateAudience = false
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnMessageReceived = context =>
-            {
-                // Prefer the Authorization Bearer header over cookie
-                var authHeader = context.Request.Headers["Authorization"].FirstOrDefault();
-                if (!string.IsNullOrEmpty(authHeader) && authHeader.StartsWith("Bearer "))
-                {
-                    return Task.CompletedTask;
-                }
-                // Fallback to cookie for SSR or non-SPA clients
-                if (context.Request.Cookies.ContainsKey("lc_token"))
-                {
-                    context.Token = context.Request.Cookies["lc_token"];
-                }
-                else if (context.Request.Cookies.ContainsKey("lc_admin_token"))
-                {
-                    context.Token = context.Request.Cookies["lc_admin_token"];
-                }
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = async context =>
-            {
-                var sessionIdClaim = context.Principal?.FindFirst("SessionId")?.Value;
-                if (string.IsNullOrEmpty(sessionIdClaim))
-                {
-                    context.Fail("Session claim is missing.");
-                    return;
-                }
-
-                var cache = context.HttpContext.RequestServices.GetRequiredService<IMemoryCache>();
-                var cacheKey = $"ActiveSession_{sessionIdClaim}";
-
-                if (!cache.TryGetValue(cacheKey, out bool sessionExists))
-                {
-                    var dbContext = context.HttpContext.RequestServices.GetRequiredService<AppDbContext>();
-                    sessionExists = await dbContext.ActiveSessions.AnyAsync(s => s.TokenId == sessionIdClaim);
-                    if (sessionExists)
-                    {
-                        cache.Set(cacheKey, true, TimeSpan.FromSeconds(60));
-                    }
-                }
-
-                if (!sessionExists)
-                {
-                    context.Fail("Session has been revoked.");
-                }
-            }
-        };
-    });
+// ── 8. JWT Authentication & Sliding Session Verification (Configured via AuthenticationExtensions) ──
+builder.Services.AddAppAuthentication(builder.Configuration);
 
 var app = builder.Build();
 
@@ -260,30 +147,18 @@ app.UseStaticFiles(new StaticFileOptions
     RequestPath = "/uploads"
 });
 
-// F. Traffic shaping & security
-app.UseRateLimiter();
+// F. Authentication & authorization MUST run BEFORE rate limiter
+// so identity-partitioned rate policies can resolve HttpContext.User claims.
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseMiddleware<AdminMustChangePasswordMiddleware>();
+app.UseRateLimiter();
 
-// G. Health probe endpoint (Kubernetes / load balancer standard)
-app.MapHealthChecks("/api/health", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
-{
-    ResponseWriter = async (context, report) =>
-    {
-        context.Response.ContentType = "application/json";
-        var payload = JsonSerializer.Serialize(new
-        {
-            status = report.Status.ToString(),
-            activeConnections = 1,
-            timestamp = DateTime.UtcNow
-        });
-        await context.Response.WriteAsync(payload);
-    }
-});
+// G. Health probe endpoint (Kubernetes / load balancer deep health check)
+app.MapAppHealthChecks();
 
 // H. Route endpoint mappings
 app.MapControllers();
-app.MapHub<AdminNotificationHub>("/hubs/notifications");
 app.MapHub<AdminNotificationHub>("/hubs/admin/notifications");
 
 // ── 10. Database Migration & Seeding Engine (Single Asynchronous Pass) ──
