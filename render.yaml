@@ -7,7 +7,7 @@ services:
     runtime: node
     plan: free
     rootDir: backend/node
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
@@ -35,6 +35,8 @@ services:
         value: 8080
       - key: ConnectionStrings__DefaultConnection
         sync: false # Set in Render Dashboard from your free TiDB Cloud MySQL
+      - key: Jwt__Key
+        generateValue: true
       - key: JWT__Secret
         generateValue: true
 

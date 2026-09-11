@@ -27,7 +27,7 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
-  origin: (origin, callback) => {
+  origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
     // Allow server-to-server, curl, health checks or keep-alive pings without origin header
     if (!origin) return callback(null, true);
 
