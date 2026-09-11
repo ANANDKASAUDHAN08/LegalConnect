@@ -2,11 +2,12 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TwoFactorEnforcerService } from '../../services/two-factor-enforcer.service';
+import { AdminIconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'admin-two-factor-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminIconComponent],
   templateUrl: './two-factor-modal.component.html',
   styleUrl: './two-factor-modal.component.scss'
 })

@@ -2,11 +2,8 @@
     <button class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-lg transition-all"
         [ngClass]="isOpen || isCustomized ? 'bg-[#0e2640] text-sky-300 border border-sky-500/45 shadow-[0_0_12px_rgba(14,165,233,0.2)]' : 'bg-slate-800/80 border border-slate-700/80 hover:bg-slate-700/60 text-slate-300 hover:text-white'"
         (click)="toggleOpen()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-indigo-400" [class.text-sky-400]="isOpen || isCustomized">
-            <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18">
-            </path>
-        </svg>
+        <admin-icon name="columns" [size]="14"
+            [cssClass]="(isOpen || isCustomized) ? 'text-sky-400' : 'text-indigo-400'"></admin-icon>
         <span>Columns</span>
     </button>
 

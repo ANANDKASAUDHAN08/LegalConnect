@@ -1,11 +1,12 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ToastService, ToastNotification } from '../../services/toast.service';
+import { AdminIconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'admin-toasts',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminIconComponent],
   templateUrl: './toast.component.html',
   styleUrl: './toast.component.scss'
 })

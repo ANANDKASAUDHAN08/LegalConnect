@@ -133,6 +133,8 @@ export class AdminApiService {
   aiSearchResources(query: string): Observable<any> { return this.content.aiSearchResources(query); }
 
   // -- Helplines Delegates --
+  getCachedHelplines(params: any = {}): any | null { return this.content.getCachedHelplines(params); }
+  clearHelplinesCache(): void { this.content.clearHelplinesCache(); }
   getHelplines(params: any = {}): Observable<any> { return this.content.getHelplines(params); }
   createHelpline(data: any): Observable<any> { return this.content.createHelpline(data); }
   updateHelpline(id: any, data: any): Observable<any> { return this.content.updateHelpline(String(id), data); }
@@ -141,6 +143,8 @@ export class AdminApiService {
   bulkUpdateHelplineStatus(ids: string[], isActive: boolean): Observable<any> { return this.content.bulkUpdateHelplineStatus(ids, isActive); }
 
   // -- Templates Delegates --
+  getCachedTemplates(params: any = {}): any | null { return this.content.getCachedTemplates(params); }
+  clearTemplatesCache(): void { this.content.clearTemplatesCache(); }
   getTemplates(params: any = {}): Observable<any> { return this.content.getTemplates(params); }
   deleteTemplate(id: string): Observable<any> { return this.content.deleteTemplate(id); }
 

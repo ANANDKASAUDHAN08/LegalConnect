@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { shareReplay } from 'rxjs/operators';
+import { shareReplay, tap } from 'rxjs/operators';
+import { SwrCacheService } from './admin-swr-cache.service';
 import { environment } from '../../../environments/environment';
 
 import {
@@ -28,7 +29,26 @@ export class AdminContentService {
   private helplinesCache$?: Observable<ApiResponse<HelplineItem[]>>;
   private actDetailCache = new Map<string, Observable<BareAct>>();
 
-  constructor(private http: HttpClient) { }
+  constructor(
+    private http: HttpClient,
+    public swrCache: SwrCacheService
+  ) { }
+
+  getCachedHelplines(params: Record<string, any> = {}): ApiResponse<HelplineItem[]> | null {
+    return this.swrCache.get<ApiResponse<HelplineItem[]>>('helplines', params);
+  }
+
+  clearHelplinesCache(): void {
+    this.swrCache.invalidate('helplines');
+  }
+
+  getCachedTemplates(params: Record<string, any> = {}): ApiResponse<LegalTemplateItem[]> | null {
+    return this.swrCache.get<ApiResponse<LegalTemplateItem[]>>('templates', params);
+  }
+
+  clearTemplatesCache(): void {
+    this.swrCache.invalidate('templates');
+  }
 
   // -- Legal Content (Bare Acts & Sections) --
   getActs(): Observable<ApiResponse<BareAct[]> | BareAct[] | { data?: BareAct[]; acts?: BareAct[]; items?: BareAct[] }> {
@@ -185,27 +205,43 @@ export class AdminContentService {
         httpParams = httpParams.set(key, params[key]);
       }
     });
-    return this.http.get<ApiResponse<HelplineItem[]>>(`${this.NODE_API}/admin/helplines`, { params: httpParams });
+    return this.http.get<ApiResponse<HelplineItem[]>>(`${this.NODE_API}/admin/helplines`, { params: httpParams }).pipe(
+      tap(res => {
+        if (res && res.success) {
+          this.swrCache.set('helplines', params, res);
+        }
+      })
+    );
   }
 
   createHelpline(data: Partial<HelplineItem>): Observable<ApiResponse<HelplineItem>> {
-    return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines`, data);
+    return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines`, data).pipe(
+      tap(() => this.clearHelplinesCache())
+    );
   }
 
   updateHelpline(id: string, data: Partial<HelplineItem>): Observable<ApiResponse<HelplineItem>> {
-    return this.http.put<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}`, data);
+    return this.http.put<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}`, data).pipe(
+      tap(() => this.clearHelplinesCache())
+    );
   }
 
   deleteHelpline(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/${id}`);
+    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/${id}`).pipe(
+      tap(() => this.clearHelplinesCache())
+    );
   }
 
   verifyHelplinePing(id: string, data: any = {}): Observable<ApiResponse<HelplineItem>> {
-    return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}/verify-ping`, data);
+    return this.http.post<ApiResponse<HelplineItem>>(`${this.NODE_API}/admin/helplines/${id}/verify-ping`, data).pipe(
+      tap(() => this.clearHelplinesCache())
+    );
   }
 
   bulkUpdateHelplineStatus(ids: string[], isActive: boolean): Observable<ApiResponse<void>> {
-    return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/bulk-status`, { ids, isActive });
+    return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/helplines/bulk-status`, { ids, isActive }).pipe(
+      tap(() => this.clearHelplinesCache())
+    );
   }
 
   // -- Template & Draft Catalog --
@@ -216,10 +252,18 @@ export class AdminContentService {
         httpParams = httpParams.set(key, params[key]);
       }
     });
-    return this.http.get<ApiResponse<LegalTemplateItem[]>>(`${this.NODE_API}/admin/templates`, { params: httpParams });
+    return this.http.get<ApiResponse<LegalTemplateItem[]>>(`${this.NODE_API}/admin/templates`, { params: httpParams }).pipe(
+      tap(res => {
+        if (res && res.success) {
+          this.swrCache.set('templates', params, res);
+        }
+      })
+    );
   }
 
   deleteTemplate(id: string): Observable<ApiResponse<void>> {
-    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/templates/${id}`);
+    return this.http.delete<ApiResponse<void>>(`${this.NODE_API}/admin/templates/${id}`).pipe(
+      tap(() => this.clearTemplatesCache())
+    );
   }
 }

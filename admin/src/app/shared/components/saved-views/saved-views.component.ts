@@ -1,9 +1,12 @@
 import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, ElementRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { ToastService } from '../../services/toast.service';
 import { AdminApiService } from '../../../core/admin-api.service';
+import { AdminIconComponent } from '../icon/icon.component';
+import { ApiResponse } from '../../../core/models/admin.models';
 
 export interface SavedViewPreset {
   id: string;
@@ -15,7 +18,7 @@ export interface SavedViewPreset {
 @Component({
   selector: 'admin-saved-views',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, AdminIconComponent],
   templateUrl: './saved-views.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -105,55 +108,48 @@ export class AdminSavedViewsComponent implements OnInit {
 
     // Background Async Cloud Revalidation & DB Sync
     this.api.getSavedViews(this.storageKey).subscribe({
-      next: (res: any) => {
+      next: (res: ApiResponse<any[]> | any) => {
         const dbViews = res?.data || res || [];
         if (Array.isArray(dbViews) && dbViews.length > 0) {
-          const cloudPresets: SavedViewPreset[] = dbViews.map((v: any) => ({
-            id: String(v.id),
+          const remotePresets: SavedViewPreset[] = dbViews.map((v: any) => ({
+            id: String(v.id || v._id),
             name: v.name,
-            params: typeof v.paramsJson === 'string' ? JSON.parse(v.paramsJson || '{}') : (v.paramsJson || {})
+            params: typeof v.paramsJson === 'string' ? JSON.parse(v.paramsJson) : (v.params || {}),
+            isDefault: false
           }));
-
-          const map = new Map<string, SavedViewPreset>();
-          localList.forEach(p => map.set(p.name.toLowerCase(), p));
-          cloudPresets.forEach(p => map.set(p.name.toLowerCase(), p));
-          const merged = Array.from(map.values());
-
-          localStorage.setItem(`legalconnect_views_${this.storageKey}`, JSON.stringify(merged));
+          const merged = [...localList];
+          for (const rp of remotePresets) {
+            if (!merged.some(m => m.name === rp.name)) merged.push(rp);
+          }
           this.presets = [defaultPreset, ...merged];
+          localStorage.setItem(`legalconnect_views_${this.storageKey}`, JSON.stringify(merged));
           this.syncActivePresetWithParams();
+          this.cdr.markForCheck();
         }
       },
-      error: () => { }
+      error: (err: HttpErrorResponse) => {
+        this.toast.warning('Saved views cloud sync failed. Using local views only.');
+        console.warn('[SavedViews] Cloud revalidation failed:', err?.status, err?.message);
+      }
     });
   }
 
   private syncActivePresetWithParams(): void {
     if (!this.presets || this.presets.length === 0) return;
-    const activeKeys = Object.keys(this._currentParams || {}).filter(k => k !== 'page' && k !== 'limit' && !!this._currentParams[k]);
-
-    if (activeKeys.length === 0) {
+    const currentKeys = Object.keys(this._currentParams).filter(k => this._currentParams[k] !== '' && this._currentParams[k] !== undefined && this._currentParams[k] !== null);
+    if (currentKeys.length === 0) {
       this.activePresetId = null;
       this.activePresetName = null;
-      this.cdr.markForCheck();
       return;
     }
-
-    const match = this.presets.find(p => {
+    const matched = this.presets.find(p => {
       if (p.isDefault) return false;
-      const pKeys = Object.keys(p.params || {}).filter(k => k !== 'page' && k !== 'limit' && !!p.params[k]);
-      if (pKeys.length !== activeKeys.length) return false;
+      const pKeys = Object.keys(p.params).filter(k => p.params[k] !== '' && p.params[k] !== undefined && p.params[k] !== null);
+      if (pKeys.length !== currentKeys.length) return false;
       return pKeys.every(k => String(p.params[k]) === String(this._currentParams[k]));
     });
-
-    if (match) {
-      this.activePresetId = match.id;
-      this.activePresetName = match.name;
-    } else {
-      this.activePresetId = null;
-      this.activePresetName = null;
-    }
-    this.cdr.markForCheck();
+    this.activePresetId = matched ? matched.id : null;
+    this.activePresetName = matched ? matched.name : null;
   }
 
   applyPreset(preset: SavedViewPreset, event?: Event): void {
@@ -218,13 +214,15 @@ export class AdminSavedViewsComponent implements OnInit {
       name,
       paramsJson: JSON.stringify(params)
     }).subscribe({
-      next: (res: any) => {
+      next: (res: ApiResponse<any> | any) => {
         if (res?.data?.id) {
           newPreset.id = String(res.data.id);
           this.cdr.markForCheck();
         }
       },
-      error: () => { }
+      error: (_err: HttpErrorResponse) => {
+        this.toast.info('View saved locally (cloud sync offline).');
+      }
     });
   }
 
@@ -241,7 +239,11 @@ export class AdminSavedViewsComponent implements OnInit {
     this.cdr.markForCheck();
 
     if (id && !id.startsWith('preset_')) {
-      this.api.deleteSavedView(id).subscribe({ error: () => { } });
+      this.api.deleteSavedView(id).subscribe({
+        error: (_err: HttpErrorResponse) => {
+          this.toast.info('View removed locally (cloud sync offline).');
+        }
+      });
     }
   }
 }

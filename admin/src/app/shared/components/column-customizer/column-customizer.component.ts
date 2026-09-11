@@ -6,10 +6,12 @@ export interface ColumnDef {
   label: string;
 }
 
+import { AdminIconComponent } from '../icon/icon.component';
+
 @Component({
   selector: 'admin-column-customizer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminIconComponent],
   templateUrl: 'column-customizer.component.html'
 })
 export class ColumnCustomizerComponent {

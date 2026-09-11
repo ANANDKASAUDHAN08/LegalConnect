@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
+import { AdminIconComponent } from '../icon/icon.component';
+
 export interface CommandItem {
   id: string;
   category: 'Navigation' | 'Actions' | 'Directory';
@@ -32,7 +34,7 @@ export class CommandPaletteService {
 @Component({
   selector: 'admin-command-palette',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminIconComponent],
   templateUrl: './command-palette.component.html',
   styleUrl: './command-palette.component.scss'
 })

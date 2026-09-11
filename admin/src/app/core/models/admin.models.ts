@@ -16,6 +16,10 @@ export interface AdminUser {
   isActive: boolean;
   isEmailVerified: boolean;
   isTwoFactorEnabled?: boolean;
+  mustChangePassword?: boolean;
+  authProvider?: string;
+  lastLoginAt?: string | Date;
+  lastIpAddress?: string;
   createdAt: string;
 }
 
@@ -196,9 +200,132 @@ export interface ResourceItem {
 
 export interface ConsultationItem {
   id: number;
-  lawyerName: string;
-  clientName: string;
-  scheduledAt: string;
-  status: 'pending' | 'confirmed' | 'completed' | 'cancelled' | string;
-  fee: number;
+  client?: string;
+  clientUser?: string;
+  phone?: string;
+  lawyer?: string;
+  sla?: string;
+  priority?: string;
+  message?: string;
+  lawyerName?: string;
+  clientName?: string;
+  lawyerEmail?: string;
+  clientEmail?: string;
+  lawyerPhone?: string;
+  clientPhone?: string;
+  specialization?: string;
+  consultationType?: 'online' | 'in_person' | 'phone' | string;
+  scheduledAt?: string;
+  completedAt?: string;
+  cancelledAt?: string;
+  status: string;
+  fee?: number;
+  paymentStatus?: 'paid' | 'pending' | 'refunded' | 'failed' | string;
+  duration?: number;
+  notes?: string;
+  adminRemark?: string;
+  rating?: number;
+  createdAt?: string;
+  auditLog?: Array<{ action: string; timestamp: string; actor: string; details?: string }>;
+  auditLogJson?: string;
+}
+
+// ---------------------------------------------------------------
+// Generic API Response Wrapper
+// ---------------------------------------------------------------
+
+/** Standard paginated API response envelope */
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  message?: string;
+  pagination?: Pagination;
+  metrics?: any;
+}
+
+/** Standard list API response with total count */
+export interface ApiListResponse<T> {
+  success: boolean;
+  data: T[];
+  total?: number;
+  pagination?: Pagination;
+}
+
+// ---------------------------------------------------------------
+// Template Models
+// ---------------------------------------------------------------
+
+export interface TemplateItem {
+  _id: string;
+  title: string;
+  category: string;
+  description?: string;
+  actRef?: string;
+  body?: string;
+  fields?: Array<{ label?: string; type?: string; name?: string; required?: boolean }>;
+  content?: string;
+  language?: string;
+  downloadCount?: number;
+  viewCount?: number;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface TemplateStats {
+  totalTemplates: number;
+  totalDrafts?: number;
+  totalDownloads?: number;
+  totalViews?: number;
+  categoryCounts?: Record<string, number>;
+  categoryStats?: Array<{ _id: string; count?: number; countDocs?: number }>;
+}
+
+// ---------------------------------------------------------------
+// Notification Models
+// ---------------------------------------------------------------
+
+export interface NotificationItem {
+  id: number;
+  userId?: number;
+  userName?: string;
+  type: string;
+  title: string;
+  message: string;
+  channel?: 'push' | 'email' | 'sms' | 'in_app' | string;
+  status?: 'sent' | 'delivered' | 'failed' | 'pending' | string;
+  isRead?: boolean;
+  createdAt: string;
+}
+
+// ---------------------------------------------------------------
+// Moderation Models
+// ---------------------------------------------------------------
+
+export interface ModerationReport {
+  id: number;
+  reportRef?: string;
+  targetId: number;
+  targetType: 'Review' | 'Lawyer' | 'LegalResource' | 'Helpline' | 'BareActSection' | string;
+  targetName?: string;
+  reason: string;
+  severity: 'Critical' | 'High' | 'Medium' | 'Low' | string;
+  status: 'Pending' | 'Resolved' | 'Dismissed' | string;
+  reporterName?: string;
+  reporterIp?: string;
+  duplicateCount?: number;
+  moderatorNotes?: string;
+  resolvedAt?: string;
+  resolvedBy?: string;
+  resolutionAction?: string;
+  createdAt: string;
+}
+
+export interface ModerationStats {
+  totalReports: number;
+  pendingCount: number;
+  resolvedCount: number;
+  criticalPendingCount: number;
+  reportsByType?: Record<string, number>;
+  reportsBySeverity?: Record<string, number>;
 }

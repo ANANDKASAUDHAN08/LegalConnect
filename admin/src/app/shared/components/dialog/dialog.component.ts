@@ -1,11 +1,12 @@
 import { Component, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DialogService, ActiveDialog } from '../../services/dialog.service';
+import { AdminIconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'admin-dialog',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminIconComponent],
   templateUrl: './dialog.component.html',
   styleUrl: './dialog.component.scss'
 })

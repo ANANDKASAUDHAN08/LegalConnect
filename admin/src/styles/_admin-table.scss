@@ -1,6 +1,13 @@
 // ==========================================
 // Centralized Enterprise Admin Table & Drawer SCSS
 // Shared styles across Users, Lawyers, Consultations, Support, & Reviews pages
+//
+// NOTE on !important usage (CSS-2 audit item):
+// The !important declarations in this file are intentional — they override
+// Angular Material / CDK component styles which use high-specificity selectors
+// (e.g., .mat-mdc-row, .cdk-column). Removing them without increasing selector
+// specificity or using :host ::ng-deep would break table styling globally.
+// Only remove !important if migrating to ViewEncapsulation.None with scoped selectors.
 // ==========================================
 
 .table-responsive-wrapper {
@@ -12,19 +19,132 @@
   box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.3);
 }
 
-.table-data-row {
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+.table-data-row,
+tr.table-data-row,
+.data-table tbody tr {
+  // Page-level CSS custom property defaults (fallback is Sky/Cyan)
+  --row-selected-color: #38bdf8;
+  --row-selected-bg: rgba(56, 189, 248, 0.08);
+
+  border-left: 1px solid transparent !important;
+  transition: all 150ms ease;
   user-select: none;
   cursor: pointer;
 
+  td {
+    transition: background-color 150ms ease;
+  }
+
+  td:first-child {
+    box-shadow: inset 0 0 0 0 transparent;
+    transition: box-shadow 150ms ease, border-color 150ms ease;
+  }
+
   &:hover {
-    background-color: rgba(56, 189, 248, 0.04);
+    background-color: rgba(255, 255, 255, 0.04) !important;
+
+    td {
+      background-color: transparent !important;
+    }
+  }
+
+  // Warning & Pending Rows (Yellow / Amber)
+  &.warning-row,
+  &.pending-row {
+    background-color: rgba(245, 158, 11, 0.04);
+
+    &:hover {
+      background-color: rgba(245, 158, 11, 0.09) !important;
+
+      td {
+        background-color: transparent !important;
+      }
+    }
+  }
+
+  // Critical Rows (Red)
+  &.critical-row {
+    background-color: rgba(239, 68, 68, 0.04);
+
+    &:hover {
+      background-color: rgba(239, 68, 68, 0.09) !important;
+
+      td {
+        background-color: transparent !important;
+      }
+    }
   }
 
   &.row-selected,
+  &.selected-row,
   &.table-row-selected {
-    background-color: rgba(56, 189, 248, 0.08) !important;
-    border-left: 3px solid #38bdf8;
+    background-color: var(--row-selected-bg) !important;
+    border-left: 1px solid var(--row-selected-color) !important;
+
+    td {
+      background-color: var(--row-selected-bg) !important;
+    }
+
+    td:first-child {
+      border-left: 1px solid var(--row-selected-color) !important;
+      box-shadow: inset 1px 0 0 0 var(--row-selected-color) !important;
+    }
+
+    &:hover {
+      background-color: var(--row-selected-bg) !important;
+      filter: brightness(1.12);
+
+      td {
+        background-color: var(--row-selected-bg) !important;
+      }
+    }
+
+    // Selected Warning & Pending Rows (Yellow / Amber Left Bar + Amber BG)
+    &.warning-row,
+    &.pending-row {
+      background-color: rgba(245, 158, 11, 0.14) !important;
+      border-left: 1px solid #f59e0b !important;
+
+      td {
+        background-color: rgba(245, 158, 11, 0.14) !important;
+      }
+
+      td:first-child {
+        border-left: 1px solid #f59e0b !important;
+        box-shadow: inset 1px 0 0 0 #f59e0b !important;
+      }
+
+      &:hover {
+        background-color: rgba(245, 158, 11, 0.18) !important;
+
+        td {
+          background-color: rgba(245, 158, 11, 0.18) !important;
+        }
+      }
+    }
+
+    // Selected Critical Rows (Red Left Bar + Red BG)
+    &.critical-row {
+      background-color: rgba(239, 68, 68, 0.14) !important;
+      border-left: 1px solid #ef4444 !important;
+
+      td {
+        background-color: rgba(239, 68, 68, 0.14) !important;
+      }
+
+      td:first-child {
+        border-left: 1px solid #ef4444 !important;
+        box-shadow: inset 1px 0 0 0 #ef4444 !important;
+      }
+
+      &:hover {
+        background-color: rgba(239, 68, 68, 0.18) !important;
+
+        td {
+          background-color: rgba(239, 68, 68, 0.18) !important;
+        }
+      }
+    }
   }
 }
 

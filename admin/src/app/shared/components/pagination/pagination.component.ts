@@ -2,16 +2,18 @@ import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SelectComponent, SelectOption } from '../select/select.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { AdminIconComponent } from '../icon/icon.component';
 
 @Component({
   selector: 'admin-pagination',
   standalone: true,
-  imports: [CommonModule, SelectComponent, TooltipDirective],
+  imports: [CommonModule, SelectComponent, TooltipDirective, AdminIconComponent],
   templateUrl: './pagination.component.html'
 })
 export class PaginationComponent {
   @Input() page = 1;
   @Input() limit = 10;
+  @Input() defaultLimit = 10;
   @Input() total = 0;
   @Input() pages = 1;
   @Input() standalone = false;
@@ -20,6 +22,7 @@ export class PaginationComponent {
 
   limitOptions: SelectOption[] = [
     { label: '10 per page', value: '10' },
+    { label: '15 per page', value: '15' },
     { label: '25 per page', value: '25' },
     { label: '50 per page', value: '50' },
     { label: '100 per page', value: '100' }
@@ -52,6 +55,7 @@ export class PaginationComponent {
 
   onLimitChange(val: any): void {
     const newLimit = Number(val) || 10;
+    this.limit = newLimit;
     this.limitChange.emit(newLimit);
   }
 }

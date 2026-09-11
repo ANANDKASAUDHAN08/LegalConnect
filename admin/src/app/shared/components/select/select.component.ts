@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ElementRef, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { AdminIconComponent } from '../icon/icon.component';
 
 export interface SelectOption {
   label: string;
@@ -13,7 +14,7 @@ export interface SelectOption {
 @Component({
   selector: 'admin-select',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, AdminIconComponent],
   templateUrl: './select.component.html',
   styleUrl: './select.component.scss'
 })
@@ -33,11 +34,19 @@ export class SelectComponent implements OnInit, OnDestroy {
   @Input() tooltip?: string;
   @Input() tooltipPosition: 'top' | 'bottom' | 'left' | 'right' = 'top';
   @Input() disabled: boolean = false;
+  @Input() highlightIfDifferentFrom?: any;
 
   @Output() valueChange = new EventEmitter<any>();
 
   isOpen = false;
   dropUp = false;
+
+  get isActive(): boolean {
+    if (this.highlightIfDifferentFrom !== undefined) {
+      return String(this.value ?? '') !== String(this.highlightIfDifferentFrom ?? '') && this.selectedOption !== undefined;
+    }
+    return this.value !== '' && this.value !== null && this.value !== undefined && this.selectedOption !== undefined && this.selectedOption.value !== '';
+  }
 
   private clickListener: ((event: MouseEvent) => void) | null = null;
 

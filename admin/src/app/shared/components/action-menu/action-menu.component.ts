@@ -18,16 +18,23 @@ export class ActionMenuComponent implements OnInit, OnDestroy {
   position = { top: 0, left: 0 };
 
   private currentTriggerEl: HTMLElement | null = null;
-  private scrollHandler: (() => void) | null = null;
+  private scrollHandler: ((event: Event) => void) | null = null;
   private clickHandler: ((event: MouseEvent) => void) | null = null;
 
   constructor(private elementRef: ElementRef, private cdr: ChangeDetectorRef) { }
 
   ngOnInit(): void {
-    this.scrollHandler = () => {
-      if (this.isOpen && this.currentTriggerEl) {
-        this.updatePosition();
+    // Top MNC Enterprise Pattern (Stripe, GitHub, Google Cloud, Linear):
+    // Dismiss contextual table action menus immediately on scroll to prevent
+    // orphaned floating overlays, accidental actions on wrong rows, and layout collisions.
+    this.scrollHandler = (event: Event) => {
+      if (!this.isOpen) return;
+      const target = event.target as Node;
+      // Allow internal scrolling inside dropdown if it contains a long list
+      if (target && this.elementRef.nativeElement.contains(target)) {
+        return;
       }
+      this.close();
     };
     window.addEventListener('scroll', this.scrollHandler, { capture: true, passive: true });
 

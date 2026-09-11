@@ -66,10 +66,12 @@ export function formatDateRange(start?: string | null, end?: string | null): str
   return '';
 }
 
+import { AdminIconComponent } from '../icon/icon.component';
+
 @Component({
   selector: 'admin-export-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AdminIconComponent],
   templateUrl: './export-modal.component.html',
   styleUrls: ['./export-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

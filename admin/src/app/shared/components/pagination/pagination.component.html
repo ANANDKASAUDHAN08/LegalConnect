@@ -5,7 +5,7 @@
             <span class="text-slate-400 font-medium text-xs">Rows per page:</span>
             <admin-select [options]="limitOptions" [value]="limit + ''" (valueChange)="onLimitChange($event)"
                 minWidth="125px" dropPosition="auto" [adminTooltip]="'Select number of rows per page'"
-                tooltipPosition="top">
+                [highlightIfDifferentFrom]="defaultLimit + ''" tooltipPosition="top">
             </admin-select>
         </div>
         <span class="hidden md:inline text-slate-700">•</span>
@@ -20,9 +20,7 @@
         <button
             class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5 shadow-sm"
             [disabled]="page <= 1" (click)="changePage(page - 1)" [adminTooltip]="'Previous page results'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
+            <admin-icon name="chevron-left" [size]="13"></admin-icon>
             <span>Previous</span>
         </button>
 
@@ -35,9 +33,7 @@
             class="px-3 py-1.5 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none cursor-pointer flex items-center gap-1.5 shadow-sm"
             [disabled]="page >= totalPages" (click)="changePage(page + 1)" [adminTooltip]="'Next page results'">
             <span>Next</span>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <admin-icon name="chevron-right" [size]="13"></admin-icon>
         </button>
     </div>
 </div>

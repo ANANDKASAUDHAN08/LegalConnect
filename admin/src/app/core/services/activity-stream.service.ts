@@ -1,8 +1,8 @@
 import { Injectable, signal, inject } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, tap, catchError, of } from 'rxjs';
+import { HttpClient, HttpParams, HttpErrorResponse } from '@angular/common/http';
+import { Observable, tap, catchError, of, Subject } from 'rxjs';
 import * as signalR from '@microsoft/signalr';
-import * as XLSX from 'xlsx';
+import { CsvExporter } from '../utils/csv-exporter';
 import { environment } from '../../../environments/environment';
 
 export interface ActivityEvent {
@@ -106,6 +106,20 @@ export class ActivityStreamService {
   signalRConnected = signal<boolean>(false);
   private hubConnection: signalR.HubConnection | null = null;
 
+  // Real-time moderation ticket synchronization stream
+  readonly moderationUpdate$ = new Subject<{
+    eventType: string;
+    reportId?: number;
+    reportIds?: number[];
+    status?: string;
+    severity?: string;
+    assignedAdminEmail?: string;
+    resolvedByAdminEmail?: string;
+    updatedAt: string;
+    extra?: any;
+    [key: string]: any;
+  }>();
+
   constructor() {
     this.loadFromBackend({ page: 1, limit: 10 }).subscribe({
       error: (err) => console.warn('⚠️ Initial notification load failed:', err?.message)
@@ -165,6 +179,11 @@ export class ActivityStreamService {
           totalEvents: s.totalEvents + 1,
           unreadCount: s.unreadCount + 1
         }));
+      });
+
+      // Collaborative moderation desk real-time event listener
+      this.hubConnection.on('ModerationTicketUpdated', (payload: any) => {
+        this.moderationUpdate$.next(payload);
       });
 
       this.hubConnection.onclose(() => {
@@ -259,8 +278,8 @@ export class ActivityStreamService {
         }
         this.isLoading.set(false);
       }),
-      catchError((err) => {
-        console.error('Failed fetching notification stream:', err);
+      catchError((_err: HttpErrorResponse) => {
+        console.error('Failed fetching notification stream:', _err);
         this.isLoading.set(false);
         return of({ success: false, events: [], pagination: this.pagination(), stats: this.stats() });
       })
@@ -270,13 +289,13 @@ export class ActivityStreamService {
   markAsRead(id: string): void {
     this.events.update(list => list.map(e => e.id === id ? { ...e, read: true } : e));
     this.stats.update(s => ({ ...s, unreadCount: Math.max(0, s.unreadCount - 1) }));
-    this.http.post(`${this.API}/mark-read/${id}`, {}).subscribe({ error: () => { } });
+    this.http.post(`${this.API}/mark-read/${id}`, {}).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] mark-read failed:', err?.status, err?.message) });
   }
 
   markAsUnread(id: string): void {
     this.events.update(list => list.map(e => e.id === id ? { ...e, read: false } : e));
     this.stats.update(s => ({ ...s, unreadCount: s.unreadCount + 1 }));
-    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'mark_unread' }).subscribe({ error: () => { } });
+    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'mark_unread' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] mark-unread failed:', err?.status, err?.message) });
   }
 
   markAllAsRead(): Observable<any> {
@@ -293,7 +312,7 @@ export class ActivityStreamService {
     this.events.update(list => list.map(e => set.has(e.id) ? { ...e, read: false } : e));
     this.stats.update(s => ({ ...s, unreadCount: s.unreadCount + ids.length }));
     if (ids.length) {
-      this.http.post(`${this.API}/bulk-action`, { ids, action: 'mark_unread' }).subscribe({ error: () => { } });
+      this.http.post(`${this.API}/bulk-action`, { ids, action: 'mark_unread' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] bulk-mark-unread failed:', err?.status, err?.message) });
     }
   }
 
@@ -306,7 +325,7 @@ export class ActivityStreamService {
       }
       return e;
     }));
-    this.http.post(`${this.API}/toggle-star/${id}`, {}).subscribe({ error: () => { } });
+    this.http.post(`${this.API}/toggle-star/${id}`, {}).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] toggle-star failed:', err?.status, err?.message) });
   }
 
   archiveNotification(id: string): void {
@@ -319,7 +338,7 @@ export class ActivityStreamService {
         unreadCount: !target.read ? Math.max(0, s.unreadCount - 1) : s.unreadCount
       }));
     }
-    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'archive' }).subscribe({ error: () => { } });
+    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'archive' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] archive failed:', err?.status, err?.message) });
   }
 
   unarchiveNotification(id: string): void {
@@ -332,7 +351,7 @@ export class ActivityStreamService {
         unreadCount: !target.read ? s.unreadCount + 1 : s.unreadCount
       }));
     }
-    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'unarchive' }).subscribe({ error: () => { } });
+    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'unarchive' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] unarchive failed:', err?.status, err?.message) });
   }
 
   deleteNotification(id: string): void {
@@ -345,7 +364,7 @@ export class ActivityStreamService {
         unreadCount: !target.read ? Math.max(0, s.unreadCount - 1) : s.unreadCount
       }));
     }
-    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'delete' }).subscribe({ error: () => { } });
+    this.http.post(`${this.API}/bulk-action`, { ids: [id], action: 'delete' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] delete failed:', err?.status, err?.message) });
   }
 
   bulkMarkRead(ids: string[]): void {
@@ -362,7 +381,7 @@ export class ActivityStreamService {
       this.stats.update(s => ({ ...s, unreadCount: Math.max(0, s.unreadCount - newlyReadCount) }));
     }
     if (ids.length) {
-      this.http.post(`${this.API}/bulk-action`, { ids, action: 'mark_read' }).subscribe({ error: () => { } });
+      this.http.post(`${this.API}/bulk-action`, { ids, action: 'mark_read' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] bulk-mark-read failed:', err?.status, err?.message) });
     }
   }
 
@@ -377,7 +396,7 @@ export class ActivityStreamService {
       unreadCount: Math.max(0, s.unreadCount - unreadRemoved)
     }));
     if (ids.length) {
-      this.http.post(`${this.API}/bulk-action`, { ids, action: 'archive' }).subscribe({ error: () => { } });
+      this.http.post(`${this.API}/bulk-action`, { ids, action: 'archive' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] bulk-archive failed:', err?.status, err?.message) });
     }
   }
 
@@ -392,7 +411,7 @@ export class ActivityStreamService {
       unreadCount: Math.max(0, s.unreadCount - unreadRemoved)
     }));
     if (ids.length) {
-      this.http.post(`${this.API}/bulk-action`, { ids, action: 'delete' }).subscribe({ error: () => { } });
+      this.http.post(`${this.API}/bulk-action`, { ids, action: 'delete' }).subscribe({ error: (err: HttpErrorResponse) => console.warn('[ActivityStream] bulk-delete failed:', err?.status, err?.message) });
     }
   }
 
@@ -442,7 +461,7 @@ export class ActivityStreamService {
           }));
           resolve(freshEvent);
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           reject(err);
         }
       });
@@ -484,52 +503,43 @@ export class ActivityStreamService {
       downloadAnchor.click();
       downloadAnchor.remove();
     } else if (format === 'xlsx') {
-      const exportData = items.map(item => ({
-        'Event ID': item.id,
-        'Severity Tier': item.severity ? item.severity.toUpperCase() : 'INFO',
-        'Domain Category': item.category ? item.category.toUpperCase() : 'GENERAL',
-        'Title': item.title || '',
-        'Summary Message': item.message || '',
-        'Telemetry Source': item.source || 'N/A',
-        'Timestamp': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
-        'Status': item.read ? 'Read' : 'Unread'
-      }));
+      import('xlsx').then(XLSX => {
+        const exportData = items.map(item => ({
+          'Event ID': item.id,
+          'Severity Tier': item.severity ? item.severity.toUpperCase() : 'INFO',
+          'Domain Category': item.category ? item.category.toUpperCase() : 'GENERAL',
+          'Title': item.title || '',
+          'Summary Message': item.message || '',
+          'Telemetry Source': item.source || 'N/A',
+          'Timestamp': item.timestamp ? new Date(item.timestamp).toLocaleString() : '',
+          'Status': item.read ? 'Read' : 'Unread'
+        }));
 
-      const worksheet = XLSX.utils.json_to_sheet(exportData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, 'Telemetry Logs');
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Telemetry Logs');
 
-      // Auto-fit column widths
-      const colWidths = Object.keys(exportData[0] || {}).map(key => ({
-        wch: Math.max(key.length + 4, 15)
-      }));
-      worksheet['!cols'] = colWidths;
+        // Auto-fit column widths
+        const colWidths = Object.keys(exportData[0] || {}).map(key => ({
+          wch: Math.max(key.length + 4, 15)
+        }));
+        worksheet['!cols'] = colWidths;
 
-      XLSX.writeFile(workbook, `${baseFilename}.xlsx`);
+        XLSX.writeFile(workbook, `${baseFilename}.xlsx`);
+      });
     } else {
       const headers = ['ID', 'Severity', 'Category', 'Title', 'Message', 'Timestamp', 'Read', 'Source'];
-      const csvRows = [headers.join(',')];
-      for (const item of items) {
-        const row = [
-          `"${item.id}"`,
-          `"${item.severity || 'N/A'}"`,
-          `"${item.category || 'N/A'}"`,
-          `"${(item.title || '').replace(/"/g, '""')}"`,
-          `"${(item.message || '').replace(/"/g, '""')}"`,
-          `"${new Date(item.timestamp).toISOString()}"`,
-          `"${item.read ? 'Read' : 'Unread'}"`,
-          `"${item.source || 'N/A'}"`
-        ];
-        csvRows.push(row.join(','));
-      }
-      const blob = new Blob([csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${baseFilename}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+      const rows = items.map(item => [
+        item.id,
+        item.severity || 'N/A',
+        item.category || 'N/A',
+        item.title || '',
+        item.message || '',
+        new Date(item.timestamp).toISOString(),
+        item.read ? 'Read' : 'Unread',
+        item.source || 'N/A'
+      ]);
+      CsvExporter.export(baseFilename, headers, rows);
     }
   }
 }

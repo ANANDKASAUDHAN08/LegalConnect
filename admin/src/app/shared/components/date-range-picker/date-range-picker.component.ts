@@ -2,6 +2,7 @@ import { Component, Input, Output, EventEmitter, ElementRef, HostListener, Chang
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { AdminIconComponent } from '../icon/icon.component';
 
 export interface DateRangeEvent {
   startDate: string;
@@ -14,7 +15,7 @@ export type DatePreset = 'today' | '7days' | '30days' | 'thisMonth';
 @Component({
   selector: 'admin-date-range-picker',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, AdminIconComponent],
   templateUrl: './date-range-picker.component.html',
   styleUrls: ['./date-range-picker.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

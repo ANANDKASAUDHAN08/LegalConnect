@@ -12,7 +12,7 @@ import {
   standalone: true
 })
 export class TooltipDirective implements OnDestroy {
-  @Input('adminTooltip') tooltipText = '';
+  @Input('adminTooltip') tooltipText: string | null | undefined = '';
   @Input() tooltipPosition: 'top' | 'bottom' | 'left' | 'right' = 'top';
   @Input() tooltipDelay = 150; // ms delay before showing
 
@@ -62,7 +62,7 @@ export class TooltipDirective implements OnDestroy {
 
     this.tooltipElement = this.renderer.createElement('div');
     const textSpan = this.renderer.createElement('span');
-    this.renderer.appendChild(textSpan, this.renderer.createText(this.tooltipText));
+    this.renderer.appendChild(textSpan, this.renderer.createText(this.tooltipText || ''));
     this.renderer.appendChild(this.tooltipElement, textSpan);
 
     this.renderer.addClass(this.tooltipElement, 'admin-custom-tooltip');

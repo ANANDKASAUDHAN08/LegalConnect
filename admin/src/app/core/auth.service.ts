@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
@@ -15,6 +15,7 @@ export interface AdminUser {
   lastIpAddress?: string;
   createdAt?: string;
   backupCodeCount?: number;
+  mustChangePassword?: boolean;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -113,7 +114,7 @@ export class AdminAuthService {
             this.userSubject.next(res);
             sessionStorage.setItem('lc_admin_user', JSON.stringify(res));
           },
-          error: (err: any) => {
+          error: (err: HttpErrorResponse) => {
             // ONLY log out if the backend explicitly returned a 401 Unauthorized status
             if (err.status === 401 || err.status === 403) {
               console.warn('Admin token expired or invalid (401/403). Clearing session...');
@@ -152,6 +153,21 @@ export class AdminAuthService {
     );
   }
 
+  /**
+   * Refreshes the active in-memory and session storage credentials when a new
+   * JWT is issued (e.g. following mandatory password rotation).
+   */
+  updateSessionToken(newToken: string): void {
+    if (!newToken) return;
+    sessionStorage.setItem('lc_admin_token', newToken);
+    this.tokenSubject.next(newToken);
+    if (this.user) {
+      const updatedUser: AdminUser = { ...this.user, mustChangePassword: false };
+      sessionStorage.setItem('lc_admin_user', JSON.stringify(updatedUser));
+      this.userSubject.next(updatedUser);
+    }
+  }
+
   logout(): void {
     this.http.post(`${this.API_URL}/logout`, {}, {
       withCredentials: true,
@@ -167,6 +183,13 @@ export class AdminAuthService {
     this.router.navigate(['/login']);
   }
 
+  /**
+   * Dual-Transport Security Strategy:
+   * 1. Primary: JWT Bearer Token stored in sessionStorage (tab-scoped) and attached to
+   *    every API request via adminAuthInterceptor in the Authorization header.
+   * 2. Secondary: HttpOnly lc_admin_token cookie managed by the backend for SSR / direct navigation.
+   * 3. Terminating session revokes both localStorage/sessionStorage memory and cookie states.
+   */
   private clearSession(shouldBroadcast = true): void {
     if (shouldBroadcast) {
       this.broadcastAuthEvent('LOGOUT');
@@ -175,6 +198,10 @@ export class AdminAuthService {
     sessionStorage.removeItem('lc_admin_user');
     localStorage.removeItem('lc_admin_token');
     localStorage.removeItem('lc_admin_user');
+    if (typeof document !== 'undefined') {
+      document.cookie = 'lc_admin_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; SameSite=Strict';
+      document.cookie = 'lc_admin_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; SameSite=Lax';
+    }
     this.tokenSubject.next(null);
     this.userSubject.next(null);
   }

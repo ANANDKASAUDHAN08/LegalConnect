@@ -44,6 +44,35 @@ export function maskEmail(email: string | null | undefined): string {
 }
 
 /**
+ * Mask IP Address (e.g. 192.168.1.100 -> 192.168.••.••)
+ * Preserves subnet identifier while protecting host/client identity (DPDP/GDPR compliant)
+ */
+export function maskIp(ip: string | null | undefined): string {
+  if (!ip || typeof ip !== 'string') return '•••.•••.•••.•••';
+  const trimmed = ip.trim();
+  const parts = trimmed.split('.');
+  if (parts.length === 4) {
+    return `${parts[0]}.${parts[1]}.••.••`;
+  }
+  if (trimmed.includes(':')) {
+    const colons = trimmed.split(':');
+    return colons.length > 2 ? `${colons[0]}:${colons[1]}:••••:••••` : '••••:••••';
+  }
+  return trimmed.length > 6 ? `${trimmed.slice(0, 4)}••••` : '••••••••';
+}
+
+/**
+ * Formats an IP address for UI display, honoring active unmask state.
+ * Returns the unmasked raw IP if isUnmasked is true, otherwise returns masked subnet.
+ */
+export function formatMaskedIp(ip: string | null | undefined, isUnmasked: boolean): string {
+  if (!ip) return 'IP Hidden';
+  if (isUnmasked) return ip;
+  return maskIp(ip);
+}
+
+
+/**
  * Sanitize Search Query Input to prevent XSS / Script Injection attacks
  */
 export function sanitizeSearchInput(input: string | null | undefined): string {

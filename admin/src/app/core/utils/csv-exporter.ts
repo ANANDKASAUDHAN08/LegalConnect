@@ -14,12 +14,14 @@ export class CsvExporter {
     const escapeCell = (val: any): string => {
       if (val === null || val === undefined) return '""';
       let str = String(val).trim();
+      // CSV Formula Injection Prevention: neutralize cells starting with
+      // =, +, -, @, \t, or \r to prevent arbitrary code execution in Excel/LibreOffice.
+      if (str.length > 0 && ('=+-@\t\r'.includes(str[0]))) {
+        str = "'" + str;
+      }
       // Replace double quotes with escaped double quotes
       str = str.replace(/"/g, '""');
-      // Wrap in double quotes if string contains comma, quote, or newline
-      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
-        return `"${str}"`;
-      }
+      // Wrap in double quotes
       return `"${str}"`;
     };
 

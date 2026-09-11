@@ -9,24 +9,15 @@
             <div class="flex items-center gap-3">
                 <div
                     class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-sky-500 text-white flex items-center justify-center shadow-md">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
+                    <admin-icon name="download" [size]="20"></admin-icon>
                 </div>
                 <div>
                     <div class="flex items-center gap-2">
                         <h3 class="text-base font-extrabold text-white">Export Data</h3>
                         <span
                             class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-500/15 border border-indigo-500/30 text-indigo-300 text-[10.5px] font-mono font-bold">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.2" class="text-indigo-400 shrink-0">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                                <line x1="16" y1="2" x2="16" y2="6"></line>
-                                <line x1="8" y1="2" x2="8" y2="6"></line>
-                                <line x1="3" y1="10" x2="21" y2="10"></line>
-                            </svg>
+                            <admin-icon name="calendar" [size]="12" [strokeWidth]="2.2"
+                                cssClass="text-indigo-400 shrink-0"></admin-icon>
                             <span>{{ computedDateRangeLabel || 'All Time' }}</span>
                         </span>
                     </div>
@@ -35,10 +26,7 @@
             </div>
             <button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 (click)="closeModal()">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <admin-icon name="close" [size]="18"></admin-icon>
             </button>
         </div>
 
@@ -140,11 +128,8 @@
                             class="mt-1 accent-indigo-500" />
                         <div class="flex flex-col min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" class="text-indigo-400 shrink-0">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                    <polyline points="14 2 14 8 20 8"></polyline>
-                                </svg>
+                                <admin-icon name="file-text" [size]="13"
+                                    cssClass="text-indigo-400 shrink-0"></admin-icon>
                                 <span class="text-xs font-bold text-slate-200">CSV (.csv)</span>
                             </div>
                             <span class="text-[10px] text-slate-400 mt-0.5">Comma-separated</span>
@@ -158,14 +143,7 @@
                             class="mt-1 accent-emerald-500" />
                         <div class="flex flex-col min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" class="text-emerald-400 shrink-0">
-                                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                                    <line x1="3" y1="9" x2="21" y2="9"></line>
-                                    <line x1="3" y1="15" x2="21" y2="15"></line>
-                                    <line x1="9" y1="3" x2="9" y2="21"></line>
-                                    <line x1="15" y1="3" x2="15" y2="21"></line>
-                                </svg>
+                                <admin-icon name="grid" [size]="13" cssClass="text-emerald-400 shrink-0"></admin-icon>
                                 <span class="text-xs font-bold text-slate-200">Excel (.xlsx)</span>
                             </div>
                             <span class="text-[10px] text-slate-400 mt-0.5">Excel workbook</span>
@@ -179,11 +157,7 @@
                             class="mt-1 accent-amber-500" />
                         <div class="flex flex-col min-w-0">
                             <div class="flex items-center gap-1.5">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" class="text-amber-400 shrink-0">
-                                    <polyline points="16 18 22 12 16 6"></polyline>
-                                    <polyline points="8 6 2 12 8 18"></polyline>
-                                </svg>
+                                <admin-icon name="activity" [size]="13" cssClass="text-amber-400 shrink-0"></admin-icon>
                                 <span class="text-xs font-bold text-slate-200">JSON (.json)</span>
                             </div>
                             <span class="text-[10px] text-slate-400 mt-0.5">Structured payload</span>
@@ -212,19 +186,10 @@
                     class="px-5 py-2.5 text-xs font-extrabold rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white shadow-lg shadow-indigo-500/25 transition-all flex items-center gap-2 disabled:opacity-50"
                     [disabled]="isExporting || selectedColumnCount === 0" (click)="doExport()">
                     @if (isExporting) {
-                    <svg class="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2">
-                        <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
-                        <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
-                    </svg>
+                    <admin-icon name="spinner" [size]="14" cssClass="animate-spin"></admin-icon>
                     <span>Exporting...</span>
                     } @else {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="7 10 12 15 17 10"></polyline>
-                        <line x1="12" y1="15" x2="12" y2="3"></line>
-                    </svg>
+                    <admin-icon name="download" [size]="14" [strokeWidth]="2.5"></admin-icon>
                     <span>Export {{ exportRowCount | number }} {{ exportScope === 'selected' ? 'Selected' : '' }} Rows
                         (.{{ exportFormat }})</span>
                     }
