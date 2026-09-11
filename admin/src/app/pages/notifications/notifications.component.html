@@ -20,11 +20,7 @@
         <div
           class="p-2.5 rounded-xl bg-gradient-to-br from-indigo-500/25 via-purple-500/20 to-sky-500/20 border border-indigo-400/30 text-indigo-300 shadow-md shadow-indigo-500/20 flex-shrink-0"
           [adminTooltip]="'Centralized Telemetry Hub'" tooltipPosition="right">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            class="drop-shadow">
-            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-          </svg>
+          <admin-icon name="bell" [size]="20" strokeWidth="2.2" cssClass="drop-shadow"></admin-icon>
         </div>
 
         <div class="flex flex-col gap-0.5">
@@ -75,12 +71,7 @@
             class="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
             [ngClass]="viewMode() === 'inbox' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
             [adminTooltip]="'View actionable items requiring human decision'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="22 12 16 12 14 15 10 15 8 12 2 12"></polyline>
-              <path
-                d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z">
-              </path>
-            </svg>
+            <admin-icon name="inbox" [size]="13" strokeWidth="2"></admin-icon>
             <span>Inbox</span>
           </button>
 
@@ -88,9 +79,7 @@
             class="px-3 py-1 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5"
             [ngClass]="viewMode() === 'telemetry' ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
             [adminTooltip]="'View real-time security & system telemetry stream'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-            </svg>
+            <admin-icon name="activity" [size]="13" strokeWidth="2"></admin-icon>
             <span>Telemetry Log</span>
           </button>
 
@@ -109,10 +98,7 @@
           class="p-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
           [adminTooltip]="isSidebarCollapsed() ? 'Show telemetry stats sidebar' : 'Hide sidebar for widescreen feed'"
           tooltipPosition="bottom">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="9" y1="3" x2="9" y2="21"></line>
-          </svg>
+          <admin-icon name="sidebar" [size]="15" strokeWidth="2"></admin-icon>
         </button>
 
         <!-- Live Stream Toggle -->
@@ -120,11 +106,7 @@
           class="px-3 py-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
           [adminTooltip]="isLiveStreaming() ? 'Pause live telemetry stream' : 'Resume live stream'"
           tooltipPosition="bottom">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
+          <admin-icon name="alert-circle" [size]="13" strokeWidth="2"></admin-icon>
           <span>{{ isLiveStreaming() ? 'Pause Stream' : 'Resume' }}</span>
         </button>
 
@@ -133,16 +115,9 @@
           class="p-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
           [adminTooltip]="soundEnabled() ? 'Mute audio alerts' : 'Enable audio chime'" tooltipPosition="bottom">
           @if (soundEnabled()) {
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          </svg>
+          <admin-icon name="volume-2" [size]="15" strokeWidth="2" cssClass="text-emerald-500"></admin-icon>
           } @else {
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <line x1="23" y1="9" x2="17" y2="15"></line>
-            <line x1="17" y1="9" x2="23" y2="15"></line>
-          </svg>
+          <admin-icon name="volume-x" [size]="15" strokeWidth="2"></admin-icon>
           }
         </button>
 
@@ -150,11 +125,7 @@
         <button (click)="openExportModal()"
           class="px-3 py-1.5 rounded-xl border border-white/10 bg-slate-800/80 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm cursor-pointer hover:border-indigo-400/40"
           [adminTooltip]="'Export telemetry dialog (CSV, JSON, XLSX)'" tooltipPosition="bottom">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+          <admin-icon name="download" [size]="13" strokeWidth="2"></admin-icon>
           <span>Export</span>
         </button>
       </div>
@@ -190,10 +161,7 @@
             </div>
             <div
               class="w-9 h-9 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                <path d="M3 9h18"></path>
-              </svg>
+              <admin-icon name="table" [size]="18" strokeWidth="2"></admin-icon>
             </div>
           </div>
 
@@ -220,10 +188,7 @@
             </div>
             <div
               class="w-9 h-9 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-              </svg>
+              <admin-icon name="bell" [size]="18" strokeWidth="2"></admin-icon>
             </div>
           </div>
 
@@ -244,12 +209,7 @@
             </div>
             <div
               class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                </path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
+              <admin-icon name="warning" [size]="18" strokeWidth="2"></admin-icon>
             </div>
           </div>
 
@@ -270,11 +230,7 @@
             </div>
             <div
               class="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform relative z-10">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                </polygon>
-              </svg>
+              <admin-icon name="star" [size]="18" strokeWidth="2"></admin-icon>
             </div>
           </div>
         </section>
@@ -293,10 +249,8 @@
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                 [ngClass]="selectedTab() === 'all' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30 border border-indigo-400/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
                 [adminTooltip]="'View all notification streams'">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  [ngClass]="selectedTab() === 'all' ? 'text-white' : 'text-indigo-400'">
-                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
-                </svg>
+                <admin-icon name="layers" [size]="13" strokeWidth="2"
+                  [cssClass]="selectedTab() === 'all' ? 'text-white' : 'text-indigo-400'"></admin-icon>
                 <span>All Stream</span>
                 <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
                   [ngClass]="selectedTab() === 'all' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'">{{
@@ -308,11 +262,8 @@
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                 [ngClass]="selectedTab() === 'unread' ? 'bg-rose-600 text-white shadow-md shadow-rose-500/30 border border-rose-400/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
                 [adminTooltip]="'View unread notifications'">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  [ngClass]="selectedTab() === 'unread' ? 'text-white' : 'text-rose-400'">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                </svg>
+                <admin-icon name="bell" [size]="13" strokeWidth="2"
+                  [cssClass]="selectedTab() === 'unread' ? 'text-white' : 'text-rose-400'"></admin-icon>
                 <span>Unread</span>
                 @if (stats().unreadCount > 0) {
                 <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
@@ -326,12 +277,8 @@
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                 [ngClass]="selectedTab() === 'starred' ? 'bg-amber-600 text-white shadow-md shadow-amber-500/30 border border-amber-400/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
                 [adminTooltip]="'View starred notifications'">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  [ngClass]="selectedTab() === 'starred' ? 'text-white' : 'text-amber-400'">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                  </polygon>
-                </svg>
+                <admin-icon name="star" [size]="13" strokeWidth="2"
+                  [cssClass]="selectedTab() === 'starred' ? 'text-white' : 'text-amber-400'"></admin-icon>
                 <span>Starred</span>
                 <span class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold"
                   [ngClass]="selectedTab() === 'starred' ? 'bg-white/20 text-white' : 'bg-slate-800 text-slate-300'">{{
@@ -343,12 +290,8 @@
                 class="px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 whitespace-nowrap"
                 [ngClass]="selectedTab() === 'archived' ? 'bg-slate-700 text-white shadow-md shadow-slate-500/30 border border-slate-500/40' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'"
                 [adminTooltip]="'View archived notifications'">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  [ngClass]="selectedTab() === 'archived' ? 'text-white' : 'text-slate-400'">
-                  <polyline points="21 8 21 21 3 21 3 8"></polyline>
-                  <rect x="1" y="3" width="22" height="5"></rect>
-                  <line x1="10" y1="12" x2="14" y2="12"></line>
-                </svg>
+                <admin-icon name="archive" [size]="13" strokeWidth="2"
+                  [cssClass]="selectedTab() === 'archived' ? 'text-white' : 'text-slate-400'"></admin-icon>
                 <span>Archived</span>
               </button>
             </div>
@@ -362,19 +305,14 @@
               @if (undoCountdown() > 0 && lastMarkedReadIds().length > 0) {
               <button (click)="undoMarkAllAsRead()"
                 class="px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/15 text-amber-300 hover:text-amber-200 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 animate-pulse">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M3 7v6h6"></path>
-                  <path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"></path>
-                </svg>
+                <admin-icon name="rotate-cw" [size]="13" strokeWidth="2.5"></admin-icon>
                 <span>Undo ({{ undoCountdown() }}s)</span>
               </button>
               } @else {
               <button (click)="markAllAsRead()"
                 class="h-8 px-3.5 rounded-xl border border-emerald-500/40 bg-emerald-500/15 hover:bg-emerald-500/25 text-emerald-300 hover:text-white text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm shadow-emerald-500/10"
                 [adminTooltip]="'Mark all notifications as read'" tooltipPosition="top">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="13" strokeWidth="2.5"></admin-icon>
                 <span>Mark All Read</span>
               </button>
               }
@@ -414,10 +352,7 @@
                 <!-- Active Filters Label -->
                 <span
                   class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider flex items-center gap-1.5 shrink-0 select-none">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-indigo-400">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                  </svg>
+                  <admin-icon name="filter" [size]="12" strokeWidth="2.5" cssClass="text-indigo-400"></admin-icon>
                   <span>Active Filters ({{ activeFilterCount() }}):</span>
                 </span>
 
@@ -479,10 +414,7 @@
               <!-- Right Side: Reset All Pill Button (Fixed at right edge) -->
               <button (click)="resetAllFilters()"
                 class="shrink-0 px-3.5 py-1 rounded-full bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/50 text-rose-200 hover:text-white text-xs font-extrabold transition-all shadow-md shadow-rose-500/10 flex items-center gap-1.5 cursor-pointer active:scale-95 z-20">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-                  <path d="M3 3v5h5"></path>
-                </svg>
+                <admin-icon name="refresh" [size]="13" strokeWidth="2.5"></admin-icon>
                 <span>Reset All ({{ activeFilterCount() }})</span>
               </button>
             </div>
@@ -520,9 +452,7 @@
             <button (click)="bulkMarkRead()"
               class="h-8 px-3.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/35 border border-emerald-400/40 text-emerald-300 hover:text-white text-xs font-bold transition-all shadow-md shadow-emerald-500/10 cursor-pointer flex items-center gap-1.5 active:scale-95"
               [adminTooltip]="'Mark selected items as read'" tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="13" strokeWidth="2.5"></admin-icon>
               <span>Mark Read</span>
             </button>
 
@@ -530,12 +460,7 @@
             <button (click)="bulkArchive()"
               class="h-8 px-3.5 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/35 border border-indigo-400/40 text-indigo-300 hover:text-white text-xs font-bold transition-all shadow-md shadow-indigo-500/10 cursor-pointer flex items-center gap-1.5 active:scale-95"
               [adminTooltip]="'Archive selected items'" tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="21 8 21 21 3 21 3 8"></polyline>
-                <rect x="1" y="3" width="22" height="5"></rect>
-                <line x1="12" y1="11" x2="12" y2="17"></line>
-                <polyline points="9 14 12 17 15 14"></polyline>
-              </svg>
+              <admin-icon name="archive" [size]="13" strokeWidth="2"></admin-icon>
               <span>Archive</span>
             </button>
 
@@ -543,12 +468,7 @@
             <button (click)="bulkDelete()"
               class="h-8 px-3.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-rose-300 hover:text-white text-xs font-bold transition-all shadow-md shadow-rose-500/10 cursor-pointer flex items-center gap-1.5 active:scale-95"
               [adminTooltip]="'Permanently delete selected items'" tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="3 6 5 6 21 6"></polyline>
-                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                <line x1="10" y1="11" x2="10" y2="17"></line>
-                <line x1="14" y1="11" x2="14" y2="17"></line>
-              </svg>
+              <admin-icon name="trash" [size]="13" strokeWidth="2"></admin-icon>
               <span>Delete</span>
             </button>
 
@@ -556,10 +476,7 @@
             <button (click)="clearSelection()"
               class="h-8 px-3 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/60 text-slate-300 hover:text-white text-xs font-semibold transition-all cursor-pointer flex items-center gap-1 active:scale-95"
               [adminTooltip]="'Clear selection'" tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <admin-icon name="close" [size]="12" strokeWidth="2.5"></admin-icon>
               <span>Cancel</span>
             </button>
           </div>
@@ -615,12 +532,7 @@
               <div class="flex items-center gap-2">
                 <div
                   class="w-5 h-5 rounded-md bg-indigo-500/15 text-indigo-400 flex items-center justify-center shadow-sm">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
+                  <admin-icon name="calendar" [size]="12" strokeWidth="2.5"></admin-icon>
                 </div>
                 <h2
                   class="text-xs font-black uppercase tracking-widest bg-gradient-to-r from-indigo-200 via-slate-200 to-slate-400 bg-clip-text text-transparent">
@@ -675,34 +587,13 @@
                         'bg-emerald-500/15 border-emerald-500/30 text-emerald-400': ev.severity === 'success'
                       }">
                       @if (ev.severity === 'critical') {
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path
-                          d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                        </path>
-                        <line x1="12" y1="9" x2="12" y2="13"></line>
-                        <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                      </svg>
+                      <admin-icon name="warning" [size]="14" strokeWidth="2.5"></admin-icon>
                       } @else if (ev.severity === 'warning') {
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                      </svg>
+                      <admin-icon name="alert-circle" [size]="14" strokeWidth="2.5"></admin-icon>
                       } @else if (ev.severity === 'success') {
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                      </svg>
+                      <admin-icon name="check-circle" [size]="14" strokeWidth="2.5"></admin-icon>
                       } @else {
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="16" x2="12" y2="12"></line>
-                        <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                      </svg>
+                      <admin-icon name="info" [size]="14" strokeWidth="2.5"></admin-icon>
                       }
                     </div>
 
@@ -747,12 +638,8 @@
                         class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-amber-300 hover:bg-amber-500/20 transition-all cursor-pointer active:scale-95"
                         [ngClass]="{ 'text-amber-400 bg-amber-500/20 border border-amber-500/30': ev.starred }"
                         [adminTooltip]="ev.starred ? 'Unstar notification' : 'Star notification'" tooltipPosition="top">
-                        <svg width="13" height="13" viewBox="0 0 24 24" [attr.fill]="ev.starred ? '#f59e0b' : 'none'"
-                          stroke="currentColor" stroke-width="2">
-                          <polygon
-                            points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                          </polygon>
-                        </svg>
+                        <admin-icon name="star" [size]="13" strokeWidth="2"
+                          [fill]="ev.starred ? '#f59e0b' : 'none'"></admin-icon>
                       </button>
 
                       <!-- Mark Read / Mark Unread -->
@@ -761,16 +648,10 @@
                         [ngClass]="{ 'text-emerald-400 bg-emerald-500/20 border border-emerald-500/30': !ev.read }"
                         [adminTooltip]="ev.read ? 'Mark as unread' : 'Mark as read'" tooltipPosition="top">
                         @if (ev.read) {
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2">
-                          <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                          <polyline points="22 6 12 13 2 6"></polyline>
-                        </svg>
+                        <admin-icon name="mail" [size]="13" strokeWidth="2"></admin-icon>
                         } @else {
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
-                          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                        </svg>
+                        <admin-icon name="check-circle" [size]="13" strokeWidth="2.5"
+                          cssClass="text-emerald-500"></admin-icon>
                         }
                       </button>
 
@@ -781,21 +662,9 @@
                         [adminTooltip]="(ev.archived || selectedTab() === 'archived') ? 'Restore to inbox' : 'Archive notification'"
                         tooltipPosition="top">
                         @if (ev.archived || selectedTab() === 'archived') {
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2">
-                          <polyline points="21 8 21 21 3 21 3 8"></polyline>
-                          <rect x="1" y="3" width="22" height="5"></rect>
-                          <line x1="12" y1="17" x2="12" y2="11"></line>
-                          <polyline points="9 13 12 10 15 13"></polyline>
-                        </svg>
+                        <admin-icon name="archive" [size]="13" strokeWidth="2"></admin-icon>
                         } @else {
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2">
-                          <polyline points="21 8 21 21 3 21 3 8"></polyline>
-                          <rect x="1" y="3" width="22" height="5"></rect>
-                          <line x1="12" y1="11" x2="12" y2="17"></line>
-                          <polyline points="9 14 12 17 15 14"></polyline>
-                        </svg>
+                        <admin-icon name="archive" [size]="13" strokeWidth="2"></admin-icon>
                         }
                       </button>
 
@@ -803,14 +672,7 @@
                       <button (click)="deleteSingle(ev, $event)"
                         class="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-rose-300 hover:bg-rose-500/20 transition-all cursor-pointer active:scale-95"
                         [adminTooltip]="'Delete permanently'" tooltipPosition="top">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2">
-                          <polyline points="3 6 5 6 21 6"></polyline>
-                          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                          </path>
-                          <line x1="10" y1="11" x2="10" y2="17"></line>
-                          <line x1="14" y1="11" x2="14" y2="17"></line>
-                        </svg>
+                        <admin-icon name="trash" [size]="13" strokeWidth="2"></admin-icon>
                       </button>
                     </div>
 
@@ -820,11 +682,7 @@
                       class="h-8 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 !text-white hover:!text-white text-xs font-bold shadow-md shadow-indigo-500/20 border border-indigo-400/30 flex items-center gap-1.5 transition-all cursor-pointer active:scale-95 shrink-0"
                       [adminTooltip]="'Navigate to detail page'" tooltipPosition="top">
                       <span class="!text-white">{{ ev.actionLabel || 'View Details' }}</span>
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5" class="!text-white">
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                        <polyline points="12 5 19 12 12 19"></polyline>
-                      </svg>
+                      <admin-icon name="arrow-right" [size]="11" strokeWidth="2.5" cssClass="!text-white"></admin-icon>
                     </a>
                     }
                   </div>
@@ -845,11 +703,7 @@
                     <span
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-slate-900/80 border border-slate-800 text-slate-300 font-medium whitespace-nowrap shadow-xs"
                       [adminTooltip]="(ev.timestamp | date:'medium') || ''">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        class="text-slate-400">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
+                      <admin-icon name="clock" [size]="10" strokeWidth="2" cssClass="text-slate-400"></admin-icon>
                       {{ ev.timestamp | relativeTime }}
                     </span>
 
@@ -870,16 +724,11 @@
                     @if (ev.detailsMarkdown) {
                     <button (click)="toggleExpand(ev.id, $event)"
                       class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-indigo-500/10 hover:bg-indigo-500/20 border border-indigo-500/30 text-indigo-300 font-bold transition-all cursor-pointer active:scale-95 text-[10px]">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <polyline points="16 18 22 12 16 6"></polyline>
-                        <polyline points="8 6 2 12 8 18"></polyline>
-                      </svg>
+                      <admin-icon name="code" [size]="10" strokeWidth="2.5"></admin-icon>
                       <span>{{ expandedId() === ev.id ? 'Hide Details' : 'Details' }}</span>
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        class="transition-transform duration-200" [class.rotate-180]="expandedId() === ev.id">
-                        <polyline points="6 9 12 15 18 9"></polyline>
-                      </svg>
+                      <admin-icon name="chevron-down" [size]="9" strokeWidth="2.5"
+                        cssClass="transition-transform duration-200"
+                        [class.rotate-180]="expandedId() === ev.id"></admin-icon>
                     </button>
                     }
                   </div>
@@ -894,17 +743,9 @@
                       [disabled]="quickActionLoading() === ev.id" [adminTooltip]="'Approve lawyer bar license'"
                       tooltipPosition="top">
                       @if (quickActionLoading() === ev.id) {
-                      <svg class="animate-spin text-white" width="11" height="11" viewBox="0 0 24 24" fill="none">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                        </circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
-                        </path>
-                      </svg>
+                      <admin-icon name="spinner" [size]="11" cssClass="animate-spin text-white"></admin-icon>
                       } @else {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
+                      <admin-icon name="checkmark" [size]="11" strokeWidth="2.5"></admin-icon>
                       }
                       <span class="!text-white">Approve</span>
                     </button>
@@ -913,11 +754,7 @@
                       class="h-7 px-2.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 !text-rose-200 hover:!text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer active:scale-95"
                       [disabled]="quickActionLoading() === ev.id" [adminTooltip]="'Reject lawyer verification request'"
                       tooltipPosition="top">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                        <line x1="6" y1="6" x2="18" y2="18"></line>
-                      </svg>
+                      <admin-icon name="close" [size]="11" strokeWidth="2.5"></admin-icon>
                       <span>Reject</span>
                     </button>
                     }
@@ -928,17 +765,9 @@
                       [disabled]="quickActionLoading() === ev.id" [adminTooltip]="'Mark support ticket as resolved'"
                       tooltipPosition="top">
                       @if (quickActionLoading() === ev.id) {
-                      <svg class="animate-spin text-white" width="11" height="11" viewBox="0 0 24 24" fill="none">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                        </circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z">
-                        </path>
-                      </svg>
+                      <admin-icon name="spinner" [size]="11" cssClass="animate-spin text-white"></admin-icon>
                       } @else {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
+                      <admin-icon name="checkmark" [size]="11" strokeWidth="2.5"></admin-icon>
                       }
                       <span class="!text-white">Resolve</span>
                     </button>
@@ -954,11 +783,7 @@
                   <div
                     class="flex items-center justify-between border-b border-slate-800 pb-1.5 mb-1.5 text-[11px] text-slate-400">
                     <span class="font-bold text-indigo-400 flex items-center gap-1.5">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <polyline points="16 18 22 12 16 6"></polyline>
-                        <polyline points="8 6 2 12 8 18"></polyline>
-                      </svg>
+                      <admin-icon name="code" [size]="12" strokeWidth="2"></admin-icon>
                       Telemetry Event Details
                     </span>
                     <span>ID: {{ ev.id }}</span>
@@ -999,9 +824,7 @@
           <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
             <div class="flex items-center gap-2">
               <div class="p-1 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                </svg>
+                <admin-icon name="activity" [size]="14" strokeWidth="2"></admin-icon>
               </div>
               <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Channel Status</h3>
             </div>
@@ -1053,11 +876,7 @@
           <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
             <div class="flex items-center gap-2">
               <div class="p-1 rounded bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="20" x2="18" y2="10"></line>
-                  <line x1="12" y1="20" x2="12" y2="4"></line>
-                  <line x1="6" y1="20" x2="6" y2="14"></line>
-                </svg>
+                <admin-icon name="bar-chart" [size]="14" strokeWidth="2"></admin-icon>
               </div>
               <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">Severity Matrix</h3>
             </div>
@@ -1133,10 +952,7 @@
           <button (click)="openExportModal()"
             class="w-full py-2 px-3 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs font-medium flex items-center justify-between transition-all cursor-pointer">
             <span class="flex items-center gap-2">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
+              <admin-icon name="file-text" [size]="13" strokeWidth="2"></admin-icon>
               Export Security Telemetry
             </span>
             <span>CSV/JSON/XLSX</span>
@@ -1145,9 +961,7 @@
           <button (click)="markAllAsRead()"
             class="w-full py-2 px-3 rounded-lg border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 text-xs font-medium flex items-center justify-between transition-all cursor-pointer">
             <span class="flex items-center gap-2">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="13" strokeWidth="2"></admin-icon>
               Clear All Unread
             </span>
             <span>✓</span>

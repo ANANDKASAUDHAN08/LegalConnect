@@ -1,14 +1,16 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TooltipDirective } from '../../../../shared/directives/tooltip.directive';
 import { ActivityStreamService, ActivityEvent } from '../../../../core/services/activity-stream.service';
+import { AdminIconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-dashboard-activity-feed',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, AdminIconComponent],
   templateUrl: './dashboard-activity-feed.component.html',
-  styleUrl: './dashboard-activity-feed.component.scss'
+  styleUrl: './dashboard-activity-feed.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardActivityFeedComponent {
   @Input() activeActivityFilter: 'all' | 'verification_req' | 'security_alert' | 'urgent_ticket' = 'all';

@@ -1,18 +1,20 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AdminApiService } from '../../../core/admin-api.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
 import { SelectComponent, SelectOption } from '../../../shared/components/select/select.component';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 import { BareAct, EditMetaForm, EditMetaPayload } from '../legal-content.models';
 
 @Component({
   selector: 'admin-edit-act-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective, SelectComponent],
+  imports: [CommonModule, FormsModule, TooltipDirective, SelectComponent, AdminIconComponent],
   templateUrl: './edit-act-modal.component.html',
   styleUrl: './edit-act-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -204,7 +206,7 @@ export class EditActModalComponent implements OnInit, OnChanges, OnDestroy {
           this.toast.success(`Act '${this.editMetaForm.actName}' metadata updated successfully.`);
           this.actUpdated.emit();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.isEditingMeta = false;
           this.toast.error(err?.error?.message || 'Failed to update act metadata.');
           this.cdr.markForCheck();

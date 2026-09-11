@@ -1,4 +1,4 @@
-<div class="px-3 py-2 pt-4 w-full flex flex-col gap-2 px-8">
+<div class="py-2 pt-4 w-full flex flex-col gap-2 px-8">
 
   <!-- --- 0. Open Hero Header & Compact Stats Bar --- -->
   <div class="flex flex-col gap-1.5">
@@ -18,22 +18,15 @@
           class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
           (click)="openExportModal()" [adminTooltip]="'Export filtered advocates roster to CSV spreadsheet'"
           tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+          <admin-icon name="download" [size]="14"></admin-icon>
           <span>Export Lawyers</span>
         </button>
 
         <button
           class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
           (click)="fetchLawyers()" [adminTooltip]="'Refresh advocate records from backend'" tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            [class.animate-spin]="isLoading && !isInitialLoad">
-            <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-            <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-          </svg>
+          <admin-icon name="refresh" [size]="14"
+            [cssClass]="(isLoading && !isInitialLoad) ? 'animate-spin' : ''"></admin-icon>
           <span>Refresh Roster</span>
         </button>
       </div>
@@ -51,12 +44,7 @@
         [adminTooltip]="'View total roster of registered lawyers'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
+          <admin-icon name="users" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -77,11 +65,7 @@
         [adminTooltip]="'Filter lawyers pending Bar Council license review'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
+          <admin-icon name="alert-circle" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -102,10 +86,7 @@
         [adminTooltip]="'Filter verified lawyers'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <admin-icon name="check-circle" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -125,11 +106,7 @@
         [adminTooltip]="'Average overall advocate satisfaction rating'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
+          <admin-icon name="star-filled" [size]="16" fill="currentColor"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -243,21 +220,8 @@
           class="btn flex items-center gap-1.5 text-xs !px-2.5 py-1 h-7 !rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
           [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
           tooltipPosition="top">
-          @if (piiState.isAllUnmasked) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-            </path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
-          <span>Mask Details</span>
-          } @else {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          <span>Reveal Details</span>
-          }
+          <admin-icon [name]="piiState.isAllUnmasked ? 'eye-off' : 'eye'" [size]="12"></admin-icon>
+          <span>{{ piiState.isAllUnmasked ? 'Mask Details' : 'Reveal Details' }}</span>
         </button>
         }
       </div>
@@ -289,20 +253,14 @@
         <button
           class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           (click)="bulkVerifyLawyers(true)" [adminTooltip]="'Bulk approve selected advocates'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          <admin-icon name="checkmark" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Bulk Approve</span>
         </button>
 
         <button
           class="h-7 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
           (click)="bulkVerifyLawyers(false)" [adminTooltip]="'Bulk revoke selected advocates'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-          </svg>
+          <admin-icon name="alert-circle" [size]="13" [strokeWidth]="2"></admin-icon>
           <span>Bulk Revoke</span>
         </button>
       </div>
@@ -326,9 +284,7 @@
         message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display advocate records."
         [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
         (action)="onColumnVisibilityChange({ barCouncil: true, profile: true, specialization: true, cityExp: true, performanceFee: true, status: true })">
-        <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
-        </svg>
+        <admin-icon icon name="columns" [size]="28" [strokeWidth]="2"></admin-icon>
       </admin-empty-state>
       } @else if (!isLoading && lawyers.length === 0) {
       <!-- Full-Size Unified Empty State -->
@@ -354,24 +310,10 @@
               (click)="toggleSort('barCouncil')" [adminTooltip]="'Click to sort by Bar Council ID'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'barCouncil'">Bar Council #</span>
-                @if (sortBy === 'barCouncil') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'barCouncil' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'barCouncil' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'barCouncil' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -382,24 +324,10 @@
               (click)="toggleSort('name')" [adminTooltip]="'Click to sort by advocate full name'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'name'">Lawyer Profile</span>
-                @if (sortBy === 'name') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'name' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'name' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'name' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -414,24 +342,10 @@
               (click)="toggleSort('city')" [adminTooltip]="'Click to sort by city location'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'city'">City &amp; Exp</span>
-                @if (sortBy === 'city') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'city' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'city' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'city' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -442,24 +356,10 @@
               (click)="toggleSort('fee')" [adminTooltip]="'Click to sort by consultation fee rate'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'fee'">Performance &amp; Fee</span>
-                @if (sortBy === 'fee') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'fee' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'fee' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'fee' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -470,24 +370,10 @@
               (click)="toggleSort('status')" [adminTooltip]="'Click to sort by verification status'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Verification</span>
-                @if (sortBy === 'status') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'status' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'status' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'status' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             <th class="p-2.5 whitespace-nowrap w-[115px] min-w-[115px]">Payout Status</th>
@@ -530,7 +416,9 @@
           } @else {
           @for (l of lawyers; track l.id) {
           <tr class="table-data-row transition-colors cursor-pointer" [ngClass]="{
-              'bg-indigo-950/40 selected-row': selection.isSelected(l.id)
+              'selected-row row-selected': selection.isSelected(l.id),
+              'critical-row': !l.isActive,
+              'warning-row pending-row': l.isActive && !l.profile?.isVerified
             }" (click)="onRowClick(l.id)" (dblclick)="onRowDblClick(l)">
             <td class="p-3 text-center" (click)="$event.stopPropagation()">
               <input type="checkbox" class="rounded border-slate-700 bg-slate-800"
@@ -572,21 +460,7 @@
                       class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
                       [adminTooltip]="isPiiUnmasked(l.id, 'email') ? 'Click to Mask Email' : 'Click to Reveal Email'"
                       tooltipPosition="top">
-                      @if (isPiiUnmasked(l.id, 'email')) {
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                        </path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                      } @else {
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      }
+                      <admin-icon [name]="isPiiUnmasked(l.id, 'email') ? 'eye-off' : 'eye'" [size]="10"></admin-icon>
                     </button>
                   </div>
                 </div>
@@ -635,11 +509,8 @@
               <div class="flex flex-col text-[11px]" [adminTooltip]="'Rating and fee rate'" tooltipPosition="top">
                 <div class="flex items-center gap-1">
                   @if (getRating(l) > 0) {
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" class="text-amber-400 shrink-0">
-                    <polygon
-                      points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                    </polygon>
-                  </svg>
+                  <admin-icon name="star-filled" [size]="11" fill="currentColor"
+                    cssClass="text-amber-400 shrink-0"></admin-icon>
                   <span class="text-amber-400 font-bold text-[11px]">{{ getRating(l) }}</span>
                   } @else {
                   <span class="text-slate-400 text-[10px]">No reviews</span>
@@ -659,17 +530,11 @@
                 [adminTooltip]="l.profile?.isVerified ? 'Bar Council license verified' : 'Pending review'"
                 tooltipPosition="top">
                 @if (l.profile?.isVerified) {
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-emerald-400 shrink-0">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="11" [strokeWidth]="2.5"
+                  cssClass="text-emerald-400 shrink-0"></admin-icon>
                 <span>Verified</span>
                 } @else {
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-amber-400 shrink-0">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
+                <admin-icon name="clock" [size]="11" [strokeWidth]="2" cssClass="text-amber-400 shrink-0"></admin-icon>
                 <span>Pending</span>
                 }
               </span>
@@ -680,10 +545,7 @@
               <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold border inline-flex items-center gap-1"
                 [ngClass]="l.profile?.isVerified ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'"
                 [adminTooltip]="'Direct payout status'" tooltipPosition="top">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-                  <line x1="2" y1="10" x2="22" y2="10"></line>
-                </svg>
+                <admin-icon name="credit-card" [size]="10"></admin-icon>
                 <span>{{ l.profile?.isVerified ? 'Payout Active' : 'KYC Pending' }}</span>
               </span>
             </td>
@@ -695,11 +557,7 @@
                 class="action-menu-btn p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
                 (click)="toggleActionMenu(l.id, $any($event.currentTarget), $event)"
                 [adminTooltip]="'Open advocate management menu'" tooltipPosition="left">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="1.5"></circle>
-                  <circle cx="12" cy="5" r="1.5"></circle>
-                  <circle cx="12" cy="19" r="1.5"></circle>
-                </svg>
+                <admin-icon name="more-horizontal" [size]="16"></admin-icon>
               </button>
             </td>
           </tr>
@@ -737,18 +595,10 @@
             <h2 class="text-lg font-extrabold text-slate-100">{{ selectedLawyerForReview.fullName }}</h2>
             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold border inline-flex items-center gap-1"
               [ngClass]="selectedLawyerForReview.profile?.isVerified ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' : 'bg-amber-500/10 text-amber-400 border-amber-500/30'">
-              @if (selectedLawyerForReview.profile?.isVerified) {
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
-              <span>Verified Advocates</span>
-              } @else {
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <span>Pending Verification Review</span>
-              }
+              <admin-icon [name]="selectedLawyerForReview.profile?.isVerified ? 'checkmark' : 'clock'" [size]="11"
+                [strokeWidth]="selectedLawyerForReview.profile?.isVerified ? 2.5 : 2"></admin-icon>
+              <span>{{ selectedLawyerForReview.profile?.isVerified ? "Verified Advocates" : "Pending Verification
+                Review" }}</span>
             </span>
           </div>
           <p class="text-xs text-slate-400">
@@ -766,33 +616,16 @@
           class="px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-bold shadow-lg shadow-emerald-500/20 flex items-center gap-1.5 transition-all disabled:opacity-50"
           (click)="verifyWithBarRegistry(selectedLawyerForReview.id)" [disabled]="isVerifyingRegistry"
           [adminTooltip]="selectedLawyerForReview.profile?.isVerified ? 'Run on-demand re-audit lookup against State Bar Council Master Registry' : 'Run 1-click live lookup against State Bar Council Master Registry'">
-          @if (isVerifyingRegistry) {
-          <svg class="animate-spin" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-            stroke-width="2">
-            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-opacity="0.25"></circle>
-            <path d="M12 2a10 10 0 0 1 10 10" stroke="currentColor"></path>
-          </svg>
-          <span>Checking Registry...</span>
-          } @else if (selectedLawyerForReview.profile?.isVerified) {
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M23 4v6h-6"></path>
-            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-          </svg>
-          <span>Re-verify Bar Registry</span>
-          } @else {
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-          </svg>
-          <span>Verify with Bar Registry</span>
-          }
+          <admin-icon
+            [name]="isVerifyingRegistry ? 'spinner' : (selectedLawyerForReview.profile?.isVerified ? 'rotate-cw' : 'zap')"
+            [size]="13" [strokeWidth]="2.5" [cssClass]="isVerifyingRegistry ? 'animate-spin' : ''"></admin-icon>
+          <span>{{ isVerifyingRegistry ? "Checking Registry..." : (selectedLawyerForReview.profile?.isVerified ?
+            "Re-verify Bar Registry" : "Verify with Bar Registry") }}</span>
         </button>
 
         <button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
           (click)="closeDocumentDrawer()" [adminTooltip]="'Close review drawer'" tooltipPosition="left">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="close" [size]="20"></admin-icon>
         </button>
       </div>
     </div>
@@ -813,33 +646,21 @@
                 class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 shrink-0"
                 [class]="activeDocType === 'bar_card' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'"
                 (click)="setDocType('bar_card')" [adminTooltip]="'View Bar Council ID card scan'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="3" y="4" width="18" height="16" rx="2"></rect>
-                  <circle cx="9" cy="10" r="2"></circle>
-                  <line x1="15" y1="8" x2="17" y2="8"></line>
-                  <line x1="15" y1="12" x2="17" y2="12"></line>
-                  <line x1="7" y1="16" x2="17" y2="16"></line>
-                </svg>
+                <admin-icon name="credit-card" [size]="12"></admin-icon>
                 <span>Bar ID Card</span>
               </button>
               <button
                 class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 shrink-0"
                 [class]="activeDocType === 'cop' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'"
                 (click)="setDocType('cop')" [adminTooltip]="'View Certificate of Practice (COP)'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                </svg>
+                <admin-icon name="file-text" [size]="12"></admin-icon>
                 <span>COP Certificate</span>
               </button>
               <button
                 class="px-2.5 py-1.5 rounded-xl text-[11px] font-bold transition-all flex items-center gap-1 shrink-0"
                 [class]="activeDocType === 'degree' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'"
                 (click)="setDocType('degree')" [adminTooltip]="'View LL.B law degree certificate'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M22 10v6M2 10l10-5 10 5-10 5z"></path>
-                  <path d="M6 12v5c3 3 9 3 12 0v-5"></path>
-                </svg>
+                <admin-icon name="award" [size]="12"></admin-icon>
                 <span>LL.B Degree</span>
               </button>
               <button
@@ -847,10 +668,7 @@
                 [class]="activeDocType === 'audit_trail' ? 'bg-gradient-to-r from-indigo-600 to-indigo-700 text-white shadow-md shadow-indigo-500/25' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'"
                 (click)="setDocType('audit_trail')"
                 [adminTooltip]="'View advocate audit history & verification log timeline'">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <polyline points="12 6 12 12 16 14"></polyline>
-                </svg>
+                <admin-icon name="clock" [size]="12"></admin-icon>
                 <span>Audit Trail</span>
               </button>
             </div>
@@ -865,31 +683,19 @@
           <div class="flex items-center gap-0.5 bg-slate-950/60 p-1 rounded-xl shrink-0">
             <button class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
               (click)="zoomOut()" [adminTooltip]="'Zoom Out (Decrease Document View)'" tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
+              <admin-icon name="zoom-out" [size]="13"></admin-icon>
             </button>
             <span
               class="text-[10.5px] font-mono font-bold text-indigo-400 px-1.5 min-w-[38px] text-center select-none">{{
               documentZoom }}%</span>
             <button class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
               (click)="zoomIn()" [adminTooltip]="'Zoom In (Magnify Document)'" tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                <line x1="11" y1="8" x2="11" y2="14"></line>
-                <line x1="8" y1="11" x2="14" y2="11"></line>
-              </svg>
+              <admin-icon name="zoom-in" [size]="13"></admin-icon>
             </button>
             <div class="h-3.5 w-px bg-slate-800 mx-0.5"></div>
             <button class="p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-slate-800 transition-colors"
               (click)="rotateDoc()" [adminTooltip]="'Rotate Document 90 Degrees Clockwise'" tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="23 4 23 10 17 10"></polyline>
-                <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-              </svg>
+              <admin-icon name="rotate-cw" [size]="13"></admin-icon>
             </button>
           </div>
           }
@@ -900,10 +706,8 @@
         <div
           class="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-between gap-3 text-xs animate-in shadow-md">
           <div class="flex items-center gap-2.5 text-emerald-300 font-semibold">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              class="text-emerald-400 shrink-0">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            <admin-icon name="checkmark" [size]="16" [strokeWidth]="2.5"
+              cssClass="text-emerald-400 shrink-0"></admin-icon>
             <span>Verified with Bar Council Master Registry: <strong>{{ registryResult.standingStatus }}</strong> ({{
               registryResult.stateCouncil }})</span>
           </div>
@@ -930,11 +734,7 @@
               class="flex flex-col items-center justify-center text-center p-6 rounded-2xl bg-slate-900/80 border border-slate-800 max-w-sm gap-3">
               <div
                 class="w-14 h-14 rounded-2xl bg-slate-800/80 text-amber-400 border border-amber-500/30 flex items-center justify-center shadow-inner">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="9" y1="15" x2="15" y2="15"></line>
-                </svg>
+                <admin-icon name="file-minus" [size]="24"></admin-icon>
               </div>
               <div class="flex flex-col gap-1">
                 <h4 class="text-xs font-extrabold text-slate-200 uppercase tracking-wider">
@@ -985,11 +785,7 @@
           class="flex-1 min-h-[320px] p-4 bg-slate-900/90 rounded-xl border border-slate-800 flex flex-col gap-4 overflow-y-auto">
           <div class="flex items-center justify-between text-slate-200 border-b border-slate-800 pb-3">
             <h4 class="font-bold text-xs flex items-center gap-2">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-sky-400">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
+              <admin-icon name="clock" [size]="14" cssClass="text-sky-400"></admin-icon>
               Advocate Verification Audit History Timeline
             </h4>
             <span class="text-[10px] text-slate-400 font-mono">{{ lawyerAuditLogs.length }} audit record(s)</span>
@@ -1041,10 +837,7 @@
               class="w-full px-2.5 py-1.5 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-sky-300 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm"
               (click)="dispatchCopRenewalNotice(selectedLawyerForReview.id)"
               [adminTooltip]="'Dispatch automated 30-day COP renewal reminder notice to advocate email'">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
+              <admin-icon name="mail" [size]="12"></admin-icon>
               <span>Dispatch COP Renewal Notice</span>
             </button>
           </div>
@@ -1053,9 +846,7 @@
             <span class="text-slate-300">Bar License Number Match</span>
             <span class="inline-flex items-center gap-1 font-bold"
               [ngClass]="(selectedLawyerForReview.profile?.barCouncilLicenseNumber || selectedLawyerForReview.profile?.barCouncilNumber) ? 'text-emerald-400' : 'text-amber-400'">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="12" [strokeWidth]="2.5"></admin-icon>
               <span>{{ (selectedLawyerForReview.profile?.barCouncilLicenseNumber ||
                 selectedLawyerForReview.profile?.barCouncilNumber) ? 'Passed' : 'Not Provided' }}</span>
             </span>
@@ -1064,9 +855,7 @@
             <span class="text-slate-300">Identity Photo Clarity</span>
             <span class="inline-flex items-center gap-1 font-bold"
               [ngClass]="selectedLawyerForReview.profile?.avatarUrl ? 'text-emerald-400' : 'text-slate-400'">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="12" [strokeWidth]="2.5"></admin-icon>
               <span>{{ selectedLawyerForReview.profile?.avatarUrl ? 'Photo Uploaded' : 'Default Avatar' }}</span>
             </span>
           </div>
@@ -1074,9 +863,7 @@
             <span class="text-slate-300">Certificate of Practice (COP)</span>
             <span class="inline-flex items-center gap-1 font-bold"
               [ngClass]="selectedLawyerForReview.profile?.isVerified ? 'text-emerald-400' : 'text-amber-400'">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="12" [strokeWidth]="2.5"></admin-icon>
               <span>{{ selectedLawyerForReview.profile?.isVerified ? 'Verified Active' : 'Pending Review' }}</span>
             </span>
           </div>
@@ -1084,9 +871,7 @@
             <span class="text-slate-300">Bank Payout KYC</span>
             <span class="inline-flex items-center gap-1 font-bold"
               [ngClass]="selectedLawyerForReview.profile?.isVerified ? 'text-sky-400' : 'text-slate-400'">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="12" [strokeWidth]="2.5"></admin-icon>
               <span>{{ selectedLawyerForReview.profile?.isVerified ? 'Payout Active' : 'KYC Pending' }}</span>
             </span>
           </div>
@@ -1108,9 +893,7 @@
               class="btn btn-success flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg"
               (click)="approveLawyerFromDrawer()" [adminTooltip]="'Approve Bar credentials and verify advocate status'"
               tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="14"></admin-icon>
               <span>Approve & Verify</span>
             </button>
 
@@ -1118,10 +901,7 @@
               class="btn btn-danger flex-1 py-2.5 text-xs font-bold flex items-center justify-center gap-1.5 shadow-lg"
               (click)="rejectLawyerFromDrawer()" [adminTooltip]="'Reject Bar credentials with chosen reason'"
               tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <admin-icon name="close" [size]="14"></admin-icon>
               <span>Reject</span>
             </button>
           </div>
@@ -1155,10 +935,7 @@
             {{ selectedLawyerDetail.user?.fullName }}
           </h2>
           <p class="text-xs text-slate-400 flex items-center gap-1">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-indigo-400 shrink-0">
-              <path d="M12 15l-2 5l9-9l-9-9l2 5l-8 4l8 4z"></path>
-            </svg>
+            <admin-icon name="feather" [size]="12" cssClass="text-indigo-400 shrink-0"></admin-icon>
             <span>Bar Council License:</span>
             <strong class="text-indigo-300 font-mono" [adminTooltip]="'Official Bar Council Enrollment ID'"
               tooltipPosition="top">{{
@@ -1171,10 +948,7 @@
 
       <button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
         (click)="closeViewModal()" [adminTooltip]="'Close profile details drawer'" tooltipPosition="left">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+        <admin-icon name="close" [size]="20"></admin-icon>
       </button>
     </div>
 
@@ -1186,10 +960,7 @@
         <div class="flex items-center gap-3">
           <div
             class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
+            <admin-icon name="user" [size]="16"></admin-icon>
           </div>
           <div class="flex flex-col">
             <span class="text-sm font-bold text-slate-100 flex items-center gap-1.5"
@@ -1198,11 +969,7 @@
             </span>
             <span class="text-slate-400 font-mono text-[11px] flex items-center gap-1"
               [adminTooltip]="'Registered email address'" tooltipPosition="bottom">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-slate-500 shrink-0">
-                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                <polyline points="22,6 12,13 2,6"></polyline>
-              </svg>
+              <admin-icon name="mail" [size]="11" cssClass="text-slate-500 shrink-0"></admin-icon>
               {{ selectedLawyerDetail.user?.email }}
             </span>
           </div>
@@ -1224,11 +991,7 @@
         <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1 cursor-help"
           [adminTooltip]="'Primary area of legal specialization'" tooltipPosition="top">
           <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-indigo-400 shrink-0">
-              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
-              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
-            </svg>
+            <admin-icon name="briefcase" [size]="13" cssClass="text-indigo-400 shrink-0"></admin-icon>
             <span>Primary Specialization</span>
           </div>
           <span class="text-slate-100 font-bold text-xs pl-5">{{ selectedLawyerDetail.user?.profile?.specialization ||
@@ -1238,11 +1001,7 @@
         <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1 cursor-help"
           [adminTooltip]="'Primary practice city and court jurisdiction'" tooltipPosition="top">
           <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-rose-400 shrink-0">
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-              <circle cx="12" cy="10" r="3"></circle>
-            </svg>
+            <admin-icon name="map-pin" [size]="13" cssClass="text-rose-400 shrink-0"></admin-icon>
             <span>Practice City & Roster</span>
           </div>
           <span class="text-slate-100 font-bold text-xs pl-5">{{ selectedLawyerDetail.user?.profile?.city ||
@@ -1252,11 +1011,7 @@
         <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1 cursor-help"
           [adminTooltip]="'Years of active legal practice experience'" tooltipPosition="top">
           <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-amber-400 shrink-0">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
+            <admin-icon name="clock" [size]="13" cssClass="text-amber-400 shrink-0"></admin-icon>
             <span>Legal Experience</span>
           </div>
           <span class="text-slate-100 font-bold text-xs pl-5">{{ selectedLawyerDetail.user?.profile?.experienceYears ?
@@ -1266,11 +1021,7 @@
         <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-1 cursor-help"
           [adminTooltip]="'Fee charged per 30-minute consultation slot'" tooltipPosition="top">
           <div class="flex items-center gap-1.5 text-slate-400 text-[11px]">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-emerald-400 shrink-0">
-              <line x1="12" y1="1" x2="12" y2="23"></line>
-              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-            </svg>
+            <admin-icon name="tag" [size]="13" cssClass="text-emerald-400 shrink-0"></admin-icon>
             <span>Consultation Fee Rate</span>
           </div>
           <span class="text-emerald-400 font-bold text-xs pl-5">{{ selectedLawyerDetail.user?.profile?.consultationFee ?
@@ -1285,11 +1036,7 @@
         <div class="flex items-center gap-2.5">
           <div
             class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center font-bold shrink-0">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-              </polygon>
-            </svg>
+            <admin-icon name="star-filled" [size]="16" fill="currentColor"></admin-icon>
           </div>
           <div class="flex flex-col">
             <span class="text-slate-400 text-[11px]">Client Satisfaction & SLA</span>
@@ -1309,11 +1056,8 @@
           [adminTooltip]="selectedLawyerDetail.user?.profile?.isVerified ? 'Payout gateway KYC verified' : 'KYC verification pending'"
           tooltipPosition="top"
           [ngClass]="selectedLawyerDetail.user?.profile?.isVerified ? 'bg-sky-500/10 text-sky-300 border-sky-500/30' : 'bg-slate-800 text-slate-400 border-slate-700'">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="shrink-0" [class.text-sky-400]="selectedLawyerDetail.user?.profile?.isVerified">
-            <rect x="2" y="5" width="20" height="14" rx="2"></rect>
-            <line x1="2" y1="10" x2="22" y2="10"></line>
-          </svg>
+          <admin-icon name="credit-card" [size]="11"
+            [cssClass]="selectedLawyerDetail.user?.profile?.isVerified ? 'text-sky-400 shrink-0' : 'shrink-0'"></admin-icon>
           <span>{{ selectedLawyerDetail.user?.profile?.isVerified ? 'Payout KYC Active' : 'KYC Pending' }}</span>
         </span>
       </div>
@@ -1322,13 +1066,7 @@
       <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col gap-2">
         <h4 class="font-extrabold uppercase tracking-wider text-slate-300 text-[11px] flex items-center gap-1.5"
           [adminTooltip]="'Advocate professional summary and background bio'" tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-indigo-400 shrink-0">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
+          <admin-icon name="file-text" [size]="14" cssClass="text-indigo-400 shrink-0"></admin-icon>
           <span>Professional Bio & Summary</span>
         </h4>
         <p class="text-slate-300 leading-relaxed">{{ selectedLawyerDetail.user?.profile?.bio || 'No background biography
@@ -1341,20 +1079,13 @@
     <div class="p-4 border-t border-slate-800 bg-slate-900/90 flex items-center justify-between gap-3">
       <button class="btn btn-secondary text-xs px-4 py-2 flex items-center gap-1.5" (click)="closeViewModal()"
         [adminTooltip]="'Dismiss advocate profile drawer'" tooltipPosition="top">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="15" y1="9" x2="9" y2="15"></line>
-          <line x1="9" y1="9" x2="15" y2="15"></line>
-        </svg>
+        <admin-icon name="close" [size]="13"></admin-icon>
         <span>Close Drawer</span>
       </button>
       <button class="btn btn-primary text-xs px-4 py-2 flex items-center gap-1.5 shadow-md"
         (click)="openEditModal(selectedLawyerDetail.user); closeViewModal()"
         [adminTooltip]="'Edit advocate profile specifications & credentials'" tooltipPosition="top">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
+        <admin-icon name="edit" [size]="13"></admin-icon>
         <span>Edit Specifications</span>
       </button>
     </div>
@@ -1375,10 +1106,7 @@
       <div class="flex items-center gap-3">
         <div
           class="w-10 h-10 rounded-xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center font-bold text-lg shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-          </svg>
+          <admin-icon name="edit" [size]="20"></admin-icon>
         </div>
         <div class="flex flex-col">
           <h2 class="text-base font-extrabold text-slate-100">Edit Lawyer Specifications</h2>
@@ -1389,10 +1117,7 @@
 
       <button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
         (click)="closeEditModal()" [adminTooltip]="'Close edit drawer'" tooltipPosition="left">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+        <admin-icon name="close" [size]="20"></admin-icon>
       </button>
     </div>
 
@@ -1402,10 +1127,7 @@
       <!-- Identity Security Protection Notice -->
       <div
         class="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 flex items-start gap-2.5">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="shrink-0 mt-0.5 text-indigo-400">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
+        <admin-icon name="shield" [size]="18" cssClass="shrink-0 mt-0.5 text-indigo-400"></admin-icon>
         <span>
           <strong>Security Protection:</strong> Personal account identity (Full Name, Primary Email) is locked and
           managed exclusively by <strong>{{ editingLawyer.fullName }}</strong>. Admins can only configure platform
@@ -1453,9 +1175,7 @@
       <button class="btn btn-secondary text-xs px-4 py-2" (click)="closeEditModal()">Cancel</button>
       <button class="btn btn-primary text-xs px-4 py-2 font-bold flex items-center gap-1.5 shadow-lg"
         (click)="saveLawyerEdit()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+        <admin-icon name="checkmark" [size]="14"></admin-icon>
         <span>Save Changes & Sync</span>
       </button>
     </div>
@@ -1470,23 +1190,13 @@
 
   @if (getOpenActionLawyer()) {
   <button class="dropdown-item" (click)="openDocumentDrawer(getOpenActionLawyer()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-sky-400">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-      <polyline points="14 2 14 8 20 8"></polyline>
-      <line x1="16" y1="13" x2="8" y2="13"></line>
-      <line x1="16" y1="17" x2="8" y2="17"></line>
-    </svg>
+    <admin-icon name="file-text" [size]="14" cssClass="text-sky-400"></admin-icon>
     <span>Review Credentials &amp; Docs</span>
     <span class="dropdown-item-shortcut">DOCS</span>
   </button>
 
   <button class="dropdown-item" (click)="openEditModal(getOpenActionLawyer()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-indigo-400">
-      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-    </svg>
+    <admin-icon name="edit" [size]="14" cssClass="text-indigo-400"></admin-icon>
     <span>Edit Profile Specifications</span>
     <span class="dropdown-item-shortcut">EDIT</span>
   </button>
@@ -1494,22 +1204,14 @@
   @if (getOpenActionLawyer()?.profile?.isVerified) {
   <button class="dropdown-item text-amber-400 hover:bg-amber-500/10"
     (click)="toggleVerification(getOpenActionLawyer()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-amber-400">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="12" y1="8" x2="12" y2="12"></line>
-      <line x1="12" y1="16" x2="12.01" y2="16"></line>
-    </svg>
+    <admin-icon name="alert-circle" [size]="14" cssClass="text-amber-400"></admin-icon>
     <span class="text-amber-400 font-semibold">Revoke Bar Verification</span>
     <span class="dropdown-item-shortcut text-amber-400">Revoke</span>
   </button>
   } @else {
   <button class="dropdown-item text-emerald-400 hover:bg-emerald-500/10"
     (click)="toggleVerification(getOpenActionLawyer()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-emerald-400">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
+    <admin-icon name="checkmark" [size]="14" cssClass="text-emerald-400"></admin-icon>
     <span class="text-emerald-400 font-semibold">Approve Credentials</span>
     <span class="dropdown-item-shortcut text-emerald-400">Approve</span>
   </button>
@@ -1519,11 +1221,7 @@
 
   <button class="dropdown-item danger text-rose-400 hover:bg-rose-500/10"
     (click)="deleteLawyer(getOpenActionLawyer()!.id); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-rose-400">
-      <polyline points="3 6 5 6 21 6"></polyline>
-      <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-    </svg>
+    <admin-icon name="trash" [size]="14" cssClass="text-rose-400"></admin-icon>
     <span class="text-rose-400 font-semibold">Delete Advocate Account</span>
     <span class="dropdown-item-shortcut text-rose-400">Delete</span>
   </button>

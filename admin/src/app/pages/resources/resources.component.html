@@ -43,10 +43,7 @@
           class="btn flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-lg shadow-emerald-950/60 border border-emerald-400/40 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shrink-0 transition-all active:scale-95"
           (click)="openCreateModal()" [adminTooltip]="'Onboard a new court complex or DLSA legal aid center'"
           tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
+          <admin-icon name="plus" [size]="14" [strokeWidth]="2.5"></admin-icon>
           <span>Onboard Institution</span>
         </button>
 
@@ -57,11 +54,7 @@
             class="px-3 py-1.5 text-xs font-semibold text-amber-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
             (click)="onOpenDuplicates()" [adminTooltip]="'Run duplicate detection matching across judicial entries'"
             tooltipPosition="top">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-amber-400">
-              <path
-                d="M8 7v8a2 2 0 0 0 2 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-            </svg>
+            <admin-icon name="copy" [size]="13" cssClass="text-amber-400"></admin-icon>
             <span class="hidden sm:inline">Duplicates</span>
           </button>
 
@@ -70,11 +63,8 @@
             class="px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
             (click)="onGeocodeMissing()" [disabled]="isGeocoding"
             [adminTooltip]="'Batch calculate coordinates for entries missing geo-points'" tooltipPosition="top">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              [class.animate-spin]="isGeocoding" class="text-emerald-400">
-              <path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z" />
-              <circle cx="12" cy="10" r="3" />
-            </svg>
+            <admin-icon name="map-pin" [size]="13"
+              [cssClass]="'text-emerald-400 ' + (isGeocoding ? 'animate-spin' : '')"></admin-icon>
             <span class="hidden sm:inline">Geocode</span>
           </button>
 
@@ -82,35 +72,22 @@
             class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
             (click)="openImportModal()" [adminTooltip]="'Batch Import Pipeline Wizard with dry-run validation'"
             tooltipPosition="top">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-sky-400">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="17 8 12 3 7 8"></polyline>
-              <line x1="12" y1="3" x2="12" y2="15"></line>
-            </svg>
+            <admin-icon name="upload" [size]="13" cssClass="text-sky-400"></admin-icon>
             <span class="hidden sm:inline">Batch Wizard</span>
           </button>
 
           <button
             class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
             (click)="openExportModal()" [adminTooltip]="'Export directory to CSV, JSON, or TSV'" tooltipPosition="top">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-indigo-400">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
+            <admin-icon name="download" [size]="13" cssClass="text-indigo-400"></admin-icon>
             <span class="hidden sm:inline">Export</span>
           </button>
 
           <button
             class="px-2.5 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center justify-center transition-all"
             (click)="fetchResources(true)" [adminTooltip]="'Refresh directory live feed'" tooltipPosition="top">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              [class.animate-spin]="isLoading && !isInitialLoad">
-              <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-              <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-            </svg>
+            <admin-icon name="refresh" [size]="13"
+              [cssClass]="(isLoading && !isInitialLoad) ? 'animate-spin' : ''"></admin-icon>
           </button>
         </div>
       </div>
@@ -125,10 +102,7 @@
         [adminTooltip]="'Total verified judicial institutions across Indian States'">
         <div
           class="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-            <circle cx="12" cy="10" r="3"></circle>
-          </svg>
+          <admin-icon name="map-pin" [size]="15"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           <span class="text-base font-extrabold text-slate-100 leading-tight">{{ summaryMetrics.total }}</span>
@@ -144,10 +118,7 @@
         [adminTooltip]="'Filter verified compliance institutions'">
         <div
           class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <admin-icon name="check-circle" [size]="15" [strokeWidth]="2.5"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           <span class="text-base font-extrabold text-emerald-300 leading-tight">{{ summaryMetrics.verified }}</span>
@@ -162,11 +133,7 @@
         [adminTooltip]="'Filter Court Complexes & Legal Aid DLSAs'">
         <div
           class="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 21h18"></path>
-            <path d="M5 21V7l8-4 8 4v14"></path>
-            <path d="M9 18h6"></path>
-          </svg>
+          <admin-icon name="building" [size]="15"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           <span class="text-base font-extrabold text-indigo-300 leading-tight">{{ summaryMetrics.courts }} / {{
@@ -182,9 +149,7 @@
         [adminTooltip]="'Filter e-Sewa Kendras & LADCS defense units'">
         <div
           class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-          </svg>
+          <admin-icon name="zap" [size]="15"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           <span class="text-base font-extrabold text-amber-300 leading-tight">{{ summaryMetrics.efilingEnabled }} / {{
@@ -256,30 +221,19 @@
           <button type="button" (click)="activeDisplayMode = 'table'"
             class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
             [ngClass]="activeDisplayMode === 'table' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="3" y1="9" x2="21" y2="9"></line>
-              <line x1="3" y1="15" x2="21" y2="15"></line>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
+            <admin-icon name="table" [size]="13"></admin-icon>
             <span>Table</span>
           </button>
           <button type="button" (click)="activeDisplayMode = 'map'"
             class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
             [ngClass]="activeDisplayMode === 'map' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-              <line x1="8" y1="2" x2="8" y2="18"></line>
-              <line x1="16" y1="6" x2="16" y2="22"></line>
-            </svg>
+            <admin-icon name="map" [size]="13"></admin-icon>
             <span>GIS Map</span>
           </button>
           <button type="button" (click)="activeDisplayMode = 'analytics'"
             class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
             [ngClass]="activeDisplayMode === 'analytics' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M18 20V10M12 20V4M6 20v-6"></path>
-            </svg>
+            <admin-icon name="bar-chart" [size]="13"></admin-icon>
             <span>Analytics</span>
           </button>
         </div>
@@ -290,19 +244,16 @@
         <!-- Left Side: Unified Full-Width Search Input with Floating Mode Badge (Pattern 1) -->
         <div class="relative flex-1 max-w-[420px] min-w-[240px]">
           <!-- Left Icon -->
-          <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-slate-400">
-            <svg *ngIf="searchMode === 'keyword'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <svg *ngIf="searchMode === 'ai'" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="text-indigo-400 animate-pulse">
-              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-            </svg>
+          <div
+            class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-slate-400">
+            <admin-icon *ngIf="searchMode === 'keyword'" name="search" [size]="14"></admin-icon>
+            <admin-icon *ngIf="searchMode === 'ai'" name="star" [size]="14"
+              cssClass="text-indigo-400 animate-pulse"></admin-icon>
           </div>
 
           <!-- Keyword Search Input -->
-          <input *ngIf="searchMode === 'keyword'" type="text" [(ngModel)]="search" (ngModelChange)="onSearchChange($event)"
-            placeholder="Search court, DLSA, district, pincode, address..."
+          <input *ngIf="searchMode === 'keyword'" type="text" [(ngModel)]="search"
+            (ngModelChange)="onSearchChange($event)" placeholder="Search court, DLSA, district, pincode, address..."
             class="w-full pl-9 pr-24 py-1.5 h-[34px] rounded-xl border border-slate-700/80 bg-slate-900/90 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
 
           <!-- AI Search Input -->
@@ -316,9 +267,7 @@
             <button *ngIf="searchMode === 'keyword'" type="button" (click)="setSearchMode('ai')"
               [adminTooltip]="'Switch to Natural Language AI Query'" tooltipPosition="top"
               class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all cursor-pointer flex items-center gap-1">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-              </svg>
+              <admin-icon name="star" [size]="10"></admin-icon>
               <span>AI Query</span>
             </button>
 
@@ -327,10 +276,7 @@
               <button type="button" (click)="setSearchMode('keyword')"
                 [adminTooltip]="'Switch to standard keyword search'" tooltipPosition="top"
                 class="px-1.5 py-0.5 rounded-lg text-[10.5px] font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                </svg>
+                <admin-icon name="search" [size]="10"></admin-icon>
                 <span class="hidden sm:inline">Keyword</span>
               </button>
 
@@ -370,6 +316,11 @@
             (visibilityChange)="onColumnVisibilityChange($event)">
           </admin-column-customizer>
 
+          <!-- 5. Saved Filter Views Dropdown Bookmark Manager -->
+          <admin-saved-views storageKey="resources" [currentParams]="activeQueryParamsObj"
+            (viewApply)="onSavedViewApply($event)">
+          </admin-saved-views>
+
           <!-- 5. Advanced Filters Popover Trigger Button -->
           <div class="relative shrink-0" #filtersContainer>
             <button type="button" (click)="toggleMoreFilters($event)"
@@ -377,17 +328,7 @@
               [ngClass]="activeSecondaryFilterCount > 0 || isMoreFiltersOpen ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sky-500/20' : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700/80 border-slate-700/60'"
               [adminTooltip]="'Open advanced filters for district, hierarchy, compliance, and dates'"
               tooltipPosition="top">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="4" y1="21" x2="4" y2="14"></line>
-                <line x1="4" y1="10" x2="4" y2="3"></line>
-                <line x1="12" y1="21" x2="12" y2="12"></line>
-                <line x1="12" y1="8" x2="12" y2="3"></line>
-                <line x1="20" y1="21" x2="20" y2="16"></line>
-                <line x1="20" y1="12" x2="20" y2="3"></line>
-                <line x1="1" y1="14" x2="7" y2="14"></line>
-                <line x1="9" y1="8" x2="15" y2="8"></line>
-                <line x1="17" y1="16" x2="23" y2="16"></line>
-              </svg>
+              <admin-icon name="sliders" [size]="13"></admin-icon>
               <span>Filters</span>
               @if (activeSecondaryFilterCount > 0) {
               <span
@@ -403,19 +344,13 @@
               class="absolute right-0 top-full mt-2 w-[310px] p-3.5 rounded-2xl bg-[#0f172a] border border-slate-700 shadow-2xl z-50 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
               <div class="flex items-center justify-between pb-2 border-b border-slate-800">
                 <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="text-sky-400">
-                    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-                  </svg>
+                  <admin-icon name="filter" [size]="13" cssClass="text-sky-400"></admin-icon>
                   <span>Advanced Registry Filters</span>
                 </span>
                 <button type="button"
                   class="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-800"
                   (click)="closeMoreFilters()" [adminTooltip]="'Close advanced filters'" tooltipPosition="left">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
+                  <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
                 </button>
               </div>
 
@@ -509,10 +444,7 @@
               <button type="button" (click)="removeFilter(pill.key)"
                 class="hover:text-red-400 text-slate-400 ml-0.5 p-0.5 rounded transition-colors shrink-0"
                 [adminTooltip]="'Remove filter: ' + pill.label" tooltipPosition="top">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <admin-icon name="close" [size]="10" [strokeWidth]="2.5"></admin-icon>
               </button>
             </span>
             }
@@ -565,11 +497,7 @@
           <button
             class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
             (click)="selection.clear()" [adminTooltip]="'Clear current selection'" tooltipPosition="top">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              class="text-slate-400">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="10" [strokeWidth]="2.5" cssClass="text-slate-400"></admin-icon>
             <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
           </button>
         </div>
@@ -579,29 +507,21 @@
           <button
             class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
             (click)="bulkVerifyCycles()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
+            <admin-icon name="check-circle" [size]="13" [strokeWidth]="2.5"></admin-icon>
             <span>Bulk Verify (+12m)</span>
           </button>
 
           <button
             class="h-7 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
             (click)="bulkUpdateStatus('approved')">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            <admin-icon name="check" [size]="13" [strokeWidth]="2.5"></admin-icon>
             <span>Bulk Approve</span>
           </button>
 
           <button
             class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
             (click)="bulkDeleteSelected()">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="3 6 5 6 21 6"></polyline>
-              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-            </svg>
+            <admin-icon name="trash" [size]="13"></admin-icon>
             <span>Bulk Delete</span>
           </button>
         </div>
@@ -634,9 +554,7 @@
           message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display institutional directory records."
           [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
           (action)="onColumnVisibilityChange({ institution: true, location: true, facilities: true, contacts: true, compliance: true })">
-          <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
-          </svg>
+          <admin-icon icon name="columns" [size]="28"></admin-icon>
         </admin-empty-state>
         } @else if (!isLoading && resources.length === 0) {
         <!-- Full-Size Unified Empty State -->
@@ -665,21 +583,15 @@
                   <span [class.text-sky-400]="sortBy === 'name'" class="truncate">Institution & Hierarchy</span>
                   @if (sortBy === 'name') {
                   @if (sortOrder === 'asc') {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-sky-400 flex-shrink-0">
-                    <path d="M12 19V5M5 12l7-7 7 7"></path>
-                  </svg>
+                  <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
+                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
                   } @else {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-sky-400 flex-shrink-0">
-                    <path d="M12 5v14M5 12l7 7 7-7"></path>
-                  </svg>
+                  <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
+                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
                   }
                   } @else {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                    <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                  </svg>
+                  <admin-icon name="sort-unsorted" [size]="13"
+                    cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
                   }
                 </div>
               </th>
@@ -695,21 +607,15 @@
                     District</span>
                   @if (sortBy === 'state' || sortBy === 'district') {
                   @if (sortOrder === 'asc') {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-sky-400 flex-shrink-0">
-                    <path d="M12 19V5M5 12l7-7 7 7"></path>
-                  </svg>
+                  <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
+                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
                   } @else {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-sky-400 flex-shrink-0">
-                    <path d="M12 5v14M5 12l7 7 7-7"></path>
-                  </svg>
+                  <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
+                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
                   }
                   } @else {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                    <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                  </svg>
+                  <admin-icon name="sort-unsorted" [size]="13"
+                    cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
                   }
                 </div>
               </th>
@@ -735,21 +641,15 @@
                     Status</span>
                   @if (sortBy === 'lastAuditDate' || sortBy === 'status') {
                   @if (sortOrder === 'asc') {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-sky-400 flex-shrink-0">
-                    <path d="M12 19V5M5 12l7-7 7 7"></path>
-                  </svg>
+                  <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
+                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
                   } @else {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    class="text-sky-400 flex-shrink-0">
-                    <path d="M12 5v14M5 12l7 7 7-7"></path>
-                  </svg>
+                  <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
+                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
                   }
                   } @else {
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                    <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                  </svg>
+                  <admin-icon name="sort-unsorted" [size]="13"
+                    cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
                   }
                 </div>
               </th>
@@ -776,6 +676,10 @@
             @for (r of resources; track (r._id || r.id || $index)) {
             <tr class="table-data-row hover:bg-slate-800/40 transition-all duration-150 cursor-pointer"
               [class.selected-row]="selection.isSelected(r._id || r.id || '')"
+              [class.row-selected]="selection.isSelected(r._id || r.id || '')"
+              [class.critical-row]="((r.feedback?.downvotes || 0) > 0)"
+              [class.warning-row]="((r.feedback?.downvotes || 0) === 0) && (r.status === 'pending' || r.isVerified === false)"
+              [class.pending-row]="((r.feedback?.downvotes || 0) === 0) && (r.status === 'pending' || r.isVerified === false)"
               [class.focused-row]="focusedRowIndex === $index" (click)="onRowClick(r._id || r.id || '')"
               (dblclick)="onRowDblClick(r)">
 
@@ -800,25 +704,13 @@
                     'gov': r.type === 'GovernmentOffice'
                   }">
                     @if (r.type === 'Court') {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M3 21h18"></path>
-                      <path d="M5 21V7l8-4 8 4v14"></path>
-                      <path d="M9 18h6"></path>
-                    </svg>
+                    <admin-icon name="building" [size]="14"></admin-icon>
                     } @else if (r.type === 'LegalAid') {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
-                    </svg>
+                    <admin-icon name="scale" [size]="14"></admin-icon>
                     } @else if (r.type === 'PoliceStation') {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                    </svg>
+                    <admin-icon name="shield" [size]="14"></admin-icon>
                     } @else {
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                      <line x1="9" y1="22" x2="9" y2="22.01"></line>
-                      <line x1="15" y1="22" x2="15" y2="22.01"></line>
-                    </svg>
+                    <admin-icon name="briefcase" [size]="14"></admin-icon>
                     }
                   </div>
 
@@ -836,12 +728,7 @@
                         class="text-slate-400 hover:text-sky-400 transition-colors shrink-0 p-0.5"
                         [adminTooltip]="'Open Official Portal: ' + r.website" tooltipPosition="top"
                         (click)="$event.stopPropagation()">
-                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                          stroke-width="2.5">
-                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                          <polyline points="15 3 21 3 21 9"></polyline>
-                          <line x1="10" y1="14" x2="21" y2="3"></line>
-                        </svg>
+                        <admin-icon name="external-link" [size]="11" [strokeWidth]="2.5"></admin-icon>
                       </a>
                       }
                     </div>
@@ -880,11 +767,7 @@
                   <div class="flex items-center gap-1.5 min-w-0">
                     <div
                       class="w-3.5 h-3.5 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
-                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                        <circle cx="12" cy="10" r="3"></circle>
-                      </svg>
+                      <admin-icon name="map-pin" [size]="9" [strokeWidth]="2.5"></admin-icon>
                     </div>
                     <span class="font-bold text-slate-200 truncate flex-1 min-w-0 text-[12px]"
                       [adminTooltip]="(r.district || r.city ? (r.district || r.city) + ', ' : '') + r.state"
@@ -917,11 +800,7 @@
                     </span>
                     } @else {
                     <div class="inline-flex items-center gap-1 text-slate-300 font-medium text-[11px] min-w-0">
-                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        class="text-sky-400/80 shrink-0">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                      </svg>
+                      <admin-icon name="clock" [size]="10" cssClass="text-sky-400/80 shrink-0"></admin-icon>
                       <span class="whitespace-nowrap font-mono text-[10.5px] text-slate-200">{{
                         getDisplayHours(r.operatingHours, r.type) }}</span>
                     </div>
@@ -960,21 +839,13 @@
                   @if (r.contactNumber | phoneDisplay; as phoneVal) {
                   <div
                     class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono text-[10px] shadow-sm leading-none">
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                      class="text-amber-400 shrink-0">
-                      <path
-                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                      </path>
-                    </svg>
+                    <admin-icon name="phone" [size]="9" cssClass="text-amber-400 shrink-0"></admin-icon>
                     <span class="font-medium tracking-wide whitespace-nowrap">{{ phoneVal }}</span>
                     <button type="button"
                       class="text-amber-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
                       (click)="copyToClipboard(phoneVal, 'Phone Number'); $event.stopPropagation()"
                       [adminTooltip]="'Copy phone number'">
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                      </svg>
+                      <admin-icon name="copy" [size]="8"></admin-icon>
                     </button>
                   </div>
                   }
@@ -982,20 +853,13 @@
                   @if (r.email | emailDisplay; as emailVal) {
                   <div
                     class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono text-[9.5px] shadow-sm max-w-full leading-none">
-                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                      class="text-sky-400 shrink-0">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-                      <polyline points="22,6 12,13 2,6"></polyline>
-                    </svg>
+                    <admin-icon name="mail" [size]="9" cssClass="text-sky-400 shrink-0"></admin-icon>
                     <span class="font-medium truncate max-w-[125px]">{{ emailVal }}</span>
                     <button type="button"
                       class="text-sky-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
                       (click)="copyToClipboard(emailVal, 'Email Address'); $event.stopPropagation()"
                       [adminTooltip]="'Copy email address'">
-                      <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                      </svg>
+                      <admin-icon name="copy" [size]="8"></admin-icon>
                     </button>
                   </div>
                   }
@@ -1034,20 +898,13 @@
                     class="w-6 h-6 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer"
                     (click)="approveSuggestion(r, $event)" [adminTooltip]="'Approve and publish to public directory'"
                     tooltipPosition="top">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="2.5">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
+                    <admin-icon name="check" [size]="12" [strokeWidth]="2.5"></admin-icon>
                   </button>
                   <button type="button"
                     class="w-6 h-6 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer"
                     (click)="rejectSuggestion(r, $event)" [adminTooltip]="'Reject and delete suggestion'"
                     tooltipPosition="top">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                      stroke-width="2.5">
-                      <line x1="18" y1="6" x2="6" y2="18"></line>
-                      <line x1="6" y1="6" x2="18" y2="18"></line>
-                    </svg>
+                    <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
                   </button>
                   }
                   <button #kebabBtn type="button"
@@ -1055,11 +912,7 @@
                     [class.active]="openActionMenuId === (r._id || r.id)"
                     (click)="toggleActionMenu(r._id || r.id || '', kebabBtn, $event)"
                     [adminTooltip]="'Institutional Actions'" tooltipPosition="left">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                      <circle cx="12" cy="5" r="2.2"></circle>
-                      <circle cx="12" cy="12" r="2.2"></circle>
-                      <circle cx="12" cy="19" r="2.2"></circle>
-                    </svg>
+                    <admin-icon name="more-horizontal" [size]="15"></admin-icon>
                   </button>
                 </div>
               </td>
@@ -1084,22 +937,14 @@
       @if (getOpenActionItem()) {
       <!-- 1. Inspect Dossier -->
       <button class="dropdown-item" (click)="openDossier(getOpenActionItem()!); closeActionMenu()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-sky-400">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
+        <admin-icon name="search" [size]="14" cssClass="text-sky-400"></admin-icon>
         <span>Inspect Dossier</span>
         <span class="dropdown-item-shortcut">View</span>
       </button>
 
       <!-- 2. Renew Annual Verification Cycle -->
       <button class="dropdown-item" (click)="renewVerificationCycle(getOpenActionItem()!); closeActionMenu()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-emerald-400">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
+        <admin-icon name="check-circle" [size]="14" cssClass="text-emerald-400"></admin-icon>
         <span>Renew Cycle (+12m)</span>
         <span class="dropdown-item-shortcut">Renew</span>
       </button>
@@ -1107,11 +952,7 @@
       @if ((getOpenActionItem()?.feedback?.downvotes || 0) > 0) {
       <!-- Resolve Reported Issues Action -->
       <button class="dropdown-item" (click)="resolveIssues(getOpenActionItem()!); closeActionMenu()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-rose-400">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
+        <admin-icon name="check-circle" [size]="14" cssClass="text-rose-400"></admin-icon>
         <span class="text-rose-300 font-semibold">Resolve Issues ({{ getOpenActionItem()?.feedback?.downvotes }})</span>
         <span class="dropdown-item-shortcut">Fix</span>
       </button>
@@ -1119,11 +960,7 @@
 
       <!-- 3. Edit Institutional Profile -->
       <button class="dropdown-item" (click)="openEditModal(getOpenActionItem()!); closeActionMenu()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-indigo-400">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
+        <admin-icon name="edit" [size]="14" cssClass="text-indigo-400"></admin-icon>
         <span>Edit Configuration</span>
         <span class="dropdown-item-shortcut">Edit</span>
       </button>
@@ -1131,12 +968,7 @@
       @if (getOpenActionItem()?.website) {
       <a class="dropdown-item" [href]="getOpenActionItem()!.website" target="_blank" rel="noopener noreferrer"
         (click)="closeActionMenu()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-amber-400">
-          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-          <polyline points="15 3 21 3 21 9"></polyline>
-          <line x1="10" y1="14" x2="21" y2="3"></line>
-        </svg>
+        <admin-icon name="external-link" [size]="14" cssClass="text-amber-400"></admin-icon>
         <span>Official Web Portal</span>
         <span class="dropdown-item-shortcut">Link ↗</span>
       </a>
@@ -1146,11 +978,7 @@
 
       <!-- 4. Delete Institutional Record -->
       <button class="dropdown-item danger" (click)="openDeleteModal(getOpenActionItem()!); closeActionMenu()">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-rose-400">
-          <polyline points="3 6 5 6 21 6"></polyline>
-          <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-        </svg>
+        <admin-icon name="trash" [size]="14" cssClass="text-rose-400"></admin-icon>
         <span class="text-rose-400 font-semibold">Delete Institution</span>
         <span class="dropdown-item-shortcut text-rose-400">Del</span>
       </button>

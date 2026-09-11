@@ -1,4 +1,4 @@
-<div class="px-3 py-2 pt-4 w-full flex flex-col gap-2 px-8">
+<div class="py-2 pt-4 w-full flex flex-col gap-2 px-8">
 
   <!-- --- 0. Open Hero Header & Compact Stats Bar --- -->
   <div class="flex flex-col gap-1.5">
@@ -19,22 +19,15 @@
           class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
           (click)="openExportModal()" [adminTooltip]="'Export filtered users directory to CSV spreadsheet'"
           tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+          <admin-icon name="download" [size]="14" [strokeWidth]="2"></admin-icon>
           <span>Export Users</span>
         </button>
 
         <button
           class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
           (click)="refreshData()" [adminTooltip]="'Refresh directory records from backend'" tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            [class.animate-spin]="isLoading && !isInitialLoad">
-            <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-            <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-          </svg>
+          <admin-icon name="refresh" [size]="14" [strokeWidth]="2"
+            [cssClass]="isLoading && !isInitialLoad ? 'animate-spin' : ''"></admin-icon>
           <span>Refresh Directory</span>
         </button>
       </div>
@@ -51,10 +44,7 @@
         [class.active-pill]="selectedRole === '' && isFilterActive" (click)="filterByRoleMetric('')"
         [adminTooltip]="'View total registered directory accounts'" tooltipPosition="top">
         <div class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
+          <admin-icon name="user" [size]="16" [strokeWidth]="2"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -75,10 +65,7 @@
         [adminTooltip]="'Filter System Administrators'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
+          <admin-icon name="key" [size]="16" [strokeWidth]="2"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -99,9 +86,7 @@
         [adminTooltip]="'Filter Lawyer Advocate accounts'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
+          <admin-icon name="award" [size]="16" [strokeWidth]="2"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -121,10 +106,7 @@
         [adminTooltip]="'Percentage of active users with 2FA enabled'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            <polyline points="9 12 11 14 15 10"></polyline>
-          </svg>
+          <admin-icon name="shield" [size]="16" [strokeWidth]="2"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -231,21 +213,8 @@
           class="btn flex items-center gap-1.5 text-xs !px-2.5 py-1 h-7 !rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
           [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
           tooltipPosition="top">
-          @if (piiState.isAllUnmasked) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-            </path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
-          <span>Mask Details</span>
-          } @else {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          <span>Reveal Details</span>
-          }
+          <admin-icon [name]="piiState.isAllUnmasked ? 'eye-off' : 'eye'" [size]="12" [strokeWidth]="2"></admin-icon>
+          <span>{{ piiState.isAllUnmasked ? 'Mask Details' : 'Reveal Details' }}</span>
         </button>
         }
       </div>
@@ -277,19 +246,14 @@
         <button
           class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           (click)="bulkUpdateStatus(true)" [adminTooltip]="'Bulk activate selected user accounts'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          <admin-icon name="checkmark" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Bulk Activate</span>
         </button>
 
         <button
           class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
           (click)="bulkUpdateStatus(false)" [adminTooltip]="'Bulk suspend selected user accounts'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-          </svg>
+          <admin-icon name="slash" [size]="13" [strokeWidth]="2"></admin-icon>
           <span>Bulk Suspend</span>
         </button>
       </div>
@@ -313,9 +277,7 @@
         message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display directory records."
         [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
         (action)="onColumnVisibilityChange({ profile: true, role: true, security: true, auth: true, lastActive: true, status: true })">
-        <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
-        </svg>
+        <admin-icon icon name="columns" [size]="28" [strokeWidth]="2"></admin-icon>
       </admin-empty-state>
       } @else if (!isLoading && users.length === 0) {
       <!-- Full-Size Unified Empty State -->
@@ -340,24 +302,10 @@
               (click)="toggleSort('name')" [adminTooltip]="'Click to sort by user full name'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'name'">User Profile</span>
-                @if (sortBy === 'name') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'name' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'name' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'name' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -369,24 +317,10 @@
               (click)="toggleSort('role')" [adminTooltip]="'Click to sort by account role'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'role'">Role / Privilege</span>
-                @if (sortBy === 'role') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'role' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'role' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'role' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -406,24 +340,11 @@
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'createdAt' || sortBy === 'newest' || sortBy === 'oldest'">Last
                   Active / Joined</span>
-                @if (sortBy === 'createdAt' || sortBy === 'newest' || sortBy === 'oldest') {
-                @if (sortOrder === 'asc' || sortBy === 'oldest') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="(sortBy === 'createdAt' || sortBy === 'newest' || sortBy === 'oldest') ? ((sortOrder === 'asc' || sortBy === 'oldest') ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13"
+                  [strokeWidth]="(sortBy === 'createdAt' || sortBy === 'newest' || sortBy === 'oldest') ? 2.5 : 2"
+                  [cssClass]="(sortBy === 'createdAt' || sortBy === 'newest' || sortBy === 'oldest') ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -435,24 +356,10 @@
               (click)="toggleSort('status')" [adminTooltip]="'Click to sort by active or suspended status'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Status</span>
-                @if (sortBy === 'status') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'status' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'status' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'status' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -516,7 +423,7 @@
           } @else {
           @for (u of users; track u.id; let i = $index) {
           <tr class="table-data-row transition-colors cursor-pointer"
-            [ngClass]="{ 'bg-indigo-950/40 selected-row': selection.isSelected(u.id), 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
+            [ngClass]="{ 'selected-row row-selected': selection.isSelected(u.id), 'critical-row': !u.isActive, 'ring-2 ring-indigo-500/50 bg-slate-800/80': focusedRowIndex === i }"
             (click)="onRowClick(u.id)" (dblclick)="onRowDblClick(u)"
             [adminTooltip]="'Double-click row (or press j/k + Enter) to open Security Drawer'" tooltipPosition="top">
             <td class="p-3.5 text-center w-[40px] min-w-[40px]" (click)="$event.stopPropagation()">
@@ -529,16 +436,14 @@
               <div class="flex items-center gap-3">
                 <div
                   class="w-9 h-9 rounded-full bg-gradient-to-tr from-sky-600 to-indigo-600 text-white font-extrabold text-xs flex items-center justify-center shadow shrink-0">
-                  {{ u.fullName?.charAt(0) || 'U' }}
+                  {{ u.fullName.charAt(0) || 'U' }}
                 </div>
                 <div class="flex flex-col min-w-0 overflow-hidden">
                   <div class="flex items-center gap-1.5">
                     <span class="font-bold text-slate-100 truncate">{{ u.fullName }}</span>
                     @if (u.isEmailVerified) {
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"
-                      [adminTooltip]="'Email address verified'" tooltipPosition="top">
-                      <polyline points="20 6 9 17 4 12"></polyline>
-                    </svg>
+                    <admin-icon name="checkmark" [size]="12" [strokeWidth]="2.5" cssClass="text-emerald-500"
+                      [adminTooltip]="'Email address verified'" tooltipPosition="top"></admin-icon>
                     }
                   </div>
                   <div class="flex items-center gap-1">
@@ -549,21 +454,8 @@
                       class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
                       [adminTooltip]="isPiiUnmasked(u.id, 'email') ? 'Click to Mask Email' : 'Click to Reveal Email'"
                       tooltipPosition="top">
-                      @if (isPiiUnmasked(u.id, 'email')) {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                        </path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                      } @else {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      }
+                      <admin-icon [name]="isPiiUnmasked(u.id, 'email') ? 'eye-off' : 'eye'" [size]="11"
+                        [strokeWidth]="2"></admin-icon>
                     </button>
                   </div>
                 </div>
@@ -636,11 +528,7 @@
                   class="action-menu-btn kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 bg-slate-800/40 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
                   [class.active]="openActionMenuId === u.id" (click)="toggleActionMenu(u.id, kebabBtn, $event)"
                   [adminTooltip]="'Account Actions'" tooltipPosition="left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2.2"></circle>
-                    <circle cx="12" cy="12" r="2.2"></circle>
-                    <circle cx="12" cy="19" r="2.2"></circle>
-                  </svg>
+                  <admin-icon name="more-horizontal" [size]="16"></admin-icon>
                 </button>
               </div>
             </td>
@@ -667,24 +555,14 @@
   @if (getOpenActionUser()) {
   <!-- View Audit Trail & Telemetry -->
   <button class="dropdown-item" (click)="openAuditDrawer(getOpenActionUser()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-sky-400">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-      <polyline points="14 2 14 8 20 8"></polyline>
-      <line x1="16" y1="13" x2="8" y2="13"></line>
-      <line x1="16" y1="17" x2="8" y2="17"></line>
-    </svg>
+    <admin-icon name="shield" [size]="14" [strokeWidth]="2" cssClass="text-sky-400"></admin-icon>
     <span>View Security Drawer</span>
     <span class="dropdown-item-shortcut">IAM</span>
   </button>
 
   <!-- Force Password Reset -->
   <button class="dropdown-item" (click)="sendForcePasswordReset(getOpenActionUser()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-purple-400">
-      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-    </svg>
+    <admin-icon name="key" [size]="14" [strokeWidth]="2" cssClass="text-purple-400"></admin-icon>
     <span>Force Password Reset</span>
     <span class="dropdown-item-shortcut">KEY</span>
   </button>
@@ -692,12 +570,7 @@
   <!-- Impersonate User -->
   @if (getOpenActionUser()!.role !== 'Admin') {
   <button class="dropdown-item" (click)="impersonateUser(getOpenActionUser()!)">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-amber-400">
-      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-      <circle cx="8.5" cy="7" r="4"></circle>
-      <polyline points="17 11 19 13 23 9"></polyline>
-    </svg>
+    <admin-icon name="user" [size]="14" [strokeWidth]="2" cssClass="text-amber-400"></admin-icon>
     <span>Impersonate User</span>
     <span class="dropdown-item-shortcut">AUTH</span>
   </button>
@@ -705,11 +578,7 @@
 
   <!-- Revoke Active Session (Logout) -->
   <button class="dropdown-item" (click)="revokeActiveSessions(getOpenActionUser()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-amber-400">
-      <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-      <line x1="12" y1="2" x2="12" y2="12"></line>
-    </svg>
+    <admin-icon name="log-out" [size]="14" [strokeWidth]="2" cssClass="text-amber-400"></admin-icon>
     <span>Revoke Session (Logout)</span>
     <span class="dropdown-item-shortcut">Revoke</span>
   </button>
@@ -717,9 +586,7 @@
   <!-- Manual Email Verification Override -->
   @if (!getOpenActionUser()!.isEmailVerified) {
   <button class="dropdown-item" (click)="verifyEmailManually(getOpenActionUser()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2">
-      <polyline points="20 6 9 17 4 12"></polyline>
-    </svg>
+    <admin-icon name="checkmark" [size]="14" [strokeWidth]="2" cssClass="text-emerald-400"></admin-icon>
     <span class="text-emerald-400 font-semibold">Verify Email Manually</span>
     <span class="dropdown-item-shortcut">Verify</span>
   </button>
@@ -730,20 +597,13 @@
   <div class="dropdown-divider"></div>
   @if (getOpenActionUser()!.role !== 'Lawyer') {
   <button class="dropdown-item" (click)="changeUserRole(getOpenActionUser()!, 'Lawyer'); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-indigo-400">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-    </svg>
+    <admin-icon name="award" [size]="14" [strokeWidth]="2" cssClass="text-indigo-400"></admin-icon>
     <span>Promote to Lawyer</span>
   </button>
   }
   @if (getOpenActionUser()!.role !== 'Client') {
   <button class="dropdown-item" (click)="changeUserRole(getOpenActionUser()!, 'Client'); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-      class="text-sky-400">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-      <circle cx="12" cy="7" r="4"></circle>
-    </svg>
+    <admin-icon name="user" [size]="14" [strokeWidth]="2" cssClass="text-sky-400"></admin-icon>
     <span>Demote to Client</span>
   </button>
   }
@@ -758,10 +618,7 @@
   </div>
   } @else {
   <button class="dropdown-item danger" (click)="toggleActive(getOpenActionUser()!); closeActionMenu()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-      <circle cx="12" cy="12" r="10"></circle>
-      <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-    </svg>
+    <admin-icon name="slash" [size]="14" [strokeWidth]="2"></admin-icon>
     <span>{{ getOpenActionUser()!.isActive ? 'Suspend Account' : 'Activate Account' }}</span>
   </button>
   }
@@ -804,10 +661,7 @@
 
       <button class="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
         (click)="closeAuditDrawer()" [adminTooltip]="'Close security drawer'" tooltipPosition="left">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+        <admin-icon name="x" [size]="20" [strokeWidth]="2"></admin-icon>
       </button>
     </div>
 
@@ -817,10 +671,7 @@
         [class.border-sky-400]="activeDrawerTab === 'profile'" [class.text-sky-400]="activeDrawerTab === 'profile'"
         [class.border-transparent]="activeDrawerTab !== 'profile'"
         [class.text-slate-400]="activeDrawerTab !== 'profile'" (click)="activeDrawerTab = 'profile'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
+        <admin-icon name="user" [size]="14" [strokeWidth]="2"></admin-icon>
         <span>Identity &amp; Profile</span>
       </button>
 
@@ -828,10 +679,7 @@
         [class.border-sky-400]="activeDrawerTab === 'security'" [class.text-sky-400]="activeDrawerTab === 'security'"
         [class.border-transparent]="activeDrawerTab !== 'security'"
         [class.text-slate-400]="activeDrawerTab !== 'security'" (click)="activeDrawerTab = 'security'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
+        <admin-icon name="key" [size]="14" [strokeWidth]="2"></admin-icon>
         <span>Security &amp; Telemetry</span>
       </button>
 
@@ -839,10 +687,7 @@
         [class.border-sky-400]="activeDrawerTab === 'audit'" [class.text-sky-400]="activeDrawerTab === 'audit'"
         [class.border-transparent]="activeDrawerTab !== 'audit'" [class.text-slate-400]="activeDrawerTab !== 'audit'"
         (click)="activeDrawerTab = 'audit'">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-        </svg>
+        <admin-icon name="clock" [size]="14" [strokeWidth]="2"></admin-icon>
         <span>IAM Audit Trail</span>
       </button>
     </div>
@@ -872,9 +717,7 @@
             <span class="text-slate-400 block text-[11px]">Email Verification</span>
             @if (selectedUserForAudit.isEmailVerified) {
             <span class="text-emerald-400 font-semibold inline-flex items-center gap-1 mt-0.5">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="12" [strokeWidth]="2.5"></admin-icon>
               <span>Verified</span>
             </span>
             } @else {
@@ -968,21 +811,14 @@
           </h3>
           <button (click)="exportUserAuditLogs()"
             class="text-[11px] font-bold text-sky-400 hover:text-sky-300 flex items-center gap-1 transition-colors">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
+            <admin-icon name="download" [size]="12" [strokeWidth]="2"></admin-icon>
             <span>Export Log</span>
           </button>
         </div>
 
         <div class="search-box relative">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+          <admin-icon name="search" [size]="14" [strokeWidth]="2"
+            cssClass="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500"></admin-icon>
           <input type="text" [(ngModel)]="searchAuditLog"
             class="form-input w-full !pl-9 bg-slate-900 border-slate-800 text-slate-200 text-xs py-1.5 rounded-lg"
             placeholder="Search audit logs by keyword or IP..." />

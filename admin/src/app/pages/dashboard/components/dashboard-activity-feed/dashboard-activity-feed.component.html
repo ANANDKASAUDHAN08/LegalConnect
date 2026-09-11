@@ -33,9 +33,7 @@
       <button
         class="px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-slate-700 text-slate-300 transition-all font-medium border border-slate-700 flex items-center gap-1"
         (click)="markAllRead()">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="20 6 9 17 4 12"></polyline>
-        </svg>
+        <admin-icon name="checkmark" [size]="12" strokeWidth="2"></admin-icon>
         <span>Mark Read</span>
       </button>
       }
@@ -58,18 +56,13 @@
                 'bg-red-500/20 text-red-400': event.type === 'security_alert',
                 'bg-indigo-500/20 text-indigo-400': event.type !== 'verification_req' && event.type !== 'security_alert'
               }">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            @if (event.type === 'verification_req') {
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            } @else if (event.type === 'security_alert') {
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="12" y1="8" x2="12" y2="12"></line>
-            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-            } @else {
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-            }
-          </svg>
+          @if (event.type === 'verification_req') {
+          <admin-icon name="shield" [size]="15" strokeWidth="2"></admin-icon>
+          } @else if (event.type === 'security_alert') {
+          <admin-icon name="alert-circle" [size]="15" strokeWidth="2"></admin-icon>
+          } @else {
+          <admin-icon name="clock" [size]="15" strokeWidth="2"></admin-icon>
+          }
         </div>
         <div class="flex flex-col">
           <span class="text-xs font-bold text-slate-200">{{ event.title }}</span>

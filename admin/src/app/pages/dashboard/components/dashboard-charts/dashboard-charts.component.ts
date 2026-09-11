@@ -1,4 +1,4 @@
-import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, ElementRef, ViewChild, AfterViewInit, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { SkeletonComponent } from '../../../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../../../shared/directives/tooltip.directive';
@@ -34,12 +34,15 @@ Chart.register(
   Filler
 );
 
+import { AdminIconComponent } from '../../../../shared/components/icon/icon.component';
+
 @Component({
   selector: 'app-dashboard-charts',
   standalone: true,
-  imports: [CommonModule, SkeletonComponent, TooltipDirective],
+  imports: [CommonModule, SkeletonComponent, TooltipDirective, AdminIconComponent],
   templateUrl: './dashboard-charts.component.html',
-  styleUrl: './dashboard-charts.component.scss'
+  styleUrl: './dashboard-charts.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardChartsComponent implements AfterViewInit, OnChanges {
   @Input() selectedTimeframe: '7D' | '30D' | '90D' | 'YTD' = '30D';

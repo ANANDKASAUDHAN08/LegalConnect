@@ -1,0 +1,100 @@
+@if (isOpen && report) {
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-card" (click)="$event.stopPropagation()" role="dialog" aria-modal="true"
+    aria-labelledby="actionModalTitle">
+    <div class="modal-header">
+      <h3 id="actionModalTitle" class="text-lg font-black text-white flex items-center gap-2">
+        @if (mode === 'resolve') {
+        <span class="text-emerald-400 flex items-center gap-1.5">
+          <admin-icon name="checkmark" [size]="18" strokeWidth="2.5"></admin-icon>
+          <span>Resolve Ticket</span>
+        </span>
+        } @else {
+        <span class="text-slate-300 flex items-center gap-1.5">
+          <admin-icon name="x-circle" [size]="18" strokeWidth="2" cssClass="text-slate-400"></admin-icon>
+          <span>Dismiss (False Positive)</span>
+        </span>
+        }
+        <span class="font-mono text-indigo-400">#{{ report.reportRef }}</span>
+      </h3>
+      <button (click)="close()" class="text-slate-400 hover:text-white p-1 rounded-lg transition-colors"
+        [adminTooltip]="'Close (Esc)'">
+        <admin-icon name="close" [size]="16"></admin-icon>
+      </button>
+    </div>
+
+    <div class="modal-body space-y-4">
+      <!-- Target Recap -->
+      <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs space-y-1">
+        <span class="text-slate-500 block">Reported Target:</span>
+        <strong class="text-white text-sm">[{{ report.targetType }}] {{ report.targetTitle }}</strong>
+        <p class="text-amber-300 font-semibold">{{ report.reasonCategory }}</p>
+      </div>
+
+      <!-- Rationale Preset Quick Templates -->
+      <div class="space-y-1.5">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Quick Compliance
+          Templates</span>
+        <div class="flex flex-wrap gap-1.5">
+          @for (template of presetTemplates; track template) {
+          <button (click)="applyTemplate(template)" type="button" [adminTooltip]="'Apply rationale: ' + template"
+            class="px-2 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 text-[10px] text-slate-300 border border-slate-800 transition-colors text-left truncate max-w-full">
+            {{ template }}
+          </button>
+          }
+        </div>
+      </div>
+
+      @if (mode === 'resolve') {
+      <!-- Resolution Action Dropdown -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-bold text-slate-300">Enforcement Action:</label>
+        <admin-select [options]="resolutionActions" [value]="resolutionAction"
+          [placeholder]="'Select Resolution Action'" (valueChange)="resolutionAction = $event">
+        </admin-select>
+      </div>
+
+      <!-- Cascade Enforcement Checkbox -->
+      <div class="flex items-center gap-2 p-2.5 rounded-xl bg-indigo-950/30 border border-indigo-800/40">
+        <input type="checkbox" [(ngModel)]="cascadeEnforcement" id="cascadeCheck"
+          class="rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer">
+        <label for="cascadeCheck" class="text-xs text-indigo-200 font-semibold cursor-pointer">
+          Cascade enforcement directly to database entity (Soft-delete / Hide record, revoke sessions)
+        </label>
+      </div>
+      }
+
+      <!-- Audit Notes Textarea -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-bold text-slate-300">Moderator Audit Rationale Notes:</label>
+        <textarea [(ngModel)]="moderatorNotes" rows="3"
+          placeholder="Explain the legal or compliance rationale for audit trail..."
+          class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500 font-sans"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer flex items-center justify-end gap-2.5">
+      <button (click)="close()" [adminTooltip]="'Cancel and discard changes'"
+        class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">
+        Cancel
+      </button>
+      <button (click)="submit()" [disabled]="isProcessing"
+        [adminTooltip]="mode === 'resolve' ? 'Execute legal resolution and cascading enforcement' : 'Confirm dismissal as false positive (No violation found)'"
+        class="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all flex items-center gap-1.5 shadow-md"
+        [class.bg-emerald-600]="mode === 'resolve'" [class.hover:bg-emerald-500]="mode === 'resolve'"
+        [class.shadow-emerald-950]="mode === 'resolve'" [class.bg-slate-700]="mode === 'dismiss'"
+        [class.hover:bg-slate-600]="mode === 'dismiss'" [class.shadow-slate-900]="mode === 'dismiss'">
+        @if (isProcessing) {
+        <div class="w-3.5 h-3.5 rounded-full border-2 border-white border-t-transparent animate-spin"></div>
+        <span>Processing...</span>
+        } @else {
+        <admin-icon [name]="mode === 'resolve' ? 'checkmark' : 'x-circle'" [size]="14"
+          [strokeWidth]="mode === 'resolve' ? 2.5 : 2"
+          [cssClass]="mode === 'resolve' ? '' : 'text-slate-300'"></admin-icon>
+        <span>{{ mode === 'resolve' ? 'Confirm Resolution' : 'Confirm Dismissal' }}</span>
+        }
+      </button>
+    </div>
+  </div>
+</div>
+}

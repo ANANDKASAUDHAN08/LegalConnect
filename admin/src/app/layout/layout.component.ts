@@ -9,6 +9,7 @@ import { AdminThemeService } from '../core/services/admin-theme.service';
 import { ActivityStreamService } from '../core/services/activity-stream.service';
 import { CommandPaletteService, CommandPaletteComponent } from '../shared/components/command-palette/command-palette.component';
 import { TwoFactorModalComponent } from '../shared/components/two-factor-modal/two-factor-modal.component';
+import { AdminIconComponent } from '../shared/components/icon/icon.component';
 
 @Component({
   selector: 'admin-layout',
@@ -21,7 +22,8 @@ import { TwoFactorModalComponent } from '../shared/components/two-factor-modal/t
     TooltipDirective,
     DialogComponent,
     CommandPaletteComponent,
-    TwoFactorModalComponent
+    TwoFactorModalComponent,
+    AdminIconComponent
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'

@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, AfterViewInit, HostListener, ElementRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { AdminApiService } from '../../core/admin-api.service';
@@ -22,13 +23,28 @@ import { DateRangePickerComponent, DateRangeEvent } from '../../shared/component
 import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
+import { ConsultationItem, ApiResponse } from '../../core/models/admin.models';
 
 import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+
+export interface ConsultationColumnVisibility {
+  id: boolean;
+  client: boolean;
+  phone: boolean;
+  lawyer: boolean;
+  sla: boolean;
+  message: boolean;
+  status: boolean;
+  createdAt: boolean;
+  [key: string]: boolean;
+}
+
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'admin-consultations',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent, AdminIconComponent],
   templateUrl: './consultations.component.html',
   styleUrl: './consultations.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -50,7 +66,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.piiState.toggleAll(event);
   }
 
-  consultations: any[] = [];
+  consultations: ConsultationItem[] = [];
   isLoading = false;
   isInitialLoad = true;
   isExporting = false;
@@ -75,7 +91,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     { key: 'createdAt', label: 'Requested' }
   ];
 
-  columnVisibility: any = {
+  columnVisibility: ConsultationColumnVisibility = {
     id: true,
     client: true,
     phone: true,
@@ -120,10 +136,16 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   resetColumnVisibility(): void {
-    const keys = Object.keys(this.columnVisibility);
-    const reset: Record<string, boolean> = {};
-    keys.forEach(k => reset[k] = true);
-    this.columnVisibility = reset;
+    this.columnVisibility = {
+      id: true,
+      client: true,
+      phone: true,
+      lawyer: true,
+      sla: true,
+      message: true,
+      status: true,
+      createdAt: true
+    };
     this.cdr.markForCheck();
   }
 
@@ -136,7 +158,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   }
 
   onColumnVisibilityChange(updated: Record<string, boolean>): void {
-    this.columnVisibility = updated;
+    this.columnVisibility = { ...this.columnVisibility, ...updated };
   }
 
   // Export Modal State
@@ -154,7 +176,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     { key: 'createdAt', label: 'Requested Date' }
   ];
 
-  selectedConsultation: any = null;
+  selectedConsultation: ConsultationItem | null = null;
   adminRemarkInput = '';
   isSavingNotes = false;
 
@@ -167,7 +189,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   customEmailMessage = '';
   isDispatchingEmail = false;
 
-  openActionMenuId: string | null = null;
+  openActionMenuId: number | null = null;
   @ViewChild('actionMenu') actionMenuRef!: ActionMenuComponent;
 
   private searchSubject = new Subject<string>();
@@ -257,6 +279,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
   onLimitChange(limitVal: number | string): void {
     this.pagination.limit = typeof limitVal === 'number' ? limitVal : (parseInt(limitVal, 10) || 10);
     this.pagination.page = 1;
+    this.updateUrlParams();
     this.fetchConsultations();
   }
 
@@ -285,6 +308,10 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      if (params['limit']) {
+        const l = parseInt(params['limit'], 10);
+        if (!isNaN(l) && l > 0) this.pagination.limit = l;
+      }
       this.cdr.markForCheck();
       this.fetchConsultations();
     });
@@ -393,6 +420,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
+    if (this.pagination.limit && this.pagination.limit !== 10) queryParams.limit = this.pagination.limit;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -507,7 +535,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     const showLoader = this.isInitialLoad && !cached;
 
     this.api.getConsultations(params).pipe(smartLoading(l => { this.isLoading = l; this.cdr.markForCheck(); }, showLoader)).subscribe({
-      next: (res: any) => {
+      next: (res: ApiResponse<ConsultationItem[]> | { data?: ConsultationItem[]; metrics?: any; pagination?: any; success?: boolean }) => {
         this.isInitialLoad = false;
         if (res.metrics) {
           this.summaryMetrics = res.metrics;
@@ -521,10 +549,11 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         }
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse | Error) => {
         this.isInitialLoad = false;
         if (!cached) {
-          this.toast.error(err?.error?.message || 'Failed to fetch consultation records.');
+          const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+          this.toast.error(msg || 'Failed to fetch consultation records.');
         }
         this.cdr.markForCheck();
       }
@@ -567,7 +596,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         this.cdr.markForCheck();
         this.fetchConsultations();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
         this.toast.error(err?.error?.message || 'Failed to bulk update consultations.');
         this.cdr.markForCheck();
@@ -590,6 +619,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     if (newPage < 1 || newPage > this.pagination.pages || newPage === this.pagination.page) return;
     this.pagination.page = newPage;
     this.updateUrlParams();
+    this.fetchConsultations();
   }
 
   async updateStatus(item: any, newStatus: string): Promise<void> {
@@ -619,7 +649,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         });
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         item.status = previousStatus;
         this.toast.error(err?.error?.message || 'Failed to update status.');
         this.cdr.markForCheck();
@@ -634,7 +664,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         this.cdr.markForCheck();
         this.fetchConsultations();
       },
-      error: (err: any) => { this.toast.error(err?.error?.message || 'Failed to revert status.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to revert status.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -675,12 +705,14 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.api.updateConsultationNotes(this.selectedConsultation.id, this.adminRemarkInput).subscribe({
       next: (res: any) => {
         this.isSavingNotes = false;
-        this.selectedConsultation.adminRemark = this.adminRemarkInput;
+        if (this.selectedConsultation) {
+          this.selectedConsultation.adminRemark = this.adminRemarkInput;
+        }
         this.toast.success('Internal admin notes saved successfully.');
         this.cdr.markForCheck();
         this.fetchConsultations();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isSavingNotes = false;
         this.toast.error(err?.error?.message || 'Failed to save admin notes.');
         this.cdr.markForCheck();
@@ -706,7 +738,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
         this.cdr.markForCheck();
         this.fetchConsultations();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isDispatchingEmail = false;
         this.toast.error(err?.error?.message || 'Failed to dispatch email.');
         this.cdr.markForCheck();
@@ -725,12 +757,12 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     }
   }
 
-  getOpenActionItem(): any | null {
-    if (!this.openActionMenuId) return null;
+  getOpenActionItem(): ConsultationItem | null {
+    if (this.openActionMenuId === null) return null;
     return this.consultations.find(c => c.id === this.openActionMenuId) || null;
   }
 
-  toggleActionMenu(id: string, buttonEl: HTMLElement, event: Event): void {
+  toggleActionMenu(id: number, buttonEl: HTMLElement, event: Event): void {
     event.stopPropagation();
     if (this.openActionMenuId === id) {
       this.openActionMenuId = null;
@@ -756,7 +788,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     this.openActionMenuId = null;
   }
 
-  copyToClipboard(text: string, label: string): void {
+  copyToClipboard(text?: string, label: string = 'Value'): void {
     if (!text) return;
     navigator.clipboard.writeText(text).then(() => {
       this.toast.success(`${label} copied to clipboard!`);
@@ -765,7 +797,7 @@ export class ConsultationsComponent implements OnInit, OnDestroy, AfterViewInit 
     });
   }
 
-  getSlaStatus(createdAt: string): { label: string; class: string; urgent: boolean } {
+  getSlaStatus(createdAt?: string): { label: string; class: string; urgent: boolean } {
     if (!createdAt) return { label: 'Standard', class: 'bg-slate-500/10 text-slate-400 border-slate-500/20', urgent: false };
     const createdDate = new Date(createdAt);
     const now = new Date();

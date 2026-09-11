@@ -19,25 +19,17 @@
 
     <div class="flex flex-wrap items-center gap-2.5">
       <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold"
-        (click)="exportCSV()"
-        [adminTooltip]="'Download complete emergency helpline roster with operational schedules as CSV'"
+        (click)="openExportModal()"
+        [adminTooltip]="'Export emergency helpline roster to CSV or JSON with custom column selection'"
         tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
-        <span>Export CSV</span>
+        <admin-icon name="download" [size]="15"></admin-icon>
+        <span>Export</span>
       </button>
 
       <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold"
         (click)="fetchHelplines()"
         [adminTooltip]="'Sync real-time line telemetry and operational metrics from database'" tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          [class.animate-spin]="isLoading()">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
+        <admin-icon name="refresh" [size]="15" [cssClass]="isLoading() ? 'animate-spin' : ''"></admin-icon>
         <span>Live Sync</span>
       </button>
 
@@ -45,10 +37,7 @@
         (click)="openCreateModal()"
         [adminTooltip]="'Register a new toll-free hotline into the national emergency directory'"
         tooltipPosition="bottom">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="12" y1="5" x2="12" y2="19"></line>
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-        </svg>
+        <admin-icon name="plus" [size]="15"></admin-icon>
         <span>Register Hotline</span>
       </button>
     </div>
@@ -63,11 +52,7 @@
       tooltipPosition="top">
       <div
         class="w-12 h-12 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          <line x1="12" y1="8" x2="12" y2="12"></line>
-          <line x1="12" y1="16" x2="12.01" y2="16"></line>
-        </svg>
+        <admin-icon name="shield" [size]="22"></admin-icon>
       </div>
       <div class="flex flex-col">
         @if (isLoading() && isInitialLoad()) {
@@ -86,10 +71,7 @@
       [adminTooltip]="'Urgent financial crime and cyber fraud reporting desks (1930)'" tooltipPosition="top">
       <div
         class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-        </svg>
+        <admin-icon name="lock" [size]="22"></admin-icon>
       </div>
       <div class="flex flex-col">
         @if (isLoading() && isInitialLoad()) {
@@ -108,9 +90,7 @@
       [adminTooltip]="'Statutory legal aid and tele-law consultation lines (15100, 14468)'" tooltipPosition="top">
       <div
         class="w-12 h-12 rounded-xl bg-sky-500/10 border border-sky-500/30 text-sky-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
-        </svg>
+        <admin-icon name="scale" [size]="22"></admin-icon>
       </div>
       <div class="flex flex-col">
         @if (isLoading() && isInitialLoad()) {
@@ -129,9 +109,7 @@
       [adminTooltip]="'Real-time ratio of operational lines vs. maintenance lines'" tooltipPosition="top">
       <div
         class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center font-bold">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-        </svg>
+        <admin-icon name="activity" [size]="22"></admin-icon>
       </div>
       <div class="flex flex-col">
         @if (isLoading() && isInitialLoad()) {
@@ -180,12 +158,12 @@
 
       <button class="btn btn-secondary flex items-center gap-1.5 px-3 py-2 text-xs font-semibold"
         (click)="resetFilters()" [adminTooltip]="'Reset search and all active filters'" tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polyline points="1 4 1 10 7 10"></polyline>
-          <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-        </svg>
+        <admin-icon name="refresh" [size]="14"></admin-icon>
         <span>Reset</span>
       </button>
+
+      <admin-saved-views storageKey="helplines" [currentParams]="activeQueryParamsObj"
+        (viewApply)="onSavedViewApply($event)"></admin-saved-views>
     </div>
   </div>
 
@@ -203,21 +181,14 @@
       <button class="btn btn-sm btn-success text-xs font-semibold flex items-center gap-1 px-3 py-1.5"
         (click)="bulkSetStatus(true)" [adminTooltip]="'Activate selected helplines across all citizen SOS hubs'"
         tooltipPosition="top">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
+        <admin-icon name="check-circle" [size]="12"></admin-icon>
         <span>Set Active (24/7)</span>
       </button>
 
       <button class="btn btn-sm btn-danger text-xs font-semibold flex items-center gap-1 px-3 py-1.5"
         (click)="bulkSetStatus(false)"
         [adminTooltip]="'Mark selected helplines as offline / undergoing carrier maintenance'" tooltipPosition="top">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <line x1="15" y1="9" x2="9" y2="15"></line>
-          <line x1="9" y1="9" x2="15" y2="15"></line>
-        </svg>
+        <admin-icon name="x-circle" [size]="12"></admin-icon>
         <span>Set Offline</span>
       </button>
     </div>
@@ -264,8 +235,11 @@
           }
           } @else {
           @for (h of filteredHelplines(); track $index) {
-          <tr class="hover:bg-slate-800/40 transition-colors"
-            [ngClass]="{ 'bg-sky-500/10': selectedIds().has(h._id || h.id || '') }">
+          <tr class="table-data-row transition-colors cursor-pointer" [ngClass]="{
+              'selected-row row-selected': selectedIds().has(h._id || h.id || ''),
+              'critical-row': h.priorityTier === 'P0_CRITICAL',
+              'warning-row pending-row': h.priorityTier === 'P1_URGENT'
+            }">
             <td class="p-3.5 text-center">
               <input type="checkbox" [checked]="selectedIds().has(h._id || h.id || '')"
                 (change)="toggleSelectOne(h._id || h.id || '')"
@@ -279,11 +253,7 @@
                     'bg-amber-500/10 text-amber-400 border border-amber-500/30': h.priorityTier === 'P1_URGENT',
                     'bg-sky-500/10 text-sky-400 border border-sky-500/30': !h.priorityTier || h.priorityTier === 'P2_ADVISORY'
                   }">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
+                  <admin-icon name="phone" [size]="14"></admin-icon>
                 </div>
                 <div class="flex flex-col">
                   <span class="text-slate-100 font-bold hover:text-sky-300 cursor-pointer" (click)="openEditModal(h)">
@@ -307,10 +277,7 @@
                 <button class="text-slate-500 hover:text-slate-200 transition-colors p-1"
                   (click)="copyToClipboard(h.number || h.phone || '112', 'Emergency Number')"
                   [adminTooltip]="'Copy number'" tooltipPosition="top">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
+                  <admin-icon name="copy" [size]="12"></admin-icon>
                 </button>
               </div>
             </td>
@@ -330,9 +297,7 @@
                 class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-amber-500/15 text-amber-300 border-amber-500/40 flex items-center gap-1 w-fit"
                 [adminTooltip]="'Urgent Tier: Financial crime freeze and cyber fraud golden-hour desk'"
                 tooltipPosition="top">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-                </svg>
+                <admin-icon name="zap" [size]="10"></admin-icon>
                 <span>P1 Cyber / Fraud</span>
               </span>
               } @else {
@@ -340,9 +305,7 @@
                 class="px-2.5 py-1 rounded-full text-[10px] font-extrabold border bg-sky-500/15 text-sky-300 border-sky-500/40 flex items-center gap-1 w-fit"
                 [adminTooltip]="'Advisory Tier: Statutory legal counseling & free representation'"
                 tooltipPosition="top">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
-                </svg>
+                <admin-icon name="scale" [size]="10"></admin-icon>
                 <span>P2 Legal Aid</span>
               </span>
               }
@@ -352,11 +315,7 @@
             <td class="p-3.5 text-xs text-slate-300">
               <span
                 class="px-2 py-0.5 rounded text-[11px] bg-slate-800 text-slate-300 border border-slate-700 flex items-center gap-1 w-fit">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-sky-400">
-                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                  <circle cx="12" cy="10" r="3"></circle>
-                </svg>
+                <admin-icon name="map-pin" [size]="10" cssClass="text-sky-400"></admin-icon>
                 <span>{{ h.state || 'All India' }}</span>
               </span>
             </td>
@@ -414,36 +373,24 @@
               <div class="flex items-center justify-end gap-1.5">
                 <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="openPingModal(h)"
                   [adminTooltip]="'Record live carrier line verification dial test'" tooltipPosition="top">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="text-amber-400">
-                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-                  </svg>
+                  <admin-icon name="activity" [size]="13" cssClass="text-amber-400"></admin-icon>
                 </button>
 
                 <button class="btn btn-secondary btn-sm text-xs p-1.5" (click)="openEditModal(h)"
                   [adminTooltip]="'Edit emergency hotline schedule & routing'" tooltipPosition="top">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                  </svg>
+                  <admin-icon name="edit" [size]="13"></admin-icon>
                 </button>
 
                 <button class="btn btn-sm text-xs p-1.5" [class.btn-danger]="h.isActive !== false"
                   [class.btn-success]="h.isActive === false" (click)="toggleActive(h)"
                   [adminTooltip]="h.isActive !== false ? 'Set line offline for maintenance' : 'Restore line to active status'"
                   tooltipPosition="top">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-                    <line x1="12" y1="2" x2="12" y2="12"></line>
-                  </svg>
+                  <admin-icon name="power" [size]="13"></admin-icon>
                 </button>
 
                 <button class="btn btn-danger btn-sm text-xs p-1.5" (click)="openDeleteModal(h)"
                   [adminTooltip]="'Permanently delete helpline record'" tooltipPosition="top">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                  </svg>
+                  <admin-icon name="trash" [size]="13"></admin-icon>
                 </button>
               </div>
             </td>
@@ -452,12 +399,7 @@
           <tr>
             <td colspan="9" class="text-center py-12 text-slate-400 text-sm">
               <div class="flex flex-col items-center justify-center">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-                  class="mb-2 text-slate-600">
-                  <path
-                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                  </path>
-                </svg>
+                <admin-icon name="phone" [size]="40" cssClass="mb-2 text-slate-600"></admin-icon>
                 <p class="font-bold text-slate-200 text-sm">No emergency helplines match current criteria.</p>
                 <p class="text-xs text-slate-500 mt-1">Try resetting your filters or onboard a new emergency line.</p>
               </div>
@@ -481,21 +423,14 @@
         <div class="flex items-center gap-2">
           <div
             class="w-8 h-8 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center font-bold">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path
-                d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-              </path>
-            </svg>
+            <admin-icon name="phone" [size]="16"></admin-icon>
           </div>
           <h3 class="text-base font-bold text-slate-100">{{ isEditMode ? 'Edit Emergency Hotline Configuration' :
             'Onboard Emergency Dispatch Hotline' }}</h3>
         </div>
         <button class="text-slate-400 hover:text-slate-200 transition-colors p-1" (click)="closeModal()"
           [adminTooltip]="'Close configuration modal'" tooltipPosition="left">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="close" [size]="18"></admin-icon>
         </button>
       </div>
 
@@ -609,11 +544,7 @@
         <button class="btn btn-primary px-5 py-2 text-xs font-semibold flex items-center gap-1.5"
           (click)="saveHelpline()" [disabled]="isSaving()">
           @if (isSaving()) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="animate-spin">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-          </svg>
+          <admin-icon name="spinner" [size]="14" cssClass="animate-spin"></admin-icon>
           }
           <span>{{ isEditMode ? 'Save Changes' : 'Onboard Helpline' }}</span>
         </button>
@@ -632,9 +563,7 @@
       <div class="flex items-center gap-3 pb-3 border-b border-slate-800">
         <div
           class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400 flex items-center justify-center">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-          </svg>
+          <admin-icon name="activity" [size]="20"></admin-icon>
         </div>
         <div class="flex flex-col">
           <h3 class="text-base font-bold text-slate-100">Live Carrier Heartbeat Dial Test</h3>
@@ -672,11 +601,7 @@
         <button class="btn btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5"
           (click)="executePing()" [disabled]="isPinging()">
           @if (isPinging()) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="animate-spin">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-          </svg>
+          <admin-icon name="spinner" [size]="14" cssClass="animate-spin"></admin-icon>
           }
           <span>Log Verified Heartbeat Ping</span>
         </button>
@@ -684,5 +609,12 @@
     </div>
   </div>
   }
+
+  <!-- --- 6. Export Modal Component --- -->
+  <admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="metrics().total"
+    [filteredCount]="filteredHelplines().length" [selectedCount]="selectedIds().size"
+    [isFilterActive]="selectedIds().size > 0 || !!searchQuery() || !!selectedPriority() || !!selectedCategory() || !!selectedState() || !!selectedStatus()"
+    [columns]="columnDefs" (exportConfirm)="onExportConfirm($event)" (closed)="closeExportModal()">
+  </admin-export-modal>
 
 </div>

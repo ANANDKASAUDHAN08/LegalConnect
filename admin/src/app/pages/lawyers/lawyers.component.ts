@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminApiService } from '../../core/admin-api.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
@@ -22,13 +23,31 @@ import { DateRangePickerComponent, DateRangeEvent } from '../../shared/component
 import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
+import { AdminLawyerProfile, ApiResponse, LawyerListResponse } from '../../core/models/admin.models';
 
 import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
 
 @Component({
   selector: 'admin-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SkeletonComponent,
+    TooltipDirective,
+    SelectComponent,
+    PaginationComponent,
+    ActionMenuComponent,
+    ColumnCustomizerComponent,
+    AdminSearchInputComponent,
+    AdminSortHeaderComponent,
+    AdminEmptyStateComponent,
+    ExportModalComponent,
+    DateRangePickerComponent,
+    AdminSavedViewsComponent,
+    AdminIconComponent
+  ],
   templateUrl: './lawyers.component.html',
   styleUrl: './lawyers.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -459,7 +478,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.lawyerAuditLogs = res.data || [];
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoadingAuditLogs = false;
         this.lawyerAuditLogs = [];
         this.cdr.markForCheck();
@@ -478,7 +497,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         this.fetchLawyerAuditLogs(id);
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isVerifyingRegistry = false;
         this.toast.error(err?.error?.message || 'Bar Registry API check failed.');
         this.cdr.markForCheck();
@@ -489,7 +508,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
   dispatchCopRenewalNotice(id: number): void {
     this.api.dispatchCopRenewalNotice(id).subscribe({
       next: (res: any) => { this.toast.success(res.message || 'COP Renewal notice email dispatched.'); this.cdr.markForCheck(); },
-      error: (err: any) => { this.toast.error(err?.error?.message || 'Failed to dispatch renewal notice.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to dispatch renewal notice.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -522,7 +541,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
 
     this.api.verifyLawyer(l.id, { isVerified: true, remarks: 'Verified & Approved by Bar Council Audit' }).subscribe({
       next: () => { this.swrCache.invalidate('lawyers'); this.cdr.markForCheck(); },
-      error: () => this.cdr.markForCheck()
+      error: (err: HttpErrorResponse) => this.cdr.markForCheck()
     });
   }
 
@@ -547,7 +566,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
 
     this.api.verifyLawyer(l.id, { isVerified: false, remarks: this.rejectionReason }).subscribe({
       next: () => { this.swrCache.invalidate('lawyers'); this.cdr.markForCheck(); },
-      error: () => this.cdr.markForCheck()
+      error: (err: HttpErrorResponse) => this.cdr.markForCheck()
     });
   }
 
@@ -576,7 +595,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         this.fetchLawyers();
       },
-      error: (err: any) => { this.toast.error(err?.error?.message || 'Verification update failed.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Verification update failed.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -601,7 +620,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         this.fetchLawyers();
       },
-      error: (err: any) => { this.toast.error(err?.error?.message || 'Failed to delete advocate profile.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to delete advocate profile.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -654,7 +673,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
         this.fetchLawyers();
       },
-      error: (err: any) => { this.toast.error(err?.error?.message || 'Bulk verification update failed.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Bulk verification update failed.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -697,9 +716,9 @@ export class LawyersComponent implements OnInit, OnDestroy {
         }
         this.exportLawyerData(fullList, config.columns);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isExporting = false;
-        this.toast.error('Failed to fetch complete lawyer records for export.');
+        this.toast.error(err?.error?.message || 'Failed to fetch complete lawyer records for export.');
         this.cdr.markForCheck();
       }
     });
@@ -726,10 +745,11 @@ export class LawyersComponent implements OnInit, OnDestroy {
     const rows = data.map(l => activeCols.map(c => c.extract(l)));
 
     try {
-      CsvExporter.export('legalconnect_lawyers_verification_queue', headers, rows);
+      CsvExporter.export('legalconnect_verified_advocates_audit', headers, rows);
       this.toast.success(`Exported ${data.length} advocate records (${headers.length} columns) to CSV.`);
-    } catch (err: any) {
-      this.toast.error(err.message || 'Export failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
     }
     this.isExporting = false;
     this.isExportModalOpen = false;
@@ -754,6 +774,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
     if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
+    if (this.pagination.limit && this.pagination.limit !== 10) queryParams.limit = this.pagination.limit;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -820,6 +841,10 @@ export class LawyersComponent implements OnInit, OnDestroy {
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      if (params['limit']) {
+        const l = parseInt(params['limit'], 10);
+        if (!isNaN(l) && l > 0) this.pagination.limit = l;
+      }
       this.cdr.markForCheck();
       this.fetchLawyers();
     });
@@ -943,7 +968,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         });
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isInitialLoad = false;
         this.toast.error(err?.error?.message || 'Failed to fetch lawyer verification list.');
         this.cdr.markForCheck();
@@ -981,18 +1006,20 @@ export class LawyersComponent implements OnInit, OnDestroy {
   onPageChange(newPage: number): void {
     this.pagination.page = newPage;
     this.updateUrlParams();
+    this.fetchLawyers();
   }
 
   onLimitChange(newLimit: number): void {
-    this.pagination.limit = newLimit;
+    this.pagination.limit = Number(newLimit) || 10;
     this.pagination.page = 1;
     this.updateUrlParams();
+    this.fetchLawyers();
   }
 
   viewLawyer(id: number): void {
     this.api.getLawyer(id).subscribe({
       next: (res: any) => { this.selectedLawyerDetail = res.data || res; this.cdr.markForCheck(); },
-      error: (err: any) => { this.toast.error(err?.error?.message || 'Failed to view lawyer details.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to view lawyer details.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -1006,7 +1033,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.selectedLawyerDetail = res.data || res;
         this.cdr.markForCheck();
       },
-      error: () => { this.toast.error('Failed to load complete lawyer credentials.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to load complete lawyer credentials.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -1046,7 +1073,7 @@ export class LawyersComponent implements OnInit, OnDestroy {
         this.closeEditModal();
         this.fetchLawyers();
       },
-      error: (err) => { this.toast.error(err?.error?.message || 'Failed to update lawyer profile.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to update lawyer profile.'); this.cdr.markForCheck(); }
     });
   }
 }

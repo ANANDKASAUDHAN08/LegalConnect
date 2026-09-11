@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy, HostListener, ViewChild, ElementRef, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -10,6 +10,9 @@ import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { smartLoading } from '../../core/utils/smart-loading.operator';
+import { ToastService } from '../../shared/services/toast.service';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 
 import {
   Chart,
@@ -46,10 +49,12 @@ import { QuickBroadcastModalComponent } from './components/quick-broadcast-modal
     DashboardChartsComponent,
     DashboardActivityFeedComponent,
     QuickVerifyModalComponent,
-    QuickBroadcastModalComponent
+    QuickBroadcastModalComponent,
+    AdminIconComponent
   ],
   templateUrl: './dashboard.component.html',
-  styleUrl: './dashboard.component.scss'
+  styleUrl: './dashboard.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
   overview: any = null;
@@ -152,7 +157,9 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     public api: AdminApiService,
     public theme: AdminThemeService,
     public activityStream: ActivityStreamService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef,
+    private toast: ToastService
   ) { }
 
   ngOnInit(): void {
@@ -320,7 +327,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         if (this.nodeLatencyHistory.length > 12) this.nodeLatencyHistory.shift();
         this.renderLatencySparklines();
       },
-      error: () => {
+      error: (_err: HttpErrorResponse) => {
         this.nodeLatency = Math.round(performance.now() - t0);
         this.systemHealth.nodeApi = false;
       }
@@ -343,7 +350,7 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         }
         this.renderLatencySparklines();
       },
-      error: () => {
+      error: (_err: HttpErrorResponse) => {
         this.dotnetLatency = Math.round(performance.now() - t1);
         this.systemHealth.dotnetApi = false;
       }
@@ -422,16 +429,18 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.lastRefreshed = new Date();
         setTimeout(() => this.renderAllSparklines(), 150);
       },
-      error: (err) => console.error('Failed to load overview from API', err)
+      error: (err: HttpErrorResponse) => {
+        this.toast.error(err?.error?.message || 'Failed to load overview data from server.');
+      }
     });
   }
 
   fetchSecondaryStats(): void {
     forkJoin({
-      templates: this.api.getTemplateStats().pipe(catchError(err => { console.error('Template stats error', err); return of(null); })),
-      bookmarks: this.api.getBookmarkStats().pipe(catchError(err => { console.error('Bookmark stats error', err); return of(null); })),
-      reviews: this.api.getReviewStats().pipe(catchError(err => { console.error('Review stats error', err); return of(null); })),
-      specializations: this.api.getSpecializationStats().pipe(catchError(err => { console.error('Spec stats error', err); return of(null); }))
+      templates: this.api.getTemplateStats().pipe(catchError(() => of(null))),
+      bookmarks: this.api.getBookmarkStats().pipe(catchError(() => of(null))),
+      reviews: this.api.getReviewStats().pipe(catchError(() => of(null))),
+      specializations: this.api.getSpecializationStats().pipe(catchError(() => of(null)))
     }).subscribe(({ templates, bookmarks, reviews, specializations }) => {
       this.templateStats = templates;
       this.bookmarkStats = bookmarks;
@@ -557,11 +566,11 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     }
 
     forkJoin({
-      reg: this.api.getRegistrationTrends().pipe(catchError(err => { console.error('Reg trends error', err); return of(null); })),
-      logins: this.api.getLoginTrends().pipe(catchError(err => { console.error('Login trends error', err); return of(null); })),
-      cities: this.api.getCityStats().pipe(catchError(err => { console.error('City stats error', err); return of(null); })),
-      consultations: this.api.getConsultationTrends().pipe(catchError(err => { console.error('Consultation trends error', err); return of(null); })),
-      consent: this.api.getConsentStats().pipe(catchError(err => { console.error('Consent stats error', err); return of(null); }))
+      reg: this.api.getRegistrationTrends().pipe(catchError(() => of(null))),
+      logins: this.api.getLoginTrends().pipe(catchError(() => of(null))),
+      cities: this.api.getCityStats().pipe(catchError(() => of(null))),
+      consultations: this.api.getConsultationTrends().pipe(catchError(() => of(null))),
+      consent: this.api.getConsentStats().pipe(catchError(() => of(null)))
     }).subscribe(({ reg, logins, cities, consultations, consent }) => {
       this.regTrendData = reg;
       this.loginTrendData = logins;
@@ -582,8 +591,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.pendingLawyers = res.lawyers || res.data || [];
         this.selectedLawyerForVerify = this.pendingLawyers[0] || null;
       },
-      error: (err) => {
-        console.error('Failed to load pending lawyers', err);
+      error: (err: HttpErrorResponse) => {
+        this.toast.error(err?.error?.message || 'Failed to load pending lawyers.');
         this.pendingLawyers = [];
         this.selectedLawyerForVerify = null;
       }
@@ -615,8 +624,8 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.closeQuickVerifyModal();
         this.fetchOverview(true);
       },
-      error: (err) => {
-        console.error('Lawyer verification error', err);
+      error: (err: HttpErrorResponse) => {
+        this.toast.error(err?.error?.message || 'Lawyer verification failed.');
         this.isSubmittingVerify = false;
         this.closeQuickVerifyModal();
       }
@@ -647,11 +656,10 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
         this.broadcastSuccessMsg = 'Broadcast Announcement successfully dispatched to all platform users!';
         setTimeout(() => this.closeQuickBroadcastModal(), 1500);
       },
-      error: (err) => {
-        console.error('Broadcast announcement error', err);
+      error: (err: HttpErrorResponse) => {
+        this.toast.error(err?.error?.message || 'Failed to dispatch broadcast announcement.');
         this.isSubmittingBroadcast = false;
-        this.broadcastSuccessMsg = 'Broadcast Announcement dispatched!';
-        setTimeout(() => this.closeQuickBroadcastModal(), 1500);
+        this.closeQuickBroadcastModal();
       }
     });
   }

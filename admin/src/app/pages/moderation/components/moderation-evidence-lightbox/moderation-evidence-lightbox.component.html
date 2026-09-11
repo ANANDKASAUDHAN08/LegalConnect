@@ -1,0 +1,46 @@
+@if (isOpen && imageUrl) {
+<div class="fixed inset-0 z-[10000] bg-slate-950/95 backdrop-blur-md flex flex-col animate-fadeIn" role="dialog"
+  aria-modal="true" aria-label="Forensic Evidence Lightbox" (click)="close()">
+  <!-- Lightbox Header Toolbar -->
+  <div class="p-4 border-b border-slate-800 flex items-center justify-between text-white"
+    (click)="$event.stopPropagation()">
+    <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Forensic Evidence Lightbox</span>
+    <div class="flex items-center gap-2">
+      <button (click)="zoomOut()" class="lightbox-btn" [adminTooltip]="'Zoom Out (Reduce magnification)'">
+        <admin-icon name="zoom-out" [size]="14"></admin-icon>
+      </button>
+      <span class="text-xs font-mono w-12 text-center">{{ (zoom * 100).toFixed(0) }}%</span>
+      <button (click)="zoomIn()" class="lightbox-btn" [adminTooltip]="'Zoom In (Increase magnification)'">
+        <admin-icon name="zoom-in" [size]="14"></admin-icon>
+      </button>
+      <button (click)="rotate()" class="lightbox-btn" [adminTooltip]="'Rotate 90° clockwise'">
+        <admin-icon name="rotate-cw" [size]="14"></admin-icon>
+      </button>
+      <button (click)="copyEvidenceUrl()" class="lightbox-btn text-xs px-2.5 flex items-center gap-1"
+        [adminTooltip]="'Copy evidence URL to clipboard'">
+        <admin-icon name="copy" [size]="12"></admin-icon>
+        <span>Copy Link</span>
+      </button>
+      @if (isValidUrl(imageUrl)) {
+      <a [href]="imageUrl" download target="_blank" rel="noopener noreferrer"
+        class="lightbox-btn text-xs px-2.5 no-underline text-white flex items-center gap-1"
+        [adminTooltip]="'Download original evidence image'">
+        <admin-icon name="download" [size]="12"></admin-icon>
+        <span>Download</span>
+      </a>
+      }
+      <button (click)="close()" class="lightbox-btn text-rose-400 hover:text-rose-300 ml-2"
+        [adminTooltip]="'Close fullscreen inspector (Esc)'">
+        <admin-icon name="close" [size]="14"></admin-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Lightbox Center Canvas -->
+  <div class="flex-1 flex items-center justify-center p-6 overflow-auto" (click)="$event.stopPropagation()">
+    <img [src]="imageUrl" alt="Evidence Inspection" decoding="async"
+      class="max-w-[90vw] max-h-[80vh] object-contain transition-transform duration-200 shadow-2xl rounded-xl"
+      [style.transform]="'scale(' + zoom + ') rotate(' + rotation + 'deg)'" />
+  </div>
+</div>
+}

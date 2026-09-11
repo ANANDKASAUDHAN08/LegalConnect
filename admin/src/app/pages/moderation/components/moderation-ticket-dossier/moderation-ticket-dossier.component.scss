@@ -1,0 +1,84 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+}
+
+.dossier-tab {
+  padding: 0.75rem 0.25rem;
+  border-bottom: 2px solid transparent;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 180ms ease;
+  background: transparent;
+  border-top: none;
+  border-left: none;
+  border-right: none;
+  font-size: 12px;
+  font-weight: 700;
+
+  &:hover {
+    color: #f1f5f9;
+  }
+
+  &.active-dossier-tab {
+    color: #38bdf8;
+    border-bottom-color: #38bdf8;
+  }
+}
+
+.dossier-scroll-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  flex: 1 1 auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.6);
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 9999px;
+
+    &:hover {
+      background: #475569;
+    }
+  }
+}
+
+.evidence-preview-container {
+  background: #0b1120;
+  border: 1px solid #1e293b;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  max-height: 240px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: zoom-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 180ms ease;
+}

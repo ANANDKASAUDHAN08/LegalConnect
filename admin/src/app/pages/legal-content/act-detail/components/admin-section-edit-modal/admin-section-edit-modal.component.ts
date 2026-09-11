@@ -13,6 +13,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { EnrichedSection, EnrichedParsedLegalSection } from '../../act-detail.component';
@@ -26,6 +27,7 @@ import { TooltipDirective } from '../../../../../shared/directives/tooltip.direc
 import { AdminApiService } from '../../../../../core/admin-api.service';
 import { ToastService } from '../../../../../shared/services/toast.service';
 import { LegalTextParser } from '../../../../../core/utils/legal-text-parser';
+import { AdminIconComponent } from '../../../../../shared/components/icon/icon.component';
 
 /** Minimum seconds between consecutive AI calls (translate or enhance) */
 const AI_COOLDOWN_SECONDS = 10;
@@ -33,7 +35,7 @@ const AI_COOLDOWN_SECONDS = 10;
 @Component({
   selector: 'admin-section-edit-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, AdminIconComponent],
   templateUrl: './admin-section-edit-modal.component.html',
   styleUrl: './admin-section-edit-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -236,7 +238,7 @@ export class AdminSectionEditModalComponent implements OnInit, OnChanges, OnDest
         }
         this.cdr.markForCheck();
       },
-      error: (err: { error?: { error?: { message?: string }; message?: string } }) => {
+      error: (err: HttpErrorResponse) => {
         this.isTranslating = false;
         this.startAiCooldown();
         const msg = err.error?.error?.message || err.error?.message || 'Failed to translate with AI.';
@@ -282,7 +284,7 @@ export class AdminSectionEditModalComponent implements OnInit, OnChanges, OnDest
         this.onContentChange();
         this.cdr.markForCheck();
       },
-      error: (err: { error?: { error?: { message?: string }; message?: string } }) => {
+      error: (err: HttpErrorResponse) => {
         this.isEnhancing = false;
         this.startAiCooldown();
         const msg = err.error?.error?.message || err.error?.message || 'Failed to enhance with AI.';

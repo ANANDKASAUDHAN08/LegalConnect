@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminApiService } from '../../core/admin-api.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
@@ -22,13 +23,31 @@ import { DateRangePickerComponent, DateRangeEvent } from '../../shared/component
 import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
+import { AdminUser, ApiResponse, UserListResponse } from '../../core/models/admin.models';
 
 import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
 
 @Component({
   selector: 'admin-users',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent, PaginationComponent, ActionMenuComponent, ColumnCustomizerComponent, AdminSearchInputComponent, AdminSortHeaderComponent, AdminEmptyStateComponent, ExportModalComponent, DateRangePickerComponent, AdminSavedViewsComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SkeletonComponent,
+    TooltipDirective,
+    SelectComponent,
+    PaginationComponent,
+    ActionMenuComponent,
+    ColumnCustomizerComponent,
+    AdminSearchInputComponent,
+    AdminSortHeaderComponent,
+    AdminEmptyStateComponent,
+    ExportModalComponent,
+    DateRangePickerComponent,
+    AdminSavedViewsComponent,
+    AdminIconComponent
+  ],
   templateUrl: './users.component.html',
   styleUrl: './users.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -50,7 +69,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.piiState.toggleAll(event);
   }
 
-  users: any[] = [];
+  users: AdminUser[] = [];
   isLoading = false;
   isInitialLoad = true;
   search = '';
@@ -340,7 +359,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     try {
       CsvExporter.export(`user_${this.selectedUserForAudit?.id}_audit_log`, headers, rows);
       this.toast.success('Exported user audit log entries to CSV.');
-    } catch (err: any) {
+    } catch (err: unknown) {
       this.toast.error('Failed to export audit logs.');
     }
   }
@@ -368,7 +387,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         }
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         if (redirectWin) redirectWin.close();
         this.toast.error(err?.error?.message || 'Failed to initiate impersonation session.');
         this.cdr.markForCheck();
@@ -389,7 +408,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         }
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoadingAuditLogs = false;
         this.userAuditLogs = [];
         this.cdr.markForCheck();
@@ -403,7 +422,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.toast.success(`Force Password Reset Email sent to ${user.email}. Temp Key: ${res.tempPassword || 'SEC-89214'}`);
         this.cdr.markForCheck();
       },
-      error: () => { this.toast.error('Password reset dispatch failed.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Password reset dispatch failed.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -415,7 +434,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (confirmed) {
       this.api.revokeUserSessions(user.id).subscribe({
         next: () => { this.toast.success(`All active authentication tokens for "${user.fullName}" revoked.`); this.cdr.markForCheck(); },
-        error: (err) => { this.toast.error(err?.error?.message || 'Failed to revoke active sessions.'); this.cdr.markForCheck(); }
+        error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to revoke active sessions.'); this.cdr.markForCheck(); }
       });
     }
   }
@@ -427,7 +446,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.toast.success(`Email address for ${user.fullName} manually verified.`);
         this.cdr.markForCheck();
       },
-      error: (err) => { this.toast.error(err?.error?.message || 'Failed to verify email.'); this.cdr.markForCheck(); }
+      error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to verify email.'); this.cdr.markForCheck(); }
     });
   }
 
@@ -446,7 +465,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     user.role = newRole;
     this.api.updateUserRole(user.id, newRole).subscribe({
       next: () => { this.toast.success(`Role for ${user.fullName} changed to ${newRole}.`); this.cdr.markForCheck(); },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         user.role = oldRole;
         this.toast.error(err?.error?.message || 'Failed to update user role.');
         this.cdr.markForCheck();
@@ -464,6 +483,10 @@ export class UsersComponent implements OnInit, OnDestroy {
       this.startDate = params['startDate'] || '';
       this.endDate = params['endDate'] || '';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      if (params['limit']) {
+        const l = parseInt(params['limit'], 10);
+        if (!isNaN(l) && l > 0) this.pagination.limit = l;
+      }
       this.cdr.markForCheck();
       this.fetchUsers();
     });
@@ -479,6 +502,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (this.sortBy && this.sortBy !== 'createdAt' && this.sortBy !== 'newest') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
+    if (this.pagination.limit && this.pagination.limit !== 10) queryParams.limit = this.pagination.limit;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -567,7 +591,12 @@ export class UsersComponent implements OnInit, OnDestroy {
         this.isInitialLoad = false;
         if (res.success) {
           this.users = this.sortData(res.data || []);
-          this.pagination = res.pagination;
+          this.pagination = {
+            page: res.pagination?.page || this.pagination.page,
+            limit: res.pagination?.limit || this.pagination.limit,
+            total: res.pagination?.total ?? 0,
+            pages: res.pagination?.pages || Math.ceil((res.pagination?.total || 0) / this.pagination.limit) || 1
+          };
 
           if (res.summary) {
             this.globalTotalUsers = res.summary.totalUsers;
@@ -582,7 +611,7 @@ export class UsersComponent implements OnInit, OnDestroy {
         }
         this.cdr.markForCheck();
       },
-      error: (err) => {
+      error: (err: HttpErrorResponse) => {
         this.isInitialLoad = false;
         if (!cached) {
           this.toast.error(err?.error?.message || 'Failed to load users.');
@@ -665,6 +694,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     if (newPage >= 1 && newPage <= this.pagination.pages) {
       this.pagination.page = newPage;
       this.updateUrlParams();
+      this.fetchUsers();
     }
   }
 
@@ -672,6 +702,7 @@ export class UsersComponent implements OnInit, OnDestroy {
     this.pagination.limit = Number(newLimit) || 10;
     this.pagination.page = 1;
     this.updateUrlParams();
+    this.fetchUsers();
   }
 
   async toggleActive(user: any): Promise<void> {
@@ -693,7 +724,7 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.toast.success(`Account for ${user.fullName} is now ${user.isActive ? 'Active' : 'Deactivated'}.`);
           this.cdr.markForCheck();
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           user.isActive = prevStatus;
           this.toast.error(err?.error?.message || 'Status update failed on server.');
           this.cdr.markForCheck();
@@ -750,7 +781,7 @@ export class UsersComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
           this.fetchUsers();
         },
-        error: (err) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Bulk status update failed.');
           this.cdr.markForCheck();
           this.fetchUsers();
@@ -796,9 +827,9 @@ export class UsersComponent implements OnInit, OnDestroy {
         }
         this.exportUserData(fullList, config.columns);
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isExporting = false;
-        this.toast.error('Failed to fetch complete user records for export.');
+        this.toast.error(err?.error?.message || 'Failed to fetch complete user records for export.');
         this.cdr.markForCheck();
       }
     });
@@ -824,8 +855,9 @@ export class UsersComponent implements OnInit, OnDestroy {
     try {
       CsvExporter.export('legalconnect_user_directory_audit', headers, rows);
       this.toast.success(`Exported ${data.length} user records (${headers.length} columns) to CSV.`);
-    } catch (err: any) {
-      this.toast.error(err.message || 'Export failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
     }
     this.isExporting = false;
     this.isExportModalOpen = false;

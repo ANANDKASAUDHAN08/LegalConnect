@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRe
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AdminApiService } from '../../core/admin-api.service';
@@ -10,6 +11,7 @@ import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 import { CreateActModalComponent } from './create-act-modal/create-act-modal.component';
 import { EditActModalComponent } from './edit-act-modal/edit-act-modal.component';
 import { BareAct } from './legal-content.models';
@@ -47,6 +49,7 @@ interface IndexedAct {
     SkeletonComponent,
     TooltipDirective,
     SelectComponent,
+    AdminIconComponent,
     CreateActModalComponent,
     EditActModalComponent
   ],
@@ -221,7 +224,7 @@ export class LegalContentComponent implements OnInit, OnDestroy {
           this.recomputeFilteredActs();
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err: HttpErrorResponse) => {
           this.isLoading = false;
           this.toast.error('Failed to load Bare Acts directory.');
           this.cdr.markForCheck();
@@ -587,7 +590,7 @@ export class LegalContentComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       },
-      error: (err: any) => console.warn('Failed to sync favorite to backend server:', err)
+      error: (err: HttpErrorResponse) => console.warn('Failed to sync favorite to backend server:', err)
     });
   }
 
@@ -619,7 +622,7 @@ export class LegalContentComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       },
-      error: (err: any) => console.warn('Backend favorites sync unavailable:', err)
+      error: (err: HttpErrorResponse) => console.warn('Backend favorites sync unavailable:', err)
     });
   }
 
@@ -713,7 +716,7 @@ export class LegalContentComponent implements OnInit, OnDestroy {
           this.toast.success(`Act '${shortName}' deleted permanently.`);
           this.fetchActs();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Failed to delete act.');
           this.cdr.markForCheck();
         }

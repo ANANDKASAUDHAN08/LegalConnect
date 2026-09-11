@@ -13,13 +13,7 @@
     <div class="flex items-center justify-between pb-4 border-b border-slate-800/80 relative z-10">
       <div class="flex items-center gap-3.5">
         <div class="p-3 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="12" y1="18" x2="12" y2="12"></line>
-            <line x1="9" y1="15" x2="15" y2="15"></line>
-          </svg>
+          <admin-icon name="file-text" [size]="22"></admin-icon>
         </div>
         <div class="flex flex-col">
           <div class="flex items-center gap-2">
@@ -39,12 +33,7 @@
         <button
           class="p-2 text-slate-400 hover:text-rose-300 rounded-xl hover:bg-rose-500/10 transition-all text-xs font-semibold flex items-center gap-1.5 cursor-pointer"
           (click)="clearAllFields()" [adminTooltip]="'Clear form fields & wipe draft'" tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M3 6h18"></path>
-            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"></path>
-            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"></path>
-          </svg>
+          <admin-icon name="trash" [size]="14"></admin-icon>
           <span class="hidden sm:inline">Reset</span>
         </button>
 
@@ -52,11 +41,7 @@
         <button
           class="p-2 text-slate-400 hover:text-slate-200 rounded-xl hover:bg-white/5 transition-all cursor-pointer"
           (click)="closeModal(true)" [adminTooltip]="'Auto-saves draft and closes'" tooltipPosition="top">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="close" [size]="18"></admin-icon>
         </button>
       </div>
     </div>
@@ -89,11 +74,7 @@
           class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 text-[10px] font-extrabold flex items-center justify-center border border-indigo-500/30">
           1
         </span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
+        <admin-icon name="book" [size]="15" cssClass="text-indigo-400"></admin-icon>
         <span>Step 1: Statutory Essentials</span>
       </button>
 
@@ -103,13 +84,7 @@
         (click)="onTabChange('gazette')">
         <span
           class="w-5 h-5 rounded-full bg-purple-500/20 text-purple-300 text-[10px] font-extrabold flex items-center justify-center border border-purple-500/30">2</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="text-purple-400">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
+        <admin-icon name="calendar" [size]="15" cssClass="text-purple-400"></admin-icon>
         <span>Step 2: Gazette & Preamble</span>
       </button>
 
@@ -119,13 +94,7 @@
         [class.text-slate-400]="activeModalTab !== 'structure'" (click)="onTabChange('structure')">
         <span
           class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-extrabold flex items-center justify-center border border-emerald-500/30">3</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-        </svg>
+        <admin-icon name="file-text" [size]="15" cssClass="text-emerald-400"></admin-icon>
         <span>Step 3: Initial Provision</span>
       </button>
 
@@ -135,11 +104,7 @@
         (click)="onTabChange('json')">
         <span
           class="w-5 h-5 rounded-full bg-cyan-500/20 text-cyan-300 text-[10px] font-extrabold flex items-center justify-center border border-cyan-500/30">4</span>
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400">
-          <polyline points="16 18 22 12 16 6"></polyline>
-          <polyline points="8 6 2 12 8 18"></polyline>
-        </svg>
+        <admin-icon name="code" [size]="15" cssClass="text-cyan-400"></admin-icon>
         <span>Step 4: 2-Way JSON Editor</span>
       </button>
     </div>
@@ -282,10 +247,7 @@
     <div class="flex flex-col gap-4 text-xs animate-in">
       <div class="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-950/20 flex flex-col gap-4">
         <div class="flex items-center gap-2.5 text-indigo-300 font-bold text-xs">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-          </svg>
+          <admin-icon name="folder" [size]="16"></admin-icon>
           <span>Initial Seed Provision (Chapter I & Section 1)</span>
         </div>
 
@@ -337,24 +299,14 @@
           <button
             class="px-2.5 py-1 rounded-lg bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-300 border border-indigo-500/20 font-semibold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
             (click)="syncJsonFromForm()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="23 4 23 10 17 10"></polyline>
-              <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
-            </svg>
+            <admin-icon name="rotate-cw" [size]="12"></admin-icon>
             <span>Sync From Form</span>
           </button>
 
           <button
             class="px-2.5 py-1 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border border-purple-500/20 font-semibold text-[11px] flex items-center gap-1.5 transition-all cursor-pointer"
             (click)="formatJsonText()">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="21" y1="10" x2="7" y2="10"></line>
-              <line x1="21" y1="6" x2="3" y2="6"></line>
-              <line x1="21" y1="14" x2="3" y2="14"></line>
-              <line x1="21" y1="18" x2="7" y2="18"></line>
-            </svg>
+            <admin-icon name="align-right" [size]="12"></admin-icon>
             <span>Format JSON</span>
           </button>
         </div>
@@ -366,11 +318,7 @@
         [ngClass]="isJsonValid ? 'border-slate-800 text-emerald-300 focus:border-indigo-500' : 'border-rose-500/60 text-rose-300 focus:border-rose-500'"></textarea>
 
       <span class="text-[10px] text-slate-400 flex items-center gap-1.5">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          class="text-amber-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M8.5 14.5A6 6 0 1 1 15.5 14.5L14 17.5H10L8.5 14.5Z"></path>
-          <line x1="10" y1="20" x2="14" y2="20"></line>
-        </svg>
+        <admin-icon name="lightbulb" [size]="12" cssClass="text-amber-400 shrink-0"></admin-icon>
         <span>Power User Feature: You can edit or paste raw JSON payload directly above to update all statutory fields
           in real-time.</span>
       </span>
@@ -417,20 +365,10 @@
           [disabled]="isSubmittingAct || !newActForm.actName || !newActForm.shortName || !newActForm.year || shortCodeCollision"
           (click)="submitCreateAct()">
           @if (isSubmittingAct) {
-          <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-            </path>
-          </svg>
+          <admin-icon name="spinner" [size]="16" cssClass="animate-spin text-white"></admin-icon>
           <span>Publishing Act...</span>
           } @else {
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-            <polyline points="7 3 7 8 15 8"></polyline>
-          </svg>
+          <admin-icon name="save" [size]="15"></admin-icon>
           <span>Save & Publish Act</span>
           }
         </button>

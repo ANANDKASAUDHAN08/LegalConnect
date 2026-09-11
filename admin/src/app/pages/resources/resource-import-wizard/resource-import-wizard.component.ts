@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy, HostListener, OnChanges, SimpleChanges, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import * as XLSX from 'xlsx';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
 import { ToastService } from '../../../shared/services/toast.service';
 
@@ -50,10 +49,12 @@ export interface BatchImportExecutionPayload {
   duplicateStrategy: 'skip' | 'upsert' | 'new';
 }
 
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
+
 @Component({
   selector: 'admin-resource-import-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, AdminIconComponent],
   templateUrl: './resource-import-wizard.component.html',
   styleUrl: './resource-import-wizard.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -196,9 +197,10 @@ export class ResourceImportWizardComponent implements OnChanges {
       reader.readAsText(file);
     } else if (ext === 'csv' || ext === 'xlsx' || ext === 'xls') {
       const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
+      reader.onload = async (e: ProgressEvent<FileReader>) => {
         try {
           const data = new Uint8Array(e.target?.result as ArrayBuffer);
+          const XLSX = await import('xlsx');
           const workbook = XLSX.read(data, { type: 'array' });
           const firstSheetName = workbook.SheetNames[0];
           const worksheet = workbook.Sheets[firstSheetName];
@@ -311,7 +313,7 @@ export class ResourceImportWizardComponent implements OnChanges {
   }
 
   // --- Sample Template Generators ---
-  downloadSampleTemplate(format: 'csv' | 'json'): void {
+  async downloadSampleTemplate(format: 'csv' | 'json'): Promise<void> {
     const sampleData = [
       {
         name: 'District & Sessions Court Tis Hazari',
@@ -319,11 +321,11 @@ export class ResourceImportWizardComponent implements OnChanges {
         jurisdictionLevel: 'District',
         state: 'Delhi',
         district: 'Central Delhi',
-        city: 'Delhi',
+        city: 'New Delhi',
         pincode: '110054',
-        address: 'Tis Hazari Court Complex, Central Delhi, Delhi - 110054',
+        address: 'Tis Hazari Courts Complex, Central District, Delhi - 110054',
         phone: '011-23951234',
-        email: 'districtcourt.tishazari@delhicourts.nic.in',
+        email: 'tishazari.court@delhi.gov.in',
         website: 'https://delhidistrictcourts.nic.in',
         lat: 28.6675,
         lng: 77.2185,
@@ -346,15 +348,15 @@ export class ResourceImportWizardComponent implements OnChanges {
         email: 'cyberps-assam@gov.in',
         website: 'https://police.assam.gov.in',
         lat: 26.1685,
-        lng: 91.7512,
+        lng: 91.7582,
         hasEfiling: false,
         hasLADCS: false,
         hasVCRoom: true,
         hasLegalAidClinic: false,
-        isWheelchairAccessible: true
+        isWheelchairAccessible: false
       },
       {
-        name: 'District Legal Services Authority (DLSA) Pune',
+        name: 'District Legal Services Authority Pune',
         type: 'LegalAid',
         jurisdictionLevel: 'District',
         state: 'Maharashtra',
@@ -385,6 +387,7 @@ export class ResourceImportWizardComponent implements OnChanges {
       URL.revokeObjectURL(url);
       this.toast.success('Downloaded Sample JSON Template.');
     } else {
+      const XLSX = await import('xlsx');
       const worksheet = XLSX.utils.json_to_sheet(sampleData);
       const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
       const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });
@@ -399,7 +402,7 @@ export class ResourceImportWizardComponent implements OnChanges {
   }
 
   // --- Export Error Report CSV ---
-  downloadErrorReport(): void {
+  async downloadErrorReport(): Promise<void> {
     if (!this.validationReport || !this.validationReport.items) return;
     const errorItems = this.validationReport.items.filter(i => i.status === 'INVALID' || i.status === 'WARNING');
     if (!errorItems.length) {
@@ -425,6 +428,7 @@ export class ResourceImportWizardComponent implements OnChanges {
       Notes: (item.validationNotes || []).join('; ')
     }));
 
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(exportRows);
     const csvOutput = XLSX.utils.sheet_to_csv(worksheet);
     const blob = new Blob([csvOutput], { type: 'text/csv;charset=utf-8;' });

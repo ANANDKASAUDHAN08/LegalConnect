@@ -1,4 +1,4 @@
-<div class="px-3 pt-3 w-full flex flex-col gap-2 px-8">
+<div class="pt-2 w-full flex flex-col gap-2 px-8">
 
   <!-- --- 0. Header & Moderation Desk Banner --- -->
   <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -16,31 +16,22 @@
         class="btn btn-primary flex items-center px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
         (click)="openExportModal()" [adminTooltip]="'Open custom export modal to download CSV or JSON spreadsheet'"
         tooltipPosition="top">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
+        <admin-icon name="download" [size]="15" [strokeWidth]="2"></admin-icon>
         <span>Export Reviews</span>
       </button>
 
       <a routerLink="/moderation" [queryParams]="{ targetType: 'Review' }"
         class="btn border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition-all no-underline"
         [adminTooltip]="'Open Content Moderation Queue for review disputes & PII flags'" tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-        </svg>
+        <admin-icon name="shield" [size]="14" [strokeWidth]="2"></admin-icon>
         <span>Moderation Queue</span>
       </a>
 
       <button
         class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
         (click)="fetchReviews()" [adminTooltip]="'Refresh review directory from database'" tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          [class.animate-spin]="isLoading">
-          <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-          <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-        </svg>
+        <admin-icon name="refresh" [size]="14" [strokeWidth]="2"
+          [cssClass]="isLoading ? 'animate-spin' : ''"></admin-icon>
         <span>Refresh Desk</span>
       </button>
     </div>
@@ -71,31 +62,11 @@
         class="flex flex-col items-center justify-center p-4 rounded-2xl bg-gradient-to-br from-amber-500/20 to-indigo-600/20 border border-amber-500/30 min-w-[110px]">
         <span class="text-3xl font-black text-amber-300">{{ averageRating }}</span>
         <div class="flex items-center gap-0.5 text-amber-400 text-xs mt-1">
-          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
-          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
-          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
-          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
-          <svg class="w-3.5 h-3.5 fill-amber-400" viewBox="0 0 24 24">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
+          <admin-icon name="star-filled" [size]="14" cssClass="text-amber-400"></admin-icon>
+          <admin-icon name="star-filled" [size]="14" cssClass="text-amber-400"></admin-icon>
+          <admin-icon name="star-filled" [size]="14" cssClass="text-amber-400"></admin-icon>
+          <admin-icon name="star-filled" [size]="14" cssClass="text-amber-400"></admin-icon>
+          <admin-icon name="star-filled" [size]="14" cssClass="text-amber-400"></admin-icon>
         </div>
         <span class="text-[10px] text-slate-400 mt-1 font-medium">Out of 5.0 Stars</span>
       </div>
@@ -169,7 +140,9 @@
       }
       }
     </div>
-  </div> <!-- --- 2. Advanced Search & Filter Bar --- -->
+  </div>
+
+  <!-- --- 2. Advanced Search & Filter Bar --- -->
   <div
     class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
     <div class="flex items-center justify-between gap-2 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
@@ -272,19 +245,14 @@
         <button
           class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           (click)="bulkUpdateModeration('Approved')" [adminTooltip]="'Bulk approve selected reviews'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          <admin-icon name="checkmark" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Bulk Approve &amp; Publish</span>
         </button>
 
         <button
           class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
           (click)="bulkUpdateModeration('Hidden')" [adminTooltip]="'Bulk hide selected reviews'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="x" [size]="13" [strokeWidth]="2"></admin-icon>
           <span>Bulk Hide</span>
         </button>
       </div>
@@ -307,9 +275,7 @@
       <admin-empty-state icon="eye-off" title="All Data Columns Currently Hidden"
         message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display review moderation data."
         [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true" (action)="resetColumnVisibility()">
-        <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
-        </svg>
+        <admin-icon icon name="columns" [size]="28" [strokeWidth]="2"></admin-icon>
       </admin-empty-state>
       } @else if (!isLoading && reviews.length === 0) {
       <!-- Full-Size Unified Empty State -->
@@ -334,24 +300,10 @@
               [adminTooltip]="'Click to sort by reviewer name'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-amber-400]="sortBy === 'userName'">Reviewer</span>
-                @if (sortBy === 'userName') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'userName' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'userName' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'userName' ? 'text-amber-400 shrink-0' : 'text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -361,24 +313,10 @@
               [adminTooltip]="'Click to sort by target advocate name'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-amber-400]="sortBy === 'lawyerName'">Target Advocate / Entity</span>
-                @if (sortBy === 'lawyerName') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'lawyerName' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'lawyerName' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'lawyerName' ? 'text-amber-400 shrink-0' : 'text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -388,24 +326,10 @@
               [adminTooltip]="'Click to sort by star rating'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-amber-400]="sortBy === 'rating'">Rating</span>
-                @if (sortBy === 'rating') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'rating' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'rating' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'rating' ? 'text-amber-400 shrink-0' : 'text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -419,24 +343,10 @@
               [adminTooltip]="'Click to sort by moderation status'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-amber-400]="sortBy === 'moderationStatus'">Moderation State</span>
-                @if (sortBy === 'moderationStatus') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'moderationStatus' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'moderationStatus' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'moderationStatus' ? 'text-amber-400 shrink-0' : 'text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -446,24 +356,10 @@
               [adminTooltip]="'Click to sort by submission date'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-amber-400]="sortBy === 'createdAt'">Submitted At</span>
-                @if (sortBy === 'createdAt') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-amber-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'createdAt' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'createdAt' ? 'text-amber-400 shrink-0' : 'text-slate-600 group-hover:text-amber-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -509,8 +405,11 @@
           } @else {
           @for (rev of reviews; track rev.id) {
           <tr (click)="onRowClick(rev.id)" (dblclick)="onRowDblClick(rev)"
-            class="hover:bg-slate-800/50 transition-colors cursor-pointer select-none"
-            [ngClass]="{ 'bg-amber-500/10': isReviewSelected(rev.id) }">
+            class="table-data-row transition-colors cursor-pointer select-none" [ngClass]="{
+              'selected-row row-selected': isReviewSelected(rev.id),
+              'critical-row': rev.moderationStatus === 'Flagged' || rev.rating <= 2,
+              'warning-row pending-row': (rev.moderationStatus === 'Pending' || rev.rating === 3) && rev.moderationStatus !== 'Flagged' && rev.rating > 2
+            }">
             <td class="p-3.5 text-center" (click)="$event.stopPropagation()">
               <input type="checkbox"
                 class="rounded border-slate-700 bg-slate-800 text-amber-500 focus:ring-amber-500/40 cursor-pointer"
@@ -532,10 +431,8 @@
                     @if (rev.consultationId) {
                     <span class="inline-flex items-center text-emerald-400 shrink-0"
                       [adminTooltip]="'Verified consultation #LC-' + rev.consultationId" tooltipPosition="top">
-                      <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" stroke-width="3"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                      </svg>
+                      <admin-icon name="checkmark" [size]="12" [strokeWidth]="3"
+                        cssClass="text-emerald-400"></admin-icon>
                     </span>
                     }
                   </div>
@@ -551,10 +448,7 @@
               <div class="flex items-center gap-2">
                 <div
                   class="w-6 h-6 rounded-full bg-slate-800 text-sky-400 flex items-center justify-center border border-slate-700 shrink-0">
-                  <svg class="w-3 h-3 text-sky-400" fill="none" stroke="currentColor" stroke-width="2"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18m-9-6l9 6 9-6M3 9l9-6 9 6" />
-                  </svg>
+                  <admin-icon name="scale" [size]="12" [strokeWidth]="2" cssClass="text-sky-400"></admin-icon>
                 </div>
                 <span class="font-bold text-sky-300 text-xs truncate"
                   [adminTooltip]="'Target advocate profile: ' + (rev.targetName || rev.lawyerName || 'Platform')"
@@ -571,11 +465,7 @@
               <span
                 class="rating-stars inline-flex items-center gap-1 font-extrabold text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-1 rounded-full text-xs"
                 [adminTooltip]="'Rating score: ' + rev.rating + ' out of 5 stars'" tooltipPosition="top">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                  </polygon>
-                </svg>
+                <admin-icon name="star-filled" [size]="13" cssClass="text-amber-400"></admin-icon>
                 <span>{{ rev.rating }}/5</span>
               </span>
             </td>
@@ -589,11 +479,8 @@
                 @if (rev.rating <= 2) { <span
                   class="inline-flex items-center gap-1 text-[10px] font-semibold text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20"
                   [adminTooltip]="'Low rating feedback requires moderator verification'" tooltipPosition="top">
-                  <svg class="w-3 h-3 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.5"
-                    viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                  </svg>
+                  <admin-icon name="alert-triangle" [size]="12" [strokeWidth]="2.5"
+                    cssClass="text-rose-400"></admin-icon>
                   <span>Low Rating Alert</span>
                   </span>
                   }
@@ -603,11 +490,8 @@
                     class="inline-flex items-center gap-1 text-[10px] font-bold text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30 animate-pulse"
                     [adminTooltip]="'Advocate requested removal review: ' + (rev.disputeReason || 'Dispute requested')"
                     tooltipPosition="top">
-                    <svg class="w-3 h-3 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                      stroke-width="2">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
+                    <admin-icon name="alert-triangle" [size]="12" [strokeWidth]="2"
+                      cssClass="text-amber-400"></admin-icon>
                     <span>Dispute Requested</span>
                   </span>
                   }
@@ -682,11 +566,7 @@
                   class="action-menu-btn kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
                   [class.active]="openActionMenuId === rev.id" (click)="toggleActionMenu(rev.id, kebabBtn, $event)"
                   [adminTooltip]="'Review Audit Actions'" tooltipPosition="left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2.2"></circle>
-                    <circle cx="12" cy="12" r="2.2"></circle>
-                    <circle cx="12" cy="19" r="2.2"></circle>
-                  </svg>
+                  <admin-icon name="more-horizontal" [size]="16"></admin-icon>
                 </button>
               </div>
             </td>
@@ -759,10 +639,7 @@
         <button type="button" (click)="activeDrawerTab = 'dispute'"
           [class]="activeDrawerTab === 'dispute' ? 'bg-amber-500/20 text-amber-300 font-bold shadow-xs' : 'text-rose-400 hover:text-rose-300 font-bold'"
           class="flex-1 py-1.5 px-2 rounded-lg transition-all text-center animate-pulse flex items-center justify-center gap-1">
-          <svg class="w-3 h-3 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
+          <admin-icon name="alert-triangle" [size]="12" [strokeWidth]="2" cssClass="text-rose-400"></admin-icon>
           <span>Dispute</span>
         </button>
         }
@@ -866,10 +743,7 @@
             </button>
             } @else {
             <span class="text-[10px] text-emerald-400 font-bold flex items-center gap-1">
-              <svg class="w-3 h-3 text-emerald-400" fill="none" stroke="currentColor" stroke-width="3"
-                viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-              </svg>
+              <admin-icon name="checkmark" [size]="12" [strokeWidth]="3" cssClass="text-emerald-400"></admin-icon>
               <span>Response Approved</span>
             </span>
             }
@@ -905,11 +779,8 @@
       <div class="flex flex-col gap-4 text-xs">
         <div
           class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-300 leading-normal flex items-start gap-2">
-          <svg class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-            stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751A11.959 11.959 0 0112 2.714z" />
-          </svg>
+          <admin-icon name="shield" [size]="16" [strokeWidth]="2"
+            cssClass="text-amber-400 flex-shrink-0 mt-0.5"></admin-icon>
           <div>
             <strong>Inline PII & Confidentiality Redaction Tool:</strong> Sanitize sensitive client data (case docket
             numbers, private phone numbers, settlement amounts) before publishing publicly.
@@ -923,11 +794,7 @@
               class="px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
               [adminTooltip]="'Run pattern scanner to automatically detect and replace phone numbers, dockets, emails & figures'"
               tooltipPosition="left">
-              <svg class="w-3.5 h-3.5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z" />
-              </svg>
+              <admin-icon name="zap" [size]="14" [strokeWidth]="2" cssClass="text-amber-400"></admin-icon>
               <span>Auto-Detect & Redact PII</span>
             </button>
           </div>
@@ -949,10 +816,7 @@
       <div class="flex flex-col gap-4 text-xs">
         <div class="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 flex flex-col gap-2">
           <strong class="font-bold text-rose-300 text-sm flex items-center gap-1.5">
-            <svg class="w-4 h-4 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-            </svg>
+            <admin-icon name="alert-triangle" [size]="16" [strokeWidth]="2" cssClass="text-rose-400"></admin-icon>
             <span>Advocate Removal Dispute Request</span>
           </strong>
           <p class="text-slate-300">The target advocate submitted a formal dispute requesting removal of this review.
@@ -974,17 +838,13 @@
           <button type="button" (click)="resolveDispute('Upheld')"
             class="btn bg-rose-600 hover:bg-rose-500 text-white font-bold px-4 py-2.5 rounded-xl shadow-md transition-all flex-1 flex items-center justify-center gap-1.5"
             [adminTooltip]="'Uphold advocate dispute and hide review from public profile'" tooltipPosition="top">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
+            <admin-icon name="checkmark" [size]="14" [strokeWidth]="2.5"></admin-icon>
             <span>Upheld (Hide Review)</span>
           </button>
           <button type="button" (click)="resolveDispute('Rejected')"
             class="btn bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold px-4 py-2.5 rounded-xl border border-slate-700 transition-all flex-1 flex items-center justify-center gap-1.5"
             [adminTooltip]="'Reject advocate dispute and keep review published'" tooltipPosition="top">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+            <admin-icon name="x" [size]="14" [strokeWidth]="2.5"></admin-icon>
             <span>Reject Dispute (Keep Published)</span>
           </button>
         </div>
@@ -1052,22 +912,14 @@
     headerLabel="Review Audit Actions" [dropdownWidth]="190" [dropdownHeight]="165" (closed)="closeActionMenu()">
     @if (getOpenActionReview()) {
     <button class="dropdown-item" (click)="openInspectModal(getOpenActionReview()!); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-sky-400">
-        <path
-          d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-        <circle cx="12" cy="12" r="3" />
-      </svg>
+      <admin-icon name="eye" [size]="14" [strokeWidth]="2" cssClass="text-sky-400"></admin-icon>
       <span>Inspect Review</span>
       <span class="dropdown-item-shortcut">INSPECT</span>
     </button>
 
     @if (getOpenActionReview()!.moderationStatus !== 'Approved') {
     <button class="dropdown-item" (click)="updateModeration(getOpenActionReview()!, 'Approved'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-emerald-400">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
+      <admin-icon name="checkmark" [size]="14" [strokeWidth]="2" cssClass="text-emerald-400"></admin-icon>
       <span>Approve & Publish</span>
       <span class="dropdown-item-shortcut">APPROVE</span>
     </button>
@@ -1076,22 +928,14 @@
     @if (getOpenActionReview()!.moderationStatus !== 'Hidden') {
     <button class="dropdown-item"
       (click)="updateModeration(getOpenActionReview()!, 'Hidden', 'Quarantined by Moderator'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-amber-400">
-        <path
-          d="M3.98 8.223A10.477 10.477 0 001.934 12C3.226 16.338 7.244 19.5 12 19.5c.993 0 1.953-.138 2.863-.395M6.228 6.228A10.45 10.45 0 0112 4.5c4.756 0 8.773 3.162 10.065 7.498a10.523 10.523 0 01-4.293 5.774M6.228 6.228L3 3m3.228 3.228l3.65 3.65m7.894 7.894L21 21m-3.228-3.228l-3.65-3.65m0 0a3 3 0 10-4.243-4.243m4.242 4.242L9.88 9.88" />
-      </svg>
+      <admin-icon name="eye-off" [size]="14" [strokeWidth]="2" cssClass="text-amber-400"></admin-icon>
       <span>Hide Review</span>
       <span class="dropdown-item-shortcut">HIDE</span>
     </button>
     }
 
     <button class="dropdown-item danger" (click)="deleteReview(getOpenActionReview()!.id); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-rose-400">
-        <path
-          d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-      </svg>
+      <admin-icon name="trash" [size]="14" [strokeWidth]="2" cssClass="text-rose-400"></admin-icon>
       <span class="text-rose-400 font-semibold">Delete Permanently</span>
       <span class="dropdown-item-shortcut">DELETE</span>
     </button>

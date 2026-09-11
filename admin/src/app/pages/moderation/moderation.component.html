@@ -1,167 +1,494 @@
-<div class="moderation-page p-6 max-w-[1800px] mx-auto space-y-6">
+<div class="moderation-page pt-4 w-full flex flex-col gap-2 px-8 animate-in">
 
-  <!-- Header & KPI Bar -->
-  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-    <div>
-      <div class="flex items-center gap-2">
-        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            class="text-amber-400">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          Content Moderation Desk
+  <!-- ========================================================================= -->
+  <!-- 0. COMMAND HEADER: Title, Compliance Badges, View Switcher & Quick Actions -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col gap-2">
+    <!-- Row 1: Workspace Title & View Mode Switcher -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <div class="flex items-center gap-2.5 flex-wrap">
+        <div
+          class="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+          <admin-icon name="shield" [size]="20" [strokeWidth]="2.2"></admin-icon>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2 shrink-0">
+          <span>Content Moderation</span>
+          <span class="text-amber-400">&</span>
+          <span class="text-slate-200">Trust Desk</span>
         </h1>
         <span
-          class="px-2.5 py-0.5 rounded-full text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
-          Trust & Safety
+          class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 flex items-center gap-1.5 shrink-0"
+          [adminTooltip]="'Enforcing DPDP Act §8 personal data protection and Bar Council regulatory compliance'">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>DPDP & Bar Council Compliant</span>
         </span>
       </div>
-      <p class="text-xs text-slate-400 mt-1">Review flagged content, citizen disputes, inaccurate institutional
-        directories, and safety violations</p>
+
+      <!-- Dual View Mode Switcher (Level with Workspace Title) -->
+      <div
+        class="inline-flex rounded-xl bg-slate-900/90 p-1 border border-slate-800 shadow-inner shrink-0 self-start sm:self-auto">
+        <button (click)="setViewMode('table')" [class.active-view]="viewMode === 'table'" class="view-toggle-btn"
+          [adminTooltip]="'Switch to High-Density Spreadsheet Table View (Batch Ops)'">
+          <admin-icon name="table" [size]="14" [strokeWidth]="2"></admin-icon>
+          <span>Table View</span>
+        </button>
+        <button (click)="setViewMode('split')" [class.active-view]="viewMode === 'split'" class="view-toggle-btn"
+          [adminTooltip]="'Switch to Split-Pane Linear-style Triage Workspace'">
+          <admin-icon name="sidebar" [size]="14" [strokeWidth]="2"></admin-icon>
+          <span>Split Triage</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Quick Actions -->
-    <div class="flex items-center gap-2">
-      <button (click)="loadQueue(); loadStats()"
-        class="btn-refresh inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition-all">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67" />
-        </svg>
-        <span>Refresh Queue</span>
-      </button>
+    <!-- Row 2: Subtitle Context & Operational Action Buttons -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <p class="text-xs text-slate-400 leading-relaxed max-w-2xl">
+        Triage citizen reports, address advocate grievances, redact sensitive personal data (PII), quarantine fraudulent
+        reviews, and enforce platform trust regulations.
+      </p>
+
+      <!-- Action Buttons Cluster (Aligned neatly with description) -->
+      <div class="flex items-center gap-2 flex-wrap sm:flex-nowrap shrink-0">
+        <!-- Analytics & SLA Velocity Modal Button -->
+        <button
+          class="btn border border-indigo-500/30 bg-indigo-950/40 hover:bg-indigo-900/60 text-indigo-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all shadow-sm shrink-0"
+          (click)="openAnalyticsModal()"
+          [adminTooltip]="'View 7-day velocity, SLA compliance, and moderator leaderboard'" tooltipPosition="top">
+          <admin-icon name="bar-chart" [size]="14" [strokeWidth]="2"></admin-icon>
+          <span>Analytics</span>
+        </button>
+
+        <!-- Export Button (Matching other admin desks) -->
+        <button
+          class="btn btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
+          (click)="openExportModal()" [adminTooltip]="'Export moderation queue to CSV or JSON spreadsheet'"
+          tooltipPosition="top">
+          <admin-icon name="download" [size]="14" [strokeWidth]="2"></admin-icon>
+          <span>Export Queue</span>
+        </button>
+
+        <!-- Share Deep-Link Button (MNC feature: 1-click shareable filtered URL) -->
+        <button
+          class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0"
+          (click)="copyShareableLink($event)"
+          [adminTooltip]="'Copy direct shareable URL with active filters & selected ticket to clipboard'"
+          tooltipPosition="top">
+          <admin-icon name="link" [size]="14" [strokeWidth]="2"></admin-icon>
+          <span>Share</span>
+        </button>
+
+        <!-- Refresh Button (Matching other admin desks) -->
+        <button
+          class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0"
+          (click)="refreshData()" [adminTooltip]="'Refresh moderation queue from backend'" tooltipPosition="top">
+          <admin-icon name="refresh" [size]="14" [strokeWidth]="2"
+            [cssClass]="isLoading ? 'animate-spin' : ''"></admin-icon>
+          <span>Refresh</span>
+        </button>
+      </div>
     </div>
   </div>
 
-  <!-- KPI Metric Cards Grid -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-    <!-- Pending Card -->
-    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+  <!-- Single Subtle Gradient Fade Divider -->
+  <div class="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"></div>
+
+  <!-- ========================================================================= -->
+  <!-- 1. TELEMETRY & SLA KPI COMMAND DECK with Shimmer Skeleton States           -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+    <!-- Pending Triage Card -->
+    <div
+      class="kpi-card p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md flex items-center gap-3.5 relative overflow-hidden cursor-pointer"
+      (click)="selectedStatus = (selectedStatus === 'Pending' ? '' : 'Pending'); onFilterChange()"
+      [adminTooltip]="'Tickets awaiting moderator triage and compliance action (Click to filter)'">
       <div
-        class="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
+        class="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400 shrink-0">
+        <admin-icon name="clock" [size]="20" [strokeWidth]="2"></admin-icon>
       </div>
-      <div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Pending Review</span>
-        <span class="text-2xl font-black text-white leading-none">{{ stats?.pendingCount || 0 }}</span>
+      <div class="min-w-0 flex-1">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Pending Triage</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <admin-skeleton width="60px" height="24px" borderRadius="6px" />
+        } @else {
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-2xl font-black text-white leading-none">{{ stats.pendingCount }}</span>
+          @if (stats.pendingCount > 0) {
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping"></span>
+          }
+        </div>
+        }
       </div>
     </div>
 
-    <!-- Critical Pending Card -->
-    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+    <!-- Critical / PII Escalations Card -->
+    <div
+      class="kpi-card p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md flex items-center gap-3.5 relative overflow-hidden cursor-pointer"
+      (click)="selectedSeverity = (selectedSeverity === 'Critical' ? '' : 'Critical'); onFilterChange()"
+      [class.ring-2]="selectedSeverity === 'Critical'" [class.ring-rose-500]="selectedSeverity === 'Critical'"
+      [adminTooltip]="'High-risk DPDP PII breaches, fake bar registrations, or fraud (Click to toggle filter)'">
       <div
-        class="w-12 h-12 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
+        class="w-11 h-11 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 shrink-0">
+        <admin-icon name="alert-triangle" [size]="20" [strokeWidth]="2"></admin-icon>
       </div>
-      <div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Critical / PII</span>
-        <span class="text-2xl font-black text-rose-400 leading-none">{{ stats?.criticalPendingCount || 0 }}</span>
+      <div class="min-w-0 flex-1">
+        <span class="text-[10px] font-bold text-rose-300 uppercase tracking-wider block truncate">Critical / PII</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <admin-skeleton width="60px" height="24px" borderRadius="6px" />
+        } @else {
+        <div class="flex items-center gap-2 mt-0.5">
+          <span class="text-2xl font-black text-rose-400 leading-none">{{ stats.criticalPendingCount }}</span>
+          <span class="text-[10px] font-bold text-rose-400/80 uppercase">Urgent SLA</span>
+        </div>
+        }
       </div>
     </div>
 
     <!-- Resolved Today Card -->
-    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+    <div
+      class="kpi-card p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md flex items-center gap-3.5 relative overflow-hidden"
+      [adminTooltip]="'Reports resolved or dismissed within the last 24 hours'">
       <div
-        class="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
+        class="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+        <admin-icon name="check-circle" [size]="20" [strokeWidth]="2"></admin-icon>
       </div>
-      <div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Resolved Today</span>
-        <span class="text-2xl font-black text-emerald-400 leading-none">{{ stats?.resolvedTodayCount || 0 }}</span>
+      <div class="min-w-0 flex-1">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Resolved Today</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <admin-skeleton width="60px" height="24px" borderRadius="6px" />
+        } @else {
+        <span class="text-2xl font-black text-emerald-400 leading-none block mt-0.5">{{ stats.resolvedTodayCount
+          }}</span>
+        }
       </div>
     </div>
 
-    <!-- SLA Time Card -->
-    <div class="kpi-card p-4 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-sm flex items-center gap-4">
+    <!-- Avg SLA Turnaround Card -->
+    <div
+      class="kpi-card p-4 rounded-2xl bg-slate-900/80 border border-slate-800/80 shadow-md flex items-center gap-3.5 relative overflow-hidden"
+      [adminTooltip]="'Average duration between report ingestion and administrator resolution'">
       <div
-        class="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
+        class="w-11 h-11 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
+        <admin-icon name="zap" [size]="20" [strokeWidth]="2"></admin-icon>
       </div>
-      <div>
-        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Avg Resolution SLA</span>
-        <span class="text-2xl font-black text-indigo-400 leading-none">{{ stats?.averageResolutionMinutes ?
-          stats!.averageResolutionMinutes + ' min' : '< 15 min' }}</span>
+      <div class="min-w-0 flex-1">
+        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block truncate">Resolution
+          Velocity</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <admin-skeleton width="60px" height="24px" borderRadius="6px" />
+        } @else {
+        <span class="text-2xl font-black text-indigo-400 leading-none block mt-0.5">
+          {{ stats.averageResolutionMinutes ? stats.averageResolutionMinutes + ' min' : '< 15 min' }} </span>
+            }
       </div>
     </div>
   </div>
 
-  <!-- Filter & Bulk Actions Bar -->
-  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 space-y-3">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-      <!-- Left Filters -->
-      <div class="flex flex-wrap items-center gap-2.5">
-        <!-- Status Tabs -->
-        <div class="inline-flex rounded-xl bg-slate-950 p-1 border border-slate-800">
-          <button (click)="selectedStatus = 'Pending'; onFilterChange()"
-            [class.active-tab]="selectedStatus === 'Pending'" class="filter-tab">Pending</button>
-          <button (click)="selectedStatus = 'UnderReview'; onFilterChange()"
-            [class.active-tab]="selectedStatus === 'UnderReview'" class="filter-tab">In Review</button>
-          <button (click)="selectedStatus = 'Resolved'; onFilterChange()"
-            [class.active-tab]="selectedStatus === 'Resolved'" class="filter-tab">Resolved</button>
-          <button (click)="selectedStatus = 'Dismissed'; onFilterChange()"
-            [class.active-tab]="selectedStatus === 'Dismissed'" class="filter-tab">Dismissed</button>
-          <button (click)="selectedStatus = ''; onFilterChange()" [class.active-tab]="selectedStatus === ''"
-            class="filter-tab">All</button>
-        </div>
+  <!-- ========================================================================= -->
+  <!-- 2. UNIFIED TRIAGE COMMAND DECK (Status Queues + Entity Mix + Micro Bar)  -->
+  <!-- ========================================================================= -->
+  <div
+    class="glass-card unified-triage-deck px-3 py-2 rounded-xl border border-white/10 bg-slate-900/90 shadow-lg relative overflow-hidden flex items-center justify-between gap-3 flex-wrap lg:flex-nowrap">
 
-        <!-- Target Type Select -->
-        <select [(ngModel)]="selectedType" (change)="onFilterChange()" class="filter-select">
-          <option value="">All Entity Types</option>
-          <option value="Review">Reviews / Disputes</option>
-          <option value="LegalResource">Legal Resources</option>
-          <option value="Lawyer">Lawyer Profiles</option>
-          <option value="Helpline">Helplines</option>
-          <option value="BareActSection">Bare Acts</option>
-          <option value="Template">Templates</option>
-        </select>
+    <!-- LEFT: Primary Lifecycle Status Tabs -->
+    <div class="inline-flex rounded-xl bg-slate-950/60 p-1 border border-slate-800/80 shadow-inner shrink-0"
+      role="tablist" aria-label="Lifecycle Status Review Queues">
+      <button (click)="selectedStatus = ''; onFilterChange()" [class.active-tab]="selectedStatus === ''" role="tab"
+        [attr.aria-selected]="selectedStatus === ''" class="filter-tab"
+        [adminTooltip]="'Show all reports across all lifecycle statuses'">
+        <span>All</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-4 h-3.5 rounded-full bg-slate-800 animate-pulse inline-block align-middle ml-1"></span>
+        } @else {
+        <span class="badge-count">{{ totalReportsCount }}</span>
+        }
+      </button>
+      <button (click)="selectedStatus = 'Pending'; onFilterChange()" [class.active-tab]="selectedStatus === 'Pending'"
+        role="tab" [attr.aria-selected]="selectedStatus === 'Pending'" class="filter-tab"
+        [adminTooltip]="'Show pending tickets awaiting review'">
+        <span>Pending</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-4 h-3.5 rounded-full bg-slate-800 animate-pulse inline-block align-middle ml-1"></span>
+        } @else {
+        <span class="badge-count">{{ stats.pendingCount }}</span>
+        }
+      </button>
+      <button (click)="selectedStatus = 'Investigating'; onFilterChange()" role="tab"
+        [attr.aria-selected]="selectedStatus === 'Investigating'"
+        [class.active-tab]="selectedStatus === 'Investigating'" class="filter-tab"
+        [adminTooltip]="'Show tickets currently claimed or undergoing investigation'">
+        <span>In Review</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-4 h-3.5 rounded-full bg-slate-800 animate-pulse inline-block align-middle ml-1"></span>
+        } @else {
+        <span class="badge-count">{{ stats.underReviewCount }}</span>
+        }
+      </button>
+      <button (click)="selectedStatus = 'Resolved'; onFilterChange()" [class.active-tab]="selectedStatus === 'Resolved'"
+        role="tab" [attr.aria-selected]="selectedStatus === 'Resolved'" class="filter-tab"
+        [adminTooltip]="'Show reports marked as resolved with enforcement'">
+        <span>Resolved</span>
+      </button>
+      <button (click)="selectedStatus = 'Dismissed'; onFilterChange()" role="tab"
+        [attr.aria-selected]="selectedStatus === 'Dismissed'" [class.active-tab]="selectedStatus === 'Dismissed'"
+        class="filter-tab" [adminTooltip]="'Show false alarms or duplicate dismissed reports'">
+        <span>Dismissed</span>
+      </button>
+    </div>
 
-        <!-- Severity Select -->
-        <select [(ngModel)]="selectedSeverity" (change)="onFilterChange()" class="filter-select">
-          <option value="">All Severities</option>
-          <option value="Critical">Critical</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
-        </select>
+    <!-- RIGHT: Compact Entity Distribution Chips Cluster -->
+    <div class="flex items-center gap-1.5 flex-wrap text-xs ml-auto min-w-0">
+      <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mr-1 hidden xl:inline">Entity:</span>
+
+      <button (click)="selectedType = 'Review'; onFilterChange()" class="dist-chip"
+        [class.active-dist]="selectedType === 'Review'"
+        [adminTooltip]="'Filter by Reviews & Client Feedback (' + (stats?.reportsByType?.['Review'] || 0) + ')'">
+        <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+        <span class="font-medium text-slate-300">Reviews</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-3.5 h-2.5 rounded bg-slate-800 animate-pulse inline-block align-middle"></span>
+        } @else {
+        <span class="text-slate-500 font-mono text-[10px]">({{ stats.reportsByType['Review'] || 0 }})</span>
+        }
+      </button>
+
+      <button (click)="selectedType = 'Lawyer'; onFilterChange()" class="dist-chip"
+        [class.active-dist]="selectedType === 'Lawyer'"
+        [adminTooltip]="'Filter by Advocate & Lawyer Profiles (' + (stats?.reportsByType?.['Lawyer'] || 0) + ')'">
+        <span class="w-2 h-2 rounded-full bg-indigo-400"></span>
+        <span class="font-medium text-slate-300">Lawyers</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-3.5 h-2.5 rounded bg-slate-800 animate-pulse inline-block align-middle"></span>
+        } @else {
+        <span class="text-slate-500 font-mono text-[10px]">({{ stats.reportsByType['Lawyer'] || 0 }})</span>
+        }
+      </button>
+
+      <button (click)="selectedType = 'LegalResource'; onFilterChange()" class="dist-chip"
+        [class.active-dist]="selectedType === 'LegalResource'"
+        [adminTooltip]="'Filter by Legal Aid & Institutional Resources (' + (stats?.reportsByType?.['LegalResource'] || 0) + ')'">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="font-medium text-slate-300">Resources</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-3.5 h-2.5 rounded bg-slate-800 animate-pulse inline-block align-middle"></span>
+        } @else {
+        <span class="text-slate-500 font-mono text-[10px]">({{ stats.reportsByType['LegalResource'] || 0 }})</span>
+        }
+      </button>
+
+      <button (click)="selectedType = 'Helpline'; onFilterChange()" class="dist-chip"
+        [class.active-dist]="selectedType === 'Helpline'"
+        [adminTooltip]="'Filter by Citizen Emergency Helplines (' + (stats?.reportsByType?.['Helpline'] || 0) + ')'">
+        <span class="w-2 h-2 rounded-full bg-rose-400"></span>
+        <span class="font-medium text-slate-300">Helplines</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-3.5 h-2.5 rounded bg-slate-800 animate-pulse inline-block align-middle"></span>
+        } @else {
+        <span class="text-slate-500 font-mono text-[10px]">({{ stats.reportsByType['Helpline'] || 0 }})</span>
+        }
+      </button>
+
+      <button (click)="selectedType = 'BareActSection'; onFilterChange()" class="dist-chip"
+        [class.active-dist]="selectedType === 'BareActSection'"
+        [adminTooltip]="'Filter by Statutory Bare Act Sections (' + (stats?.reportsByType?.['BareActSection'] || 0) + ')'">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        <span class="font-medium text-slate-300">Bare Acts</span>
+        @if (!stats || (isLoading && isInitialLoad)) {
+        <span class="w-3.5 h-2.5 rounded bg-slate-800 animate-pulse inline-block align-middle"></span>
+        } @else {
+        <span class="text-slate-500 font-mono text-[10px]">({{ stats.reportsByType['BareActSection'] || 0 }})</span>
+        }
+      </button>
+
+      @if (selectedType) {
+      <button (click)="selectedType = ''; onFilterChange()"
+        class="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 ml-1 px-1.5 py-1 rounded bg-indigo-500/10 border border-indigo-500/20 transition-colors inline-flex items-center gap-1"
+        [adminTooltip]="'Clear entity filter to view all types'">
+        <span>Clear</span>
+        <admin-icon name="close" [size]="10" strokeWidth="2.5"></admin-icon>
+      </button>
+      }
+    </div>
+
+    <!-- INTEGRATED BOTTOM MICRO-DISTRIBUTION BAR (2.5px Precision Track) -->
+    <div class="absolute bottom-0 left-0 right-0 h-[2.5px] bg-slate-800/80 flex overflow-hidden pointer-events-auto"
+      [adminTooltip]="'Proportional entity breakdown across active queue'">
+      @if (!stats || (isLoading && isInitialLoad)) {
+      <div class="w-full h-full bg-gradient-to-r from-transparent via-indigo-500/50 to-transparent animate-pulse"></div>
+      } @else {
+      <div class="bg-amber-400 hover:brightness-125 transition-all duration-500 cursor-pointer"
+        [style.width.%]="getDistributionPercent('Review')" (click)="selectedType = 'Review'; onFilterChange()"
+        [adminTooltip]="'Reviews & Feedback: ' + getDistributionPercent('Review') + '% (' + (stats.reportsByType['Review'] || 0) + ')'">
       </div>
+      <div class="bg-indigo-400 hover:brightness-125 transition-all duration-500 cursor-pointer"
+        [style.width.%]="getDistributionPercent('Lawyer')" (click)="selectedType = 'Lawyer'; onFilterChange()"
+        [adminTooltip]="'Lawyer Profiles: ' + getDistributionPercent('Lawyer') + '% (' + (stats.reportsByType['Lawyer'] || 0) + ')'">
+      </div>
+      <div class="bg-emerald-400 hover:brightness-125 transition-all duration-500 cursor-pointer"
+        [style.width.%]="getDistributionPercent('LegalResource')"
+        (click)="selectedType = 'LegalResource'; onFilterChange()"
+        [adminTooltip]="'Legal Resources: ' + getDistributionPercent('LegalResource') + '% (' + (stats.reportsByType['LegalResource'] || 0) + ')'">
+      </div>
+      <div class="bg-rose-400 hover:brightness-125 transition-all duration-500 cursor-pointer"
+        [style.width.%]="getDistributionPercent('Helpline')" (click)="selectedType = 'Helpline'; onFilterChange()"
+        [adminTooltip]="'Citizen Helplines: ' + getDistributionPercent('Helpline') + '% (' + (stats.reportsByType['Helpline'] || 0) + ')'">
+      </div>
+      <div class="bg-cyan-400 hover:brightness-125 transition-all duration-500 cursor-pointer"
+        [style.width.%]="getDistributionPercent('BareActSection')"
+        (click)="selectedType = 'BareActSection'; onFilterChange()"
+        [adminTooltip]="'Bare Act Sections: ' + getDistributionPercent('BareActSection') + '% (' + (stats.reportsByType['BareActSection'] || 0) + ')'">
+      </div>
+      }
+    </div>
+  </div>
 
-      <!-- Right: Search -->
-      <div class="w-full sm:w-72">
-        <admin-search-input [placeholder]="'Search reference, user, or reason...'" [value]="searchQuery"
-          (searchChange)="onSearch($event)"></admin-search-input>
+  <!-- ========================================================================= -->
+  <!-- 3. ADVANCED FILTER & SEARCH TOOLBAR (Standard Admin Portal Layout)        -->
+  <!-- ========================================================================= -->
+  <div
+    class="glass-card page-filters p-3 rounded-xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-xl overflow-visible">
+    <!-- Top Controls Row (Option 2 Layout) -->
+    <div class="flex items-center justify-between gap-2.5 w-full flex-wrap xl:flex-nowrap overflow-visible min-w-0">
+      <!-- Search Input (Left - Standard Placement Across All Pages) -->
+      <admin-search-input class="flex-1 min-w-[250px] max-w-[300px]" [value]="searchQuery"
+        placeholder="Search reference, reason, or reporter..." tooltip="Type query to auto-debounce search by 300ms"
+        (searchChange)="onSearch($event)" minWidth="100%" maxWidth="100%">
+      </admin-search-input>
+
+      <!-- Unified Filters & Tools Cluster (Right) -->
+      <div class="flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
+        <!-- 1. Target Entity Dropdown using admin-select with rich icon -->
+        <admin-select [options]="typeOptions" [value]="selectedType" icon="file-text"
+          (valueChange)="selectedType = $event; onFilterChange();" minWidth="150px" maxWidth="210px"
+          [tooltip]="selectedType ? ('Reported Entity: ' + getSelectedTypeLabel()) : 'Filter by reported entity classification (Reviews, Lawyers, Resources, Helplines, Bare Acts)'"
+          tooltipPosition="top">
+        </admin-select>
+
+        <!-- 2. Severity Dropdown using admin-select with rich icon -->
+        <admin-select [options]="severityOptions" [value]="selectedSeverity" icon="shield"
+          (valueChange)="selectedSeverity = $event; onFilterChange();" minWidth="145px" maxWidth="195px"
+          [tooltip]="selectedSeverity ? ('Severity Tier: ' + selectedSeverity) : 'Filter by compliance risk severity tier'"
+          tooltipPosition="top">
+        </admin-select>
+
+        <!-- 3. Saved Filter Views Dropdown Bookmark Manager -->
+        <admin-saved-views storageKey="moderation" [currentParams]="activeQueryParamsObj"
+          (viewApply)="onSavedViewApply($event)">
+        </admin-saved-views>
+
+        <!-- 4. Column Customizer (Table Mode Only) -->
+        @if (viewMode === 'table') {
+        <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
+          (visibilityChange)="onColumnVisibilityChange($event)">
+        </admin-column-customizer>
+        }
+
+        <!-- 5. Custom Date Range Filter -->
+        <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-amber-400"
+          tooltip="Filter reports by creation date bounds" (rangeChange)="onDateRangeChange($event)">
+        </admin-date-range-picker>
       </div>
     </div>
 
-    <!-- Bulk Action Strip -->
+    <!-- ROW 2: Active Filters Badges & Result Counts (Matching Resources & Top SaaS UI) -->
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 min-h-[32px] w-full min-w-0">
+      @if (hasQueryFilter) {
+      <!-- Left Side: Filtered Badge (Static) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <span
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-semibold shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          Filtered
+        </span>
+      </div>
+
+      <!-- Middle: Scrollable Active Filter Badges Container -->
+      <div class="active-chips-scroll-wrapper relative min-w-0 flex-1 flex items-center overflow-hidden">
+        <div class="active-chips-scroll flex items-center gap-1.5 overflow-x-auto min-w-0 w-full py-0.5">
+          @for (pill of activeFilterPills; track pill.key) {
+          <div [adminTooltip]="pill.label" tooltipPosition="top"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[10px] font-medium shadow-sm transition-all hover:border-sky-500/40 shrink-0 max-w-[210px]"
+            [class.text-amber-300]="pill.key === 'sort'" [class.border-amber-500]="pill.key === 'sort'">
+            @if (pill.key === 'sort') {
+            <admin-icon [name]="sortOrder === 'asc' ? 'sort-asc' : 'sort-desc'" [size]="10" [strokeWidth]="2.5"
+              cssClass="text-amber-400 shrink-0"></admin-icon>
+            }
+            <span class="truncate">{{ pill.label }}</span>
+            <button type="button" (click)="removeFilter(pill.key)"
+              class="hover:text-red-400 text-slate-400 ml-0.5 p-0.5 rounded transition-colors shrink-0"
+              [adminTooltip]="getFilterPillTooltip(pill)" tooltipPosition="top">
+              <admin-icon name="close" [size]="10" strokeWidth="2.5"></admin-icon>
+            </button>
+          </div>
+          }
+        </div>
+      </div>
+
+      <!-- Right Side: Clear All & Result Count -->
+      <div class="flex items-center gap-2.5 shrink-0 ml-auto pl-2">
+        <button (click)="resetAllFilters()"
+          class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors shrink-0"
+          [adminTooltip]="'Reset all search and filters'" tooltipPosition="top">
+          Clear All
+        </button>
+        <span class="text-slate-600 font-light select-none">|</span>
+        <span class="text-slate-400 text-xs font-medium shrink-0">
+          Showing <strong class="text-slate-200">{{ reports.length }}</strong> matching
+          (filtered from <strong class="text-slate-200">{{ totalReportsCount }}</strong> total)
+        </span>
+      </div>
+      } @else {
+      <!-- Idle Status Indicator (Matches Resources Page Screenshot) -->
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400/80"></span>
+          All moderation queue filters active & up to date
+        </span>
+      </div>
+
+      <!-- Total Count -->
+      <div class="flex items-center gap-2 shrink-0 ml-auto">
+        <span class="text-slate-400 text-xs font-medium">
+          Showing all <strong class="text-slate-200">{{ totalReportsCount }}</strong> reports
+        </span>
+      </div>
+      }
+    </div>
+
+    <!-- ROW 3 (Integrated Bulk Action Dock): Appears inside the filter card when rows are checked -->
     @if (selectedReportIds.size > 0) {
     <div
-      class="flex items-center justify-between p-2.5 rounded-xl bg-indigo-950/40 border border-indigo-800/60 animate-fadeIn">
+      class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/30 px-3 py-1.5 rounded-xl animate-in transition-all duration-200">
+      <!-- Left Side: Selection Count Pill & Deselect -->
       <div class="flex items-center gap-2">
-        <span class="text-xs font-bold text-indigo-300">{{ selectedReportIds.size }} items selected</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <button (click)="bulkResolve()" class="btn-bulk btn-resolve">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
-          <span>Bulk Resolve</span>
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold border border-indigo-500/40 text-[11px] shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selectedReportIds.size }} report(s) selected</span>
+        </span>
+
+        <button
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
+          (click)="clearSelection()" [adminTooltip]="'Clear current selection'" tooltipPosition="top">
+          <admin-icon name="x" [size]="10" [strokeWidth]="2.5" cssClass="text-slate-400"></admin-icon>
+          <span>Deselect Selected</span>
         </button>
-        <button (click)="bulkDismiss()" class="btn-bulk btn-dismiss">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+      </div>
+
+      <!-- Right Side: Bulk Action Buttons -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          (click)="bulkResolve()"
+          [adminTooltip]="'Bulk resolve selected reports and soft-delete reported content with database enforcement'">
+          <admin-icon name="checkmark" [size]="13" [strokeWidth]="2.5"></admin-icon>
+          <span>Bulk Resolve (Content Removed)</span>
+        </button>
+
+        <button
+          class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
+          (click)="bulkDismiss()" [adminTooltip]="'Bulk dismiss selected items as false positives'">
+          <admin-icon name="x" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Bulk Dismiss</span>
         </button>
       </div>
@@ -169,345 +496,821 @@
     }
   </div>
 
-  <!-- Data Table Container -->
-  <div class="bg-slate-900/90 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-    @if (isLoading) {
-    <div class="p-16 text-center text-slate-400 flex flex-col items-center justify-center gap-3">
-      <div class="w-8 h-8 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin"></div>
-      <span class="text-xs font-semibold">Loading moderation queue...</span>
-    </div>
-    } @else if (reports.length === 0) {
+  <!-- ========================================================================= -->
+  <!-- 3. WORKSPACE VIEWS: Table View (Full Grid) OR Split-Pane View (Triage)     -->
+  <!-- ========================================================================= -->
+
+  <!-- MODE A: HIGH-DENSITY SPREADSHEET TABLE MODE -->
+  @if (viewMode === 'table') {
+  <div
+    class="table-responsive-wrapper overflow-hidden border border-slate-800/80 bg-slate-900/80 rounded-2xl shadow-xl">
+    @if (isNoColumnsVisible) {
+    <!-- Full-Size Columns Hidden Empty State -->
+    <admin-empty-state title="No Columns Selected"
+      message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display moderation queue reports."
+      [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true" (action)="resetColumnVisibility()">
+      <admin-icon icon name="columns" [size]="28" [strokeWidth]="2"></admin-icon>
+    </admin-empty-state>
+    } @else if (!isLoading && reports.length === 0) {
     <div class="p-16 text-center">
-      <admin-empty-state [title]="'Queue is Clean'"
-        [message]="'No reports matching your active filters. All flagged items have been handled.'">
+      <admin-empty-state [title]="'Queue Clean & Compliant'"
+        [message]="'No reports matching your active filters. All flagged citizen grievances have been reviewed.'">
       </admin-empty-state>
     </div>
     } @else {
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs text-slate-300">
+    @if (!isInitialLoad && isLoading) {
+    <div
+      class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-500 animate-pulse w-full">
+    </div>
+    }
+    <div class="overflow-x-auto data-table-wrapper">
+      <table class="data-table table-fixed w-full text-left border-collapse min-w-[980px]"
+        [class.table-refreshing]="!isInitialLoad && isLoading">
         <thead
-          class="bg-slate-950/70 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
+          class="bg-slate-950/90 border-b border-slate-800 text-slate-400 font-bold uppercase tracking-wider text-[10px] select-none">
           <tr>
-            <th class="p-3.5 w-10 text-center">
+            @if (columnVisibility['select']) {
+            <th class="p-3.5 w-12 min-w-[48px] max-w-[48px] text-center">
               <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()"
-                class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+                class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer"
+                [adminTooltip]="'Select / deselect all reports on this page'">
             </th>
-            <admin-sort-header [label]="'Reference'" [key]="'reportRef'" [currentSort]="sortBy"
-              [currentOrder]="sortOrder" (sortChange)="onSortHeader($event)"></admin-sort-header>
-            <th class="p-3.5">Target Entity</th>
-            <th class="p-3.5">Reason & Severity</th>
-            <th class="p-3.5">Reporter</th>
-            <admin-sort-header [label]="'Duplicates'" [key]="'duplicateCount'" [currentSort]="sortBy"
-              [currentOrder]="sortOrder" (sortChange)="onSortHeader($event)"></admin-sort-header>
-            <admin-sort-header [label]="'Status'" [key]="'status'" [currentSort]="sortBy" [currentOrder]="sortOrder"
-              (sortChange)="onSortHeader($event)"></admin-sort-header>
-            <admin-sort-header [label]="'Reported At'" [key]="'createdAt'" [currentSort]="sortBy"
-              [currentOrder]="sortOrder" (sortChange)="onSortHeader($event)"></admin-sort-header>
-            <th class="p-3.5 text-right">Actions</th>
+            }
+
+            @if (columnVisibility['reportRef']) {
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[140px] min-w-[130px] max-w-[150px]"
+              (click)="toggleSort('reportRef')" [adminTooltip]="getSortTooltip('reportRef', 'Ticket Ref')">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-sky-400]="sortBy === 'reportRef'">Ticket Ref</span>
+                <admin-icon
+                  [name]="sortBy === 'reportRef' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'reportRef' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'reportRef' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility['targetEntity']) {
+            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none min-w-[220px]"
+              (click)="toggleSort('targetType')" [adminTooltip]="getSortTooltip('targetType', 'Target Entity')">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-sky-400]="sortBy === 'targetType'">Target Entity</span>
+                <admin-icon
+                  [name]="sortBy === 'targetType' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'targetType' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'targetType' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility['reasonSeverity']) {
+            <th class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none min-w-[240px]"
+              (click)="toggleSort('severity')" [adminTooltip]="getSortTooltip('severity', 'Severity Level')">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-sky-400]="sortBy === 'severity'">Reason & Severity</span>
+                <admin-icon
+                  [name]="sortBy === 'severity' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'severity' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'severity' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility['reporter']) {
+            <th class="p-3.5 w-[140px] min-w-[130px] max-w-[150px] select-none"
+              [adminTooltip]="'Reporter identity and client IP telemetry'">
+              Reporter & IP
+            </th>
+            }
+
+            @if (columnVisibility['duplicates']) {
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[100px] min-w-[90px] max-w-[110px] text-center"
+              (click)="toggleSort('duplicateCount')"
+              [adminTooltip]="getSortTooltip('duplicateCount', 'Duplicate Count')">
+              <div class="flex items-center justify-center gap-1.5">
+                <span [class.text-sky-400]="sortBy === 'duplicateCount'">Duplicates</span>
+                <admin-icon
+                  [name]="sortBy === 'duplicateCount' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'duplicateCount' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'duplicateCount' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility['status']) {
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[130px] min-w-[120px] max-w-[140px] text-center"
+              (click)="toggleSort('status')" [adminTooltip]="getSortTooltip('status', 'Status')">
+              <div class="flex items-center justify-center gap-1.5">
+                <span [class.text-sky-400]="sortBy === 'status'">Status</span>
+                <admin-icon
+                  [name]="sortBy === 'status' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'status' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'status' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility['createdAt']) {
+            <th
+              class="p-3.5 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[130px] min-w-[120px] max-w-[140px]"
+              (click)="toggleSort('createdAt')" [adminTooltip]="getSortTooltip('createdAt', 'Reported At')">
+              <div class="flex items-center gap-1.5">
+                <span [class.text-sky-400]="sortBy === 'createdAt'">Reported At</span>
+                <admin-icon
+                  [name]="sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'createdAt' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'createdAt' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
+              </div>
+            </th>
+            }
+
+            @if (columnVisibility['actions']) {
+            <th class="py-3.5 px-2 text-center w-20 min-w-[76px] select-none" [adminTooltip]="'Quick action controls'">
+              Actions
+            </th>
+            }
           </tr>
         </thead>
 
-        <tbody class="divide-y divide-slate-800/60">
-          @for (report of reports; track report.id) {
-          <tr (click)="openDrawer(report)" class="hover:bg-slate-800/50 cursor-pointer transition-colors"
-            [class.critical-flagged]="report.severity === 'Critical'">
+        <tbody class="divide-y divide-slate-800/60 text-xs">
+          @if (isLoading) {
+          @for (item of [1,2,3,4,5,6,7,8]; track trackByIndex($index)) {
+          <tr class="table-row-skeleton border-b border-slate-800/60">
+            @if (columnVisibility['select']) {
+            <td class="p-3.5 text-center w-12 min-w-[48px] max-w-[48px]">
+              <div class="flex justify-center">
+                <admin-skeleton width="16px" height="16px" borderRadius="4px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['reportRef']) {
+            <td class="p-3.5 w-[140px] min-w-[130px] max-w-[150px]">
+              <admin-skeleton width="85px" height="14px" borderRadius="4px" />
+            </td>
+            }
+
+            @if (columnVisibility['targetEntity']) {
+            <td class="p-3.5 min-w-[220px]">
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center gap-2">
+                  <admin-skeleton width="55px" height="16px" borderRadius="4px" />
+                  <admin-skeleton width="130px" height="14px" borderRadius="4px" />
+                </div>
+                <admin-skeleton width="80px" height="11px" borderRadius="4px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['reasonSeverity']) {
+            <td class="p-3.5 min-w-[240px]">
+              <div class="flex flex-col gap-1.5">
+                <div class="flex items-center gap-2">
+                  <admin-skeleton width="65px" height="16px" borderRadius="9999px" />
+                  <admin-skeleton width="110px" height="14px" borderRadius="4px" />
+                </div>
+                <admin-skeleton width="170px" height="11px" borderRadius="4px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['reporter']) {
+            <td class="p-3.5 w-[140px] min-w-[130px] max-w-[150px]">
+              <div class="flex flex-col gap-1.5">
+                <admin-skeleton width="105px" height="13px" borderRadius="4px" />
+                <admin-skeleton width="80px" height="11px" borderRadius="4px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['duplicates']) {
+            <td class="p-3.5 w-[100px] min-w-[90px] max-w-[110px] text-center">
+              <div class="flex justify-center">
+                <admin-skeleton width="50px" height="18px" borderRadius="9999px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['status']) {
+            <td class="p-3.5 w-[130px] min-w-[120px] max-w-[140px] text-center">
+              <div class="flex justify-center">
+                <admin-skeleton width="80px" height="20px" borderRadius="9999px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['createdAt']) {
+            <td class="p-3.5 w-[130px] min-w-[120px] max-w-[140px]">
+              <div class="flex flex-col gap-1.5">
+                <admin-skeleton width="90px" height="13px" borderRadius="4px" />
+                <admin-skeleton width="60px" height="10px" borderRadius="4px" />
+              </div>
+            </td>
+            }
+
+            @if (columnVisibility['actions']) {
+            <td class="py-3.5 px-2 text-center w-20 min-w-[76px]">
+              <div class="flex justify-center">
+                <admin-skeleton width="28px" height="28px" borderRadius="8px" />
+              </div>
+            </td>
+            }
+          </tr>
+          }
+          } @else {
+          @for (report of reports; track trackByReportId($index, report)) {
+          <tr (click)="onRowClick(report.id)" (dblclick)="onRowDblClick(report)"
+            class="table-data-row hover:bg-slate-800/40 transition-colors cursor-pointer"
+            [class.row-selected]="selectedReportIds.has(report.id)" [class.critical-row]="isCritical(report)"
+            [class.warning-row]="isWarning(report)">
 
             <!-- Checkbox -->
-            <td class="p-3.5 text-center" (click)="$event.stopPropagation()">
+            @if (columnVisibility['select']) {
+            <td class="p-3.5 w-12 min-w-[48px] max-w-[48px] text-center" (click)="$event.stopPropagation()">
               <input type="checkbox" [checked]="selectedReportIds.has(report.id)"
                 (change)="toggleSelect(report.id, $event)"
-                class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0">
+                class="rounded bg-slate-800 border-slate-700 text-indigo-600 focus:ring-0 cursor-pointer"
+                [adminTooltip]="selectedReportIds.has(report.id) ? 'Deselect report' : 'Select report'">
             </td>
+            }
 
-            <!-- Reference -->
-            <td class="p-3.5 font-mono font-bold text-indigo-400 whitespace-nowrap">
+            <!-- Ref Ticket -->
+            @if (columnVisibility['reportRef']) {
+            <td
+              class="p-3.5 w-[140px] min-w-[130px] max-w-[150px] font-mono font-bold text-indigo-400 whitespace-nowrap cursor-pointer hover:underline"
+              (click)="copyToClipboard('#' + report.reportRef, 'Ticket Reference', $event)"
+              [adminTooltip]="'Click to copy #' + report.reportRef" tooltipPosition="top">
               #{{ report.reportRef }}
             </td>
+            }
 
             <!-- Target Entity -->
-            <td class="p-3.5">
+            @if (columnVisibility['targetEntity']) {
+            <td class="p-3.5 min-w-[220px]">
               <div class="flex items-center gap-1.5 flex-wrap">
-                <span
-                  class="px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                <span class="px-2 py-0.5 rounded text-[9px] font-extrabold uppercase tracking-wider border shrink-0"
+                  [class]="getTypeBadgeClass(report.targetType)" [adminTooltip]="'Entity Type: ' + report.targetType">
                   {{ report.targetType }}
                 </span>
-                <span class="font-bold text-white max-w-[200px] truncate" [title]="report.targetTitle">
+                <span class="font-bold text-white truncate max-w-full" [adminTooltip]="report.targetTitle"
+                  tooltipPosition="top">
                   {{ report.targetTitle }}
                 </span>
               </div>
+              <span
+                class="text-[10px] text-slate-500 font-mono block mt-0.5 cursor-pointer hover:text-indigo-400 transition-colors"
+                (click)="copyToClipboard(report.targetId, 'Target ID', $event)"
+                [adminTooltip]="'Click to copy Target ID: ' + report.targetId" tooltipPosition="top">
+                ID: {{ report.targetId }}
+              </span>
             </td>
+            }
 
             <!-- Reason & Severity -->
-            <td class="p-3.5">
-              <div class="flex items-center gap-2">
-                <span class="px-2 py-0.5 rounded-md text-[9px] font-bold border"
-                  [class]="getSeverityClass(report.severity)">
+            @if (columnVisibility['reasonSeverity']) {
+            <td class="p-3.5 min-w-[240px]">
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase border shrink-0"
+                  [class]="getSeverityBadgeClass(report.severity)" [adminTooltip]="'Risk Level: ' + report.severity">
                   {{ report.severity }}
                 </span>
-                <span class="text-slate-300 font-semibold">{{ report.reasonCategory }}</span>
+                <span
+                  class="sla-badge text-[9px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-1 border shrink-0"
+                  [class]="getSlaStatus(report).badgeClass"
+                  [adminTooltip]="'Resolution SLA: ' + getSlaStatus(report).label">
+                  <admin-icon [name]="getSlaStatus(report).isBreached ? 'alert-triangle' : 'clock'"
+                    [size]="9"></admin-icon>
+                  <span>{{ getSlaStatus(report).label }}</span>
+                </span>
+                <span class="text-slate-200 font-semibold" [adminTooltip]="'Category: ' + report.reasonCategory">{{
+                  report.reasonCategory }}</span>
               </div>
-              <p class="text-[11px] text-slate-400 line-clamp-1 mt-0.5">{{ report.description }}</p>
+              <p class="text-[11px] text-slate-400 line-clamp-1 mt-0.5" [adminTooltip]="report.description"
+                tooltipPosition="top">{{
+                report.description }}</p>
             </td>
+            }
 
             <!-- Reporter -->
-            <td class="p-3.5 text-slate-400 whitespace-nowrap">
-              @if (report.reporterName) {
-              <span class="text-slate-300 font-medium block">{{ report.reporterName }}</span>
-              } @else {
-              <span class="text-slate-500 italic block">Anonymous Guest</span>
-              }
-            </td>
-
-            <!-- Duplicate Count -->
-            <td class="p-3.5 text-center whitespace-nowrap">
-              @if (report.duplicateCount > 1) {
-              <span
-                class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                × {{ report.duplicateCount }} flags
+            @if (columnVisibility['reporter']) {
+            <td class="p-3.5 w-[140px] min-w-[130px] max-w-[150px] whitespace-nowrap">
+              <span class="text-slate-200 font-medium block truncate max-w-[140px]"
+                [adminTooltip]="'Reporter: ' + (report.reporterName || 'Anonymous Citizen') + ' (' + (report.reporterEmail || 'No email') + ')'"
+                tooltipPosition="top">
+                {{ report.reporterName || 'Anonymous Citizen' }}
               </span>
-              } @else {
-              <span class="text-slate-500 font-mono">1</span>
-              }
-            </td>
-
-            <!-- Status -->
-            <td class="p-3.5 whitespace-nowrap">
-              <span class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border"
-                [class]="getStatusClass(report.status)">
-                {{ report.status }}
-              </span>
-            </td>
-
-            <!-- Date -->
-            <td class="p-3.5 text-slate-400 whitespace-nowrap">
-              {{ report.createdAt | date:'short' }}
-            </td>
-
-            <!-- Actions -->
-            <td class="p-3.5 text-right whitespace-nowrap" (click)="$event.stopPropagation()">
-              <div class="flex items-center justify-end gap-1.5">
-                @if (report.status === 'Pending' || report.status === 'UnderReview') {
-                <button (click)="openResolveModal(report, $event)" [adminTooltip]="'Resolve Report'"
-                  class="btn-row-action text-emerald-400 hover:bg-emerald-500/20 border-emerald-500/30">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <polyline points="20 6 9 17 4 12"></polyline>
-                  </svg>
-                </button>
-                <button (click)="openDismissModal(report, $event)" [adminTooltip]="'Dismiss / False Alarm'"
-                  class="btn-row-action text-slate-400 hover:bg-slate-700/50 border-slate-700">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                  </svg>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[10px] text-slate-400 font-mono cursor-pointer hover:text-sky-400 transition-colors"
+                  (click)="copyToClipboard(report.reporterIp || '', 'IP Address', $event)"
+                  [adminTooltip]="'Reporter IP: ' + (isIpUnmasked(report.id) ? (report.reporterIp || 'N/A') : 'Masked (DPDP compliant)') + ' • FP: ' + (report.clientFingerprint || 'Unknown') + ' (Click to copy)'"
+                  tooltipPosition="top">
+                  {{ getDisplayIp(report) }}
+                </span>
+                @if (report.reporterIp) {
+                <button type="button"
+                  class="text-slate-500 hover:text-slate-300 transition-colors p-0.5 inline-flex items-center"
+                  (click)="toggleIpMask(report.id, $event)"
+                  [adminTooltip]="isIpUnmasked(report.id) ? 'Mask IP (DPDP compliance)' : 'Reveal IP (Audit logged)'"
+                  tooltipPosition="top">
+                  <admin-icon [name]="isIpUnmasked(report.id) ? 'eye-off' : 'eye'" [size]="10"
+                    [strokeWidth]="2"></admin-icon>
                 </button>
                 }
-                <button (click)="openDrawer(report)" [adminTooltip]="'Inspect Dossier'"
-                  class="btn-row-action text-indigo-400 hover:bg-indigo-500/20 border-indigo-500/30">
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
+              </div>
+            </td>
+            }
+
+            <!-- Duplicates / Anti-Brigading -->
+            @if (columnVisibility['duplicates']) {
+            <td class="p-3.5 w-[100px] min-w-[90px] max-w-[110px] text-center whitespace-nowrap">
+              @if (report.duplicateCount > 1) {
+              <span
+                class="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-amber-500/20 text-amber-300 border border-amber-500/30 inline-flex items-center gap-1"
+                [adminTooltip]="'Multiple duplicate citizen reports merged into single investigation'">
+                <admin-icon name="layers" [size]="10"></admin-icon>
+                <span>{{ report.duplicateCount }} merged</span>
+              </span>
+              } @else {
+              <span class="text-slate-500 font-mono text-[11px]"
+                [adminTooltip]="'Single report filed for this incident'">1 flag</span>
+              }
+            </td>
+            }
+
+            <!-- Status -->
+            @if (columnVisibility['status']) {
+            <td class="p-3.5 w-[130px] min-w-[120px] max-w-[140px] text-center whitespace-nowrap">
+              <span
+                class="px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider border inline-flex items-center gap-1.5"
+                [class]="getStatusBadgeClass(report.status)"
+                [adminTooltip]="'Moderation lifecycle state: ' + report.status">
+                <span class="w-1.5 h-1.5 rounded-full shrink-0" [class]="getStatusDotClass(report.status)"></span>
+                {{ report.status }}
+              </span>
+              @if (report.assignedAdminEmail) {
+              <div
+                class="mt-1 text-[9px] font-medium flex items-center justify-center gap-1 max-w-[120px] mx-auto truncate"
+                [class.text-emerald-400]="isAssignedToCurrentAdmin(report.assignedAdminEmail)"
+                [class.text-slate-400]="!isAssignedToCurrentAdmin(report.assignedAdminEmail)"
+                [adminTooltip]="'Assigned to: ' + report.assignedAdminEmail">
+                @if (isAssignedToCurrentAdmin(report.assignedAdminEmail)) {
+                <admin-icon name="user-check" [size]="10" strokeWidth="2.5"></admin-icon>
+                <span>You</span>
+                } @else {
+                <admin-icon name="user" [size]="10"></admin-icon>
+                <span class="truncate">{{ report.assignedAdminEmail }}</span>
+                }
+              </div>
+              }
+            </td>
+            }
+
+            <!-- Created At -->
+            @if (columnVisibility['createdAt']) {
+            <td class="p-3.5 w-[130px] min-w-[120px] max-w-[140px] text-slate-400 whitespace-nowrap"
+              [adminTooltip]="'Reported on ' + (report.createdAt | date:'medium')">
+              <div class="font-medium text-slate-300 text-xs">{{ report.createdAt | date:'mediumDate' }}</div>
+              <span class="text-[10px] text-slate-500 block font-mono">{{ report.createdAt | date:'shortTime' }}</span>
+            </td>
+            }
+
+            <!-- Actions (Kebab Menu) -->
+            @if (columnVisibility['actions']) {
+            <td class="py-3.5 px-2 text-center w-20 min-w-[76px]" (click)="$event.stopPropagation()">
+              <div class="flex items-center justify-center w-full">
+                <button #kebabBtn
+                  class="kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white bg-slate-800/40 hover:bg-slate-700/60 transition-all shadow-sm"
+                  [class.active]="openActionMenuId === report.id"
+                  (click)="toggleActionMenu(report.id, kebabBtn, $event)" [adminTooltip]="'Incident actions'"
+                  tooltipPosition="left">
+                  <admin-icon name="more-horizontal" [size]="16"></admin-icon>
                 </button>
               </div>
             </td>
+            }
           </tr>
+          }
           }
         </tbody>
       </table>
     </div>
-    }
 
-    <!-- Pagination -->
-    <div class="p-4 border-t border-slate-800 flex items-center justify-between">
-      <span class="text-xs text-slate-400">Total: <strong>{{ pagination.total }}</strong> reports</span>
-      <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
-        [pages]="pagination.pages" (pageChange)="onPageChange($event)"></admin-pagination>
+    <!-- Table Pagination Footer -->
+    @if (!isLoading || !isInitialLoad) {
+    <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
+      [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onLimitChange($event)">
+    </admin-pagination>
+    } @else {
+    <div class="p-3.5 border-t border-slate-800/80 flex items-center justify-between">
+      <admin-skeleton width="140px" height="16px" borderRadius="4px" />
+      <div class="flex items-center gap-2">
+        <admin-skeleton width="32px" height="28px" borderRadius="6px" />
+        <admin-skeleton width="32px" height="28px" borderRadius="6px" />
+        <admin-skeleton width="32px" height="28px" borderRadius="6px" />
+      </div>
     </div>
+    }
+    }
   </div>
+  }
 
-  <!-- Action Modal -->
-  @if (showActionModal) {
-  <div class="modal-backdrop" (click)="closeActionModal()">
-    <div class="modal-card" (click)="$event.stopPropagation()">
-      <div class="modal-header">
-        <h3 class="text-lg font-black text-white flex items-center gap-2">
-          @if (actionModalMode === 'resolve') {
-          <span class="text-emerald-400">Resolve Report</span>
-          } @else {
-          <span class="text-slate-400">Dismiss Report</span>
-          }
-          <span class="font-mono text-indigo-400">#{{ activeReport?.reportRef }}</span>
-        </h3>
-        <button (click)="closeActionModal()" class="text-slate-400 hover:text-white">&times;</button>
+  <!-- MODE B: SPLIT-PANE LINEAR-STYLE TRIAGE WORKSPACE -->
+  @if (viewMode === 'split') {
+  <div class="grid grid-cols-1 lg:grid-cols-[390px_1fr] gap-4 w-full items-start">
+    <!-- Left Queue List Panel -->
+    <div
+      class="flex flex-col gap-2 bg-slate-900/80 border border-slate-800/80 rounded-2xl p-3 shadow-lg max-h-[85vh] overflow-y-auto">
+      <div class="flex items-center justify-between px-1 pb-2 border-b border-slate-800">
+        <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Queue Items ({{ reports.length
+          }})</span>
+        <span class="text-[10px] text-indigo-400 font-mono">Use J / K to navigate</span>
       </div>
 
-      <div class="modal-body space-y-4">
-        <div class="p-3 rounded-xl bg-slate-950 border border-slate-800 text-xs">
-          <span class="text-slate-400 block mb-1">Target Entity:</span>
-          <strong class="text-white text-sm">[{{ activeReport?.targetType }}] {{ activeReport?.targetTitle }}</strong>
-          <p class="text-amber-300/90 mt-1">Reason: {{ activeReport?.reasonCategory }}</p>
-          <p class="text-slate-400 mt-0.5">{{ activeReport?.description }}</p>
+      @if (isLoading) {
+      @for (i of [1,2,3,4,5,6]; track trackByIndex($index)) {
+      <div class="p-3 rounded-xl bg-slate-950/60 border border-slate-800/60 flex flex-col gap-2 animate-pulse">
+        <div class="flex justify-between items-center">
+          <admin-skeleton width="75px" height="15px" borderRadius="4px" />
+          <admin-skeleton width="60px" height="16px" borderRadius="9999px" />
+        </div>
+        <admin-skeleton width="100%" height="15px" borderRadius="4px" />
+        <admin-skeleton width="70%" height="13px" borderRadius="4px" />
+        <div class="flex justify-between items-center pt-1 border-t border-slate-800/60">
+          <admin-skeleton width="60px" height="11px" borderRadius="4px" />
+          <admin-skeleton width="45px" height="11px" borderRadius="4px" />
+        </div>
+      </div>
+      }
+      } @else if (reports.length === 0) {
+      <div class="p-8 text-center flex flex-col items-center gap-3">
+        <div
+          class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-md">
+          <admin-icon name="shield-check" [size]="24" strokeWidth="2"></admin-icon>
+        </div>
+        <div class="space-y-1">
+          <strong class="text-xs text-white font-bold block">Queue Cleared</strong>
+          <span class="text-[11px] text-slate-400 block">No {{ selectedStatus ? selectedStatus.toLowerCase() : '' }}
+            items in stream</span>
+        </div>
+        @if (selectedStatus !== '') {
+        <button (click)="selectedStatus = ''; onFilterChange()"
+          class="text-xs text-indigo-400 hover:text-indigo-300 font-bold underline mt-1"
+          [adminTooltip]="'View all moderation reports across all stages'">
+          Show All Reports
+        </button>
+        }
+      </div>
+      } @else {
+      @for (report of reports; track trackByReportId($index, report)) {
+      <div (click)="selectReport(report)"
+        class="queue-item-card p-3 rounded-xl border transition-all cursor-pointer flex flex-col gap-2"
+        [class.active-queue-item]="activeReport?.id === report.id" [class.critical-border]="isCritical(report)"
+        [adminTooltip]="'Click or use J/K to triage #' + report.reportRef" tooltipPosition="right">
+
+        <div class="flex items-center justify-between gap-1.5">
+          <span class="font-mono text-[11px] font-black text-indigo-400 cursor-pointer hover:underline"
+            (click)="copyToClipboard('#' + report.reportRef, 'Ticket Reference', $event)"
+            [adminTooltip]="'Click to copy #' + report.reportRef">#{{ report.reportRef }}</span>
+          <div class="flex items-center gap-1.5">
+            @if (report.duplicateCount > 0) {
+            <span
+              class="px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[10px] font-extrabold flex items-center gap-0.5"
+              [adminTooltip]="report.duplicateCount + ' duplicate reports merged'">
+              <span>+{{ report.duplicateCount }}</span>
+            </span>
+            }
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-extrabold uppercase border"
+              [class]="getSeverityBadgeClass(report.severity)" [adminTooltip]="'Risk Level: ' + report.severity">
+              {{ report.severity }}
+            </span>
+            <span
+              class="sla-badge text-[8px] px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5 border shrink-0"
+              [class]="getSlaStatus(report).badgeClass"
+              [adminTooltip]="'Resolution SLA: ' + getSlaStatus(report).label">
+              <admin-icon [name]="getSlaStatus(report).isBreached ? 'alert-triangle' : 'clock'" [size]="8"></admin-icon>
+              <span>{{ getSlaStatus(report).label }}</span>
+            </span>
+          </div>
         </div>
 
-        @if (actionModalMode === 'resolve') {
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-300">Resolution Action:</label>
-          <select [(ngModel)]="resolutionAction" class="w-full filter-select">
-            @for (act of resolutionActions; track act.value) {
-            <option [value]="act.value">{{ act.label }}</option>
-            }
-          </select>
+        <p class="text-xs text-slate-200 line-clamp-2 font-medium leading-relaxed" [adminTooltip]="report.description">
+          {{ report.description }}
+        </p>
+
+        <div class="flex items-center justify-between text-[10px] text-slate-400 pt-1 border-t border-slate-800/60">
+          <span class="uppercase font-bold tracking-wider text-slate-500"
+            [adminTooltip]="'Entity: ' + report.targetType">{{ report.targetType }}</span>
+          @if (report.assignedAdminEmail) {
+          <span class="text-[9px] font-semibold px-1.5 py-0.5 rounded flex items-center gap-1"
+            [class]="isAssignedToCurrentAdmin(report.assignedAdminEmail) ? 'text-emerald-300 bg-emerald-500/15 border border-emerald-500/30' : 'text-slate-400 bg-slate-800/80'"
+            [adminTooltip]="'Assigned to: ' + report.assignedAdminEmail">
+            <admin-icon [name]="isAssignedToCurrentAdmin(report.assignedAdminEmail) ? 'check' : 'user'"
+              [size]="9"></admin-icon>
+            {{ isAssignedToCurrentAdmin(report.assignedAdminEmail) ? 'You' : report.assignedAdminEmail }}
+          </span>
+          }
+          <span [adminTooltip]="'Reported on ' + (report.createdAt | date:'medium')">{{ report.createdAt |
+            date:'shortTime' }}</span>
+        </div>
+      </div>
+      }
+      }
+    </div>
+
+    <!-- Right Sticky Live Dossier Inspector -->
+    <div
+      class="sticky top-20 bg-slate-900/90 border border-slate-800/90 rounded-2xl shadow-2xl flex flex-col overflow-hidden min-h-[70vh] max-h-[calc(100vh-6rem)]">
+      @if (isLoading && isInitialLoad) {
+      <!-- Split View Initial Dossier Skeleton Blueprint -->
+      <div class="p-6 space-y-5 animate-pulse flex-1">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <admin-skeleton width="100px" height="24px" borderRadius="6px" />
+              <admin-skeleton width="70px" height="20px" borderRadius="9999px" />
+              <admin-skeleton width="60px" height="20px" borderRadius="9999px" />
+            </div>
+            <admin-skeleton width="240px" height="14px" borderRadius="4px" />
+          </div>
+          <div class="flex items-center gap-2">
+            <admin-skeleton width="90px" height="32px" borderRadius="8px" />
+            <admin-skeleton width="90px" height="32px" borderRadius="8px" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+        </div>
+
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-3">
+          <admin-skeleton width="35%" height="16px" borderRadius="4px" />
+          <admin-skeleton width="100%" height="14px" borderRadius="4px" />
+          <admin-skeleton width="85%" height="14px" borderRadius="4px" />
+        </div>
+
+        <div class="space-y-3 pt-2">
+          <div class="flex gap-4 border-b border-slate-800 pb-2">
+            <admin-skeleton width="70px" height="16px" borderRadius="4px" />
+            <admin-skeleton width="70px" height="16px" borderRadius="4px" />
+            <admin-skeleton width="70px" height="16px" borderRadius="4px" />
+          </div>
+          <admin-skeleton width="100%" height="140px" borderRadius="12px" />
+        </div>
+      </div>
+      } @else if (!activeReport) {
+      <div class="p-8 lg:p-12 flex flex-col items-center justify-center text-center gap-4 flex-1">
+        @if (reports.length === 0) {
+        <div
+          class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400 shadow-xl shadow-emerald-950/40">
+          <admin-icon name="shield-check" [size]="32" strokeWidth="2"></admin-icon>
+        </div>
+        <div class="space-y-1.5 max-w-md">
+          <h3 class="text-base font-black text-white">Trust & Safety Command Console</h3>
+          <p class="text-xs text-slate-400 leading-relaxed">
+            All user incident queues are currently cleared. The platform is continuously monitoring real user
+            submissions, client feedback downvotes, and anti-brigading clusters in real-time.
+          </p>
+        </div>
+        <div class="grid grid-cols-2 gap-3 w-full max-w-sm text-left">
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-bold uppercase block">Ingestion Pipeline</span>
+            <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5 mt-1">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              Live & Healthy
+            </span>
+          </div>
+          <div class="p-3 rounded-xl bg-slate-950 border border-slate-800">
+            <span class="text-[10px] text-slate-400 font-bold uppercase block">SLA Compliance</span>
+            <span class="text-xs font-bold text-indigo-300 mt-1 block">100% Target Met</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 pt-2">
+          <button (click)="selectedStatus = 'Resolved'; onFilterChange()"
+            class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700"
+            [adminTooltip]="'Filter queue to inspect resolved archive'">
+            Inspect Resolved Archive
+          </button>
+          <button (click)="selectedStatus = ''; onFilterChange()"
+            class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold transition-all shadow-md"
+            [adminTooltip]="'View all reports across all lifecycle stages'">
+            View All Reports
+          </button>
+        </div>
+        } @else {
+        <div
+          class="w-12 h-12 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-400">
+          <admin-icon name="sidebar" [size]="24" strokeWidth="2"></admin-icon>
+        </div>
+        <div class="space-y-1">
+          <h4 class="text-sm font-bold text-white">Select a Ticket from Queue</h4>
+          <p class="text-xs text-slate-400">Click any incident on the left stream or press <kbd
+              class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-300">J</kbd>
+            / <kbd
+              class="px-1.5 py-0.5 rounded bg-slate-800 border border-slate-700 text-[10px] font-mono text-slate-300">K</kbd>
+            to triage.</p>
         </div>
         }
-
-        <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-300">Moderator Audit Notes:</label>
-          <textarea [(ngModel)]="moderatorNotes" rows="3"
-            placeholder="Explain the action taken or rationale for audit trail..."
-            class="w-full p-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white outline-none focus:border-indigo-500"></textarea>
+      </div>
+      } @else {
+      @defer (when activeReport; prefetch on idle) {
+      <moderation-ticket-dossier [report]="activeReport" [currentAdminEmail]="currentAdminEmail" [isDrawerMode]="false"
+        (claim)="claimTicket($event)" (resolve)="openResolveModal($event)" (dismiss)="openDismissModal($event)"
+        (reopen)="openReopenModal($event)" (openLightbox)="openLightbox($event)">
+      </moderation-ticket-dossier>
+      } @placeholder {
+      <div class="p-6 space-y-5 animate-pulse flex-1">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+          <div class="space-y-2">
+            <div class="flex items-center gap-2">
+              <admin-skeleton width="100px" height="24px" borderRadius="6px" />
+              <admin-skeleton width="70px" height="20px" borderRadius="9999px" />
+              <admin-skeleton width="60px" height="20px" borderRadius="9999px" />
+            </div>
+            <admin-skeleton width="240px" height="14px" borderRadius="4px" />
+          </div>
+          <div class="flex items-center gap-2">
+            <admin-skeleton width="90px" height="32px" borderRadius="8px" />
+            <admin-skeleton width="90px" height="32px" borderRadius="8px" />
+          </div>
         </div>
+        <div class="grid grid-cols-3 gap-3">
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+        </div>
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-3">
+          <admin-skeleton width="35%" height="16px" borderRadius="4px" />
+          <admin-skeleton width="100%" height="14px" borderRadius="4px" />
+          <admin-skeleton width="85%" height="14px" borderRadius="4px" />
+        </div>
+        <admin-skeleton width="100%" height="140px" borderRadius="12px" />
       </div>
-
-      <div class="modal-footer flex items-center justify-end gap-2">
-        <button (click)="closeActionModal()"
-          class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Cancel</button>
-        <button (click)="submitAction()" [disabled]="isProcessingAction"
-          class="px-4 py-2 rounded-xl text-xs font-bold text-white transition-all"
-          [class.bg-emerald-600]="actionModalMode === 'resolve'" [class.bg-slate-700]="actionModalMode === 'dismiss'">
-          {{ isProcessingAction ? 'Submitting...' : (actionModalMode === 'resolve' ? 'Confirm Resolution' : 'Confirm
-          Dismissal') }}
-        </button>
-      </div>
+      }
+      }
     </div>
   </div>
   }
 
-  <!-- Detail Drawer -->
+  <!-- ========================================================================= -->
+  <!-- 4. SLIDE-OVER DETAIL DRAWER (TABLE MODE INSPECTION)                        -->
+  <!-- ========================================================================= -->
   @if (drawerReport) {
   <div class="drawer-backdrop" (click)="closeDrawer()">
-    <div class="drawer-panel" (click)="$event.stopPropagation()">
-      <div class="drawer-header flex items-center justify-between p-4 border-b border-slate-800">
-        <div>
-          <h3 class="text-base font-black text-white flex items-center gap-2">
-            <span>Report Dossier</span>
-            <span class="font-mono text-indigo-400">#{{ drawerReport.reportRef }}</span>
-          </h3>
-          <span class="text-xs text-slate-400">Detailed Evidence & Audit Trail</span>
-        </div>
-        <button (click)="closeDrawer()" class="text-slate-400 hover:text-white p-1">&times;</button>
-      </div>
-
-      <div class="drawer-body p-6 space-y-6 overflow-y-auto">
-        <!-- Target Info -->
-        <div class="space-y-2">
-          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Target Content</span>
-          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-2">
+    <div class="drawer-panel" (click)="$event.stopPropagation()" role="complementary"
+      aria-label="Report Inspection Drawer">
+      @defer (when drawerReport; prefetch on idle) {
+      <moderation-ticket-dossier [report]="drawerReport" [currentAdminEmail]="currentAdminEmail" [isDrawerMode]="true"
+        (closed)="closeDrawer()" (claim)="claimTicket($event)" (resolve)="openResolveModal($event)"
+        (dismiss)="openDismissModal($event)" (reopen)="openReopenModal($event)" (openLightbox)="openLightbox($event)">
+      </moderation-ticket-dossier>
+      } @placeholder {
+      <div class="p-6 space-y-5 animate-pulse">
+        <div class="flex items-center justify-between pb-4 border-b border-slate-800/80">
+          <div class="space-y-2">
             <div class="flex items-center gap-2">
-              <span class="px-2 py-0.5 rounded text-[9px] font-black bg-indigo-500/20 text-indigo-300">{{
-                drawerReport.targetType }}</span>
-              <span class="font-bold text-white text-sm">{{ drawerReport.targetTitle }}</span>
+              <admin-skeleton width="100px" height="24px" borderRadius="6px" />
+              <admin-skeleton width="70px" height="20px" borderRadius="9999px" />
+              <admin-skeleton width="60px" height="20px" borderRadius="9999px" />
             </div>
-            <span class="text-xs font-mono text-slate-500 block">ID: {{ drawerReport.targetId }}</span>
+            <admin-skeleton width="200px" height="14px" borderRadius="4px" />
+          </div>
+          <div class="flex items-center gap-2">
+            <admin-skeleton width="85px" height="32px" borderRadius="8px" />
+            <admin-skeleton width="32px" height="32px" borderRadius="8px" />
           </div>
         </div>
-
-        <!-- Severity & Category -->
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">Severity</span>
-            <span class="px-3 py-1 rounded-xl text-xs font-bold border inline-block"
-              [class]="getSeverityClass(drawerReport.severity)">
-              {{ drawerReport.severity }}
-            </span>
-          </div>
-          <div>
-            <span class="text-[10px] font-black uppercase tracking-wider text-slate-500 block mb-1">Category</span>
-            <span class="text-xs font-bold text-white block">{{ drawerReport.reasonCategory }}</span>
-          </div>
+        <div class="grid grid-cols-3 gap-3">
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
+          <admin-skeleton width="100%" height="54px" borderRadius="12px" />
         </div>
-
-        <!-- Description -->
-        <div class="space-y-2">
-          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Reporter's Narrative</span>
-          <p class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs text-slate-300 leading-relaxed whitespace-pre-line">{{
-            drawerReport.description }}</p>
+        <div class="p-4 rounded-xl bg-slate-950/60 border border-slate-800/60 space-y-3">
+          <admin-skeleton width="35%" height="16px" borderRadius="4px" />
+          <admin-skeleton width="100%" height="14px" borderRadius="4px" />
+          <admin-skeleton width="80%" height="14px" borderRadius="4px" />
         </div>
-
-        <!-- Attached Evidence Proof -->
-        @if (drawerReport.evidenceUrl) {
-        <div class="space-y-2">
-          <span class="text-[10px] font-black uppercase tracking-wider text-indigo-400">Attached Evidence / Proof</span>
-          <div class="p-4 rounded-2xl bg-slate-950 border border-indigo-950/60 space-y-3">
-            @if (drawerReport.evidenceUrl.startsWith('data:application/pdf')) {
-            <div class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-              <div class="flex items-center gap-2">
-                <span class="text-red-400 font-bold text-xs">PDF Document</span>
-                <span class="text-slate-400 text-xs">Attached by citizen</span>
-              </div>
-              <a [href]="drawerReport.evidenceUrl" download="evidence-document.pdf" target="_blank"
-                class="px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold no-underline">
-                Open PDF
-              </a>
-            </div>
-            } @else {
-            <div class="rounded-xl overflow-hidden border border-slate-800 max-h-80 bg-slate-900 flex items-center justify-center">
-              <img [src]="drawerReport.evidenceUrl" alt="Evidence proof" class="max-h-80 w-auto object-contain rounded-lg" />
-            </div>
-            <div class="flex justify-end">
-              <a [href]="drawerReport.evidenceUrl" target="_blank" download="evidence-proof.png"
-                class="text-xs text-indigo-400 hover:text-indigo-300 font-bold no-underline">
-                View Full Size / Download &rarr;
-              </a>
-            </div>
-            }
-          </div>
-        </div>
-        }
-
-        <!-- Reporter Metadata -->
-        <div class="space-y-2">
-          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Reporter Dossier</span>
-          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
-            <div class="flex justify-between"><span class="text-slate-500">Name:</span> <strong class="text-white">{{
-                drawerReport.reporterName || 'Anonymous' }}</strong></div>
-            <div class="flex justify-between"><span class="text-slate-500">Email:</span> <span
-                class="text-slate-300 font-mono">{{ drawerReport.reporterEmail || 'N/A' }}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">IP Address:</span> <span
-                class="text-slate-300 font-mono">{{ drawerReport.reporterIp || 'N/A' }}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">Report Count:</span> <span
-                class="text-amber-400 font-bold">{{ drawerReport.duplicateCount }} duplicate flags combined</span></div>
-          </div>
-        </div>
-
-        <!-- Resolution State -->
-        @if (drawerReport.status === 'Resolved' || drawerReport.status === 'Dismissed') {
-        <div class="space-y-2">
-          <span class="text-[10px] font-black uppercase tracking-wider text-slate-500">Resolution Record</span>
-          <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800 text-xs space-y-1.5">
-            <div class="flex justify-between"><span class="text-slate-500">Status:</span> <strong
-                class="text-emerald-400">{{ drawerReport.status }}</strong></div>
-            <div class="flex justify-between"><span class="text-slate-500">Action:</span> <span class="text-white">{{
-                drawerReport.resolutionAction || 'None' }}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">Notes:</span> <span
-                class="text-slate-300 italic">{{ drawerReport.moderatorNotes || 'No notes' }}</span></div>
-            <div class="flex justify-between"><span class="text-slate-500">Reviewed At:</span> <span
-                class="text-slate-400">{{ drawerReport.reviewedAt | date:'medium' }}</span></div>
-          </div>
-        </div>
-        }
+        <admin-skeleton width="100%" height="160px" borderRadius="12px" />
       </div>
-
-      <div class="drawer-footer p-4 border-t border-slate-800 flex items-center justify-end gap-2">
-        <button (click)="closeDrawer()"
-          class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300">Close</button>
-        @if (drawerReport.status === 'Pending' || drawerReport.status === 'UnderReview') {
-        <button (click)="openResolveModal(drawerReport)"
-          class="px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white">Resolve
-          Issue</button>
-        }
-      </div>
+      }
     </div>
   </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 5. ACTION MODAL: Resolve or Dismiss with Enforcement Cascade              -->
+  <!-- ========================================================================= -->
+  @defer (when showActionModal; prefetch on idle) {
+  <moderation-action-modal [isOpen]="showActionModal" [mode]="actionModalMode" [report]="actionTargetReport"
+    [isProcessing]="isProcessingAction" (confirmed)="onActionModalConfirmed($event)" (closed)="closeActionModal()">
+  </moderation-action-modal>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 6. INTERACTIVE EVIDENCE LIGHTBOX (FULLSCREEN INSPECTOR)                    -->
+  <!-- ========================================================================= -->
+  @defer (when lightboxOpen; prefetch on idle) {
+  <moderation-evidence-lightbox [isOpen]="lightboxOpen" [imageUrl]="lightboxUrl" (closed)="closeLightbox()">
+  </moderation-evidence-lightbox>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 8. EXPORT MODAL COMPONENT (CSV / JSON SPREADSHEET)                        -->
+  <!-- ========================================================================= -->
+  @defer (when isExportModalOpen; prefetch on idle) {
+  <admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="pagination.total"
+    [filteredCount]="reports.length" [selectedCount]="selectedReportIds.size" [columns]="columnDefs"
+    (closed)="closeExportModal()" (exportConfirm)="onExportConfirm($event)">
+  </admin-export-modal>
+  }
+
+  <!-- Row Context Action Menu Component -->
+  <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionReport()" [dropdownWidth]="200"
+    headerLabel="Incident Actions" (closed)="closeActionMenu()">
+    @if (getOpenActionReport(); as r) {
+    <!-- 1. Inspect Live Evidence & Audit Dossier -->
+    <button class="dropdown-item" (click)="openDrawer(r, $event); closeActionMenu()"
+      [adminTooltip]="'Open detailed forensic dossier for #' + r.reportRef">
+      <admin-icon name="eye" [size]="14" strokeWidth="2" cssClass="text-indigo-400"></admin-icon>
+      <span>Inspect Dossier</span>
+      <span class="dropdown-item-shortcut">View</span>
+    </button>
+
+    <!-- 2. Claim Ticket if unassigned / pending -->
+    @if (r.status === 'Pending' || !r.assignedAdminEmail) {
+    <button class="dropdown-item" (click)="claimTicket(r, $event); closeActionMenu()"
+      [adminTooltip]="'Assign report ticket to your current admin session'">
+      <admin-icon name="user-check" [size]="14" strokeWidth="2" cssClass="text-sky-400"></admin-icon>
+      <span>Claim Ticket</span>
+      <span class="dropdown-item-shortcut">Claim</span>
+    </button>
+    }
+
+    <!-- 3. Escalate to Critical Severity if not already critical -->
+    @if (r.severity !== 'Critical' && r.status !== 'Resolved' && r.status !== 'Dismissed') {
+    <button class="dropdown-item text-rose-400 hover:bg-rose-500/10"
+      (click)="escalateReport(r, 'Critical', $event); closeActionMenu()"
+      [adminTooltip]="'Escalate priority to P1 Critical (Urgent SLA)'">
+      <admin-icon name="star" [size]="14" strokeWidth="2" cssClass="text-rose-400"></admin-icon>
+      <span class="text-rose-400 font-semibold">Escalate to Critical</span>
+      <span class="dropdown-item-shortcut text-rose-400">P1</span>
+    </button>
+    }
+
+    <div class="dropdown-divider"></div>
+
+    <!-- 4. Quick Resolve Modal -->
+    @if (r.status !== 'Resolved') {
+    <button class="dropdown-item text-emerald-400 hover:bg-emerald-500/10"
+      (click)="openResolveModal(r, $event); closeActionMenu()"
+      [adminTooltip]="'Open resolution workflow with legal enforcement actions'">
+      <admin-icon name="shield-check" [size]="14" strokeWidth="2" cssClass="text-emerald-400"></admin-icon>
+      <span class="text-emerald-400 font-semibold">Resolve Ticket</span>
+      <span class="dropdown-item-shortcut text-emerald-400">Resolve</span>
+    </button>
+    }
+
+    <!-- 5. Dismiss Modal -->
+    @if (r.status !== 'Dismissed') {
+    <button class="dropdown-item text-slate-300 hover:bg-slate-800/80"
+      (click)="openDismissModal(r, $event); closeActionMenu()"
+      [adminTooltip]="'Dismiss false positive or unverified report (No violation found)'" tooltipPosition="left">
+      <admin-icon name="x-circle" [size]="14" strokeWidth="2" cssClass="text-slate-400"></admin-icon>
+      <span class="text-slate-300 font-semibold">Dismiss False Positive</span>
+      <span class="dropdown-item-shortcut text-slate-400">Dismiss</span>
+    </button>
+    }
+
+    <!-- 6. Re-Open Ticket if Resolved or Dismissed -->
+    @if (r.status === 'Resolved' || r.status === 'Dismissed') {
+    <button class="dropdown-item text-amber-400 hover:bg-amber-500/10"
+      (click)="openReopenModal(r, $event); closeActionMenu()"
+      [adminTooltip]="'Re-open ticket for forensic re-evaluation'">
+      <admin-icon name="refresh" [size]="14" strokeWidth="2" cssClass="text-amber-400"></admin-icon>
+      <span class="text-amber-400 font-semibold">Re-Open Ticket</span>
+      <span class="dropdown-item-shortcut text-amber-400">Reopen</span>
+    </button>
+    }
+    }
+  </admin-action-menu>
+
+  @defer (when showReopenModal; prefetch on idle) {
+  <moderation-reopen-modal [isOpen]="showReopenModal" [report]="reopenTargetReport" [isProcessing]="isProcessingReopen"
+    (confirmed)="onReopenModalConfirmed($event)" (closed)="closeReopenModal()">
+  </moderation-reopen-modal>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- MODERATION VELOCITY & SLA OPERATIONAL TELEMETRY MODAL (EF-005)             -->
+  <!-- ========================================================================= -->
+  @defer (when isAnalyticsModalOpen; prefetch on idle) {
+  <moderation-analytics-modal [isOpen]="isAnalyticsModalOpen" (queueNeedsReload)="onAnalyticsReloadQueue()"
+    (closed)="closeAnalyticsModal()">
+  </moderation-analytics-modal>
   }
 
 </div>

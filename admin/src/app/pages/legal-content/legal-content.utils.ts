@@ -1,4 +1,5 @@
 import { BareAct } from './legal-content.models';
+import { IconName } from '../../shared/components/icon/icon.component';
 
 export interface CategoryTheme {
   name: string;
@@ -7,6 +8,7 @@ export interface CategoryTheme {
   stripeGradient: string;
   bgGlow: string;
   iconSvg: string;
+  iconName: IconName;
 }
 
 export interface DensityBadge {
@@ -58,7 +60,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-rose-500/50 hover:shadow-rose-500/15',
       stripeGradient: 'linear-gradient(90deg, #f43f5e, #e11d48, #fda4af)',
       bgGlow: 'rgba(244, 63, 94, 0.04)',
-      iconSvg: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z'
+      iconSvg: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z',
+      iconName: 'shield'
     };
   }
   // 2. Commercial / Business / Corporate / Trade
@@ -82,7 +85,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-indigo-500/50 hover:shadow-indigo-500/15',
       stripeGradient: 'linear-gradient(90deg, #6366f1, #4f46e5, #818cf8)',
       bgGlow: 'rgba(99, 102, 241, 0.04)',
-      iconSvg: 'M20 7h-3a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z'
+      iconSvg: 'M20 7h-3a2 2 0 0 0-2-2h-6a2 2 0 0 0-2 2H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z',
+      iconName: 'briefcase'
     };
   }
   // 3. Financial / Tax / Revenue
@@ -104,7 +108,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-emerald-500/50 hover:shadow-emerald-500/15',
       stripeGradient: 'linear-gradient(90deg, #10b981, #059669, #34d399)',
       bgGlow: 'rgba(16, 185, 129, 0.04)',
-      iconSvg: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6'
+      iconSvg: 'M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6',
+      iconName: 'dollar-sign'
     };
   }
   // 4. Constitutional / Governance
@@ -124,7 +129,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-purple-500/50 hover:shadow-purple-500/15',
       stripeGradient: 'linear-gradient(90deg, #a855f7, #9333ea, #c084fc)',
       bgGlow: 'rgba(168, 85, 247, 0.04)',
-      iconSvg: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z'
+      iconSvg: 'M4 19.5A2.5 2.5 0 0 1 6.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z',
+      iconName: 'book'
     };
   }
   // 5. IP & Technology / Cyber
@@ -145,7 +151,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-cyan-500/50 hover:shadow-cyan-500/15',
       stripeGradient: 'linear-gradient(90deg, #06b6d4, #0891b2, #22d3ee)',
       bgGlow: 'rgba(6, 182, 212, 0.04)',
-      iconSvg: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17.93a8 8 0 0 1-7-7.93h7zm0-9.93V4.07a8 8 0 0 1 7 7.93z'
+      iconSvg: 'M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm1 17.93a8 8 0 0 1-7-7.93h7zm0-9.93V4.07a8 8 0 0 1 7 7.93z',
+      iconName: 'cpu'
     };
   }
   // 6. Civil & Property / Family
@@ -165,7 +172,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-amber-500/50 hover:shadow-amber-500/15',
       stripeGradient: 'linear-gradient(90deg, #f59e0b, #d97706, #fbbf24)',
       bgGlow: 'rgba(245, 158, 11, 0.04)',
-      iconSvg: 'M3 6l9-4 9 4v12l-9 4-9-4V6z'
+      iconSvg: 'M3 6l9-4 9 4v12l-9 4-9-4V6z',
+      iconName: 'scale'
     };
   }
   // 7. Default General Statute
@@ -176,7 +184,8 @@ export function getCategoryTheme(act: BareAct): CategoryTheme {
       glowClass: 'hover:border-indigo-500/40 hover:shadow-indigo-500/10',
       stripeGradient: 'linear-gradient(90deg, #6366f1, #818cf8, #a5b4fc)',
       bgGlow: 'rgba(99, 102, 241, 0.02)',
-      iconSvg: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'
+      iconSvg: 'M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z',
+      iconName: 'file-text'
     };
   }
 

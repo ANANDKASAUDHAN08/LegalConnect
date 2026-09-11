@@ -23,11 +23,7 @@
           <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
           <span class="relative inline-flex rounded-full h-2 w-2 bg-purple-400"></span>
         </span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round" class="text-purple-400">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-        </svg>
+        <admin-icon name="book" [size]="14" cssClass="text-purple-400"></admin-icon>
         <span class="tracking-wide text-[11px] uppercase font-bold text-purple-300/90">Statutory Bare Acts
           Registry</span>
       </div>
@@ -51,11 +47,7 @@
         <div
           class="flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-slate-800/40 hover:bg-slate-800/70 backdrop-blur-md shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5">
           <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 shadow-sm shadow-indigo-500/10">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-              <polyline points="14 2 14 8 20 8"></polyline>
-            </svg>
+            <admin-icon name="file-text" [size]="18"></admin-icon>
           </div>
           <div class="flex flex-col">
             <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Total Acts</span>
@@ -67,10 +59,7 @@
         <div
           class="flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-slate-800/40 hover:bg-slate-800/70 backdrop-blur-md shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5">
           <div class="p-2.5 rounded-xl bg-purple-500/10 text-purple-400 shadow-sm shadow-purple-500/10">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-            </svg>
+            <admin-icon name="folder" [size]="18"></admin-icon>
           </div>
           <div class="flex flex-col">
             <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Chapters</span>
@@ -82,11 +71,7 @@
         <div
           class="flex items-center gap-3.5 px-4 py-3 rounded-2xl bg-slate-800/40 hover:bg-slate-800/70 backdrop-blur-md shadow-lg shadow-black/10 transition-all duration-300 hover:-translate-y-0.5">
           <div class="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-400 shadow-sm shadow-emerald-500/10">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 11 12 14 22 4"></polyline>
-              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-            </svg>
+            <admin-icon name="check-circle" [size]="18"></admin-icon>
           </div>
           <div class="flex flex-col">
             <span class="text-slate-400 text-[10px] uppercase font-bold tracking-widest">Sections</span>
@@ -101,13 +86,8 @@
         <button
           class="flex items-center gap-2 px-4 py-3 text-xs font-semibold rounded-2xl bg-slate-800/50 hover:bg-slate-700/70 text-slate-300 hover:text-white backdrop-blur-md shadow-lg shadow-black/10 transition-all duration-300 active:scale-95 cursor-pointer"
           (click)="fetchActs()" [adminTooltip]="'Refresh acts list from database'" tooltipPosition="top">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            stroke-linecap="round" stroke-linejoin="round" [class.animate-spin]="isLoading">
-            <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
-            <path d="M3 3v5h5"></path>
-            <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
-            <path d="M16 16h5v5"></path>
-          </svg>
+          <admin-icon name="refresh" [size]="15" [strokeWidth]="2.2"
+            [cssClass]="isLoading ? 'animate-spin' : ''"></admin-icon>
           <span>Refresh</span>
         </button>
 
@@ -115,11 +95,7 @@
         <button
           class="flex items-center gap-2 px-5 py-3 text-xs font-bold rounded-2xl bg-gradient-to-r from-indigo-500 via-indigo-600 to-purple-600 hover:from-indigo-400 hover:to-purple-500 text-white shadow-xl shadow-indigo-500/25 transition-all duration-300 hover:shadow-indigo-500/40 hover:-translate-y-0.5 active:translate-y-0 active:scale-95 cursor-pointer"
           (click)="openCreateModal()" [adminTooltip]="'Create a new statutory Bare Act entry'" tooltipPosition="top">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19"></line>
-            <line x1="5" y1="12" x2="19" y2="12"></line>
-          </svg>
+          <admin-icon name="plus" [size]="16" [strokeWidth]="2.5"></admin-icon>
           <span>Create New Act</span>
         </button>
       </div>
@@ -136,11 +112,7 @@
         <!-- Search Input & Keyboard Shortcut -->
         <div class="relative flex-1 w-full max-w-xl flex items-center">
           <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <admin-icon name="search" [size]="15"></admin-icon>
           </div>
           <input #searchInput type="text"
             class="w-full pl-10 pr-24 py-2.5 bg-slate-950/70 border border-slate-800 text-slate-100 placeholder-slate-500 rounded-xl text-xs outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-inner"
@@ -152,11 +124,7 @@
             @if (searchQuery) {
             <button class="p-1 text-slate-400 hover:text-white transition-colors cursor-pointer" (click)="clearSearch()"
               [adminTooltip]="'Clear search (Esc)'" tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <admin-icon name="close" [size]="14"></admin-icon>
             </button>
             } @else {
             <span
@@ -178,12 +146,8 @@
               [ngClass]="(yearFilter === 'all' && !showFavoritesOnly) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
               (click)="yearFilter = 'all'; showFavoritesOnly = false; onSearchChange()"
               [adminTooltip]="'Show all statutory acts'" tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                class="shrink-0"
-                [ngClass]="(yearFilter === 'all' && !showFavoritesOnly) ? 'text-white' : 'text-indigo-400'">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-              </svg>
+              <admin-icon name="book" [size]="12" [strokeWidth]="2.2" cssClass="shrink-0"
+                [cssClass]="(yearFilter === 'all' && !showFavoritesOnly) ? 'text-white' : 'text-indigo-400'"></admin-icon>
               <span>All Laws</span>
             </button>
 
@@ -193,11 +157,8 @@
               [ngClass]="(yearFilter === 'new' && !showFavoritesOnly) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
               (click)="yearFilter = 'new'; showFavoritesOnly = false; onSearchChange()"
               [adminTooltip]="'Show acts enacted in year 2000 or later'" tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round" class="shrink-0"
-                [ngClass]="(yearFilter === 'new' && !showFavoritesOnly) ? 'text-white' : 'text-emerald-400'">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-              </svg>
+              <admin-icon name="zap" [size]="12" [strokeWidth]="2.2" cssClass="shrink-0"
+                [cssClass]="(yearFilter === 'new' && !showFavoritesOnly) ? 'text-white' : 'text-emerald-400'"></admin-icon>
               <span>Modern (2000+)</span>
             </button>
 
@@ -207,16 +168,8 @@
               [ngClass]="(yearFilter === 'historical' && !showFavoritesOnly) ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'"
               (click)="yearFilter = 'historical'; showFavoritesOnly = false; onSearchChange()"
               [adminTooltip]="'Show acts enacted before year 2000'" tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" class="shrink-0"
-                [ngClass]="(yearFilter === 'historical' && !showFavoritesOnly) ? 'text-white' : 'text-amber-400'">
-                <line x1="3" y1="21" x2="21" y2="21"></line>
-                <path d="M4 21v-7"></path>
-                <path d="M9 21v-7"></path>
-                <path d="M15 21v-7"></path>
-                <path d="M20 21v-7"></path>
-                <path d="M12 3L2 10h20L12 3z"></path>
-              </svg>
+              <admin-icon name="building" [size]="12" cssClass="shrink-0"
+                [cssClass]="(yearFilter === 'historical' && !showFavoritesOnly) ? 'text-white' : 'text-amber-400'"></admin-icon>
               <span>Pre-2000</span>
             </button>
 
@@ -226,12 +179,8 @@
               [ngClass]="showFavoritesOnly ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-md shadow-amber-500/20' : 'text-slate-400 hover:text-amber-300'"
               (click)="toggleFavoritesFilter()" [adminTooltip]="'Filter grid to show only pinned favorite acts'"
               tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="shrink-0" [ngClass]="showFavoritesOnly ? 'text-white' : 'text-amber-400'">
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                </polygon>
-              </svg>
+              <admin-icon name="star" [size]="12" cssClass="shrink-0"
+                [cssClass]="showFavoritesOnly ? 'text-white' : 'text-amber-400'"></admin-icon>
               <span>Pinned</span>
               <span class="px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold shrink-0"
                 [ngClass]="showFavoritesOnly ? 'bg-white/25 text-white border border-white/30' : 'bg-slate-800 text-slate-400 border border-slate-700/60'">
@@ -249,18 +198,12 @@
           <!-- Results Count & Latency Badge -->
           <div
             class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-800/60 border border-slate-700/50 text-[11px] text-slate-300 font-medium shrink-0">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
-              <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-            </svg>
+            <admin-icon name="activity" [size]="12" cssClass="text-slate-400"></admin-icon>
             <span>{{ filteredCount }} of {{ totalActsCount }}</span>
             @if (searchQuery) {
             <span class="text-emerald-400 font-mono text-[10px] border-l border-slate-700 pl-2 flex items-center gap-1"
               [adminTooltip]="'In-memory search execution latency: ' + searchLatencyMs + 'ms'" tooltipPosition="top">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-              </svg>
+              <admin-icon name="zap" [size]="10" [strokeWidth]="2.5"></admin-icon>
               {{ searchLatencyMs }}ms
             </span>
             }
@@ -309,10 +252,7 @@
       <div
         class="flex flex-wrap items-center gap-2 px-3 py-2 rounded-xl bg-slate-900/80 border border-indigo-500/20 backdrop-blur-md animate-in shadow-inner">
         <span class="text-[10px] uppercase font-bold text-indigo-400 tracking-wider flex items-center gap-1.5 mr-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon>
-          </svg>
+          <admin-icon name="filter" [size]="12" [strokeWidth]="2.2"></admin-icon>
           Active Filters:
         </span>
 
@@ -323,11 +263,7 @@
           <span>Query: <strong class="text-white font-mono">"{{ searchQuery }}"</strong></span>
           <button class="hover:text-white transition-colors cursor-pointer" (click)="removeSearchQuery()"
             [adminTooltip]="'Remove search query filter'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
           </button>
         </span>
         }
@@ -340,11 +276,7 @@
               (Pre-2000)' }}</strong></span>
           <button class="hover:text-white transition-colors cursor-pointer" (click)="removeYearFilter()"
             [adminTooltip]="'Remove era filter'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
           </button>
         </span>
         }
@@ -356,11 +288,7 @@
           <span>Domain: <strong class="text-white">{{ categoryFilter }}</strong></span>
           <button class="hover:text-white transition-colors cursor-pointer" (click)="removeCategoryFilter()"
             [adminTooltip]="'Remove category filter'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
           </button>
         </span>
         }
@@ -372,11 +300,7 @@
           <span>Sort: <strong class="text-white">{{ getSortOptionLabel(sortBy) }}</strong></span>
           <button class="hover:text-white transition-colors cursor-pointer" (click)="removeSortFilter()"
             [adminTooltip]="'Reset sort order to default'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
           </button>
         </span>
         }
@@ -385,20 +309,11 @@
         @if (showFavoritesOnly) {
         <span
           class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-amber-500/15 border border-amber-500/30 text-amber-200">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5"
-            class="text-amber-400 shrink-0">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
+          <admin-icon name="star-filled" [size]="12" cssClass="text-amber-400 shrink-0"></admin-icon>
           <span>View: <strong class="text-white font-semibold">Pinned Only ({{ favoritesSet.size }})</strong></span>
           <button class="hover:text-white transition-colors cursor-pointer" (click)="removeFavoritesFilter()"
             [adminTooltip]="'Show all acts'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
           </button>
         </span>
         }
@@ -450,10 +365,8 @@
                 class="px-2 py-0.5 rounded-lg text-[9px] font-extrabold uppercase tracking-wider border backdrop-blur-md inline-flex items-center gap-1 shadow-sm shrink-0"
                 [ngClass]="getCategoryTheme(act).badgeClass"
                 [adminTooltip]="'Domain Category: ' + getCategoryTheme(act).name" tooltipPosition="top">
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                  stroke-linecap="round" stroke-linejoin="round" class="shrink-0">
-                  <path [attr.d]="getCategoryTheme(act).iconSvg"></path>
-                </svg>
+                <admin-icon [name]="getCategoryTheme(act).iconName" [size]="11" [strokeWidth]="2.2"
+                  cssClass="shrink-0"></admin-icon>
                 <span>{{ getCategoryTheme(act).name }}</span>
               </span>
 
@@ -463,12 +376,8 @@
                 (click)="copyShortCode(act.shortName, $event)"
                 [adminTooltip]="'Click to copy short code \'' + act.shortName + '\''" tooltipPosition="top">
                 <span>{{ act.shortName }}</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round"
-                  class="text-purple-300/70 group-hover/code:text-white transition-colors shrink-0">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
+                <admin-icon name="copy" [size]="10"
+                  cssClass="text-purple-300/70 group-hover/code:text-white transition-colors shrink-0"></admin-icon>
               </button>
 
               <!-- Enactment Year Badge -->
@@ -497,24 +406,14 @@
                 (click)="toggleFavorite(act.shortName, $event)"
                 [adminTooltip]="isFavorite(act.shortName) ? 'Unpin from favorites' : 'Pin to favorites'"
                 tooltipPosition="top">
-                <svg width="13" height="13" viewBox="0 0 24 24"
-                  [attr.fill]="isFavorite(act.shortName) ? 'currentColor' : 'none'" stroke="currentColor"
-                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <polygon
-                    points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                  </polygon>
-                </svg>
+                <admin-icon [name]="isFavorite(act.shortName) ? 'star-filled' : 'star'" [size]="13"></admin-icon>
               </button>
 
               <!-- Copy Citation Button -->
               <button
                 class="p-1 rounded-md text-slate-400 hover:text-sky-300 hover:bg-sky-500/10 transition-colors cursor-pointer"
                 (click)="copyCitation(act, $event)" [adminTooltip]="'Copy official act citation'" tooltipPosition="top">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-                  <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-                </svg>
+                <admin-icon name="paperclip" [size]="13"></admin-icon>
               </button>
 
               <!-- Edit Metadata Button -->
@@ -522,11 +421,7 @@
                 class="p-1 rounded-md text-slate-400 hover:text-indigo-300 hover:bg-indigo-500/10 transition-colors cursor-pointer"
                 (click)="openEditMetaModal(act, $event)" [adminTooltip]="'Edit act metadata & gazette information'"
                 tooltipPosition="top">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                </svg>
+                <admin-icon name="edit" [size]="13"></admin-icon>
               </button>
 
               <!-- Delete Act Button -->
@@ -534,11 +429,7 @@
                 class="p-1 rounded-md text-slate-400 hover:text-rose-300 hover:bg-rose-500/10 transition-colors cursor-pointer"
                 (click)="confirmDeleteAct(act, $event)" [adminTooltip]="'Delete this act permanently'"
                 tooltipPosition="top">
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  stroke-linecap="round" stroke-linejoin="round">
-                  <polyline points="3 6 5 6 21 6"></polyline>
-                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                </svg>
+                <admin-icon name="trash" [size]="13"></admin-icon>
               </button>
             </div>
           </div>
@@ -565,20 +456,13 @@
             class="flex items-center gap-1.5 flex-nowrap shrink min-w-0 overflow-hidden text-[11px] font-semibold text-slate-300">
             <span class="flex items-center gap-1 shrink-0" [adminTooltip]="getChapterLabel(act) + ' in this act'"
               tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-purple-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
+              <admin-icon name="folder" [size]="12" cssClass="text-purple-400 shrink-0"></admin-icon>
               <span class="shrink-0">{{ getChapterLabel(act) }}</span>
             </span>
             <span class="text-slate-700 shrink-0">·</span>
             <span class="flex items-center gap-1 shrink-0" [adminTooltip]="getSectionLabel(act) + ' in this act'"
               tooltipPosition="top">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-emerald-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 1-2 2v16a2 2 0 0 1 2 2h12a2 2 0 0 1 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-              </svg>
+              <admin-icon name="file-text" [size]="12" cssClass="text-emerald-400 shrink-0"></admin-icon>
               <span class="shrink-0">{{ getSectionLabel(act) }}</span>
             </span>
 
@@ -597,11 +481,8 @@
             (click)="openActDetail(act.shortName, true); $event.stopPropagation();"
             [adminTooltip]="'Open statutory reader for ' + act.shortName" tooltipPosition="top">
             <span class="whitespace-nowrap">Open</span>
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round"
-              class="transition-transform duration-300 group-hover/btn:translate-x-1 shrink-0">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
+            <admin-icon name="chevron-right" [size]="11" [strokeWidth]="2.5"
+              cssClass="transition-transform duration-300 group-hover/btn:translate-x-1 shrink-0"></admin-icon>
           </button>
         </div>
 
@@ -613,11 +494,7 @@
         <!-- Pinned Favorites Empty State -->
         <div
           class="p-4 rounded-2xl bg-amber-500/10 text-amber-400 border border-amber-500/20 shadow-lg shadow-amber-500/10">
-          <svg width="36" height="36" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
+          <admin-icon name="star-filled" [size]="36" [strokeWidth]="1"></admin-icon>
         </div>
         <div class="flex flex-col gap-1.5 max-w-md">
           @if (favoritesSet.size > 0) {
@@ -632,12 +509,7 @@
           <p
             class="text-xs text-slate-400 leading-relaxed font-normal flex items-center justify-center gap-1 flex-wrap">
             <span>Bookmark your statutory bare acts by clicking the star icon</span>
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-amber-400 inline shrink-0">
-              <polygon
-                points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-              </polygon>
-            </svg>
+            <admin-icon name="star" [size]="12" cssClass="text-amber-400 inline shrink-0"></admin-icon>
             <span>on any card for 1-click quick access.</span>
           </p>
           }
@@ -645,21 +517,13 @@
         <button
           class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/60 transition-all cursor-pointer shadow-md flex items-center gap-2"
           (click)="removeFavoritesFilter()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
+          <admin-icon name="eye" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>View All Statutory Acts</span>
         </button>
         } @else {
         <!-- General Empty State -->
         <div class="p-4 rounded-full bg-slate-800/80 text-slate-400 border border-slate-700/50">
-          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            <line x1="8" y1="11" x2="14" y2="11"></line>
-          </svg>
+          <admin-icon name="search" [size]="32" [strokeWidth]="1.5"></admin-icon>
         </div>
         <div class="flex flex-col gap-1 max-w-sm">
           <h3 class="text-base font-bold text-slate-200">No Acts Found</h3>
@@ -675,11 +539,7 @@
         @if (hasActiveFilters) {
         <button class="btn btn-secondary text-xs px-4 py-2 flex items-center gap-2 cursor-pointer"
           (click)="clearSearch()" [adminTooltip]="'Reset search query and active filters'" tooltipPosition="top">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="close" [size]="13"></admin-icon>
           Clear Filters
         </button>
         }
@@ -695,11 +555,7 @@
         class="btn btn-secondary px-6 py-2.5 text-xs font-semibold rounded-xl flex items-center gap-2 hover:bg-slate-800 transition-colors cursor-pointer"
         (click)="loadMore()" [adminTooltip]="'Load next ' + PAGE_SIZE + ' acts (' + remainingCount + ' remaining)'"
         tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="7 13 12 18 17 13"></polyline>
-          <polyline points="7 6 12 11 17 6"></polyline>
-        </svg>
+        <admin-icon name="chevron-down" [size]="14"></admin-icon>
         Load More ({{ remainingCount }} remaining)
       </button>
       <span class="text-[10px] text-slate-500">Showing {{ visibleActs.length }} of {{ filteredCount }} acts</span>

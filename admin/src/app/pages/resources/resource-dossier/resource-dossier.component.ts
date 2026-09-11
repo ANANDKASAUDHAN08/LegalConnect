@@ -4,12 +4,13 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { LegalResourceItem } from '../../legal-content/legal-content.models';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
 import { ToastService } from '../../../shared/services/toast.service';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'admin-resource-dossier',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, AdminIconComponent],
   templateUrl: './resource-dossier.component.html',
   styleUrl: './resource-dossier.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

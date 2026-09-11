@@ -1,13 +1,15 @@
-import { Component, OnInit, HostListener, ElementRef, ViewChild } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClient } from '@angular/common/http';
+import { ActivatedRoute } from '@angular/router';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { AdminApiService } from '../../core/admin-api.service';
 import { AdminAuthService } from '../../core/auth.service';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 import { environment } from '../../../environments/environment';
 
 export interface AccountAuditLog {
@@ -21,9 +23,10 @@ export interface AccountAuditLog {
 @Component({
   selector: 'admin-account',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, AdminIconComponent],
   templateUrl: './account.component.html',
-  styleUrl: './account.component.scss'
+  styleUrl: './account.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AccountComponent implements OnInit {
 
@@ -115,18 +118,29 @@ export class AccountComponent implements OnInit {
   // -- Security Activity Audit Log --
   auditLogs: AccountAuditLog[] = [];
   isLoadingAuditLogs = false;
+  mustChangePasswordPrompt = false;
 
   constructor(
     private api: AdminApiService,
     private auth: AdminAuthService,
+    private route: ActivatedRoute,
     private http: HttpClient,
     private toast: ToastService,
     private dialog: DialogService,
-    private el: ElementRef
+    private el: ElementRef,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
     this.fetchProfile();
+    this.route.queryParams.subscribe(params => {
+      if (params['promptPasswordChange'] === 'true' || this.auth.user?.mustChangePassword) {
+        this.activeTab = 'password';
+        this.mustChangePasswordPrompt = true;
+        this.toast.warning('Default security password detected. Please change your password.');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   // -- Account Security Health Score Calculation ----------------
@@ -197,7 +211,7 @@ export class AccountComponent implements OnInit {
         this.populateEditForm(res);
         this.isLoadingProfile = false;
       },
-      error: () => {
+      error: (_err: HttpErrorResponse) => {
         const user = this.auth.user;
         if (user) {
           this.profile = user;
@@ -256,7 +270,7 @@ export class AccountComponent implements OnInit {
           this.refreshProfile();
         }
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isSavingProfile = false;
         this.toast.error(err?.error?.message || 'Failed to update profile.');
       }
@@ -319,14 +333,21 @@ export class AccountComponent implements OnInit {
       currentPassword: this.currentPassword,
       newPassword: this.newPassword
     }).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.isChangingPassword = false;
+        this.mustChangePasswordPrompt = false;
+        if (res?.token) {
+          this.auth.updateSessionToken(res.token);
+        } else if (this.auth.user) {
+          this.auth.user.mustChangePassword = false;
+        }
         this.toast.success('Password changed successfully.');
         this.currentPassword = '';
         this.newPassword = '';
         this.confirmPassword = '';
+        this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isChangingPassword = false;
         this.toast.error(err?.error?.message || 'Failed to change password.');
       }
@@ -346,7 +367,7 @@ export class AccountComponent implements OnInit {
         this.backupCodes = res.backupCodes || [];
         this.setupStep = 'qr';
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.is2FALoading = false;
         this.toast.error(err?.error?.message || 'Failed to initiate 2FA setup.');
       }
@@ -373,7 +394,7 @@ export class AccountComponent implements OnInit {
         this.toast.success('Two-factor authentication activated!');
         this.refreshProfile();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isVerifying = false;
         this.toast.error(err?.error?.message || 'Verification failed. Try again.');
       }
@@ -404,7 +425,7 @@ export class AccountComponent implements OnInit {
         this.refreshProfile();
         this.reset2FASetup();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isDisabling = false;
         this.toast.error(err?.error?.message || 'Failed to disable 2FA.');
       }
@@ -480,7 +501,7 @@ export class AccountComponent implements OnInit {
         this.isLoadingSessions = false;
         this.sessions = res.data || [];
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoadingSessions = false;
         this.toast.error(err?.error?.message || 'Failed to load sessions.');
       }
@@ -505,7 +526,7 @@ export class AccountComponent implements OnInit {
         this.toast.success('Session revoked.');
         this.fetchSessions();
       },
-      error: (err: any) => this.toast.error(err?.error?.message || 'Revocation failed.')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Revocation failed.')
     });
   }
 
@@ -530,7 +551,7 @@ export class AccountComponent implements OnInit {
         this.toast.success(res?.message || 'All other sessions have been terminated.');
         this.fetchSessions();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isRevokingOthers = false;
         this.toast.error(err?.error?.message || 'Failed to revoke other sessions.');
       }
@@ -546,7 +567,7 @@ export class AccountComponent implements OnInit {
         this.isLoadingAuditLogs = false;
         this.auditLogs = res.data || [];
       },
-      error: () => {
+      error: (_err: HttpErrorResponse) => {
         this.isLoadingAuditLogs = false;
       }
     });

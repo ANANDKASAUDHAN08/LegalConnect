@@ -3,27 +3,21 @@
   <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-600/30 rounded-full blur-3xl pointer-events-none"></div>
   <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/20 rounded-full blur-3xl pointer-events-none"></div>
 
-  <div class="glass-card max-w-md w-full rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl p-8 flex flex-col gap-6 animate-in relative z-10">
+  <div
+    class="glass-card max-w-md w-full rounded-3xl border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl p-8 flex flex-col gap-6 animate-in relative z-10">
     <div class="flex flex-col items-center text-center gap-2">
-      <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shadow-inner mb-1">
-        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
-          <polyline points="2 17 12 22 22 17"></polyline>
-          <polyline points="2 12 12 17 22 12"></polyline>
-        </svg>
+      <div
+        class="w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shadow-inner mb-1">
+        <admin-icon name="layers" [size]="36" strokeWidth="2"></admin-icon>
       </div>
       <h2 class="text-2xl font-extrabold text-slate-100 tracking-tight">LegalConnect Admin</h2>
       <p class="text-xs text-slate-400 font-medium">Control Center & Analytics Portal</p>
     </div>
 
     @if (errorMessage) {
-    <div class="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-xs flex items-center gap-2.5 animate-in">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="shrink-0 text-red-400">
-        <circle cx="12" cy="12" r="10"></circle>
-        <line x1="12" y1="8" x2="12" y2="12"></line>
-        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-      </svg>
+    <div
+      class="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-300 text-xs flex items-center gap-2.5 animate-in">
+      <admin-icon name="alert-circle" [size]="16" strokeWidth="2" cssClass="shrink-0 text-red-400"></admin-icon>
       <span>{{ errorMessage }}</span>
     </div>
     }
@@ -33,16 +27,15 @@
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-semibold text-slate-300" for="email">Admin Email</label>
         <div class="relative">
-          <input id="email" type="email" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl p-3 pr-10 text-sm w-full focus:border-indigo-500 transition-all" [(ngModel)]="email" name="email"
-            placeholder="admin@legalconnect.com" required autocomplete="email"
+          <input id="email" type="email"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl p-3 pr-10 text-sm w-full focus:border-indigo-500 transition-all"
+            [(ngModel)]="email" name="email" placeholder="admin@legalconnect.com" required autocomplete="email"
             [adminTooltip]="'Enter admin account email'" tooltipPosition="top" />
           @if (email) {
-          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors z-10 p-1"
+          <button type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors z-10 p-1"
             (click)="email = ''" [adminTooltip]="'Clear email field'" tooltipPosition="left">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="14" strokeWidth="2"></admin-icon>
           </button>
           }
         </div>
@@ -52,31 +45,24 @@
       <div class="flex flex-col gap-1.5">
         <label class="text-xs font-semibold text-slate-300" for="password">Password</label>
         <div class="relative">
-          <input id="password" [type]="showPassword ? 'text' : 'password'" class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl p-3 pr-16 text-sm w-full focus:border-indigo-500 transition-all" [(ngModel)]="password" name="password"
-            placeholder="••••••••••••" required autocomplete="current-password"
+          <input id="password" [type]="showPassword ? 'text' : 'password'"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-slate-100 placeholder-slate-500 rounded-xl p-3 pr-16 text-sm w-full focus:border-indigo-500 transition-all"
+            [(ngModel)]="password" name="password" placeholder="••••••••••••" required autocomplete="current-password"
             [adminTooltip]="'Enter admin account password'" tooltipPosition="top" />
           <div class="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
             @if (password) {
             <button type="button" class="text-slate-400 hover:text-slate-200 transition-colors p-1"
               (click)="password = ''" [adminTooltip]="'Clear password field'" tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <admin-icon name="close" [size]="14" strokeWidth="2"></admin-icon>
             </button>
             }
             <button type="button" class="text-slate-400 hover:text-slate-200 transition-colors p-1"
-              (click)="showPassword = !showPassword" [adminTooltip]="showPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
+              (click)="showPassword = !showPassword" [adminTooltip]="showPassword ? 'Hide password' : 'Show password'"
+              tooltipPosition="top">
               @if (showPassword) {
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
-                <line x1="1" y1="1" x2="23" y2="23"></line>
-              </svg>
+              <admin-icon name="eye-off" [size]="15" strokeWidth="2"></admin-icon>
               } @else {
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                <circle cx="12" cy="12" r="3"></circle>
-              </svg>
+              <admin-icon name="eye" [size]="15" strokeWidth="2"></admin-icon>
               }
             </button>
           </div>
@@ -88,41 +74,35 @@
       <div class="flex flex-col gap-1.5 animate-in">
         <label class="text-xs font-semibold text-slate-300" for="twoFactorCode">2FA Verification Code</label>
         <div class="relative">
-          <input id="twoFactorCode" type="text" class="form-input bg-slate-800/80 border-slate-700/80 text-amber-300 font-mono tracking-widest text-center rounded-xl p-3 pr-10 text-sm w-full focus:border-amber-500 transition-all" [(ngModel)]="twoFactorCode" name="twoFactorCode"
-            placeholder="6-digit TOTP code" maxlength="6" [adminTooltip]="'Open Authenticator App for 6-digit code'"
-            tooltipPosition="top" />
+          <input id="twoFactorCode" type="text"
+            class="form-input bg-slate-800/80 border-slate-700/80 text-amber-300 font-mono tracking-widest text-center rounded-xl p-3 pr-10 text-sm w-full focus:border-amber-500 transition-all"
+            [(ngModel)]="twoFactorCode" name="twoFactorCode" placeholder="6-digit TOTP code" maxlength="6"
+            [adminTooltip]="'Open Authenticator App for 6-digit code'" tooltipPosition="top" />
           @if (twoFactorCode) {
-          <button type="button" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors z-10 p-1"
+          <button type="button"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors z-10 p-1"
             (click)="twoFactorCode = ''" [adminTooltip]="'Clear 2FA code'" tooltipPosition="left">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="14" strokeWidth="2"></admin-icon>
           </button>
           }
         </div>
       </div>
       }
 
-      <button type="submit" class="btn btn-primary w-full py-3.5 px-4 text-xs font-bold rounded-xl flex items-center justify-center gap-2 mt-2 shadow-lg shadow-indigo-600/20" [disabled]="isLoading"
-        [adminTooltip]="'Authenticate and open control center'" tooltipPosition="bottom">
+      <button type="submit"
+        class="btn btn-primary w-full py-3.5 px-4 text-xs font-bold rounded-xl flex items-center justify-center gap-2 mt-2 shadow-lg shadow-indigo-600/20"
+        [disabled]="isLoading" [adminTooltip]="'Authenticate and open control center'" tooltipPosition="bottom">
         @if (isLoading) {
         <span>Authenticating...</span>
         } @else {
         <span>Sign In to Admin Console</span>
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="5" y1="12" x2="19" y2="12"></line>
-          <polyline points="12 5 19 12 12 19"></polyline>
-        </svg>
+        <admin-icon name="arrow-right" [size]="14" strokeWidth="2"></admin-icon>
         }
       </button>
     </form>
 
     <div class="flex items-center justify-center gap-1.5 pt-4 border-t border-slate-800/80 text-[11px] text-slate-400">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-      </svg>
+      <admin-icon name="lock" [size]="12" strokeWidth="2"></admin-icon>
       <span>Restricted Access - Unauthorized entry is strictly logged</span>
     </div>
   </div>

@@ -1,4 +1,4 @@
-<div class="px-3 pt-3 w-full flex flex-col gap-2 px-8">
+<div class="pt-2 w-full flex flex-col gap-2 px-8">
 
   <!-- --- 0. Header Banner & Quick Actions --- -->
   <div class="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
@@ -16,11 +16,7 @@
         class="btn btn-primary flex items-center px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
         (click)="openExportModal()" [adminTooltip]="'Open custom export modal to download CSV or JSON spreadsheet'"
         tooltipPosition="top">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-          <polyline points="7 10 12 15 17 10"></polyline>
-          <line x1="12" y1="15" x2="12" y2="3"></line>
-        </svg>
+        <admin-icon name="download" [size]="15"></admin-icon>
         <span>Export Support</span>
       </button>
 
@@ -28,11 +24,7 @@
         class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
         (click)="fetchContacts()" [adminTooltip]="'Refresh support inquiry directory from database'"
         tooltipPosition="top">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          [class.animate-spin]="isLoading">
-          <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-          <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-        </svg>
+        <admin-icon name="refresh" [size]="14" [cssClass]="isLoading ? 'animate-spin' : ''"></admin-icon>
         <span>Refresh Desk</span>
       </button>
     </div>
@@ -53,10 +45,7 @@
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">Total Inquiries</span>
         <div class="w-6 h-6 rounded-md bg-slate-800 text-slate-300 flex items-center justify-center shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-          </svg>
+          <admin-icon name="file-text" [size]="14"></admin-icon>
         </div>
       </div>
       @if (isLoading) {
@@ -78,9 +67,7 @@
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-extrabold text-amber-400 uppercase tracking-wider">Open / Pending</span>
         <div class="w-6 h-6 rounded-md bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <admin-icon name="clock" [size]="14"></admin-icon>
         </div>
       </div>
       @if (isLoading) {
@@ -102,10 +89,7 @@
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-extrabold text-rose-400 uppercase tracking-wider">Urgent Priority</span>
         <div class="w-6 h-6 rounded-md bg-rose-500/10 text-rose-400 flex items-center justify-center shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-          </svg>
+          <admin-icon name="alert-triangle" [size]="14"></admin-icon>
         </div>
       </div>
       @if (isLoading) {
@@ -127,10 +111,7 @@
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-extrabold text-purple-400 uppercase tracking-wider">DPDP Escalations</span>
         <div class="w-6 h-6 rounded-md bg-purple-500/10 text-purple-400 flex items-center justify-center shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751A11.959 11.959 0 0112 2.714z" />
-          </svg>
+          <admin-icon name="shield" [size]="14"></admin-icon>
         </div>
       </div>
       @if (isLoading) {
@@ -152,9 +133,7 @@
       <div class="flex items-center justify-between">
         <span class="text-[10px] font-extrabold text-emerald-400 uppercase tracking-wider">Resolved & Closed</span>
         <div class="w-6 h-6 rounded-md bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+          <admin-icon name="checkmark" [size]="14" [strokeWidth]="2.5"></admin-icon>
         </div>
       </div>
       @if (isLoading) {
@@ -256,21 +235,8 @@
           class="btn flex items-center gap-1.5 text-xs !px-2.5 py-1 h-7 !rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
           [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
           tooltipPosition="top">
-          @if (piiState.isAllUnmasked) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-            </path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
-          <span>Mask Details</span>
-          } @else {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          <span>Reveal Details</span>
-          }
+          <admin-icon [name]="piiState.isAllUnmasked ? 'eye-off' : 'eye'" [size]="12"></admin-icon>
+          <span>{{ piiState.isAllUnmasked ? 'Mask Details' : 'Reveal Details' }}</span>
         </button>
         }
       </div>
@@ -302,18 +268,14 @@
         <button
           class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           (click)="bulkUpdateStatus('Resolved')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          <admin-icon name="checkmark" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Bulk Resolve</span>
         </button>
 
         <button
           class="h-7 px-3 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
           (click)="bulkUpdateStatus('Escalated to DPO')">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
+          <admin-icon name="shield" [size]="13" [strokeWidth]="2"></admin-icon>
           <span>Bulk Escalate to DPO</span>
         </button>
       </div>
@@ -358,24 +320,10 @@
               [adminTooltip]="'Click to sort by applicant name'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'fullName'">Applicant / Email</span>
-                @if (sortBy === 'fullName') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'fullName' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'fullName' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'fullName' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -386,24 +334,10 @@
               [adminTooltip]="'Click to sort by subject line'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'subject'">Subject &amp; Category</span>
-                @if (sortBy === 'subject') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'subject' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'subject' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'subject' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -414,24 +348,10 @@
               [adminTooltip]="'Click to sort by urgency priority'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'priority'">Priority SLA</span>
-                @if (sortBy === 'priority') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'priority' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'priority' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'priority' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -442,24 +362,10 @@
               [adminTooltip]="'Click to sort by workflow status'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Status &amp; SLA</span>
-                @if (sortBy === 'status') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'status' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'status' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'status' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -470,24 +376,10 @@
               [adminTooltip]="'Click to sort by submission date'" tooltipPosition="top">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'createdAt'">Submitted At</span>
-                @if (sortBy === 'createdAt') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'createdAt' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'createdAt' ? 'text-sky-400 shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -534,8 +426,11 @@
           } @else {
           @for (contact of contacts; track contact.id) {
           <tr (click)="onRowClick(contact.id)" (dblclick)="onRowDblClick(contact)"
-            class="hover:bg-slate-800/50 transition-colors cursor-pointer select-none"
-            [ngClass]="{ 'bg-sky-500/10': isTicketSelected(contact.id) }">
+            class="table-data-row transition-colors cursor-pointer select-none" [ngClass]="{
+              'selected-row row-selected': isTicketSelected(contact.id),
+              'critical-row': contact.priority === 'Urgent' || contact.category === 'DPDP',
+              'warning-row pending-row': (contact.status === 'Pending' || contact.priority === 'High' || contact.priority === 'Medium') && contact.priority !== 'Urgent' && contact.category !== 'DPDP'
+            }">
             <td class="p-3.5 text-center w-[40px] min-w-[40px]" (click)="$event.stopPropagation()">
               <input type="checkbox"
                 class="rounded border-slate-700 bg-slate-800 text-sky-500 focus:ring-sky-500/40 cursor-pointer"
@@ -561,21 +456,8 @@
                       class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
                       [adminTooltip]="isPiiUnmasked(contact.id, 'email') ? 'Click to Mask Email' : 'Click to Reveal Email'"
                       tooltipPosition="top">
-                      @if (isPiiUnmasked(contact.id, 'email')) {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                        </path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                      } @else {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      }
+                      <admin-icon [name]="isPiiUnmasked(contact.id, 'email') ? 'eye-off' : 'eye'"
+                        [size]="11"></admin-icon>
                     </button>
                   </div>
                 </div>
@@ -602,17 +484,9 @@
                   'bg-slate-700/30 text-slate-400 border-slate-700/50': contact.priority === 'Low'
                 }">
                 @if (contact.priority === 'Urgent') {
-                <svg class="w-3 h-3 text-rose-400" fill="none" stroke="currentColor" stroke-width="2.5"
-                  viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
+                <admin-icon name="alert-triangle" [size]="12" [strokeWidth]="2.5" cssClass="text-rose-400"></admin-icon>
                 } @else if (contact.priority === 'High') {
-                <svg class="w-3 h-3 text-amber-400" fill="none" stroke="currentColor" stroke-width="2.5"
-                  viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="9" />
-                  <path d="M12 7v5l3 3" />
-                </svg>
+                <admin-icon name="clock" [size]="12" [strokeWidth]="2.5" cssClass="text-amber-400"></admin-icon>
                 }
                 <span>{{ contact.priority || 'Normal' }}</span>
               </span>
@@ -650,11 +524,7 @@
                   [class.active]="openActionMenuId === contact.id"
                   (click)="toggleActionMenu(contact.id, kebabBtn, $event)" [adminTooltip]="'Ticket Actions'"
                   tooltipPosition="left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2.2"></circle>
-                    <circle cx="12" cy="12" r="2.2"></circle>
-                    <circle cx="12" cy="19" r="2.2"></circle>
-                  </svg>
+                  <admin-icon name="more-horizontal" [size]="16"></admin-icon>
                 </button>
               </div>
             </td>
@@ -734,10 +604,7 @@
           } @else {
           <span
             class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-            <svg class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5"
-              viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-            </svg>
+            <admin-icon name="checkmark" [size]="14" [strokeWidth]="2.5" cssClass="text-emerald-400"></admin-icon>
             <span>Ticket Resolved</span>
           </span>
           }
@@ -758,10 +625,7 @@
       <div
         class="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-300 flex flex-col gap-1 text-xs">
         <strong class="font-bold flex items-center gap-1.5 text-emerald-200">
-          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" stroke-width="2.5"
-            viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-          </svg>
+          <admin-icon name="checkmark" [size]="16" [strokeWidth]="2.5" cssClass="text-emerald-400"></admin-icon>
           <span>Resolution Note Dispatched to Applicant:</span>
         </strong>
         <p class="leading-relaxed text-slate-200 mt-1 whitespace-pre-wrap">{{ selectedTicket.resolutionNote }}</p>
@@ -882,12 +746,7 @@
     headerLabel="Support Ticket Actions" [dropdownWidth]="190" (closed)="closeActionMenu()">
     @if (getOpenActionTicket()) {
     <button class="dropdown-item" (click)="viewTicket(getOpenActionTicket()!); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-sky-400">
-        <path
-          d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
-        <circle cx="12" cy="12" r="3" />
-      </svg>
+      <admin-icon name="eye" [size]="14" [strokeWidth]="2" cssClass="text-sky-400"></admin-icon>
       <span>View Detail Drawer</span>
       <span class="dropdown-item-shortcut">VIEW</span>
     </button>
@@ -895,29 +754,19 @@
     @if (getOpenActionTicket()!.status !== 'Resolved' && getOpenActionTicket()!.status !== 'Replied') {
     <button class="dropdown-item"
       (click)="openResolutionModal(getOpenActionTicket()!, 'Escalated to DPO'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-amber-400">
-        <path
-          d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-      </svg>
+      <admin-icon name="shield" [size]="14" [strokeWidth]="2" cssClass="text-amber-400"></admin-icon>
       <span>Escalate to DPO</span>
       <span class="dropdown-item-shortcut">DPDP</span>
     </button>
 
     <button class="dropdown-item" (click)="openResolutionModal(getOpenActionTicket()!, 'Resolved'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-emerald-400">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
+      <admin-icon name="checkmark" [size]="14" [strokeWidth]="2" cssClass="text-emerald-400"></admin-icon>
       <span>Mark Resolved</span>
       <span class="dropdown-item-shortcut">RESOLVE</span>
     </button>
 
     <button class="dropdown-item" (click)="bulkUpdateStatus('In Progress'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-purple-400">
-        <path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.2" />
-      </svg>
+      <admin-icon name="refresh" [size]="14" [strokeWidth]="2" cssClass="text-purple-400"></admin-icon>
       <span>Mark In Progress</span>
       <span class="dropdown-item-shortcut">PROGRESS</span>
     </button>

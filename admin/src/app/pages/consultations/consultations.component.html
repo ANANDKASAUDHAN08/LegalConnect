@@ -1,4 +1,4 @@
-<div class="consultations-page px-3 pt-4 w-full flex flex-col gap-2 relative px-8">
+<div class="consultations-page pt-4 w-full flex flex-col gap-2 relative px-8">
 
   <!-- ----- 0. Header Banner + Minimalist Stat Pills ----- -->
   <div class="flex flex-col gap-1.5">
@@ -18,22 +18,14 @@
           class="btn btn-primary flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-md bg-indigo-600 hover:bg-indigo-500 text-white shrink-0 transition-all"
           (click)="openExportModal()" [adminTooltip]="'Export ALL matching consultation records to CSV'"
           tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+          <admin-icon name="download" [size]="14"></admin-icon>
           <span>Export Desk</span>
         </button>
 
         <button
           class="btn border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold rounded-xl transition-all"
           (click)="refreshData()" [adminTooltip]="'Refresh consultation records from backend'" tooltipPosition="top">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            [class.animate-spin]="isLoading">
-            <path d="M21.5 2v6h-6M2.5 22v-6h6"></path>
-            <path d="M2 11.5a10 10 0 0 1 18.8-4.3L21.5 8M2.5 16l1.2 1.2A10 10 0 0 0 22 12.5"></path>
-          </svg>
+          <admin-icon name="refresh" [size]="14" [cssClass]="isLoading ? 'animate-spin' : ''"></admin-icon>
           <span>Refresh Desk</span>
         </button>
       </div>
@@ -51,10 +43,7 @@
         [adminTooltip]="'Click to show all consultation requests'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center font-bold flex-shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path>
-            <rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect>
-          </svg>
+          <admin-icon name="file-text" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -75,10 +64,7 @@
         [adminTooltip]="'Click to filter pending consultation requests'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 flex items-center justify-center font-bold flex-shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <polyline points="12 6 12 12 16 14"></polyline>
-          </svg>
+          <admin-icon name="clock" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -99,9 +85,7 @@
         [adminTooltip]="'Click to filter contacted inquiries'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-sky-500/10 text-sky-400 flex items-center justify-center font-bold flex-shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-          </svg>
+          <admin-icon name="message-square" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -122,10 +106,7 @@
         [adminTooltip]="'Click to filter completed consultations'" tooltipPosition="top">
         <div
           class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold flex-shrink-0">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <admin-icon name="check-circle" [size]="16"></admin-icon>
         </div>
         <div class="flex flex-col min-w-0">
           @if (isInitialLoad && isLoading) {
@@ -233,21 +214,8 @@
           class="btn flex items-center gap-1.5 text-xs !px-2.5 py-1 h-7 !rounded-lg bg-slate-800/80 hover:bg-slate-700/80 text-slate-300 hover:text-white font-medium border border-slate-700/60 transition-all shadow-sm"
           [adminTooltip]="piiState.isAllUnmasked ? 'Click to Mask All Details' : 'Click to Reveal All Details'"
           tooltipPosition="top">
-          @if (piiState.isAllUnmasked) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path
-              d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-            </path>
-            <line x1="1" y1="1" x2="23" y2="23"></line>
-          </svg>
-          <span>Mask Details</span>
-          } @else {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-          <span>Reveal Details</span>
-          }
+          <admin-icon [name]="piiState.isAllUnmasked ? 'eye-off' : 'eye'" [size]="12" [strokeWidth]="2"></admin-icon>
+          <span>{{ piiState.isAllUnmasked ? 'Mask Details' : 'Reveal Details' }}</span>
         </button>
         }
       </div>
@@ -279,19 +247,14 @@
         <button
           class="h-7 px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
           (click)="bulkUpdateStatus('Contacted')" [adminTooltip]="'Mark all selected consultations as Contacted'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          <admin-icon name="checkmark" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Mark Contacted</span>
         </button>
 
         <button
           class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
           (click)="bulkUpdateStatus('Closed')" [adminTooltip]="'Close & resolve all selected consultations'">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <admin-icon name="check-circle" [size]="13" [strokeWidth]="2.5"></admin-icon>
           <span>Close &amp; Resolve</span>
         </button>
       </div>
@@ -314,9 +277,7 @@
         message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display consultation records."
         [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
         (action)="onColumnVisibilityChange({ id: true, client: true, phone: true, lawyer: true, sla: true, message: true, status: true, createdAt: true })">
-        <svg icon width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
-        </svg>
+        <admin-icon icon name="columns" [size]="28" [strokeWidth]="2"></admin-icon>
       </admin-empty-state>
       } @else if (!isLoading && consultations.length === 0) {
       <admin-empty-state title="No Consultation Inquiries Found"
@@ -343,24 +304,10 @@
               (click)="toggleSort('id')" [adminTooltip]="'Click to sort by Inquiry ID #'">
               <div class="flex items-center gap-1">
                 <span [class.text-sky-400]="sortBy === 'id'">#</span>
-                @if (sortBy === 'id') {
-                @if (sortOrder === 'asc') {
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'id' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="12" [strokeWidth]="sortBy === 'id' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'id' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -372,24 +319,10 @@
               (click)="toggleSort('clientName')" [adminTooltip]="'Click to sort by client name'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'clientName'">Client</span>
-                @if (sortBy === 'clientName') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'clientName' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'clientName' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'clientName' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -405,24 +338,10 @@
               (click)="toggleSort('lawyerName')" [adminTooltip]="'Click to sort by advocate name'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'lawyerName'">Advocate</span>
-                @if (sortBy === 'lawyerName') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'lawyerName' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'lawyerName' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'lawyerName' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -434,24 +353,10 @@
               (click)="toggleSort('sla')" [adminTooltip]="'Click to sort by SLA urgency (Overdue & Oldest first)'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'sla'">SLA</span>
-                @if (sortBy === 'sla') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'sla' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'sla' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'sla' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -467,24 +372,10 @@
               (click)="toggleSort('status')" [adminTooltip]="'Click to sort by status'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'status'">Status</span>
-                @if (sortBy === 'status') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'status' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'status' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'status' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
@@ -496,29 +387,15 @@
               (click)="toggleSort('createdAt')" [adminTooltip]="'Click to sort by requested date'">
               <div class="flex items-center gap-1.5">
                 <span [class.text-sky-400]="sortBy === 'createdAt'">Requested</span>
-                @if (sortBy === 'createdAt') {
-                @if (sortOrder === 'asc') {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 19V5M5 12l7-7 7 7"></path>
-                </svg>
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                  class="text-sky-400 flex-shrink-0">
-                  <path d="M12 5v14M5 12l7 7 7-7"></path>
-                </svg>
-                }
-                } @else {
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0">
-                  <path d="M7 15l5 5 5-5M7 9l5-5 5 5"></path>
-                </svg>
-                }
+                <admin-icon
+                  [name]="sortBy === 'createdAt' ? (sortOrder === 'asc' ? 'sort-asc' : 'sort-desc') : 'sort-unsorted'"
+                  [size]="13" [strokeWidth]="sortBy === 'createdAt' ? 2.5 : 2"
+                  [cssClass]="sortBy === 'createdAt' ? 'text-sky-400 flex-shrink-0' : 'text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0'"></admin-icon>
               </div>
             </th>
             }
 
-            <th class="p-3.5 text-center min-w-[65px] w-[65px] sticky right-0 z-10 actions-sticky-cell">
+            <th class="p-3.5 text-center min-w-[65px] w-[65px]">
               <span class="text-slate-300 font-semibold">Actions</span>
             </th>
           </tr>
@@ -584,22 +461,27 @@
                 borderRadius="4px" /></td>
             }
 
-            <td class="p-3.5 text-center min-w-[65px] w-[65px] sticky right-0 z-10 actions-sticky-cell">
+            <td class="p-3.5 text-center min-w-[65px] w-[65px]">
               <div class="flex justify-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></div>
             </td>
           </tr>
           }
           } @else {
           @for (item of consultations; track item.id; let i = $index) {
-          <tr class="table-data-row transition-colors cursor-pointer"
-            [ngClass]="{ 'bg-sky-500/10 selected-row': selection.isSelected(item.id), 'ring-2 ring-sky-500/50 bg-slate-800/80': focusedRowIndex === i }"
-            (click)="onRowClick(item.id)" (dblclick)="onRowDblClick(item)"
+          <tr class="table-data-row transition-colors cursor-pointer" [ngClass]="{
+              'selected-row row-selected': selection.isSelected(item.id),
+              'critical-row': item.priority === 'Urgent' || item.status === 'Cancelled',
+              'warning-row pending-row': item.status !== 'Cancelled' && item.priority !== 'Urgent' && (item.status === 'Pending' || item.priority === 'High'),
+              'ring-2 ring-sky-500/50 bg-slate-800/80': focusedRowIndex === i
+            }" (click)="onRowClick(item.id)" (dblclick)="onRowDblClick(item)"
             [adminTooltip]="'Double-click row (or press j/k + Enter) to inspect case details & notes'"
             tooltipPosition="top">
             <!-- Row Checkbox -->
             <td class="p-3.5 pl-5 w-[40px] min-w-[40px]" (click)="$event.stopPropagation()">
               <input type="checkbox" [checked]="selection.isSelected(item.id)" (change)="selection.toggle(item.id)"
-                class="form-checkbox rounded border-slate-700 bg-slate-900 text-sky-500 focus:ring-sky-500/40 cursor-pointer" />
+                class="form-checkbox rounded border-slate-700 bg-slate-900 focus:ring-0 cursor-pointer"
+                [class.text-amber-500]="item.status === 'Pending' && item.priority !== 'Urgent'"
+                [class.text-sky-500]="item.status !== 'Pending' || item.priority === 'Urgent'" />
             </td>
 
             <!-- Inquiry ID -->
@@ -624,7 +506,8 @@
                     {{ item.clientName || item.clientUser || 'Anonymous Client' }}
                   </div>
                   <div class="text-slate-400 text-[11px] truncate flex items-center gap-1">
-                    <span class="font-mono text-slate-300 truncate max-w-[135px]" [adminTooltip]="item.clientEmail">{{
+                    <span class="font-mono text-slate-300 truncate max-w-[135px]"
+                      [adminTooltip]="item.clientEmail || ''">{{
                       isPiiUnmasked(item.id, 'clientEmail') ? (item.clientEmail
                       || 'No Email') : maskEmail(item.clientEmail) }}</span>
                     @if (item.clientEmail) {
@@ -632,21 +515,8 @@
                       class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
                       [adminTooltip]="isPiiUnmasked(item.id, 'clientEmail') ? 'Click to Mask Email' : 'Click to Reveal Email'"
                       tooltipPosition="top">
-                      @if (isPiiUnmasked(item.id, 'clientEmail')) {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                        </path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                      } @else {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      }
+                      <admin-icon [name]="isPiiUnmasked(item.id, 'clientEmail') ? 'eye-off' : 'eye'" [size]="11"
+                        [strokeWidth]="2"></admin-icon>
                     </button>
                     }
                   </div>
@@ -661,11 +531,7 @@
               <div class="flex items-center gap-1 font-mono text-[11px]">
                 <span
                   class="phone-chip inline-flex items-center gap-1 px-1.5 py-0.5 rounded-lg border bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <path
-                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                  </svg>
+                  <admin-icon name="phone" [size]="10" [strokeWidth]="2.2"></admin-icon>
                   <span class="truncate max-w-[85px]" [adminTooltip]="item.clientPhone">{{ isPiiUnmasked(item.id,
                     'clientPhone') ? item.clientPhone : maskPhone(item.clientPhone)
                     }}</span>
@@ -674,19 +540,8 @@
                   class="text-slate-500 hover:text-emerald-400 transition-colors p-0.5 shrink-0"
                   [adminTooltip]="isPiiUnmasked(item.id, 'clientPhone') ? 'Click to Mask Phone' : 'Click to Reveal Phone'"
                   tooltipPosition="top">
-                  @if (isPiiUnmasked(item.id, 'clientPhone')) {
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path
-                      d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                    </path>
-                    <line x1="1" y1="1" x2="23" y2="23"></line>
-                  </svg>
-                  } @else {
-                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
-                  }
+                  <admin-icon [name]="isPiiUnmasked(item.id, 'clientPhone') ? 'eye-off' : 'eye'" [size]="11"
+                    [strokeWidth]="2"></admin-icon>
                 </button>
               </div>
               } @else {
@@ -704,10 +559,11 @@
                   {{ (item.lawyerName || 'L').charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex flex-col min-w-0 overflow-hidden">
-                  <div class="user-name font-bold text-slate-100 truncate" [adminTooltip]="item.lawyerName">{{
+                  <div class="user-name font-bold text-slate-100 truncate" [adminTooltip]="item.lawyerName || ''">{{
                     item.lawyerName }}</div>
                   <div class="text-slate-400 text-[11px] truncate flex items-center gap-1">
-                    <span class="truncate max-w-[135px]" [adminTooltip]="item.lawyerEmail">{{ isPiiUnmasked(item.id,
+                    <span class="truncate max-w-[135px]" [adminTooltip]="item.lawyerEmail || ''">{{
+                      isPiiUnmasked(item.id,
                       'lawyerEmail') ? (item.lawyerEmail || 'Bar Verified Advocate') :
                       maskEmail(item.lawyerEmail) }}</span>
                     @if (item.lawyerEmail) {
@@ -715,21 +571,8 @@
                       class="text-slate-500 hover:text-sky-400 transition-colors p-0.5 shrink-0"
                       [adminTooltip]="isPiiUnmasked(item.id, 'lawyerEmail') ? 'Click to Mask Email' : 'Click to Reveal Email'"
                       tooltipPosition="top">
-                      @if (isPiiUnmasked(item.id, 'lawyerEmail')) {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path
-                          d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                        </path>
-                        <line x1="1" y1="1" x2="23" y2="23"></line>
-                      </svg>
-                      } @else {
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                      }
+                      <admin-icon [name]="isPiiUnmasked(item.id, 'lawyerEmail') ? 'eye-off' : 'eye'" [size]="11"
+                        [strokeWidth]="2"></admin-icon>
                     </button>
                     }
                   </div>
@@ -793,18 +636,13 @@
             }
 
             <!-- Actions (Kebab Menu) -->
-            <td class="p-3.5 text-center min-w-[65px] w-[65px] sticky right-0 z-10 actions-sticky-cell"
-              (click)="$event.stopPropagation()">
+            <td class="p-3.5 text-center min-w-[65px] w-[65px]" (click)="$event.stopPropagation()">
               <div class="flex items-center justify-center w-full">
                 <button #kebabBtn
                   class="kebab-btn w-8 h-8 rounded-lg flex items-center justify-center text-slate-100 bg-slate-800/40 hover:bg-slate-700 hover:text-white transition-all shadow-sm"
                   [class.active]="openActionMenuId === item.id" (click)="toggleActionMenu(item.id, kebabBtn, $event)"
                   [adminTooltip]="'Actions'" tooltipPosition="left">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="5" r="2.2"></circle>
-                    <circle cx="12" cy="12" r="2.2"></circle>
-                    <circle cx="12" cy="19" r="2.2"></circle>
-                  </svg>
+                  <admin-icon name="more-horizontal" [size]="16"></admin-icon>
                 </button>
               </div>
             </td>
@@ -828,11 +666,7 @@
     @if (getOpenActionItem()) {
     <!-- Inspect -->
     <button class="dropdown-item" (click)="openDetailModal(getOpenActionItem()!); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-indigo-400">
-        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-        <circle cx="12" cy="12" r="3"></circle>
-      </svg>
+      <admin-icon name="eye" [size]="14" [strokeWidth]="2" cssClass="text-indigo-400"></admin-icon>
       <span>Inspect Details</span>
       <span class="dropdown-item-shortcut">View</span>
     </button>
@@ -840,11 +674,7 @@
     @if (getOpenActionItem()!.status !== 'Pending') {
     <div class="dropdown-divider"></div>
     <button class="dropdown-item" (click)="updateStatus(getOpenActionItem()!, 'Pending'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-amber-400">
-        <circle cx="12" cy="12" r="10"></circle>
-        <polyline points="12 6 12 12 16 14"></polyline>
-      </svg>
+      <admin-icon name="clock" [size]="14" [strokeWidth]="2" cssClass="text-amber-400"></admin-icon>
       <span>Re-open Pending</span>
       <span class="dropdown-item-shortcut">Reset</span>
     </button>
@@ -853,12 +683,7 @@
     @if (getOpenActionItem()!.status === 'Pending') {
     <div class="dropdown-divider"></div>
     <button class="dropdown-item" (click)="updateStatus(getOpenActionItem()!, 'Contacted'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-sky-400">
-        <path
-          d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z">
-        </path>
-      </svg>
+      <admin-icon name="phone" [size]="14" [strokeWidth]="2" cssClass="text-sky-400"></admin-icon>
       <span>Mark Contacted</span>
       <span class="dropdown-item-shortcut">Status</span>
     </button>
@@ -867,10 +692,7 @@
     @if (getOpenActionItem()!.status !== 'Closed') {
     <div class="dropdown-divider"></div>
     <button class="dropdown-item" (click)="updateStatus(getOpenActionItem()!, 'Closed'); closeActionMenu()">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        class="text-emerald-400">
-        <polyline points="20 6 9 17 4 12"></polyline>
-      </svg>
+      <admin-icon name="checkmark" [size]="14" [strokeWidth]="2" cssClass="text-emerald-400"></admin-icon>
       <span>Close &amp; Resolve</span>
       <span class="dropdown-item-shortcut">Close</span>
     </button>
@@ -913,10 +735,7 @@
           </div>
           <button class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
             (click)="selectedConsultation = null" [adminTooltip]="'Close workspace drawer'" tooltipPosition="left">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="x" [size]="18" [strokeWidth]="2"></admin-icon>
           </button>
         </div>
 
@@ -1005,10 +824,7 @@
           <div class="flex flex-col gap-2 pt-2 border-t border-slate-800">
             <div class="flex items-center justify-between">
               <label class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
+                <admin-icon name="edit" [size]="14" [strokeWidth]="2"></admin-icon>
                 <span>Persisted Internal Staff Notes</span>
               </label>
               <button class="btn btn-primary text-xs px-3 py-1.5 rounded-lg flex items-center gap-1"

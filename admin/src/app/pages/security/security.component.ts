@@ -1,39 +1,46 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminApiService } from '../../core/admin-api.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
-import { ActiveSessionItem, LoginHistoryItem } from '../../core/models/admin.models';
+import { ActiveSessionItem, LoginHistoryItem, ApiResponse } from '../../core/models/admin.models';
 import { ActivatedRoute } from '@angular/router';
 import { CsvExporter } from '../../core/utils/csv-exporter';
 import { TwoFactorEnforcerService } from '../../shared/services/two-factor-enforcer.service';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'admin-security',
   standalone: true,
-  imports: [CommonModule, SkeletonComponent, TooltipDirective],
+  imports: [CommonModule, SkeletonComponent, TooltipDirective, AdminIconComponent],
   templateUrl: './security.component.html',
-  styleUrl: './security.component.scss'
+  styleUrl: './security.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class SecurityComponent implements OnInit {
+export class SecurityComponent implements OnInit, OnDestroy {
   activeTab: 'sessions' | 'logs' = 'sessions';
   sessions: ActiveSessionItem[] = [];
   loginLogs: LoginHistoryItem[] = [];
   isLoading = false;
   statusFilter = '';
 
+  private routeSub?: Subscription;
+
   constructor(
     private api: AdminApiService,
     private toast: ToastService,
     private dialog: DialogService,
     private route: ActivatedRoute,
-    private twoFactor: TwoFactorEnforcerService
+    private twoFactor: TwoFactorEnforcerService,
+    private cdr: ChangeDetectorRef
   ) { }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe(params => {
+    this.routeSub = this.route.queryParams.subscribe(params => {
       if (params['tab'] === 'logs' || params['status']) {
         this.activeTab = 'logs';
         if (params['status']) {
@@ -44,33 +51,44 @@ export class SecurityComponent implements OnInit {
         this.activeTab = 'sessions';
         this.fetchSessions();
       }
+      this.cdr.markForCheck();
     });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
   }
 
   fetchSessions(): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.api.getActiveSessions().subscribe({
-      next: (res: any) => {
+      next: (res: ApiResponse<ActiveSessionItem[]>) => {
         this.isLoading = false;
         this.sessions = res.data || [];
+        this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
         this.toast.error(err?.error?.message || 'Failed to fetch active sessions.');
+        this.cdr.markForCheck();
       }
     });
   }
 
   fetchLoginLogs(): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.api.getLoginHistory({ page: 1, limit: 20, status: this.statusFilter || undefined }).subscribe({
-      next: (res: any) => {
+      next: (res: ApiResponse<LoginHistoryItem[]>) => {
         this.isLoading = false;
         this.loginLogs = res.data || [];
+        this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
         this.toast.error(err?.error?.message || 'Failed to fetch login history.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -92,8 +110,9 @@ export class SecurityComponent implements OnInit {
     try {
       CsvExporter.export('legalconnect_security_active_sessions_audit', headers, rows);
       this.toast.success(`Exported ${this.sessions.length} active session records for IT Act statutory compliance.`);
-    } catch (err: any) {
-      this.toast.error(err.message || 'Export failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
     }
   }
 
@@ -115,8 +134,9 @@ export class SecurityComponent implements OnInit {
     try {
       CsvExporter.export('legalconnect_security_login_audit_history', headers, rows);
       this.toast.success(`Exported ${this.loginLogs.length} login audit log records.`);
-    } catch (err: any) {
-      this.toast.error(err.message || 'Export failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
     }
   }
 
@@ -144,7 +164,7 @@ export class SecurityComponent implements OnInit {
         this.toast.success('Session revoked successfully.');
         this.fetchSessions();
       },
-      error: (err: any) => this.toast.error(err?.error?.message || 'Revoke failed.')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Revoke failed.')
     });
   }
 }

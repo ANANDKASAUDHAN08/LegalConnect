@@ -3,6 +3,8 @@
 :host {
   display: block;
   width: 100%;
+  --row-selected-color: #10b981;
+  --row-selected-bg: rgba(6, 78, 59, 0.35);
 }
 
 @keyframes slideInRight {
@@ -67,10 +69,12 @@
 }
 
 .active-chips-scroll {
-  scrollbar-width: none; /* Hidden by default */
+  scrollbar-width: none;
+  /* Hidden by default */
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  padding-right: 18px; /* Breathing room for edge fade */
+  padding-right: 18px;
+  /* Breathing room for edge fade */
 
   &::-webkit-scrollbar {
     height: 3.5px;
@@ -82,7 +86,7 @@
   }
 
   &::-webkit-scrollbar-thumb {
-    background: transparent; /* Invisible on idle */
+    background: transparent;
     border-radius: 9999px;
     transition: background 0.2s ease;
   }
@@ -141,6 +145,8 @@
 }
 
 .table-data-row {
+  --row-selected-color: #10b981;
+  --row-selected-bg: rgba(6, 78, 59, 0.35);
   background: #0f172a;
   transition: all 150ms ease-in-out;
 
@@ -150,23 +156,6 @@
 
   &:hover {
     background: rgba(30, 41, 59, 0.75);
-  }
-
-  &.selected-row {
-    background-color: rgba(6, 78, 59, 0.22) !important;
-
-    td {
-      background-color: rgba(6, 78, 59, 0.22) !important;
-      border-bottom: 1px solid rgba(16, 185, 129, 0.22) !important;
-    }
-
-    &:hover {
-      background-color: rgba(6, 78, 59, 0.34) !important;
-
-      td {
-        background-color: rgba(6, 78, 59, 0.34) !important;
-      }
-    }
   }
 
   &.focused-row {

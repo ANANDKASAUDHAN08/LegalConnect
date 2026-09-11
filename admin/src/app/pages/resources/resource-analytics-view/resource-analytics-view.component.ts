@@ -1,18 +1,23 @@
-import { Component, Input, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, Input, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminApiService } from '../../../core/admin-api.service';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'admin-resource-analytics-view',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, AdminIconComponent],
   templateUrl: './resource-analytics-view.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class ResourceAnalyticsViewComponent implements OnInit {
+export class ResourceAnalyticsViewComponent implements OnInit, OnDestroy {
   analytics: any = null;
   isLoading = true;
+  private destroy$ = new Subject<void>();
 
   constructor(
     private api: AdminApiService,
@@ -23,11 +28,16 @@ export class ResourceAnalyticsViewComponent implements OnInit {
     this.fetchAnalytics();
   }
 
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
   fetchAnalytics(): void {
     this.isLoading = true;
     this.cdr.markForCheck();
 
-    this.api.getResourceAnalytics().subscribe({
+    this.api.getResourceAnalytics().pipe(takeUntil(this.destroy$)).subscribe({
       next: (res) => {
         if (res?.success && res.data) {
           this.analytics = res.data;
@@ -35,7 +45,7 @@ export class ResourceAnalyticsViewComponent implements OnInit {
         this.isLoading = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
         this.cdr.markForCheck();
       }

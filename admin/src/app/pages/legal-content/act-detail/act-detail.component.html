@@ -31,21 +31,14 @@
         <a routerLink="/legal-content"
           class="flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-xl bg-slate-800/80 hover:bg-indigo-600/20 text-slate-300 hover:text-white border border-white/10 hover:border-indigo-500/40 backdrop-blur-md shadow-md transition-all duration-300 shrink-0 cursor-pointer group/btn"
           [adminTooltip]="'Return to Bare Acts Directory'" tooltipPosition="right">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-            stroke-linecap="round" stroke-linejoin="round"
-            class="transition-transform duration-300 group-hover/btn:-translate-x-0.5 text-indigo-400">
-            <line x1="19" y1="12" x2="5" y2="12"></line>
-            <polyline points="12 19 5 12 12 5"></polyline>
-          </svg>
+          <admin-icon name="arrow-left" [size]="14" strokeWidth="2.2"
+            cssClass="transition-transform duration-300 group-hover/btn:-translate-x-0.5 text-indigo-400"></admin-icon>
           <span>Directory</span>
         </a>
 
         <!-- Chevron Separator -->
         <div class="flex items-center text-slate-600 shrink-0 select-none">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="9 18 15 12 9 6"></polyline>
-          </svg>
+          <admin-icon name="chevron-right" [size]="14"></admin-icon>
         </div>
 
         <!-- Title & Metadata Block -->
@@ -68,13 +61,7 @@
           <div class="flex items-center gap-2.5 flex-wrap text-xs text-slate-400 font-medium">
             <span
               class="inline-flex items-center gap-1.5 bg-slate-800/50 px-2.5 py-1 rounded-lg border border-white/5 text-slate-300">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" class="text-indigo-400">
-                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="16" y1="2" x2="16" y2="6"></line>
-                <line x1="8" y1="2" x2="8" y2="6"></line>
-                <line x1="3" y1="10" x2="21" y2="10"></line>
-              </svg>
+              <admin-icon name="calendar" [size]="13" cssClass="text-indigo-400"></admin-icon>
               <span>Year {{ enrichedAct?.year }}</span>
             </span>
 
@@ -82,14 +69,7 @@
 
             <span
               class="inline-flex items-center gap-1.5 bg-slate-800/50 px-2.5 py-1 rounded-lg border border-white/5 text-slate-300">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-                <polyline points="10 9 9 9 8 9"></polyline>
-              </svg>
+              <admin-icon name="file-text" [size]="13" cssClass="text-emerald-400"></admin-icon>
               <span>{{ enrichedAct?.totalSections || 0 }} Provisions</span>
             </span>
 
@@ -121,11 +101,7 @@
           <!-- Search Icon -->
           <div
             class="absolute left-3.5 flex items-center pointer-events-none text-slate-400 group-focus-within/search:text-indigo-400 transition-colors z-10">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <admin-icon name="search" [size]="16" strokeWidth="2.2"></admin-icon>
           </div>
 
           <input #searchInput type="text"
@@ -143,11 +119,7 @@
             <button
               class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-700/60 transition-colors cursor-pointer"
               (click)="clearMainSearch()" [adminTooltip]="'Clear search query (Esc)'" tooltipPosition="top">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
+              <admin-icon name="close" [size]="14" strokeWidth="2.5"></admin-icon>
             </button>
             } @else {
             <kbd
@@ -168,12 +140,7 @@
           (click)="toggleToc()"
           [adminTooltip]="isTocCollapsed ? 'Show Table of Contents (Ctrl+B)' : 'Hide Sidebar / Focus Mode (Ctrl+B)'"
           tooltipPosition="bottom">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-indigo-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-            <line x1="3" y1="6" x2="21" y2="6"></line>
-            <line x1="3" y1="12" x2="15" y2="12"></line>
-            <line x1="3" y1="18" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="list" [size]="15" cssClass="text-indigo-400 shrink-0"></admin-icon>
           <span>{{ isTocCollapsed ? 'Show TOC' : 'Contents' }}</span>
         </button>
 
@@ -183,18 +150,7 @@
             class="reader-settings-toggle hero-action-btn h-11 flex items-center gap-1 px-3.5 py-2 text-xs font-semibold rounded-xl border border-white/10 bg-slate-800/50 hover:bg-slate-700/80 text-slate-300 hover:text-white backdrop-blur-md shadow-md transition-all duration-200 cursor-pointer active:scale-95"
             [ngClass]="{ 'border-indigo-500/60 bg-indigo-600/20 text-indigo-200': showReaderSettings }"
             (click)="toggleReaderSettings()" [adminTooltip]="'Reader preferences'" tooltipPosition="bottom">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-purple-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
-            </svg>
+            <admin-icon name="sliders" [size]="15" cssClass="text-purple-400 shrink-0"></admin-icon>
             <span>Reader</span>
           </button>
 
@@ -305,22 +261,14 @@
             <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-white/10">
               <div class="flex items-center gap-2">
                 <span class="p-1 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
-                    <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M6 12h.001M10 12h.001M14 12h.001M18 12h.001M8 16h8">
-                    </path>
-                  </svg>
+                  <admin-icon name="keyboard" [size]="13"></admin-icon>
                 </span>
                 <h4 class="font-bold text-slate-100 text-xs">Keyboard Shortcuts</h4>
               </div>
               <button
                 class="text-slate-400 hover:text-white p-1 rounded hover:bg-white/5 transition-colors cursor-pointer"
                 (click)="showShortcutsModal = false" [adminTooltip]="'Close shortcuts dialog'" tooltipPosition="left">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <admin-icon name="close" [size]="12" strokeWidth="2.5"></admin-icon>
               </button>
             </div>
 
@@ -376,13 +324,7 @@
         <button
           class="hero-action-btn h-11 flex items-center gap-1 px-3.5 py-2 text-xs font-semibold rounded-xl border border-white/10 bg-slate-800/50 hover:bg-slate-700/80 text-slate-300 hover:text-white backdrop-blur-md shadow-md transition-all duration-200 cursor-pointer active:scale-95"
           (click)="exportFullActPDF()" [adminTooltip]="'Export complete act as PDF'" tooltipPosition="bottom">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-emerald-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <path d="M12 18v-6"></path>
-            <path d="M9 15l3 3 3-3"></path>
-          </svg>
+          <admin-icon name="download" [size]="15" cssClass="text-emerald-400 shrink-0"></admin-icon>
           <span>PDF</span>
         </button>
 
@@ -396,17 +338,10 @@
           [adminTooltip]="isEditMode ? 'Exit edit mode (E)' : 'Enable edit mode (E)'" tooltipPosition="bottom">
           @if (isEditMode) {
           <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round" class="shrink-0 text-amber-300">
-            <polyline points="20 6 9 17 4 12"></polyline>
-          </svg>
+          <admin-icon name="checkmark" [size]="15" strokeWidth="2.5" cssClass="shrink-0 text-amber-300"></admin-icon>
           <span>Editing Active</span>
           } @else {
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round" class="text-amber-400 shrink-0">
-            <path d="M12 20h9"></path>
-            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-          </svg>
+          <admin-icon name="edit" [size]="15" cssClass="text-amber-400 shrink-0"></admin-icon>
           <span>Edit Mode</span>
           }
         </button>
@@ -432,12 +367,8 @@
         class="flex items-center gap-1.5 px-3 py-1 text-xs font-semibold rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 hover:text-amber-200 border border-amber-500/30 hover:border-amber-400/50 shadow-sm backdrop-blur-sm transition-all duration-200 cursor-pointer active:scale-95 group/sticky-edit"
         (click)="openEditSection(activeSection, $event)"
         [adminTooltip]="'Edit Section § ' + activeSection.secId + ' (E)'" tooltipPosition="bottom">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round"
-          class="text-amber-400 group-hover/sticky-edit:rotate-6 transition-transform">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
+        <admin-icon name="edit" [size]="12"
+          cssClass="text-amber-400 group-hover/sticky-edit:rotate-6 transition-transform"></admin-icon>
         <span>Edit § {{ activeSection.secId }}</span>
       </button>
 
@@ -447,15 +378,11 @@
       <div class="flex items-center gap-1 border-l border-white/10 pl-2">
         <button class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
           (click)="navigateSection(-1)" [adminTooltip]="'Previous section (K / ↑)'" tooltipPosition="bottom">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="18 15 12 9 6 15"></polyline>
-          </svg>
+          <admin-icon name="chevron-up" [size]="12" strokeWidth="2.5"></admin-icon>
         </button>
         <button class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-white cursor-pointer"
           (click)="navigateSection(1)" [adminTooltip]="'Next section (J / ↓)'" tooltipPosition="bottom">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+          <admin-icon name="chevron-down" [size]="12" strokeWidth="2.5"></admin-icon>
         </button>
       </div>
     </div>
@@ -501,21 +428,16 @@
             (click)="toggleAllTocChapters($event)"
             [adminTooltip]="areAllTocChaptersCollapsed ? 'Expand all chapters' : 'Collapse all chapters'"
             tooltipPosition="top">
-            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              class="text-indigo-400 transition-transform duration-200" [class.rotate-180]="areAllTocChaptersCollapsed">
-              <polyline points="18 15 12 9 6 15"></polyline>
-            </svg>
+            <admin-icon name="chevron-up" [size]="10" strokeWidth="2.5"
+              cssClass="text-indigo-400 transition-transform duration-200"
+              [class.rotate-180]="areAllTocChaptersCollapsed"></admin-icon>
             <span>{{ areAllTocChaptersCollapsed ? 'Expand' : 'Collapse' }}</span>
           </button>
 
           <button
             class="p-1 rounded-lg hover:bg-slate-800 text-slate-400 hover:text-indigo-300 transition-all border border-white/5 bg-slate-950/40 cursor-pointer"
             (click)="toggleToc()" [adminTooltip]="'Hide Table of Contents (Ctrl+B)'" tooltipPosition="top">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
+            <admin-icon name="sidebar" [size]="12"></admin-icon>
           </button>
         </div>
       </div>
@@ -531,11 +453,7 @@
             }" (click)="toggleBookmarkedOnly()"
           [adminTooltip]="showBookmarkedOnly ? 'Show all provisions' : 'Filter pinned / bookmarked provisions only'"
           tooltipPosition="top">
-          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1.5">
-            <polygon
-              points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-            </polygon>
-          </svg>
+          <admin-icon name="star-filled" [size]="11"></admin-icon>
           <span>Pinned</span>
           @if (bookmarkedSectionIds.size > 0) {
           <span class="px-1.5 py-0.5 rounded bg-amber-500/30 text-[9px] font-mono font-bold">{{
@@ -570,11 +488,7 @@
       <!-- Inline TOC Search Input -->
       <div class="relative w-full shrink-0">
         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
+          <admin-icon name="search" [size]="12" strokeWidth="2.5"></admin-icon>
         </div>
         <input type="text"
           class="toc-search-input w-full pl-8 pr-7 py-2 bg-slate-950/60 border border-white/10 text-slate-200 placeholder-slate-500 rounded-xl text-xs focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
@@ -585,10 +499,7 @@
           class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-500 hover:text-slate-300 cursor-pointer"
           (click)="clearTocSearch()" [adminTooltip]="'Clear TOC filter'" tooltipPosition="left"
           aria-label="Clear TOC search">
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="close" [size]="10" strokeWidth="2.5"></admin-icon>
         </button>
         }
       </div>
@@ -605,10 +516,7 @@
             (click)="toggleTocChapterCollapse(chap.chapKey, $event)"
             [attr.aria-expanded]="!tocCollapsedChapters[chap.chapKey]">
             <span class="truncate pr-2 flex items-center gap-2 text-xs font-bold text-slate-200">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                class="text-indigo-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-              </svg>
+              <admin-icon name="folder" [size]="12" strokeWidth="2.5" cssClass="text-indigo-400 shrink-0"></admin-icon>
               Ch. {{ chap.chapterNumber }}: {{ chap.title }}
             </span>
             <div class="flex items-center gap-2 shrink-0">
@@ -616,11 +524,9 @@
                 class="px-1.5 py-0.5 rounded-md text-[9px] font-mono font-medium bg-slate-900 text-slate-400 border border-white/5">
                 {{ chap.sections.length }}
               </span>
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                class="text-slate-500 transition-transform duration-200"
-                [class.rotate-180]="tocCollapsedChapters[chap.chapKey]" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="6 9 12 15 18 9"></polyline>
-              </svg>
+              <admin-icon name="chevron-down" [size]="11" strokeWidth="2.5"
+                cssClass="text-slate-500 transition-transform duration-200"
+                [class.rotate-180]="tocCollapsedChapters[chap.chapKey]"></admin-icon>
             </div>
           </div>
 
@@ -635,12 +541,8 @@
               <span class="toc-sec-title"
                 [innerHTML]="sec.cleanTitle | highlight:(tocSearchQuery || searchQuery)"></span>
               @if (sec.isBookmarked) {
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1"
-                class="text-amber-400 ml-auto shrink-0 select-none">
-                <polygon
-                  points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2">
-                </polygon>
-              </svg>
+              <admin-icon name="star-filled" [size]="10"
+                cssClass="text-amber-400 ml-auto shrink-0 select-none"></admin-icon>
               }
             </div>
             }
@@ -671,12 +573,8 @@
             class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-bold bg-indigo-500/15 hover:bg-indigo-500/25 text-indigo-300 hover:text-white border border-indigo-500/30 shadow-sm transition-all cursor-pointer group"
             (click)="toggleToc()" [adminTooltip]="'Restore Table of Contents sidebar (Ctrl+B)'"
             tooltipPosition="bottom">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round"
-              class="text-indigo-400 group-hover:scale-110 transition-transform">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-              <line x1="9" y1="3" x2="9" y2="21"></line>
-            </svg>
+            <admin-icon name="sidebar" [size]="13" strokeWidth="2.2"
+              cssClass="text-indigo-400 group-hover:scale-110 transition-transform"></admin-icon>
             <span>Show Contents</span>
             <kbd
               class="hidden md:inline font-mono text-[9px] px-1 py-0.2 rounded bg-indigo-900/50 border border-indigo-400/30 text-indigo-200">Ctrl+B</kbd>
@@ -686,11 +584,7 @@
           <button type="button"
             class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-800/60 hover:bg-slate-800 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer"
             (click)="toggleJumpToSection()" [adminTooltip]="'Jump to section number (Ctrl+G)'" tooltipPosition="bottom">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-              stroke-linecap="round" stroke-linejoin="round" class="text-slate-400">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
+            <admin-icon name="search" [size]="12" strokeWidth="2.2" cssClass="text-slate-400"></admin-icon>
             <span class="hidden sm:inline">Jump</span>
             <kbd
               class="hidden lg:inline font-mono text-[9px] px-1 py-0.2 rounded bg-slate-900 border border-white/10 text-slate-400">Ctrl+G</kbd>
@@ -704,13 +598,7 @@
             @if (!isTocCollapsed) {
             <span
               class="flex items-center justify-center w-6 h-6 rounded-lg bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-              </svg>
+              <admin-icon name="file-text" [size]="13"></admin-icon>
             </span>
             }
             <div class="flex items-center gap-1.5" aria-live="polite" aria-atomic="true">
@@ -733,12 +621,8 @@
             class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer group"
             (click)="toggleAllSectionsCollapse(false)" [adminTooltip]="'Expand all section cards'"
             tooltipPosition="top">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round"
-              class="text-indigo-400 group-hover:translate-y-0.5 transition-transform">
-              <polyline points="7 13 12 18 17 13"></polyline>
-              <polyline points="7 6 12 11 17 6"></polyline>
-            </svg>
+            <admin-icon name="chevrons-down" [size]="11" strokeWidth="2.5"
+              cssClass="text-indigo-400 group-hover:translate-y-0.5 transition-transform"></admin-icon>
             <span>Expand All</span>
           </button>
 
@@ -748,12 +632,8 @@
             class="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 transition-all cursor-pointer group"
             (click)="toggleAllSectionsCollapse(true)" [adminTooltip]="'Collapse all section cards'"
             tooltipPosition="top">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              stroke-linecap="round" stroke-linejoin="round"
-              class="text-slate-400 group-hover:-translate-y-0.5 transition-transform">
-              <polyline points="17 11 12 6 7 11"></polyline>
-              <polyline points="17 18 12 13 7 18"></polyline>
-            </svg>
+            <admin-icon name="chevrons-up" [size]="11" strokeWidth="2.5"
+              cssClass="text-slate-400 group-hover:-translate-y-0.5 transition-transform"></admin-icon>
             <span>Collapse All</span>
           </button>
         </div>
@@ -771,11 +651,8 @@
           </div>
           <span class="chapter-meta flex items-center gap-1.5 shrink-0">
             {{ chap.sections.length }} Sections
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-slate-600 transition-transform duration-200"
-              [class.rotate-180]="collapsedChapters[chap.chapKey]" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <admin-icon name="chevron-down" [size]="12" cssClass="text-slate-600 transition-transform duration-200"
+              [class.rotate-180]="collapsedChapters[chap.chapKey]"></admin-icon>
           </span>
         </div>
 
@@ -814,11 +691,7 @@
       } @empty {
       <div
         class="p-12 text-center text-slate-500 text-sm rounded-2xl border border-white/10 bg-slate-900/40 flex flex-col items-center justify-center gap-3">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"
-          class="text-slate-600" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
+        <admin-icon name="search" [size]="32" strokeWidth="1.5" cssClass="text-slate-600"></admin-icon>
         <p>No sections found matching your active filter criteria.</p>
         <button class="btn btn-secondary text-xs px-3 py-1.5 cursor-pointer" (click)="clearMainSearch()"
           [adminTooltip]="'Reset search and active filters'" tooltipPosition="bottom">Clear Search</button>
@@ -832,10 +705,7 @@
   @if (showBackToTop) {
   <div class="floating-actions">
     <button class="fab-btn slide-up" (click)="scrollToTop()" [adminTooltip]="'Scroll to top'" tooltipPosition="left">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-        stroke-linecap="round" stroke-linejoin="round">
-        <polyline points="18 15 12 9 6 15"></polyline>
-      </svg>
+      <admin-icon name="chevron-up" [size]="14"></admin-icon>
       <span>Top</span>
     </button>
   </div>
@@ -887,10 +757,7 @@
       </div>
       <button class="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
         (click)="closeFootnoteModal()" aria-label="Close footnote dialog">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+        <admin-icon name="close" [size]="14" strokeWidth="2.5"></admin-icon>
       </button>
     </div>
     <p class="text-sm text-slate-300 leading-relaxed">{{ activeFootnote.text }}</p>

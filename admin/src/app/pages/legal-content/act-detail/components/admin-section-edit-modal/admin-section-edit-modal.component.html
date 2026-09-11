@@ -9,11 +9,7 @@
     <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
       <div class="flex items-center gap-3">
         <div class="p-2.5 rounded-xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 shadow-inner">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-          </svg>
+          <admin-icon name="edit" [size]="18"></admin-icon>
         </div>
         <div>
           <div class="flex items-center gap-2">
@@ -29,11 +25,7 @@
 
       <button class="p-2 text-slate-400 hover:text-white rounded-lg hover:bg-white/5 transition-colors cursor-pointer"
         (click)="onClose()" [adminTooltip]="'Close (Esc)'" tooltipPosition="left">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <line x1="18" y1="6" x2="6" y2="18"></line>
-          <line x1="6" y1="6" x2="18" y2="18"></line>
-        </svg>
+        <admin-icon name="close" [size]="16"></admin-icon>
       </button>
     </div>
 
@@ -45,13 +37,7 @@
           class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
           [class.bg-indigo-600]="editTab === 'en'" [class.text-white]="editTab === 'en'"
           [class.shadow-md]="editTab === 'en'" [class.text-slate-400]="editTab !== 'en'" (click)="editTab = 'en'">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <line x1="16" y1="13" x2="8" y2="13"></line>
-            <line x1="16" y1="17" x2="8" y2="17"></line>
-          </svg>
+          <admin-icon name="file-text" [size]="12"></admin-icon>
           <span>English</span>
         </button>
 
@@ -59,13 +45,7 @@
           class="px-3.5 py-1.5 text-xs font-semibold rounded-lg transition-all cursor-pointer flex items-center gap-1.5"
           [class.bg-indigo-600]="editTab === 'hi'" [class.text-white]="editTab === 'hi'"
           [class.shadow-md]="editTab === 'hi'" [class.text-slate-400]="editTab !== 'hi'" (click)="editTab = 'hi'">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-            </path>
-          </svg>
+          <admin-icon name="globe" [size]="12"></admin-icon>
           <span>हिंदी</span>
           @if (hasHindiContent) {
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
@@ -79,11 +59,7 @@
           [class.bg-purple-600]="editTab === 'preview'" [class.text-white]="editTab === 'preview'"
           [class.shadow-md]="editTab === 'preview'" [class.text-slate-400]="editTab !== 'preview'"
           (click)="editTab = 'preview'">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
+          <admin-icon name="eye" [size]="12"></admin-icon>
           <span>Live Preview</span>
         </button>
       </div>
@@ -96,19 +72,10 @@
           [adminTooltip]="isAiOnCooldown ? 'Cooldown: ' + aiCooldownRemaining + 's remaining' : 'Use AI to clean OCR glitches and proofread statutory text'"
           tooltipPosition="top">
           @if (isEnhancing) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            class="animate-spin text-indigo-300" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 2a10 10 0 0 1 10 10"></path>
-          </svg>
+          <admin-icon name="spinner" [size]="12" cssClass="animate-spin text-indigo-300"></admin-icon>
           <span>Proofreading...</span>
           } @else {
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-indigo-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-            <path
-              d="M12 3l1.912 5.885a1 1 0 00.95.691H21l-4.945 3.593a1 1 0 00-.364 1.118L17.603 20.2 12.658 16.6a1 1 0 00-1.176 0l-4.945 3.593 1.912-5.913a1 1 0 00-.364-1.118L3.14 9.576h6.138a1 1 0 00.95-.691L12 3z">
-            </path>
-          </svg>
+          <admin-icon name="star" [size]="13" cssClass="text-indigo-400 shrink-0"></admin-icon>
           <span>AI Proofread</span>
           }
         </button>
@@ -116,12 +83,7 @@
         <button type="button" (click)="formatEditClauses()"
           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
           [adminTooltip]="'Auto-format clauses so (1), (2), (a) start on clean new lines'" tooltipPosition="top">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-slate-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="4 7 4 4 20 4 20 7"></polyline>
-            <line x1="9" y1="20" x2="15" y2="20"></line>
-            <line x1="12" y1="4" x2="12" y2="20"></line>
-          </svg>
+          <admin-icon name="type" [size]="12" cssClass="text-slate-400 shrink-0"></admin-icon>
           <span>Auto-Format</span>
         </button>
         }
@@ -132,17 +94,10 @@
           [adminTooltip]="isAiOnCooldown ? 'Cooldown: ' + aiCooldownRemaining + 's remaining' : 'Translate English statutory title & body to official Indian legal Hindi'"
           tooltipPosition="top">
           @if (isTranslating) {
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-            class="animate-spin text-white" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 2a10 10 0 0 1 10 10"></path>
-          </svg>
+          <admin-icon name="spinner" [size]="12" cssClass="animate-spin text-white"></admin-icon>
           <span>Translating...</span>
           } @else {
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-indigo-200 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M5 8l6 6M4 14l6-6 2-3M2 5h12M7 2h1M22 22l-5-10-5 10M14 18h6"></path>
-          </svg>
+          <admin-icon name="languages" [size]="13" cssClass="text-indigo-200 shrink-0"></admin-icon>
           <span>AI Translate from English</span>
           }
         </button>
@@ -150,12 +105,7 @@
         <button type="button" (click)="formatEditClauses()"
           class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white border border-white/10 transition-all cursor-pointer shadow-sm active:scale-95"
           [adminTooltip]="'Auto-format clauses so (1), (2), (a) start on clean new lines'" tooltipPosition="top">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-slate-400 shrink-0" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="4 7 4 4 20 4 20 7"></polyline>
-            <line x1="9" y1="20" x2="15" y2="20"></line>
-            <line x1="12" y1="4" x2="12" y2="20"></line>
-          </svg>
+          <admin-icon name="type" [size]="12" cssClass="text-slate-400 shrink-0"></admin-icon>
           <span>Auto-Format</span>
         </button>
         }
@@ -273,19 +223,10 @@
           class="btn btn-primary px-5 py-2 text-xs font-semibold rounded-xl flex items-center gap-2 shadow-lg shadow-indigo-500/20 cursor-pointer"
           (click)="onSave()" [disabled]="isSaving">
           @if (isSaving) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="animate-spin" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M12 2a10 10 0 0 1 10 10"></path>
-          </svg>
+          <admin-icon name="spinner" [size]="14" cssClass="animate-spin"></admin-icon>
           <span>Saving...</span>
           } @else {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            stroke-linecap="round" stroke-linejoin="round">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-            <polyline points="7 3 7 8 15 8"></polyline>
-          </svg>
+          <admin-icon name="save" [size]="14"></admin-icon>
           <span>Save Amendment</span>
           }
         </button>

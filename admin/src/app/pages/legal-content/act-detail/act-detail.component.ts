@@ -12,6 +12,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { AdminApiService } from '../../../core/admin-api.service';
@@ -23,6 +24,7 @@ import { LegalPrintService } from '../../../core/services/legal-print.service';
 import { LegalTextParser, ParsedLegalSection, LegalClauseNode } from '../../../core/utils/legal-text-parser';
 import { AdminSectionCardComponent } from './components/admin-section-card/admin-section-card.component';
 import { AdminSectionEditModalComponent } from './components/admin-section-edit-modal/admin-section-edit-modal.component';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 import { BareAct, EditSectionFormData, EditSectionSaveEvent } from '../legal-content.models';
 
 export interface EnrichedClauseNode extends LegalClauseNode {
@@ -100,7 +102,8 @@ export interface EnrichedAct {
     TooltipDirective,
     HighlightPipe,
     AdminSectionCardComponent,
-    AdminSectionEditModalComponent
+    AdminSectionEditModalComponent,
+    AdminIconComponent
   ],
   templateUrl: './act-detail.component.html',
   styleUrl: './act-detail.component.scss',
@@ -298,7 +301,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.refreshScrollspyObserver();
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
         this.toast.error('Failed to load Act details.');
         this.cdr.markForCheck();
@@ -921,7 +924,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         // Fallback to local storage if offline or request fails
         this.saveBookmarks();
         this.toast.warning(`Section § ${secId} saved locally (offline).`);
@@ -961,7 +964,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
               localStorage.removeItem(`lc_bookmarks_${this.shortName}`);
               this.cdr.markForCheck();
             },
-            error: () => {
+            error: (err: HttpErrorResponse) => {
               this.bookmarkedSectionIds = new Set([...backendPins, ...localPending]);
               this.applyBookmarksToViewModel();
               this.cdr.markForCheck();
@@ -975,7 +978,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
           this.cdr.markForCheck();
         }
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         // Offline / backend unavailable — retain local cache
         this.cdr.markForCheck();
       }
@@ -1436,7 +1439,7 @@ export class ActDetailComponent implements OnInit, OnDestroy, AfterViewInit {
         this.recalculateDisplayedChapters();
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isSaving = false;
         this.toast.error('Failed to save section edits.');
         this.cdr.markForCheck();

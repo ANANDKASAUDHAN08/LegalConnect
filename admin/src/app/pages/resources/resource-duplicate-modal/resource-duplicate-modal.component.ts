@@ -1,8 +1,10 @@
 import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminApiService } from '../../../core/admin-api.service';
 import { ToastService } from '../../../shared/services/toast.service';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 
 export interface DuplicatePair {
   primary: any;
@@ -14,7 +16,7 @@ export interface DuplicatePair {
 @Component({
   selector: 'admin-resource-duplicate-modal',
   standalone: true,
-  imports: [CommonModule, TooltipDirective],
+  imports: [CommonModule, TooltipDirective, AdminIconComponent],
   templateUrl: './resource-duplicate-modal.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -52,7 +54,7 @@ export class ResourceDuplicateModalComponent {
         this.toast.success(res.message || 'Duplicate record merged successfully.');
         this.merged.emit();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isMerging = false;
         this.mergingPairIndex = null;
         this.toast.error('Failed to merge duplicate records.');

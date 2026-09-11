@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { AdminApiService } from '../../../core/admin-api.service';
@@ -8,12 +9,13 @@ import { ToastService } from '../../../shared/services/toast.service';
 import { DialogService } from '../../../shared/services/dialog.service';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
 import { SelectComponent, SelectOption } from '../../../shared/components/select/select.component';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 import { BareAct, CreateActForm, CreateActPayload } from '../legal-content.models';
 
 @Component({
   selector: 'admin-create-act-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective, SelectComponent],
+  imports: [CommonModule, FormsModule, TooltipDirective, SelectComponent, AdminIconComponent],
   templateUrl: './create-act-modal.component.html',
   styleUrl: './create-act-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -371,7 +373,7 @@ export class CreateActModalComponent implements OnInit, OnDestroy {
           this.toast.success(`Bare Act '${payload.actName}' created & published successfully!`);
           this.actCreated.emit();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.isSubmittingAct = false;
           const msg = err?.error?.message || err?.message || 'Failed to create Act.';
           this.toast.error(msg);

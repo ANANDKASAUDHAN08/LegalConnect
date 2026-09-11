@@ -34,9 +34,7 @@
           </h1>
           <span
             class="hero-badge-admin px-3 py-1 rounded-full text-xs font-bold backdrop-blur-md shadow-sm flex items-center gap-1.5">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
+            <admin-icon name="shield" [size]="12" strokeWidth="2.5"></admin-icon>
             {{ profile?.role || 'Admin' }}
           </span>
         </div>
@@ -44,11 +42,7 @@
         <div class="flex items-center gap-4 flex-wrap text-xs font-medium">
           <!-- Email Chip -->
           <div class="flex items-center gap-1.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-indigo-500">
-              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
-              <polyline points="22,6 12,13 2,6"></polyline>
-            </svg>
+            <admin-icon name="mail" [size]="13" strokeWidth="2" cssClass="text-indigo-500"></admin-icon>
             <span class="hero-meta-text font-mono">{{ profile?.email }}</span>
           </div>
 
@@ -56,11 +50,7 @@
 
           <!-- Timezone Chip -->
           <div class="flex items-center gap-1.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-purple-500">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
+            <admin-icon name="clock" [size]="13" strokeWidth="2" cssClass="text-purple-500"></admin-icon>
             <span class="hero-meta-text">Timezone: <strong class="hero-title">{{ profile?.preferredTimezone ||
                 'Asia/Kolkata' }}</strong></span>
           </div>
@@ -73,9 +63,7 @@
       <div class="flex items-center justify-between">
         <div class="flex items-center">
           <div class="p-1.5 text-indigo-500">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
+            <admin-icon name="shield" [size]="15" strokeWidth="2.5"></admin-icon>
           </div>
           <span class="security-title text-xs font-extrabold uppercase tracking-wider">Security Score</span>
         </div>
@@ -110,12 +98,8 @@
       <!-- Recommendation pill action -->
       @if (securityScore.recommendations.length > 0) {
       <div class="recommendation-pill flex items-center gap-1 p-2 px-3 text-[11px] font-medium">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-          class="recommendation-icon shrink-0">
-          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-          <line x1="12" y1="9" x2="12" y2="13"></line>
-          <line x1="12" y1="17" x2="12.01" y2="17"></line>
-        </svg>
+        <admin-icon name="alert-triangle" [size]="13" strokeWidth="2.5"
+          cssClass="recommendation-icon shrink-0"></admin-icon>
         <span class="truncate">{{ securityScore.recommendations[0] }}</span>
       </div>
       }
@@ -131,10 +115,7 @@
       class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
       [ngClass]="activeTab === 'info' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
       (click)="switchTab('info')" [adminTooltip]="'View & edit profile information'" tooltipPosition="top">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-        <circle cx="12" cy="7" r="4"></circle>
-      </svg>
+      <admin-icon name="user" [size]="15" strokeWidth="2"></admin-icon>
       <span>Profile & Details</span>
     </button>
 
@@ -142,10 +123,7 @@
       class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
       [ngClass]="activeTab === 'password' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
       (click)="switchTab('password')" [adminTooltip]="'Change password'" tooltipPosition="top">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-      </svg>
+      <admin-icon name="lock" [size]="15" strokeWidth="2"></admin-icon>
       <span>Password</span>
     </button>
 
@@ -153,9 +131,7 @@
       class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
       [ngClass]="activeTab === '2fa' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
       (click)="switchTab('2fa')" [adminTooltip]="'Manage Two-Factor Authentication'" tooltipPosition="top">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-      </svg>
+      <admin-icon name="shield" [size]="15" strokeWidth="2"></admin-icon>
       <span>Two-Factor (2FA)</span>
       @if (is2FAEnabled) {
       <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400"></span>
@@ -166,11 +142,7 @@
       class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
       [ngClass]="activeTab === 'sessions' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
       (click)="switchTab('sessions')" [adminTooltip]="'View and manage active sessions'" tooltipPosition="top">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-        <line x1="8" y1="21" x2="16" y2="21"></line>
-        <line x1="12" y1="17" x2="12" y2="21"></line>
-      </svg>
+      <admin-icon name="monitor" [size]="15" strokeWidth="2"></admin-icon>
       <span>Active Sessions</span>
       @if (sessions.length > 0) {
       <span class="session-count-badge px-1.5 py-0.5 rounded-full text-[10px] font-extrabold">{{
@@ -182,10 +154,7 @@
       class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 flex items-center gap-2 cursor-pointer"
       [ngClass]="activeTab === 'audit' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-600/30 border border-indigo-400/40' : 'tab-btn-inactive'"
       (click)="switchTab('audit')" [adminTooltip]="'Security activity history'" tooltipPosition="top">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <polyline points="12 8 12 12 14 14"></polyline>
-        <path d="M3.05 11a9 9 0 1 1 .5 4m-.5 5v-5h5"></path>
-      </svg>
+      <admin-icon name="history" [size]="15" strokeWidth="2"></admin-icon>
       <span>Security Activity Log</span>
     </button>
   </div>
@@ -208,10 +177,7 @@
         @if (isEditingProfile) {
         <span>Cancel Editing</span>
         } @else {
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
+        <admin-icon name="edit" [size]="14" strokeWidth="2"></admin-icon>
         <span>Edit Profile</span>
         }
       </button>
@@ -267,11 +233,9 @@
                   }}</span>
               </div>
             </div>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-              class="text-indigo-400 shrink-0 transition-transform duration-200"
-              [class.rotate-180]="isTimezoneDropdownOpen">
-              <polyline points="6 9 12 15 18 9"></polyline>
-            </svg>
+            <admin-icon name="chevron-down" [size]="16" strokeWidth="2.5"
+              cssClass="text-indigo-400 shrink-0 transition-transform duration-200"
+              [class.rotate-180]="isTimezoneDropdownOpen"></admin-icon>
           </button>
 
           <!-- Floating Glass Options Panel -->
@@ -291,10 +255,7 @@
                 </div>
               </div>
               @if (editForm.preferredTimezone === tz.value) {
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"
-                class="text-indigo-400 shrink-0">
-                <polyline points="20 6 9 17 4 12"></polyline>
-              </svg>
+              <admin-icon name="checkmark" [size]="14" strokeWidth="3" cssClass="text-indigo-400 shrink-0"></admin-icon>
               }
             </button>
             }
@@ -358,11 +319,7 @@
           @if (isSavingProfile) {
           <span>Saving Changes…</span>
           } @else {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-            <polyline points="17 21 17 13 7 13 7 21"></polyline>
-            <polyline points="7 3 7 8 15 8"></polyline>
-          </svg>
+          <admin-icon name="save" [size]="14" strokeWidth="2"></admin-icon>
           <span>Save Profile Changes</span>
           }
         </button>
@@ -469,12 +426,19 @@
     <!-- Left Column: Password Update Form -->
     <div class="lg:col-span-7 glass-card rounded-2xl p-6 shadow-xl flex flex-col gap-6">
 
+      @if (mustChangePasswordPrompt) {
+      <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 flex items-start gap-3 shadow-lg">
+        <admin-icon name="alert-triangle" [size]="20" cssClass="text-amber-400 shrink-0 mt-0.5"></admin-icon>
+        <div>
+          <h4 class="font-bold text-sm text-white">Default Seed Password Detected</h4>
+          <p class="text-xs text-amber-200/90 mt-0.5">Your administrator account was initialized with a default temporary password. To protect the platform and comply with security requirements, you must set a new password before proceeding.</p>
+        </div>
+      </div>
+      }
+
       <div class="flex items-center gap-3 pb-4 border-b border-[var(--border-subtle)]">
         <div class="p-3 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400 shrink-0">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
+          <admin-icon name="lock" [size]="22" strokeWidth="2"></admin-icon>
         </div>
         <div>
           <h2 class="text-base font-extrabold text-[var(--text-primary)]">Update Admin Password</h2>
@@ -498,10 +462,7 @@
               <button type="button"
                 class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
                 (click)="currentPassword = ''" [adminTooltip]="'Clear input'" tooltipPosition="top">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <admin-icon name="close" [size]="14" strokeWidth="2"></admin-icon>
               </button>
               }
               <button type="button"
@@ -509,17 +470,9 @@
                 (click)="showCurrentPassword = !showCurrentPassword"
                 [adminTooltip]="showCurrentPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
                 @if (showCurrentPassword) {
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                  </path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
+                <admin-icon name="eye-off" [size]="15" strokeWidth="2"></admin-icon>
                 } @else {
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
+                <admin-icon name="eye" [size]="15" strokeWidth="2"></admin-icon>
                 }
               </button>
             </div>
@@ -539,10 +492,7 @@
               <button type="button"
                 class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
                 (click)="newPassword = ''" [adminTooltip]="'Clear input'" tooltipPosition="top">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <admin-icon name="close" [size]="14" strokeWidth="2"></admin-icon>
               </button>
               }
               <button type="button"
@@ -550,17 +500,9 @@
                 (click)="showNewPassword = !showNewPassword"
                 [adminTooltip]="showNewPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
                 @if (showNewPassword) {
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                  </path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
+                <admin-icon name="eye-off" [size]="15" strokeWidth="2"></admin-icon>
                 } @else {
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
+                <admin-icon name="eye" [size]="15" strokeWidth="2"></admin-icon>
                 }
               </button>
             </div>
@@ -580,10 +522,7 @@
               <button type="button"
                 class="text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors p-1"
                 (click)="confirmPassword = ''" [adminTooltip]="'Clear input'" tooltipPosition="top">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <admin-icon name="close" [size]="14" strokeWidth="2"></admin-icon>
               </button>
               }
               <button type="button"
@@ -591,17 +530,9 @@
                 (click)="showConfirmPassword = !showConfirmPassword"
                 [adminTooltip]="showConfirmPassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
                 @if (showConfirmPassword) {
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path
-                    d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                  </path>
-                  <line x1="1" y1="1" x2="23" y2="23"></line>
-                </svg>
+                <admin-icon name="eye-off" [size]="15" strokeWidth="2"></admin-icon>
                 } @else {
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
+                <admin-icon name="eye" [size]="15" strokeWidth="2"></admin-icon>
                 }
               </button>
             </div>
@@ -614,10 +545,7 @@
           @if (isChangingPassword) {
           <span>Updating Password…</span>
           } @else {
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-          </svg>
+          <admin-icon name="lock" [size]="15" strokeWidth="2"></admin-icon>
           <span>Update Password</span>
           }
         </button>
@@ -669,9 +597,7 @@
               <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
                 [ngClass]="hasMinLength ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
                 @if (hasMinLength) {
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="10" strokeWidth="3"></admin-icon>
                 }
               </div>
               <span class="font-medium">At least 8 characters long</span>
@@ -684,9 +610,7 @@
               <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
                 [ngClass]="(hasUpper && hasLower) ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
                 @if (hasUpper && hasLower) {
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="10" strokeWidth="3"></admin-icon>
                 }
               </div>
               <span class="font-medium">Uppercase & lowercase letters (A-Z, a-z)</span>
@@ -698,9 +622,7 @@
               <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
                 [ngClass]="hasNumber ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
                 @if (hasNumber) {
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="10" strokeWidth="3"></admin-icon>
                 }
               </div>
               <span class="font-medium">At least one digit (0-9)</span>
@@ -712,9 +634,7 @@
               <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
                 [ngClass]="hasSpecial ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
                 @if (hasSpecial) {
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="10" strokeWidth="3"></admin-icon>
                 }
               </div>
               <span class="font-medium">Special character (!&#64;#$%^&*)</span>
@@ -726,9 +646,7 @@
               <div class="w-4 h-4 rounded-full flex items-center justify-center border shrink-0"
                 [ngClass]="passwordsMatch ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400' : 'req-check-empty'">
                 @if (passwordsMatch) {
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
-                  <polyline points="20 6 9 17 4 12"></polyline>
-                </svg>
+                <admin-icon name="checkmark" [size]="10" strokeWidth="3"></admin-icon>
                 }
               </div>
               <span class="font-medium">Passwords match</span>
@@ -741,10 +659,7 @@
       <!-- Security Best Practice Card -->
       <div class="p-4 rounded-2xl border border-indigo-500/20 bg-indigo-500/5 flex flex-col gap-2">
         <div class="flex items-center gap-2">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-indigo-400 shrink-0">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
+          <admin-icon name="shield" [size]="16" strokeWidth="2" cssClass="text-indigo-400 shrink-0"></admin-icon>
           <span class="text-xs font-bold text-indigo-400">Admin Password Hygiene</span>
         </div>
         <p class="text-[11px] text-[var(--text-secondary)] leading-relaxed">
@@ -775,10 +690,7 @@
       <div class="glass-card rounded-2xl p-5 shadow-xl flex flex-col gap-4">
         <div class="flex items-center gap-2.5 pb-3 border-b border-[var(--border-subtle)]">
           <div class="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/30 text-indigo-400">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
-              <line x1="12" y1="18" x2="12.01" y2="18"></line>
-            </svg>
+            <admin-icon name="phone" [size]="18" strokeWidth="2"></admin-icon>
           </div>
           <div>
             <h3 class="text-xs font-extrabold uppercase tracking-wider text-[var(--text-primary)]">Authenticator Apps
@@ -833,10 +745,7 @@
       <!-- Quick Security Tips -->
       <div class="p-4 rounded-2xl border border-[var(--border-subtle)] bg-[var(--bg-glass)] flex flex-col gap-2">
         <span class="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-amber-400">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
+          <admin-icon name="shield" [size]="14" strokeWidth="2" cssClass="text-amber-400"></admin-icon>
           How TOTP 2FA Works
         </span>
         <ul class="text-[11px] text-[var(--text-secondary)] space-y-1.5 list-disc list-inside leading-relaxed">
@@ -888,9 +797,7 @@
           <div class="flex items-center gap-3">
             <div class="p-3 rounded-2xl border text-xl shrink-0 shadow-inner"
               [ngClass]="is2FAEnabled ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' : 'bg-amber-500/10 border-amber-500/30 text-amber-400'">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
+              <admin-icon name="shield" [size]="24" strokeWidth="2"></admin-icon>
             </div>
             <div>
               <h2 class="text-base font-extrabold text-[var(--text-primary)]">Two-Factor Security Shield (TOTP)</h2>
@@ -920,9 +827,7 @@
           class="p-8 rounded-2xl border border-dashed border-indigo-500/30 bg-indigo-500/5 flex flex-col items-center gap-4 text-center">
           <div
             class="w-16 h-16 rounded-2xl bg-indigo-500/15 border border-indigo-500/40 text-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/10">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
+            <admin-icon name="shield" [size]="28" strokeWidth="2"></admin-icon>
           </div>
           <div>
             <p class="text-base font-extrabold text-[var(--text-primary)]">Activate Two-Factor Authentication</p>
@@ -935,9 +840,7 @@
             (click)="initiate2FASetup()" [disabled]="is2FALoading">
             @if (is2FALoading) { <span>Generating Key…</span> }
             @else {
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-            </svg>
+            <admin-icon name="shield" [size]="15" strokeWidth="2"></admin-icon>
             <span>Enable 2FA Protection</span>
             }
           </button>
@@ -989,11 +892,7 @@
           <div class="flex flex-col gap-4 p-5 rounded-2xl border border-amber-500/30 bg-amber-500/5 shadow-lg">
             <div class="flex items-center justify-between flex-wrap gap-2">
               <div class="flex items-center gap-2">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                  class="text-amber-400">
-                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z">
-                  </path>
-                </svg>
+                <admin-icon name="alert-triangle" [size]="18" strokeWidth="2" cssClass="text-amber-400"></admin-icon>
                 <span class="backup-codes-title text-xs font-extrabold uppercase tracking-wider">Emergency Backup
                   Recovery
                   Codes</span>
@@ -1037,10 +936,7 @@
             class="btn btn-primary w-full py-3.5 text-xs font-extrabold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-indigo-600/25"
             (click)="proceedToVerify()">
             <span>I Have Saved My Backup Codes - Continue to Verification</span>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="5" y1="12" x2="19" y2="12"></line>
-              <polyline points="12 5 19 12 12 19"></polyline>
-            </svg>
+            <admin-icon name="arrow-right" [size]="15" strokeWidth="2"></admin-icon>
           </button>
         </div>
         }
@@ -1080,9 +976,7 @@
           class="p-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 flex flex-col items-center gap-3 text-center shadow-xl">
           <div
             class="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center shadow-lg">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            <admin-icon name="checkmark" [size]="32" strokeWidth="2.5"></admin-icon>
           </div>
           <p class="text-base font-extrabold text-emerald-500">Two-Factor Authentication Active!</p>
           <p class="text-xs text-[var(--text-secondary)]">Your admin account is now protected with TOTP. Every login
@@ -1099,9 +993,7 @@
           <div class="p-5 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 flex items-center gap-4 shadow-lg">
             <div
               class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 shadow-inner">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
+              <admin-icon name="shield" [size]="24" strokeWidth="2"></admin-icon>
             </div>
             <div class="flex flex-col">
               <p class="text-sm font-extrabold text-emerald-400">2FA Security Shield Active</p>
@@ -1128,17 +1020,9 @@
                     (click)="showDisablePassword = !showDisablePassword"
                     [adminTooltip]="showDisablePassword ? 'Hide password' : 'Show password'" tooltipPosition="top">
                     @if (showDisablePassword) {
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path
-                        d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24">
-                      </path>
-                      <line x1="1" y1="1" x2="23" y2="23"></line>
-                    </svg>
+                    <admin-icon name="eye-off" [size]="15" strokeWidth="2"></admin-icon>
                     } @else {
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
+                    <admin-icon name="eye" [size]="15" strokeWidth="2"></admin-icon>
                     }
                   </button>
                 </div>
@@ -1149,10 +1033,7 @@
                 (click)="submitDisable2FA()" [disabled]="isDisabling || !disablePassword">
                 @if (isDisabling) { <span>Disabling 2FA…</span> }
                 @else {
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="12" cy="12" r="10"></circle>
-                  <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
-                </svg>
+                <admin-icon name="slash" [size]="14" strokeWidth="2"></admin-icon>
                 <span>Confirm & Disable 2FA</span>
                 }
               </button>
@@ -1187,10 +1068,7 @@
         [adminTooltip]="'Log out of all other devices'" tooltipPosition="top">
         @if (isRevokingOthers) { <span>Terminating…</span> }
         @else {
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path>
-          <line x1="12" y1="2" x2="12" y2="12"></line>
-        </svg>
+        <admin-icon name="power" [size]="14" strokeWidth="2"></admin-icon>
         <span>Revoke All Other Sessions</span>
         }
       </button>
@@ -1225,11 +1103,7 @@
               <div class="flex items-center gap-3">
                 <div
                   class="p-2 rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-glass)] text-indigo-400 shrink-0">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                  </svg>
+                  <admin-icon name="monitor" [size]="16" strokeWidth="2"></admin-icon>
                 </div>
                 <div class="flex flex-col">
                   <span class="font-bold text-[var(--text-primary)]">
@@ -1320,14 +1194,9 @@
           <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
             [ngClass]="log.status === 'Success' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/10 text-red-400 border border-red-500/30'">
             @if (log.status === 'Success') {
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="20 6 9 17 4 12"></polyline>
-            </svg>
+            <admin-icon name="checkmark" [size]="16" strokeWidth="2"></admin-icon>
             } @else {
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
+            <admin-icon name="close" [size]="16" strokeWidth="2"></admin-icon>
             }
           </div>
 

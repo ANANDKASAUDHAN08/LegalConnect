@@ -19,10 +19,7 @@
       class="btn-broadcast flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-extrabold text-xs shadow-lg shadow-indigo-500/30 border border-indigo-400/40 transition-all hover:scale-[1.02] cursor-pointer"
       (click)="openCreateModal()" [adminTooltip]="'Dispatch a new targeted broadcast announcement'"
       tooltipPosition="left">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-        <path d="M22 2L11 13"></path>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-      </svg>
+      <admin-icon name="send" [size]="15" strokeWidth="2.5"></admin-icon>
       <span>Compose New Broadcast</span>
     </button>
   </div>
@@ -72,9 +69,7 @@
         @if (item.detailsMarkdown) {
         <button (click)="toggleExpand(item.id, $event)"
           class="text-indigo-400 hover:text-indigo-300 text-[11px] font-bold flex items-center gap-1 mt-1 cursor-pointer w-fit">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 12 15 18 9"></polyline>
-          </svg>
+          <admin-icon name="chevron-down" [size]="12" strokeWidth="2"></admin-icon>
           <span>{{ expandedId === item.id ? 'Hide Markdown' : 'View Markdown Preview' }}</span>
         </button>
 
@@ -119,10 +114,7 @@
       <div class="p-5 flex items-center justify-between bg-slate-950/60">
         <div class="flex items-center gap-3">
           <div class="p-2 rounded-xl bg-indigo-500/20 border border-indigo-500/30 text-indigo-400">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M22 2L11 13"></path>
-              <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-            </svg>
+            <admin-icon name="send" [size]="20" strokeWidth="2"></admin-icon>
           </div>
           <div>
             <h2 class="text-base font-extrabold text-white">Super Admin Notification Broadcaster</h2>
@@ -145,35 +137,25 @@
             <button (click)="form.targetCohort = 'all'" type="button"
               class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               [ngClass]="form.targetCohort === 'all' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-              </svg>
+              <admin-icon name="users" [size]="14" strokeWidth="2"></admin-icon>
               <span>All Users</span>
             </button>
             <button (click)="form.targetCohort = 'lawyers'" type="button"
               class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               [ngClass]="form.targetCohort === 'lawyers' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 3v18M3 9l9-6 9 6M3 9h18"></path>
-              </svg>
+              <admin-icon name="scale" [size]="14" strokeWidth="2"></admin-icon>
               <span>Lawyers</span>
             </button>
             <button (click)="form.targetCohort = 'citizens'" type="button"
               class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               [ngClass]="form.targetCohort === 'citizens' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                <circle cx="9" cy="7" r="4"></circle>
-              </svg>
+              <admin-icon name="user" [size]="14" strokeWidth="2"></admin-icon>
               <span>Citizens</span>
             </button>
             <button (click)="form.targetCohort = 'admins'" type="button"
               class="px-3 py-2 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer"
               [ngClass]="form.targetCohort === 'admins' ? 'bg-indigo-600 border-indigo-400 text-white shadow-md' : 'bg-slate-800/60 border-white/10 text-slate-400 hover:text-white'">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
+              <admin-icon name="shield" [size]="14" strokeWidth="2"></admin-icon>
               <span>Admin Team</span>
             </button>
           </div>
@@ -249,10 +231,7 @@
           @if (isDispatching) {
           <span class="animate-spin text-xs">⏳</span> Dispatching...
           } @else {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
-            <path d="M22 2L11 13"></path>
-            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-          </svg>
+          <admin-icon name="send" [size]="14" strokeWidth="2.5"></admin-icon>
           <span>Dispatch Notification</span>
           }
         </button>

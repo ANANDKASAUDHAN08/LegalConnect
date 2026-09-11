@@ -21,6 +21,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { TooltipDirective } from '../../../shared/directives/tooltip.directive';
 import { SelectComponent, SelectOption } from '../../../shared/components/select/select.component';
 import { ToastService } from '../../../shared/services/toast.service';
+import { AdminIconComponent } from '../../../shared/components/icon/icon.component';
 import {
   INDIAN_STATES,
   getStateDistricts
@@ -41,7 +42,7 @@ export interface PresetHubItem extends LocationSearchResult {
 @Component({
   selector: 'admin-resource-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective, SelectComponent],
+  imports: [CommonModule, FormsModule, TooltipDirective, SelectComponent, AdminIconComponent],
   templateUrl: './resource-modal.component.html',
   styleUrl: './resource-modal.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

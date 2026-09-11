@@ -1,12 +1,14 @@
 import { Component, OnInit, OnDestroy, HostListener, ChangeDetectionStrategy, ChangeDetectorRef, ViewChild, ElementRef, AfterViewInit, DestroyRef, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { AdminApiService } from '../../core/admin-api.service';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { ToastService } from '../../shared/services/toast.service';
@@ -25,6 +27,7 @@ import { ResourceImportWizardComponent, BatchImportResult, ValidationReport } fr
 import { ResourceMapViewComponent } from './resource-map-view/resource-map-view.component';
 import { ResourceDuplicateModalComponent } from './resource-duplicate-modal/resource-duplicate-modal.component';
 import { ResourceAnalyticsViewComponent } from './resource-analytics-view/resource-analytics-view.component';
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
 
 import { TableSelection, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
@@ -40,6 +43,7 @@ import { environment } from '../../../environments/environment';
   imports: [
     CommonModule,
     FormsModule,
+    AdminIconComponent,
     SkeletonComponent,
     TooltipDirective,
     SelectComponent,
@@ -58,7 +62,8 @@ import { environment } from '../../../environments/environment';
     ResourceImportWizardComponent,
     ResourceMapViewComponent,
     ResourceDuplicateModalComponent,
-    ResourceAnalyticsViewComponent
+    ResourceAnalyticsViewComponent,
+    AdminSavedViewsComponent
   ],
   templateUrl: './resources.component.html',
   styleUrl: './resources.component.scss',
@@ -620,7 +625,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         }
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isAiSearching = false;
         this.toast.error('AI search service encountered an error.');
         this.cdr.markForCheck();
@@ -645,7 +650,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.duplicatePairs = res?.duplicates || [];
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoadingDuplicates = false;
         this.toast.error('Failed to load duplicate detection candidates.');
         this.cdr.markForCheck();
@@ -676,7 +681,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.fetchResources(true);
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isGeocoding = false;
         this.toast.error('Failed to geocode missing resources.');
         this.cdr.markForCheck();
@@ -897,7 +902,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.set('resources', params, res);
           this.cdr.markForCheck();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.isInitialLoad = false;
           this.toast.error(err?.error?.message || 'Failed to fetch legal institutional registry.');
           this.cdr.markForCheck();
@@ -1033,7 +1038,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.swrCache.invalidate('resources');
         this.fetchResources(true);
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isVerifyingCycle = false;
         this.toast.error(err?.error?.message || 'Failed to renew verification cycle.');
         this.cdr.markForCheck();
@@ -1056,7 +1061,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.swrCache.invalidate('resources');
         this.fetchResources(true);
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.toast.error(err?.error?.message || 'Failed to resolve reported issues.');
       }
     });
@@ -1264,7 +1269,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.isSaving = false;
           this.toast.error(err?.error?.message || 'Failed to update legal institution.');
           this.cdr.markForCheck();
@@ -1279,7 +1284,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.isSaving = false;
           this.toast.error(err?.error?.message || 'Failed to create legal resource.');
           this.cdr.markForCheck();
@@ -1309,7 +1314,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Failed to delete resource.');
         }
       });
@@ -1376,7 +1381,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.swrCache.invalidate('resources');
         this.fetchResources(true);
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.toast.error(err?.error?.message || 'Failed to approve suggestion.');
       }
     });
@@ -1397,7 +1402,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Failed to reject suggestion.');
         }
       });
@@ -1423,7 +1428,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Failed to perform bulk status update.');
         }
       });
@@ -1447,7 +1452,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Failed to renew verification cycles.');
         }
       });
@@ -1471,7 +1476,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.swrCache.invalidate('resources');
           this.fetchResources(true);
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.toast.error(err?.error?.message || 'Failed to delete selected resources.');
         }
       });
@@ -1520,7 +1525,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
           this.toast.info(`Dry-run validation complete: ${res.validCount} valid / ${res.errorCount} errors.`);
           this.cdr.markForCheck();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse) => {
           this.isDryRunning = false;
           this.toast.error(err?.error?.message || 'Validation request failed.');
           this.cdr.markForCheck();
@@ -1568,7 +1573,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.fetchResources(true);
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isBatchImporting = false;
         this.toast.error(err?.error?.message || 'Failed to execute batch import.');
         this.cdr.markForCheck();
@@ -1676,7 +1681,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         this.isExportModalOpen = false;
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isExporting = false;
         this.toast.error(err?.error?.message || 'Export failed.');
         this.cdr.markForCheck();

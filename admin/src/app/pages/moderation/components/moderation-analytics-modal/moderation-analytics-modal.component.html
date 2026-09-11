@@ -1,0 +1,409 @@
+@if (isOpen) {
+<div
+  class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md flex items-center justify-center p-4 sm:p-6 overflow-y-auto animate-fadeIn"
+  (click)="close()">
+  <div
+    class="bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl analytics-modal-card overflow-hidden my-auto animate-scaleUp"
+    (click)="$event.stopPropagation()">
+
+    <!-- Modal Header -->
+    <div class="px-6 py-4 border-b border-slate-800/80 flex items-center justify-between bg-slate-950/60 shrink-0">
+      <div class="flex items-center gap-3">
+        <div
+          class="w-10 h-10 rounded-xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center text-indigo-400 shrink-0">
+          <admin-icon name="bar-chart" [size]="20" [strokeWidth]="2"></admin-icon>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-sm sm:text-base font-bold text-white tracking-tight">Moderation Velocity & SLA Telemetry
+            </h2>
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-indigo-500/15 text-indigo-400 border border-indigo-500/30">
+              SLA Ops Engine
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">Queue velocity, auto-escalation telemetry, and moderator resolution
+            throughput</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2.5">
+        <!-- Timeframe selector -->
+        <div class="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-0.5">
+          <button (click)="loadAnalytics(7)" [class.bg-indigo-600]="analyticsDays === 7"
+            [class.text-white]="analyticsDays === 7" [class.text-slate-400]="analyticsDays !== 7"
+            class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all"
+            [adminTooltip]="'View past 7 days operational metrics'">
+            7D
+          </button>
+          <button (click)="loadAnalytics(14)" [class.bg-indigo-600]="analyticsDays === 14"
+            [class.text-white]="analyticsDays === 14" [class.text-slate-400]="analyticsDays !== 14"
+            class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all"
+            [adminTooltip]="'View past 14 days operational metrics'">
+            14D
+          </button>
+          <button (click)="loadAnalytics(30)" [class.bg-indigo-600]="analyticsDays === 30"
+            [class.text-white]="analyticsDays === 30" [class.text-slate-400]="analyticsDays !== 30"
+            class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all"
+            [adminTooltip]="'View past 30 days operational metrics'">
+            30D
+          </button>
+        </div>
+
+        <button (click)="close()"
+          class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+          [adminTooltip]="'Close telemetry modal'">
+          <admin-icon name="close" [size]="16"></admin-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body -->
+    <div class="overflow-y-auto max-h-[calc(90vh-145px)] p-6 space-y-6">
+      @if (isLoadingAnalytics) {
+      <div class="py-20 flex flex-col items-center justify-center gap-3">
+        <admin-icon name="spinner" [size]="32" [cssClass]="'animate-spin text-indigo-500'"></admin-icon>
+        <span class="text-xs font-semibold text-slate-400 tracking-wide">Aggregating moderation metrics & SLA
+          compliance...</span>
+      </div>
+      } @else if (analyticsData) {
+
+      <!-- 1. Top Telemetry KPI Strip -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <!-- Total Inflow -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span class="font-medium">Total Inflow ({{ analyticsDays }}d)</span>
+            <admin-icon name="trending-up" [size]="14" class="text-indigo-400"></admin-icon>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-white">{{ analyticsData.totalIncoming }}</span>
+            <p class="text-[11px] text-slate-500 mt-0.5">incoming citizen reports</p>
+          </div>
+        </div>
+
+        <!-- Resolutions -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span class="font-medium">Total Resolved</span>
+            <admin-icon name="check-circle" [size]="14" class="text-emerald-400"></admin-icon>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-emerald-400">{{ analyticsData.totalResolved }}</span>
+            <p class="text-[11px] text-slate-500 mt-0.5">{{ analyticsData.totalDismissed }} dismissed without action</p>
+          </div>
+        </div>
+
+        <!-- SLA Compliance Rate -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span class="font-medium">SLA Compliance</span>
+            <admin-icon name="shield-check" [size]="14"
+              [class.text-emerald-400]="analyticsData.complianceRatePercent >= 90"
+              [class.text-amber-400]="analyticsData.complianceRatePercent < 90 && analyticsData.complianceRatePercent >= 75"
+              [class.text-rose-400]="analyticsData.complianceRatePercent < 75"></admin-icon>
+          </div>
+          <div class="mt-2">
+            <div class="flex items-baseline gap-1.5">
+              <span class="text-2xl font-black" [class.text-emerald-400]="analyticsData.complianceRatePercent >= 90"
+                [class.text-amber-400]="analyticsData.complianceRatePercent < 90 && analyticsData.complianceRatePercent >= 75"
+                [class.text-rose-400]="analyticsData.complianceRatePercent < 75">
+                {{ analyticsData.complianceRatePercent | number:'1.0-1' }}%
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 mt-0.5">
+              {{ (100 - analyticsData.complianceRatePercent) | number:'1.0-1' }}% breached target window
+            </p>
+          </div>
+        </div>
+
+        <!-- Avg Resolution Latency -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span class="font-medium">Avg Triage Latency</span>
+            <admin-icon name="clock" [size]="14" class="text-sky-400"></admin-icon>
+          </div>
+          <div class="mt-2">
+            <span class="text-2xl font-black text-white">
+              @if (analyticsData.averageTriageLatencyMinutes < 60) { {{ analyticsData.averageTriageLatencyMinutes |
+                number:'1.0-0' }}m } @else { {{ (analyticsData.averageTriageLatencyMinutes / 60) | number:'1.1-1' }}h }
+                </span>
+                <p class="text-[11px] text-slate-500 mt-0.5">mean time from report to resolution</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Middle Row: Velocity Chart & Action Breakdown -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <!-- Daily Inflow vs Resolution Trends (CSS/SVG Flex Bars) -->
+        <div class="lg:col-span-2 p-4 rounded-xl bg-slate-950/80 border border-slate-800/80">
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="text-xs font-bold text-slate-200">Daily Queue Velocity Trends</h3>
+              <p class="text-[10px] text-slate-500">Incoming tickets vs. resolutions and dismissals</p>
+            </div>
+            <!-- Chart Legend -->
+            <div class="flex items-center gap-3 text-[10px]">
+              <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span>
+                <span class="text-slate-400">Incoming</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                <span class="text-slate-400">Resolved</span>
+              </div>
+              <div class="flex items-center gap-1">
+                <span class="w-2.5 h-2.5 rounded-sm bg-slate-600"></span>
+                <span class="text-slate-400">Dismissed</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Responsive Chart Bars -->
+          <div class="flex items-end justify-between gap-1.5 pt-4 pb-1 border-b border-slate-800/70 h-[150px]">
+            @for (trend of analyticsData.dailyTrends; track trend.date) {
+            <div class="chart-bar-col group relative">
+              <!-- Group of 3 bars -->
+              <div class="chart-bar-group">
+                <!-- Incoming Bar -->
+                <div class="chart-bar bg-indigo-500 group-hover:brightness-125"
+                  [style.height.%]="(trend.incoming / getMaxDaily(analyticsData.dailyTrends)) * 100"
+                  [adminTooltip]="trend.date + ': ' + trend.incoming + ' incoming'">
+                </div>
+                <!-- Resolved Bar -->
+                <div class="chart-bar bg-emerald-500 group-hover:brightness-125"
+                  [style.height.%]="(trend.resolved / getMaxDaily(analyticsData.dailyTrends)) * 100"
+                  [adminTooltip]="trend.date + ': ' + trend.resolved + ' resolved'">
+                </div>
+                <!-- Dismissed Bar -->
+                <div class="chart-bar bg-slate-600 group-hover:brightness-125"
+                  [style.height.%]="(trend.dismissed / getMaxDaily(analyticsData.dailyTrends)) * 100"
+                  [adminTooltip]="trend.date + ': ' + trend.dismissed + ' dismissed'">
+                </div>
+              </div>
+              <span class="text-[9px] text-slate-500 font-mono mt-2 shrink-0">{{ trend.date | slice:5 }}</span>
+            </div>
+            }
+          </div>
+        </div>
+
+        <!-- Disposition / Action Breakdown -->
+        <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80 flex flex-col justify-between">
+          <div>
+            <h3 class="text-xs font-bold text-slate-200 mb-1">Action Disposition</h3>
+            <p class="text-[10px] text-slate-500 mb-3">Breakdown of administrative decisions</p>
+
+            <div class="space-y-3">
+              <!-- Resolved -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-300 font-medium">Resolved</span>
+                  <span class="font-bold text-white">{{ analyticsData.actionBreakdown.resolved }} <span
+                      class="text-slate-500 font-normal">({{
+                      getActionPercent(analyticsData.actionBreakdown.resolved,
+                      getTotalBreakdownActions(analyticsData.actionBreakdown)) }}%)</span></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                    [style.width.%]="getActionPercent(analyticsData.actionBreakdown.resolved, getTotalBreakdownActions(analyticsData.actionBreakdown))">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dismissed -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-300 font-medium">Dismissed (Harmless)</span>
+                  <span class="font-bold text-white">{{ analyticsData.actionBreakdown.dismissed }} <span
+                      class="text-slate-500 font-normal">({{
+                      getActionPercent(analyticsData.actionBreakdown.dismissed,
+                      getTotalBreakdownActions(analyticsData.actionBreakdown)) }}%)</span></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-slate-500 transition-all duration-500"
+                    [style.width.%]="getActionPercent(analyticsData.actionBreakdown.dismissed, getTotalBreakdownActions(analyticsData.actionBreakdown))">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Escalated -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-300 font-medium">Escalated</span>
+                  <span class="font-bold text-white">{{ analyticsData.actionBreakdown.escalated }} <span
+                      class="text-slate-500 font-normal">({{
+                      getActionPercent(analyticsData.actionBreakdown.escalated,
+                      getTotalBreakdownActions(analyticsData.actionBreakdown)) }}%)</span></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-amber-500 transition-all duration-500"
+                    [style.width.%]="getActionPercent(analyticsData.actionBreakdown.escalated, getTotalBreakdownActions(analyticsData.actionBreakdown))">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Re-Opened -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-300 font-medium">Re-Opened</span>
+                  <span class="font-bold text-white">{{ analyticsData.actionBreakdown.reopened }} <span
+                      class="text-slate-500 font-normal">({{
+                      getActionPercent(analyticsData.actionBreakdown.reopened,
+                      getTotalBreakdownActions(analyticsData.actionBreakdown)) }}%)</span></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-purple-500 transition-all duration-500"
+                    [style.width.%]="getActionPercent(analyticsData.actionBreakdown.reopened, getTotalBreakdownActions(analyticsData.actionBreakdown))">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Claimed -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-300 font-medium">Claimed / Assigned</span>
+                  <span class="font-bold text-white">{{ analyticsData.actionBreakdown.claimed }} <span
+                      class="text-slate-500 font-normal">({{
+                      getActionPercent(analyticsData.actionBreakdown.claimed,
+                      getTotalBreakdownActions(analyticsData.actionBreakdown)) }}%)</span></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-sky-500 transition-all duration-500"
+                    [style.width.%]="getActionPercent(analyticsData.actionBreakdown.claimed, getTotalBreakdownActions(analyticsData.actionBreakdown))">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Internal Notes -->
+              <div class="space-y-1">
+                <div class="flex items-center justify-between text-[11px]">
+                  <span class="text-slate-300 font-medium">Internal Notes</span>
+                  <span class="font-bold text-white">{{ analyticsData.actionBreakdown.notes }} <span
+                      class="text-slate-500 font-normal">({{
+                      getActionPercent(analyticsData.actionBreakdown.notes,
+                      getTotalBreakdownActions(analyticsData.actionBreakdown)) }}%)</span></span>
+                </div>
+                <div class="w-full h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                  <div class="h-full rounded-full bg-indigo-500 transition-all duration-500"
+                    [style.width.%]="getActionPercent(analyticsData.actionBreakdown.notes, getTotalBreakdownActions(analyticsData.actionBreakdown))">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-800/60 text-[10px] text-slate-500 flex items-center gap-1.5">
+            <admin-icon name="shield" [size]="12" class="text-indigo-400"></admin-icon>
+            <span>Automated audit trail records all moderator actions</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Bottom Row: Moderator Throughput Leaderboard -->
+      <div class="p-4 rounded-xl bg-slate-950/80 border border-slate-800/80">
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h3 class="text-xs font-bold text-slate-200">Moderator Resolution Throughput</h3>
+            <p class="text-[10px] text-slate-500">Individual investigator throughput and turnaround latency</p>
+          </div>
+          <span class="text-[10px] font-semibold text-slate-500">{{ analyticsData.moderatorThroughput.length }} Active
+            Moderators</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead>
+              <tr class="border-b border-slate-800 text-[10px] uppercase font-bold text-slate-400 tracking-wider">
+                <th class="pb-2">Moderator / Investigator</th>
+                <th class="pb-2 text-center">Resolved</th>
+                <th class="pb-2 text-center">Dismissed</th>
+                <th class="pb-2 text-center">Total Handled</th>
+                <th class="pb-2 text-right">Avg Turnaround</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800/50">
+              @for (mod of analyticsData.moderatorThroughput; track mod.adminEmail) {
+              <tr class="hover:bg-slate-900/50 transition-colors">
+                <td class="py-2.5">
+                  <div class="flex items-center gap-2">
+                    <div
+                      class="w-6 h-6 rounded-full bg-indigo-950 border border-indigo-500/30 flex items-center justify-center text-[10px] font-bold text-indigo-300 shrink-0">
+                      {{ getInitials(mod.adminEmail) }}
+                    </div>
+                    <span class="font-mono text-slate-200 text-xs truncate max-w-[200px]" [title]="mod.adminEmail">{{
+                      mod.adminEmail }}</span>
+                  </div>
+                </td>
+                <td class="py-2.5 text-center">
+                  <span
+                    class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {{ mod.resolvedCount }}
+                  </span>
+                </td>
+                <td class="py-2.5 text-center">
+                  <span
+                    class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-slate-800 text-slate-400 border border-slate-700">
+                    {{ mod.dismissedCount }}
+                  </span>
+                </td>
+                <td class="py-2.5 text-center">
+                  <span
+                    class="px-2 py-0.5 rounded-md text-[11px] font-extrabold bg-indigo-500/15 text-indigo-300 border border-indigo-500/30">
+                    {{ mod.totalHandled }}
+                  </span>
+                </td>
+                <td class="py-2.5 text-right font-mono text-slate-400 text-xs">
+                  @if (mod.avgResolutionMinutes < 60) { {{ mod.avgResolutionMinutes | number:'1.0-0' }}m } @else { {{
+                    (mod.avgResolutionMinutes / 60) | number:'1.1-1' }}h } </td>
+              </tr>
+              }
+              @if (analyticsData.moderatorThroughput.length === 0) {
+              <tr>
+                <td colspan="5" class="py-8 text-center text-xs text-slate-500">
+                  No individual moderator actions recorded in the selected {{ analyticsDays }}-day window.
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      }
+    </div>
+
+    <!-- Modal Footer -->
+    <div
+      class="px-6 py-4 border-t border-slate-800 bg-slate-950/80 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
+      <div class="flex items-center gap-2 text-xs text-slate-400">
+        <admin-icon name="zap" [size]="15" class="text-amber-400 shrink-0"></admin-icon>
+        <span class="text-[11px]">SLA Target Thresholds: <b class="text-rose-400">Critical 4h</b> · <b
+            class="text-amber-400">High 24h</b> · <b class="text-sky-400">Medium 48h</b> · <b class="text-slate-400">Low
+            72h</b></span>
+      </div>
+
+      <div class="flex items-center gap-2.5 self-end sm:self-auto">
+        <!-- Trigger Auto-Escalation Engine Button -->
+        <button (click)="triggerAutoEscalate()" [disabled]="isAutoEscalating"
+          class="px-3.5 py-2 rounded-xl text-xs font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          [adminTooltip]="'Scan open tickets beyond SLA thresholds and auto-escalate them to Critical priority'"
+          tooltipPosition="top">
+          @if (isAutoEscalating) {
+          <div class="w-3.5 h-3.5 rounded-full border-2 border-amber-400 border-t-transparent animate-spin"></div>
+          <span>Scanning Queue...</span>
+          } @else {
+          <admin-icon name="zap" [size]="14"></admin-icon>
+          <span>Run Auto-Escalate Scan</span>
+          }
+        </button>
+
+        <button (click)="close()"
+          class="px-4 py-2 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-300 transition-all">
+          Close
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+}

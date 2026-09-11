@@ -1,12 +1,14 @@
-import { Component, OnInit, OnDestroy, inject } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AdminApiService } from '../../core/admin-api.service';
 import { ActivityStreamService } from '../../core/services/activity-stream.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { SystemAnnouncementItem } from '../../core/models/admin.models';
@@ -26,9 +28,10 @@ export interface BroadcasterForm {
 @Component({
   selector: 'admin-announcements',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective],
+  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, AdminIconComponent],
   templateUrl: './announcements.component.html',
-  styleUrl: './announcements.component.scss'
+  styleUrl: './announcements.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class AnnouncementsComponent implements OnInit, OnDestroy {
   private api = inject(AdminApiService);
@@ -37,6 +40,7 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
 
   announcements: SystemAnnouncementItem[] = [];
   isLoading = false;
@@ -75,16 +79,19 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
 
   fetchAnnouncements(): void {
     this.isLoading = true;
+    this.cdr.markForCheck();
     this.api.getAnnouncements().subscribe({
       next: (res: any) => {
         this.isLoading = false;
         this.announcements = Array.isArray(res)
           ? res
           : (res?.announcements || res?.data || res?.items || []);
+        this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         this.isLoading = false;
-        this.toast.error(err?.error?.message || 'Failed to fetch announcements.');
+        this.toast.error(err.error?.message || 'Failed to fetch announcements.');
+        this.cdr.markForCheck();
       }
     });
   }
@@ -139,7 +146,7 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
       this.toast.success(`Broadcast announcement published live to '${this.form.targetCohort.toUpperCase()}' cohort!`);
       this.closeModal();
       this.fetchAnnouncements();
-    }).catch((err: any) => {
+    }).catch((err: unknown) => {
       // Fallback to legacy API endpoint if needed
       this.api.createAnnouncement({
         version: this.form.version,
@@ -155,9 +162,10 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
           this.closeModal();
           this.fetchAnnouncements();
         },
-        error: (apiErr: any) => {
+        error: (apiErr: HttpErrorResponse) => {
           this.isDispatching = false;
-          this.toast.error(apiErr?.error?.message || err?.error?.message || 'Failed to publish announcement.');
+          const msg = apiErr.error?.message || (err instanceof Error ? err.message : 'Failed to publish announcement.');
+          this.toast.error(msg);
         }
       });
     });
@@ -175,7 +183,7 @@ export class AnnouncementsComponent implements OnInit, OnDestroy {
           this.toast.success('Announcement removed.');
           this.fetchAnnouncements();
         },
-        error: (err: any) => this.toast.error(err?.error?.message || 'Delete failed.')
+        error: (err: HttpErrorResponse) => this.toast.error(err.error?.message || 'Delete failed.')
       });
     }
   }

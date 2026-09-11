@@ -1,6 +1,9 @@
-import { Component, OnInit, signal, computed, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
+import { Subject } from 'rxjs';
+import { takeUntil } from 'rxjs/operators';
 import { AdminApiService } from '../../core/admin-api.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
@@ -8,18 +11,33 @@ import { ToastService } from '../../shared/services/toast.service';
 import { DialogService } from '../../shared/services/dialog.service';
 import { CsvExporter } from '../../core/utils/csv-exporter';
 import { HelplineItem } from '../legal-content/legal-content.models';
+import { ApiResponse } from '../../core/models/admin.models';
 import { SelectComponent, SelectOption } from '../../shared/components/select/select.component';
 import { INDIAN_STATES } from '../../core/constants/geo.constants';
+import { TableSelection, handleTableKeyboardNav } from '../../core/utils/table.utils';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
+import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
+import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
+import { ColumnDef } from '../../shared/components/column-customizer/column-customizer.component';
 
 @Component({
   selector: 'admin-helplines',
   standalone: true,
-  imports: [CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent],
+  imports: [
+    CommonModule,
+    FormsModule,
+    SkeletonComponent,
+    TooltipDirective,
+    SelectComponent,
+    AdminIconComponent,
+    AdminSavedViewsComponent,
+    ExportModalComponent
+  ],
   templateUrl: './helplines.component.html',
   styleUrl: './helplines.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class HelplinesComponent implements OnInit {
+export class HelplinesComponent implements OnInit, OnDestroy {
   helplines = signal<HelplineItem[]>([]);
   isLoading = signal(false);
   isInitialLoad = signal(true);
@@ -34,7 +52,11 @@ export class HelplinesComponent implements OnInit {
   selectedStatus = signal('');
 
   // Selected item IDs for bulk operations
+  selection = new TableSelection<string>();
   selectedIds = signal<Set<string>>(new Set());
+
+  focusedRowIndex = -1;
+  private destroy$ = new Subject<void>();
 
   // Backend Metrics summary
   metrics = signal({
@@ -46,6 +68,32 @@ export class HelplinesComponent implements OnInit {
     national: 0,
     offline: 0
   });
+
+  // Export Modal & Saved Views State
+  isExportModalOpen = false;
+  isExporting = false;
+
+  columnDefs: ColumnDef[] = [
+    { key: 'name', label: 'Helpline Title' },
+    { key: 'number', label: 'Toll-Free / Number' },
+    { key: 'category', label: 'Category' },
+    { key: 'priorityTier', label: 'Priority Tier' },
+    { key: 'state', label: 'Jurisdiction State' },
+    { key: 'operatingHours', label: 'Operating Schedule' },
+    { key: 'languages', label: 'Languages' },
+    { key: 'isActive', label: 'Carrier Status' },
+    { key: 'lastVerifiedAt', label: 'Last Verified Date' }
+  ];
+
+  get activeQueryParamsObj(): Record<string, any> {
+    const obj: Record<string, any> = {};
+    if (this.selectedPriority()) obj['priority'] = this.selectedPriority();
+    if (this.selectedCategory()) obj['category'] = this.selectedCategory();
+    if (this.selectedState()) obj['state'] = this.selectedState();
+    if (this.selectedStatus()) obj['status'] = this.selectedStatus();
+    if (this.searchQuery()) obj['search'] = this.searchQuery();
+    return obj;
+  }
 
   // Modal drawer states
   isModalOpen = false;
@@ -139,31 +187,74 @@ export class HelplinesComponent implements OnInit {
     this.fetchHelplines();
   }
 
-  fetchHelplines(): void {
-    this.isLoading.set(true);
-    const params: any = {};
-    if (this.selectedPriority()) params.priorityTier = this.selectedPriority();
-    if (this.selectedState()) params.state = this.selectedState();
-    if (this.selectedCategory()) params.category = this.selectedCategory();
-    if (this.selectedStatus()) params.isActive = this.selectedStatus() === 'active';
-    if (this.searchQuery()) params.search = this.searchQuery();
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardShortcut(event: KeyboardEvent): void {
+    handleTableKeyboardNav(event, {
+      getListLength: () => this.filteredHelplines().length,
+      getFocusedIndex: () => this.focusedRowIndex,
+      setFocusedIndex: (idx) => { this.focusedRowIndex = idx; },
+      onEnter: (idx) => {
+        const item = this.filteredHelplines()[idx];
+        if (item) this.openEditModal(item);
+      },
+      onEscape: () => {
+        this.closeModal();
+        this.closePingModal();
+      }
+    });
+  }
 
-    this.api.getHelplines(params).subscribe({
-      next: (res: any) => {
+  onSavedViewApply(savedParams: Record<string, any>): void {
+    this.selectedPriority.set(savedParams?.['priority'] || '');
+    this.selectedCategory.set(savedParams?.['category'] || '');
+    this.selectedState.set(savedParams?.['state'] || '');
+    this.selectedStatus.set(savedParams?.['status'] || '');
+    this.searchQuery.set(savedParams?.['search'] || '');
+    this.toast.info('Applied saved helpline view preset.');
+    this.fetchHelplines();
+  }
+
+  fetchHelplines(): void {
+    const params: Record<string, string | boolean | undefined> = {};
+    if (this.selectedPriority()) params['priorityTier'] = this.selectedPriority();
+    if (this.selectedState()) params['state'] = this.selectedState();
+    if (this.selectedCategory()) params['category'] = this.selectedCategory();
+    if (this.selectedStatus()) params['isActive'] = this.selectedStatus() === 'active';
+    if (this.searchQuery()) params['search'] = this.searchQuery();
+
+    // SWR Cache Hydration
+    const cached = this.api.getCachedHelplines(params);
+    if (cached) {
+      const data: HelplineItem[] = Array.isArray(cached) ? cached : (cached?.data || (cached as any)?.helplines || []);
+      this.helplines.set(data);
+      if (cached?.metrics) {
+        this.metrics.set(cached.metrics);
+      } else {
+        this.calculateLocalMetrics(data);
+      }
+      this.isLoading.set(false);
+      this.isInitialLoad.set(false);
+    } else {
+      this.isLoading.set(true);
+    }
+
+    this.api.getHelplines(params).pipe(takeUntil(this.destroy$)).subscribe({
+      next: (res: ApiResponse<HelplineItem[]> | { data?: HelplineItem[]; helplines?: HelplineItem[]; metrics?: any } | HelplineItem[]) => {
         this.isLoading.set(false);
         this.isInitialLoad.set(false);
-        const data = Array.isArray(res) ? res : (res?.data || res?.helplines || []);
+        const data: HelplineItem[] = Array.isArray(res) ? res : (res?.data || (res as any)?.helplines || []);
         this.helplines.set(data);
-        if (res?.metrics) {
+        if (res && 'metrics' in res && res.metrics) {
           this.metrics.set(res.metrics);
         } else {
           this.calculateLocalMetrics(data);
         }
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse | Error) => {
         this.isLoading.set(false);
         this.isInitialLoad.set(false);
-        this.toast.error(err?.error?.message || 'Failed to sync helpline telemetry.');
+        const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+        this.toast.error(msg || 'Failed to sync helpline telemetry.');
       }
     });
   }
@@ -208,46 +299,51 @@ export class HelplinesComponent implements OnInit {
     }
   }
 
-  // Selection for bulk actions
-  toggleSelectAll(checked: boolean): void {
-    if (checked) {
-      const allIds = new Set(this.filteredHelplines().map(h => h._id || h.id || '').filter(Boolean));
-      this.selectedIds.set(allIds);
-      this.toast.info(`Selected all ${allIds.size} visible helplines.`);
+  toggleSelectAll(checked?: boolean): void {
+    const list = this.filteredHelplines();
+    const allIds = list.map(h => h._id || h.id || '').filter(Boolean);
+    if (checked !== undefined) {
+      if (checked) {
+        allIds.forEach(id => this.selection.selectedIds.add(id));
+      } else {
+        this.selection.clear();
+      }
     } else {
-      this.selectedIds.set(new Set());
+      this.selection.toggleAll(allIds);
     }
+    this.selectedIds.set(new Set(this.selection.selectedIds));
   }
 
   toggleSelectOne(id: string): void {
-    const current = new Set(this.selectedIds());
-    if (current.has(id)) current.delete(id);
-    else current.add(id);
-    this.selectedIds.set(current);
+    this.selection.toggle(id);
+    this.selectedIds.set(new Set(this.selection.selectedIds));
   }
 
   isAllSelected(): boolean {
     const list = this.filteredHelplines();
     if (!list.length) return false;
-    return list.every(h => this.selectedIds().has(h._id || h.id || ''));
+    const allIds = list.map(h => h._id || h.id || '').filter(Boolean);
+    return this.selection.isAllSelected(allIds);
   }
 
   // Bulk Status Update
   bulkSetStatus(isActive: boolean): void {
-    const ids = Array.from(this.selectedIds());
+    const ids = this.selection.toArray();
     if (!ids.length) {
       this.toast.warning('Please select at least one helpline line.');
       return;
     }
 
-    this.api.bulkUpdateHelplineStatus(ids, isActive).subscribe({
+    this.api.bulkUpdateHelplineStatus(ids, isActive).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.toast.success(`Updated ${ids.length} helpline(s) to ${isActive ? 'Active' : 'Offline'}.`);
+        this.selection.clear();
         this.selectedIds.set(new Set());
         this.fetchHelplines();
       },
-      error: (err: any) => {
-        this.toast.error(err?.error?.message || 'Failed to update helpline statuses.');
+      error: (err: HttpErrorResponse | Error) => {
+        const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+        this.toast.error(msg || 'Failed to update helpline statuses.');
       }
     });
   }
@@ -321,29 +417,31 @@ export class HelplinesComponent implements OnInit {
     };
 
     if (this.isEditMode && this.editingId) {
-      this.api.updateHelpline(this.editingId, payload).subscribe({
+      this.api.updateHelpline(this.editingId, payload).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.isSaving.set(false);
           this.toast.success(`Helpline "${this.formData.name}" updated successfully.`);
           this.closeModal();
           this.fetchHelplines();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse | Error) => {
           this.isSaving.set(false);
-          this.toast.error(err?.error?.message || 'Failed to update helpline.');
+          const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+          this.toast.error(msg || 'Failed to update helpline.');
         }
       });
     } else {
-      this.api.createHelpline(payload).subscribe({
+      this.api.createHelpline(payload).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.isSaving.set(false);
           this.toast.success(`New helpline "${this.formData.name}" onboarded successfully.`);
           this.closeModal();
           this.fetchHelplines();
         },
-        error: (err: any) => {
+        error: (err: HttpErrorResponse | Error) => {
           this.isSaving.set(false);
-          this.toast.error(err?.error?.message || 'Failed to create helpline.');
+          const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+          this.toast.error(msg || 'Failed to create helpline.');
         }
       });
     }
@@ -365,16 +463,17 @@ export class HelplinesComponent implements OnInit {
     if (!targetId) return;
 
     this.isPinging.set(true);
-    this.api.verifyHelplinePing(targetId, { notes: this.pingNotes, verifiedBy: 'Security & Telemetry Dispatch' }).subscribe({
+    this.api.verifyHelplinePing(targetId, { notes: this.pingNotes, verifiedBy: 'Security & Telemetry Dispatch' }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         this.isPinging.set(false);
         this.toast.success(`Telemetry Ping recorded: "${this.pingModalItem?.name}" marked verified.`);
         this.closePingModal();
         this.fetchHelplines();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse | Error) => {
         this.isPinging.set(false);
-        this.toast.error(err?.error?.message || 'Failed to record line ping.');
+        const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+        this.toast.error(msg || 'Failed to record line ping.');
       }
     });
   }
@@ -384,7 +483,7 @@ export class HelplinesComponent implements OnInit {
     const targetId = item._id || item.id;
     if (!targetId) return;
 
-    this.api.updateHelpline(targetId, { isActive: newStatus }).subscribe({
+    this.api.updateHelpline(targetId, { isActive: newStatus }).pipe(takeUntil(this.destroy$)).subscribe({
       next: () => {
         item.isActive = newStatus;
         this.toast.success(`Line "${item.name || item.title}" status set to ${newStatus ? 'Operational' : 'Offline'}.`);
@@ -406,15 +505,93 @@ export class HelplinesComponent implements OnInit {
     );
 
     if (confirmed) {
-      this.api.deleteHelpline(targetId).subscribe({
+      this.api.deleteHelpline(targetId).pipe(takeUntil(this.destroy$)).subscribe({
         next: () => {
           this.toast.success(`Helpline "${item.name || item.title}" permanently removed.`);
           this.fetchHelplines();
         },
-        error: (err: any) => {
-          this.toast.error(err?.error?.message || 'Failed to remove helpline record.');
+        error: (err: HttpErrorResponse | Error) => {
+          const msg = err instanceof HttpErrorResponse ? err.error?.message || err.message : err.message;
+          this.toast.error(msg || 'Failed to remove helpline record.');
         }
       });
+    }
+  }
+
+  // Export Modal Handlers
+  openExportModal(): void {
+    this.isExportModalOpen = true;
+  }
+
+  closeExportModal(): void {
+    this.isExportModalOpen = false;
+  }
+
+  onExportConfirm(config: ExportConfig): void {
+    let dataToExport = this.filteredHelplines();
+    if (config.scope === 'selected' && this.selectedIds().size > 0) {
+      dataToExport = dataToExport.filter(h => this.selectedIds().has(h._id || h.id || ''));
+    }
+
+    if (!dataToExport.length) {
+      this.toast.info('No helpline records to export.');
+      return;
+    }
+
+    this.isExporting = true;
+    try {
+      const dateStr = new Date().toISOString().slice(0, 10);
+      const filename = `helplines_directory_${config.scope}_${dateStr}`;
+
+      if (config.format === 'json') {
+        const jsonRows = dataToExport.map(h => {
+          const row: Record<string, any> = {};
+          if (config.columns.includes('name')) row['Title'] = h.name || h.title || '';
+          if (config.columns.includes('number')) row['Number'] = h.number || h.phone || '';
+          if (config.columns.includes('category')) row['Category'] = h.category || 'General';
+          if (config.columns.includes('priorityTier')) row['PriorityTier'] = h.priorityTier || 'P2_ADVISORY';
+          if (config.columns.includes('state')) row['State'] = h.state || 'All India';
+          if (config.columns.includes('operatingHours')) row['Schedule'] = h.is24x7 ? '24/7 Continuous' : (h.operatingHours || 'Shift');
+          if (config.columns.includes('languages')) row['Languages'] = Array.isArray(h.languages) ? h.languages.join('; ') : 'English; Hindi';
+          if (config.columns.includes('isActive')) row['Status'] = h.isActive !== false ? 'Active' : 'Offline';
+          if (config.columns.includes('lastVerifiedAt')) row['LastVerified'] = h.lastVerifiedAt ? new Date(h.lastVerifiedAt).toISOString().slice(0, 10) : 'Pending';
+          return row;
+        });
+
+        const blob = new Blob([JSON.stringify(jsonRows, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${filename}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        this.toast.success(`Exported ${jsonRows.length} helpline(s) as JSON.`);
+      } else {
+        const colMap: Record<string, { label: string; get: (h: HelplineItem) => string }> = {
+          name: { label: 'Helpline Title', get: h => h.name || h.title || '' },
+          number: { label: 'Toll-Free / Number', get: h => h.number || h.phone || '' },
+          category: { label: 'Category', get: h => h.category || 'General' },
+          priorityTier: { label: 'Priority Tier', get: h => h.priorityTier || 'P2_ADVISORY' },
+          state: { label: 'Jurisdiction State', get: h => h.state || 'All India' },
+          operatingHours: { label: 'Operating Schedule', get: h => h.is24x7 ? '24/7 Continuous' : (h.operatingHours || 'Shift') },
+          languages: { label: 'Languages', get: h => Array.isArray(h.languages) ? h.languages.join('; ') : 'English; Hindi' },
+          isActive: { label: 'Status', get: h => h.isActive !== false ? 'Active' : 'Offline' },
+          lastVerifiedAt: { label: 'Last Verified', get: h => h.lastVerifiedAt ? new Date(h.lastVerifiedAt).toISOString().slice(0, 10) : 'Pending' }
+        };
+
+        const selectedCols = config.columns.filter(c => colMap[c]);
+        const headers = selectedCols.map(c => colMap[c].label);
+        const rows = dataToExport.map(h => selectedCols.map(c => colMap[c].get(h)));
+
+        CsvExporter.export(filename, headers, rows);
+        this.toast.success(`Exported ${rows.length} helpline records to CSV.`);
+      }
+      this.closeExportModal();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Export failed';
+      this.toast.error(message);
+    } finally {
+      this.isExporting = false;
     }
   }
 
@@ -452,8 +629,14 @@ export class HelplinesComponent implements OnInit {
     try {
       CsvExporter.export(`national_helplines_directory_${new Date().toISOString().slice(0, 10)}`, headers, rows);
       this.toast.success(`Exported ${rows.length} helpline records to CSV.`);
-    } catch (err: any) {
-      this.toast.error(err.message || 'Export failed.');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 }

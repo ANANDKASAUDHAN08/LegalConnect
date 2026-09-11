@@ -17,25 +17,13 @@
             'bg-emerald-500/15 border border-emerald-500/30 text-emerald-300': item.type === 'GovernmentOffice'
           }">
           @if (item.type === 'Court') {
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 21h18"></path>
-            <path d="M5 21V7l8-4 8 4v14"></path>
-            <path d="M9 18h6"></path>
-          </svg>
+          <admin-icon name="building" [size]="22"></admin-icon>
           } @else if (item.type === 'LegalAid') {
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
-          </svg>
+          <admin-icon name="scale" [size]="22"></admin-icon>
           } @else if (item.type === 'PoliceStation') {
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
+          <admin-icon name="shield" [size]="22"></admin-icon>
           } @else {
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-            <line x1="9" y1="22" x2="9" y2="22.01"></line>
-            <line x1="15" y1="22" x2="15" y2="22.01"></line>
-          </svg>
+          <admin-icon name="file-text" [size]="22"></admin-icon>
           }
         </div>
 
@@ -47,11 +35,7 @@
               {{ item.jurisdictionLevel || 'District Level' }}
             </span>
             <span class="text-xs text-slate-400 flex items-center gap-1">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                class="text-sky-400">
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-                <circle cx="12" cy="10" r="3"></circle>
-              </svg>
+              <admin-icon name="map-pin" [size]="11" cssClass="text-sky-400"></admin-icon>
               <span>{{ item.district || item.city }}, {{ item.state }}</span>
             </span>
 
@@ -77,19 +61,12 @@
         <button type="button"
           class="text-slate-400 hover:text-sky-300 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
           (click)="exportDossierJson()" [adminTooltip]="'Download full institutional dossier JSON payload'">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-            <polyline points="7 10 12 15 17 10"></polyline>
-            <line x1="12" y1="15" x2="12" y2="3"></line>
-          </svg>
+          <admin-icon name="download" [size]="16"></admin-icon>
         </button>
 
         <button class="text-slate-400 hover:text-slate-200 p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
           (click)="close()" [adminTooltip]="'Close dossier drawer (Esc)'" tooltipPosition="left">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <line x1="18" y1="6" x2="6" y2="18"></line>
-            <line x1="6" y1="6" x2="18" y2="18"></line>
-          </svg>
+          <admin-icon name="close" [size]="20"></admin-icon>
         </button>
       </div>
     </div>
@@ -100,10 +77,7 @@
         class="py-1.5 px-1 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1"
         [ngClass]="activeTab === 'overview' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
         (click)="setTab('overview')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
-          <circle cx="12" cy="10" r="3"></circle>
-        </svg>
+        <admin-icon name="map-pin" [size]="12"></admin-icon>
         <span>Overview</span>
       </button>
 
@@ -111,9 +85,7 @@
         class="py-1.5 px-1 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1"
         [ngClass]="activeTab === 'facilities' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
         (click)="setTab('facilities')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-        </svg>
+        <admin-icon name="zap" [size]="12"></admin-icon>
         <span>Facilities</span>
       </button>
 
@@ -121,10 +93,7 @@
         class="py-1.5 px-1 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1"
         [ngClass]="activeTab === 'leadership' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
         (click)="setTab('leadership')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-        </svg>
+        <admin-icon name="users" [size]="12"></admin-icon>
         <span>Leadership</span>
       </button>
 
@@ -132,10 +101,7 @@
         class="py-1.5 px-1 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1"
         [ngClass]="activeTab === 'audit' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
         (click)="setTab('audit')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-          <polyline points="22 4 12 14.01 9 11.01"></polyline>
-        </svg>
+        <admin-icon name="check-circle" [size]="12"></admin-icon>
         <span>Audit</span>
       </button>
 
@@ -143,10 +109,7 @@
         class="py-1.5 px-1 rounded-lg text-[11px] font-semibold transition-all flex items-center justify-center gap-1"
         [ngClass]="activeTab === 'history' ? 'bg-sky-500 text-slate-950 font-bold shadow-sm' : 'text-slate-400 hover:text-slate-200'"
         (click)="setTab('history')">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
+        <admin-icon name="clock" [size]="12"></admin-icon>
         <span>History</span>
       </button>
     </div>
@@ -159,10 +122,7 @@
       <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <span class="font-bold text-slate-200 flex items-center gap-1.5">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-sky-400">
-              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
-            </svg>
+            <admin-icon name="map" [size]="13" cssClass="text-sky-400"></admin-icon>
             <span>GIS Satellite Pinpoint:</span>
           </span>
 
@@ -171,12 +131,7 @@
             <button type="button"
               class="px-2 py-0.5 rounded-lg bg-slate-900 border border-slate-800 text-[10.5px] font-semibold text-sky-300 hover:bg-slate-800 transition-all flex items-center gap-1"
               (click)="toggleMapType()" [adminTooltip]="'Switch between Google Street Map and Satellite Imagery'">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="2" y1="12" x2="22" y2="12"></line>
-                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z">
-                </path>
-              </svg>
+              <admin-icon name="compass" [size]="11"></admin-icon>
               <span>{{ mapType === 'satellite' ? 'Street View' : 'Satellite' }}</span>
             </button>
 
@@ -186,9 +141,7 @@
               target="_blank" rel="noopener noreferrer"
               class="px-2 py-0.5 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/20 text-[10.5px] font-semibold flex items-center gap-1 transition-all"
               [adminTooltip]="'Get turn-by-turn driving & transit directions in Google Maps'">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
-              </svg>
+              <admin-icon name="navigation" [size]="11"></admin-icon>
               <span>Directions</span>
             </a>
 
@@ -259,10 +212,7 @@
               </a>
               <button type="button" class="text-slate-500 hover:text-amber-300 p-0.5"
                 (click)="copyToClipboard(item.contactNumber + '', 'Phone Number')">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
+                <admin-icon name="copy" [size]="10"></admin-icon>
               </button>
             </div>
             } @else {
@@ -286,10 +236,7 @@
               </a>
               <button type="button" class="text-slate-500 hover:text-sky-300 p-0.5"
                 (click)="copyToClipboard(item.email + '', 'Email')">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                </svg>
+                <admin-icon name="copy" [size]="10"></admin-icon>
               </button>
             </div>
             } @else {
@@ -304,11 +251,7 @@
               <a [href]="item.website" target="_blank" rel="noopener noreferrer"
                 class="hover:underline flex items-center gap-1">
                 <span>{{ item.website }}</span>
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                  <polyline points="15 3 21 3 21 9"></polyline>
-                  <line x1="10" y1="14" x2="21" y2="3"></line>
-                </svg>
+                <admin-icon name="external-link" [size]="10"></admin-icon>
               </a>
             </p>
             } @else {
@@ -341,9 +284,7 @@
           [ngClass]="item.facilities?.hasEfiling ? 'bg-amber-500/10 border-amber-500/30 text-amber-200' : 'bg-slate-950/40 border-slate-800 text-slate-500'">
           <div class="flex flex-col">
             <span class="font-bold flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
-              </svg>
+              <admin-icon name="zap" [size]="13"></admin-icon>
               <span>e-Sewa Kendra</span>
             </span>
             <span class="text-[10px] text-slate-400">e-Filing & QR Token Dispenser</span>
@@ -359,9 +300,7 @@
           [ngClass]="item.facilities?.hasLADCS ? 'bg-indigo-500/10 border-indigo-500/30 text-indigo-200' : 'bg-slate-950/40 border-slate-800 text-slate-500'">
           <div class="flex flex-col">
             <span class="font-bold flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-              </svg>
+              <admin-icon name="shield" [size]="13"></admin-icon>
               <span>LADCS Defense Unit</span>
             </span>
             <span class="text-[10px] text-slate-400">Chief & Deputy Legal Defense</span>
@@ -377,10 +316,7 @@
           [ngClass]="item.facilities?.hasVCRoom ? 'bg-sky-500/10 border-sky-500/30 text-sky-200' : 'bg-slate-950/40 border-slate-800 text-slate-500'">
           <div class="flex flex-col">
             <span class="font-bold flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <polygon points="23 7 16 12 23 17 23 7"></polygon>
-                <rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect>
-              </svg>
+              <admin-icon name="video" [size]="13"></admin-icon>
               <span>VC Remand Cabin</span>
             </span>
             <span class="text-[10px] text-slate-400">Prison VC & Evidence Room</span>
@@ -396,9 +332,7 @@
           [ngClass]="item.facilities?.hasLegalAidClinic ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-200' : 'bg-slate-950/40 border-slate-800 text-slate-500'">
           <div class="flex flex-col">
             <span class="font-bold flex items-center gap-1.5">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 3v18M3 7l9-4 9 4M6 10l-3 6h6l-3-6zM18 10l-3 6h6l-3-6z"></path>
-              </svg>
+              <admin-icon name="scale" [size]="13"></admin-icon>
               <span>Front Office Aid Clinic</span>
             </span>
             <span class="text-[10px] text-slate-400">NALSA / DLSA Retainer Desk</span>
@@ -413,13 +347,7 @@
       <!-- Physical Accessibility Card -->
       <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col gap-2">
         <span class="font-bold text-slate-200 flex items-center gap-2">
-          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-sky-400">
-            <circle cx="12" cy="4" r="2"></circle>
-            <path d="M8 12h4l2 6h4"></path>
-            <path d="M14 12v-4a2 2 0 0 0-2-2H8"></path>
-            <circle cx="9" cy="18" r="3"></circle>
-          </svg>
+          <admin-icon name="activity" [size]="15" cssClass="text-sky-400"></admin-icon>
           <span>Physical & Tactile Accessibility:</span>
         </span>
         <p class="text-slate-300 leading-relaxed">
@@ -436,11 +364,7 @@
     <div class="flex flex-col gap-4 text-xs animate-in">
       <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col gap-3">
         <h4 class="font-bold text-slate-200 flex items-center gap-2">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="text-sky-400">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-          </svg>
+          <admin-icon name="users" [size]="14" cssClass="text-sky-400"></admin-icon>
           <span>{{ item.type === 'PoliceStation' ? 'Police Station Command & Nodal Officers' : 'Judicial & Statutory
             Leadership Hierarchy' }}</span>
         </h4>
@@ -572,16 +496,9 @@
           (click)="onRenew()" [disabled]="isVerifyingCycle"
           [adminTooltip]="'Grant 12-month compliance extension after registrar audit verification'">
           @if (isVerifyingCycle) {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-            class="animate-spin">
-            <polyline points="1 4 1 10 7 10"></polyline>
-            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
-          </svg>
+          <admin-icon name="spinner" [size]="14" cssClass="animate-spin"></admin-icon>
           } @else {
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <admin-icon name="check-circle" [size]="14"></admin-icon>
           }
           <span>Renew Verification Cycle for 12 Months</span>
         </button>
@@ -591,11 +508,7 @@
       <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col gap-3">
         <div class="flex items-center justify-between">
           <h4 class="font-bold text-slate-200 flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-              class="text-amber-400">
-              <path
-                d="M14 10h4.764a2 2 0 011.789 2.894l-3.5 7A2 2 0 0115.263 21h-4.017c-.163 0-.326-.02-.485-.06L7 20m7-10V5a2 2 0 00-2-2h-.095c-.5 0-.905.405-.905.905 0 .714-.211 1.412-.608 2.006L7 11v9m7-10h-2M7 20H5a2 2 0 01-2-2v-6a2 2 0 012-2h2.5" />
-            </svg>
+            <admin-icon name="message-circle" [size]="14" cssClass="text-amber-400"></admin-icon>
             <span>Citizen Feedback & Registry Quality</span>
           </h4>
           <span class="px-2 py-0.5 rounded text-[10px] font-bold"
@@ -610,24 +523,14 @@
             <div class="text-[10px] text-slate-400 font-bold uppercase">Helpful (Upvotes)</div>
             <div class="text-base font-black text-emerald-400 mt-0.5 flex items-center justify-center gap-1.5">
               <span>{{ item.feedback?.upvotes || 0 }}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round" class="text-emerald-400">
-                <path
-                  d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3">
-                </path>
-              </svg>
+              <admin-icon name="thumbs-up" [size]="14" [strokeWidth]="2.2" cssClass="text-emerald-400"></admin-icon>
             </div>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
             <div class="text-[10px] text-slate-400 font-bold uppercase">Issues (Downvotes)</div>
             <div class="text-base font-black text-rose-400 mt-0.5 flex items-center justify-center gap-1.5">
               <span>{{ item.feedback?.downvotes || 0 }}</span>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
-                stroke-linecap="round" stroke-linejoin="round" class="text-rose-400">
-                <path
-                  d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3">
-                </path>
-              </svg>
+              <admin-icon name="thumbs-down" [size]="14" [strokeWidth]="2.2" cssClass="text-rose-400"></admin-icon>
             </div>
           </div>
           <div class="p-2.5 rounded-xl bg-slate-900 border border-slate-800 text-center">
@@ -654,10 +557,7 @@
         <button type="button"
           class="btn mt-2 w-full flex items-center justify-center gap-2 py-2 text-xs font-bold bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white rounded-xl shadow-md cursor-pointer border-0 transition-all"
           (click)="onResolveIssues()">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-            <polyline points="22 4 12 14.01 9 11.01"></polyline>
-          </svg>
+          <admin-icon name="check-circle" [size]="14"></admin-icon>
           <span>Mark Reported Discrepancies as Resolved</span>
         </button>
         }
@@ -730,7 +630,7 @@
         </div>
 
         @if (item.feedback?.reasons?.length) {
-        <div class="mt-2 pt-2 border-t border-slate-750">
+        <div class="mt-2 pt-2 border-t border-slate-755">
           <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">Reported Issue Breakdown
           </div>
           <div class="space-y-1">
@@ -787,10 +687,7 @@
       <button
         class="btn btn-primary px-4 py-2 text-xs font-semibold flex items-center gap-1.5 shadow-lg shadow-sky-500/20"
         (click)="onEdit()">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-        </svg>
+        <admin-icon name="edit" [size]="13"></admin-icon>
         <span>Edit Configuration</span>
       </button>
     </div>

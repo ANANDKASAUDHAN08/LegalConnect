@@ -9,10 +9,7 @@
     <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
-          </svg>
+          <admin-icon name="copy" [size]="20"></admin-icon>
         </div>
         <div>
           <h2 class="text-base font-bold text-white m-0">Duplicate Detection & Resolution</h2>
@@ -23,19 +20,14 @@
 
       <button (click)="close()"
         class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer bg-transparent border-0">
-        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <admin-icon name="close" [size]="20"></admin-icon>
       </button>
     </div>
 
     <!-- Candidate List -->
     <div class="flex-1 overflow-y-auto space-y-4 pr-1">
       <div *ngIf="duplicatePairs.length === 0" class="py-12 text-center text-slate-400 text-xs">
-        <svg class="w-10 h-10 text-emerald-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-          stroke-width="2">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
+        <admin-icon name="check-circle" [size]="40" cssClass="text-emerald-400 mx-auto mb-2 block"></admin-icon>
         <span>No duplicate candidates found. Registry records are clean!</span>
       </div>
 
@@ -89,10 +81,7 @@
           </button>
           <button (click)="mergePair(pair, idx)" [disabled]="isMerging && mergingPairIndex === idx"
             class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer border-0 shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1.5">
-            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-            </svg>
+            <admin-icon name="repeat" [size]="14"></admin-icon>
             <span>{{ (isMerging && mergingPairIndex === idx) ? 'Merging...' : 'Merge Records' }}</span>
           </button>
         </div>

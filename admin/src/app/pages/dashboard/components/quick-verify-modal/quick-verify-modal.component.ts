@@ -1,12 +1,15 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
+import { AdminIconComponent } from '../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'app-quick-verify-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, AdminIconComponent],
   templateUrl: './quick-verify-modal.component.html',
-  styleUrl: './quick-verify-modal.component.scss'
+  styleUrl: './quick-verify-modal.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class QuickVerifyModalComponent {
   @Input() isOpen = false;

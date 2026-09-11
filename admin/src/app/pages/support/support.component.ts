@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminApiService } from '../../core/admin-api.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
@@ -19,6 +20,8 @@ import { DateRangePickerComponent, DateRangeEvent } from '../../shared/component
 import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail, PiiMaskState } from '../../core/utils/security-utils';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
+import { CsvExporter } from '../../core/utils/csv-exporter';
 
 interface CannedMacro {
   title: string;
@@ -35,7 +38,7 @@ import { AdminSavedViewsComponent } from '../../shared/components/saved-views/sa
     CommonModule, FormsModule, SkeletonComponent, TooltipDirective, SelectComponent,
     ExportModalComponent, ActionMenuComponent, PaginationComponent, ColumnCustomizerComponent,
     AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent,
-    AdminSavedViewsComponent
+    AdminSavedViewsComponent, AdminIconComponent
   ],
   templateUrl: './support.component.html',
   styleUrl: './support.component.scss',
@@ -286,6 +289,10 @@ export class SupportComponent implements OnInit, OnDestroy {
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      if (params['limit']) {
+        const l = parseInt(params['limit'], 10);
+        if (!isNaN(l) && l > 0) this.pagination.limit = l;
+      }
       this.cdr.markForCheck();
       this.fetchContacts();
     });
@@ -309,6 +316,7 @@ export class SupportComponent implements OnInit, OnDestroy {
     if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
+    if (this.pagination.limit && this.pagination.limit !== 10) queryParams.limit = this.pagination.limit;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -507,7 +515,7 @@ export class SupportComponent implements OnInit, OnDestroy {
         this.isInitialLoad = false;
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         if (!cached) {
           this.toast.error(err?.error?.message || 'Failed to load support inquiries.');
         }
@@ -520,12 +528,14 @@ export class SupportComponent implements OnInit, OnDestroy {
   onPageChange(page: number): void {
     this.pagination.page = page;
     this.updateUrlParams();
+    this.fetchContacts();
   }
 
   onLimitChange(limit: number): void {
-    this.pagination.limit = limit;
+    this.pagination.limit = Number(limit) || 10;
     this.pagination.page = 1;
     this.updateUrlParams();
+    this.fetchContacts();
   }
 
   get totalTicketsCount(): number {
@@ -603,7 +613,7 @@ export class SupportComponent implements OnInit, OnDestroy {
     if (typeof ticket.id === 'number') {
       this.api.updateContactStatus(ticket.id, ticket.status).subscribe({
         next: () => { this.toast.success(`Priority updated to ${priority}`); this.cdr.markForCheck(); },
-        error: () => this.toast.error('Failed to update priority')
+        error: (err: HttpErrorResponse) => { this.toast.error(err?.error?.message || 'Failed to update priority'); this.cdr.markForCheck(); }
       });
     }
   }
@@ -628,6 +638,10 @@ export class SupportComponent implements OnInit, OnDestroy {
         next: () => {
           this.toast.success('Internal note added');
           this.newInternalNote = '';
+          this.cdr.markForCheck();
+        },
+        error: (err: HttpErrorResponse) => {
+          this.toast.error(err?.error?.message || 'Failed to add internal note');
           this.cdr.markForCheck();
         }
       });
@@ -667,7 +681,10 @@ export class SupportComponent implements OnInit, OnDestroy {
           this.fetchContacts();
           this.closeResolutionModal();
         },
-        error: () => this.toast.error('Failed to resolve ticket')
+        error: (err: HttpErrorResponse) => {
+          this.toast.error(err?.error?.message || 'Failed to resolve ticket');
+          this.cdr.markForCheck();
+        }
       });
     }
   }
@@ -758,22 +775,20 @@ export class SupportComponent implements OnInit, OnDestroy {
       return selectedCols.map(key => {
         let val = (ticket as any)[key] ?? '';
         if (key === 'fullName') val = this.getContactName(ticket);
-        if (typeof val === 'string') val = `"${val.replace(/"/g, '""')}"`;
         return val;
       });
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `support_tickets_export_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    this.isExporting = false;
-    this.isExportModalOpen = false;
-    this.toast.success(`Exported ${targetTickets.length} support ticket(s) to CSV.`);
+    try {
+      CsvExporter.export('support_tickets_export', headers, rows);
+      this.toast.success(`Exported ${targetTickets.length} support ticket(s) to CSV.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
+    } finally {
+      this.isExporting = false;
+      this.isExportModalOpen = false;
+      this.cdr.markForCheck();
+    }
   }
 }

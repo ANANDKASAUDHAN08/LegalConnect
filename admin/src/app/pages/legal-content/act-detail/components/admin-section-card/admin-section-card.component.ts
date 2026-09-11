@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { EnrichedSection, EnrichedParsedLegalSection } from '../../act-detail.component';
 import { TooltipDirective } from '../../../../../shared/directives/tooltip.directive';
 import { HighlightPipe } from '../../../../../shared/pipes/highlight.pipe';
+import { AdminIconComponent } from '../../../../../shared/components/icon/icon.component';
 
 @Component({
   selector: 'admin-section-card',
   standalone: true,
-  imports: [CommonModule, TooltipDirective, HighlightPipe],
+  imports: [CommonModule, TooltipDirective, HighlightPipe, AdminIconComponent],
   templateUrl: './admin-section-card.component.html',
   styleUrl: './admin-section-card.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

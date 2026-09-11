@@ -6,6 +6,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Subscription, interval } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 
 import { ActivityStreamService, ActivityEvent, NotificationQueryParams } from '../../core/services/activity-stream.service';
 import { ToastService } from '../../shared/services/toast.service';
@@ -42,7 +44,8 @@ export interface NotificationGroup {
     AdminEmptyStateComponent,
     ExportModalComponent,
     DateRangePickerComponent,
-    ActionMenuComponent
+    ActionMenuComponent,
+    AdminIconComponent
   ],
   templateUrl: './notifications.component.html',
   styleUrls: ['./notifications.component.scss'],
@@ -385,7 +388,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.updateUrlParams();
     }
 
-    this.activityService.loadFromBackend(query).subscribe();
+    this.activityService.loadFromBackend(query).subscribe({
+      error: (err: HttpErrorResponse) => {
+        this.toastService.error(err?.error?.message || 'Failed to load notifications', 'Notifications');
+      }
+    });
   }
 
   private updateUrlParams(): void {
@@ -607,37 +614,42 @@ export class NotificationsComponent implements OnInit, OnDestroy {
 
     const localUnreadIds = this.activityService.events().filter(e => !e.read).map(e => e.id);
 
-    this.activityService.markAllAsRead().subscribe((res: any) => {
-      const idsToSave = (res && res.unreadIds && res.unreadIds.length > 0) ? res.unreadIds : localUnreadIds;
-      const count = (res && res.count) ? res.count : idsToSave.length;
+    this.activityService.markAllAsRead().subscribe({
+      next: (res: any) => {
+        const idsToSave = (res && res.unreadIds && res.unreadIds.length > 0) ? res.unreadIds : localUnreadIds;
+        const count = (res && res.count) ? res.count : idsToSave.length;
 
-      this.lastMarkedReadIds.set(idsToSave);
+        this.lastMarkedReadIds.set(idsToSave);
 
-      // Start 8-second countdown timer for button swap & undo capability
-      this.undoCountdown.set(8);
-      if (this.undoTimer) clearInterval(this.undoTimer);
+        // Start 8-second countdown timer for button swap & undo capability
+        this.undoCountdown.set(8);
+        if (this.undoTimer) clearInterval(this.undoTimer);
 
-      this.undoTimer = setInterval(() => {
-        const remaining = this.undoCountdown() - 1;
-        if (remaining <= 0) {
-          clearInterval(this.undoTimer);
-          this.undoCountdown.set(0);
-          this.lastMarkedReadIds.set([]);
-        } else {
-          this.undoCountdown.set(remaining);
-        }
+        this.undoTimer = setInterval(() => {
+          const remaining = this.undoCountdown() - 1;
+          if (remaining <= 0) {
+            clearInterval(this.undoTimer);
+            this.undoCountdown.set(0);
+            this.lastMarkedReadIds.set([]);
+          } else {
+            this.undoCountdown.set(remaining);
+          }
+          this.cdr.markForCheck();
+        }, 1000);
+
+        // Trigger Floating Toast Snackbar with interactive [Undo] Action Button
+        this.toastService.success(
+          `Marked ${count || 1} notification${(count || 1) > 1 ? 's' : ''} as read`,
+          'Notifications',
+          'Undo',
+          () => this.undoMarkAllAsRead()
+        );
+
         this.cdr.markForCheck();
-      }, 1000);
-
-      // Trigger Floating Toast Snackbar with interactive [Undo] Action Button
-      this.toastService.success(
-        `Marked ${count || 1} notification${(count || 1) > 1 ? 's' : ''} as read`,
-        'Notifications',
-        'Undo',
-        () => this.undoMarkAllAsRead()
-      );
-
-      this.cdr.markForCheck();
+      },
+      error: (err: HttpErrorResponse) => {
+        this.toastService.error(err?.error?.message || 'Failed to mark all as read', 'Notifications');
+      }
     });
   }
 
@@ -681,9 +693,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
         this.quickActionLoading.set(null);
         this.toastService.success(res?.message || 'Quick action completed successfully', 'Quick Action');
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.quickActionLoading.set(null);
-        this.toastService.error('Failed to execute quick action', 'Quick Action');
+        this.toastService.error(err?.error?.message || 'Failed to execute quick action', 'Quick Action');
       }
     });
   }

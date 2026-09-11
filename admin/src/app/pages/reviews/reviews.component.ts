@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ChangeDetectionStrategy, ChangeDetectorRef, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
 import { AdminApiService } from '../../core/admin-api.service';
 import { SkeletonComponent } from '../../shared/components/skeleton/skeleton.component';
@@ -19,8 +20,9 @@ import { DateRangePickerComponent, DateRangeEvent } from '../../shared/component
 import { TableSelection, sortByField, handleTableKeyboardNav } from '../../core/utils/table.utils';
 import { SwrCacheService } from '../../core/services/admin-swr-cache.service';
 import { maskPhone, maskEmail } from '../../core/utils/security-utils';
-
+import { AdminIconComponent } from '../../shared/components/icon/icon.component';
 import { ExportModalComponent, ExportConfig } from '../../shared/components/export-modal/export-modal.component';
+import { CsvExporter } from '../../core/utils/csv-exporter';
 
 import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
 
@@ -31,7 +33,7 @@ import { AdminSavedViewsComponent } from '../../shared/components/saved-views/sa
     CommonModule, FormsModule, RouterLink, SkeletonComponent, TooltipDirective, SelectComponent,
     ActionMenuComponent, PaginationComponent, ColumnCustomizerComponent,
     AdminSearchInputComponent, AdminEmptyStateComponent, AdminSortHeaderComponent, DateRangePickerComponent,
-    ExportModalComponent, AdminSavedViewsComponent
+    ExportModalComponent, AdminSavedViewsComponent, AdminIconComponent
   ],
   templateUrl: './reviews.component.html',
   styleUrl: './reviews.component.scss',
@@ -184,6 +186,10 @@ export class ReviewsComponent implements OnInit, OnDestroy {
       this.sortBy = params['sort'] || 'createdAt';
       this.sortOrder = params['sortOrder'] || 'desc';
       this.pagination.page = parseInt(params['page'], 10) || 1;
+      if (params['limit']) {
+        const l = parseInt(params['limit'], 10);
+        if (!isNaN(l) && l > 0) this.pagination.limit = l;
+      }
       this.cdr.markForCheck();
       this.fetchReviews();
     });
@@ -224,6 +230,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
     if (this.sortBy && this.sortBy !== 'createdAt') queryParams.sort = this.sortBy;
     if (this.sortOrder && this.sortOrder !== 'desc') queryParams.sortOrder = this.sortOrder;
     if (this.pagination.page > 1) queryParams.page = this.pagination.page;
+    if (this.pagination.limit && this.pagination.limit !== 10) queryParams.limit = this.pagination.limit;
 
     this.router.navigate([], {
       relativeTo: this.route,
@@ -417,7 +424,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         this.isInitialLoad = false;
         this.cdr.markForCheck();
       },
-      error: (err: any) => {
+      error: (err: HttpErrorResponse) => {
         if (!cached) {
           this.toast.error(err?.error?.message || 'Failed to load reviews.');
         }
@@ -430,12 +437,14 @@ export class ReviewsComponent implements OnInit, OnDestroy {
   onPageChange(page: number): void {
     this.pagination.page = page;
     this.updateUrlParams();
+    this.fetchReviews();
   }
 
   onLimitChange(limit: number): void {
-    this.pagination.limit = limit;
+    this.pagination.limit = Number(limit) || 10;
     this.pagination.page = 1;
     this.updateUrlParams();
+    this.fetchReviews();
   }
 
   get totalReviewsCount(): number {
@@ -550,7 +559,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         this.isLoadingAuditHistory = false;
         this.cdr.markForCheck();
       },
-      error: () => {
+      error: (err: HttpErrorResponse) => {
         this.isLoadingAuditHistory = false;
         this.cdr.markForCheck();
       }
@@ -573,7 +582,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         this.loadAuditHistory(this.selectedReview!.id);
         this.cdr.markForCheck();
       },
-      error: () => this.toast.error('Failed to sanitize review content.')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to sanitize review content.')
     });
   }
 
@@ -592,7 +601,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
           this.cdr.markForCheck();
         }
       },
-      error: () => this.toast.error('Failed to run auto-sanitizer.')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to run auto-sanitizer.')
     });
   }
 
@@ -612,7 +621,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         this.closeInspectModal();
         this.cdr.markForCheck();
       },
-      error: () => this.toast.error('Failed to resolve dispute.')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to resolve dispute.')
     });
   }
 
@@ -641,7 +650,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         }
         this.cdr.markForCheck();
       },
-      error: () => this.toast.error('Failed to update review moderation status')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to update review moderation status')
     });
   }
 
@@ -653,7 +662,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
       advocateReplyStatus: 'Approved'
     }).subscribe({
       next: () => { this.toast.success('Advocate response approved for display'); this.cdr.markForCheck(); },
-      error: () => this.toast.error('Failed to approve advocate response')
+      error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to approve advocate response')
     });
   }
 
@@ -673,7 +682,7 @@ export class ReviewsComponent implements OnInit, OnDestroy {
             this.closeInspectModal();
             this.cdr.markForCheck();
           },
-          error: () => this.toast.error('Failed to delete review.')
+          error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to delete review.')
         });
       }
     });
@@ -700,7 +709,9 @@ export class ReviewsComponent implements OnInit, OnDestroy {
       if (this.selection.isSelected(rev.id)) {
         rev.moderationStatus = status;
         count++;
-        this.api.updateReviewModeration(rev.id, { moderationStatus: status }).subscribe();
+        this.api.updateReviewModeration(rev.id, { moderationStatus: status }).subscribe({
+          error: (err: HttpErrorResponse) => this.toast.error(err?.error?.message || 'Failed to update review.')
+        });
       }
     });
     this.swrCache.invalidate('reviews');
@@ -793,23 +804,20 @@ export class ReviewsComponent implements OnInit, OnDestroy {
         if (key === 'targetName') val = rev.targetName || rev.lawyerName || 'LegalConnect Platform';
         if (key === 'comment') val = rev.comment || rev.content || '';
         if (key === 'moderationStatus') val = rev.moderationStatus || 'Approved';
-        if (typeof val === 'string') val = `"${val.replace(/"/g, '""')}"`;
         return val;
       });
     });
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `reviews_export_${new Date().toISOString().slice(0, 10)}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-
-    this.isExporting = false;
-    this.isExportModalOpen = false;
-    this.toast.success(`Exported ${targetReviews.length} review(s) to CSV.`);
-    this.cdr.markForCheck();
+    try {
+      CsvExporter.export('reviews_export', headers, rows);
+      this.toast.success(`Exported ${targetReviews.length} review(s) to CSV.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Export failed.';
+      this.toast.error(msg);
+    } finally {
+      this.isExporting = false;
+      this.isExportModalOpen = false;
+      this.cdr.markForCheck();
+    }
   }
 }
