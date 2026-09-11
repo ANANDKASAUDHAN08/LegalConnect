@@ -1,0 +1,83 @@
+services:
+  # ─────────────────────────────────────────────────────────────
+  # 1. Node.js Legal Microservice (Free Web Service)
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: legalconnect-legal
+    runtime: node
+    plan: free
+    rootDir: backend/node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 5000
+      - key: MONGO_URI
+        sync: false # Set in Render Dashboard from your free MongoDB Atlas M0
+      - key: JWT_SECRET
+        generateValue: true
+
+  # ─────────────────────────────────────────────────────────────
+  # 2. .NET 8 Auth Microservice (Free Docker Web Service)
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: legalconnect-auth
+    runtime: docker
+    plan: free
+    dockerfilePath: backend/dotnet/Dockerfile
+    dockerContext: backend/dotnet
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: PORT
+        value: 8080
+      - key: ConnectionStrings__DefaultConnection
+        sync: false # Set in Render Dashboard from your free TiDB Cloud MySQL
+      - key: JWT__Secret
+        generateValue: true
+
+  # ─────────────────────────────────────────────────────────────
+  # 3. Angular Client Frontend (Free Global CDN Static Site)
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: legalconnect-frontend
+    runtime: static
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build -- --configuration=production
+    staticPublishPath: ./dist/frontend/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+
+  # ─────────────────────────────────────────────────────────────
+  # 4. Angular Admin Frontend (Free Global CDN Static Site)
+  # ─────────────────────────────────────────────────────────────
+  - type: web
+    name: legalconnect-admin
+    runtime: static
+    plan: free
+    rootDir: admin
+    buildCommand: npm install && npm run build -- --configuration=production
+    staticPublishPath: ./dist/admin/browser
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Frame-Options
+        value: SAMEORIGIN
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

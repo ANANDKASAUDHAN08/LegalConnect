@@ -14,7 +14,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Cloud Run binds to PORT environment variable which defaults to 8080
+# Render and Cloud Run bind to PORT or 8080
+ENV ASPNETCORE_HTTP_PORTS=8080
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 ENTRYPOINT ["dotnet", "CoreApi.dll"]

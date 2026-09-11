@@ -1,0 +1,22 @@
+name: 24/7 Render Keep-Alive Heartbeat
+
+on:
+  schedule:
+    # Runs every 10 minutes (Render sleeps after 15 min of inactivity)
+    - cron: '*/10 * * * *'
+  workflow_dispatch: # Allows manual trigger from GitHub Actions tab
+
+jobs:
+  ping-services:
+    name: Ping Render Services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Node Legal Service
+        run: |
+          echo "Pinging legalconnect-legal..."
+          curl -s -f -m 20 "https://legalconnect-legal.onrender.com/api/health" || echo "Node service ping completed (or waking up)"
+
+      - name: Ping .NET Auth Service
+        run: |
+          echo "Pinging legalconnect-auth..."
+          curl -s -f -m 20 "https://legalconnect-auth.onrender.com/api/health" || echo ".NET service ping completed (or waking up)"

@@ -2,6 +2,28 @@ import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpEvent, HttpHandl
 import { inject } from '@angular/core';
 import { Observable, from, throwError, switchMap, catchError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { environment } from '../../environments/environment';
+
+/** Resolves relative /api paths to Render backend URLs when running in production. */
+function resolveUrl(url: string): string {
+  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('assets/')) {
+    return url;
+  }
+
+  // Node.js Legal Microservice paths
+  if (url.startsWith('/api/legal') || url.startsWith('/api/lawyers') || url.startsWith('/api/info')) {
+    const nodeBase = (environment as any).nodeApiUrl || '';
+    return nodeBase ? `${nodeBase}${url}` : url;
+  }
+
+  // .NET 8 Auth & Core Microservice paths
+  if (url.startsWith('/api') || url.startsWith('/uploads') || url.startsWith('/hubs')) {
+    const authBase = (environment as any).authApiUrl || '';
+    return authBase ? `${authBase}${url}` : url;
+  }
+
+  return url;
+}
 
 /**
  * HTTP Authentication Interceptor
@@ -46,19 +68,27 @@ function isAuthEndpoint(url: string): boolean {
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
 
+  const resolvedUrl = resolveUrl(req.url);
+  const isCrossOrigin = resolvedUrl.startsWith('http');
+
+  const baseReq = req.clone({
+    url: resolvedUrl,
+    withCredentials: isCrossOrigin ? true : req.withCredentials
+  });
+
   if (isAuthEndpoint(req.url)) {
-    return next(req);
+    return next(baseReq);
   }
 
   const token = authService.getToken();
   const authedReq = token
-    ? req.clone({ headers: req.headers.set('Authorization', `Bearer ${token}`) })
-    : req;
+    ? baseReq.clone({ headers: baseReq.headers.set('Authorization', `Bearer ${token}`) })
+    : baseReq;
 
   return next(authedReq).pipe(
     catchError((error: HttpErrorResponse) => {
       if (error.status === 401) {
-        return handle401(authService, req, next);
+        return handle401(authService, authedReq, next);
       }
       return throwError(() => error);
     })

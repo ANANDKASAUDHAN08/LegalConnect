@@ -63,24 +63,33 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // ── 5. Dynamic CORS (Configured via appsettings.json or environment) ──
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
-    ?? new[]
-    {
-        "http://localhost:4200",
-        "http://localhost:4201",
-        "http://localhost:4300",
-        "https://legalconnect-501109.web.app",
-        "https://legalconnect-501109.firebaseapp.com",
-        "https://legalconnect-admin.web.app",
-        "https://legalconnect-admin.firebaseapp.com",
-        "https://admin.legalconnect-501109.web.app"
-    };
+var configuredOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+    ?? Array.Empty<string>();
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAngular", policy =>
     {
-        policy.WithOrigins(allowedOrigins)
+        policy.SetIsOriginAllowed(origin =>
+              {
+                  if (string.IsNullOrEmpty(origin)) return false;
+                  if (configuredOrigins.Contains(origin)) return true;
+
+                  try
+                  {
+                      var uri = new Uri(origin);
+                      var host = uri.Host;
+                      return host == "localhost" ||
+                             host == "127.0.0.1" ||
+                             host.EndsWith(".onrender.com", StringComparison.OrdinalIgnoreCase) ||
+                             host.EndsWith(".web.app", StringComparison.OrdinalIgnoreCase) ||
+                             host.EndsWith(".firebaseapp.com", StringComparison.OrdinalIgnoreCase);
+                  }
+                  catch
+                  {
+                      return false;
+                  }
+              })
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();

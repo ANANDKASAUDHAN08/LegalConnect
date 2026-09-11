@@ -1,5 +1,7 @@
 export const environment = {
   production: false,
+  authApiUrl: '', // In development, relative paths route through proxy.conf.json
+  nodeApiUrl: '',
   firebase: {
     apiKey: "AIzaSyAbT7gkJLThxS6OwKp7X98E5ehfpQnBRPY",
     authDomain: "legalconnect-501109.firebaseapp.com",

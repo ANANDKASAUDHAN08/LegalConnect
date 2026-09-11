@@ -1,5 +1,7 @@
 export const environment = {
   production: true,
+  authApiUrl: 'https://legalconnect-auth.onrender.com',
+  nodeApiUrl: 'https://legalconnect-legal.onrender.com',
   firebase: {
     apiKey: "AIzaSyAbT7gkJLThxS6OwKp7X98E5ehfpQnBRPY",
     authDomain: "legalconnect-501109.web.app",

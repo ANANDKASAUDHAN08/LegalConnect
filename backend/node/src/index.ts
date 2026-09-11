@@ -16,16 +16,32 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Global Middleware
+const allowedOrigins = [
+  'http://localhost:4200',
+  'http://localhost:4201',
+  'http://localhost:4300',
+  'https://legalconnect-501109.web.app',
+  'https://legalconnect-501109.firebaseapp.com',
+  'https://legalconnect-admin.web.app',
+  'https://legalconnect-admin.firebaseapp.com'
+];
+
 app.use(cors({
-  origin: [
-    'http://localhost:4200',
-    'http://localhost:4201',
-    'http://localhost:4300',
-    'https://legalconnect-501109.web.app',
-    'https://legalconnect-501109.firebaseapp.com',
-    'https://legalconnect-admin.web.app',
-    'https://legalconnect-admin.firebaseapp.com'
-  ],
+  origin: (origin, callback) => {
+    // Allow server-to-server, curl, health checks or keep-alive pings without origin header
+    if (!origin) return callback(null, true);
+
+    if (
+      allowedOrigins.includes(origin) ||
+      origin.endsWith('.onrender.com') ||
+      origin.endsWith('.web.app') ||
+      origin.endsWith('.firebaseapp.com') ||
+      origin.includes('localhost')
+    ) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
