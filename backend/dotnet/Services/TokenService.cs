@@ -35,14 +35,7 @@ namespace CoreApi.Services
                 new Claim("SessionId", sessionId)
             };
 
-            var jwtKey = _configuration["Jwt:Key"] ?? _configuration["Jwt__Key"];
-            if (string.IsNullOrEmpty(jwtKey))
-            {
-                throw new InvalidOperationException("Required configuration 'Jwt:Key' is missing.");
-            }
-
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+            var creds = CoreApi.Extensions.AuthenticationExtensions.GetSigningCredentials(_configuration);
 
             var issuer = _configuration["Jwt:Issuer"] ?? _configuration["Jwt__Issuer"] ?? "LegalConnect-API";
             var audience = _configuration["Jwt:Audience"] ?? _configuration["Jwt__Audience"] ?? "LegalConnect-Admin";

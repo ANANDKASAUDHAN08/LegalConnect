@@ -485,9 +485,7 @@ namespace CoreApi.Controllers
                 new Claim("ImpersonatedBy", adminEmail)
             };
 
-            var key = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(
-                _configuration.GetSection("Jwt:Key").Value!));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
+            var creds = CoreApi.Extensions.AuthenticationExtensions.GetSigningCredentials(_configuration);
 
             var issuer = _configuration["Jwt:Issuer"] ?? _configuration["Jwt__Issuer"] ?? "LegalConnect-API";
             var audience = _configuration["Jwt:Audience"] ?? _configuration["Jwt__Audience"] ?? "LegalConnect-Admin";

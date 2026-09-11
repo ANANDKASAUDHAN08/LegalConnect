@@ -21,9 +21,9 @@ namespace CoreApi.Extensions
     /// </summary>
     public static class AuthenticationExtensions
     {
-        public static AuthenticationBuilder AddAppAuthentication(
-            this IServiceCollection services,
-            IConfiguration configuration)
+        public const string DefaultFallbackJwtKey = "SuperSecretKeyForLegalConnectWhichIsLongEnoughToSatisfyHMACSHA512RequirementAndMore";
+
+        public static string ResolveJwtKey(IConfiguration configuration)
         {
             var jwtKey = configuration["Jwt:Key"]
                 ?? configuration["Jwt__Key"]
@@ -31,13 +31,45 @@ namespace CoreApi.Extensions
                 ?? configuration["JWT_SECRET"]
                 ?? configuration["JWT__Key"]
                 ?? configuration["JWT_KEY"]
-                ?? configuration["JWT:Secret"];
+                ?? configuration["JWT:Secret"]
+                ?? Environment.GetEnvironmentVariable("Jwt__Key")
+                ?? Environment.GetEnvironmentVariable("JWT__Secret")
+                ?? Environment.GetEnvironmentVariable("JWT_SECRET")
+                ?? Environment.GetEnvironmentVariable("JWT_KEY")
+                ?? Environment.GetEnvironmentVariable("Jwt:Key");
 
-            if (string.IsNullOrEmpty(jwtKey))
+            if (string.IsNullOrWhiteSpace(jwtKey))
             {
-                jwtKey = "SuperSecretKeyForLegalConnectWhichIsLongEnoughToSatisfyHMACSHA512RequirementAndMore";
+                jwtKey = DefaultFallbackJwtKey;
             }
 
+            return jwtKey;
+        }
+
+        public static SymmetricSecurityKey GetSigningKey(IConfiguration configuration)
+        {
+            var rawKey = ResolveJwtKey(configuration);
+            var keyBytes = Encoding.UTF8.GetBytes(rawKey);
+
+            if (keyBytes.Length < 32)
+            {
+                var padded = rawKey + DefaultFallbackJwtKey;
+                keyBytes = Encoding.UTF8.GetBytes(padded);
+            }
+
+            return new SymmetricSecurityKey(keyBytes);
+        }
+
+        public static SigningCredentials GetSigningCredentials(IConfiguration configuration)
+        {
+            var key = GetSigningKey(configuration);
+            return new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        }
+
+        public static AuthenticationBuilder AddAppAuthentication(
+            this IServiceCollection services,
+            IConfiguration configuration)
+        {
             var validIssuer = configuration["Jwt:Issuer"] ?? configuration["Jwt__Issuer"] ?? "LegalConnect-API";
 
             var validAudience = configuration["Jwt:Audience"] ?? configuration["Jwt__Audience"] ?? "LegalConnect-Admin";
@@ -54,7 +86,7 @@ namespace CoreApi.Extensions
                     options.TokenValidationParameters = new TokenValidationParameters
                     {
                         ValidateIssuerSigningKey = true,
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                        IssuerSigningKey = GetSigningKey(configuration),
                         ValidateIssuer = true,
                         ValidIssuer = validIssuer,
                         ValidateAudience = true,
