@@ -14,7 +14,8 @@
           "headers": [
             { "key": "X-Content-Type-Options", "value": "nosniff" },
             { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+            { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" }
           ]
         },
         {
@@ -37,6 +38,27 @@
         }
       ],
       "rewrites": [
+        {
+          "source": "/hubs{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/notification{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/notifications{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
         {
           "source": "/api/verification{,/**}",
           "run": {
@@ -295,7 +317,8 @@
           "headers": [
             { "key": "X-Content-Type-Options", "value": "nosniff" },
             { "key": "X-Frame-Options", "value": "SAMEORIGIN" },
-            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
+            { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+            { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" }
           ]
         },
         {
@@ -318,6 +341,27 @@
         }
       ],
       "rewrites": [
+        {
+          "source": "/hubs{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/notification{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
+        {
+          "source": "/api/notifications{,/**}",
+          "run": {
+            "serviceId": "legalconnect-auth",
+            "region": "us-central1"
+          }
+        },
         {
           "source": "/api/verification{,/**}",
           "run": {

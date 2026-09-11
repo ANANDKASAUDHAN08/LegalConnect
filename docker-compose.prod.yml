@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: legalconnect-mysql-prod
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-rootpassword}
+      MYSQL_DATABASE: legalconnect_db
+      MYSQL_USER: ${MYSQL_USER:-legaluser}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-legalpassword}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+
+  mongodb:
+    image: mongo:7.0
+    container_name: legalconnect-mongodb-prod
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME:-root}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-rootpassword}
+      MONGO_INITDB_DATABASE: legalconnect_db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    restart: always
+
+  gateway:
+    image: nginx:alpine
+    container_name: legalconnect-gateway-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot:ro
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: always
+    command: >
+      /bin/sh -c '
+        if [ ! -f /etc/letsencrypt/live/api.legalconnect.in/fullchain.pem ]; then
+          echo "Generating temporary self-signed SSL certificate for initial Nginx boot..." &&
+          mkdir -p /etc/letsencrypt/live/api.legalconnect.in &&
+          openssl req -x509 -nodes -newkey rsa:2048 -days 1 -keyout /etc/letsencrypt/live/api.legalconnect.in/privkey.pem -out /etc/letsencrypt/live/api.legalconnect.in/fullchain.pem -subj "/CN=api.legalconnect.in";
+        fi;
+        while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g "daemon off;"
+      '
+
+  certbot:
+    image: certbot/certbot
+    container_name: legalconnect-certbot
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+    restart: always
+
+volumes:
+  mysql_data:
+  mongodb_data:
+  certbot_conf:
+  certbot_www:
