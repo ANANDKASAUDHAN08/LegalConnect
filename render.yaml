@@ -41,8 +41,9 @@ services:
   # ─────────────────────────────────────────────────────────────
   # 3. Angular Client Frontend (Free Global CDN Static Site)
   # ─────────────────────────────────────────────────────────────
-  - type: static
+  - type: web
     name: legalconnect-frontend
+    runtime: static
     rootDir: frontend
     buildCommand: npm install && npm run build -- --configuration=production
     staticPublishPath: ./dist/frontend/browser
@@ -61,8 +62,9 @@ services:
   # ─────────────────────────────────────────────────────────────
   # 4. Angular Admin Frontend (Free Global CDN Static Site)
   # ─────────────────────────────────────────────────────────────
-  - type: static
+  - type: web
     name: legalconnect-admin
+    runtime: static
     rootDir: admin
     buildCommand: npm install && npm run build -- --configuration=production
     staticPublishPath: ./dist/admin/browser
