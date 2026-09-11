@@ -36,6 +36,7 @@ services:
       - "443:443"
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/ssl.conf:/etc/nginx/conf.d/ssl.conf:ro
       - certbot_conf:/etc/letsencrypt
       - certbot_www:/var/www/certbot:ro
     extra_hosts:
@@ -45,6 +46,7 @@ services:
       /bin/sh -c '
         if [ ! -f /etc/letsencrypt/live/api.legalconnect.in/fullchain.pem ]; then
           echo "Generating temporary self-signed SSL certificate for initial Nginx boot..." &&
+          (which openssl >/dev/null 2>&1 || apk add --no-cache openssl) &&
           mkdir -p /etc/letsencrypt/live/api.legalconnect.in &&
           openssl req -x509 -nodes -newkey rsa:2048 -days 1 -keyout /etc/letsencrypt/live/api.legalconnect.in/privkey.pem -out /etc/letsencrypt/live/api.legalconnect.in/fullchain.pem -subj "/CN=api.legalconnect.in";
         fi;
