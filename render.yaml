@@ -17,7 +17,7 @@ services:
       - key: MONGO_URI
         sync: false # Set in Render Dashboard from your free MongoDB Atlas M0
       - key: JWT_SECRET
-        generateValue: true
+        sync: false # Set manually in Render Dashboard — MUST match .NET service Jwt__Key
 
   # ─────────────────────────────────────────────────────────────
   # 2. .NET 8 Auth Microservice (Free Docker Web Service)
@@ -36,9 +36,7 @@ services:
       - key: ConnectionStrings__DefaultConnection
         sync: false # Set in Render Dashboard from your free TiDB Cloud MySQL
       - key: Jwt__Key
-        generateValue: true
-      - key: JWT__Secret
-        generateValue: true
+        sync: false # Set manually in Render Dashboard — MUST match Node.js service JWT_SECRET
 
   # ─────────────────────────────────────────────────────────────
   # 3. Angular Client Frontend (Free Global CDN Static Site)

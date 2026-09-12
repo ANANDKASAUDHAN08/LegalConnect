@@ -40,7 +40,7 @@ app.use(cors({
     ) {
       return callback(null, true);
     }
-    return callback(null, true);
+    return callback(new Error(`CORS: Origin '${origin}' is not allowed.`), false);
   },
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true
@@ -80,21 +80,20 @@ app.use('/api', publicRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start Server
-const startServer = () => {
+// Start Server — connect DB first, then listen
+const startServer = async () => {
+  try {
+    await connectDB();
+    await seedFullDatabaseIfEmpty();
+    await actRegistry.initialize();
+    console.log('✅ Database initialization, seeding, and ActRegistry loading completed.');
+  } catch (err) {
+    console.error('❌ Database initialization failed:', err);
+    // Continue starting — the service should still respond to health checks
+  }
+
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
-    
-    // Connect to database, seed, and initialize ActRegistry
-    connectDB()
-      .then(() => seedFullDatabaseIfEmpty())
-      .then(() => actRegistry.initialize())
-      .then(() => {
-        console.log('✅ Database initialization, seeding, and ActRegistry loading completed.');
-      })
-      .catch((err) => {
-        console.error('❌ Database initialization failed:', err);
-      });
   });
 };
 

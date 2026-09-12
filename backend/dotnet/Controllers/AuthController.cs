@@ -30,6 +30,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("register")]
+        [AllowAnonymous]
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
@@ -79,6 +80,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> Login([FromBody] LoginDto request)
         {
@@ -127,6 +129,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("google")]
+        [AllowAnonymous]
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> GoogleLogin([FromBody] GoogleLoginDto request)
         {
@@ -217,6 +220,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [AllowAnonymous]
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordDto request)
         {
@@ -225,6 +229,7 @@ namespace CoreApi.Controllers
         }
 
         [HttpPost("reset-password")]
+        [AllowAnonymous]
         [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto request)
         {

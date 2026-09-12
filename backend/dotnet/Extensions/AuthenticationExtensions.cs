@@ -21,8 +21,6 @@ namespace CoreApi.Extensions
     /// </summary>
     public static class AuthenticationExtensions
     {
-        public const string DefaultFallbackJwtKey = "SuperSecretKeyForLegalConnectWhichIsLongEnoughToSatisfyHMACSHA512RequirementAndMore";
-
         public static string ResolveJwtKey(IConfiguration configuration)
         {
             var jwtKey = configuration["Jwt:Key"]
@@ -40,7 +38,9 @@ namespace CoreApi.Extensions
 
             if (string.IsNullOrWhiteSpace(jwtKey))
             {
-                jwtKey = DefaultFallbackJwtKey;
+                throw new InvalidOperationException(
+                    "CRITICAL: JWT signing key is not configured. " +
+                    "Set 'Jwt:Key' in appsettings.json, appsettings.Local.json, or as environment variable 'Jwt__Key' / 'JWT_SECRET'.");
             }
 
             return jwtKey;
@@ -53,8 +53,8 @@ namespace CoreApi.Extensions
 
             if (keyBytes.Length < 32)
             {
-                var padded = rawKey + DefaultFallbackJwtKey;
-                keyBytes = Encoding.UTF8.GetBytes(padded);
+                throw new InvalidOperationException(
+                    $"JWT signing key is too short ({keyBytes.Length} bytes). Minimum 32 bytes (256 bits) required for HMAC-SHA256.");
             }
 
             return new SymmetricSecurityKey(keyBytes);
