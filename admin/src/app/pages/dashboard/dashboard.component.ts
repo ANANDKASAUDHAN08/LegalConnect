@@ -320,23 +320,25 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
     const t0 = performance.now();
     this.api.getNodeHealth().subscribe({
       next: () => {
-        this.nodeLatency = Math.round(performance.now() - t0);
+        this.nodeLatency = Math.max(1, Math.round(performance.now() - t0));
         this.systemHealth.nodeApi = true;
         this.systemHealth.lastChecked = new Date();
         this.nodeLatencyHistory.push(this.nodeLatency);
         if (this.nodeLatencyHistory.length > 12) this.nodeLatencyHistory.shift();
         this.renderLatencySparklines();
+        this.cdr.markForCheck();
       },
       error: (_err: HttpErrorResponse) => {
-        this.nodeLatency = Math.round(performance.now() - t0);
+        this.nodeLatency = Math.max(1, Math.round(performance.now() - t0));
         this.systemHealth.nodeApi = false;
+        this.cdr.markForCheck();
       }
     });
 
     const t1 = performance.now();
     this.api.getHealth().subscribe({
       next: (res: any) => {
-        this.dotnetLatency = Math.round(performance.now() - t1);
+        this.dotnetLatency = Math.max(1, Math.round(performance.now() - t1));
         this.systemHealth.dotnetApi = true;
         this.systemHealth.database = true;
         this.dotnetLatencyHistory.push(this.dotnetLatency);
@@ -349,10 +351,12 @@ export class DashboardComponent implements OnInit, AfterViewInit, OnDestroy {
           this.dbConnections = this.overview?.activeSessions || 1;
         }
         this.renderLatencySparklines();
+        this.cdr.markForCheck();
       },
       error: (_err: HttpErrorResponse) => {
-        this.dotnetLatency = Math.round(performance.now() - t1);
+        this.dotnetLatency = Math.max(1, Math.round(performance.now() - t1));
         this.systemHealth.dotnetApi = false;
+        this.cdr.markForCheck();
       }
     });
   }

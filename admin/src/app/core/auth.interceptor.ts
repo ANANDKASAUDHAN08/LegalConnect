@@ -9,6 +9,11 @@ export const adminAuthInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const token = auth.token;
 
+  // Public health endpoints bypass (avoids cross-origin cookie and preflight blocking on Render domains)
+  if (req.url.includes('/health')) {
+    return next(req);
+  }
+
   // Generate cryptographically safe pseudo-UUID for request telemetry fingerprint
   const requestId = 'req_' + Math.random().toString(36).substring(2, 11) + '_' + Date.now();
 
