@@ -150,6 +150,7 @@ export class LoginComponent implements OnInit, OnDestroy {
           return;
         }
 
+        this.loading.set(false);
         this.snackbar.show('Welcome back! Signed in successfully.', 'success');
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
         this.router.navigateByUrl(returnUrl);

@@ -405,8 +405,10 @@ export class AuthService {
       this._currentUser.next(userObj);
       this.tokenStorage.setCachedUser(userObj);
       this._isLoggedIn.next(true);
-      this._isSessionLoaded.next(true);
     }
+    // Always mark session as loaded — even if user object is missing — to prevent
+    // auth guards from blocking navigation indefinitely (login stuck on spinner).
+    this._isSessionLoaded.next(true);
   }
 
   /** Fetches the user profile from the server and updates local authentication state. */

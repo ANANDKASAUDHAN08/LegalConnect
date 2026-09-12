@@ -22,6 +22,11 @@ export interface AdminUser {
 export class AdminAuthService {
   private readonly API_URL = environment.apiUrl;
 
+  /**
+   * In-memory only — NEVER persisted to sessionStorage or localStorage.
+   * The in-memory token is used by the interceptor for the Authorization header
+   * as a supplement to the HttpOnly cookie (dual-transport strategy).
+   */
   private tokenSubject = new BehaviorSubject<string | null>(null);
   private userSubject = new BehaviorSubject<AdminUser | null>(null);
   private loadedSubject = new BehaviorSubject<boolean>(false);
@@ -38,7 +43,23 @@ export class AdminAuthService {
 
   constructor(private http: HttpClient, private router: Router) {
     this.initMultiTabSync();
+    this.purgeAllLegacyStorage();
     this.restoreSession();
+  }
+
+  /**
+   * Security hardening: Remove ALL legacy sessionStorage/localStorage tokens.
+   * Tokens must only exist in memory and HttpOnly cookies.
+   */
+  private purgeAllLegacyStorage(): void {
+    try {
+      sessionStorage.removeItem('lc_admin_token');
+      sessionStorage.removeItem('lc_admin_user');
+      localStorage.removeItem('lc_admin_token');
+      localStorage.removeItem('lc_admin_user');
+    } catch {
+      // Ignore storage access errors
+    }
   }
 
   private initMultiTabSync(): void {
@@ -69,67 +90,33 @@ export class AdminAuthService {
     }
   }
 
-  private isTokenExpired(token: string): boolean {
-    try {
-      const payloadBase64 = token.split('.')[1];
-      if (!payloadBase64) return false;
-      const decodedJson = atob(payloadBase64.replace(/-/g, '+').replace(/_/g, '/'));
-      const payload = JSON.parse(decodedJson);
-      if (payload && payload.exp) {
-        const nowSec = Math.floor(Date.now() / 1000);
-        return payload.exp < nowSec;
-      }
-      return false;
-    } catch {
-      return false;
-    }
-  }
-
+  /**
+   * Cookie-authenticated session restoration.
+   * On page load/refresh, calls /me with HttpOnly cookies to validate the session.
+   * No tokens are read from storage — only from HttpOnly cookies sent by the browser.
+   */
   private restoreSession(): void {
-    // Purge legacy localStorage entries to ensure security hardening
-    localStorage.removeItem('lc_admin_token');
-    localStorage.removeItem('lc_admin_user');
-
-    const token = sessionStorage.getItem('lc_admin_token');
-    const savedUser = sessionStorage.getItem('lc_admin_user');
-
-    if (token && savedUser) {
-      if (this.isTokenExpired(token)) {
-        console.warn('[AdminAuthService] Stored admin JWT token is expired. Clearing session...');
-        this.clearSession();
-        this.loadedSubject.next(true);
-        return;
-      }
-
-      try {
-        const userObj = JSON.parse(savedUser);
-        this.tokenSubject.next(token);
-        this.userSubject.next(userObj);
-        // Mark as loaded SYNCHRONOUSLY so Angular Router permits instant page access
-        this.loadedSubject.next(true);
-
-        // Perform background verification without blocking the route
-        this.http.get<any>(`${this.API_URL}/me`).subscribe({
-          next: (res: any) => {
-            this.userSubject.next(res);
-            sessionStorage.setItem('lc_admin_user', JSON.stringify(res));
-          },
-          error: (err: HttpErrorResponse) => {
-            // ONLY log out if the backend explicitly returned a 401 Unauthorized status
-            if (err.status === 401 || err.status === 403) {
-              console.warn('Admin token expired or invalid (401/403). Clearing session...');
-              this.clearSession();
-              this.router.navigate(['/login']);
-            }
+    this.http.get<any>(`${this.API_URL}/me`, { withCredentials: true }).subscribe({
+      next: (res: any) => {
+        if (res && res.id && (res.role === 'Admin' || res.role === 'SuperAdmin')) {
+          this.userSubject.next(res);
+          // Extract token from response if server provides it for Authorization header usage
+          if (res.token) {
+            this.tokenSubject.next(res.token);
           }
-        });
-        return;
-      } catch {
-        this.clearSession();
+          this.loadedSubject.next(true);
+        } else {
+          // User is not admin or no valid session
+          this.clearSession(false);
+          this.loadedSubject.next(true);
+        }
+      },
+      error: (_err: HttpErrorResponse) => {
+        // No active session — normal for unauthenticated page loads
+        this.clearSession(false);
+        this.loadedSubject.next(true);
       }
-    }
-
-    this.loadedSubject.next(true);
+    });
   }
 
   login(email: string, password: string, twoFactorCode?: string): Observable<any> {
@@ -140,12 +127,17 @@ export class AdminAuthService {
     }, { withCredentials: true }).pipe(
       tap((res: any) => {
         if (res.token) {
-          sessionStorage.setItem('lc_admin_token', res.token);
+          // Store token in-memory only (for Authorization header via interceptor)
+          this.tokenSubject.next(res.token);
+
           if (res.user) {
-            sessionStorage.setItem('lc_admin_user', JSON.stringify(res.user));
+            // M-06: Enforce admin role check — reject non-admin logins at client level
+            if (res.user.role !== 'Admin' && res.user.role !== 'SuperAdmin') {
+              this.clearSession(false);
+              throw new Error('Access denied. This portal is restricted to administrators.');
+            }
             this.userSubject.next(res.user);
           }
-          this.tokenSubject.next(res.token);
           this.loadedSubject.next(true);
           this.broadcastAuthEvent('LOGIN');
         }
@@ -154,16 +146,14 @@ export class AdminAuthService {
   }
 
   /**
-   * Refreshes the active in-memory and session storage credentials when a new
-   * JWT is issued (e.g. following mandatory password rotation).
+   * Refreshes the active in-memory credentials when a new JWT is issued
+   * (e.g. following mandatory password rotation).
    */
   updateSessionToken(newToken: string): void {
     if (!newToken) return;
-    sessionStorage.setItem('lc_admin_token', newToken);
     this.tokenSubject.next(newToken);
     if (this.user) {
       const updatedUser: AdminUser = { ...this.user, mustChangePassword: false };
-      sessionStorage.setItem('lc_admin_user', JSON.stringify(updatedUser));
       this.userSubject.next(updatedUser);
     }
   }
@@ -184,20 +174,21 @@ export class AdminAuthService {
   }
 
   /**
-   * Dual-Transport Security Strategy:
-   * 1. Primary: JWT Bearer Token stored in sessionStorage (tab-scoped) and attached to
-   *    every API request via adminAuthInterceptor in the Authorization header.
-   * 2. Secondary: HttpOnly lc_admin_token cookie managed by the backend for SSR / direct navigation.
-   * 3. Terminating session revokes both localStorage/sessionStorage memory and cookie states.
+   * Enterprise Cookie-Only Security Strategy:
+   * 1. Primary: HttpOnly cookie (lc_token / __session) managed by the backend — NOT accessible to JS.
+   * 2. Supplementary: In-memory JWT in BehaviorSubject for Authorization header (never persisted).
+   * 3. Session termination clears in-memory state + server revokes cookies.
+   *
+   * This eliminates XSS token exfiltration since JS cannot access HttpOnly cookies.
    */
   private clearSession(shouldBroadcast = true): void {
     if (shouldBroadcast) {
       this.broadcastAuthEvent('LOGOUT');
     }
-    sessionStorage.removeItem('lc_admin_token');
-    sessionStorage.removeItem('lc_admin_user');
-    localStorage.removeItem('lc_admin_token');
-    localStorage.removeItem('lc_admin_user');
+    // Purge any legacy storage remnants
+    this.purgeAllLegacyStorage();
+
+    // Clear client-accessible non-HttpOnly cookie remnants (defense-in-depth)
     if (typeof document !== 'undefined') {
       document.cookie = 'lc_admin_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; SameSite=Strict';
       document.cookie = 'lc_admin_token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; Max-Age=0; SameSite=Lax';

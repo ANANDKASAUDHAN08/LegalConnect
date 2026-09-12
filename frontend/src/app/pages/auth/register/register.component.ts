@@ -234,14 +234,15 @@ export class RegisterComponent implements OnInit {
       role: this.registerData.role
     }).subscribe({
       next: (res) => {
+        this.loading.set(false);
         if (res?.token && res?.user) {
           this.snackbar.show('Account created successfully! Welcome to LegalConnect.', 'success');
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
           this.router.navigateByUrl(returnUrl);
         } else {
-          const msg = res?.message || 'Account created successfully! You can now sign in.';
-          this.snackbar.show(msg, 'success');
-          this.router.navigate(['/login']);
+          const msg = res?.message || 'Account created! Please check your email to verify your account before signing in.';
+          this.snackbar.show(msg, 'info', 8000);
+          this.router.navigate(['/login'], { queryParams: { verificationSent: 'true' } });
         }
       },
       error: (err) => {

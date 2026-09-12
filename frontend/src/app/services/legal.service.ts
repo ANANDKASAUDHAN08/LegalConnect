@@ -668,7 +668,7 @@ export class LegalService {
 
     return this.http.get<any>(`${this.apiUrl}/resources/directory?${queryString}`).pipe(
       map(res => {
-        if (res?.success) {
+        if (res?.success && Array.isArray(res.data) && res.data.length > 0) {
           this.directoryCache.set(cacheKey, { data: res, timestamp: Date.now() });
         }
         return res;
