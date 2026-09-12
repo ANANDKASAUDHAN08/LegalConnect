@@ -68,13 +68,55 @@ namespace CoreApi.Services
             return (rawToken, entity);
         }
 
+        /// <summary>
+        /// M-02: Detects user agents that are broken by SameSite=None according to Microsoft/Chromium guidance:
+        /// - iOS 12 Safari / WKWebView / Chrome
+        /// - macOS 10.14 Mojave Safari
+        /// - Chrome 51 to 66
+        /// For these clients, SameSiteMode.Unspecified is used (omits SameSite attribute) to prevent browsers
+        /// from treating the cookie as Strict and breaking authentication.
+        /// </summary>
+        public static bool DisallowsSameSiteNone(string? userAgent)
+        {
+            if (string.IsNullOrWhiteSpace(userAgent))
+                return false;
+
+            // iOS 12 Safari / WebView / Chrome (broken by SameSite=None)
+            if (userAgent.Contains("CPU iPhone OS 12") || userAgent.Contains("iPad; CPU OS 12"))
+                return true;
+
+            // macOS 10.14 Mojave Safari (broken by SameSite=None)
+            if (userAgent.Contains("Macintosh; Intel Mac OS X 10_14") &&
+                userAgent.Contains("Version/") && userAgent.Contains("Safari"))
+                return true;
+
+            // Chrome 51 to 66
+            if (userAgent.Contains("Chrome/5") || userAgent.Contains("Chrome/6"))
+                return true;
+
+            return false;
+        }
+
+        private SameSiteMode GetSameSiteMode(HttpResponse response)
+        {
+            if (_env.IsDevelopment())
+            {
+                return SameSiteMode.Lax;
+            }
+
+            var userAgent = response.HttpContext?.Request?.Headers["User-Agent"].ToString();
+            if (DisallowsSameSiteNone(userAgent))
+            {
+                return SameSiteMode.Unspecified;
+            }
+
+            return SameSiteMode.None;
+        }
+
         public void SetAuthCookies(HttpResponse response, string accessToken, string refreshToken)
         {
             var isSecure = !_env.IsDevelopment();
-            // Use SameSite=None in production for Firebase Hosting → Cloud Run proxy compatibility.
-            // Lax blocks cookies on some mobile/PWA scenarios where the proxy hop is treated as cross-site.
-            // In development (localhost), use Lax since None requires Secure which requires HTTPS.
-            var sameSiteMode = isSecure ? SameSiteMode.None : SameSiteMode.Lax;
+            var sameSiteMode = GetSameSiteMode(response);
             
             var tokenCookieOptions = new CookieOptions
             {
@@ -100,7 +142,7 @@ namespace CoreApi.Services
         public void ClearAuthCookies(HttpResponse response)
         {
             var isSecure = !_env.IsDevelopment();
-            var sameSiteMode = isSecure ? SameSiteMode.None : SameSiteMode.Lax;
+            var sameSiteMode = GetSameSiteMode(response);
             
             response.Cookies.Delete("lc_token", new CookieOptions
             {
@@ -111,6 +153,35 @@ namespace CoreApi.Services
             });
 
             response.Cookies.Delete("__session", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = sameSiteMode,
+                Path = "/"
+            });
+        }
+
+        public void SetAdminCookie(HttpResponse response, string token)
+        {
+            var isSecure = response.HttpContext?.Request?.IsHttps == true || !_env.IsDevelopment();
+            var sameSiteMode = GetSameSiteMode(response);
+
+            response.Cookies.Append("lc_admin_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = sameSiteMode,
+                Expires = DateTime.UtcNow.AddHours(4),
+                Path = "/"
+            });
+        }
+
+        public void ClearAdminCookie(HttpResponse response)
+        {
+            var isSecure = response.HttpContext?.Request?.IsHttps == true || !_env.IsDevelopment();
+            var sameSiteMode = GetSameSiteMode(response);
+
+            response.Cookies.Delete("lc_admin_token", new CookieOptions
             {
                 HttpOnly = true,
                 Secure = isSecure,

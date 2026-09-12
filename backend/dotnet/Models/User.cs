@@ -64,6 +64,18 @@ namespace CoreApi.Models
         /// </summary>
         public bool MustChangePassword { get; set; } = false;
 
+        // ── Progressive Account Lockout (Brute-Force Protection) ──
+        /// <summary>
+        /// Consecutive failed login attempts. Resets to 0 on successful login.
+        /// Lockout policy: 5 failures → 15 min lock, 10 failures → 1 hour lock, 15+ → 24 hour lock.
+        /// </summary>
+        public int FailedLoginAttempts { get; set; } = 0;
+
+        /// <summary>
+        /// UTC timestamp until which the account is locked. Null = not locked.
+        /// </summary>
+        public DateTime? LockoutEnd { get; set; }
+
         [MaxLength(50)]
         public string AuthProvider { get; set; } = "Email + Password";
 

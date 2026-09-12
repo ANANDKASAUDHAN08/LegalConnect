@@ -704,6 +704,7 @@ namespace CoreApi.Controllers
                     {
                         using var cts = new System.Threading.CancellationTokenSource(TimeSpan.FromMilliseconds(800));
                         var httpClient = _httpClientFactory.CreateClient();
+                        AttachAdminAuthHeader(httpClient);
                         var response = await httpClient.GetAsync($"{nodeBaseUrl}/api/legal/contact/all-tickets", cts.Token);
                         if (response.IsSuccessStatusCode)
                         {

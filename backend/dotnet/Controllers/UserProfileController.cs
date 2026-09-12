@@ -16,10 +16,12 @@ namespace CoreApi.Controllers
     public class UserProfileController : ControllerBase
     {
         private readonly IUserProfileService _profileService;
+        private readonly ITokenService _tokenService;
 
-        public UserProfileController(IUserProfileService profileService)
+        public UserProfileController(IUserProfileService profileService, ITokenService tokenService)
         {
             _profileService = profileService;
+            _tokenService = tokenService;
         }
 
         [HttpGet("me")]
@@ -99,8 +101,8 @@ namespace CoreApi.Controllers
             var deleted = await _profileService.DeleteAccountAsync(userId);
             if (!deleted) return NotFound("User not found.");
 
-            Response.Cookies.Delete("lc_token", new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax });
-            Response.Cookies.Delete("__session", new CookieOptions { HttpOnly = true, Secure = true, SameSite = SameSiteMode.Lax });
+            // M-02: Clear auth cookies using matching browser-compatible options
+            _tokenService.ClearAuthCookies(Response);
 
             return Ok(new { message = "Account deleted successfully." });
         }

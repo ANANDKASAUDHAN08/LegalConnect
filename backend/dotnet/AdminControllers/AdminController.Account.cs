@@ -70,15 +70,7 @@ namespace CoreApi.Controllers
             // Re-issue fresh admin JWT with MustChangePassword: false and refresh HttpOnly cookie
             var sessionId = User.FindFirst("SessionId")?.Value ?? Guid.NewGuid().ToString("N");
             var newToken = CreateAdminToken(user, sessionId);
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
-            Response.Cookies.Append("lc_admin_token", newToken, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = isSecure ? SameSiteMode.Strict : SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddHours(4),
-                Path = "/"
-            });
+            SetAdminAuthCookie(newToken);
 
             return Ok(new { success = true, token = newToken, message = "Password changed successfully." });
         }

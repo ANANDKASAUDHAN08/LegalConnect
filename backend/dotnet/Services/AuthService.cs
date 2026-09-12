@@ -33,6 +33,17 @@ namespace CoreApi.Services
             _logger = logger;
         }
 
+        /// <summary>
+        /// Generates a cryptographically secure, URL-safe random token (OWASP best practice).
+        /// Replaces predictable GUIDs for sensitive authentication operations.
+        /// </summary>
+        public static string GenerateSecureToken(int byteCount = 32)
+        {
+            var bytes = RandomNumberGenerator.GetBytes(byteCount);
+            return Convert.ToBase64String(bytes)
+                .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+        }
+
         public async Task<(bool isSuccess, string message, User? user)> RegisterAsync(RegisterDto request, string? ipAddress)
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
@@ -42,7 +53,7 @@ namespace CoreApi.Services
             }
 
             var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
-            var emailToken = Guid.NewGuid().ToString("N");
+            var emailToken = GenerateSecureToken();
 
             var user = new User
             {
@@ -93,7 +104,7 @@ namespace CoreApi.Services
             }
 
             var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
-            var emailToken = Guid.NewGuid().ToString("N");
+            var emailToken = GenerateSecureToken();
 
             var user = new User
             {
@@ -166,6 +177,14 @@ namespace CoreApi.Services
 
             if (user != null)
             {
+                // ── Progressive Account Lockout Check (M-07) ──
+                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+                {
+                    var remainingMinutes = (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes);
+                    _logger.LogWarning("[Security Audit] Locked account login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}. Locked for {Minutes} more minutes.", user.Id, user.Email, ipAddress, remainingMinutes);
+                    return (false, $"Account is temporarily locked due to too many failed login attempts. Please try again in {remainingMinutes} minute(s).", false, null, null, null);
+                }
+
                 if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
                 {
                     isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
@@ -183,6 +202,24 @@ namespace CoreApi.Services
                 _logger.LogWarning("[Security Audit] Failed login attempt for Email: {Email}, IP: {IP}, UserAgent: {UserAgent}", request.Email, ipAddress, userAgent);
                 if (user != null)
                 {
+                    // ── Progressive Lockout Escalation ──
+                    user.FailedLoginAttempts++;
+                    if (user.FailedLoginAttempts >= 15)
+                    {
+                        user.LockoutEnd = DateTime.UtcNow.AddHours(24);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 24 hours after {Attempts} failed attempts.", user.Id, user.FailedLoginAttempts);
+                    }
+                    else if (user.FailedLoginAttempts >= 10)
+                    {
+                        user.LockoutEnd = DateTime.UtcNow.AddHours(1);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 1 hour after {Attempts} failed attempts.", user.Id, user.FailedLoginAttempts);
+                    }
+                    else if (user.FailedLoginAttempts >= 5)
+                    {
+                        user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 15 minutes after {Attempts} failed attempts.", user.Id, user.FailedLoginAttempts);
+                    }
+
                     _context.LoginHistories.Add(new LoginHistory
                     {
                         UserId = user.Id,
@@ -192,6 +229,13 @@ namespace CoreApi.Services
                         Status = "Failed"
                     });
                     await _context.SaveChangesAsync();
+
+                    // Return lockout-specific message if newly locked
+                    if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+                    {
+                        var remainingMinutes = (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes);
+                        return (false, $"Too many failed login attempts. Account locked for {remainingMinutes} minute(s).", false, null, null, null);
+                    }
                 }
                 return (false, "Invalid credentials.", false, null, null, null);
             }
@@ -223,6 +267,13 @@ namespace CoreApi.Services
             {
                 _logger.LogWarning("[Security Audit] Login blocked for unverified email. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
                 return (false, "Please verify your email address before signing in.", false, null, null, null);
+            }
+
+            // ── Reset lockout counter on successful authentication (M-07) ──
+            if (user.FailedLoginAttempts > 0 || user.LockoutEnd.HasValue)
+            {
+                user.FailedLoginAttempts = 0;
+                user.LockoutEnd = null;
             }
 
             var sessionId = Guid.NewGuid().ToString("N");
@@ -267,10 +318,12 @@ namespace CoreApi.Services
             {
                 var validationSettings = new GoogleJsonWebSignature.ValidationSettings();
                 var configuredClientId = _configuration["Google:ClientId"];
-                if (!string.IsNullOrWhiteSpace(configuredClientId))
+                if (string.IsNullOrWhiteSpace(configuredClientId))
                 {
-                    validationSettings.Audience = new[] { configuredClientId };
+                    _logger.LogError("[Security] Google:ClientId is not configured. Google login is disabled for security.");
+                    return (false, "Google authentication is temporarily unavailable. Please contact support.", null, null, null);
                 }
+                validationSettings.Audience = new[] { configuredClientId };
 
                 payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, validationSettings);
             }
@@ -503,7 +556,8 @@ namespace CoreApi.Services
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             if (user == null) return false;
 
-            var resetToken = Guid.NewGuid().ToString("N");
+            // M-08: Cryptographically secure reset token (OWASP best practice)
+            var resetToken = GenerateSecureToken();
             user.PasswordResetToken = resetToken;
             user.PasswordResetTokenExpires = DateTime.UtcNow.AddHours(1);
             await _context.SaveChangesAsync();

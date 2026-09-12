@@ -171,16 +171,8 @@ namespace CoreApi.Controllers
             var token = CreateAdminToken(user, sessionId);
             _logger.LogInformation("[Security Audit] Successful Admin Login. AdminId: {AdminId}, Email: {Email}, SessionId: {SessionId}, IP: {IP}", user.Id, user.Email, sessionId, ip);
 
-            // Set cookie for admin panel
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
-            Response.Cookies.Append("lc_admin_token", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = isSecure ? SameSiteMode.Strict : SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddHours(4),
-                Path = "/"
-            });
+            // M-02: Set cookie for admin panel with browser-compatible SameSite handling
+            SetAdminAuthCookie(token);
 
             return Ok(new
             {
@@ -213,14 +205,8 @@ namespace CoreApi.Controllers
                 }
             }
 
-            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
-            Response.Cookies.Delete("lc_admin_token", new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = isSecure,
-                SameSite = isSecure ? SameSiteMode.Strict : SameSiteMode.Lax,
-                Path = "/"
-            });
+            // M-02: Clear admin cookie with matching SameSite attributes
+            ClearAdminAuthCookie();
 
             return Ok(new { message = "Admin logged out." });
         }

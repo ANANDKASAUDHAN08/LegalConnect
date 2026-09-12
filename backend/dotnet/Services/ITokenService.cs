@@ -10,5 +10,7 @@ namespace CoreApi.Services
         (string rawToken, RefreshToken entity) GenerateRefreshToken(int userId, string sessionId);
         void SetAuthCookies(HttpResponse response, string accessToken, string refreshToken);
         void ClearAuthCookies(HttpResponse response);
+        void SetAdminCookie(HttpResponse response, string token);
+        void ClearAdminCookie(HttpResponse response);
     }
 }

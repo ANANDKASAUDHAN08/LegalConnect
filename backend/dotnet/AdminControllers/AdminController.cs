@@ -90,6 +90,75 @@ namespace CoreApi.Controllers
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        private void SetAdminAuthCookie(string token)
+        {
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
+
+            SameSiteMode sameSiteMode;
+            if (_env.IsDevelopment())
+            {
+                sameSiteMode = SameSiteMode.Lax;
+            }
+            else if (CoreApi.Services.TokenService.DisallowsSameSiteNone(userAgent))
+            {
+                sameSiteMode = SameSiteMode.Unspecified;
+            }
+            else
+            {
+                sameSiteMode = SameSiteMode.None;
+            }
+
+            Response.Cookies.Append("lc_admin_token", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = sameSiteMode,
+                Expires = DateTime.UtcNow.AddHours(4),
+                Path = "/"
+            });
+        }
+
+        private void ClearAdminAuthCookie()
+        {
+            var isSecure = HttpContext.Request.IsHttps || !_env.IsDevelopment();
+            var userAgent = HttpContext.Request.Headers["User-Agent"].ToString();
+
+            SameSiteMode sameSiteMode;
+            if (_env.IsDevelopment())
+            {
+                sameSiteMode = SameSiteMode.Lax;
+            }
+            else if (CoreApi.Services.TokenService.DisallowsSameSiteNone(userAgent))
+            {
+                sameSiteMode = SameSiteMode.Unspecified;
+            }
+            else
+            {
+                sameSiteMode = SameSiteMode.None;
+            }
+
+            Response.Cookies.Delete("lc_admin_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = isSecure,
+                SameSite = sameSiteMode,
+                Path = "/"
+            });
+        }
+
+        private void AttachAdminAuthHeader(System.Net.Http.HttpClient httpClient)
+        {
+            if (Request.Headers.TryGetValue("Authorization", out var authHeader) && !string.IsNullOrWhiteSpace(authHeader))
+            {
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader.ToString());
+            }
+            else if (Request.Cookies.TryGetValue("lc_admin_token", out var adminCookie) && !string.IsNullOrWhiteSpace(adminCookie))
+            {
+                httpClient.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", $"Bearer {adminCookie}");
+            }
+        }
+
         [HttpGet("telemetry/stream")]
         [Authorize(Roles = "Admin")]
         public async Task StreamTelemetry(System.Threading.CancellationToken cancellationToken)

@@ -99,7 +99,7 @@ namespace CoreApi.Services
                 };
             }
 
-            var newToken = Guid.NewGuid().ToString("N");
+            var newToken = AuthService.GenerateSecureToken();
             user.EmailVerificationToken = newToken;
             await _context.SaveChangesAsync();
 
