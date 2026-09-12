@@ -9,6 +9,16 @@ export function extractErrorMessage(
 ): string {
   if (!err) return fallbackMessage;
 
+  // Firebase OAuth Domain Authorization
+  if (err?.code === 'auth/unauthorized-domain' || (typeof err?.message === 'string' && err.message.includes('auth/unauthorized-domain'))) {
+    return 'This domain is not authorized for Google Sign-In. Please add this domain to Authorized Domains in the Firebase Console.';
+  }
+
+  // Firebase Popup cancelled / closed
+  if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+    return 'Google Sign-In popup was closed before completing authentication.';
+  }
+
   // 1. Network / Server Unreachable (Status 0)
   if (err.status === 0) {
     return 'Unable to reach the server. Please check your internet connection and try again.';
