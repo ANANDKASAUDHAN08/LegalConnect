@@ -5,15 +5,24 @@ import { getAllTickets, updateTicketStatus } from '../../services/ticketService'
 
 const router = Router();
 
-// GET all contact/support tickets
-router.get('/contact/all-tickets', asyncHandler(async (req: Request, res: Response) => {
+// GET all contact/support tickets (supports multiple gateway mount paths)
+router.get(['/contact/all-tickets', '/all-tickets'], asyncHandler(async (req: Request, res: Response) => {
   const { status } = req.query;
   const tickets = await getAllTickets(status as string);
-  res.json({ success: true, count: tickets.length, data: tickets });
+  const newCount = tickets.filter(t => (t as any).status === 'New' || (t as any).status === 'Pending').length;
+
+  res.json({
+    success: true,
+    count: tickets.length,
+    total: tickets.length,
+    newCount,
+    tickets,
+    data: tickets
+  });
 }));
 
 // PUT update ticket status & audit notes
-router.put('/contact/tickets/:id', asyncHandler(async (req: Request, res: Response) => {
+router.put(['/contact/tickets/:id', '/tickets/:id'], asyncHandler(async (req: Request, res: Response) => {
   const id = req.params.id as string;
   const { status, notes } = req.body;
 
