@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap, catchError, of } from 'rxjs';
+import { BehaviorSubject, Observable, tap, catchError, of, take } from 'rxjs';
 import { Router } from '@angular/router';
 import { environment } from '../../environments/environment';
 
@@ -24,7 +24,35 @@ export class AdminAuthService {
 
   private getInitialToken(): string | null {
     try {
-      return typeof window !== 'undefined' ? sessionStorage.getItem('lc_admin_token') : null;
+      if (typeof window === 'undefined') return null;
+      const token = sessionStorage.getItem('lc_admin_token');
+      if (!token) return null;
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        if (payload.exp && Date.now() >= payload.exp * 1000) {
+          sessionStorage.removeItem('lc_admin_token');
+          sessionStorage.removeItem('lc_admin_user');
+          return null;
+        }
+      }
+      return token;
+    } catch {
+      return null;
+    }
+  }
+
+  private getInitialUser(): AdminUser | null {
+    try {
+      const u = typeof window !== 'undefined' ? sessionStorage.getItem('lc_admin_user') : null;
+      return u ? JSON.parse(u) : null;
     } catch {
       return null;
     }
@@ -35,7 +63,7 @@ export class AdminAuthService {
    * valid Authorization headers for cross-domain services (Node.js API) across refreshes.
    */
   private tokenSubject = new BehaviorSubject<string | null>(this.getInitialToken());
-  private userSubject = new BehaviorSubject<AdminUser | null>(null);
+  private userSubject = new BehaviorSubject<AdminUser | null>(this.getInitialUser());
   private loadedSubject = new BehaviorSubject<boolean>(false);
 
   token$ = this.tokenSubject.asObservable();
@@ -98,10 +126,11 @@ export class AdminAuthService {
    * No tokens are read from storage — only from HttpOnly cookies sent by the browser.
    */
   private restoreSession(): void {
-    this.http.get<any>(`${this.API_URL}/me`, { withCredentials: true }).subscribe({
+    this.http.get<any>(`${this.API_URL}/me`, { withCredentials: true }).pipe(take(1)).subscribe({
       next: (res: any) => {
         if (res && res.id && (res.role === 'Admin' || res.role === 'SuperAdmin')) {
           this.userSubject.next(res);
+          try { sessionStorage.setItem('lc_admin_user', JSON.stringify(res)); } catch {}
           // Extract token from response if server provides it for Authorization header usage
           if (res.token) {
             this.tokenSubject.next(res.token);
@@ -114,9 +143,12 @@ export class AdminAuthService {
           this.loadedSubject.next(true);
         }
       },
-      error: (_err: HttpErrorResponse) => {
-        // No active session — normal for unauthenticated page loads
-        this.clearSession(false);
+      error: (err: HttpErrorResponse) => {
+        // Only invalidate session if server explicitly rejects credentials
+        if (err.status === 401 || err.status === 403) {
+          this.clearSession(false);
+        }
+        // If server is restarting/unreachable (status 0 or 5xx), keep cached session active
         this.loadedSubject.next(true);
       }
     });
@@ -140,6 +172,7 @@ export class AdminAuthService {
               throw new Error('Access denied. This portal is restricted to administrators.');
             }
             this.userSubject.next(res.user);
+            try { sessionStorage.setItem('lc_admin_user', JSON.stringify(res.user)); } catch {}
           }
           this.loadedSubject.next(true);
           this.broadcastAuthEvent('LOGIN');
@@ -159,6 +192,7 @@ export class AdminAuthService {
     if (this.user) {
       const updatedUser: AdminUser = { ...this.user, mustChangePassword: false };
       this.userSubject.next(updatedUser);
+      try { sessionStorage.setItem('lc_admin_user', JSON.stringify(updatedUser)); } catch {}
     }
   }
 
@@ -166,15 +200,21 @@ export class AdminAuthService {
     this.http.post(`${this.API_URL}/logout`, {}, {
       withCredentials: true,
       headers: { Authorization: `Bearer ${this.token}` }
-    }).pipe(catchError(() => of(null))).subscribe(() => {
+    }).pipe(catchError(() => of(null)), take(1)).subscribe(() => {
       this.clearSession();
       this.router.navigate(['/login']);
     });
   }
 
+  private isHandling401 = false;
+
   handle401SessionExpired(): void {
+    if (this.isHandling401) return;
+    this.isHandling401 = true;
     this.clearSession();
-    this.router.navigate(['/login']);
+    this.router.navigate(['/login']).finally(() => {
+      this.isHandling401 = false;
+    });
   }
 
   /**

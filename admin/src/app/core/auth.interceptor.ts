@@ -40,7 +40,8 @@ export const adminAuthInterceptor: HttpInterceptorFn = (req, next) => {
       }
 
       // Auto-terminate expired or unauthorized session (401 Unauthorized or 403 Forbidden)
-      if ((error.status === 401 || error.status === 403) && !req.url.includes('/login')) {
+      // Exclude /login (invalid credentials) and /me (session restoration probe handled by AuthService)
+      if ((error.status === 401 || error.status === 403) && !req.url.includes('/login') && !req.url.includes('/me')) {
         console.warn(`[Security Interceptor] Authorization failure (${error.status}) on ${req.url}. Revoking session...`);
         auth.handle401SessionExpired();
       }
