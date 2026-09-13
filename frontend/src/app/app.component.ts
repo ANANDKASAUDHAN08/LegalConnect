@@ -17,7 +17,7 @@ import { SettingsService } from './services/settings.service';
 import { AuthService } from './services/auth.service';
 import { SeoService } from './services/seo.service';
 import { PrintService } from './services/print.service';
-import { HeartbeatService } from './core/services/heartbeat.service';
+import { HeartbeatService } from './services/heartbeat.service';
 import { routeTransitionAnimation } from './core/animations/route.animations';
 
 @Component({

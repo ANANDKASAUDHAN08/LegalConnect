@@ -11,6 +11,5 @@ import { AdminHeartbeatService } from './core/services/heartbeat.service';
   styleUrl: './app.component.scss'
 })
 export class AppComponent {
-  constructor(private heartbeat: AdminHeartbeatService) {}
+  constructor(private heartbeat: AdminHeartbeatService) { }
 }
-
