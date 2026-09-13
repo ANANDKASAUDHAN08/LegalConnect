@@ -25,6 +25,6 @@ export const connectDB = async () => {
     console.log('✅ MongoDB Indexes verified and synchronized.');
   } catch (error: any) {
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
-    process.exit(1);
+    throw error;
   }
 };

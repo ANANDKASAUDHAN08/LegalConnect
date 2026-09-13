@@ -80,20 +80,21 @@ app.use('/api', publicRoutes);
 app.use(notFoundHandler);
 app.use(errorHandler);
 
-// Start Server — connect DB first, then listen
-const startServer = async () => {
-  try {
-    await connectDB();
-    await seedFullDatabaseIfEmpty();
-    await actRegistry.initialize();
-    console.log('✅ Database initialization, seeding, and ActRegistry loading completed.');
-  } catch (err) {
-    console.error('❌ Database initialization failed:', err);
-    // Continue starting — the service should still respond to health checks
-  }
-
+// Start Server — bind port immediately, then initialize DB & registry in background
+const startServer = () => {
   app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
+
+    // Connect to database, seed, and initialize ActRegistry asynchronously
+    connectDB()
+      .then(() => seedFullDatabaseIfEmpty())
+      .then(() => actRegistry.initialize())
+      .then(() => {
+        console.log('✅ Database initialization, seeding, and ActRegistry loading completed.');
+      })
+      .catch((err) => {
+        console.error('❌ Background initialization error:', err);
+      });
   });
 };
 
