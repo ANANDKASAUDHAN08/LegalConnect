@@ -147,6 +147,11 @@ export class AuthService {
     return this._isLoggedIn.value;
   }
 
+  /** Synchronous getter for current cached user profile. */
+  get currentUser(): UserProfile | null {
+    return this._currentUser.value;
+  }
+
   /** Registers a new user and establishes an authenticated session. */
   register(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register`, data, this.httpOptions).pipe(

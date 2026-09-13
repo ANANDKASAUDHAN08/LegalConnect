@@ -237,13 +237,21 @@ export class RegisterComponent implements OnInit {
         this.loading.set(false);
         if (res?.token && res?.user) {
           this.snackbar.show('Account created successfully! Welcome to LegalConnect.', 'success');
-          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+          const role = (res.user?.role || '').toLowerCase();
+          const defaultDestination = role === 'lawyer' ? '/lawyer/workstation' : '/client/portal';
+          const returnUrl = this.route.snapshot.queryParams['returnUrl'] || defaultDestination;
           this.router.navigateByUrl(returnUrl).then(success => {
             if (!success) {
-              this.router.navigate(['/home']);
+              this.router.navigate([defaultDestination]).then(fallbackSuccess => {
+                if (!fallbackSuccess) {
+                  this.router.navigate(['/home']);
+                }
+              });
             }
           }).catch(() => {
-            this.router.navigate(['/home']);
+            this.router.navigate([defaultDestination]).catch(() => {
+              this.router.navigate(['/home']);
+            });
           });
         } else {
           const msg = res?.message || 'Account created! Please check your email to verify your account before signing in.';
@@ -274,13 +282,21 @@ export class RegisterComponent implements OnInit {
           next: (isLoggedIn) => {
             if (isLoggedIn) {
               this.snackbar.show('Signed in with Google successfully!', 'success');
-              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+              const role = (this.auth.currentUser?.role || this.registerData.role || '').toLowerCase();
+              const defaultDestination = role === 'lawyer' ? '/lawyer/workstation' : '/client/portal';
+              const returnUrl = this.route.snapshot.queryParams['returnUrl'] || defaultDestination;
               this.router.navigateByUrl(returnUrl).then(success => {
                 if (!success) {
-                  this.router.navigate(['/home']);
+                  this.router.navigate([defaultDestination]).then(fallbackSuccess => {
+                    if (!fallbackSuccess) {
+                      this.router.navigate(['/home']);
+                    }
+                  });
                 }
               }).catch(() => {
-                this.router.navigate(['/home']);
+                this.router.navigate([defaultDestination]).catch(() => {
+                  this.router.navigate(['/home']);
+                });
               });
             } else {
               this.error.set('Failed to initialize session with Google.');
