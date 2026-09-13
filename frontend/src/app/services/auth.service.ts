@@ -1,6 +1,6 @@
 import { Injectable, NgZone } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { BehaviorSubject, tap, catchError, of, map, Observable, firstValueFrom } from 'rxjs';
+import { BehaviorSubject, tap, catchError, of, map, Observable, firstValueFrom, retry, timer } from 'rxjs';
 import { Router } from '@angular/router';
 import { TokenStorageService } from './token-storage.service';
 import { UserProfileService } from './user-profile.service';
@@ -304,7 +304,18 @@ export class AuthService {
     }
 
     this._refreshPromise = firstValueFrom(
-      this.http.post<any>(`${this.apiUrl}/refresh`, payload, this.httpOptions)
+      this.http.post<any>(`${this.apiUrl}/refresh`, payload, this.httpOptions).pipe(
+        retry({
+          count: 2,
+          delay: (error: HttpErrorResponse, retryCount: number) => {
+            // If backend is waking up from Render cold start (status 0, 502, 503, 504), retry with backoff
+            if (error?.status === 0 || (error?.status >= 502 && error?.status <= 504)) {
+              return timer(retryCount * 2500);
+            }
+            throw error;
+          }
+        })
+      )
     )
       .then(res => {
         const newToken = res?.token || null;

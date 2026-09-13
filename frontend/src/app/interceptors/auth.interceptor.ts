@@ -131,8 +131,12 @@ function handle401(
       });
       return next(retryReq);
     }),
-    catchError((refreshError) => {
-      authService.handleRefreshFailure();
+    catchError((refreshError: HttpErrorResponse) => {
+      // Only terminate session if server explicitly revoked/rejected credentials (401 or 403).
+      // If server is cold-starting or transiently unreachable (status 0 or 5xx), do not destroy the session!
+      if (refreshError?.status === 401 || refreshError?.status === 403) {
+        authService.handleRefreshFailure();
+      }
       return throwError(() => refreshError);
     })
   );

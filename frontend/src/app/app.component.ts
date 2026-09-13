@@ -17,6 +17,7 @@ import { SettingsService } from './services/settings.service';
 import { AuthService } from './services/auth.service';
 import { SeoService } from './services/seo.service';
 import { PrintService } from './services/print.service';
+import { HeartbeatService } from './core/services/heartbeat.service';
 import { routeTransitionAnimation } from './core/animations/route.animations';
 
 @Component({
@@ -49,10 +50,11 @@ export class AppComponent {
     private seoService: SeoService,
     private authService: AuthService,
     private printService: PrintService,
+    private heartbeatService: HeartbeatService,
     private contexts: ChildrenOutletContexts
   ) {
     // Auth session is hydrated by APP_INITIALIZER (checkSession)
-    // Google OAuth uses popup-only flow — no redirect listener needed
+    // HeartbeatService keeps cloud containers warm while active
   }
 
   /** Intercept native Ctrl+P / Cmd+P keyboard shortcuts globally for official print output */
