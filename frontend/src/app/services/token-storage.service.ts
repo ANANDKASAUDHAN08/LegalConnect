@@ -19,13 +19,16 @@ import { Injectable } from '@angular/core';
 @Injectable({ providedIn: 'root' })
 export class TokenStorageService {
   private static readonly ACCESS_TOKEN_KEY = 'lc_access_token';
+  private static readonly REFRESH_TOKEN_KEY = 'lc_refresh_token';
 
   private inMemoryToken: string | null = null;
+  private inMemoryRefreshToken: string | null = null;
   private inMemoryUser: any | null = null;
 
   constructor() {
     if (typeof window !== 'undefined') {
       this.inMemoryToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_KEY);
+      this.inMemoryRefreshToken = localStorage.getItem(TokenStorageService.REFRESH_TOKEN_KEY);
     }
   }
 
@@ -52,12 +55,41 @@ export class TokenStorageService {
     }
   }
 
+  /** Returns the current refresh token (used as cross-origin fallback when cookies are blocked). */
+  getRefreshToken(): string | null {
+    if (this.inMemoryRefreshToken) {
+      return this.inMemoryRefreshToken;
+    }
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem(TokenStorageService.REFRESH_TOKEN_KEY);
+      if (stored) {
+        this.inMemoryRefreshToken = stored;
+      }
+      return stored;
+    }
+    return null;
+  }
+
+  /** Persists the refresh token to both in-memory cache and `localStorage`. */
+  setRefreshToken(refreshToken: string): void {
+    this.inMemoryRefreshToken = refreshToken;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TokenStorageService.REFRESH_TOKEN_KEY, refreshToken);
+    }
+  }
+
+  /** Removes only the refresh token. */
+  removeRefreshToken(): void {
+    this.inMemoryRefreshToken = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(TokenStorageService.REFRESH_TOKEN_KEY);
+    }
+  }
+
   /**
    * Performs a soft clear — removes only the access token.
    *
-   * The refresh token (HttpOnly cookie) is unaffected and managed by the server.
-   * This allows session recovery on the next API call or proactive refresh cycle.
-   *
+   * The refresh token is preserved for potential session recovery.
    * Used during: normal token rotation, transient server errors, session rehydration failures.
    */
   removeAccessTokenOnly(): void {
@@ -78,9 +110,11 @@ export class TokenStorageService {
    */
   removeAllTokens(): void {
     this.inMemoryToken = null;
+    this.inMemoryRefreshToken = null;
     this.inMemoryUser = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TokenStorageService.ACCESS_TOKEN_KEY);
+      localStorage.removeItem(TokenStorageService.REFRESH_TOKEN_KEY);
       localStorage.removeItem('lc_refresh_hint');
       localStorage.removeItem('lc_token');
       localStorage.removeItem('lc_user_profile');

@@ -41,6 +41,31 @@ const PUBLIC_ROUTES = [
 ];
 
 /**
+ * Safely decodes base64url JWT payload with padding support.
+ * Prevents DOMException in standard browser atob() implementations.
+ */
+function decodeJwtPayload(token: string | null): any | null {
+  if (!token) return null;
+  try {
+    const parts = token.split('.');
+    if (parts.length < 2) return null;
+    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
+      base64 += '=';
+    }
+    const json = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Authentication Service
  *
  * Central authority for session lifecycle management including login, logout,
@@ -158,8 +183,7 @@ export class AuthService {
           return true;
         }
         return false;
-      }),
-      catchError(() => of(false))
+      })
     );
   }
 
@@ -268,8 +292,14 @@ export class AuthService {
       return this._refreshPromise;
     }
 
+    const payload: { refreshToken?: string } = {};
+    const storedRefreshToken = this.tokenStorage.getRefreshToken();
+    if (storedRefreshToken) {
+      payload.refreshToken = storedRefreshToken;
+    }
+
     this._refreshPromise = firstValueFrom(
-      this.http.post<any>(`${this.apiUrl}/refresh`, {}, this.httpOptions)
+      this.http.post<any>(`${this.apiUrl}/refresh`, payload, this.httpOptions)
     )
       .then(res => {
         const newToken = res?.token || null;
@@ -277,6 +307,9 @@ export class AuthService {
           this.tokenStorage.setToken(newToken);
           this._proactiveRefreshRetries = 0;
           this.scheduleProactiveRefresh(newToken);
+        }
+        if (res?.refreshToken) {
+          this.tokenStorage.setRefreshToken(res.refreshToken);
         }
         return newToken;
       })
@@ -314,10 +347,8 @@ export class AuthService {
   private scheduleProactiveRefresh(token: string): void {
     this.cancelProactiveRefresh();
     try {
-      const parts = token.split('.');
-      if (parts.length < 2) return;
-      const payload = JSON.parse(atob(parts[1]));
-      if (!payload.exp) return;
+      const payload = decodeJwtPayload(token);
+      if (!payload?.exp) return;
 
       const expiresAtMs = payload.exp * 1000;
       const nowMs = Date.now();
@@ -396,6 +427,9 @@ export class AuthService {
     if (res.token) {
       this.tokenStorage.setToken(res.token);
       this.scheduleProactiveRefresh(res.token);
+    }
+    if (res.refreshToken) {
+      this.tokenStorage.setRefreshToken(res.refreshToken);
     }
     if (res.user) {
       if (res.user.avatarUrl) {
@@ -498,17 +532,12 @@ export class AuthService {
 
         const token = this.getToken();
         if (token) {
-          try {
-            const parts = token.split('.');
-            if (parts.length >= 2) {
-              const payload = JSON.parse(atob(parts[1]));
-              const expMs = payload.exp * 1000;
-              if (Date.now() + 120000 >= expMs) {
-                this.ngZone.run(() => this.executeProactiveRefresh());
-              }
+          const payload = decodeJwtPayload(token);
+          if (payload?.exp) {
+            const expMs = payload.exp * 1000;
+            if (Date.now() + 120000 >= expMs) {
+              this.ngZone.run(() => this.executeProactiveRefresh());
             }
-          } catch {
-            this.ngZone.run(() => this.executeProactiveRefresh());
           }
         } else {
           this.ngZone.run(() => this.executeProactiveRefresh());
