@@ -238,7 +238,13 @@ export class RegisterComponent implements OnInit {
         if (res?.token && res?.user) {
           this.snackbar.show('Account created successfully! Welcome to LegalConnect.', 'success');
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-          this.router.navigateByUrl(returnUrl);
+          this.router.navigateByUrl(returnUrl).then(success => {
+            if (!success) {
+              this.router.navigate(['/home']);
+            }
+          }).catch(() => {
+            this.router.navigate(['/home']);
+          });
         } else {
           const msg = res?.message || 'Account created! Please check your email to verify your account before signing in.';
           this.snackbar.show(msg, 'info', 8000);
@@ -269,7 +275,13 @@ export class RegisterComponent implements OnInit {
             if (isLoggedIn) {
               this.snackbar.show('Signed in with Google successfully!', 'success');
               const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-              this.router.navigateByUrl(returnUrl);
+              this.router.navigateByUrl(returnUrl).then(success => {
+                if (!success) {
+                  this.router.navigate(['/home']);
+                }
+              }).catch(() => {
+                this.router.navigate(['/home']);
+              });
             } else {
               this.error.set('Failed to initialize session with Google.');
               this.googleLoading.set(false);

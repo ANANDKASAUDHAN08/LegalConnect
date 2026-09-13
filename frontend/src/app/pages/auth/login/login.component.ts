@@ -153,7 +153,13 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.loading.set(false);
         this.snackbar.show('Welcome back! Signed in successfully.', 'success');
         const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-        this.router.navigateByUrl(returnUrl);
+        this.router.navigateByUrl(returnUrl).then(success => {
+          if (!success) {
+            this.router.navigate(['/home']);
+          }
+        }).catch(() => {
+          this.router.navigate(['/home']);
+        });
       },
       error: (err) => {
         const userMsg = extractErrorMessage(err, 'Invalid email address or password. Please double-check your credentials and try again.');
@@ -179,7 +185,13 @@ export class LoginComponent implements OnInit, OnDestroy {
             if (isLoggedIn) {
               this.snackbar.show('Signed in with Google successfully!', 'success');
               const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
-              this.router.navigateByUrl(returnUrl);
+              this.router.navigateByUrl(returnUrl).then(success => {
+                if (!success) {
+                  this.router.navigate(['/home']);
+                }
+              }).catch(() => {
+                this.router.navigate(['/home']);
+              });
             } else {
               this.error.set('Failed to initialize session with Google.');
               this.googleLoading.set(false);

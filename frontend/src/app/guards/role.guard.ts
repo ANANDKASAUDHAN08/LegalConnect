@@ -12,7 +12,10 @@ function getRoleFromJwt(token: string | null): string | null {
   try {
     const parts = token.split('.');
     if (parts.length !== 3) return null;
-    const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    let base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4 !== 0) {
+      base64 += '=';
+    }
     const json = decodeURIComponent(
       atob(base64)
         .split('')
@@ -56,21 +59,27 @@ export const roleGuard: CanActivateFn = (route: ActivatedRouteSnapshot) => {
       const token = auth.getToken();
       const tokenRole = getRoleFromJwt(token);
 
-      const userRoleMatches = expectedRoles.includes(user.role);
+      const userRole = (user.role || '').trim();
+      const expectedNormalized = expectedRoles.map(r => r.toLowerCase());
+
+      const userRoleMatches = expectedNormalized.includes(userRole.toLowerCase());
       // If a JWT token exists, ensure token's cryptographic role claim matches expected role and user.role
+      const tokenRoleNormalized = (tokenRole || '').trim();
       const tokenRoleMatches = token
-        ? tokenRole !== null && expectedRoles.includes(tokenRole) && tokenRole === user.role
+        ? tokenRole !== null && expectedNormalized.includes(tokenRoleNormalized.toLowerCase()) && tokenRoleNormalized.toLowerCase() === userRole.toLowerCase()
         : true;
 
       if (userRoleMatches && tokenRoleMatches) {
         return true;
       }
 
-      // Route unauthorized user to appropriate home dashboard
-      if (user.role === 'Lawyer') {
-        router.navigate(['/lawyer/dashboard']);
+      // Route unauthorized user directly to their respective workstation without entering a redirect loop
+      if (userRole.toLowerCase() === 'lawyer') {
+        router.navigate(['/lawyer/workstation']);
+      } else if (userRole.toLowerCase() === 'client') {
+        router.navigate(['/client/portal']);
       } else {
-        router.navigate(['/dashboard']);
+        router.navigate(['/home']);
       }
       return false;
     })
