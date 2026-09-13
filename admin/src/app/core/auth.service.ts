@@ -22,12 +22,19 @@ export interface AdminUser {
 export class AdminAuthService {
   private readonly API_URL = environment.apiUrl;
 
+  private getInitialToken(): string | null {
+    try {
+      return typeof window !== 'undefined' ? sessionStorage.getItem('lc_admin_token') : null;
+    } catch {
+      return null;
+    }
+  }
+
   /**
-   * In-memory only — NEVER persisted to sessionStorage or localStorage.
-   * The in-memory token is used by the interceptor for the Authorization header
-   * as a supplement to the HttpOnly cookie (dual-transport strategy).
+   * Stored in-memory with sessionStorage per-tab persistence to maintain
+   * valid Authorization headers for cross-domain services (Node.js API) across refreshes.
    */
-  private tokenSubject = new BehaviorSubject<string | null>(null);
+  private tokenSubject = new BehaviorSubject<string | null>(this.getInitialToken());
   private userSubject = new BehaviorSubject<AdminUser | null>(null);
   private loadedSubject = new BehaviorSubject<boolean>(false);
 
@@ -43,14 +50,9 @@ export class AdminAuthService {
 
   constructor(private http: HttpClient, private router: Router) {
     this.initMultiTabSync();
-    this.purgeAllLegacyStorage();
     this.restoreSession();
   }
 
-  /**
-   * Security hardening: Remove ALL legacy sessionStorage/localStorage tokens.
-   * Tokens must only exist in memory and HttpOnly cookies.
-   */
   private purgeAllLegacyStorage(): void {
     try {
       sessionStorage.removeItem('lc_admin_token');
@@ -103,6 +105,7 @@ export class AdminAuthService {
           // Extract token from response if server provides it for Authorization header usage
           if (res.token) {
             this.tokenSubject.next(res.token);
+            try { sessionStorage.setItem('lc_admin_token', res.token); } catch {}
           }
           this.loadedSubject.next(true);
         } else {
@@ -127,8 +130,8 @@ export class AdminAuthService {
     }, { withCredentials: true }).pipe(
       tap((res: any) => {
         if (res.token) {
-          // Store token in-memory only (for Authorization header via interceptor)
           this.tokenSubject.next(res.token);
+          try { sessionStorage.setItem('lc_admin_token', res.token); } catch {}
 
           if (res.user) {
             // M-06: Enforce admin role check — reject non-admin logins at client level
@@ -152,6 +155,7 @@ export class AdminAuthService {
   updateSessionToken(newToken: string): void {
     if (!newToken) return;
     this.tokenSubject.next(newToken);
+    try { sessionStorage.setItem('lc_admin_token', newToken); } catch {}
     if (this.user) {
       const updatedUser: AdminUser = { ...this.user, mustChangePassword: false };
       this.userSubject.next(updatedUser);

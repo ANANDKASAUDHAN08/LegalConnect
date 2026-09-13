@@ -259,6 +259,10 @@ namespace CoreApi.Controllers
                 }
             }
 
+            var sessionId = User.FindFirst("SessionId")?.Value ?? Guid.NewGuid().ToString();
+            var token = CreateAdminToken(user, sessionId);
+            SetAdminAuthCookie(token);
+
             return Ok(new
             {
                 user.Id,
@@ -271,7 +275,8 @@ namespace CoreApi.Controllers
                 user.MustChangePassword,
                 lastLoginAt,
                 lastIpAddress = string.IsNullOrWhiteSpace(lastIpAddress) ? null : lastIpAddress,
-                backupCodeCount
+                backupCodeCount,
+                token
             });
         }
     }

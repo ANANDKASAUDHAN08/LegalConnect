@@ -127,11 +127,25 @@ export const seedFullDatabaseIfEmpty = async () => {
       ]).catch(() => { });
     }
 
+function findSeedFile(fileName: string): string | null {
+  const possiblePaths = [
+    path.resolve(__dirname, '../data', fileName),
+    path.resolve(__dirname, '../../src/data', fileName),
+    path.resolve(process.cwd(), 'src/data', fileName),
+    path.resolve(process.cwd(), 'dist/data', fileName),
+    path.resolve(process.cwd(), 'data', fileName),
+  ];
+  for (const p of possiblePaths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
     // --- 3. Legal Resources Seeding (from src/data/resources.seed.json) ---
     const resCount = await LegalResource.countDocuments({});
-    const resourcesPath = path.resolve(__dirname, '../data/resources.seed.json');
-    if (resCount === 0 && fs.existsSync(resourcesPath)) {
-      console.log('🌱 Seeding LegalResource table from resources.seed.json...');
+    const resourcesPath = findSeedFile('resources.seed.json');
+    if (resCount === 0 && resourcesPath) {
+      console.log(`🌱 Seeding LegalResource table from ${resourcesPath}...`);
       const seedResources = JSON.parse(fs.readFileSync(resourcesPath, 'utf-8'));
       const approvedResources = seedResources.map((r: any) => ({
         ...r,
@@ -142,9 +156,9 @@ export const seedFullDatabaseIfEmpty = async () => {
 
     // --- 4. Lawyers Seeding (from src/data/lawyers.seed.json) ---
     const lawyerCount = await Lawyer.countDocuments({});
-    const lawyersPath = path.resolve(__dirname, '../data/lawyers.seed.json');
-    if (lawyerCount === 0 && fs.existsSync(lawyersPath)) {
-      console.log('🌱 Seeding Lawyer table from lawyers.seed.json...');
+    const lawyersPath = findSeedFile('lawyers.seed.json');
+    if (lawyerCount === 0 && lawyersPath) {
+      console.log(`🌱 Seeding Lawyer table from ${lawyersPath}...`);
       const seedLawyers = JSON.parse(fs.readFileSync(lawyersPath, 'utf-8'));
       await Lawyer.insertMany(seedLawyers).catch((err) => console.error('Lawyer seed error:', err.message));
     }
@@ -460,9 +474,9 @@ export const seedFullDatabaseIfEmpty = async () => {
     });
 
     // --- 6. Annotated Central Acts Library ---
-    const centralActsPath = path.resolve(__dirname, '../data/central_acts.seed.json');
-    if (fs.existsSync(centralActsPath)) {
-      console.log('📖 Processing Central Acts Library...');
+    const centralActsPath = findSeedFile('central_acts.seed.json');
+    if (centralActsPath) {
+      console.log(`📖 Processing Central Acts Library from ${centralActsPath}...`);
       const centralActs = JSON.parse(fs.readFileSync(centralActsPath, 'utf-8'));
       console.log(`  Found ${centralActs.length} acts in Central Acts Library seed.`);
 
