@@ -7,6 +7,111 @@ import { buildStateRegex } from '../public/publicHelpRoutes';
 
 const router = Router();
 
+let cachedSummaryMetrics: any = null;
+let cachedSummaryTimestamp = 0;
+const SUMMARY_CACHE_TTL_MS = 60 * 1000; // 60 seconds TTL
+
+export async function getOrComputeSummaryMetrics(forceRefresh = false) {
+  const now = Date.now();
+  if (!forceRefresh && cachedSummaryMetrics && (now - cachedSummaryTimestamp) < SUMMARY_CACHE_TTL_MS) {
+    return cachedSummaryMetrics;
+  }
+
+  const [
+    totalAll,
+    verifiedCount,
+    courtsCount,
+    legalAidCount,
+    policeCount,
+    efilingCount,
+    ladcsCount,
+    pendingCount,
+    uniqueStates
+  ] = await Promise.all([
+    LegalResource.countDocuments(),
+    LegalResource.countDocuments({ $or: [{ isVerified: true }, { status: 'approved' }] }),
+    LegalResource.countDocuments({ type: 'Court' }),
+    LegalResource.countDocuments({ type: 'LegalAid' }),
+    LegalResource.countDocuments({ type: 'PoliceStation' }),
+    LegalResource.countDocuments({ 'facilities.hasEfiling': true }),
+    LegalResource.countDocuments({ 'facilities.hasLADCS': true }),
+    LegalResource.countDocuments({ status: 'pending' }),
+    LegalResource.distinct('state')
+  ]);
+
+  cachedSummaryMetrics = {
+    total: totalAll,
+    totalAll,
+    verified: verifiedCount,
+    courts: courtsCount,
+    legalAid: legalAidCount,
+    policeStations: policeCount,
+    efilingEnabled: efilingCount,
+    ladcsActive: ladcsCount,
+    pending: pendingCount,
+    coveredStatesCount: uniqueStates.filter(Boolean).length
+  };
+  cachedSummaryTimestamp = now;
+  return cachedSummaryMetrics;
+}
+
+// GET summary metrics independently
+router.get('/resources/summary', asyncHandler(async (req: Request, res: Response) => {
+  const force = req.query.fresh === 'true';
+  const summary = await getOrComputeSummaryMetrics(force);
+  res.json({ success: true, data: summary });
+}));
+
+// GET /resources/geojson - High-performance Vector GIS Point Features (Decoupled from table pagination)
+router.get('/resources/geojson', asyncHandler(async (req: Request, res: Response) => {
+  const { type, state, status } = req.query;
+  const filter: any = {
+    'coordinates.lat': { $ne: null, $exists: true },
+    'coordinates.lng': { $ne: null, $exists: true }
+  };
+
+  if (type && type !== 'All' && type !== 'ALL') {
+    filter.type = type;
+  }
+  if (state && state !== 'All') {
+    filter.state = { $regex: buildStateRegex(state as string) };
+  }
+  if (status) {
+    filter.status = status;
+  }
+
+  const docs = await LegalResource.find(filter)
+    .select('name type status jurisdictionLevel city state district coordinates contactNumber website facilities')
+    .lean();
+
+  const features = docs.map(d => ({
+    type: 'Feature',
+    geometry: {
+      type: 'Point',
+      coordinates: [d.coordinates?.lng, d.coordinates?.lat]
+    },
+    properties: {
+      id: d._id,
+      name: d.name,
+      type: d.type,
+      status: d.status,
+      jurisdictionLevel: d.jurisdictionLevel,
+      city: d.city,
+      district: d.district,
+      state: d.state,
+      phone: Array.isArray(d.contactNumber) ? d.contactNumber[0] : d.contactNumber,
+      website: d.website,
+      facilities: d.facilities
+    }
+  }));
+
+  res.json({
+    type: 'FeatureCollection',
+    count: features.length,
+    features
+  });
+}));
+
 // GET all legal resources with advanced filtering, search, and pagination
 router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
   const {
@@ -73,11 +178,9 @@ router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
   if (search) {
     const q = (search as string).trim();
     if (q.length >= 2 && /^[\w\s-]+$/.test(q)) {
-      // Utilize MongoDB compound text index on { name, city, state, district, address }
       filter.$text = { $search: q };
     } else {
       const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      // Prefix-anchored regex leverages B-tree indexes on indexed fields (name, city, district)
       filter.$or = [
         { name: { $regex: new RegExp(`^${escaped}`, 'i') } },
         { city: { $regex: new RegExp(`^${escaped}`, 'i') } },
@@ -100,25 +203,11 @@ router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
   const [
     resources,
     total,
-    verifiedCount,
-    courtsCount,
-    legalAidCount,
-    policeCount,
-    efilingCount,
-    ladcsCount,
-    pendingCount,
-    uniqueStates
+    summary
   ] = await Promise.all([
     LegalResource.find(filter).sort(sortOptions).skip(skip).limit(limitNum).lean(),
     LegalResource.countDocuments(filter),
-    LegalResource.countDocuments({ $or: [{ isVerified: true }, { status: 'approved' }] }),
-    LegalResource.countDocuments({ type: 'Court' }),
-    LegalResource.countDocuments({ type: 'LegalAid' }),
-    LegalResource.countDocuments({ type: 'PoliceStation' }),
-    LegalResource.countDocuments({ 'facilities.hasEfiling': true }),
-    LegalResource.countDocuments({ 'facilities.hasLADCS': true }),
-    LegalResource.countDocuments({ status: 'pending' }),
-    LegalResource.distinct('state')
+    getOrComputeSummaryMetrics()
   ]);
 
   res.json({
@@ -131,15 +220,8 @@ router.get('/resources', asyncHandler(async (req: Request, res: Response) => {
       pages: Math.ceil(total / limitNum) || 1
     },
     metrics: {
-      total,
-      verified: verifiedCount,
-      courts: courtsCount,
-      legalAid: legalAidCount,
-      policeStations: policeCount,
-      efilingEnabled: efilingCount,
-      ladcsActive: ladcsCount,
-      pending: pendingCount,
-      coveredStatesCount: uniqueStates.filter(Boolean).length
+      ...summary,
+      filteredTotal: total
     }
   });
 }));
@@ -723,18 +805,23 @@ router.post('/resources/bulk-delete', asyncHandler(async (req: Request, res: Res
 
 // GET /resources/analytics - Aggregate usage and registry telemetry
 router.get('/resources/analytics', asyncHandler(async (req: Request, res: Response) => {
+  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
+
   const [
     totalResources,
     approvedCount,
     pendingCount,
+    staleCount,
     typeStats,
     stateStats,
     viewsAggregate,
-    feedbackAggregate
+    feedbackAggregate,
+    facilitiesAggregate
   ] = await Promise.all([
     LegalResource.countDocuments(),
     LegalResource.countDocuments({ status: 'approved' }),
     LegalResource.countDocuments({ status: 'pending' }),
+    LegalResource.countDocuments({ status: 'approved', lastAuditDate: { $lt: oneYearAgo } }),
     LegalResource.aggregate([
       { $group: { _id: '$type', count: { $sum: 1 } } },
       { $sort: { count: -1 } }
@@ -742,7 +829,7 @@ router.get('/resources/analytics', asyncHandler(async (req: Request, res: Respon
     LegalResource.aggregate([
       { $group: { _id: '$state', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $limit: 10 }
+      { $limit: 18 }
     ]),
     LegalResource.aggregate([
       { $group: { _id: null, totalViews: { $sum: '$viewsCount' } } }
@@ -755,6 +842,17 @@ router.get('/resources/analytics', asyncHandler(async (req: Request, res: Respon
           totalDownvotes: { $sum: '$feedback.downvotes' }
         }
       }
+    ]),
+    LegalResource.aggregate([
+      {
+        $group: {
+          _id: null,
+          efilingCount: { $sum: { $cond: [{ $eq: ['$facilities.hasEfiling', true] }, 1, 0] } },
+          ladcsCount: { $sum: { $cond: [{ $eq: ['$facilities.hasLADCS', true] }, 1, 0] } },
+          vcRoomCount: { $sum: { $cond: [{ $eq: ['$facilities.hasVCRoom', true] }, 1, 0] } },
+          accessibleCount: { $sum: { $cond: [{ $eq: ['$facilities.isWheelchairAccessible', true] }, 1, 0] } }
+        }
+      }
     ])
   ]);
 
@@ -764,19 +862,40 @@ router.get('/resources/analytics', asyncHandler(async (req: Request, res: Respon
   const totalFeedback = totalUpvotes + totalDownvotes;
   const satisfactionRate = totalFeedback > 0 ? Math.round((totalUpvotes / totalFeedback) * 100) : 100;
 
-  // Stale count (>12 months)
-  const oneYearAgo = new Date(Date.now() - 365 * 24 * 60 * 60 * 1000);
-  const staleCount = await LegalResource.countDocuments({
-    status: 'approved',
-    lastAuditDate: { $lt: oneYearAgo }
-  });
+  // Top 5 most viewed resources & Top 5 most overdue for audit
+  const [topViewed, topStale] = await Promise.all([
+    LegalResource.find({ status: 'approved' })
+      .sort({ viewsCount: -1 })
+      .limit(5)
+      .select('name type city state viewsCount feedback')
+      .lean(),
+    LegalResource.find({ status: 'approved', lastAuditDate: { $lt: oneYearAgo } })
+      .sort({ lastAuditDate: 1 })
+      .limit(5)
+      .select('name type city state lastAuditDate')
+      .lean()
+  ]);
 
-  // Top 5 most viewed resources
-  const topViewed = await LegalResource.find({ status: 'approved' })
-    .sort({ viewsCount: -1 })
-    .limit(5)
-    .select('name type city state viewsCount feedback')
-    .lean();
+  const total = totalResources || 1;
+  const formattedTypeBreakdown = typeStats.map((t: any) => ({
+    _id: t._id || 'Unknown',
+    type: t._id || 'Unknown',
+    count: t.count,
+    percentage: Math.min(100, Math.round((t.count / total) * 100))
+  }));
+
+  const formattedStateDistribution = stateStats.map((s: any) => ({
+    _id: s._id || 'Unspecified',
+    state: s._id || 'Unspecified',
+    count: s.count
+  }));
+
+  const facilities = {
+    efilingCount: facilitiesAggregate[0]?.efilingCount || 0,
+    ladcsCount: facilitiesAggregate[0]?.ladcsCount || 0,
+    vcRoomCount: facilitiesAggregate[0]?.vcRoomCount || 0,
+    accessibleCount: facilitiesAggregate[0]?.accessibleCount || 0
+  };
 
   res.json({
     success: true,
@@ -789,16 +908,88 @@ router.get('/resources/analytics', asyncHandler(async (req: Request, res: Respon
       satisfactionRate,
       totalUpvotes,
       totalDownvotes,
-      typeDistribution: typeStats.map((t: any) => ({ type: t._id || 'Unknown', count: t.count })),
-      topStates: stateStats.map((s: any) => ({ state: s._id || 'Unspecified', count: s.count })),
-      topViewed
+      facilities,
+      typeBreakdown: formattedTypeBreakdown,
+      typeDistribution: formattedTypeBreakdown,
+      stateDistribution: formattedStateDistribution,
+      topStates: formattedStateDistribution,
+      topViewed,
+      topStale
     }
   });
 }));
 
-// GET /resources/duplicates - Fuzzy and exact match duplicate detection
+// GET /resources/duplicates - High-performance aggregation duplicate detection (O(N log N))
 router.get('/resources/duplicates', asyncHandler(async (req: Request, res: Response) => {
-  const resources = await LegalResource.find().select('name address city state district contactNumber type').lean();
+  // 1. Phone number duplicates via aggregation grouping
+  const phoneDupGroups = await LegalResource.aggregate([
+    { $match: { contactNumber: { $exists: true, $ne: [] } } },
+    { $unwind: '$contactNumber' },
+    {
+      $project: {
+        cleanPhone: {
+          $replaceAll: {
+            input: {
+              $replaceAll: { input: '$contactNumber', find: ' ', replacement: '' }
+            },
+            find: '-',
+            replacement: ''
+          }
+        },
+        doc: {
+          _id: '$_id',
+          name: '$name',
+          address: '$address',
+          city: '$city',
+          state: '$state',
+          district: '$district',
+          contactNumber: '$contactNumber',
+          type: '$type'
+        }
+      }
+    },
+    { $match: { cleanPhone: { $regex: /\d{8,}/ } } },
+    {
+      $group: {
+        _id: '$cleanPhone',
+        count: { $sum: 1 },
+        docs: { $push: '$doc' }
+      }
+    },
+    { $match: { count: { $gt: 1 } } },
+    { $limit: 40 }
+  ]);
+
+  // 2. Exact or normalized name duplicates in same State
+  const nameDupGroups = await LegalResource.aggregate([
+    { $match: { name: { $exists: true, $ne: '' }, state: { $exists: true, $ne: '' } } },
+    {
+      $project: {
+        nameKey: { $toLower: { $trim: { input: '$name' } } },
+        stateKey: { $toLower: { $trim: { input: '$state' } } },
+        doc: {
+          _id: '$_id',
+          name: '$name',
+          address: '$address',
+          city: '$city',
+          state: '$state',
+          district: '$district',
+          contactNumber: '$contactNumber',
+          type: '$type'
+        }
+      }
+    },
+    {
+      $group: {
+        _id: { name: '$nameKey', state: '$stateKey' },
+        count: { $sum: 1 },
+        docs: { $push: '$doc' }
+      }
+    },
+    { $match: { count: { $gt: 1 } } },
+    { $limit: 40 }
+  ]);
+
   const duplicatePairs: Array<{
     primary: any;
     duplicate: any;
@@ -806,47 +997,40 @@ router.get('/resources/duplicates', asyncHandler(async (req: Request, res: Respo
     reason: string;
   }> = [];
 
-  const cleanStr = (s?: string) => (s || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  const seenPairKeys = new Set<string>();
 
-  for (let i = 0; i < resources.length; i++) {
-    for (let j = i + 1; j < resources.length; j++) {
-      const a = resources[i];
-      const b = resources[j];
-
-      // Exact contact number match
-      const commonPhone = (a.contactNumber || []).some((num: string) =>
-        (b.contactNumber || []).some((bNum: string) => cleanStr(num) === cleanStr(bNum) && cleanStr(num).length >= 8)
-      );
-
-      if (commonPhone && a.type === b.type) {
+  for (const group of phoneDupGroups) {
+    const docs = group.docs;
+    for (let i = 0; i < docs.length - 1; i++) {
+      const a = docs[i];
+      const b = docs[i + 1];
+      const key = [String(a._id), String(b._id)].sort().join(':');
+      if (!seenPairKeys.has(key)) {
+        seenPairKeys.add(key);
         duplicatePairs.push({
           primary: a,
           duplicate: b,
           similarityScore: 95,
-          reason: 'Identical Contact Number and Institutional Type'
+          reason: `Matching Contact Number: ${group._id}`
         });
-        continue;
       }
+    }
+  }
 
-      // Name similarity within same state and district
-      const nameA = cleanStr(a.name);
-      const nameB = cleanStr(b.name);
-      if (a.state && b.state && a.state.toLowerCase() === b.state.toLowerCase()) {
-        if (nameA === nameB) {
-          duplicatePairs.push({
-            primary: a,
-            duplicate: b,
-            similarityScore: 100,
-            reason: 'Identical Institution Name in Same State'
-          });
-        } else if (nameA.length > 8 && nameB.length > 8 && (nameA.includes(nameB) || nameB.includes(nameA))) {
-          duplicatePairs.push({
-            primary: a,
-            duplicate: b,
-            similarityScore: 85,
-            reason: 'High Name Similarity in Same State'
-          });
-        }
+  for (const group of nameDupGroups) {
+    const docs = group.docs;
+    for (let i = 0; i < docs.length - 1; i++) {
+      const a = docs[i];
+      const b = docs[i + 1];
+      const key = [String(a._id), String(b._id)].sort().join(':');
+      if (!seenPairKeys.has(key)) {
+        seenPairKeys.add(key);
+        duplicatePairs.push({
+          primary: a,
+          duplicate: b,
+          similarityScore: 100,
+          reason: `Identical Name in ${a.state || 'Same State'}`
+        });
       }
     }
   }
@@ -913,7 +1097,7 @@ router.post('/resources/duplicates/merge', asyncHandler(async (req: Request, res
   });
 }));
 
-// POST /resources/geocode-missing - Batch geocode missing coordinates
+// POST /resources/geocode-missing - Batch geocode missing coordinates with bulkWrite
 router.post('/resources/geocode-missing', asyncHandler(async (req: Request, res: Response) => {
   const missingCoords = await LegalResource.find({
     $or: [
@@ -921,30 +1105,42 @@ router.post('/resources/geocode-missing', asyncHandler(async (req: Request, res:
       { 'coordinates.lat': 0, 'coordinates.lng': 0 },
       { 'coordinates.lat': null }
     ]
-  });
+  }).select('_id city district state').limit(500);
 
-  let geocodedCount = 0;
+  if (missingCoords.length === 0) {
+    return res.json({
+      success: true,
+      message: 'All judicial facilities have valid geographic coordinates.',
+      geocodedCount: 0
+    });
+  }
 
-  for (const resource of missingCoords) {
+  const bulkOps = missingCoords.map(resource => {
     const coord = resolveGeoCentroid(resource.city || resource.district || resource.state);
-
-    // Apply minor jitter so markers in same city don't completely overlap
     const jitterLat = coord.lat + (Math.random() - 0.5) * 0.04;
     const jitterLng = coord.lng + (Math.random() - 0.5) * 0.04;
 
-    resource.coordinates = {
-      lat: parseFloat(jitterLat.toFixed(5)),
-      lng: parseFloat(jitterLng.toFixed(5))
+    return {
+      updateOne: {
+        filter: { _id: resource._id },
+        update: {
+          $set: {
+            coordinates: {
+              lat: parseFloat(jitterLat.toFixed(5)),
+              lng: parseFloat(jitterLng.toFixed(5))
+            }
+          }
+        }
+      }
     };
+  });
 
-    await resource.save();
-    geocodedCount++;
-  }
+  const bulkResult = await LegalResource.bulkWrite(bulkOps);
 
   res.json({
     success: true,
-    message: `Batch geocoding completed. Resolved ${geocodedCount} record(s).`,
-    geocodedCount
+    message: `Batch geocoding completed. Resolved ${bulkResult.modifiedCount} record(s).`,
+    geocodedCount: bulkResult.modifiedCount
   });
 }));
 
