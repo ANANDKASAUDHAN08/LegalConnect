@@ -126,6 +126,8 @@ export class AdminApiService {
   bulkUpdateResourceStatus(ids: string[], status: string): Observable<any> { return this.content.bulkUpdateResourceStatus(ids, status); }
   bulkVerifyResourceCycles(ids: string[], notes?: string): Observable<any> { return this.content.bulkVerifyResourceCycles(ids, notes); }
   bulkDeleteResources(ids: string[]): Observable<any> { return this.content.bulkDeleteResources(ids); }
+  getResourceSummary(fresh = false): Observable<any> { return this.content.getResourceSummary(fresh); }
+  getResourceGeoJson(params: any = {}): Observable<any> { return this.content.getResourceGeoJson(params); }
   getResourceAnalytics(): Observable<any> { return this.content.getResourceAnalytics(); }
   getResourceDuplicates(): Observable<any> { return this.content.getResourceDuplicates(); }
   mergeResourceDuplicates(primaryId: string, duplicateId: string): Observable<any> { return this.content.mergeResourceDuplicates(primaryId, duplicateId); }

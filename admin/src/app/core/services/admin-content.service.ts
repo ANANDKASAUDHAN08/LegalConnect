@@ -175,7 +175,22 @@ export class AdminContentService {
     return this.http.post<ApiResponse<void>>(`${this.NODE_API}/admin/resources/bulk-delete`, { ids });
   }
 
-  // ── Phase 5: Analytics, Duplicates, Geocoding, AI Search ──
+  // ── Phase 5: Analytics, Duplicates, Geocoding, AI Search, GeoJSON & Summary ──
+
+  getResourceSummary(fresh = false): Observable<ApiResponse<any>> {
+    const params = fresh ? new HttpParams().set('fresh', 'true') : undefined;
+    return this.http.get<ApiResponse<any>>(`${this.NODE_API}/admin/resources/summary`, { params });
+  }
+
+  getResourceGeoJson(params: Record<string, any> = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        httpParams = httpParams.set(key, params[key]);
+      }
+    });
+    return this.http.get<any>(`${this.NODE_API}/admin/resources/geojson`, { params: httpParams });
+  }
 
   getResourceAnalytics(): Observable<ApiResponse<any>> {
     return this.http.get<ApiResponse<any>>(`${this.NODE_API}/admin/resources/analytics`);
