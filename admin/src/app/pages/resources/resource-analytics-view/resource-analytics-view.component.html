@@ -1,20 +1,71 @@
-<!-- Institutional Registry Telemetry & Analytics Dashboard -->
-<div class="p-6 space-y-6">
+<!-- Institutional Registry Telemetry & Analytics Dashboard (Embedded Enterprise Workspace) -->
+<div class="p-6 space-y-6 animate-in">
 
-  <!-- Loading State -->
-  <div *ngIf="isLoading" class="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse">
-    <div *ngFor="let i of [1,2,3,4]" class="h-28 rounded-2xl bg-slate-850 border border-slate-800"></div>
+  <!-- Header with Refresh & Quick Export Actions -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-800">
+    <div class="flex items-center gap-3">
+      <div
+        class="w-10 h-10 rounded-2xl bg-indigo-500/15 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
+        <admin-icon name="bar-chart" [size]="20"></admin-icon>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h2 class="text-lg font-bold text-white tracking-tight leading-tight m-0">
+            Institutional Registry Telemetry &amp; Analytics
+          </h2>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            Live Diagnostics
+          </span>
+        </div>
+        <p class="text-xs text-slate-400 mt-0.5 m-0">
+          Real-time citizen engagement velocity, judicial capacity telemetry, and audit compliance monitoring
+        </p>
+      </div>
+    </div>
+
+    <!-- Actions: Export Dossier & Refresh Data -->
+    <div class="flex items-center gap-2 shrink-0">
+      <button type="button" (click)="exportReport()" [disabled]="isLoading || !analytics"
+        class="btn px-3 py-1.5 rounded-xl text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 transition-all border border-slate-700/60 flex items-center gap-1.5 text-xs font-semibold shadow-xs"
+        [adminTooltip]="'Export structured telemetry dossier as JSON file for audit records'" tooltipPosition="bottom">
+        <admin-icon name="download" [size]="14" [strokeWidth]="2"></admin-icon>
+        <span>Export Report</span>
+      </button>
+
+      <button type="button" (click)="fetchAnalytics()" [disabled]="isLoading"
+        class="btn px-3 py-1.5 rounded-xl text-slate-300 hover:text-white bg-slate-900/80 hover:bg-slate-800 transition-all border border-slate-700/60 flex items-center gap-1.5 text-xs font-semibold shadow-xs"
+        [adminTooltip]="'Refresh Telemetry data from database'" tooltipPosition="bottom">
+        <admin-icon name="refresh" [size]="14" [cssClass]="isLoading ? 'animate-spin' : ''"></admin-icon>
+        <span>Refresh Data</span>
+      </button>
+    </div>
   </div>
 
+  <!-- Loading Skeleton State -->
+  @if (isLoading) {
+  <div class="grid grid-cols-1 md:grid-cols-4 gap-4 animate-pulse">
+    @for (i of [1,2,3,4]; track i) {
+    <div class="h-28 rounded-2xl bg-slate-800/50 border border-slate-800"></div>
+    }
+  </div>
+  }
+
   <!-- Analytics Summary Stats Strip -->
-  <div *ngIf="!isLoading && analytics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  @if (!isLoading && analytics) {
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 
     <!-- Total Views -->
-    <div class="p-5 rounded-2xl bg-slate-850 border border-slate-800 shadow-xs flex items-center justify-between">
+    <div
+      class="p-5 rounded-2xl bg-slate-800/40 border border-slate-800 shadow-xs flex items-center justify-between transition-all hover:border-indigo-500/40 cursor-pointer"
+      (click)="drillDownStatus('')"
+      [adminTooltip]="'Click to drill down into all directory entries'">
       <div>
         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Citizen Views</div>
         <div class="text-2xl font-black text-white mt-1">{{ analytics.totalViews || 0 | number }}</div>
-        <div class="text-[11px] text-emerald-400 font-bold mt-1">Direct public engagement</div>
+        <div class="text-[11px] text-emerald-400 font-bold mt-1 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+          <span>Direct public engagement</span>
+        </div>
       </div>
       <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center">
         <admin-icon name="eye" [size]="24"></admin-icon>
@@ -22,7 +73,7 @@
     </div>
 
     <!-- Satisfaction Rate -->
-    <div class="p-5 rounded-2xl bg-slate-850 border border-slate-800 shadow-xs flex items-center justify-between">
+    <div class="p-5 rounded-2xl bg-slate-800/40 border border-slate-800 shadow-xs flex items-center justify-between">
       <div>
         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Satisfaction Rate</div>
         <div class="text-2xl font-black text-emerald-400 mt-1">{{ analytics.satisfactionRate || 100 }}%</div>
@@ -35,7 +86,10 @@
     </div>
 
     <!-- Active Registry Size -->
-    <div class="p-5 rounded-2xl bg-slate-850 border border-slate-800 shadow-xs flex items-center justify-between">
+    <div
+      class="p-5 rounded-2xl bg-slate-800/40 border border-slate-800 shadow-xs flex items-center justify-between transition-all hover:border-purple-500/40 cursor-pointer"
+      (click)="drillDownStatus('approved')"
+      [adminTooltip]="'Click to filter all approved compliance institutions'">
       <div>
         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Verified</div>
         <div class="text-2xl font-black text-white mt-1">{{ analytics.approvedCount || 0 }}</div>
@@ -47,11 +101,14 @@
     </div>
 
     <!-- Compliance Staleness -->
-    <div class="p-5 rounded-2xl bg-slate-850 border border-slate-800 shadow-xs flex items-center justify-between">
+    <div
+      class="p-5 rounded-2xl bg-slate-800/40 border border-slate-800 shadow-xs flex items-center justify-between transition-all hover:border-rose-500/40 cursor-pointer"
+      (click)="drillDownStatus('approved')"
+      [adminTooltip]="'Click to review institutional verification records'">
       <div>
         <div class="text-xs font-bold text-slate-400 uppercase tracking-wider">Stale / Overdue</div>
         <div class="text-2xl font-black text-rose-400 mt-1">{{ analytics.staleCount || 0 }}</div>
-        <div class="text-[11px] text-slate-400 mt-1">>12 months verification cycle</div>
+        <div class="text-[11px] text-rose-300/80 mt-1">&gt;12 months audit cycle</div>
       </div>
       <div class="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-400 flex items-center justify-center">
         <admin-icon name="clock" [size]="24"></admin-icon>
@@ -60,68 +117,223 @@
 
   </div>
 
-  <!-- Detailed Analytics Breakdown Grid -->
-  <div *ngIf="!isLoading && analytics" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <!-- Institutional Distribution & Health Panels -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <!-- Type Distribution -->
-    <div class="p-6 rounded-3xl bg-slate-850 border border-slate-800 shadow-xs">
-      <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-        <admin-icon name="layers" [size]="16" cssClass="text-indigo-400"></admin-icon>
-        Institutional Type Breakdown
-      </h3>
-      <div class="space-y-3">
-        <div *ngFor="let item of analytics.typeDistribution"
-          class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-          <span class="text-xs font-bold text-slate-300">{{ getTypeLabel(item.type) }}</span>
-          <span
-            class="text-xs font-black text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20">{{
-            item.count }}</span>
-        </div>
+    <!-- Type Breakdown with Interactive Drill-downs -->
+    <div class="p-6 rounded-2xl bg-slate-800/30 border border-slate-800/80">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider m-0 flex items-center gap-2">
+          <admin-icon name="briefcase" [size]="16" cssClass="text-sky-400"></admin-icon>
+          <span>Directory Categorization</span>
+        </h3>
+        <span class="text-[11px] text-slate-400 font-medium">Click category to filter list</span>
       </div>
-    </div>
-
-    <!-- Top Searched States -->
-    <div class="p-6 rounded-3xl bg-slate-850 border border-slate-800 shadow-xs">
-      <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-        <admin-icon name="map" [size]="16" cssClass="text-emerald-400"></admin-icon>
-        Top Coverage States
-      </h3>
       <div class="space-y-3">
-        <div *ngFor="let item of analytics.topStates"
-          class="flex items-center justify-between p-3 rounded-xl bg-slate-900 border border-slate-800">
-          <span class="text-xs font-bold text-slate-300">{{ item.state }}</span>
-          <span
-            class="text-xs font-black text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">{{
-            item.count }} resources</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Top Viewed Institutions -->
-    <div class="p-6 rounded-3xl bg-slate-850 border border-slate-800 shadow-xs lg:col-span-2">
-      <h3 class="text-sm font-bold text-white mb-4 flex items-center gap-2">
-        <admin-icon name="trending-up" [size]="16" cssClass="text-amber-400"></admin-icon>
-        Most Viewed Legal Institutions by Citizens
-      </h3>
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-        <div *ngFor="let res of analytics.topViewed"
-          class="p-4 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-          <div class="min-w-0 pr-3">
-            <div class="text-xs font-bold text-white truncate">{{ res.name }}</div>
-            <div class="text-[11px] text-slate-400 mt-0.5">{{ res.city }}, {{ res.state }} • {{ getTypeLabel(res.type)
-              }}</div>
+        @for (item of (analytics.typeBreakdown || analytics.typeDistribution); track (item._id || item.type)) {
+        <div
+          class="p-2 -mx-2 rounded-xl hover:bg-slate-800/50 cursor-pointer transition-colors"
+          (click)="drillDownType(item.type || item._id)"
+          [adminTooltip]="'Filter by ' + getTypeLabel(item.type || item._id)">
+          <div class="flex justify-between text-xs mb-1.5">
+            <span class="text-slate-300 font-semibold flex items-center gap-1.5">
+              <span>{{ getTypeLabel(item.type || item._id) }}</span>
+            </span>
+            <span class="text-slate-400 font-mono">{{ item.count }} ({{ item.percentage || 0 }}%)</span>
           </div>
-          <div class="text-right shrink-0">
-            <div class="text-xs font-black text-indigo-400">{{ res.viewsCount || 0 }} views</div>
-            <div class="text-[10px] text-emerald-400 font-bold mt-0.5 inline-flex items-center gap-1">
-              <span>{{ res.feedback?.upvotes || 0 }}</span>
-              <admin-icon name="thumbs-up" [size]="11" [strokeWidth]="2.2"></admin-icon>
+          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div class="bg-gradient-to-r from-sky-500 to-indigo-500 h-full rounded-full transition-all duration-500"
+              [style.width.%]="item.percentage || 0"></div>
+          </div>
+        </div>
+        }
+      </div>
+    </div>
+
+    <!-- Facility Capabilities with Interactive Drill-Down Cards -->
+    <div class="p-6 rounded-2xl bg-slate-800/30 border border-slate-800/80 flex flex-col justify-between">
+      <div>
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider m-0 flex items-center gap-2">
+            <admin-icon name="zap" [size]="16" cssClass="text-amber-400"></admin-icon>
+            <span>Infrastructure Capabilities Coverage</span>
+          </h3>
+          <span class="text-[11px] text-slate-400 font-medium">Click card to filter</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <!-- e-Sewa Kendras -->
+          <div
+            class="p-3.5 rounded-xl bg-slate-850 border border-slate-800 hover:border-amber-500/40 hover:bg-slate-800/80 cursor-pointer transition-all shadow-xs"
+            (click)="drillDownFacility('hasEfiling')"
+            [adminTooltip]="'Filter institutions equipped with e-Sewa / e-Filing Kendras'">
+            <div class="text-[11px] text-slate-400 font-bold uppercase flex items-center justify-between">
+              <span>e-Sewa Kendras</span>
+              <admin-icon name="zap" [size]="14" cssClass="text-amber-400"></admin-icon>
             </div>
+            <div class="text-2xl font-black text-amber-300 mt-1">{{ analytics.facilities?.efilingCount || 0 }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">e-Filing enabled units</div>
+          </div>
+
+          <!-- LADCS Units -->
+          <div
+            class="p-3.5 rounded-xl bg-slate-850 border border-slate-800 hover:border-indigo-500/40 hover:bg-slate-800/80 cursor-pointer transition-all shadow-xs"
+            (click)="drillDownFacility('hasLADCS')"
+            [adminTooltip]="'Filter institutions with Legal Aid Defense Counsel System (LADCS)'">
+            <div class="text-[11px] text-slate-400 font-bold uppercase flex items-center justify-between">
+              <span>LADCS Units</span>
+              <admin-icon name="shield" [size]="14" cssClass="text-indigo-400"></admin-icon>
+            </div>
+            <div class="text-2xl font-black text-indigo-300 mt-1">{{ analytics.facilities?.ladcsCount || 0 }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Defense counsel systems</div>
+          </div>
+
+          <!-- VC Remand Rooms -->
+          <div
+            class="p-3.5 rounded-xl bg-slate-850 border border-slate-800 hover:border-sky-500/40 hover:bg-slate-800/80 cursor-pointer transition-all shadow-xs"
+            (click)="drillDownFacility('hasVCRoom')"
+            [adminTooltip]="'Filter institutions with active Video Conferencing remand rooms'">
+            <div class="text-[11px] text-slate-400 font-bold uppercase flex items-center justify-between">
+              <span>VC Remand Rooms</span>
+              <admin-icon name="video" [size]="14" cssClass="text-sky-400"></admin-icon>
+            </div>
+            <div class="text-2xl font-black text-sky-300 mt-1">{{ analytics.facilities?.vcRoomCount || 0 }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Video conferencing active</div>
+          </div>
+
+          <!-- Divyangjan Access -->
+          <div
+            class="p-3.5 rounded-xl bg-slate-850 border border-slate-800 hover:border-emerald-500/40 hover:bg-slate-800/80 cursor-pointer transition-all shadow-xs"
+            (click)="drillDownFacility('isWheelchairAccessible')"
+            [adminTooltip]="'Filter institutions with Divyangjan wheelchair barrier-free compliance'">
+            <div class="text-[11px] text-slate-400 font-bold uppercase flex items-center justify-between">
+              <span>Divyangjan Access</span>
+              <admin-icon name="check-circle" [size]="14" cssClass="text-emerald-400"></admin-icon>
+            </div>
+            <div class="text-2xl font-black text-emerald-300 mt-1">{{ analytics.facilities?.accessibleCount || 0 }}</div>
+            <div class="text-[10px] text-slate-500 mt-0.5">Wheelchair compliant</div>
           </div>
         </div>
+      </div>
+
+      <!-- Quick Summary Subtitle -->
+      <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
+        <span>Judicial Modernization Index</span>
+        <span class="text-emerald-400 font-bold">Active Telemetry</span>
       </div>
     </div>
 
   </div>
+
+  <!-- Actionable Operational Intelligence Radar (Top Viewed & Compliance Attention) -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+    <!-- Panel 1: Top Most Consulted Judicial Centers -->
+    <div class="p-6 rounded-2xl bg-slate-800/30 border border-slate-800/80">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider m-0 flex items-center gap-2">
+          <admin-icon name="eye" [size]="16" cssClass="text-sky-400"></admin-icon>
+          <span>Top Consulted Judicial Centers</span>
+        </h3>
+        <span class="text-[11px] text-slate-400 font-medium">Public traffic demand</span>
+      </div>
+
+      @if (analytics.topViewed && analytics.topViewed.length > 0) {
+      <div class="space-y-2.5">
+        @for (item of analytics.topViewed; track item._id) {
+        <div
+          class="p-2.5 rounded-xl bg-slate-900/60 border border-slate-800/70 flex items-center justify-between gap-3 hover:border-sky-500/40 transition-colors">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-white truncate">{{ item.name }}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-medium">{{ getTypeLabel(item.type) }}</span>
+              <span>{{ item.city ? item.city + ', ' : '' }}{{ item.state }}</span>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <div class="text-sm font-black text-sky-400 flex items-center justify-end gap-1 font-mono">
+              <admin-icon name="eye" [size]="13"></admin-icon>
+              <span>{{ item.viewsCount || 0 }}</span>
+            </div>
+            <div class="text-[10px] text-emerald-400 font-bold mt-0.5">
+              {{ item.feedback?.upvotes || 0 }} helpful
+            </div>
+          </div>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="p-8 text-center text-xs text-slate-500">
+        No citizen view logs recorded yet.
+      </div>
+      }
+    </div>
+
+    <!-- Panel 2: Audit Compliance Priority Radar (>12 Months Stale) -->
+    <div class="p-6 rounded-2xl bg-slate-800/30 border border-slate-800/80">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-sm font-bold text-white uppercase tracking-wider m-0 flex items-center gap-2">
+          <admin-icon name="alert-triangle" [size]="16" cssClass="text-rose-400"></admin-icon>
+          <span>Audit Verification Priority Radar</span>
+        </h3>
+        <span class="text-[11px] text-rose-400 font-semibold">&gt;12 mos stale</span>
+      </div>
+
+      @if (analytics.topStale && analytics.topStale.length > 0) {
+      <div class="space-y-2.5">
+        @for (stale of analytics.topStale; track stale._id) {
+        <div
+          class="p-2.5 rounded-xl bg-slate-900/60 border border-rose-500/20 flex items-center justify-between gap-3 hover:border-rose-500/40 transition-colors">
+          <div class="min-w-0 flex-1">
+            <div class="text-xs font-bold text-white truncate">{{ stale.name }}</div>
+            <div class="text-[11px] text-slate-400 mt-0.5 flex items-center gap-2">
+              <span class="px-1.5 py-0.2 rounded bg-slate-800 text-slate-300 font-medium">{{ getTypeLabel(stale.type) }}</span>
+              <span>{{ stale.city ? stale.city + ', ' : '' }}{{ stale.state }}</span>
+            </div>
+          </div>
+          <div class="text-right shrink-0">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-rose-500/15 text-rose-300 border border-rose-500/30 block">
+              Audit Overdue
+            </span>
+            <span class="text-[10px] text-slate-500 mt-0.5 block font-mono">
+              {{ stale.lastAuditDate ? (stale.lastAuditDate | date:'mediumDate') : 'Never Audited' }}
+            </span>
+          </div>
+        </div>
+        }
+      </div>
+      } @else {
+      <div class="p-8 text-center text-xs text-emerald-400 flex flex-col items-center justify-center gap-1.5">
+        <admin-icon name="check-circle" [size]="24"></admin-icon>
+        <span class="font-bold">100% Audit Compliance</span>
+        <span class="text-slate-400 text-[11px]">All active institutions have been verified within the last 12 months.</span>
+      </div>
+      }
+    </div>
+
+  </div>
+
+  <!-- State Geographic Distribution -->
+  <div class="p-6 rounded-2xl bg-slate-800/30 border border-slate-800/80">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-sm font-bold text-white uppercase tracking-wider m-0 flex items-center gap-2">
+        <admin-icon name="map-pin" [size]="16" cssClass="text-emerald-400"></admin-icon>
+        <span>Geographic Distribution (Top States &amp; UTs)</span>
+      </h3>
+      <span class="text-[11px] text-slate-400 font-medium">Click state to filter directory</span>
+    </div>
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+      @for (st of (analytics.stateDistribution || analytics.topStates)?.slice(0, 18); track (st._id || st.state)) {
+      <div
+        class="p-3 rounded-xl bg-slate-850 border border-slate-800 text-center hover:border-emerald-500/40 hover:bg-slate-800/80 cursor-pointer transition-all shadow-xs"
+        (click)="drillDownState(st.state || st._id)"
+        [adminTooltip]="'Filter directory for ' + (st.state || st._id)">
+        <div class="text-xs font-bold text-slate-200 truncate">{{ st.state || st._id || 'Unknown' }}</div>
+        <div class="text-base font-black text-emerald-400 mt-1">{{ st.count }}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Institutions</div>
+      </div>
+      }
+    </div>
+  </div>
+  }
 
 </div>

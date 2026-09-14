@@ -15,8 +15,22 @@ import {
 import { CommonModule } from '@angular/common';
 import { LegalResourceItem } from '../../legal-content/legal-content.models';
 import { INDIAN_STATES } from '../../../core/constants/geo.constants';
+import { AdminApiService } from '../../../core/admin-api.service';
 
 declare var google: any;
+
+interface MapPoint {
+  id: string;
+  name: string;
+  type: string;
+  address?: string;
+  state?: string;
+  district?: string;
+  city?: string;
+  contactNumber?: string | string[];
+  status?: string;
+  coordinates: { lat: number; lng: number };
+}
 
 @Component({
   selector: 'admin-resource-map-view',
@@ -43,6 +57,8 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
   gapStates: string[] = [];
   wellCoveredStates: string[] = [];
   totalMappedCount = 0;
+  isGeoJsonLoading = false;
+  allMapPoints: MapPoint[] = [];
 
   // Dark Mode Map Styles
   private darkMapStyles = [
@@ -101,17 +117,20 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
     }
   ];
 
-  constructor(private cdr: ChangeDetectorRef) { }
+  constructor(
+    private api: AdminApiService,
+    private cdr: ChangeDetectorRef
+  ) { }
 
   ngAfterViewInit(): void {
     this.initMap();
+    this.loadNationwideGeoJson();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['resources']) {
-      this.calculateCoverageGaps();
-      if (this.map) {
-        this.renderMarkers();
+      if (this.allMapPoints.length === 0) {
+        this.syncFromInputResources();
       }
     }
   }
@@ -120,6 +139,67 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
     this.clearMarkers();
     if (this.infoWindow) {
       this.infoWindow.close();
+    }
+  }
+
+  private loadNationwideGeoJson(): void {
+    this.isGeoJsonLoading = true;
+    this.cdr.markForCheck();
+
+    this.api.getResourceGeoJson().subscribe({
+      next: (res: any) => {
+        this.isGeoJsonLoading = false;
+        if (res?.features && Array.isArray(res.features)) {
+          this.allMapPoints = res.features.map((f: any) => ({
+            id: f.properties?.id || f.id,
+            name: f.properties?.name || 'Institution',
+            type: f.properties?.type || 'Court',
+            address: f.properties?.address,
+            state: f.properties?.state || '',
+            district: f.properties?.district,
+            city: f.properties?.city,
+            contactNumber: f.properties?.contactNumber,
+            status: f.properties?.status || (f.properties?.isVerified ? 'approved' : 'pending'),
+            coordinates: {
+              lng: f.geometry?.coordinates[0],
+              lat: f.geometry?.coordinates[1]
+            }
+          }));
+          this.calculateCoverageGaps();
+          if (this.map) {
+            this.renderMarkers();
+          }
+        } else {
+          this.syncFromInputResources();
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isGeoJsonLoading = false;
+        this.syncFromInputResources();
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private syncFromInputResources(): void {
+    this.allMapPoints = this.resources
+      .filter(r => r.coordinates?.lat && r.coordinates?.lng)
+      .map(r => ({
+        id: r._id || r.id || '',
+        name: r.name,
+        type: r.type,
+        address: r.address,
+        state: r.state,
+        district: r.district,
+        city: r.city,
+        contactNumber: r.contactNumber,
+        status: r.status,
+        coordinates: { lat: r.coordinates!.lat, lng: r.coordinates!.lng }
+      }));
+    this.calculateCoverageGaps();
+    if (this.map) {
+      this.renderMarkers();
     }
   }
 
@@ -147,9 +227,10 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
 
     // Listen for global inspect clicks triggered from InfoWindow HTML
     (window as any)._adminInspectResourceById = (id: string) => {
-      const found = this.resources.find(r => (r._id || r.id) === id);
+      const found = this.resources.find(r => (r._id || r.id) === id) ||
+        this.allMapPoints.find(p => p.id === id);
       if (found) {
-        this.inspectResource.emit(found);
+        this.inspectResource.emit(found as any);
       }
     };
 
@@ -174,13 +255,27 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
     const bounds = new google.maps.LatLngBounds();
     let validCount = 0;
 
-    const filtered = this.resources.filter(r => {
+    const source = this.allMapPoints.length > 0 ? this.allMapPoints : this.resources.map(r => ({
+      id: r._id || r.id || '',
+      name: r.name,
+      type: r.type,
+      address: r.address,
+      state: r.state,
+      district: r.district,
+      city: r.city,
+      contactNumber: r.contactNumber,
+      status: r.status,
+      coordinates: r.coordinates || { lat: 0, lng: 0 }
+    }));
+
+    const filtered = source.filter(r => {
       if (this.selectedFilterType === 'ALL') return true;
       return r.type === this.selectedFilterType;
     });
 
     filtered.forEach(r => {
-      if (!r.coordinates || typeof r.coordinates.lat !== 'number' || typeof r.coordinates.lng !== 'number') {
+      if (!r.coordinates || typeof r.coordinates.lat !== 'number' || typeof r.coordinates.lng !== 'number' ||
+          (r.coordinates.lat === 0 && r.coordinates.lng === 0)) {
         return;
       }
 
@@ -195,16 +290,16 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
         title: r.name,
         icon: {
           path: google.maps.SymbolPath.CIRCLE,
-          scale: 7,
+          scale: 6.5,
           fillColor: color,
           fillOpacity: 0.9,
-          strokeWeight: 2,
+          strokeWeight: 1.5,
           strokeColor: '#ffffff'
         }
       });
 
       marker.addListener('click', () => {
-        this.openInfoWindowForResource(r, marker);
+        this.openInfoWindowForPoint(r, marker);
       });
 
       this.markers.push(marker);
@@ -215,7 +310,7 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
     if (validCount > 0) {
       this.map.fitBounds(bounds);
       const listener = google.maps.event.addListener(this.map, 'idle', () => {
-        if (this.map.getZoom() > 14) this.map.setZoom(14);
+        if (this.map.getZoom() > 13) this.map.setZoom(13);
         google.maps.event.removeListener(listener);
       });
     }
@@ -223,8 +318,8 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
     this.cdr.markForCheck();
   }
 
-  private openInfoWindowForResource(r: LegalResourceItem, marker: any): void {
-    const resId = r._id || r.id || '';
+  private openInfoWindowForPoint(r: MapPoint | any, marker: any): void {
+    const resId = r.id || r._id || '';
     const typeLabel = r.type === 'LegalAid' ? 'Legal Aid Center' : r.type === 'Court' ? 'District Court' : r.type;
     const phone = Array.isArray(r.contactNumber) ? r.contactNumber[0] : (r.contactNumber || 'N/A');
 
@@ -242,7 +337,7 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
           ${r.name}
         </h4>
         <p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b; line-height: 1.4;">
-          ${r.address || (r.city + ', ' + r.state)}
+          ${r.address || ((r.district || r.city || '') + ', ' + r.state)}
         </p>
         <div style="font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 8px;">
           📞 ${phone}
@@ -260,17 +355,18 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
 
   private getTypeMarkerColor(type: string): string {
     switch (type) {
-      case 'Court': return '#3b82f6'; // Blue
-      case 'LegalAid': return '#a855f7'; // Purple
+      case 'Court': return '#38bdf8'; // Sky Blue
+      case 'LegalAid': return '#818cf8'; // Indigo
       case 'PoliceStation': return '#f59e0b'; // Amber
-      case 'GovernmentOffice': return '#f97316'; // Orange
+      case 'GovernmentOffice': return '#fb923c'; // Orange
       default: return '#10b981'; // Emerald
     }
   }
 
   private calculateCoverageGaps(): void {
     this.stateCounts = {};
-    this.resources.forEach(r => {
+    const dataset = this.allMapPoints.length > 0 ? this.allMapPoints : this.resources;
+    dataset.forEach(r => {
       if (r.state) {
         this.stateCounts[r.state] = (this.stateCounts[r.state] || 0) + 1;
       }

@@ -9,7 +9,7 @@
       <button type="button" (click)="setFilterType('ALL')"
         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-0"
         [ngClass]="selectedFilterType === 'ALL' ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-800 text-slate-300 hover:bg-slate-750'">
-        All ({{ resources.length }})
+        All ({{ allMapPoints.length || resources.length }})
       </button>
       <button type="button" (click)="setFilterType('Court')"
         class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
@@ -35,9 +35,17 @@
 
     <!-- Mapped Telemetry Stat -->
     <div class="flex items-center gap-3 text-xs">
-      <span class="text-slate-400">
-        Geo-Located: <strong class="text-emerald-400">{{ totalMappedCount }}</strong> / {{ resources.length }}
+      @if (isGeoJsonLoading) {
+      <span class="text-slate-400 flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-sky-400 animate-ping"></span>
+        Streaming Nationwide GIS...
       </span>
+      } @else {
+      <span class="text-slate-400">
+        Geo-Located: <strong class="text-emerald-400">{{ totalMappedCount }}</strong> / {{ allMapPoints.length ||
+        resources.length }} Points
+      </span>
+      }
     </div>
   </div>
 
@@ -55,13 +63,17 @@
     </div>
 
     <div class="flex items-center gap-1.5 overflow-x-auto py-1 max-w-2xl scrollbar-thin">
-      <span *ngFor="let gap of gapStates.slice(0, 10)"
+      @for (gap of gapStates.slice(0, 10); track gap) {
+      <span
         class="whitespace-nowrap px-2 py-0.5 rounded-md bg-amber-500/10 border border-amber-500/20 text-amber-300 text-[10px] font-bold">
         {{ gap }}: {{ stateCounts[gap] || 0 }}
       </span>
-      <span *ngIf="gapStates.length > 10" class="text-[10px] text-slate-400 font-bold">
+      }
+      @if (gapStates.length > 10) {
+      <span class="text-[10px] text-slate-400 font-bold">
         +{{ gapStates.length - 10 }} more
       </span>
+      }
     </div>
   </div>
 </div>
