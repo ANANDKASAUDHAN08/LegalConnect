@@ -10,6 +10,7 @@ import { ActivityStreamService } from '../core/services/activity-stream.service'
 import { CommandPaletteService, CommandPaletteComponent } from '../shared/components/command-palette/command-palette.component';
 import { TwoFactorModalComponent } from '../shared/components/two-factor-modal/two-factor-modal.component';
 import { AdminIconComponent } from '../shared/components/icon/icon.component';
+import { AdminLogoComponent } from '../shared/components/logo/logo.component';
 
 @Component({
   selector: 'admin-layout',
@@ -23,7 +24,8 @@ import { AdminIconComponent } from '../shared/components/icon/icon.component';
     DialogComponent,
     CommandPaletteComponent,
     TwoFactorModalComponent,
-    AdminIconComponent
+    AdminIconComponent,
+    AdminLogoComponent
   ],
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss'

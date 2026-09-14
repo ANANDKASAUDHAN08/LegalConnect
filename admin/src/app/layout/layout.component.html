@@ -8,18 +8,7 @@
     <!-- Brand Header -->
     <div
       class="sidebar-brand flex items-center justify-between h-16 px-4 border-b border-white/10 bg-slate-950/40 relative">
-      <div class="flex items-center gap-3">
-        <div
-          class="logo p-2 rounded-xl bg-gradient-to-br from-indigo-500/20 via-purple-500/15 to-blue-500/20 border border-indigo-500/30 text-indigo-400 shadow-lg shadow-indigo-500/10 flex items-center justify-center">
-          <admin-icon name="layers" [size]="20" cssClass="brand-icon"></admin-icon>
-        </div>
-        @if (!isCollapsed) {
-        <div class="brand-text flex flex-col">
-          <span class="brand-title font-extrabold text-sm tracking-tight text-white">LegalConnect</span>
-          <span class="brand-badge text-[9px] font-black tracking-widest text-indigo-400 uppercase">ADMIN PANEL</span>
-        </div>
-        }
-      </div>
+      <admin-logo [mode]="isCollapsed ? 'icon' : 'full'" size="md"></admin-logo>
 
       <button
         class="toggle-btn p-1.5 rounded-lg border border-white/10 bg-slate-800/60 hover:bg-slate-700/80 text-slate-400 hover:text-white transition-all shadow-sm flex items-center justify-center"

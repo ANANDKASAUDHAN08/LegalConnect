@@ -5,12 +5,13 @@ import { FormsModule } from '@angular/forms';
 import { InfoApiService } from '../../pages/info/services/info-api.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { IconComponent } from '../icon/icon.component';
+import { LogoComponent } from '../logo/logo.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-footer',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, IconComponent, TooltipDirective],
+  imports: [CommonModule, RouterLink, FormsModule, IconComponent, LogoComponent, TooltipDirective],
   templateUrl: './footer.component.html',
   styleUrls: ['./footer.component.scss']
 })

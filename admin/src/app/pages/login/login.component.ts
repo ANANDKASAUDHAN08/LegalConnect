@@ -6,11 +6,12 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { AdminAuthService } from '../../core/auth.service';
 import { TooltipDirective } from '../../shared/directives/tooltip.directive';
 import { AdminIconComponent } from '../../shared/components/icon/icon.component';
+import { AdminLogoComponent } from '../../shared/components/logo/logo.component';
 
 @Component({
   selector: 'admin-login',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective, AdminIconComponent],
+  imports: [CommonModule, FormsModule, TooltipDirective, AdminIconComponent, AdminLogoComponent],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush

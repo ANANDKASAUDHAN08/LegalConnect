@@ -1,0 +1,182 @@
+:host {
+    display: inline-flex;
+    flex-shrink: 0;
+}
+
+.lc-logo-root {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    text-decoration: none;
+    cursor: inherit;
+    transition: opacity 0.2s ease;
+}
+
+a.lc-logo-root {
+    cursor: pointer;
+}
+
+/* ── Orientations ── */
+.lc-logo--vertical {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.75rem;
+
+    .lc-logo-text {
+        align-items: center;
+    }
+}
+
+.lc-logo--horizontal {
+    flex-direction: row;
+}
+
+/* ── Icon Badge ── */
+.lc-logo-badge {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.75rem;
+    background: linear-gradient(135deg, #2563eb, #4f46e5);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
+    transition: transform 0.3s ease;
+    flex-shrink: 0;
+}
+
+.lc-logo--animated .lc-logo-badge:hover,
+.lc-logo--animated:hover .lc-logo-badge {
+    transform: scale(1.05);
+}
+
+/* ── Text ── */
+.lc-logo-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.lc-logo-name {
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+    transition: color 0.2s ease;
+}
+
+.lc-logo-tagline {
+    font-size: 0.62rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+/* ── Sizes Typography ── */
+.lc-logo--size-xs .lc-logo-name {
+    font-size: 0.8rem;
+}
+
+.lc-logo--size-xs .lc-logo-tagline {
+    font-size: 0.55rem;
+}
+
+.lc-logo--size-sm .lc-logo-name {
+    font-size: 0.9rem;
+}
+
+.lc-logo--size-sm .lc-logo-tagline {
+    font-size: 0.58rem;
+}
+
+.lc-logo--size-md .lc-logo-name {
+    font-size: 1rem;
+}
+
+.lc-logo--size-md .lc-logo-tagline {
+    font-size: 0.62rem;
+}
+
+.lc-logo--size-lg .lc-logo-name {
+    font-size: 1.25rem;
+}
+
+.lc-logo--size-lg .lc-logo-tagline {
+    font-size: 0.7rem;
+}
+
+.lc-logo--size-xl .lc-logo-name {
+    font-size: 1.5rem;
+}
+
+.lc-logo--size-xl .lc-logo-tagline {
+    font-size: 0.8rem;
+}
+
+/* ── Theme: Auto (inherits) ── */
+.lc-logo--auto .lc-logo-name {
+    color: var(--lc-logo-name, #0f172a);
+}
+
+.lc-logo--auto .lc-logo-tagline {
+    color: var(--lc-logo-tagline, #94a3b8);
+}
+
+:host-context(.dark) .lc-logo--auto .lc-logo-name,
+:host-context([data-theme="dark"]) .lc-logo--auto .lc-logo-name {
+    color: #fff;
+}
+
+:host-context(.dark) .lc-logo--auto .lc-logo-tagline,
+:host-context([data-theme="dark"]) .lc-logo--auto .lc-logo-tagline {
+    color: #64748b;
+}
+
+:host-context(.dark) .lc-logo--auto a.lc-logo-root:hover .lc-logo-name,
+:host-context([data-theme="dark"]) .lc-logo--auto a.lc-logo-root:hover .lc-logo-name {
+    color: #60a5fa;
+}
+
+/* ── Theme: Light ── */
+.lc-logo--light .lc-logo-name {
+    color: #0f172a;
+}
+
+.lc-logo--light .lc-logo-tagline {
+    color: #94a3b8;
+}
+
+.lc-logo--light a.lc-logo-root:hover .lc-logo-name,
+.lc-logo--light .lc-logo-root:hover .lc-logo-name {
+    color: #2563eb;
+}
+
+/* ── Theme: Dark ── */
+.lc-logo--dark .lc-logo-name {
+    color: #fff;
+}
+
+.lc-logo--dark .lc-logo-tagline {
+    color: #94a3b8;
+}
+
+.lc-logo--dark a.lc-logo-root:hover .lc-logo-name,
+.lc-logo--dark .lc-logo-root:hover .lc-logo-name {
+    color: #60a5fa;
+}
+
+/* ── Print Overrides ── */
+@media print {
+    .lc-logo-badge {
+        background: transparent !important;
+        border: 2px solid #2563eb !important;
+        box-shadow: none !important;
+        color: #2563eb !important;
+    }
+
+    .lc-logo-name {
+        color: #0f172a !important;
+    }
+
+    .lc-logo-tagline {
+        color: #94a3b8 !important;
+    }
+}

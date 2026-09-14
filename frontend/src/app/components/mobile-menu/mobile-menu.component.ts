@@ -10,11 +10,12 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { SystemAnnouncementService } from '../../services/system-announcement.service';
 import { IconComponent } from '../icon/icon.component';
+import { LogoComponent } from '../logo/logo.component';
 
 @Component({
   selector: 'app-mobile-menu',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent],
+  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent, LogoComponent],
   templateUrl: './mobile-menu.component.html',
   styleUrls: ['./mobile-menu.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

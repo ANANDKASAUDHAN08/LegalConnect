@@ -6,11 +6,13 @@ import { AuthService } from '../../../services/auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { IconComponent } from '../../../components/icon/icon.component';
+import { LogoComponent } from '../../../components/logo/logo.component';
+import { TooltipDirective } from '../../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-reset-password',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, IconComponent],
+  imports: [CommonModule, RouterLink, FormsModule, IconComponent, LogoComponent, TooltipDirective],
   templateUrl: './reset-password.component.html',
   styleUrls: ['./reset-password.component.scss'],
   animations: [
@@ -28,6 +30,7 @@ import { IconComponent } from '../../../components/icon/icon.component';
 export class ResetPasswordComponent implements OnInit {
   showPassword = signal(false);
   loading = signal(false);
+  validating = signal(true);
   error = signal<string | null>(null);
   submitted = signal(false);
 
@@ -67,10 +70,13 @@ export class ResetPasswordComponent implements OnInit {
     this.email = this.route.snapshot.queryParams['email'] || null;
     this.token = this.route.snapshot.queryParams['token'] || null;
 
-    if (!this.email || !this.token) {
-      this.error.set('Invalid or incomplete password reset link.');
-      this.snackbar.show('The password reset link is missing required parameters.', 'error');
-    }
+    // Brief token initialization check with skeleton loader
+    setTimeout(() => {
+      if (!this.email || !this.token) {
+        this.error.set('Invalid or incomplete password reset link.');
+      }
+      this.validating.set(false);
+    }, 280);
   }
 
   togglePassword() {

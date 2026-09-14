@@ -1,0 +1,36 @@
+<!-- Wrapper: <a> if linkTo is set, otherwise <div> -->
+<ng-container *ngIf="linkTo; else noLink">
+    <a [routerLink]="linkTo" class="lc-logo-root" [class.lc-logo--animated]="animated"
+        [ngClass]="[themeClass, orientationClass, sizeClass]"
+        [attr.aria-label]="'LegalConnect — Legal help, simplified.'">
+        <ng-container *ngTemplateOutlet="logoContent"></ng-container>
+    </a>
+</ng-container>
+<ng-template #noLink>
+    <div class="lc-logo-root" [class.lc-logo--animated]="animated" [ngClass]="[themeClass, orientationClass, sizeClass]"
+        [attr.aria-label]="'LegalConnect — Legal help, simplified.'">
+        <ng-container *ngTemplateOutlet="logoContent"></ng-container>
+    </div>
+</ng-template>
+
+<!-- Shared inner content template -->
+<ng-template #logoContent>
+    <!-- Icon Badge (hidden in text mode) -->
+    <div class="lc-logo-badge" *ngIf="mode !== 'text'" [style.width.px]="boxSize" [style.height.px]="boxSize"
+        [style.min-width.px]="boxSize">
+        <svg [attr.width]="iconSize" [attr.height]="iconSize" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+            stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="LegalConnect Logo">
+            <path d="M12 3v17M8 20h8" stroke-width="2.2" />
+            <path d="M4 8h16" stroke-width="2.2" />
+            <path d="M5 8l-2.5 5.5c0 2 5 2 5 0L5 8z" stroke-width="1.8" />
+            <path d="M19 8l-2.5 5.5c0 2 5 2 5 0L19 8z" stroke-width="1.8" />
+            <circle cx="12" cy="10.5" r="2.2" fill="currentColor" />
+        </svg>
+    </div>
+
+    <!-- Text Block (hidden in icon mode) -->
+    <div class="lc-logo-text" *ngIf="mode !== 'icon'">
+        <span class="lc-logo-name">LegalConnect</span>
+        <span class="lc-logo-tagline" *ngIf="mode === 'full'">Legal help, simplified.</span>
+    </div>
+</ng-template>

@@ -101,7 +101,6 @@ export type IconName =
   | 'qr-code'
   | 'shopping-cart'
   | 'file-check'
-  | 'logo'
   | 'linkedin'
   | 'twitter'
   | 'x-social'

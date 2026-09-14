@@ -13,6 +13,7 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 import { NAV_DROPDOWN_DIRECTIVES } from '../../directives/nav-dropdown.directive';
 import { LocationMapModalComponent } from '../location-map-modal/location-map-modal.component';
 import { IconComponent } from '../icon/icon.component';
+import { LogoComponent } from '../logo/logo.component';
 import { Subscription } from 'rxjs';
 import { ScrollService } from '../../services/scroll.service';
 import { NavigationEnd } from '@angular/router';
@@ -41,7 +42,8 @@ declare var google: any;
     TooltipDirective,
     NAV_DROPDOWN_DIRECTIVES,
     LocationMapModalComponent,
-    IconComponent
+    IconComponent,
+    LogoComponent
   ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
