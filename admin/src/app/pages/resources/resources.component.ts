@@ -26,7 +26,7 @@ import { ResourceModalComponent } from './resource-modal/resource-modal.componen
 import { ResourceImportWizardComponent, BatchImportResult, ValidationReport } from './resource-import-wizard/resource-import-wizard.component';
 import { ResourceMapViewComponent } from './resource-map-view/resource-map-view.component';
 import { ResourceDuplicateModalComponent } from './resource-duplicate-modal/resource-duplicate-modal.component';
-import { ResourceAnalyticsViewComponent } from './resource-analytics-view/resource-analytics-view.component';
+import { ResourceAnalyticsViewComponent, DrillDownFilterEvent } from './resource-analytics-view/resource-analytics-view.component';
 import { AdminSavedViewsComponent } from '../../shared/components/saved-views/saved-views.component';
 
 import { TableSelection, handleTableKeyboardNav } from '../../core/utils/table.utils';
@@ -74,6 +74,38 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // View Display Mode ('table' | 'map' | 'analytics')
   activeDisplayMode: 'table' | 'map' | 'analytics' = 'table';
+
+  // Analytics Modal Dialog State
+  isAnalyticsModalOpen = false;
+
+  openAnalyticsModal(): void {
+    this.isAnalyticsModalOpen = true;
+    this.cdr.markForCheck();
+  }
+
+  closeAnalyticsModal(): void {
+    this.isAnalyticsModalOpen = false;
+    this.cdr.markForCheck();
+  }
+
+  // ETL & Batch Utilities Popover Menu
+  isEtlMenuOpen = false;
+
+  toggleEtlMenu(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.isEtlMenuOpen = !this.isEtlMenuOpen;
+    this.cdr.markForCheck();
+  }
+
+  closeEtlMenu(): void {
+    if (this.isEtlMenuOpen) {
+      this.isEtlMenuOpen = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  // Live Telemetry Sync Timestamp
+  lastSyncTime: Date = new Date();
 
   duplicatePairs: any[] = [];
   showDuplicateModal = false;
@@ -188,24 +220,14 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     this.cdr.markForCheck();
   }
 
-  private rowClickTimeout: any = null;
-
   onRowClick(id: string): void {
-    if (this.rowClickTimeout) {
-      clearTimeout(this.rowClickTimeout);
+    const found = this.resources.find(r => (r._id || r.id) === id);
+    if (found) {
+      this.openDossier(found);
     }
-    this.rowClickTimeout = setTimeout(() => {
-      this.selection.toggle(id);
-      this.rowClickTimeout = null;
-      this.cdr.markForCheck();
-    }, 250);
   }
 
   onRowDblClick(resource: LegalResourceItem): void {
-    if (this.rowClickTimeout) {
-      clearTimeout(this.rowClickTimeout);
-      this.rowClickTimeout = null;
-    }
     this.openDossier(resource);
   }
 
@@ -399,6 +421,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
 
   // Secondary / More Filters Popover Drawer State
   @ViewChild('filtersContainer') filtersContainer?: ElementRef;
+  @ViewChild('etlContainer') etlContainer?: ElementRef;
   isMoreFiltersOpen = false;
 
   get activeSecondaryFilterCount(): number {
@@ -429,6 +452,12 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
       const isClickInside = this.filtersContainer.nativeElement.contains(event.target as Node);
       if (!isClickInside) {
         this.closeMoreFilters();
+      }
+    }
+    if (this.isEtlMenuOpen && this.etlContainer) {
+      const isClickInsideEtl = this.etlContainer.nativeElement.contains(event.target as Node);
+      if (!isClickInsideEtl) {
+        this.closeEtlMenu();
       }
     }
   }
@@ -511,6 +540,22 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
       this.selectedFacility = facilityVal;
     }
     this.onFilterChange();
+  }
+
+  // Seamless Analytics -> Table Drill-down (MNC Standard)
+  onAnalyticsDrillDown(event: DrillDownFilterEvent): void {
+    if (event.filterType === 'type') {
+      this.selectedType = event.value;
+    } else if (event.filterType === 'state') {
+      this.selectedState = event.value;
+    } else if (event.filterType === 'facility') {
+      this.selectedFacility = event.value;
+    } else if (event.filterType === 'status') {
+      this.selectedStatus = event.value;
+    }
+    this.activeDisplayMode = 'table';
+    this.onFilterChange();
+    this.toast.info(`Switched to Table View filtered by ${event.value || 'all'}.`);
   }
 
   // Master-Detail Dossier Drawer State
@@ -724,6 +769,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     });
 
     this.fetchResources();
+    this.fetchSummaryMetrics();
   }
 
   ngAfterViewInit(): void {
@@ -778,6 +824,10 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
   onEscapePress(): void {
     this.openActionMenuId = null;
     this.closeMoreFilters();
+    this.closeEtlMenu();
+    if (this.isAnalyticsModalOpen) {
+      this.closeAnalyticsModal();
+    }
   }
 
   @HostListener('window:resize')
@@ -857,6 +907,15 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
     });
   }
 
+  // Refresh Data Action (Matching other admin desks)
+  refreshData(): void {
+    this.toast.info('Refreshing queue...');
+    this.swrCache.invalidate('resources');
+    this.swrCache.invalidate('resource-summary');
+    this.fetchResources(true);
+    this.fetchSummaryMetrics(true);
+  }
+
   // Fetch Resources with SWR & smartLoading
   fetchResources(forceFresh = false): void {
     const params: any = {
@@ -910,10 +969,23 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
+  fetchSummaryMetrics(fresh = false): void {
+    this.api.getResourceSummary(fresh).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: (res: any) => {
+        if (res?.success && res.data) {
+          this.summaryMetrics = res.data;
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => { }
+    });
+  }
+
   private processResponse(res: any): void {
     if (res.metrics) {
       this.summaryMetrics = res.metrics;
     }
+    this.lastSyncTime = new Date();
     if (res.pagination) {
       this.resources = res.data || [];
       this.pagination.total = res.pagination.total || 0;
@@ -966,6 +1038,17 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
   // Keyboard Shortcuts & Navigation
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcut(event: KeyboardEvent): void {
+    // '/' shortcut to focus universal search input
+    if (event.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+      event.preventDefault();
+      const inputEl = document.getElementById('resources-main-search') as HTMLInputElement;
+      if (inputEl) {
+        inputEl.focus();
+        inputEl.select();
+      }
+      return;
+    }
+
     handleTableKeyboardNav(event, {
       getListLength: () => this.resources.length,
       getFocusedIndex: () => this.focusedRowIndex,
@@ -976,6 +1059,7 @@ export class ResourcesComponent implements OnInit, OnDestroy, AfterViewInit {
         else if (this.isModalOpen) this.closeModal();
         else if (this.showImportModal) this.closeImportModal();
         else if (this.isExportModalOpen) this.isExportModalOpen = false;
+        else if (this.isAnalyticsModalOpen) this.closeAnalyticsModal();
         this.cdr.markForCheck();
       },
       scrollToRow: () => this.scrollToFocusedRow()

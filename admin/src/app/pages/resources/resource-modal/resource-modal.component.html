@@ -3,7 +3,7 @@
   class="fixed inset-0 z-[1000] modal-overlay bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-5"
   (click)="close()" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div
-    class="glass-card max-w-5xl w-full rounded-2xl border border-sky-500/20 bg-slate-900/98 backdrop-blur-2xl shadow-2xl p-4 sm:p-5 flex flex-col gap-3.5 max-h-[95vh] overflow-y-auto animate-in"
+    class="glass-card max-w-5xl w-full rounded-2xl border border-sky-500/20 bg-slate-900/98 backdrop-blur-2xl shadow-2xl p-4 sm:p-5 flex flex-col gap-3.5 max-h-[90vh] overflow-hidden animate-in"
     (click)="$event.stopPropagation()">
 
     <!-- ========================================== -->
@@ -89,9 +89,14 @@
     </div>
 
     <!-- ========================================== -->
-    <!-- TAB 1: GENERAL                             -->
+    <!-- SCROLLABLE TABS CONTENT CONTAINER         -->
     <!-- ========================================== -->
-    @if (activeTab === 'general') {
+    <div class="flex-1 overflow-y-auto min-h-0 pr-1 py-1 custom-scrollbar flex flex-col gap-4">
+
+      <!-- ========================================== -->
+      <!-- TAB 1: GENERAL                             -->
+      <!-- ========================================== -->
+      @if (activeTab === 'general') {
     <div class="flex flex-col gap-4 text-xs tab-content-animate">
 
       <!-- Name (Primary Field) -->
@@ -688,6 +693,8 @@
       </div>
     </div>
     }
+
+    </div>
 
     <!-- ========================================== -->
     <!-- FOOTER — Premium Action Bar                -->

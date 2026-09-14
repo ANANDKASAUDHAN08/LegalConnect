@@ -1,38 +1,53 @@
 <!-- Duplicate Resolution Modal -->
 <div
-  class="fixed inset-0 z-[2100] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fade-in"
+  class="fixed inset-0 z-[2100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
   role="dialog" aria-modal="true">
   <div
-    class="bg-slate-900 border border-slate-800 rounded-3xl p-6 max-w-3xl w-full shadow-2xl animate-scale-up max-h-[85vh] flex flex-col">
+    class="bg-slate-900/98 border border-slate-700/80 rounded-2xl max-w-2xl w-full shadow-2xl animate-scale-up max-h-[85vh] flex flex-col overflow-hidden backdrop-blur-xl">
 
     <!-- Header -->
-    <div class="flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+    <div class="px-5 py-4 border-b border-slate-800 flex items-center justify-between shrink-0">
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center">
-          <admin-icon name="copy" [size]="20"></admin-icon>
+        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 shadow-sm">
+          <admin-icon name="copy" [size]="18"></admin-icon>
         </div>
         <div>
-          <h2 class="text-base font-bold text-white m-0">Duplicate Detection & Resolution</h2>
-          <p class="text-xs text-slate-400 m-0 mt-0.5">Found {{ duplicatePairs.length }} potential duplicate candidate
-            pairs across registry records.</p>
+          <h2 class="text-sm font-bold text-white m-0 flex items-center gap-2">
+            <span>Duplicate Detection & Resolution</span>
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold"
+              [ngClass]="duplicatePairs.length > 0 ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30' : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'">
+              {{ duplicatePairs.length }} {{ duplicatePairs.length === 1 ? 'Pair' : 'Pairs' }}
+            </span>
+          </h2>
+          <p class="text-[11px] text-slate-400 m-0 mt-0.5">Automated identity matching across judicial registry records.</p>
         </div>
       </div>
 
       <button (click)="close()"
-        class="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer bg-transparent border-0">
-        <admin-icon name="close" [size]="20"></admin-icon>
+        class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer bg-transparent border-0"
+        [adminTooltip]="'Close (Esc)'" tooltipPosition="left">
+        <admin-icon name="close" [size]="18"></admin-icon>
       </button>
     </div>
 
-    <!-- Candidate List -->
-    <div class="flex-1 overflow-y-auto space-y-4 pr-1">
-      <div *ngIf="duplicatePairs.length === 0" class="py-12 text-center text-slate-400 text-xs">
-        <admin-icon name="check-circle" [size]="40" cssClass="text-emerald-400 mx-auto mb-2 block"></admin-icon>
-        <span>No duplicate candidates found. Registry records are clean!</span>
+    <!-- Candidate List / Empty State -->
+    <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
+      <div *ngIf="duplicatePairs.length === 0" class="py-10 text-center flex flex-col items-center justify-center">
+        <div class="w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center mb-3 shadow-inner">
+          <admin-icon name="check-circle" [size]="28" [strokeWidth]="2.2"></admin-icon>
+        </div>
+        <h3 class="text-sm font-bold text-slate-200">No Duplicate Candidates Detected</h3>
+        <p class="text-xs text-slate-400 max-w-sm mt-1 leading-relaxed">
+          All court complexes, legal aid authorities, and police stations across 28 States & 8 UTs have unique registered identities.
+        </p>
+        <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-[11px] font-semibold text-emerald-300 mt-3.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+          <span>100% Registry Integrity Verified</span>
+        </div>
       </div>
 
       <div *ngFor="let pair of duplicatePairs; let idx = index"
-        class="p-4 rounded-2xl bg-slate-850 border border-slate-750 flex flex-col gap-3">
+        class="p-4 rounded-xl bg-slate-950/60 border border-slate-800 flex flex-col gap-3">
 
         <!-- Match Reason & Score Badge -->
         <div class="flex items-center justify-between gap-2">
@@ -40,17 +55,16 @@
             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
             <span>{{ pair.reason }}</span>
           </span>
-          <span class="text-[10px] font-black text-slate-400">Match Confidence: {{ pair.similarityScore }}%</span>
+          <span class="text-[10px] font-bold text-slate-400 font-mono">Match: {{ pair.similarityScore }}%</span>
         </div>
 
         <!-- Side by Side Comparison -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
           <!-- Primary Record -->
-          <div class="p-3 rounded-xl bg-slate-900 border border-emerald-500/20">
+          <div class="p-3 rounded-xl bg-slate-900/90 border border-emerald-500/20">
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-[10px] font-black uppercase tracking-wider text-emerald-400">Primary (To Keep)</span>
-              <span class="text-[9px] text-slate-500 font-mono">{{ (pair.primary._id || pair.primary.id) | slice:0:8
-                }}</span>
+              <span class="text-[9px] text-slate-500 font-mono">{{ (pair.primary._id || pair.primary.id) | slice:0:8 }}</span>
             </div>
             <div class="font-bold text-white mb-1">{{ pair.primary.name }}</div>
             <div class="text-slate-400 mb-1">{{ pair.primary.address }}</div>
@@ -59,12 +73,10 @@
           </div>
 
           <!-- Duplicate Record -->
-          <div class="p-3 rounded-xl bg-slate-900 border border-rose-500/20">
+          <div class="p-3 rounded-xl bg-slate-900/90 border border-rose-500/20">
             <div class="flex items-center justify-between mb-1.5">
-              <span class="text-[10px] font-black uppercase tracking-wider text-rose-400">Duplicate (To Merge &
-                Remove)</span>
-              <span class="text-[9px] text-slate-500 font-mono">{{ (pair.duplicate._id || pair.duplicate.id) | slice:0:8
-                }}</span>
+              <span class="text-[10px] font-black uppercase tracking-wider text-rose-400">Duplicate (To Merge & Remove)</span>
+              <span class="text-[9px] text-slate-500 font-mono">{{ (pair.duplicate._id || pair.duplicate.id) | slice:0:8 }}</span>
             </div>
             <div class="font-bold text-white mb-1">{{ pair.duplicate.name }}</div>
             <div class="text-slate-400 mb-1">{{ pair.duplicate.address }}</div>
@@ -76,11 +88,11 @@
         <!-- Actions -->
         <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-800">
           <button (click)="dismissPair(idx)"
-            class="px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer bg-transparent border-0 transition-all">
-            Dismiss (Not Duplicate)
+            class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800 cursor-pointer bg-transparent border-0 transition-all">
+            Dismiss
           </button>
           <button (click)="mergePair(pair, idx)" [disabled]="isMerging && mergingPairIndex === idx"
-            class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer border-0 shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1.5">
+            class="px-4 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white cursor-pointer border-0 shadow-md transition-all disabled:opacity-50 inline-flex items-center gap-1.5">
             <admin-icon name="repeat" [size]="14"></admin-icon>
             <span>{{ (isMerging && mergingPairIndex === idx) ? 'Merging...' : 'Merge Records' }}</span>
           </button>
@@ -90,9 +102,12 @@
     </div>
 
     <!-- Footer -->
-    <div class="pt-4 border-t border-slate-800 flex items-center justify-end">
+    <div class="px-5 py-3.5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-between shrink-0 backdrop-blur-md">
+      <span class="text-[11px] text-slate-500 font-mono">
+        Algorithm: Levenshtein + Spatial Distance Matching
+      </span>
       <button (click)="close()"
-        class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold cursor-pointer border-0">
+        class="px-4 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white text-xs font-bold cursor-pointer border border-slate-700 transition-all">
         Close
       </button>
     </div>

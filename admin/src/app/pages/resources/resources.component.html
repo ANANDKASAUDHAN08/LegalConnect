@@ -1,176 +1,229 @@
-<div class="w-full flex flex-col">
+<div class="resources-page pt-4 w-full flex flex-col gap-2 px-8">
 
-  <!-- --- 0. Distinct National Judicial Command & Territory Header (Full-Width Edge-to-Edge) --- -->
-  <div
-    class="relative overflow-hidden w-full border-b border-indigo-500/20 bg-gradient-to-r from-slate-950 via-[#0b1329] to-slate-950 backdrop-blur-2xl px-4 sm:px-6 py-4 sm:py-5 shadow-2xl flex flex-col gap-4 animate-in">
-
-    <!-- Ambient Gradient Mesh Accents -->
-    <div class="absolute -top-24 left-1/4 w-96 h-48 bg-sky-500/10 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-10 right-10 w-80 h-36 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none">
-    </div>
-
-    <!-- Top Header Row -->
-    <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-      <div class="flex flex-col gap-1.5 min-w-0">
-        <div class="flex items-center gap-2 flex-wrap">
-          <div
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-sky-400/30 bg-sky-500/15 text-xs font-semibold text-sky-200 shadow-sm shadow-sky-500/20 w-fit backdrop-blur-md">
-            <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-ping"></span>
-            <span class="tracking-wider uppercase text-[10px] font-bold">National Judicial Infrastructure & GIS
-              Directory</span>
-          </div>
-          <span class="text-slate-500 text-xs hidden sm:inline">•</span>
-          <span class="text-slate-400 text-xs font-medium">Pan-India Judicial Roster</span>
+  <!-- ========================================================================= -->
+  <!-- ROW A: Compact Command Header — Title + Badge + Subheading + Actions      -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-h-[44px]">
+    <!-- Left: Icon + Title + Territory Badge + Subtle Beautiful Subheading -->
+    <div class="flex flex-col gap-1 min-w-0">
+      <div class="flex items-center gap-2.5 min-w-0 flex-wrap">
+        <div
+          class="w-8 h-8 rounded-xl bg-gradient-to-br from-sky-500/20 to-indigo-500/10 border border-sky-500/30 flex items-center justify-center text-sky-400 shrink-0 shadow-sm shadow-sky-500/10">
+          <admin-icon name="map-pin" [size]="17" [strokeWidth]="2.2"></admin-icon>
         </div>
-
-        <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-1 flex-wrap">
+        <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-1.5 shrink-0 m-0">
           <span>Legal Resources</span>
           <span
-            class="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent text-2xl">&</span>
+            class="bg-gradient-to-r from-amber-300 via-amber-400 to-orange-400 bg-clip-text text-transparent font-black">&amp;</span>
           <span class="text-slate-100">Institutional Directory</span>
         </h1>
-
-        <p class="text-xs sm:text-sm text-slate-400 max-w-3xl leading-relaxed">
-          National registry for High Courts, District Courts, State & District Legal Services Authorities (SLSA/DLSA),
-          e-Sewa Kendras, LADCS defense counsel rosters, and police stations across 28 States & 8 UTs.
-        </p>
+        <span
+          class="hidden sm:inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase tracking-wider bg-sky-500/15 text-sky-300 border border-sky-500/30 shrink-0"
+          [adminTooltip]="'National registry for High Courts, District Courts, SLSA/DLSA, e-Sewa Kendras, LADCS defense counsel rosters, and police stations across 28 States & 8 UTs'">
+          <span class="w-1.5 h-1.5 rounded-full bg-sky-400 animate-pulse"></span>
+          <span>Pan-India Judicial Roster</span>
+        </span>
       </div>
 
-      <!-- Quick Action Toolbar -->
-      <div class="flex items-center gap-2 shrink-0 flex-wrap">
-        <!-- Onboard Primary Action -->
-        <button
-          class="btn flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl shadow-lg shadow-emerald-950/60 border border-emerald-400/40 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shrink-0 transition-all active:scale-95"
-          (click)="openCreateModal()" [adminTooltip]="'Onboard a new court complex or DLSA legal aid center'"
-          tooltipPosition="top">
-          <admin-icon name="plus" [size]="14" [strokeWidth]="2.5"></admin-icon>
-          <span>Onboard Institution</span>
-        </button>
-
-        <!-- Secondary Actions Group -->
-        <div class="inline-flex rounded-xl bg-slate-900/80 p-0.5 border border-slate-700/80 shadow-md backdrop-blur-md">
-          <!-- Duplicates Detection Button (Phase 5) -->
-          <button
-            class="px-3 py-1.5 text-xs font-semibold text-amber-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
-            (click)="onOpenDuplicates()" [adminTooltip]="'Run duplicate detection matching across judicial entries'"
-            tooltipPosition="top">
-            <admin-icon name="copy" [size]="13" cssClass="text-amber-400"></admin-icon>
-            <span class="hidden sm:inline">Duplicates</span>
-          </button>
-
-          <!-- Batch Geocode Missing (Phase 5) -->
-          <button
-            class="px-3 py-1.5 text-xs font-semibold text-emerald-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
-            (click)="onGeocodeMissing()" [disabled]="isGeocoding"
-            [adminTooltip]="'Batch calculate coordinates for entries missing geo-points'" tooltipPosition="top">
-            <admin-icon name="map-pin" [size]="13"
-              [cssClass]="'text-emerald-400 ' + (isGeocoding ? 'animate-spin' : '')"></admin-icon>
-            <span class="hidden sm:inline">Geocode</span>
-          </button>
-
-          <button
-            class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
-            (click)="openImportModal()" [adminTooltip]="'Batch Import Pipeline Wizard with dry-run validation'"
-            tooltipPosition="top">
-            <admin-icon name="upload" [size]="13" cssClass="text-sky-400"></admin-icon>
-            <span class="hidden sm:inline">Batch Wizard</span>
-          </button>
-
-          <button
-            class="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center gap-1.5 transition-all"
-            (click)="openExportModal()" [adminTooltip]="'Export directory to CSV, JSON, or TSV'" tooltipPosition="top">
-            <admin-icon name="download" [size]="13" cssClass="text-indigo-400"></admin-icon>
-            <span class="hidden sm:inline">Export</span>
-          </button>
-
-          <button
-            class="px-2.5 py-1.5 text-xs font-semibold text-slate-400 hover:text-white hover:bg-slate-800/80 rounded-lg flex items-center justify-center transition-all"
-            (click)="fetchResources(true)" [adminTooltip]="'Refresh directory live feed'" tooltipPosition="top">
-            <admin-icon name="refresh" [size]="13"
-              [cssClass]="(isLoading && !isInitialLoad) ? 'animate-spin' : ''"></admin-icon>
-          </button>
-        </div>
-      </div>
+      <!-- Subtle & Beautiful Subheading -->
+      <p class="text-[11.5px] text-slate-400 font-normal leading-normal m-0 pl-0.5 max-w-3xl flex items-center gap-1.5">
+        <span>National registry for High Courts, District Courts, SLSA/DLSA, e-Sewa Kendras, LADCS defense rosters &amp;
+          police stations across 28 States &amp; 8 UTs</span>
+      </p>
     </div>
 
-    <!-- Integrated Territory Telemetry Banner (High-Density Status Strip) -->
-    <div class="relative z-10 grid grid-cols-2 lg:grid-cols-4 gap-2.5 pt-2 border-t border-slate-800/80">
-      <!-- Stat 1: Total Registered -->
-      <div
-        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-slate-950/80 border border-slate-800/80 hover:border-sky-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
-        [class.border-sky-500]="selectedType === '' && isFilterActive" (click)="resetFilters()"
-        [adminTooltip]="'Total verified judicial institutions across Indian States'">
+    <!-- Right: Primary CTA + More Actions Overflow + Refresh -->
+    <div class="flex items-center gap-2 shrink-0 self-start sm:self-center">
+      <!-- Primary Action: Onboard Institution -->
+      <button
+        class="btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl shadow-md border border-emerald-400/40 bg-gradient-to-r from-emerald-500 via-emerald-600 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-white shrink-0 transition-all active:scale-95"
+        (click)="openCreateModal()" [adminTooltip]="'Onboard a new court complex or DLSA legal aid center'"
+        tooltipPosition="bottom">
+        <admin-icon name="plus" [size]="14" [strokeWidth]="2.5"></admin-icon>
+        <span class="hidden sm:inline">Onboard Institution</span>
+        <span class="sm:hidden">Onboard</span>
+      </button>
+
+      <!-- More Actions Overflow Dropdown -->
+      <div class="relative shrink-0" #etlContainer>
+        <button type="button" (click)="toggleEtlMenu($event)"
+          class="btn flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl border transition-all shadow-xs"
+          [ngClass]="isEtlMenuOpen ? 'bg-slate-800 text-white border-slate-600' : 'bg-slate-900/80 text-slate-300 hover:text-white hover:bg-slate-800 border-slate-800'"
+          [adminTooltip]="'More tools: Duplicates, Geocode, Batch Import, Export'" tooltipPosition="bottom">
+          <admin-icon name="more-horizontal" [size]="16" [strokeWidth]="2"></admin-icon>
+        </button>
+
+        <!-- Overflow Popover Menu -->
+        @if (isEtlMenuOpen) {
         <div
-          class="w-8 h-8 rounded-lg bg-sky-500/15 text-sky-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <admin-icon name="map-pin" [size]="15"></admin-icon>
+          class="absolute right-0 top-full mt-1.5 w-[220px] p-1.5 rounded-xl bg-[#0f172a] border border-slate-700 shadow-2xl z-50 flex flex-col gap-0.5 animate-in fade-in zoom-in-95 duration-150">
+          <button type="button" (click)="onOpenDuplicates(); closeEtlMenu()"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-all text-left">
+            <admin-icon name="copy" [size]="14" cssClass="text-amber-400"></admin-icon>
+            <div class="flex flex-col">
+              <span>Detect Duplicates</span>
+              <span class="text-[10px] text-slate-500 font-normal">Find matching judicial entries</span>
+            </div>
+          </button>
+
+          <button type="button" (click)="onGeocodeMissing(); closeEtlMenu()" [disabled]="isGeocoding"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-all text-left disabled:opacity-40">
+            <admin-icon name="map-pin" [size]="14"
+              [cssClass]="'text-emerald-400 ' + (isGeocoding ? 'animate-spin' : '')"></admin-icon>
+            <div class="flex flex-col">
+              <span>Batch Geocode</span>
+              <span class="text-[10px] text-slate-500 font-normal">Calculate missing coordinates</span>
+            </div>
+          </button>
+
+          <button type="button" (click)="openImportModal(); closeEtlMenu()"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-all text-left">
+            <admin-icon name="upload" [size]="14" cssClass="text-sky-400"></admin-icon>
+            <div class="flex flex-col">
+              <span>Batch Import Wizard</span>
+              <span class="text-[10px] text-slate-500 font-normal">CSV/JSON with dry-run validation</span>
+            </div>
+          </button>
+
+          <div class="h-[1px] bg-slate-800 my-0.5"></div>
+
+          <button type="button" (click)="openExportModal(); closeEtlMenu()"
+            class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold text-slate-200 hover:bg-slate-800/80 hover:text-white transition-all text-left">
+            <admin-icon name="download" [size]="14" cssClass="text-indigo-400"></admin-icon>
+            <div class="flex flex-col">
+              <span>Export Directory</span>
+              <span class="text-[10px] text-slate-500 font-normal">CSV, JSON, or TSV formats</span>
+            </div>
+          </button>
         </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-base font-extrabold text-slate-100 leading-tight">{{ summaryMetrics.total }}</span>
-          <span class="text-[11px] text-slate-400 font-medium truncate">Total across {{
-            summaryMetrics.coveredStatesCount || 28 }} States</span>
-        </div>
+        }
       </div>
 
-      <!-- Stat 2: Verified Compliance Rate -->
-      <div
-        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-emerald-950/20 border border-slate-800/80 hover:border-emerald-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
-        [class.border-emerald-500]="selectedStatus === 'approved'" (click)="filterByStatusMetric('approved')"
-        [adminTooltip]="'Filter verified compliance institutions'">
-        <div
-          class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <admin-icon name="check-circle" [size]="15" [strokeWidth]="2.5"></admin-icon>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-base font-extrabold text-emerald-300 leading-tight">{{ summaryMetrics.verified }}</span>
-          <span class="text-[11px] text-slate-400 font-medium truncate">Annual Audit Verified</span>
-        </div>
-      </div>
-
-      <!-- Stat 3: Courts vs DLSA Distribution -->
-      <div
-        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-indigo-950/20 border border-slate-800/80 hover:border-indigo-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
-        [class.border-indigo-500]="selectedType === 'Court'" (click)="filterByTypeMetric('Court')"
-        [adminTooltip]="'Filter Court Complexes & Legal Aid DLSAs'">
-        <div
-          class="w-8 h-8 rounded-lg bg-indigo-500/15 text-indigo-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <admin-icon name="building" [size]="15"></admin-icon>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-base font-extrabold text-indigo-300 leading-tight">{{ summaryMetrics.courts }} / {{
-            summaryMetrics.legalAid }}</span>
-          <span class="text-[11px] text-slate-400 font-medium truncate">Courts / DLSAs</span>
-        </div>
-      </div>
-
-      <!-- Stat 4: Digital Capabilities (e-Sewa / LADCS) -->
-      <div
-        class="flex items-center gap-3 p-2.5 rounded-xl bg-gradient-to-br from-slate-900/90 to-amber-950/20 border border-slate-800/80 hover:border-amber-500/40 hover:bg-slate-800/50 shadow-sm transition-all cursor-pointer select-none"
-        [class.border-amber-500]="selectedFacility === 'hasEfiling'" (click)="filterByFacilityMetric('hasEfiling')"
-        [adminTooltip]="'Filter e-Sewa Kendras & LADCS defense units'">
-        <div
-          class="w-8 h-8 rounded-lg bg-amber-500/15 text-amber-400 flex items-center justify-center font-bold shrink-0 shadow-inner">
-          <admin-icon name="zap" [size]="15"></admin-icon>
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-base font-extrabold text-amber-300 leading-tight">{{ summaryMetrics.efilingEnabled }} / {{
-            summaryMetrics.ladcsActive }}</span>
-          <span class="text-[11px] text-slate-400 font-medium truncate">e-Sewa / LADCS Active</span>
-        </div>
-      </div>
+      <!-- Refresh (icon-only) -->
+      <button
+        class="btn w-8 h-8 flex items-center justify-center rounded-xl border border-slate-800 bg-slate-900/80 hover:bg-slate-800 text-slate-400 hover:text-white transition-all shrink-0"
+        (click)="refreshData()" [adminTooltip]="'Refresh directory records'" tooltipPosition="bottom">
+        <admin-icon name="refresh" [size]="15" [strokeWidth]="2"
+          [cssClass]="(isLoading && !isInitialLoad) ? 'animate-spin' : ''"></admin-icon>
+      </button>
     </div>
   </div>
 
-  <!-- --- Main Body Container with Standard Page Padding --- -->
-  <div class="px-8 py-3 w-full flex flex-col gap-1">
+  <!-- ========================================================================= -->
+  <!-- COMPACT TELEMETRY KPI CARDS (4 Sleek High-Density Metric Badges)          -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5 w-full animate-in">
 
-    <!-- --- 1. Unified Judicial Filter Studio with Integrated Bulk Action Dock --- -->
-    <div
-      class="glass-card page-filters p-3 rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-2xl overflow-visible">
+    <!-- Card 1: Total Directory -->
+    <div (click)="resetFilters()"
+      [class.border-sky-500]="selectedType === '' && selectedStatus === '' && !selectedFacility && !isFilterActive"
+      class="group relative flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800/80 hover:border-sky-500/40 backdrop-blur-md shadow-xs hover:shadow-sky-500/5 transition-all cursor-pointer select-none overflow-hidden"
+      [adminTooltip]="'Total registered legal institutions. Click to view all without filters.'"
+      tooltipPosition="bottom">
+      <div
+        class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-sky-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      </div>
+      <div
+        class="w-7 h-7 rounded-lg bg-sky-500/10 border border-sky-500/20 text-sky-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+        <admin-icon name="map-pin" [size]="14" [strokeWidth]="2.2"></admin-icon>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 leading-none truncate">Total
+          Directory</span>
+        <div class="flex items-baseline gap-1.5 mt-0.5">
+          <span class="text-sm sm:text-base font-black text-white leading-tight tracking-tight">{{ summaryMetrics.total
+            }}</span>
+          <span class="text-[10.5px] text-slate-400 font-medium leading-none truncate">Across {{
+            summaryMetrics.coveredStatesCount || 28 }} States &amp; UTs</span>
+        </div>
+      </div>
+    </div>
 
-      <!-- ROW 0: Management View Tabs Strip -->
-      <div class="flex items-center gap-1.5 border-b border-slate-800/80 pb-2 overflow-x-auto scrollbar-none">
+    <!-- Card 2: Annual Audit Verified -->
+    <div (click)="filterByStatusMetric('approved')" [class.border-emerald-500]="selectedStatus === 'approved'"
+      class="group relative flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800/80 hover:border-emerald-500/40 backdrop-blur-md shadow-xs hover:shadow-emerald-500/5 transition-all cursor-pointer select-none overflow-hidden"
+      [adminTooltip]="'Statutory compliance verified entries. Click to filter active verified.'"
+      tooltipPosition="bottom">
+      <div
+        class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      </div>
+      <div
+        class="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+        <admin-icon name="check-circle" [size]="14" [strokeWidth]="2.5"></admin-icon>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 leading-none truncate">Annual Audit
+          Verified</span>
+        <div class="flex items-baseline gap-1.5 mt-0.5">
+          <span class="text-sm sm:text-base font-black text-emerald-400 leading-tight tracking-tight">{{
+            summaryMetrics.verified }}</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 shrink-0 animate-pulse"></span>
+          <span class="text-[10.5px] text-slate-400 font-medium leading-none truncate">Compliant &amp; Active</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 3: Courts & Legal Aid -->
+    <div (click)="filterByTypeMetric('Court')" [class.border-indigo-500]="selectedType === 'Court'"
+      class="group relative flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800/80 hover:border-indigo-500/40 backdrop-blur-md shadow-xs hover:shadow-indigo-500/5 transition-all cursor-pointer select-none overflow-hidden"
+      [adminTooltip]="'Court complexes vs Legal Aid Authorities ratio. Click to filter courts.'"
+      tooltipPosition="bottom">
+      <div
+        class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-indigo-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      </div>
+      <div
+        class="w-7 h-7 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+        <admin-icon name="building" [size]="14" [strokeWidth]="2"></admin-icon>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 leading-none truncate">Courts &amp;
+          Legal Aid</span>
+        <div class="flex items-baseline gap-1.5 mt-0.5">
+          <span class="text-sm sm:text-base font-black text-indigo-300 leading-tight tracking-tight">{{
+            summaryMetrics.courts }} / {{ summaryMetrics.legalAid }}</span>
+          <span class="text-[10.5px] text-slate-400 font-medium leading-none truncate">Courts / DLSAs Roster</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 4: Digital Capabilities -->
+    <div (click)="filterByFacilityMetric('hasEfiling')" [class.border-amber-500]="selectedFacility === 'hasEfiling'"
+      class="group relative flex items-center gap-2.5 px-3 py-2 rounded-xl bg-slate-900/60 hover:bg-slate-900/90 border border-slate-800/80 hover:border-amber-500/40 backdrop-blur-md shadow-xs hover:shadow-amber-500/5 transition-all cursor-pointer select-none overflow-hidden"
+      [adminTooltip]="'Digital service kiosks & legal aid defense units. Click to filter.'" tooltipPosition="bottom">
+      <div
+        class="absolute inset-x-0 top-0 h-[1px] bg-gradient-to-r from-transparent via-amber-500/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+      </div>
+      <div
+        class="w-7 h-7 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+        <admin-icon name="zap" [size]="14" [strokeWidth]="2.2"></admin-icon>
+      </div>
+      <div class="flex flex-col min-w-0">
+        <span class="text-[9.5px] font-bold uppercase tracking-wider text-slate-400 leading-none truncate">Digital
+          Capabilities</span>
+        <div class="flex items-baseline gap-1.5 mt-0.5">
+          <span class="text-sm sm:text-base font-black text-amber-300 leading-tight tracking-tight">{{
+            summaryMetrics.efilingEnabled }} / {{ summaryMetrics.ladcsActive }}</span>
+          <span class="text-[10.5px] text-slate-400 font-medium leading-none truncate">e-Sewa / LADCS Units</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- ROW B: Status Tabs (Left) + View Mode Switcher (Right) — Unified Toolbar  -->
+  <!-- ========================================================================= -->
+  <div
+    class="glass-card page-filters p-3 rounded-2xl border border-white/10 bg-slate-900/90 backdrop-blur-xl flex flex-col gap-2.5 animate-in sticky top-0 z-30 shadow-2xl overflow-visible">
+
+    <!-- ROW B-0: Tabs + View Mode Switcher -->
+    <div class="flex items-center justify-between gap-3 overflow-x-auto scrollbar-none"
+      [ngClass]="activeDisplayMode !== 'analytics' ? 'border-b border-slate-800/80 pb-2' : ''">
+
+      <!-- Left: Status Tabs -->
+      <div class="flex items-center gap-1.5 min-w-0">
         <button type="button" (click)="onTabChange('all')"
-          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border whitespace-nowrap"
           [ngClass]="activeTab === 'all'
             ? 'bg-sky-500/15 text-sky-300 border-sky-500/40 shadow-sm'
             : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
@@ -182,7 +235,7 @@
         </button>
 
         <button type="button" (click)="onTabChange('approved')"
-          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border whitespace-nowrap"
           [ngClass]="activeTab === 'approved'
             ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40 shadow-sm'
             : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
@@ -195,7 +248,7 @@
         </button>
 
         <button type="button" (click)="onTabChange('pending')"
-          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border whitespace-nowrap"
           [ngClass]="activeTab === 'pending'
             ? 'bg-purple-500/20 text-purple-300 border-purple-500/50 shadow-sm'
             : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
@@ -208,824 +261,819 @@
         </button>
 
         <button type="button" (click)="onTabChange('issues')"
-          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border"
+          class="px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer border whitespace-nowrap"
           [ngClass]="activeTab === 'issues'
             ? 'bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-sm'
             : 'bg-slate-800/40 text-slate-400 border-slate-700/50 hover:text-slate-200 hover:bg-slate-800/80'">
           <span class="w-1.5 h-1.5 rounded-full bg-rose-400 animate-pulse"></span>
           <span>Reported Issues</span>
         </button>
+      </div>
 
-        <!-- Display Mode Toggle (Table / GIS Map / Telemetry Analytics) -->
-        <div class="ml-auto flex items-center rounded-xl bg-slate-800/80 p-0.5 border border-slate-700/80 shrink-0">
-          <button type="button" (click)="activeDisplayMode = 'table'"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
-            [ngClass]="activeDisplayMode === 'table' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
-            <admin-icon name="table" [size]="13"></admin-icon>
-            <span>Table</span>
+      <!-- Right: View Mode Switcher (fills dead space) -->
+      <div class="inline-flex rounded-xl bg-slate-950/80 p-0.5 border border-slate-800 shadow-inner shrink-0">
+        <button (click)="activeDisplayMode = 'table'" [class.active-view]="activeDisplayMode === 'table'"
+          class="view-toggle-btn" [adminTooltip]="'Switch to High-Density Spreadsheet Table View'">
+          <admin-icon name="table" [size]="13" [strokeWidth]="2"></admin-icon>
+          <span>Table</span>
+        </button>
+        <button (click)="activeDisplayMode = 'map'" [class.active-view]="activeDisplayMode === 'map'"
+          class="view-toggle-btn" [adminTooltip]="'Switch to Interactive Pan-India GIS Map'">
+          <admin-icon name="map" [size]="13" [strokeWidth]="2"></admin-icon>
+          <span>Map</span>
+        </button>
+        <button (click)="activeDisplayMode = 'analytics'" [class.active-view]="activeDisplayMode === 'analytics'"
+          class="view-toggle-btn" [adminTooltip]="'Switch to Telemetry & Analytics Dashboard'">
+          <admin-icon name="bar-chart" [size]="13" [strokeWidth]="2"></admin-icon>
+          <span>Analytics</span>
+        </button>
+      </div>
+    </div>
+
+    @if (activeDisplayMode !== 'analytics') {
+    <!-- ROW 1: Unified Search Bar & Filter Group Toolbar -->
+    <div class="flex items-center justify-between gap-3 w-full flex-wrap sm:flex-nowrap overflow-visible">
+      <!-- Left Side: Unified Full-Width Search Input with Floating Mode Badge (Pattern 1) -->
+      <div class="relative flex-1 max-w-[420px] min-w-[240px]">
+        <!-- Left Icon -->
+        <div class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-slate-400">
+          <admin-icon *ngIf="searchMode === 'keyword'" name="search" [size]="14"></admin-icon>
+          <admin-icon *ngIf="searchMode === 'ai'" name="star" [size]="14"
+            cssClass="text-indigo-400 animate-pulse"></admin-icon>
+        </div>
+
+        <!-- Keyword Search Input -->
+        <input *ngIf="searchMode === 'keyword'" type="text" [(ngModel)]="search"
+          (ngModelChange)="onSearchChange($event)" placeholder="Search court, DLSA, district, pincode, address..."
+          class="w-full pl-9 pr-24 py-1.5 h-[34px] rounded-xl border border-slate-700/80 bg-slate-900/90 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+
+        <!-- AI Search Input -->
+        <input *ngIf="searchMode === 'ai'" type="text" [(ngModel)]="aiSearchQuery" (keydown.enter)="onAiSearch()"
+          placeholder="Ask in plain text: e.g. 'Find all courts with e-filing in Delhi'..."
+          class="w-full pl-9 pr-36 py-1.5 h-[34px] rounded-xl border border-indigo-500/50 bg-slate-950 text-xs text-white placeholder-indigo-300/60 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+
+        <!-- Floating Right-Side Controls (Inside Input) -->
+        <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
+          <!-- Keyword Mode: Toggle to AI Badge -->
+          <button *ngIf="searchMode === 'keyword'" type="button" (click)="setSearchMode('ai')"
+            [adminTooltip]="'Switch to Natural Language AI Query'" tooltipPosition="top"
+            class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all cursor-pointer flex items-center gap-1">
+            <admin-icon name="star" [size]="10"></admin-icon>
+            <span>AI Query</span>
           </button>
-          <button type="button" (click)="activeDisplayMode = 'map'"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
-            [ngClass]="activeDisplayMode === 'map' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
-            <admin-icon name="map" [size]="13"></admin-icon>
-            <span>GIS Map</span>
-          </button>
-          <button type="button" (click)="activeDisplayMode = 'analytics'"
-            class="px-2.5 py-1 rounded-lg text-xs font-bold transition-all cursor-pointer border-0 flex items-center gap-1.5"
-            [ngClass]="activeDisplayMode === 'analytics' ? 'bg-indigo-600 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'">
-            <admin-icon name="bar-chart" [size]="13"></admin-icon>
-            <span>Analytics</span>
-          </button>
+
+          <!-- AI Mode: Toggle back to Keyword + Search Button -->
+          <ng-container *ngIf="searchMode === 'ai'">
+            <button type="button" (click)="setSearchMode('keyword')"
+              [adminTooltip]="'Switch to standard keyword search'" tooltipPosition="top"
+              class="px-1.5 py-0.5 rounded-lg text-[10.5px] font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1">
+              <admin-icon name="search" [size]="10"></admin-icon>
+              <span class="hidden sm:inline">Keyword</span>
+            </button>
+
+            <button type="button" (click)="onAiSearch()" [disabled]="!aiSearchQuery.trim() || isAiSearching"
+              class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-[10.5px] font-bold transition-all cursor-pointer border-0 inline-flex items-center gap-1 shadow-xs">
+              <span>{{ isAiSearching ? '...' : 'Search' }}</span>
+            </button>
+          </ng-container>
         </div>
       </div>
 
-      <!-- ROW 1: Unified Search Bar & Filter Group Toolbar -->
-      <div class="flex items-center justify-between gap-3 w-full flex-wrap sm:flex-nowrap overflow-visible">
-        <!-- Left Side: Unified Full-Width Search Input with Floating Mode Badge (Pattern 1) -->
-        <div class="relative flex-1 max-w-[420px] min-w-[240px]">
-          <!-- Left Icon -->
-          <div
-            class="absolute left-3 top-1/2 -translate-y-1/2 flex items-center pointer-events-none z-10 text-slate-400">
-            <admin-icon *ngIf="searchMode === 'keyword'" name="search" [size]="14"></admin-icon>
-            <admin-icon *ngIf="searchMode === 'ai'" name="star" [size]="14"
-              cssClass="text-indigo-400 animate-pulse"></admin-icon>
-          </div>
+      <!-- Right Side: Filter Dropdowns Cluster (pushed to far right via ml-auto) -->
+      <div class="filter-group flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
+        <!-- 1. Category / Type Dropdown -->
+        <admin-select [options]="typeOptions" [value]="selectedType" icon="briefcase"
+          (valueChange)="selectedType = $event; onFilterChange();" minWidth="120px" maxWidth="170px"
+          [tooltip]="selectedType ? ('Institution Type: ' + getSelectedTypeLabel()) : 'Filter by institution type (Courts, Legal Aid DLSA, Police)'"
+          tooltipPosition="top">
+        </admin-select>
 
-          <!-- Keyword Search Input -->
-          <input *ngIf="searchMode === 'keyword'" type="text" [(ngModel)]="search"
-            (ngModelChange)="onSearchChange($event)" placeholder="Search court, DLSA, district, pincode, address..."
-            class="w-full pl-9 pr-24 py-1.5 h-[34px] rounded-xl border border-slate-700/80 bg-slate-900/90 text-xs text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+        <!-- 2. State Dropdown -->
+        <admin-select [options]="stateOptions" [value]="selectedState" icon="map-pin"
+          (valueChange)="onStateChange($event)" minWidth="120px" maxWidth="185px"
+          [tooltip]="selectedState ? ('State / UT: ' + selectedState) : 'Filter by Indian State or Union Territory'"
+          tooltipPosition="top">
+        </admin-select>
 
-          <!-- AI Search Input -->
-          <input *ngIf="searchMode === 'ai'" type="text" [(ngModel)]="aiSearchQuery" (keydown.enter)="onAiSearch()"
-            placeholder="Ask in plain text: e.g. 'Find all courts with e-filing in Delhi'..."
-            class="w-full pl-9 pr-36 py-1.5 h-[34px] rounded-xl border border-indigo-500/50 bg-slate-950 text-xs text-white placeholder-indigo-300/60 focus:outline-none focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+        <!-- 3. Facilities Dropdown -->
+        <admin-select [options]="facilityOptions" [value]="selectedFacility" icon="zap"
+          (valueChange)="selectedFacility = $event; onFilterChange();" minWidth="120px" maxWidth="170px"
+          [tooltip]="selectedFacility ? ('Facility: ' + getSelectedFacilityLabel()) : 'Filter by digital capabilities (e-Sewa, LADCS, VC Remand, Aid Clinic)'"
+          tooltipPosition="top">
+        </admin-select>
 
-          <!-- Floating Right-Side Controls (Inside Input) -->
-          <div class="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-1 z-10">
-            <!-- Keyword Mode: Toggle to AI Badge -->
-            <button *ngIf="searchMode === 'keyword'" type="button" (click)="setSearchMode('ai')"
-              [adminTooltip]="'Switch to Natural Language AI Query'" tooltipPosition="top"
-              class="px-2 py-0.5 rounded-lg text-[10.5px] font-bold text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 hover:bg-indigo-500/25 transition-all cursor-pointer flex items-center gap-1">
-              <admin-icon name="star" [size]="10"></admin-icon>
-              <span>AI Query</span>
-            </button>
+        <!-- 4. Columns Customizer -->
+        <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
+          (visibilityChange)="onColumnVisibilityChange($event)">
+        </admin-column-customizer>
 
-            <!-- AI Mode: Toggle back to Keyword + Search Button -->
-            <ng-container *ngIf="searchMode === 'ai'">
-              <button type="button" (click)="setSearchMode('keyword')"
-                [adminTooltip]="'Switch to standard keyword search'" tooltipPosition="top"
-                class="px-1.5 py-0.5 rounded-lg text-[10.5px] font-medium text-slate-300 bg-slate-800 border border-slate-700 hover:bg-slate-700 transition-all cursor-pointer flex items-center gap-1">
-                <admin-icon name="search" [size]="10"></admin-icon>
-                <span class="hidden sm:inline">Keyword</span>
-              </button>
+        <!-- 5. Saved Filter Views Dropdown Bookmark Manager -->
+        <admin-saved-views storageKey="resources" [currentParams]="activeQueryParamsObj"
+          (viewApply)="onSavedViewApply($event)">
+        </admin-saved-views>
 
-              <button type="button" (click)="onAiSearch()" [disabled]="!aiSearchQuery.trim() || isAiSearching"
-                class="px-2 py-0.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white text-[10.5px] font-bold transition-all cursor-pointer border-0 inline-flex items-center gap-1 shadow-xs">
-                <span>{{ isAiSearching ? '...' : 'Search' }}</span>
-              </button>
-            </ng-container>
-          </div>
-        </div>
-
-        <!-- Right Side: Filter Dropdowns Cluster (pushed to far right via ml-auto) -->
-        <div class="filter-group flex items-center gap-1.5 shrink-0 ml-auto flex-wrap sm:flex-nowrap overflow-visible">
-          <!-- 1. Category / Type Dropdown -->
-          <admin-select [options]="typeOptions" [value]="selectedType" icon="briefcase"
-            (valueChange)="selectedType = $event; onFilterChange();" minWidth="120px" maxWidth="170px"
-            [tooltip]="selectedType ? ('Institution Type: ' + getSelectedTypeLabel()) : 'Filter by institution type (Courts, Legal Aid DLSA, Police)'"
+        <!-- 5. Advanced Filters Popover Trigger Button -->
+        <div class="relative shrink-0" #filtersContainer>
+          <button type="button" (click)="toggleMoreFilters($event)"
+            class="btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all shadow-sm"
+            [ngClass]="activeSecondaryFilterCount > 0 || isMoreFiltersOpen ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sky-500/20' : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700/80 border-slate-700/60'"
+            [adminTooltip]="'Open advanced filters for district, hierarchy, compliance, and dates'"
             tooltipPosition="top">
-          </admin-select>
-
-          <!-- 2. State Dropdown -->
-          <admin-select [options]="stateOptions" [value]="selectedState" icon="map-pin"
-            (valueChange)="onStateChange($event)" minWidth="120px" maxWidth="185px"
-            [tooltip]="selectedState ? ('State / UT: ' + selectedState) : 'Filter by Indian State or Union Territory'"
-            tooltipPosition="top">
-          </admin-select>
-
-          <!-- 3. Facilities Dropdown -->
-          <admin-select [options]="facilityOptions" [value]="selectedFacility" icon="zap"
-            (valueChange)="selectedFacility = $event; onFilterChange();" minWidth="120px" maxWidth="170px"
-            [tooltip]="selectedFacility ? ('Facility: ' + getSelectedFacilityLabel()) : 'Filter by digital capabilities (e-Sewa, LADCS, VC Remand, Aid Clinic)'"
-            tooltipPosition="top">
-          </admin-select>
-
-          <!-- 4. Columns Customizer -->
-          <admin-column-customizer [columns]="columnDefs" [visibility]="columnVisibility"
-            (visibilityChange)="onColumnVisibilityChange($event)">
-          </admin-column-customizer>
-
-          <!-- 5. Saved Filter Views Dropdown Bookmark Manager -->
-          <admin-saved-views storageKey="resources" [currentParams]="activeQueryParamsObj"
-            (viewApply)="onSavedViewApply($event)">
-          </admin-saved-views>
-
-          <!-- 5. Advanced Filters Popover Trigger Button -->
-          <div class="relative shrink-0" #filtersContainer>
-            <button type="button" (click)="toggleMoreFilters($event)"
-              class="btn flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl border transition-all shadow-sm"
-              [ngClass]="activeSecondaryFilterCount > 0 || isMoreFiltersOpen ? 'bg-sky-500/20 text-sky-300 border-sky-500/40 shadow-sky-500/20' : 'bg-slate-800/80 text-slate-300 hover:text-white hover:bg-slate-700/80 border-slate-700/60'"
-              [adminTooltip]="'Open advanced filters for district, hierarchy, compliance, and dates'"
-              tooltipPosition="top">
-              <admin-icon name="sliders" [size]="13"></admin-icon>
-              <span>Filters</span>
-              @if (activeSecondaryFilterCount > 0) {
-              <span
-                class="w-4 h-4 rounded-full bg-sky-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
-                {{ activeSecondaryFilterCount }}
-              </span>
-              }
-            </button>
-
-            <!-- Secondary Filters Popover Drawer -->
-            @if (isMoreFiltersOpen) {
-            <div
-              class="absolute right-0 top-full mt-2 w-[310px] p-3.5 rounded-2xl bg-[#0f172a] border border-slate-700 shadow-2xl z-50 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
-              <div class="flex items-center justify-between pb-2 border-b border-slate-800">
-                <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
-                  <admin-icon name="filter" [size]="13" cssClass="text-sky-400"></admin-icon>
-                  <span>Advanced Registry Filters</span>
-                </span>
-                <button type="button"
-                  class="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-800"
-                  (click)="closeMoreFilters()" [adminTooltip]="'Close advanced filters'" tooltipPosition="left">
-                  <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
-                </button>
-              </div>
-
-              <!-- District -->
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center justify-between">
-                  <label class="text-[11px] font-semibold" [class.text-slate-400]="selectedState"
-                    [class.text-slate-500]="!selectedState">
-                    District / Territory
-                  </label>
-                  @if (!selectedState) {
-                  <span class="text-[10px] text-amber-400/80 font-medium tracking-tight">Requires State</span>
-                  }
-                </div>
-                <admin-select [options]="districtOptions" [value]="selectedDistrict" icon="map-pin"
-                  [disabled]="!selectedState"
-                  [placeholder]="selectedState ? ('All Districts in ' + selectedState) : 'Select a State first...'"
-                  (valueChange)="onDistrictChange($event)" width="100%" minWidth="100%" maxWidth="100%"
-                  menuMinWidth="100%" menuMaxWidth="100%"
-                  [tooltip]="selectedState ? (selectedDistrict ? ('District: ' + selectedDistrict) : ('Filter by specific district in ' + selectedState)) : 'Please select a State / UT in the filter bar above to enable district filtering'"
-                  tooltipPosition="top">
-                </admin-select>
-              </div>
-
-              <!-- Hierarchy -->
-              <div class="flex flex-col gap-1">
-                <label class="text-[11px] font-semibold text-slate-400">Judicial Hierarchy Level</label>
-                <admin-select [options]="jurisdictionOptions" [value]="selectedJurisdiction" icon="award"
-                  (valueChange)="selectedJurisdiction = $event; onFilterChange();" width="100%" minWidth="100%"
-                  maxWidth="100%" menuMinWidth="100%" menuMaxWidth="100%"
-                  [tooltip]="selectedJurisdiction ? ('Hierarchy: ' + getSelectedJurisdictionLabel()) : 'Filter by statutory hierarchy tier (Supreme Court, High Court, District, Taluka)'"
-                  tooltipPosition="top">
-                </admin-select>
-              </div>
-
-              <!-- Compliance Status -->
-              <div class="flex flex-col gap-1">
-                <label class="text-[11px] font-semibold text-slate-400">Compliance Audit Status</label>
-                <admin-select [options]="statusOptions" [value]="selectedStatus" icon="shield"
-                  (valueChange)="selectedStatus = $event; onFilterChange();" width="100%" minWidth="100%"
-                  maxWidth="100%" menuMinWidth="100%" menuMaxWidth="100%"
-                  [tooltip]="selectedStatus ? ('Status: ' + (selectedStatus === 'approved' ? 'Audit Verified' : 'Pending Audit')) : 'Filter by statutory annual compliance audit status'"
-                  tooltipPosition="top">
-                </admin-select>
-              </div>
-
-              <!-- Date Bounds -->
-              <div class="flex flex-col gap-1">
-                <label class="text-[11px] font-semibold text-slate-400">Audit Cycle Date Bounds</label>
-                <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-sky-400"
-                  dropDirection="up" (rangeChange)="onDateRangeChange($event)">
-                </admin-date-range-picker>
-              </div>
-
-              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
-                <button type="button" class="text-xs text-rose-400 hover:text-rose-300 font-semibold transition-colors"
-                  (click)="resetSecondaryFilters()" [adminTooltip]="'Reset all advanced drawer filters'"
-                  tooltipPosition="top">Reset Advanced</button>
-                <button type="button"
-                  class="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
-                  (click)="closeMoreFilters()" [adminTooltip]="'Apply and close filters drawer'"
-                  tooltipPosition="top">Done</button>
-              </div>
-            </div>
-            }
-          </div>
-        </div>
-      </div>
-
-      <!-- ROW 2: Active Filters Badges & Result Counts -->
-      <div
-        class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 min-h-[32px] w-full min-w-0">
-        @if (hasQueryFilter) {
-        <!-- Left Side: Filtered Badge (Static) -->
-        <div class="flex items-center gap-2 shrink-0">
-          <span
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10.5px] font-semibold shrink-0">
-            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
-            Filtered
-          </span>
-        </div>
-
-        <!-- Middle: Scrollable Active Filter Badges Container with Edge Fade & Mouse Wheel Support -->
-        <div class="active-chips-scroll-wrapper relative min-w-0 flex-1 flex items-center overflow-hidden">
-          <div class="active-chips-scroll flex items-center gap-1.5 overflow-x-auto min-w-0 w-full py-0.5"
-            (wheel)="onChipsWheel($event)">
-            @for (pill of activeFilterPills; track pill.key) {
-            <span [adminTooltip]="pill.label" tooltipPosition="top"
-              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[10.5px] font-medium shadow-sm transition-all hover:border-sky-500/40 shrink-0 max-w-[210px]">
-              <span class="truncate">{{ pill.label }}</span>
-              <button type="button" (click)="removeFilter(pill.key)"
-                class="hover:text-red-400 text-slate-400 ml-0.5 p-0.5 rounded transition-colors shrink-0"
-                [adminTooltip]="'Remove filter: ' + pill.label" tooltipPosition="top">
-                <admin-icon name="close" [size]="10" [strokeWidth]="2.5"></admin-icon>
-              </button>
+            <admin-icon name="sliders" [size]="13"></admin-icon>
+            <span>Filters</span>
+            @if (activeSecondaryFilterCount > 0) {
+            <span
+              class="w-4 h-4 rounded-full bg-sky-500 text-slate-950 font-black text-[10px] flex items-center justify-center">
+              {{ activeSecondaryFilterCount }}
             </span>
             }
-          </div>
-        </div>
-
-        <!-- Right Side: Clear All & Result Count -->
-        <div class="flex items-center gap-2.5 shrink-0 ml-auto pl-2">
-          <button (click)="resetFilters()"
-            class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors shrink-0"
-            [adminTooltip]="'Reset all search and filters'" tooltipPosition="top">
-            Clear All
           </button>
-          <span class="text-slate-600 font-light select-none">|</span>
-          <span class="text-slate-400 text-xs font-medium shrink-0">
-            Showing <strong class="text-slate-200">{{ pagination.total || resources.length }}</strong> matching
-            (filtered from <strong class="text-slate-200">{{ summaryMetrics.total }}</strong> total)
-          </span>
-        </div>
-        } @else {
-        <!-- Idle Status Indicator -->
-        <div class="flex items-center gap-1.5 min-w-0">
-          <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400/80"></span>
-            All institutional filters active & up to date
-          </span>
-        </div>
 
-        <!-- Total Count -->
-        <div class="flex items-center gap-2 shrink-0 ml-auto">
-          <span class="text-slate-400 text-xs font-medium">
-            Showing all <strong class="text-slate-200">{{ summaryMetrics.total }}</strong> verified institutions
-          </span>
+          <!-- Secondary Filters Popover Drawer -->
+          @if (isMoreFiltersOpen) {
+          <div
+            class="absolute right-0 top-full mt-2 w-[310px] p-3.5 rounded-2xl bg-[#0f172a] border border-slate-700 shadow-2xl z-50 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-150">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-800">
+              <span class="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                <admin-icon name="filter" [size]="13" cssClass="text-sky-400"></admin-icon>
+                <span>Advanced Registry Filters</span>
+              </span>
+              <button type="button"
+                class="text-slate-400 hover:text-slate-200 transition-colors p-1 rounded-md hover:bg-slate-800"
+                (click)="closeMoreFilters()" [adminTooltip]="'Close advanced filters'" tooltipPosition="left">
+                <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
+              </button>
+            </div>
+
+            <!-- District -->
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center justify-between">
+                <label class="text-[11px] font-semibold" [class.text-slate-400]="selectedState"
+                  [class.text-slate-500]="!selectedState">
+                  District / Territory
+                </label>
+                @if (!selectedState) {
+                <span class="text-[10px] text-amber-400/80 font-medium tracking-tight">Requires State</span>
+                }
+              </div>
+              <admin-select [options]="districtOptions" [value]="selectedDistrict" icon="map-pin"
+                [disabled]="!selectedState"
+                [placeholder]="selectedState ? ('All Districts in ' + selectedState) : 'Select a State first...'"
+                (valueChange)="onDistrictChange($event)" width="100%" minWidth="100%" maxWidth="100%"
+                menuMinWidth="100%" menuMaxWidth="100%"
+                [tooltip]="selectedState ? (selectedDistrict ? ('District: ' + selectedDistrict) : ('Filter by specific district in ' + selectedState)) : 'Please select a State / UT in the filter bar above to enable district filtering'"
+                tooltipPosition="top">
+              </admin-select>
+            </div>
+
+            <!-- Hierarchy -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-semibold text-slate-400">Judicial Hierarchy Level</label>
+              <admin-select [options]="jurisdictionOptions" [value]="selectedJurisdiction" icon="award"
+                (valueChange)="selectedJurisdiction = $event; onFilterChange();" width="100%" minWidth="100%"
+                maxWidth="100%" menuMinWidth="100%" menuMaxWidth="100%"
+                [tooltip]="selectedJurisdiction ? ('Hierarchy: ' + getSelectedJurisdictionLabel()) : 'Filter by statutory hierarchy tier (Supreme Court, High Court, District, Taluka)'"
+                tooltipPosition="top">
+              </admin-select>
+            </div>
+
+            <!-- Compliance Status -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-semibold text-slate-400">Compliance Audit Status</label>
+              <admin-select [options]="statusOptions" [value]="selectedStatus" icon="shield"
+                (valueChange)="selectedStatus = $event; onFilterChange();" width="100%" minWidth="100%" maxWidth="100%"
+                menuMinWidth="100%" menuMaxWidth="100%"
+                [tooltip]="selectedStatus ? ('Status: ' + (selectedStatus === 'approved' ? 'Audit Verified' : 'Pending Audit')) : 'Filter by statutory annual compliance audit status'"
+                tooltipPosition="top">
+              </admin-select>
+            </div>
+
+            <!-- Date Bounds -->
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-semibold text-slate-400">Audit Cycle Date Bounds</label>
+              <admin-date-range-picker [startDate]="startDate" [endDate]="endDate" activeColorClass="text-sky-400"
+                dropDirection="up" (rangeChange)="onDateRangeChange($event)">
+              </admin-date-range-picker>
+            </div>
+
+            <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+              <button type="button" class="text-xs text-rose-400 hover:text-rose-300 font-semibold transition-colors"
+                (click)="resetSecondaryFilters()" [adminTooltip]="'Reset all advanced drawer filters'"
+                tooltipPosition="top">Reset Advanced</button>
+              <button type="button"
+                class="px-3 py-1 bg-sky-600 hover:bg-sky-500 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
+                (click)="closeMoreFilters()" [adminTooltip]="'Apply and close filters drawer'"
+                tooltipPosition="top">Done</button>
+            </div>
+          </div>
+          }
         </div>
-        }
+      </div>
+    </div>
+
+    <!-- ROW 2: Active Filters Badges & Result Counts -->
+    <div
+      class="flex items-center justify-between gap-3 text-xs pt-2 border-t border-slate-800/60 min-h-[32px] w-full min-w-0">
+      @if (hasQueryFilter) {
+      <!-- Left Side: Filtered Badge (Static) -->
+      <div class="flex items-center gap-2 shrink-0">
+        <span
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10.5px] font-semibold shrink-0">
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+          Filtered
+        </span>
       </div>
 
-      <!-- ROW 3 (Integrated Bulk Action Dock): Appears inside the filter card when rows are checked -->
-      @if (selection.size > 0) {
-      <div
-        class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/30 px-3 py-1.5 rounded-xl animate-in fade-in duration-200 transition-all">
-        <!-- Left Side: Selection Count Pill & Deselect -->
-        <div class="flex items-center gap-2">
-          <span
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold border border-indigo-500/40 text-[11px] shadow-sm">
-            <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
-            <span>{{ selection.size }} institution(s) selected</span>
+      <!-- Middle: Scrollable Active Filter Badges Container with Edge Fade & Mouse Wheel Support -->
+      <div class="active-chips-scroll-wrapper relative min-w-0 flex-1 flex items-center overflow-hidden">
+        <div class="active-chips-scroll flex items-center gap-1.5 overflow-x-auto min-w-0 w-full py-0.5"
+          (wheel)="onChipsWheel($event)">
+          @for (pill of activeFilterPills; track pill.key) {
+          <span [adminTooltip]="pill.label" tooltipPosition="top"
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/90 border border-slate-700/80 text-sky-300 text-[10.5px] font-medium shadow-sm transition-all hover:border-sky-500/40 shrink-0 max-w-[210px]">
+            <span class="truncate">{{ pill.label }}</span>
+            <button type="button" (click)="removeFilter(pill.key)"
+              class="hover:text-red-400 text-slate-400 ml-0.5 p-0.5 rounded transition-colors shrink-0"
+              [adminTooltip]="'Remove filter: ' + pill.label" tooltipPosition="top">
+              <admin-icon name="close" [size]="10" [strokeWidth]="2.5"></admin-icon>
+            </button>
           </span>
-
-          <button
-            class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
-            (click)="selection.clear()" [adminTooltip]="'Clear current selection'" tooltipPosition="top">
-            <admin-icon name="close" [size]="10" [strokeWidth]="2.5" cssClass="text-slate-400"></admin-icon>
-            <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
-          </button>
+          }
         </div>
+      </div>
 
-        <!-- Right Side: Bulk Action Buttons -->
-        <div class="flex items-center gap-2 shrink-0">
-          <button
-            class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-            (click)="bulkVerifyCycles()">
-            <admin-icon name="check-circle" [size]="13" [strokeWidth]="2.5"></admin-icon>
-            <span>Bulk Verify (+12m)</span>
-          </button>
+      <!-- Right Side: Clear All & Result Count -->
+      <div class="flex items-center gap-2.5 shrink-0 ml-auto pl-2">
+        <button (click)="resetFilters()"
+          class="text-amber-400 hover:text-amber-300 text-xs font-bold underline transition-colors shrink-0"
+          [adminTooltip]="'Reset all search and filters'" tooltipPosition="top">
+          Clear All
+        </button>
+        <span class="text-slate-600 font-light select-none">|</span>
+        <span class="text-slate-400 text-xs font-medium shrink-0">
+          Showing <strong class="text-slate-200">{{ pagination.total || resources.length }}</strong> matching
+          (filtered from <strong class="text-slate-200">{{ summaryMetrics.total }}</strong> total)
+        </span>
+      </div>
+      } @else {
+      <!-- Idle Status Indicator -->
+      <div class="flex items-center gap-1.5 min-w-0">
+        <span class="text-slate-500 text-[11px] font-medium flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400/80"></span>
+          All institutional filters active & up to date
+        </span>
+      </div>
 
-          <button
-            class="h-7 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
-            (click)="bulkUpdateStatus('approved')">
-            <admin-icon name="check" [size]="13" [strokeWidth]="2.5"></admin-icon>
-            <span>Bulk Approve</span>
-          </button>
-
-          <button
-            class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
-            (click)="bulkDeleteSelected()">
-            <admin-icon name="trash" [size]="13"></admin-icon>
-            <span>Bulk Delete</span>
-          </button>
-        </div>
+      <!-- Total Count -->
+      <div class="flex items-center gap-2 shrink-0 ml-auto">
+        <span class="text-slate-400 text-xs font-medium">
+          Showing all <strong class="text-slate-200">{{ summaryMetrics.total }}</strong> verified institutions
+        </span>
       </div>
       }
     </div>
 
-    <!-- --- Main Legal Resources Display (GIS Map View vs Data Table vs Telemetry Analytics) --- -->
-    @if (activeDisplayMode === 'map') {
-    <admin-resource-map-view [resources]="resources" [loading]="isLoading" (inspectResource)="openDossier($event)">
-    </admin-resource-map-view>
-    } @else if (activeDisplayMode === 'analytics') {
+    <!-- ROW 3 (Integrated Bulk Action Dock): Appears inside the filter card when rows are checked -->
+    @if (selection.size > 0) {
     <div
-      class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
-      <admin-resource-analytics-view></admin-resource-analytics-view>
+      class="flex items-center justify-between gap-3 text-xs pt-1.5 border-t border-slate-800/80 bg-indigo-950/30 px-3 py-1.5 rounded-xl animate-in fade-in duration-200 transition-all">
+      <!-- Left Side: Selection Count Pill & Deselect -->
+      <div class="flex items-center gap-2">
+        <span
+          class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 font-extrabold border border-indigo-500/40 text-[11px] shadow-sm">
+          <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+          <span>{{ selection.size }} institution(s) selected</span>
+        </span>
+
+        <button
+          class="inline-flex items-center gap-1 px-2 py-0.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 rounded-md text-[11px] font-semibold transition-all"
+          (click)="selection.clear()" [adminTooltip]="'Clear current selection'" tooltipPosition="top">
+          <admin-icon name="close" [size]="10" [strokeWidth]="2.5" cssClass="text-slate-400"></admin-icon>
+          <span>{{ isAllPageSelected ? 'Deselect All' : 'Deselect Selected' }}</span>
+        </button>
+      </div>
+
+      <!-- Right Side: Bulk Action Buttons -->
+      <div class="flex items-center gap-2 shrink-0">
+        <button
+          class="h-7 px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          (click)="bulkVerifyCycles()">
+          <admin-icon name="check-circle" [size]="13" [strokeWidth]="2.5"></admin-icon>
+          <span>Bulk Verify (+12m)</span>
+        </button>
+
+        <button
+          class="h-7 px-3 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm active:scale-95"
+          (click)="bulkUpdateStatus('approved')">
+          <admin-icon name="check" [size]="13" [strokeWidth]="2.5"></admin-icon>
+          <span>Bulk Approve</span>
+        </button>
+
+        <button
+          class="h-7 px-3 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 shadow-md active:scale-95"
+          (click)="bulkDeleteSelected()">
+          <admin-icon name="trash" [size]="13"></admin-icon>
+          <span>Bulk Delete</span>
+        </button>
+      </div>
     </div>
-    } @else {
-    <div
-      class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
-      <div class="data-table-wrapper overflow-x-auto min-h-[400px]">
-        @if (!isInitialLoad && isLoading) {
-        <div
-          class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-pink-500 animate-pulse w-full">
-        </div>
-        }
+    }
+    }
+  </div>
 
-        @if (isNoColumnsVisible) {
-        <!-- Full-Size Unified Columns Hidden Empty State -->
-        <admin-empty-state title="All Data Columns Currently Hidden"
-          message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display institutional directory records."
-          [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
-          (action)="onColumnVisibilityChange({ institution: true, location: true, facilities: true, contacts: true, compliance: true })">
-          <admin-icon icon name="columns" [size]="28"></admin-icon>
-        </admin-empty-state>
-        } @else if (!isLoading && resources.length === 0) {
-        <!-- Full-Size Unified Empty State -->
-        <admin-empty-state title="No Legal Institutions Found"
-          message="No institutional records match your active search, state, district, or facility criteria. Try refining your filters or onboard a new institution."
-          [showAction]="isFilterActive" actionLabel="Reset Registry Filters" (action)="resetFilters()">
-        </admin-empty-state>
-        } @else {
-        <table class="data-table w-full text-left border-collapse table-fixed"
-          [class.table-refreshing]="!isInitialLoad && isLoading">
-          <thead>
-            <tr class="table-header-row text-xs uppercase tracking-wider font-semibold">
-              <th class="px-2 py-3 text-center w-[42px] min-w-[42px] max-w-[42px]">
-                <input type="checkbox"
-                  class="rounded border-slate-700 bg-slate-800 text-emerald-500 accent-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
-                  [checked]="isAllSelected()" (change)="toggleSelectAll()" [adminTooltip]="'Select all rows'"
-                  tooltipPosition="top" />
-              </th>
+  <!-- --- Main Legal Resources Display (GIS Map View vs Data Table vs Telemetry Analytics) --- -->
+  @if (activeDisplayMode === 'map') {
+  <admin-resource-map-view [resources]="resources" [loading]="isLoading" (inspectResource)="openDossier($event)">
+  </admin-resource-map-view>
+  } @else if (activeDisplayMode === 'analytics') {
+  <div
+    class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
+    <admin-resource-analytics-view (drillDown)="onAnalyticsDrillDown($event)"></admin-resource-analytics-view>
+  </div>
+  } @else {
+  <div
+    class="glass-card rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden animate-in">
+    <div class="data-table-wrapper overflow-x-auto min-h-[400px]">
+      @if (!isInitialLoad && isLoading) {
+      <div
+        class="table-loading-bar h-0.5 bg-gradient-to-r from-sky-500 via-indigo-500 to-pink-500 animate-pulse w-full">
+      </div>
+      }
 
-              <!-- 1. Institution & Hierarchy -->
-              @if (columnVisibility['institution']) {
-              <th
-                class="px-3.5 pr-4 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[28%] min-w-[240px]"
-                (click)="toggleSort('name')" [adminTooltip]="'Click to sort by institution name'">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span [class.text-sky-400]="sortBy === 'name'" class="truncate">Institution & Hierarchy</span>
-                  @if (sortBy === 'name') {
-                  @if (sortOrder === 'asc') {
-                  <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
-                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
-                  } @else {
-                  <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
-                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
-                  }
-                  } @else {
-                  <admin-icon name="sort-unsorted" [size]="13"
-                    cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
-                  }
-                </div>
-              </th>
-              }
+      @if (isNoColumnsVisible) {
+      <!-- Full-Size Unified Columns Hidden Empty State -->
+      <admin-empty-state title="All Data Columns Currently Hidden"
+        message="You have unchecked all visible data columns in the Column Customizer. Restore columns to display institutional directory records."
+        [showAction]="true" actionLabel="Show All Columns" [hasCustomIcon]="true"
+        (action)="onColumnVisibilityChange({ institution: true, location: true, facilities: true, contacts: true, compliance: true })">
+        <admin-icon icon name="columns" [size]="28"></admin-icon>
+      </admin-empty-state>
+      } @else if (!isLoading && resources.length === 0) {
+      <!-- Full-Size Unified Empty State -->
+      <admin-empty-state title="No Legal Institutions Found"
+        message="No institutional records match your active search, state, district, or facility criteria. Try refining your filters or onboard a new institution."
+        [showAction]="isFilterActive" actionLabel="Reset Registry Filters" (action)="resetFilters()">
+      </admin-empty-state>
+      } @else {
+      <table class="data-table w-full text-left border-collapse table-fixed"
+        [class.table-refreshing]="!isInitialLoad && isLoading">
+        <thead>
+          <tr class="table-header-row text-xs uppercase tracking-wider font-semibold">
+            <th class="px-2 py-3 text-center w-[42px] min-w-[42px] max-w-[42px]">
+              <input type="checkbox"
+                class="rounded border-slate-700 bg-slate-800 text-emerald-500 accent-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
+                [checked]="isAllSelected()" (change)="toggleSelectAll()" [adminTooltip]="'Select all rows'"
+                tooltipPosition="top" />
+            </th>
 
-              <!-- 2. Location & District -->
-              @if (columnVisibility['location']) {
-              <th
-                class="px-3 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[20%] min-w-[180px]"
-                (click)="toggleSort('state')" [adminTooltip]="'Click to sort by State/District'">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span [class.text-sky-400]="sortBy === 'state' || sortBy === 'district'" class="truncate">Location &
-                    District</span>
-                  @if (sortBy === 'state' || sortBy === 'district') {
-                  @if (sortOrder === 'asc') {
-                  <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
-                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
-                  } @else {
-                  <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
-                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
-                  }
-                  } @else {
-                  <admin-icon name="sort-unsorted" [size]="13"
-                    cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
-                  }
-                </div>
-              </th>
-              }
-
-              <!-- 3. Capabilities & Hours (Expanded to 20% for comfortable inline display) -->
-              @if (columnVisibility['facilities']) {
-              <th class="px-3 py-3 w-[16%] min-w-[150px] truncate">Capabilities & Hours</th>
-              }
-
-              <!-- 4. Contacts Channels -->
-              @if (columnVisibility['contacts']) {
-              <th class="px-3 py-3 w-[14%] min-w-[130px] truncate">Official Contacts</th>
-              }
-
-              <!-- 5. Compliance & Audit -->
-              @if (columnVisibility['compliance']) {
-              <th
-                class="px-3 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[100px] min-w-[100px]"
-                (click)="toggleSort('lastAuditDate')" [adminTooltip]="'Click to sort by audit date'">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  <span [class.text-sky-400]="sortBy === 'lastAuditDate' || sortBy === 'status'" class="truncate">Audit
-                    Status</span>
-                  @if (sortBy === 'lastAuditDate' || sortBy === 'status') {
-                  @if (sortOrder === 'asc') {
-                  <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
-                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
-                  } @else {
-                  <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
-                    cssClass="text-sky-400 flex-shrink-0"></admin-icon>
-                  }
-                  } @else {
-                  <admin-icon name="sort-unsorted" [size]="13"
-                    cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
-                  }
-                </div>
-              </th>
-              }
-
-              <!-- 6. Actions Header -->
-              <th class="px-2 py-3 text-center w-[50px] min-w-[50px]">Actions</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-slate-800/60 text-xs">
-            @if (isLoading && isInitialLoad) {
-            @for (item of [1,2,3,4,5,6,7,8]; track $index) {
-            <tr class="hover:bg-slate-800/30">
-              <td class="px-2 py-3 text-center"><admin-skeleton width="16px" height="16px" /></td>
-              <td class="px-3.5 pr-4 py-3"><admin-skeleton width="210px" height="20px" /></td>
-              <td class="px-3 py-3"><admin-skeleton width="140px" height="18px" /></td>
-              <td class="px-3 py-3"><admin-skeleton width="160px" height="20px" borderRadius="8px" /></td>
-              <td class="px-3 py-3"><admin-skeleton width="140px" height="20px" borderRadius="8px" /></td>
-              <td class="px-3 py-3"><admin-skeleton width="105px" height="20px" borderRadius="12px" /></td>
-              <td class="px-2 py-3 text-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></td>
-            </tr>
+            <!-- 1. Institution & Hierarchy -->
+            @if (columnVisibility['institution']) {
+            <th
+              class="px-3.5 pr-4 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[28%] min-w-[240px]"
+              (click)="toggleSort('name')" [adminTooltip]="'Click to sort by institution name'">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span [class.text-sky-400]="sortBy === 'name'" class="truncate">Institution & Hierarchy</span>
+                @if (sortBy === 'name') {
+                @if (sortOrder === 'asc') {
+                <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
+                  cssClass="text-sky-400 flex-shrink-0"></admin-icon>
+                } @else {
+                <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
+                  cssClass="text-sky-400 flex-shrink-0"></admin-icon>
+                }
+                } @else {
+                <admin-icon name="sort-unsorted" [size]="13"
+                  cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
+                }
+              </div>
+            </th>
             }
-            } @else {
-            @for (r of resources; track (r._id || r.id || $index)) {
-            <tr class="table-data-row hover:bg-slate-800/40 transition-all duration-150 cursor-pointer"
-              [class.selected-row]="selection.isSelected(r._id || r.id || '')"
-              [class.row-selected]="selection.isSelected(r._id || r.id || '')"
-              [class.critical-row]="((r.feedback?.downvotes || 0) > 0)"
-              [class.warning-row]="((r.feedback?.downvotes || 0) === 0) && (r.status === 'pending' || r.isVerified === false)"
-              [class.pending-row]="((r.feedback?.downvotes || 0) === 0) && (r.status === 'pending' || r.isVerified === false)"
-              [class.focused-row]="focusedRowIndex === $index" (click)="onRowClick(r._id || r.id || '')"
-              (dblclick)="onRowDblClick(r)">
 
-              <!-- Checkbox -->
-              <td class="px-2 py-2 text-center w-[42px] min-w-[42px] max-w-[42px] align-middle"
-                (click)="$event.stopPropagation()">
-                <input type="checkbox" [checked]="selection.isSelected(r._id || r.id || '')"
-                  (change)="toggleSelectOne(r._id || r.id || '')"
-                  class="rounded border-slate-700 bg-slate-800 text-emerald-500 accent-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
-                  [adminTooltip]="'Select ' + r.name" tooltipPosition="right" />
-              </td>
+            <!-- 2. Location & District -->
+            @if (columnVisibility['location']) {
+            <th
+              class="px-3 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[20%] min-w-[180px]"
+              (click)="toggleSort('state')" [adminTooltip]="'Click to sort by State/District'">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span [class.text-sky-400]="sortBy === 'state' || sortBy === 'district'" class="truncate">Location &
+                  District</span>
+                @if (sortBy === 'state' || sortBy === 'district') {
+                @if (sortOrder === 'asc') {
+                <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
+                  cssClass="text-sky-400 flex-shrink-0"></admin-icon>
+                } @else {
+                <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
+                  cssClass="text-sky-400 flex-shrink-0"></admin-icon>
+                }
+                } @else {
+                <admin-icon name="sort-unsorted" [size]="13"
+                  cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
+                }
+              </div>
+            </th>
+            }
 
-              <!-- 1. Institution Name & Hierarchy -->
-              @if (columnVisibility['institution']) {
-              <td class="px-3.5 pr-4 py-2 w-[28%] min-w-[240px] overflow-hidden align-middle">
-                <div class="flex items-center gap-2.5 min-w-0 max-w-full overflow-hidden">
-                  <!-- Compact 28x28 Type Badge Avatar -->
-                  <div class="type-badge-icon w-7 h-7 shrink-0" [ngClass]="{
+            <!-- 3. Capabilities & Hours (Expanded to 20% for comfortable inline display) -->
+            @if (columnVisibility['facilities']) {
+            <th class="px-3 py-3 w-[16%] min-w-[150px] truncate">Capabilities & Hours</th>
+            }
+
+            <!-- 4. Contacts Channels -->
+            @if (columnVisibility['contacts']) {
+            <th class="px-3 py-3 w-[14%] min-w-[130px] truncate">Official Contacts</th>
+            }
+
+            <!-- 5. Compliance & Audit -->
+            @if (columnVisibility['compliance']) {
+            <th
+              class="px-3 py-3 cursor-pointer group hover:text-sky-300 transition-colors select-none w-[100px] min-w-[100px]"
+              (click)="toggleSort('lastAuditDate')" [adminTooltip]="'Click to sort by audit date'">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span [class.text-sky-400]="sortBy === 'lastAuditDate' || sortBy === 'status'" class="truncate">Audit
+                  Status</span>
+                @if (sortBy === 'lastAuditDate' || sortBy === 'status') {
+                @if (sortOrder === 'asc') {
+                <admin-icon name="sort-asc" [size]="13" [strokeWidth]="2.5"
+                  cssClass="text-sky-400 flex-shrink-0"></admin-icon>
+                } @else {
+                <admin-icon name="sort-desc" [size]="13" [strokeWidth]="2.5"
+                  cssClass="text-sky-400 flex-shrink-0"></admin-icon>
+                }
+                } @else {
+                <admin-icon name="sort-unsorted" [size]="13"
+                  cssClass="text-slate-600 group-hover:text-sky-400/70 transition-colors flex-shrink-0"></admin-icon>
+                }
+              </div>
+            </th>
+            }
+
+            <!-- 6. Actions Header -->
+            <th class="px-2 py-3 text-center w-[50px] min-w-[50px]">Actions</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-800/60 text-xs">
+          @if (isLoading && isInitialLoad) {
+          @for (item of [1,2,3,4,5,6,7,8]; track $index) {
+          <tr class="hover:bg-slate-800/30">
+            <td class="px-2 py-3 text-center"><admin-skeleton width="16px" height="16px" /></td>
+            <td class="px-3.5 pr-4 py-3"><admin-skeleton width="210px" height="20px" /></td>
+            <td class="px-3 py-3"><admin-skeleton width="140px" height="18px" /></td>
+            <td class="px-3 py-3"><admin-skeleton width="160px" height="20px" borderRadius="8px" /></td>
+            <td class="px-3 py-3"><admin-skeleton width="140px" height="20px" borderRadius="8px" /></td>
+            <td class="px-3 py-3"><admin-skeleton width="105px" height="20px" borderRadius="12px" /></td>
+            <td class="px-2 py-3 text-center"><admin-skeleton width="28px" height="28px" borderRadius="8px" /></td>
+          </tr>
+          }
+          } @else {
+          @for (r of resources; track (r._id || r.id || $index)) {
+          <tr class="table-data-row hover:bg-slate-800/40 transition-all duration-150 cursor-pointer"
+            [class.selected-row]="selection.isSelected(r._id || r.id || '')"
+            [class.row-selected]="selection.isSelected(r._id || r.id || '')"
+            [class.critical-row]="((r.feedback?.downvotes || 0) > 0)"
+            [class.warning-row]="((r.feedback?.downvotes || 0) === 0) && (r.status === 'pending' || r.isVerified === false)"
+            [class.pending-row]="((r.feedback?.downvotes || 0) === 0) && (r.status === 'pending' || r.isVerified === false)"
+            [class.focused-row]="focusedRowIndex === $index" (click)="onRowClick(r._id || r.id || '')"
+            (dblclick)="onRowDblClick(r)">
+
+            <!-- Checkbox -->
+            <td class="px-2 py-2 text-center w-[42px] min-w-[42px] max-w-[42px] align-middle"
+              (click)="$event.stopPropagation()">
+              <input type="checkbox" [checked]="selection.isSelected(r._id || r.id || '')"
+                (change)="toggleSelectOne(r._id || r.id || '')"
+                class="rounded border-slate-700 bg-slate-800 text-emerald-500 accent-emerald-500 focus:ring-emerald-500/20 cursor-pointer"
+                [adminTooltip]="'Select ' + r.name" tooltipPosition="right" />
+            </td>
+
+            <!-- 1. Institution Name & Hierarchy -->
+            @if (columnVisibility['institution']) {
+            <td class="px-3.5 pr-4 py-2 w-[28%] min-w-[240px] overflow-hidden align-middle">
+              <div class="flex items-center gap-2.5 min-w-0 max-w-full overflow-hidden">
+                <!-- Compact 28x28 Type Badge Avatar -->
+                <div class="type-badge-icon w-7 h-7 shrink-0" [ngClass]="{
                     'court': r.type === 'Court',
                     'legalaid': r.type === 'LegalAid',
                     'police': r.type === 'PoliceStation',
                     'gov': r.type === 'GovernmentOffice'
                   }">
-                    @if (r.type === 'Court') {
-                    <admin-icon name="building" [size]="14"></admin-icon>
-                    } @else if (r.type === 'LegalAid') {
-                    <admin-icon name="scale" [size]="14"></admin-icon>
-                    } @else if (r.type === 'PoliceStation') {
-                    <admin-icon name="shield" [size]="14"></admin-icon>
-                    } @else {
-                    <admin-icon name="briefcase" [size]="14"></admin-icon>
+                  @if (r.type === 'Court') {
+                  <admin-icon name="building" [size]="14"></admin-icon>
+                  } @else if (r.type === 'LegalAid') {
+                  <admin-icon name="scale" [size]="14"></admin-icon>
+                  } @else if (r.type === 'PoliceStation') {
+                  <admin-icon name="shield" [size]="14"></admin-icon>
+                  } @else {
+                  <admin-icon name="briefcase" [size]="14"></admin-icon>
+                  }
+                </div>
+
+                <!-- Text Info with Dynamic Flex Truncation & Portal Link -->
+                <div class="flex flex-col min-w-0 flex-1 overflow-hidden">
+                  <div class="flex items-center gap-1.5 min-w-0 max-w-full overflow-hidden">
+                    <span
+                      class="text-slate-100 font-bold hover:text-sky-300 text-[12.5px] leading-snug truncate block min-w-0 flex-1"
+                      [adminTooltip]="r.name" tooltipPosition="top">
+                      {{ r.name }}
+                    </span>
+
+                    @if (r.website) {
+                    <a [href]="r.website" target="_blank" rel="noopener noreferrer"
+                      class="text-slate-400 hover:text-sky-400 transition-colors shrink-0 p-0.5"
+                      [adminTooltip]="'Open Official Portal: ' + r.website" tooltipPosition="top"
+                      (click)="$event.stopPropagation()">
+                      <admin-icon name="external-link" [size]="11" [strokeWidth]="2.5"></admin-icon>
+                    </a>
                     }
                   </div>
 
-                  <!-- Text Info with Dynamic Flex Truncation & Portal Link -->
-                  <div class="flex flex-col min-w-0 flex-1 overflow-hidden">
-                    <div class="flex items-center gap-1.5 min-w-0 max-w-full overflow-hidden">
-                      <span
-                        class="text-slate-100 font-bold hover:text-sky-300 text-[12.5px] leading-snug truncate block min-w-0 flex-1"
-                        [adminTooltip]="r.name" tooltipPosition="top">
-                        {{ r.name }}
-                      </span>
+                  <div class="flex items-center gap-1.5 mt-0.5 min-w-0 max-w-full overflow-hidden">
+                    <!-- Dynamic Contextual Hierarchy Badge -->
+                    @if (getJurisdictionBadge(r); as badge) {
+                    <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold border shrink-0 leading-none"
+                      [ngClass]="badge.class">
+                      {{ badge.label }}
+                    </span>
+                    }
 
-                      @if (r.website) {
-                      <a [href]="r.website" target="_blank" rel="noopener noreferrer"
-                        class="text-slate-400 hover:text-sky-400 transition-colors shrink-0 p-0.5"
-                        [adminTooltip]="'Open Official Portal: ' + r.website" tooltipPosition="top"
-                        (click)="$event.stopPropagation()">
-                        <admin-icon name="external-link" [size]="11" [strokeWidth]="2.5"></admin-icon>
-                      </a>
-                      }
-                    </div>
+                    @if ((r.feedback?.downvotes || 0) > 0) {
+                    <span
+                      class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0 leading-none flex items-center gap-1"
+                      [adminTooltip]="(r.feedback?.downvotes || 0) + ' citizen discrepancy reports logged'">
+                      <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                      <span>{{ r.feedback?.downvotes }} Issue(s)</span>
+                    </span>
+                    }
 
-                    <div class="flex items-center gap-1.5 mt-0.5 min-w-0 max-w-full overflow-hidden">
-                      <!-- Dynamic Contextual Hierarchy Badge -->
-                      @if (getJurisdictionBadge(r); as badge) {
-                      <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold border shrink-0 leading-none"
-                        [ngClass]="badge.class">
-                        {{ badge.label }}
-                      </span>
-                      }
-
-                      @if ((r.feedback?.downvotes || 0) > 0) {
-                      <span
-                        class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 shrink-0 leading-none flex items-center gap-1"
-                        [adminTooltip]="(r.feedback?.downvotes || 0) + ' citizen discrepancy reports logged'">
-                        <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
-                        <span>{{ r.feedback?.downvotes }} Issue(s)</span>
-                      </span>
-                      }
-
-                      <span class="text-[11px] text-slate-400 font-medium truncate flex-1 min-w-0 block">
-                        {{ r.district || r.city }} <span class="text-slate-600">•</span> {{ r.pincode || 'PIN N/A' }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </td>
-              }
-
-              <!-- 2. Location & District -->
-              @if (columnVisibility['location']) {
-              <td class="px-3 py-2 text-xs w-[20%] min-w-[180px] overflow-hidden align-middle">
-                <div class="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
-                  <div class="flex items-center gap-1.5 min-w-0">
-                    <div
-                      class="w-3.5 h-3.5 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
-                      <admin-icon name="map-pin" [size]="9" [strokeWidth]="2.5"></admin-icon>
-                    </div>
-                    <span class="font-bold text-slate-200 truncate flex-1 min-w-0 text-[12px]"
-                      [adminTooltip]="(r.district || r.city ? (r.district || r.city) + ', ' : '') + r.state"
-                      tooltipPosition="top">
-                      {{ r.district || r.city }}, {{ r.state }}
+                    <span class="text-[11px] text-slate-400 font-medium truncate flex-1 min-w-0 block">
+                      {{ r.district || r.city }} <span class="text-slate-600">•</span> {{ r.pincode || 'PIN N/A' }}
                     </span>
                   </div>
-                  <span class="text-[10.5px] text-slate-400 truncate max-w-full block pl-0.5"
-                    [adminTooltip]="r.address ? ('Address: ' + r.address) : 'No street address recorded'"
+                </div>
+              </div>
+            </td>
+            }
+
+            <!-- 2. Location & District -->
+            @if (columnVisibility['location']) {
+            <td class="px-3 py-2 text-xs w-[20%] min-w-[180px] overflow-hidden align-middle">
+              <div class="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <div
+                    class="w-3.5 h-3.5 rounded-full bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+                    <admin-icon name="map-pin" [size]="9" [strokeWidth]="2.5"></admin-icon>
+                  </div>
+                  <span class="font-bold text-slate-200 truncate flex-1 min-w-0 text-[12px]"
+                    [adminTooltip]="(r.district || r.city ? (r.district || r.city) + ', ' : '') + r.state"
                     tooltipPosition="top">
-                    {{ r.address }}
+                    {{ r.district || r.city }}, {{ r.state }}
                   </span>
                 </div>
-              </td>
-              }
+                <span class="text-[10.5px] text-slate-400 truncate max-w-full block pl-0.5"
+                  [adminTooltip]="r.address ? ('Address: ' + r.address) : 'No street address recorded'"
+                  tooltipPosition="top">
+                  {{ r.address }}
+                </span>
+              </div>
+            </td>
+            }
 
-              <!-- 3. Capabilities & Hours (Clean Single-Line Badges with +N More Tooltip) -->
-              @if (columnVisibility['facilities']) {
-              <td class="px-3 py-2 text-xs w-[16%] min-w-[150px] overflow-hidden align-middle">
-                <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
-                  <!-- Operating Hours Line -->
-                  <div class="flex items-center gap-1 min-w-0"
-                    [adminTooltip]="(r.operatingHours || '09:30 AM - 05:00 PM') + (r.lunchBreak ? ' (Recess: ' + r.lunchBreak + ')' : '')"
-                    tooltipPosition="top">
-                    @if (r.operatingHours?.includes('24') || r.type === 'PoliceStation') {
-                    <span
-                      class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px] shrink-0 leading-tight">
-                      <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
-                      <span>24x7 Active</span>
-                    </span>
-                    } @else {
-                    <div class="inline-flex items-center gap-1 text-slate-300 font-medium text-[11px] min-w-0">
-                      <admin-icon name="clock" [size]="10" cssClass="text-sky-400/80 shrink-0"></admin-icon>
-                      <span class="whitespace-nowrap font-mono text-[10.5px] text-slate-200">{{
-                        getDisplayHours(r.operatingHours, r.type) }}</span>
-                    </div>
-                    }
-                  </div>
-
-                  <!-- Capabilities Strip: Max 2 Chips + "+N more" Hover Badge -->
-                  <div class="flex items-center gap-1 flex-nowrap overflow-hidden pt-0.5">
-                    @if (getFacilityChips(r.facilities); as chips) {
-                    @if (chips.length > 0) {
-                    @for (chip of chips.slice(0, 2); track chip.label) {
-                    <span
-                      class="h-[17px] px-1.5 rounded text-[9px] font-semibold border inline-flex items-center shrink-0 leading-none whitespace-nowrap"
-                      [ngClass]="chip.class" [adminTooltip]="chip.tooltip" tooltipPosition="top">{{ chip.label }}</span>
-                    }
-                    @if (chips.length > 2) {
-                    <span
-                      class="h-[17px] px-1.5 rounded text-[9px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30 inline-flex items-center shrink-0 leading-none cursor-help whitespace-nowrap hover:bg-sky-500/25 transition-colors"
-                      [adminTooltip]="getFacilityMoreTooltip(r.facilities)" tooltipPosition="top">
-                      +{{ chips.length - 2 }} more
-                    </span>
-                    }
-                    } @else {
-                    <span class="text-slate-500 text-[10px] italic">Standard Desk</span>
-                    }
-                    }
-                  </div>
-                </div>
-              </td>
-              }
-
-              <!-- 4. Contacts Channels (Compact Slimline Badges) -->
-              @if (columnVisibility['contacts']) {
-              <td class="px-3 py-2 text-xs w-[14%] min-w-[130px] overflow-hidden align-middle">
-                <div class="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
-                  @if (r.contactNumber | phoneDisplay; as phoneVal) {
-                  <div
-                    class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono text-[10px] shadow-sm leading-none">
-                    <admin-icon name="phone" [size]="9" cssClass="text-amber-400 shrink-0"></admin-icon>
-                    <span class="font-medium tracking-wide whitespace-nowrap">{{ phoneVal }}</span>
-                    <button type="button"
-                      class="text-amber-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
-                      (click)="copyToClipboard(phoneVal, 'Phone Number'); $event.stopPropagation()"
-                      [adminTooltip]="'Copy phone number'">
-                      <admin-icon name="copy" [size]="8"></admin-icon>
-                    </button>
-                  </div>
-                  }
-
-                  @if (r.email | emailDisplay; as emailVal) {
-                  <div
-                    class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono text-[9.5px] shadow-sm max-w-full leading-none">
-                    <admin-icon name="mail" [size]="9" cssClass="text-sky-400 shrink-0"></admin-icon>
-                    <span class="font-medium truncate max-w-[125px]">{{ emailVal }}</span>
-                    <button type="button"
-                      class="text-sky-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
-                      (click)="copyToClipboard(emailVal, 'Email Address'); $event.stopPropagation()"
-                      [adminTooltip]="'Copy email address'">
-                      <admin-icon name="copy" [size]="8"></admin-icon>
-                    </button>
-                  </div>
-                  }
-
-                  @if (!r.contactNumber && !r.email) {
-                  <span class="text-slate-500 text-[10px] italic">No Direct Line</span>
-                  }
-                </div>
-              </td>
-              }
-
-              <!-- 5. Audit Compliance Status -->
-              @if (columnVisibility['compliance']) {
-              <td class="px-3 py-2 w-[110px] min-w-[110px] overflow-hidden align-middle">
-                <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
+            <!-- 3. Capabilities & Hours (Clean Single-Line Badges with +N More Tooltip) -->
+            @if (columnVisibility['facilities']) {
+            <td class="px-3 py-2 text-xs w-[16%] min-w-[150px] overflow-hidden align-middle">
+              <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
+                <!-- Operating Hours Line -->
+                <div class="flex items-center gap-1 min-w-0"
+                  [adminTooltip]="(r.operatingHours || '09:30 AM - 05:00 PM') + (r.lunchBreak ? ' (Recess: ' + r.lunchBreak + ')' : '')"
+                  tooltipPosition="top">
+                  @if (r.operatingHours?.includes('24') || r.type === 'PoliceStation') {
                   <span
-                    class="px-2 py-1 rounded-full text-[9px] font-semibold border flex items-center gap-1.5 w-fit whitespace-nowrap leading-none"
-                    [ngClass]="getStalenessInfo(r).colorClass" [adminTooltip]="getStalenessInfo(r).tooltip"
-                    tooltipPosition="top">
-                    <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="getStalenessInfo(r).dotClass"></span>
-                    <span class="whitespace-nowrap">{{ getStalenessInfo(r).label }}</span>
+                    class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-md bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 font-semibold text-[11px] shrink-0 leading-tight">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0"></span>
+                    <span>24x7 Active</span>
                   </span>
-                  <span class="text-[9.5px] text-slate-400 font-mono whitespace-nowrap pl-0.5">
-                    {{ r.lastAuditDate ? (r.lastAuditDate | date:'mediumDate') : 'Pending Cycle' }}
-                  </span>
-                </div>
-              </td>
-              }
-
-              <!-- 6. Actions Cell -->
-              <td class="px-2 py-2 text-center w-[85px] min-w-[85px] align-middle">
-                <div class="flex items-center justify-center gap-1">
-                  @if (r.status === 'pending') {
-                  <!-- Quick Moderation Buttons for Pending Suggestions -->
-                  <button type="button"
-                    class="w-6 h-6 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer"
-                    (click)="approveSuggestion(r, $event)" [adminTooltip]="'Approve and publish to public directory'"
-                    tooltipPosition="top">
-                    <admin-icon name="check" [size]="12" [strokeWidth]="2.5"></admin-icon>
-                  </button>
-                  <button type="button"
-                    class="w-6 h-6 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer"
-                    (click)="rejectSuggestion(r, $event)" [adminTooltip]="'Reject and delete suggestion'"
-                    tooltipPosition="top">
-                    <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
-                  </button>
+                  } @else {
+                  <div class="inline-flex items-center gap-1 text-slate-300 font-medium text-[11px] min-w-0">
+                    <admin-icon name="clock" [size]="10" cssClass="text-sky-400/80 shrink-0"></admin-icon>
+                    <span class="whitespace-nowrap font-mono text-[10.5px] text-slate-200">{{
+                      getDisplayHours(r.operatingHours, r.type) }}</span>
+                  </div>
                   }
-                  <button #kebabBtn type="button"
-                    class="kebab-btn w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all shadow-sm"
-                    [class.active]="openActionMenuId === (r._id || r.id)"
-                    (click)="toggleActionMenu(r._id || r.id || '', kebabBtn, $event)"
-                    [adminTooltip]="'Institutional Actions'" tooltipPosition="left">
-                    <admin-icon name="more-horizontal" [size]="15"></admin-icon>
+                </div>
+
+                <!-- Capabilities Strip: Max 2 Chips + "+N more" Hover Badge -->
+                <div class="flex items-center gap-1 flex-nowrap overflow-hidden pt-0.5">
+                  @if (getFacilityChips(r.facilities); as chips) {
+                  @if (chips.length > 0) {
+                  @for (chip of chips.slice(0, 2); track chip.label) {
+                  <span
+                    class="h-[17px] px-1.5 rounded text-[9px] font-semibold border inline-flex items-center shrink-0 leading-none whitespace-nowrap"
+                    [ngClass]="chip.class" [adminTooltip]="chip.tooltip" tooltipPosition="top">{{ chip.label }}</span>
+                  }
+                  @if (chips.length > 2) {
+                  <span
+                    class="h-[17px] px-1.5 rounded text-[9px] font-bold bg-sky-500/15 text-sky-300 border border-sky-500/30 inline-flex items-center shrink-0 leading-none cursor-help whitespace-nowrap hover:bg-sky-500/25 transition-colors"
+                    [adminTooltip]="getFacilityMoreTooltip(r.facilities)" tooltipPosition="top">
+                    +{{ chips.length - 2 }} more
+                  </span>
+                  }
+                  } @else {
+                  <span class="text-slate-500 text-[10px] italic">Standard Desk</span>
+                  }
+                  }
+                </div>
+              </div>
+            </td>
+            }
+
+            <!-- 4. Contacts Channels (Compact Slimline Badges) -->
+            @if (columnVisibility['contacts']) {
+            <td class="px-3 py-2 text-xs w-[14%] min-w-[130px] overflow-hidden align-middle">
+              <div class="flex flex-col gap-0.5 min-w-0 max-w-full overflow-hidden">
+                @if (r.contactNumber | phoneDisplay; as phoneVal) {
+                <div
+                  class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-amber-500/10 border border-amber-500/20 text-amber-300 font-mono text-[10px] shadow-sm leading-none">
+                  <admin-icon name="phone" [size]="9" cssClass="text-amber-400 shrink-0"></admin-icon>
+                  <span class="font-medium tracking-wide whitespace-nowrap">{{ phoneVal }}</span>
+                  <button type="button"
+                    class="text-amber-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
+                    (click)="copyToClipboard(phoneVal, 'Phone Number'); $event.stopPropagation()"
+                    [adminTooltip]="'Copy phone number'">
+                    <admin-icon name="copy" [size]="8"></admin-icon>
                   </button>
                 </div>
-              </td>
-            </tr>
-            }
-            }
-          </tbody>
-        </table>
-        }
-      </div>
+                }
 
-      <!-- Standard Admin Pagination Footer -->
-      <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
-        [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onPageSizeChange($event)">
-      </admin-pagination>
+                @if (r.email | emailDisplay; as emailVal) {
+                <div
+                  class="w-fit inline-flex items-center gap-1 h-[18px] py-0 px-1.5 rounded bg-sky-500/10 border border-sky-500/20 text-sky-300 font-mono text-[9.5px] shadow-sm max-w-full leading-none">
+                  <admin-icon name="mail" [size]="9" cssClass="text-sky-400 shrink-0"></admin-icon>
+                  <span class="font-medium truncate max-w-[125px]">{{ emailVal }}</span>
+                  <button type="button" class="text-sky-400/60 hover:text-white transition-colors shrink-0 p-0.2 ml-0.5"
+                    (click)="copyToClipboard(emailVal, 'Email Address'); $event.stopPropagation()"
+                    [adminTooltip]="'Copy email address'">
+                    <admin-icon name="copy" [size]="8"></admin-icon>
+                  </button>
+                </div>
+                }
+
+                @if (!r.contactNumber && !r.email) {
+                <span class="text-slate-500 text-[10px] italic">No Direct Line</span>
+                }
+              </div>
+            </td>
+            }
+
+            <!-- 5. Audit Compliance Status -->
+            @if (columnVisibility['compliance']) {
+            <td class="px-3 py-2 w-[110px] min-w-[110px] overflow-hidden align-middle">
+              <div class="flex flex-col gap-0.5 min-w-0 max-w-full">
+                <span
+                  class="px-2 py-1 rounded-full text-[9px] font-semibold border flex items-center gap-1.5 w-fit whitespace-nowrap leading-none"
+                  [ngClass]="getStalenessInfo(r).colorClass" [adminTooltip]="getStalenessInfo(r).tooltip"
+                  tooltipPosition="top">
+                  <span class="w-1.5 h-1.5 rounded-full shrink-0" [ngClass]="getStalenessInfo(r).dotClass"></span>
+                  <span class="whitespace-nowrap">{{ getStalenessInfo(r).label }}</span>
+                </span>
+                <span class="text-[9.5px] text-slate-400 font-mono whitespace-nowrap pl-0.5">
+                  {{ r.lastAuditDate ? (r.lastAuditDate | date:'mediumDate') : 'Pending Cycle' }}
+                </span>
+              </div>
+            </td>
+            }
+
+            <!-- 6. Actions Cell -->
+            <td class="px-2 py-2 text-center w-[85px] min-w-[85px] align-middle">
+              <div class="flex items-center justify-center gap-1">
+                @if (r.status === 'pending') {
+                <!-- Quick Moderation Buttons for Pending Suggestions -->
+                <button type="button"
+                  class="w-6 h-6 rounded-md bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all cursor-pointer"
+                  (click)="approveSuggestion(r, $event)" [adminTooltip]="'Approve and publish to public directory'"
+                  tooltipPosition="top">
+                  <admin-icon name="check" [size]="12" [strokeWidth]="2.5"></admin-icon>
+                </button>
+                <button type="button"
+                  class="w-6 h-6 rounded-md bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/30 flex items-center justify-center transition-all cursor-pointer"
+                  (click)="rejectSuggestion(r, $event)" [adminTooltip]="'Reject and delete suggestion'"
+                  tooltipPosition="top">
+                  <admin-icon name="close" [size]="12" [strokeWidth]="2.5"></admin-icon>
+                </button>
+                }
+                <button #kebabBtn type="button"
+                  class="kebab-btn w-7 h-7 rounded-lg flex items-center justify-center text-slate-300 hover:text-white hover:bg-slate-700/80 transition-all shadow-sm"
+                  [class.active]="openActionMenuId === (r._id || r.id)"
+                  (click)="toggleActionMenu(r._id || r.id || '', kebabBtn, $event)"
+                  [adminTooltip]="'Institutional Actions'" tooltipPosition="left">
+                  <admin-icon name="more-horizontal" [size]="15"></admin-icon>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+          }
+        </tbody>
+      </table>
+      }
     </div>
-    }
 
-    <!-- ----- Floating Action Dropdown Menu ----- -->
-    <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionItem()" [dropdownWidth]="210"
-      headerLabel="Institutional Actions" (closed)="closeActionMenu()">
-      @if (getOpenActionItem()) {
-      <!-- 1. Inspect Dossier -->
-      <button class="dropdown-item" (click)="openDossier(getOpenActionItem()!); closeActionMenu()">
-        <admin-icon name="search" [size]="14" cssClass="text-sky-400"></admin-icon>
-        <span>Inspect Dossier</span>
-        <span class="dropdown-item-shortcut">View</span>
-      </button>
-
-      <!-- 2. Renew Annual Verification Cycle -->
-      <button class="dropdown-item" (click)="renewVerificationCycle(getOpenActionItem()!); closeActionMenu()">
-        <admin-icon name="check-circle" [size]="14" cssClass="text-emerald-400"></admin-icon>
-        <span>Renew Cycle (+12m)</span>
-        <span class="dropdown-item-shortcut">Renew</span>
-      </button>
-
-      @if ((getOpenActionItem()?.feedback?.downvotes || 0) > 0) {
-      <!-- Resolve Reported Issues Action -->
-      <button class="dropdown-item" (click)="resolveIssues(getOpenActionItem()!); closeActionMenu()">
-        <admin-icon name="check-circle" [size]="14" cssClass="text-rose-400"></admin-icon>
-        <span class="text-rose-300 font-semibold">Resolve Issues ({{ getOpenActionItem()?.feedback?.downvotes }})</span>
-        <span class="dropdown-item-shortcut">Fix</span>
-      </button>
-      }
-
-      <!-- 3. Edit Institutional Profile -->
-      <button class="dropdown-item" (click)="openEditModal(getOpenActionItem()!); closeActionMenu()">
-        <admin-icon name="edit" [size]="14" cssClass="text-indigo-400"></admin-icon>
-        <span>Edit Configuration</span>
-        <span class="dropdown-item-shortcut">Edit</span>
-      </button>
-
-      @if (getOpenActionItem()?.website) {
-      <a class="dropdown-item" [href]="getOpenActionItem()!.website" target="_blank" rel="noopener noreferrer"
-        (click)="closeActionMenu()">
-        <admin-icon name="external-link" [size]="14" cssClass="text-amber-400"></admin-icon>
-        <span>Official Web Portal</span>
-        <span class="dropdown-item-shortcut">Link ↗</span>
-      </a>
-      }
-
-      <div class="dropdown-divider"></div>
-
-      <!-- 4. Delete Institutional Record -->
-      <button class="dropdown-item danger" (click)="openDeleteModal(getOpenActionItem()!); closeActionMenu()">
-        <admin-icon name="trash" [size]="14" cssClass="text-rose-400"></admin-icon>
-        <span class="text-rose-400 font-semibold">Delete Institution</span>
-        <span class="dropdown-item-shortcut text-rose-400">Del</span>
-      </button>
-      }
-    </admin-action-menu>
-
-    <!-- --- 4. Master-Detail Intelligence Dossier Drawer (4 Tabs) --- -->
-    @defer (when inspectItem) {
-    <admin-resource-dossier [item]="inspectItem" [activeTab]="activeDossierTab" [isVerifyingCycle]="isVerifyingCycle"
-      (closed)="closeDossier()" (activeTabChange)="activeDossierTab = $event; updateUrlParams()"
-      (editRequested)="closeDossier(); openEditModal($event)" (renewRequested)="renewVerificationCycle($event)">
-    </admin-resource-dossier>
-    }
-
-    <!-- --- 5. Create / Edit Institution Modal Studio --- -->
-    @defer (when isModalOpen) {
-    <admin-resource-modal [isOpen]="isModalOpen" [isEditMode]="isEditMode" [formData]="formData"
-      [stateOptions]="stateOptions" [isSaving]="isSaving" [isGeocoding]="isGeocoding" (closed)="closeModal()"
-      (saved)="saveResource()" (resolveGis)="resolveAddressGis()">
-    </admin-resource-modal>
-    }
-
-    <!-- --- 6. Batch Data Pipeline Import Wizard Modal --- -->
-    @defer (when showImportModal) {
-    <admin-resource-import-wizard [isOpen]="showImportModal" [step]="importWizardStep" [bulkJsonText]="bulkJsonText"
-      [isDryRunning]="isDryRunning" [isBatchImporting]="isBatchImporting" [validationReport]="validationReport"
-      [importResult]="importResult" (closed)="closeImportModal()" (bulkJsonTextChange)="bulkJsonText = $event"
-      (stepChange)="importWizardStep = $event" (runDryRun)="runDryRunValidation()"
-      (executeImport)="executeBatchImport($event)">
-    </admin-resource-import-wizard>
-    }
-
-    <!-- --- 7. Export Modal --- -->
-    @defer (when isExportModalOpen) {
-    <admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="pagination.total"
-      [selectedCount]="selection.size" [isFilterActive]="isFilterActive" [columns]="exportColumns"
-      [visibleColumnKeys]="visibleColumnKeys" (exportRequest)="handleExport($event)"
-      (closed)="isExportModalOpen = false">
-    </admin-export-modal>
-    }
-
-    <!-- --- 8. Duplicate Detection & Resolution Modal (Phase 5) --- -->
-    @if (showDuplicateModal) {
-    <admin-resource-duplicate-modal [duplicatePairs]="duplicatePairs" [isLoading]="isLoadingDuplicates"
-      (closed)="onCloseDuplicates()" (merged)="onDuplicatesMerged()">
-    </admin-resource-duplicate-modal>
-    }
-
+    <!-- Standard Admin Pagination Footer -->
+    <admin-pagination [page]="pagination.page" [limit]="pagination.limit" [total]="pagination.total"
+      [pages]="pagination.pages" (pageChange)="onPageChange($event)" (limitChange)="onPageSizeChange($event)">
+    </admin-pagination>
   </div>
+  }
+
+  <!-- ----- Floating Action Dropdown Menu ----- -->
+  <admin-action-menu #actionMenu [isOpen]="openActionMenuId !== null && !!getOpenActionItem()" [dropdownWidth]="210"
+    headerLabel="Institutional Actions" (closed)="closeActionMenu()">
+    @if (getOpenActionItem()) {
+    <!-- 1. Inspect Dossier -->
+    <button class="dropdown-item" (click)="openDossier(getOpenActionItem()!); closeActionMenu()">
+      <admin-icon name="search" [size]="14" cssClass="text-sky-400"></admin-icon>
+      <span>Inspect Dossier</span>
+      <span class="dropdown-item-shortcut">View</span>
+    </button>
+
+    <!-- 2. Renew Annual Verification Cycle -->
+    <button class="dropdown-item" (click)="renewVerificationCycle(getOpenActionItem()!); closeActionMenu()">
+      <admin-icon name="check-circle" [size]="14" cssClass="text-emerald-400"></admin-icon>
+      <span>Renew Cycle (+12m)</span>
+      <span class="dropdown-item-shortcut">Renew</span>
+    </button>
+
+    @if ((getOpenActionItem()?.feedback?.downvotes || 0) > 0) {
+    <!-- Resolve Reported Issues Action -->
+    <button class="dropdown-item" (click)="resolveIssues(getOpenActionItem()!); closeActionMenu()">
+      <admin-icon name="check-circle" [size]="14" cssClass="text-rose-400"></admin-icon>
+      <span class="text-rose-300 font-semibold">Resolve Issues ({{ getOpenActionItem()?.feedback?.downvotes }})</span>
+      <span class="dropdown-item-shortcut">Fix</span>
+    </button>
+    }
+
+    <!-- 3. Edit Institutional Profile -->
+    <button class="dropdown-item" (click)="openEditModal(getOpenActionItem()!); closeActionMenu()">
+      <admin-icon name="edit" [size]="14" cssClass="text-indigo-400"></admin-icon>
+      <span>Edit Configuration</span>
+      <span class="dropdown-item-shortcut">Edit</span>
+    </button>
+
+    @if (getOpenActionItem()?.website) {
+    <a class="dropdown-item" [href]="getOpenActionItem()!.website" target="_blank" rel="noopener noreferrer"
+      (click)="closeActionMenu()">
+      <admin-icon name="external-link" [size]="14" cssClass="text-amber-400"></admin-icon>
+      <span>Official Web Portal</span>
+      <span class="dropdown-item-shortcut">Link ↗</span>
+    </a>
+    }
+
+    <div class="dropdown-divider"></div>
+
+    <!-- 4. Delete Institutional Record -->
+    <button class="dropdown-item danger" (click)="openDeleteModal(getOpenActionItem()!); closeActionMenu()">
+      <admin-icon name="trash" [size]="14" cssClass="text-rose-400"></admin-icon>
+      <span class="text-rose-400 font-semibold">Delete Institution</span>
+      <span class="dropdown-item-shortcut text-rose-400">Del</span>
+    </button>
+    }
+  </admin-action-menu>
 </div>
+
+<!-- --- 4. Master-Detail Intelligence Dossier Drawer (4 Tabs) --- -->
+@defer (when inspectItem) {
+<admin-resource-dossier [item]="inspectItem" [activeTab]="activeDossierTab" [isVerifyingCycle]="isVerifyingCycle"
+  (closed)="closeDossier()" (activeTabChange)="activeDossierTab = $event; updateUrlParams()"
+  (editRequested)="closeDossier(); openEditModal($event)" (renewRequested)="renewVerificationCycle($event)">
+</admin-resource-dossier>
+}
+
+<!-- --- 5. Create / Edit Institution Modal Studio --- -->
+@defer (when isModalOpen) {
+<admin-resource-modal [isOpen]="isModalOpen" [isEditMode]="isEditMode" [formData]="formData"
+  [stateOptions]="stateOptions" [isSaving]="isSaving" [isGeocoding]="isGeocoding" (closed)="closeModal()"
+  (saved)="saveResource()" (resolveGis)="resolveAddressGis()">
+</admin-resource-modal>
+}
+
+<!-- --- 6. Batch Data Pipeline Import Wizard Modal --- -->
+@defer (when showImportModal) {
+<admin-resource-import-wizard [isOpen]="showImportModal" [step]="importWizardStep" [bulkJsonText]="bulkJsonText"
+  [isDryRunning]="isDryRunning" [isBatchImporting]="isBatchImporting" [validationReport]="validationReport"
+  [importResult]="importResult" (closed)="closeImportModal()" (bulkJsonTextChange)="bulkJsonText = $event"
+  (stepChange)="importWizardStep = $event" (runDryRun)="runDryRunValidation()"
+  (executeImport)="executeBatchImport($event)">
+</admin-resource-import-wizard>
+}
+
+<!-- --- 7. Export Modal --- -->
+@defer (when isExportModalOpen) {
+<admin-export-modal [isOpen]="isExportModalOpen" [isExporting]="isExporting" [totalRecords]="pagination.total"
+  [selectedCount]="selection.size" [isFilterActive]="isFilterActive" [columns]="exportColumns"
+  [visibleColumnKeys]="visibleColumnKeys" (exportRequest)="handleExport($event)" (closed)="isExportModalOpen = false">
+</admin-export-modal>
+}
+
+<!-- --- 8. Duplicate Detection & Resolution Modal (Phase 5) --- -->
+@if (showDuplicateModal) {
+<admin-resource-duplicate-modal [duplicatePairs]="duplicatePairs" [isLoading]="isLoadingDuplicates"
+  (closed)="onCloseDuplicates()" (merged)="onDuplicatesMerged()">
+</admin-resource-duplicate-modal>
+}
