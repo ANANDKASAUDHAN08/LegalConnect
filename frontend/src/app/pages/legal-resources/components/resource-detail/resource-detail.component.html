@@ -131,39 +131,44 @@
         {{ resource.description_hi }}
       </p>
 
-      <!-- Mobile Action Row (Apple/Google Places 5-Pill Layout: 100% visible, Zero Scroll) -->
-      <div class="flex sm:hidden items-center gap-2">
+      <!-- Mobile Action Row (Apple/Google Places Layout: 100% visible, Zero Scroll) -->
+      <div class="flex sm:hidden items-center justify-between gap-1.5 min-w-0 mobile-action-strip">
         <!-- 1. Call Button -->
         <a *ngIf="resource.contactNumber?.length" href="tel:{{ resource.contactNumber?.[0] }}"
-          class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-2xl bg-indigo-600 active:bg-indigo-700 text-white text-xs font-bold no-underline shadow-sm active:scale-95">
+          class="shrink-0 inline-flex items-center justify-center gap-1.5 px-3 rounded-2xl bg-indigo-600 active:bg-indigo-700 text-white text-xs font-bold no-underline shadow-sm active:scale-95">
           <app-icon name="phone" [size]="14"></app-icon>
           <span>Call</span>
         </a>
 
-        <!-- 2. Directions Button -->
+        <!-- 2. Directions / Route Button -->
         <button (click)="openDirections()"
-          class="flex-1 inline-flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold border-0 active:scale-95 cursor-pointer">
-          <app-icon name="navigation" [size]="14" class="text-indigo-600 dark:text-indigo-400"></app-icon>
-          <span class="truncate">{{ selectedLanguage === 'hi' ? 'रास्ता' : 'Directions' }}</span>
+          class="shrink-0 inline-flex items-center justify-center gap-1.5 px-3 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-800 dark:text-slate-100 text-xs font-bold border-0 active:scale-95 cursor-pointer">
+          <app-icon name="navigation" [size]="14" class="text-indigo-600 dark:text-indigo-400 shrink-0"></app-icon>
+          <span>{{ selectedLanguage === 'hi' ? 'रास्ता' : 'Route' }}</span>
         </button>
 
-        <!-- 3. Native Share Button -->
-        <button (click)="shareResource()" [appTooltip]="'Share link'"
-          class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 border-0 active:scale-95 cursor-pointer">
-          <app-icon name="share" [size]="15"></app-icon>
-        </button>
-
-        <!-- 4. Universal Bookmark Button -->
+        <!-- 3. Universal Bookmark Button -->
         <div class="shrink-0 flex items-center justify-center">
           <app-bookmark-button targetType="LegalResource" [targetId]="resource._id" [title]="resource.name"
             [subtitle]="getTypeLabel(resource.type)" variant="icon" size="md">
           </app-bookmark-button>
         </div>
 
-        <!-- 5. More Actions (3-Dots Bottom Sheet Trigger) -->
-        <button (click)="toggleMobileOverflow()" [appTooltip]="'More actions'"
-          class="w-10 h-10 rounded-2xl bg-slate-100 dark:bg-slate-800 active:bg-slate-200 dark:active:bg-slate-700 text-slate-700 dark:text-slate-300 flex items-center justify-center shrink-0 border-0 active:scale-95 cursor-pointer">
-          <app-icon name="more-horizontal" [size]="16"></app-icon>
+        <!-- 4. Interactive Like Button (Universal Real-time Like/Upvote) -->
+        <div class="shrink-0 flex items-center justify-center">
+          <app-interactive-like targetType="LegalResource" [targetId]="resource._id" variant="pill" size="sm"
+            [eager]="true">
+          </app-interactive-like>
+        </div>
+
+        <!-- 5. Native Share Button -->
+        <button (click)="shareResource()" [appTooltip]="'Share link'" class="utility-action-btn shrink-0">
+          <app-icon name="share" [size]="14"></app-icon>
+        </button>
+
+        <!-- 6. More Actions (3-Dots Bottom Sheet Trigger) -->
+        <button (click)="toggleMobileOverflow()" [appTooltip]="'More actions'" class="utility-action-btn shrink-0">
+          <app-icon name="more-horizontal" [size]="15"></app-icon>
         </button>
       </div>
 
@@ -775,26 +780,7 @@
 
     <!-- Action Sheet List -->
     <div class="space-y-1.5">
-      <!-- 1. Helpful / Upvote -->
-      <button (click)="onUpvote(); closeMobileOverflow()"
-        class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
-        <div class="flex items-center gap-3">
-          <div
-            class="w-8 h-8 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <app-icon name="thumbs-up" [size]="15"></app-icon>
-          </div>
-          <div>
-            <div class="text-xs font-bold">{{ selectedLanguage === 'hi' ? 'सहायक / सही जानकारी (लाइक)' : 'Mark as
-              Helpful & Accurate' }}</div>
-            <div class="text-[10px] text-slate-400">{{ resource?.feedback?.upvotes || 0 }} citizens verified this</div>
-          </div>
-        </div>
-        <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg">
-          +1 Like
-        </span>
-      </button>
-
-      <!-- 2. Report Issue / Inaccurate Info -->
+      <!-- 1. Report Issue / Inaccurate Info -->
       <button (click)="closeMobileOverflow(); openReportModal()"
         class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
         <div class="flex items-center gap-3">
@@ -811,7 +797,7 @@
         <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
       </button>
 
-      <!-- 3. Print Official Dossier -->
+      <!-- 2. Print Official Dossier -->
       <button (click)="closeMobileOverflow(); printPage()"
         class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
         <div class="flex items-center gap-3">
@@ -828,7 +814,7 @@
         <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
       </button>
 
-      <!-- 4. Mobile QR Code -->
+      <!-- 3. Mobile QR Code -->
       <button (click)="closeMobileOverflow(); openQrModal()"
         class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
         <div class="flex items-center gap-3">
@@ -845,7 +831,7 @@
         <app-icon name="chevron-right" [size]="14" class="text-slate-400"></app-icon>
       </button>
 
-      <!-- 5. Copy Full Address -->
+      <!-- 4. Copy Full Address -->
       <button (click)="closeMobileOverflow(); copyAddress()"
         class="w-full flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-800/60 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border-0 cursor-pointer transition-colors text-left">
         <div class="flex items-center gap-3">
