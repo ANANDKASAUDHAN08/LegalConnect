@@ -75,15 +75,15 @@
 </div>
 
 <!-- Immersive Emergency SOS Bottom Sheet -->
-<div class="fixed inset-0 z-[1500] pointer-events-none" [class.active-sheet]="showSosOverlay">
+<div *ngIf="showSosOverlay" class="fixed inset-0 z-[1500] overflow-hidden" [class.active-sheet]="showSosOverlay">
   <!-- Backdrop Blur -->
   <div
     class="sos-backdrop absolute inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity duration-300 pointer-events-auto"
-    *ngIf="showSosOverlay" (click)="closeSos()"></div>
+    (click)="closeSos()"></div>
 
   <!-- Bottom Drawer Box -->
   <div
-    class="sos-sheet-panel absolute bottom-0 left-0 right-0 max-w-[600px] mx-auto bg-gradient-to-b from-slate-900 to-slate-950 border-t border-red-500/30 text-white rounded-t-[2.5rem] p-6 pb-10 shadow-2xl transition-transform duration-300 ease-out translate-y-full pointer-events-auto flex flex-col items-center">
+    class="sos-sheet-panel absolute bottom-0 left-0 right-0 max-w-[600px] mx-auto bg-gradient-to-b from-slate-900 to-slate-950 border-t border-red-500/30 text-white rounded-t-[2.5rem] p-6 pb-10 shadow-2xl transition-transform duration-300 ease-out pointer-events-auto flex flex-col items-center">
 
     <!-- Drag handle / accent indicator -->
     <div class="w-12 h-1 bg-red-500/20 rounded-full mb-6"></div>
