@@ -5,15 +5,23 @@ import { ReviewService, ReviewItem } from '../../services/review.service';
 import { UserProfile } from '../../services/auth.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { IconComponent } from '../icon/icon.component';
 
 interface QuickChip {
   text: string;
 }
 
+export interface ConsultationOption {
+  id: number;
+  lawyerName: string;
+  status?: string;
+  date?: string;
+}
+
 @Component({
   selector: 'app-write-review-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, TooltipDirective],
+  imports: [CommonModule, FormsModule, TooltipDirective, IconComponent],
   templateUrl: './write-review-modal.component.html',
   styleUrls: ['./write-review-modal.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -21,6 +29,9 @@ interface QuickChip {
 export class WriteReviewModalComponent implements OnInit, OnDestroy {
   @Input() currentUser: UserProfile | null = null;
   @Input() reviewToEdit: ReviewItem | null = null;
+  @Input() initialTargetName = '';
+  @Input() initialConsultationId: number | null = null;
+  @Input() consultationOptions: ConsultationOption[] = [];
   @Input() navbarHeight = 68;
   @Output() close = new EventEmitter<void>();
   @Output() saved = new EventEmitter<ReviewItem>();
@@ -35,12 +46,23 @@ export class WriteReviewModalComponent implements OnInit, OnDestroy {
     return item?.text || index.toString();
   }
 
+  trackByConsultationId(index: number, item: ConsultationOption): number {
+    return item?.id || index;
+  }
+
   rating = 5;
   hoverRating = 0;
   content = '';
   targetName = 'Platform';
+  selectedConsultationId: number | null = null;
   authorName = '';
   isSubmitting = false;
+
+  selectTarget(name: string, consultationId?: number) {
+    this.targetName = name;
+    this.selectedConsultationId = consultationId || null;
+    this.cdr.markForCheck();
+  }
 
   get currentDisplayRating(): number {
     return this.hoverRating > 0 ? this.hoverRating : this.rating;
@@ -83,6 +105,14 @@ export class WriteReviewModalComponent implements OnInit, OnDestroy {
       this.content = this.reviewToEdit.content;
       this.targetName = this.reviewToEdit.targetName;
       this.authorName = this.reviewToEdit.authorName;
+      this.selectedConsultationId = this.reviewToEdit.consultationId || null;
+    } else if (this.initialTargetName) {
+      this.targetName = this.initialTargetName;
+      if (this.initialConsultationId) {
+        this.selectedConsultationId = this.initialConsultationId;
+      }
+    } else if (this.initialConsultationId) {
+      this.selectedConsultationId = this.initialConsultationId;
     }
   }
 
@@ -164,6 +194,10 @@ export class WriteReviewModalComponent implements OnInit, OnDestroy {
       content: this.content.trim(),
       targetName: this.targetName.trim()
     };
+
+    if (this.selectedConsultationId) {
+      payload.consultationId = this.selectedConsultationId;
+    }
 
     if (!this.currentUser) {
       payload.authorName = this.authorName.trim() || 'Anonymous Guest';

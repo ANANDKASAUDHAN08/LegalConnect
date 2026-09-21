@@ -26,7 +26,7 @@ export interface HighlightPart {
   match: boolean;
 }
 
-export type SelectSize = 'sm' | 'md' | 'lg';
+export type SelectSize = 'sm' | 'mid' | 'base' | 'md' | 'lg';
 export type SelectVariant = 'default' | 'filled' | 'outlined' | 'glass' | 'minimal';
 export type SelectDropPosition = 'auto' | 'down' | 'up';
 export type SelectMenuAlign = 'auto' | 'left' | 'right';

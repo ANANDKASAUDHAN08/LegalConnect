@@ -140,13 +140,37 @@
     </p>
 
     <!-- Moderation Badges -->
-    <div *ngIf="review.isDisputeRequested" class="flex items-center gap-1.5 flex-wrap text-[8px] font-semibold mt-0.5">
+    <div
+      *ngIf="review.isDisputeRequested || (currentUser && review.userId === currentUser.id && review.moderationStatus)"
+      class="flex items-center gap-1.5 flex-wrap text-[8px] font-semibold mt-0.5">
+      <!-- Moderation Status Badge for author -->
+      <span *ngIf="currentUser && review.userId === currentUser.id" [class]="review.moderationStatus === 'Approved'
+          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
+          : (review.moderationStatus === 'Flagged'
+            ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20'
+            : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20')"
+        class="inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-md border">
+        <app-icon
+          [name]="review.moderationStatus === 'Approved' ? 'check' : (review.moderationStatus === 'Flagged' ? 'flag' : 'clock')"
+          [size]="10"></app-icon>
+        <span>{{ review.moderationStatus === 'Approved' ? 'Published' : (review.moderationStatus || 'Under Review')
+          }}</span>
+      </span>
+
       <!-- Dispute Pending -->
-      <span [appTooltip]="'Formal removal dispute submitted to moderators'" [tooltipPlacement]="'top'"
+      <span *ngIf="review.isDisputeRequested" [appTooltip]="'Formal removal dispute submitted to moderators'"
+        [tooltipPlacement]="'top'"
         class="inline-flex items-center gap-1 text-rose-600 dark:text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded-md border border-rose-500/15 animate-pulse font-bold cursor-help">
         <app-icon name="alert-triangle" [size]="10" class="text-rose-500"></app-icon>
         <span>Dispute Pending</span>
       </span>
+    </div>
+
+    <!-- Redacted Notice if PII was cleansed -->
+    <div *ngIf="review.redactedContent && review.redactedContent !== review.content"
+      class="p-2 rounded-lg bg-amber-500/10 border border-amber-500/20 text-[10.5px] text-amber-700 dark:text-amber-300 flex items-center gap-1.5 mt-1">
+      <app-icon name="shield" [size]="12"></app-icon>
+      <span>Content was automatically sanitized to protect personal contact information.</span>
     </div>
   </div>
 
@@ -191,8 +215,9 @@
     <!-- Read More Link -->
     <button *ngIf="showReadMore && (review.content?.length > 110)"
       (click)="$event.stopPropagation(); readMore.emit(review)"
-      class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline outline-none cursor-pointer">
-      Read More →
+      class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline outline-none cursor-pointer inline-flex items-center">
+      <span>Read More</span>
+      <app-icon name="arrow-right" [size]="10" class="ml-1"></app-icon>
     </button>
   </div>
 </div>

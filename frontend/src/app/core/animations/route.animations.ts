@@ -24,7 +24,7 @@ export const routeTransitionAnimation = trigger('routeAnimation', [
           '160ms cubic-bezier(0.16, 1, 0.3, 1)',
           style({
             opacity: 1,
-            transform: 'translateY(0)'
+            transform: 'none'
           })
         )
       ],
