@@ -53,6 +53,11 @@ module.exports = {
         'xl': '20px',
         '2xl': '32px',
         'auth': 'var(--radius-md)',
+      },
+      boxShadow: {
+        'card-flat': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        'card-elevated': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02)',
+        'modal': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
       }
     },
   },

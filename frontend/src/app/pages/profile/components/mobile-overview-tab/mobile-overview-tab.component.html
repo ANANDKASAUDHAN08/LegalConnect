@@ -1,0 +1,429 @@
+<div class="space-y-4 sm:space-y-6 pb-8 animate-[fadeIn_0.25s_ease-out]">
+
+  <!-- ══════════ 1. TRUST STANDING & VERIFICATION STATUS ══════════ -->
+  <div *ngIf="profile"
+    class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-3.5 sm:p-4">
+    <div class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800/60">
+      <div class="flex items-center gap-2">
+        <app-icon name="shield-check" [size]="16" class="text-blue-600 dark:text-blue-400"></app-icon>
+        <span class="text-xs font-extrabold text-slate-900 dark:text-white">Trust & Verification Standing</span>
+      </div>
+      <span
+        class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50"
+        appTooltip="Account is active and in good standing" tooltipPlacement="top">
+        Active Standing
+      </span>
+    </div>
+
+    <!-- 2-Column Verification Status Badges -->
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <!-- Email Verification -->
+      <div
+        class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <app-icon name="mail" [size]="13" class="text-slate-400 flex-shrink-0"></app-icon>
+          <span class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate">Email</span>
+        </div>
+        <span *ngIf="profile.isEmailVerified"
+          appTooltip="Primary email address confirmed and verified" tooltipPlacement="top"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 cursor-default">
+          <app-icon name="check" [size]="12"></app-icon>
+          <span>Verified</span>
+        </span>
+        <button *ngIf="!profile.isEmailVerified" (click)="requestVerification.emit('email')"
+          class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0"
+          appTooltip="Verify your registered email address" tooltipPlacement="top">
+          Verify Now
+        </button>
+      </div>
+
+      <!-- Phone OTP Verification -->
+      <div
+        class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800">
+        <div class="flex items-center gap-1.5 min-w-0">
+          <app-icon name="phone" [size]="13" class="text-slate-400 flex-shrink-0"></app-icon>
+          <span class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate">Phone OTP</span>
+        </div>
+        <span *ngIf="profile.isPhoneVerified"
+          appTooltip="Mobile phone number verified via OTP" tooltipPlacement="top"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 cursor-default">
+          <app-icon name="check" [size]="12"></app-icon>
+          <span>Verified</span>
+        </span>
+        <button *ngIf="!profile.isPhoneVerified" (click)="requestVerification.emit('phone')"
+          class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0"
+          appTooltip="Verify mobile phone via OTP" tooltipPlacement="top">
+          Verify OTP
+        </button>
+      </div>
+    </div>
+
+    <!-- 2-Factor Authentication (2FA) Status Row -->
+    <div (click)="openTab('account')"
+      class="mt-2 flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs cursor-pointer hover:border-slate-300 dark:hover:border-slate-700 transition-all group"
+      appTooltip="Manage Two-Factor Authentication (2FA)" tooltipPlacement="top">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
+          [ngClass]="profile.isTwoFactorEnabled ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' : 'bg-amber-500/10 text-amber-600 dark:text-amber-400'">
+          <app-icon [name]="profile.isTwoFactorEnabled ? 'shield-check' : 'shield'" [size]="13"></app-icon>
+        </div>
+        <div class="min-w-0">
+          <div class="text-[11px] font-bold text-slate-800 dark:text-slate-200 truncate">
+            2-Factor Auth (2FA)
+          </div>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+            {{ profile.isTwoFactorEnabled ? 'Active (Protected with TOTP)' : 'Protect account with Google Authenticator'
+            }}
+          </p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 flex-shrink-0 ml-2">
+        <span *ngIf="profile.isTwoFactorEnabled"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400">
+          <app-icon name="check" [size]="12"></app-icon>
+          <span>Enabled</span>
+        </span>
+        <span *ngIf="!profile.isTwoFactorEnabled"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 group-hover:underline">
+          <span>Setup 2FA</span>
+          <app-icon name="chevron-right" [size]="11"></app-icon>
+        </span>
+      </div>
+    </div>
+
+    <!-- If Lawyer: Bar Council Credentials Status -->
+    <div *ngIf="!isClient && lawyerProfile as law"
+      class="mt-2 flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 text-xs"
+      appTooltip="Official Bar Council enrollment verification" tooltipPlacement="top">
+      <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium">Bar Registration</span>
+      <span class="font-bold font-mono text-[11px]"
+        [ngClass]="law.barCouncilNumber ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400'">
+        {{ law.barCouncilNumber || 'Pending Verification' }}
+      </span>
+    </div>
+  </div>
+
+  <!-- ══════════ 2. PROMINENT NAVIGATION CARDS TO THE OTHER 2 TABS ══════════ -->
+  <div class="space-y-3">
+    <div class="flex items-center justify-between px-1">
+      <h3 class="text-xs font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+        Profile Sections
+      </h3>
+      <span class="text-[11px] font-medium text-slate-400">Tap to navigate</span>
+    </div>
+
+    <!-- NAV CARD 1: PROFILE TAB -->
+    <div (click)="openTab('profile')" appTooltip="Open Profile Details (Tab 2)" tooltipPlacement="top"
+      class="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer">
+      <div class="flex items-start gap-3.5">
+        <!-- Icon Circle -->
+        <div
+          class="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200/60 dark:border-blue-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm">
+          <app-icon name="user" [size]="20"></app-icon>
+        </div>
+
+        <!-- Description -->
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between">
+            <h4
+              class="text-sm font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              Profile Details
+            </h4>
+            <span
+              class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-blue-600 group-hover:text-white dark:group-hover:bg-blue-600 transition-all flex items-center justify-center">
+              <app-icon name="chevron-right" [size]="14"></app-icon>
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            {{ isClient
+            ? 'Personal information, contact details, location preferences & activity.'
+            : 'Advocate credentials, Bar Council enrollment, practice areas, bio & contact information.' }}
+          </p>
+
+          <!-- Key Feature Pills -->
+          <div class="flex items-center gap-1.5 flex-wrap mt-2.5">
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              {{ isClient ? 'Contact & Location' : 'Bar License & Practice' }}
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              {{ isClient ? 'Saved Activity' : 'Advocate Statement' }}
+            </span>
+            <span *ngIf="profile?.clientCity"
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              {{ profile?.clientCity }}
+            </span>
+          </div>
+
+          <!-- Bottom Button Action -->
+          <div
+            class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
+            <span class="font-bold text-blue-600 dark:text-blue-400 group-hover:underline flex items-center gap-1">
+              <span>View & Edit Profile Details</span>
+              <app-icon name="arrow-right" [size]="12"></app-icon>
+            </span>
+            <span class="text-[10px] font-mono text-slate-400">Tab 2</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NAV CARD 2: ACCOUNT & PREFERENCES TAB -->
+    <div (click)="openTab('account')" appTooltip="Open Account & Preferences (Tab 3)" tooltipPlacement="top"
+      class="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-sm hover:shadow-md transition-all active:scale-[0.99] cursor-pointer">
+      <div class="flex items-start gap-3.5">
+        <!-- Icon Circle -->
+        <div
+          class="w-11 h-11 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-800/50 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform shadow-sm">
+          <app-icon name="shield-check" [size]="20"></app-icon>
+        </div>
+
+        <!-- Description -->
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <h4
+                class="text-sm font-bold text-slate-900 dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                Account & Preferences
+              </h4>
+              <span class="text-[10px] font-black px-1.5 py-0.5 rounded" [ngClass]="securityScore >= 80
+                  ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+                  : 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'">
+                {{ securityRating }}
+              </span>
+            </div>
+            <span
+              class="w-7 h-7 rounded-lg bg-slate-100 dark:bg-slate-800 text-slate-400 group-hover:bg-emerald-600 group-hover:text-white dark:group-hover:bg-emerald-600 transition-all flex items-center justify-center">
+              <app-icon name="chevron-right" [size]="14"></app-icon>
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+            Security health score ({{ securityScore }}/100), password management, two-factor authentication, active
+            sessions & notifications.
+          </p>
+
+          <!-- Key Feature Pills -->
+          <div class="flex items-center gap-1.5 flex-wrap mt-2.5">
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold" [ngClass]="profile?.isTwoFactorEnabled
+                ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'">
+              {{ profile?.isTwoFactorEnabled ? '2FA Enabled' : '2FA Available' }}
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              Security Score: {{ securityScore }}%
+            </span>
+            <span
+              class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+              Notification Preferences
+            </span>
+          </div>
+
+          <!-- Bottom Button Action -->
+          <div
+            class="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-xs">
+            <span
+              class="font-bold text-emerald-600 dark:text-emerald-400 group-hover:underline flex items-center gap-1">
+              <span>Manage Security & Preferences</span>
+              <app-icon name="arrow-right" [size]="12"></app-icon>
+            </span>
+            <span class="text-[10px] font-mono text-slate-400">Tab 3</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2FA Security Banner -->
+  <div *ngIf="profile && !profile.isTwoFactorEnabled"
+    class="p-3.5 rounded-2xl bg-gradient-to-r from-amber-50/80 via-white to-amber-50/40 dark:from-amber-950/30 dark:via-slate-900/60 dark:to-amber-950/10 border border-amber-200/80 dark:border-amber-900/60 shadow-xs flex items-center justify-between gap-3">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div
+        class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+        <app-icon name="shield" [size]="16"></app-icon>
+      </div>
+      <div class="min-w-0">
+        <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">Enable Two-Factor Authentication (2FA)
+        </h4>
+        <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Protect case inquiries, legal records
+          & logins</p>
+      </div>
+    </div>
+    <button (click)="openTab('account')"
+      class="px-2.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex-shrink-0 flex items-center gap-1 border-0 shadow-xs cursor-pointer active:scale-95 transition-all"
+      appTooltip="Set up 2FA in Account tab" tooltipPlacement="top">
+      <span>Setup 2FA</span>
+      <app-icon name="arrow-right" [size]="11"></app-icon>
+    </button>
+  </div>
+
+  <div *ngIf="profile && profile.isTwoFactorEnabled"
+    class="p-3 rounded-2xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200/60 dark:border-emerald-900/40 shadow-xs flex items-center justify-between gap-2.5">
+    <div class="flex items-center gap-2 min-w-0">
+      <div
+        class="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+        <app-icon name="shield-check" [size]="14"></app-icon>
+      </div>
+      <div class="min-w-0">
+        <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 block truncate">2-Factor Authentication
+          Active</span>
+        <span class="text-[10px] text-emerald-600/80 dark:text-emerald-400/70 block truncate">Your consultations &
+          profile data are protected with TOTP</span>
+      </div>
+    </div>
+    <button (click)="openTab('account')"
+      class="text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:underline flex items-center gap-1 flex-shrink-0 bg-transparent border-0 cursor-pointer">
+      <span>Manage</span>
+      <app-icon name="chevron-right" [size]="11"></app-icon>
+    </button>
+  </div>
+
+  <!-- ══════════ 3. PROFILE COMPLETENESS & 4-TIER MILESTONES ══════════ -->
+  <div
+    class="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 p-4 sm:p-5 shadow-sm space-y-4">
+    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/60">
+      <div>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+          Profile Completeness
+        </span>
+        <h3 class="text-xs font-extrabold text-slate-900 dark:text-white mt-0.5">
+          Account Verification & Readiness
+        </h3>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="text-xs font-black px-2.5 py-1 rounded-xl" [ngClass]="overallCompletionPct >= 80
+            ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
+            : overallCompletionPct >= 50
+              ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
+              : 'bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400'">
+          {{ overallCompletionPct }}%
+        </span>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="space-y-1.5" [appTooltip]="'Overall profile completeness: ' + overallCompletionPct + '%'" tooltipPlacement="top">
+      <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-500"
+          [ngClass]="overallCompletionPct >= 80 ? 'bg-emerald-500' : overallCompletionPct >= 50 ? 'bg-amber-500' : 'bg-red-500'"
+          [style.width.%]="overallCompletionPct">
+        </div>
+      </div>
+    </div>
+
+    <!-- Next Action Banner (If Incomplete) -->
+    <div *ngIf="overallCompletionPct < 100 && nextMilestoneAction"
+      class="p-3 rounded-xl bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/40 dark:to-orange-950/20 border border-amber-200/70 dark:border-amber-800/50 flex items-center justify-between gap-3 shadow-sm">
+      <div class="min-w-0">
+        <span class="text-[10px] font-bold text-amber-900 dark:text-amber-300 uppercase tracking-wider block">
+          Recommended Next Step
+        </span>
+        <span class="text-xs font-bold text-amber-800 dark:text-amber-200 truncate block mt-0.5">
+          {{ nextMilestoneAction.title }}
+        </span>
+      </div>
+      <button (click)="onNextMilestone()"
+        class="min-h-[40px] px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs flex-shrink-0 flex items-center gap-1 border-0 shadow-sm cursor-pointer transition-all active:scale-95"
+        appTooltip="Continue to next profile setup milestone" tooltipPlacement="top">
+        <span>{{ nextMilestoneAction.label }}</span>
+      </button>
+    </div>
+
+    <!-- 4-Tier Cards Stack -->
+    <div class="space-y-2.5 pt-1">
+      <div *ngFor="let tier of fourTierMilestones; trackBy: trackByTier" class="p-3 rounded-xl border transition-all"
+        [ngClass]="tier.done
+          ? 'bg-emerald-50/40 dark:bg-emerald-950/15 border-emerald-200/60 dark:border-emerald-900/40'
+          : 'bg-slate-50/60 dark:bg-slate-950/30 border-slate-200/60 dark:border-slate-800/60'">
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-5 h-5 rounded-lg flex items-center justify-center text-[10px] font-black" [ngClass]="tier.done
+                ? 'bg-emerald-500 text-white'
+                : 'bg-slate-200 dark:bg-slate-800 text-slate-600 dark:text-slate-400'">
+              <app-icon *ngIf="tier.done" name="check" [size]="10" class="text-white"></app-icon>
+              <span *ngIf="!tier.done">{{ tier.tier }}</span>
+            </span>
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200">{{ tier.title }}</span>
+          </div>
+          <span class="text-[10px] font-bold"
+            [ngClass]="tier.done ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'">
+            {{ tier.pct }}%
+          </span>
+        </div>
+
+        <!-- Step Checklist -->
+        <div class="space-y-1 pl-7">
+          <div *ngFor="let step of tier.steps; trackBy: trackByStepTitle"
+            class="flex items-center justify-between text-[11px]">
+            <span class="text-slate-500 dark:text-slate-400">{{ step.title }}</span>
+            <app-icon *ngIf="step.done" name="check" [size]="12" class="text-emerald-500"></app-icon>
+            <span *ngIf="!step.done"
+              class="w-2.5 h-2.5 rounded-full border border-slate-300 dark:border-slate-600 inline-block"></span>
+          </div>
+        </div>
+
+        <!-- Action Link -->
+        <div *ngIf="!tier.done && tier.actionLabel" class="mt-2.5 pl-7">
+          <button (click)="onTierAction(tier)" [appTooltip]="'Complete: ' + tier.actionLabel" tooltipPlacement="top"
+            class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer flex items-center gap-1 bg-transparent border-0 p-0">
+            <span>{{ tier.actionLabel }}</span>
+            <app-icon name="chevron-right" [size]="11"></app-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════ 4. SECURITY HEALTH & SESSION CONTROLS ══════════ -->
+  <div
+    class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 p-4 shadow-sm space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <app-icon name="shield" [size]="16" class="text-slate-400"></app-icon>
+        <span class="text-xs font-bold text-slate-800 dark:text-slate-200">Account Standing & Security</span>
+      </div>
+      <span class="text-[10px] font-mono text-slate-400">Since {{ memberSince }}</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2 text-xs">
+      <button (click)="openTab('account')"
+        class="py-2 px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-left hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer group"
+        appTooltip="Configure Two-Factor Authentication" tooltipPlacement="top">
+        <div class="flex items-center justify-between">
+          <div class="text-[10px] text-slate-400 uppercase font-bold">2-Factor Auth</div>
+          <span class="w-1.5 h-1.5 rounded-full"
+            [ngClass]="profile?.isTwoFactorEnabled ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse'"></span>
+        </div>
+        <div class="text-xs font-bold mt-0.5 flex items-center justify-between"
+          [ngClass]="profile?.isTwoFactorEnabled ? 'text-emerald-600' : 'text-slate-600 dark:text-slate-300'">
+          <span>{{ profile?.isTwoFactorEnabled ? 'Active (Protected)' : 'Not Configured' }}</span>
+          <app-icon name="chevron-right" [size]="10"
+            class="text-slate-400 group-hover:translate-x-0.5 transition-transform"></app-icon>
+        </div>
+      </button>
+
+      <button (click)="openTab('account')"
+        class="py-2 px-4 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 text-left hover:border-slate-300 dark:hover:border-slate-700 transition-all cursor-pointer"
+        appTooltip="View Security Health & Preferences" tooltipPlacement="top">
+        <div class="text-[10px] text-slate-400 uppercase font-bold">Security Score</div>
+        <div class="text-xs font-bold mt-0.5" [ngClass]="securityScore >= 80 ? 'text-emerald-600' : 'text-amber-600'">
+          {{ securityScore }}/100 ({{ securityRating }})
+        </div>
+      </button>
+    </div>
+
+    <!-- Sign Out Button -->
+    <div class="pt-2 border-t border-slate-100 dark:border-slate-800/60">
+      <button (click)="logout.emit()"
+        class="w-full min-h-[44px] px-4 py-2.5 rounded-xl border border-red-200/80 dark:border-red-900/40 bg-red-50/50 dark:bg-red-950/20 text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-950/40 text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer"
+        appTooltip="Sign out of your session" tooltipPlacement="top">
+        <app-icon name="log-out" [size]="14"></app-icon>
+        <span>Sign Out of Session</span>
+      </button>
+    </div>
+  </div>
+
+</div>

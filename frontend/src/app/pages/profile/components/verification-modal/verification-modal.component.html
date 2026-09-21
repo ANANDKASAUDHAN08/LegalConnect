@@ -1,0 +1,304 @@
+<div *ngIf="isOpen"
+  class="fixed inset-0 z-[3000] flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
+
+  <!-- Modal / Drawer Container -->
+  <div
+    class="relative w-full sm:max-w-xl md:max-w-[620px] bg-white dark:bg-[#0d1829] border-t sm:border border-slate-200/90 dark:border-slate-800/90 rounded-t-[28px] sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90dvh] sm:max-h-[85vh] flex flex-col my-0 sm:my-auto animate-[slideUp_0.25s_ease-out] transition-all">
+
+    <!-- Mobile Drawer Pull Handle -->
+    <div class="sm:hidden w-full flex items-center justify-center pt-3 pb-1 cursor-grab">
+      <div class="w-12 h-1.5 rounded-full bg-slate-300/80 dark:bg-slate-700/80"></div>
+    </div>
+
+    <!-- Header -->
+    <div
+      class="px-5 sm:px-6 py-3.5 sm:py-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3 min-w-0">
+        <div
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-600 dark:text-amber-400 flex-shrink-0 shadow-xs">
+          <app-icon name="shield-check" [size]="20"></app-icon>
+        </div>
+        <div class="min-w-0">
+          <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">Trust & Verification
+          </h2>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">Secure credential authentication
+          </p>
+        </div>
+      </div>
+      <button (click)="closeModal()" [appTooltip]="'Close Dialog'"
+        class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer border-0 bg-transparent flex-shrink-0"
+        aria-label="Close dialog">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <!-- Segmented Flow Tabs (Responsive Scrollable on Mobile, Equal on Desktop) -->
+    <div
+      class="px-3 sm:px-6 pt-2.5 sm:pt-3 pb-2 sm:pb-2.5 bg-slate-50/80 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-none">
+      <button (click)="setFlow('phone')" [appTooltip]="'Authenticate mobile phone number with SMS OTP'"
+        class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
+        [ngClass]="activeFlow === 'phone' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
+        <app-icon name="phone" [size]="14"></app-icon>
+        <span>Mobile OTP</span>
+      </button>
+      <button (click)="setFlow('email')" [appTooltip]="'Verify primary communication email address'"
+        class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
+        [ngClass]="activeFlow === 'email' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
+        <app-icon name="mail" [size]="14"></app-icon>
+        <span>Email</span>
+      </button>
+      <button (click)="setFlow('emergency')"
+        [appTooltip]="'Configure trusted recovery contact for identity verification & account safety'"
+        class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
+        [ngClass]="activeFlow === 'emergency' ? 'bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
+        <app-icon name="user-check" [size]="14"></app-icon>
+        <span>Recovery Contact</span>
+      </button>
+    </div>
+
+    <!-- Modal Body Content (Scrollable) -->
+    <div
+      class="p-4 sm:p-6 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5 flex-1 overscroll-contain no-scrollbar scrollbar-none">
+
+      <!-- ══════════ FLOW 1: PHONE OTP ══════════ -->
+      <div *ngIf="activeFlow === 'phone'" class="space-y-4">
+        <div>
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Registered Mobile Number
+          </label>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-2.5">
+            We will send a 6-digit one-time passcode for two-tier trust verification.
+          </p>
+
+          <!-- Input Group: Country code + digits -->
+          <div
+            class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all relative">
+            <!-- Country Selector -->
+            <div class="relative flex-shrink-0">
+              <button type="button" (click)="toggleCountryDropdown()"
+                class="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none cursor-pointer">
+                <img [src]="'https://flagcdn.com/w20/' + selectedCountry.short.toLowerCase() + '.png'"
+                  class="w-5 h-3.5 object-cover rounded-sm" alt="flag" />
+                <span class="text-xs font-bold">{{ selectedCountry.code }}</span>
+                <app-icon name="chevron-down" [size]="12"></app-icon>
+              </button>
+
+              <!-- Country List Dropdown -->
+              <div *ngIf="showCountryDropdown" class="fixed inset-0 z-40 bg-transparent"
+                (click)="showCountryDropdown = false"></div>
+              <div *ngIf="showCountryDropdown"
+                class="absolute z-50 left-0 mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden animate-[fadeIn_0.15s_ease-out]">
+                <div class="p-2 border-b border-slate-100 dark:border-slate-800">
+                  <input type="text" [(ngModel)]="countrySearchText" placeholder="Search country..."
+                    class="w-full px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-white" />
+                </div>
+                <div class="max-h-48 overflow-y-auto">
+                  <button *ngFor="let c of getFilteredCountries(); trackBy: trackByCountryCode" type="button"
+                    (click)="selectCountry(c)"
+                    class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left transition-colors cursor-pointer border-0 bg-transparent">
+                    <img [src]="'https://flagcdn.com/w20/' + c.short.toLowerCase() + '.png'"
+                      class="w-4 h-3 object-cover rounded-sm" alt="flag" />
+                    <span>{{ c.short }}</span>
+                    <span class="text-slate-400 font-normal ml-auto">{{ c.code }}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Phone Digits -->
+            <input type="text" [(ngModel)]="phoneBody" (keypress)="onlyNumbers($event)" (input)="filterPhoneDigits()"
+              placeholder="10-digit mobile" maxlength="10"
+              class="w-full flex-1 bg-transparent px-3 py-2.5 outline-none border-0 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400" />
+          </div>
+        </div>
+
+        <!-- Trigger Button -->
+        <button *ngIf="!showPhoneOtpInput" (click)="sendPhoneOtp()"
+          [disabled]="resendLoading || phoneBody.length !== 10"
+          class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2 border-0">
+          <span>{{ resendLoading ? 'Sending OTP...' : 'Send Verification OTP' }}</span>
+          <app-icon name="arrow-right" [size]="16"></app-icon>
+        </button>
+
+        <!-- OTP Code Input Area -->
+        <div *ngIf="showPhoneOtpInput"
+          class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 space-y-3 animate-[fadeIn_0.25s_ease-out]">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Enter 6-Digit Code</span>
+            <span class="text-[11px] text-blue-600 dark:text-blue-400 font-mono">Demo: 123456</span>
+          </div>
+
+          <input type="text" [(ngModel)]="phoneOtpCode" placeholder="••••••" maxlength="6"
+            class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-mono text-xl tracking-[0.4em] font-bold text-slate-900 dark:text-white transition-all" />
+
+          <div class="flex items-center justify-between pt-1">
+            <button (click)="resendPhoneOtp()" [disabled]="resendCooldown > 0"
+              class="text-xs font-bold transition-colors disabled:opacity-50 border-0 bg-transparent"
+              [ngClass]="resendCooldown > 0 ? 'text-slate-400' : 'text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'">
+              {{ resendCooldown > 0 ? 'Resend code in ' + resendCooldown + 's' : 'Resend Code' }}
+            </button>
+
+            <button (click)="verifyPhoneOtp()" [disabled]="otpLoading || phoneOtpCode.length < 6"
+              class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-1.5 border-0">
+              <span>{{ otpLoading ? 'Verifying...' : 'Confirm OTP' }}</span>
+              <app-icon name="check" [size]="14"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══════════ FLOW 2: EMAIL CONFIRMATION ══════════ -->
+      <div *ngIf="activeFlow === 'email'" class="space-y-4">
+        <div
+          class="p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/30 flex items-center gap-3.5">
+          <div
+            class="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+            <app-icon name="mail" [size]="20"></app-icon>
+          </div>
+          <div class="min-w-0">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Primary Email</span>
+            <div class="text-sm font-bold text-slate-900 dark:text-white truncate">{{ profile?.email }}</div>
+          </div>
+          <span *ngIf="profile?.isEmailVerified"
+            class="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border border-emerald-200">
+            <span>Verified</span>
+            <app-icon name="check" [size]="11"></app-icon>
+          </span>
+        </div>
+
+        <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+          Email verification protects your account from unauthorized takeovers and activates notifications for case
+          filings and court hearing alerts.
+        </p>
+
+        <button *ngIf="!profile?.isEmailVerified" (click)="resendEmailVerification()" [disabled]="emailResendLoading"
+          class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2">
+          <span>{{ emailResendLoading ? 'Sending Link...' : 'Resend Verification Link' }}</span>
+          <app-icon name="arrow-right" [size]="16"></app-icon>
+        </button>
+
+        <div *ngIf="profile?.isEmailVerified"
+          class="p-3.5 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900 text-xs text-emerald-800 dark:text-emerald-300 flex items-center gap-2">
+          <app-icon name="shield-check" [size]="16" class="text-emerald-600"></app-icon>
+          <span>Your email address is officially verified and linked to your citizen dossier.</span>
+        </div>
+      </div>
+
+      <!-- ══════════ FLOW 3: EMERGENCY RECOVERY CONTACT ══════════ -->
+      <div *ngIf="activeFlow === 'emergency' || activeFlow === 'identity'" class="space-y-4">
+        <!-- Purpose Explainer Banner -->
+        <div
+          class="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/40 flex items-start gap-3">
+          <div
+            class="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+            <app-icon name="user-check" [size]="16"></app-icon>
+          </div>
+          <div class="text-xs text-teal-950 dark:text-teal-200 space-y-0.5">
+            <p class="font-bold">Trusted Account Recovery</p>
+            <p class="text-[11px] text-teal-800/80 dark:text-teal-300/80 leading-relaxed">
+              Designate a trusted individual who can help verify your identity and restore access if you ever lose your
+              phone or login credentials.
+            </p>
+          </div>
+        </div>
+
+        <!-- Currently Configured Status Card -->
+        <div *ngIf="isEmergencyConfigured"
+          class="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div
+              class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <app-icon name="check" [size]="14"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ profile?.emergencyContactName
+                  }}</span>
+                <span
+                  class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50">
+                  {{ profile?.emergencyContactRelation || 'Configured' }}
+                </span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">{{
+                profile?.emergencyContactPhone }}</p>
+            </div>
+          </div>
+          <button type="button" (click)="removeEmergencyContact()" [disabled]="isRemovingEmergency"
+            class="text-[11px] font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:underline border-0 bg-transparent cursor-pointer flex-shrink-0">
+            {{ isRemovingEmergency ? 'Removing...' : 'Remove' }}
+          </button>
+        </div>
+
+        <!-- Form Inputs (2-Column Grid on Desktop) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+          <!-- Field 1: Contact Full Name -->
+          <div>
+            <label
+              class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+              Contact Full Name <span class="text-rose-500">*</span>
+            </label>
+            <div
+              class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all px-3 py-2.5 h-[42px]">
+              <app-icon name="user" [size]="16" class="text-slate-400 mr-2 flex-shrink-0"></app-icon>
+              <input type="text" [(ngModel)]="emergencyName" placeholder="e.g. Rajesh Sharma"
+                class="w-full bg-transparent outline-none border-0 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400" />
+            </div>
+          </div>
+
+          <!-- Field 2: Relationship Dropdown -->
+          <div>
+            <label
+              class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+              Relationship <span class="text-rose-500">*</span>
+            </label>
+            <app-custom-select class="w-full block" [options]="relationOptions" [(ngModel)]="emergencyRelation"
+              placeholder="Select Relationship" width="100%" minWidth="100%" height="42px" size="mid" rounded="xl"
+              menuRounded="xl" [useBottomSheetOnMobile]="true" sheetTitle="Relationship to Contact"
+              [searchable]="false">
+            </app-custom-select>
+          </div>
+
+          <!-- Field 3: Contact Phone Number -->
+          <div>
+            <label
+              class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
+              Contact Phone Number <span class="text-rose-500">*</span>
+            </label>
+            <div
+              class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all px-3 py-2.5 h-[42px]">
+              <app-icon name="phone" [size]="16" class="text-slate-400 mr-2 flex-shrink-0"></app-icon>
+              <input type="tel" [(ngModel)]="emergencyPhone" placeholder="e.g. +91 98765 43210"
+                class="w-full bg-transparent outline-none border-0 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 font-mono" />
+            </div>
+          </div>
+
+          <!-- Action Button: Perfectly aligned in 2nd column of row 2 on desktop -->
+          <div class="flex flex-col justify-end">
+            <button (click)="saveEmergencyContact()"
+              [disabled]="isSavingEmergency || !emergencyName.trim() || !emergencyPhone.trim()"
+              class="w-full h-[42px] rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20 cursor-pointer flex items-center justify-center gap-2 border-0">
+              <app-icon *ngIf="isSavingEmergency" name="loader" [size]="14" class="animate-spin"></app-icon>
+              <span>{{ isSavingEmergency ? 'Saving Details...' : (isEmergencyConfigured ? 'Update Recovery Contact' :
+                'Save Recovery Contact') }}</span>
+              <app-icon *ngIf="!isSavingEmergency" name="check" [size]="14"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Footer Action -->
+    <div
+      class="px-4 sm:px-6 py-3 sm:py-3.5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/50 dark:bg-slate-950/30 flex items-center justify-end shrink-0 pb-[max(0.85rem,env(safe-area-inset-bottom))]">
+      <button (click)="closeModal()"
+        class="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer text-center">
+        Close Window
+      </button>
+    </div>
+
+  </div>
+</div>

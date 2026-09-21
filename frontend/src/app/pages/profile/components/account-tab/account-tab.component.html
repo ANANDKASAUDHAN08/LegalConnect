@@ -1,0 +1,1102 @@
+<div class="space-y-4 sm:space-y-6 animate-[fadeIn_0.3s_ease-out]">
+
+  <!-- ── 1. SECTION HEADER ── -->
+  <div class="flex items-start gap-3.5 sm:gap-4">
+    <div
+      class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200/60 dark:border-indigo-800/40 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shadow-sm flex-shrink-0">
+      <app-icon name="shield-check" [size]="24"></app-icon>
+    </div>
+    <div class="flex-1 min-w-0">
+      <h2 class="text-lg sm:text-xl font-black text-slate-900 dark:text-white leading-tight">Account & Security</h2>
+      <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 sm:mt-1">
+        Manage your security settings, active sessions, and privacy preferences.
+      </p>
+      <!-- Sleek Line Divider: Starts from the text, NOT the icon -->
+      <div
+        class="mt-2 h-[1.5px] w-full bg-gradient-to-r from-indigo-500/60 via-slate-200 to-transparent dark:from-indigo-500/60 dark:via-slate-800 dark:to-transparent">
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 2. TRUST & VERIFICATION STATUS ── -->
+  <section class="space-y-3 sm:space-y-4" aria-labelledby="verification-heading">
+    <h3 id="verification-heading"
+      class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+      <app-icon name="badge-check" [size]="15" class="text-slate-400"></app-icon>
+      <span>Trust & Verification Credentials</span>
+    </h3>
+
+    <!-- Unified Inset List on Mobile (Zero Box Fatigue), 3-Column Grid of Distinct Cards on Desktop -->
+    <div
+      class="rounded-xl md:rounded-none bg-white md:bg-transparent dark:bg-slate-900/60 md:dark:bg-transparent border md:border-0 border-slate-200/80 dark:border-slate-800/80 shadow-sm md:shadow-none divide-y divide-slate-100 dark:divide-slate-800/80 md:divide-y-0 md:grid md:grid-cols-3 md:gap-4">
+
+      <!-- Email Card / Box -->
+      <div
+        class="p-4 sm:p-5 rounded-none md:rounded-2xl bg-transparent md:bg-white md:dark:bg-slate-900/60 border-0 md:border md:border-slate-200/80 md:dark:border-slate-800/80 flex flex-col md:justify-between gap-3 md:shadow-sm">
+        <!-- Top Bar: Icon on left, Actions on right (with mobile text beside icon) -->
+        <div class="flex items-center justify-between gap-2.5">
+          <div class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+            <div
+              class="w-9 h-9 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+              <app-icon name="mail" [size]="18"></app-icon>
+            </div>
+            <!-- Mobile Only Text -->
+            <div class="min-w-0 flex-1 md:hidden">
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">Primary Email</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 select-all">{{ profile.email }}</p>
+            </div>
+          </div>
+          <!-- Badges & Action -->
+          <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <span *ngIf="profile.isEmailVerified"
+              class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50"
+              appTooltip="Primary email address confirmed" tooltipPlacement="top">
+              <app-icon name="check" [size]="10"></app-icon>
+              <span>Verified</span>
+            </span>
+            <button *ngIf="!profile.isEmailVerified" (click)="openVerification('email')"
+              appTooltip="Send official email confirmation link" tooltipPlacement="top"
+              class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[11px] sm:text-xs font-bold transition-all shadow-sm cursor-pointer border-0 flex items-center gap-1">
+              <span>Verify</span>
+              <app-icon name="arrow-right" [size]="11"></app-icon>
+            </button>
+          </div>
+        </div>
+        <!-- Desktop Only Text (Full Width below Header Row — No truncation!) -->
+        <div class="hidden md:block min-w-0 w-full mt-2">
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">Primary Email</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1 select-all">{{ profile.email }}</p>
+        </div>
+      </div>
+
+      <!-- Phone OTP Card / Box -->
+      <div
+        class="p-4 sm:p-5 rounded-none md:rounded-2xl bg-transparent md:bg-white md:dark:bg-slate-900/60 border-0 md:border md:border-slate-200/80 md:dark:border-slate-800/80 flex flex-col md:justify-between gap-3 md:shadow-sm">
+        <!-- Top Bar: Icon on left, Actions on right (with mobile text beside icon) -->
+        <div class="flex items-center justify-between gap-2.5">
+          <div class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+            <div
+              class="w-9 h-9 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0">
+              <app-icon name="phone" [size]="18"></app-icon>
+            </div>
+            <!-- Mobile Only Text -->
+            <div class="min-w-0 flex-1 md:hidden">
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">Mobile Security OTP</h4>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="text-xs text-slate-500 dark:text-slate-400 font-mono select-all truncate">{{ displayPhone()
+                  }}</span>
+                <button *ngIf="profile?.phone" type="button" (click)="toggleShowPhone()"
+                  class="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent inline-flex items-center justify-center focus:outline-none"
+                  [appTooltip]="showFullPhone() ? 'Hide phone number' : 'Show full phone number'" tooltipPlacement="top"
+                  [attr.aria-label]="showFullPhone() ? 'Hide phone number' : 'Show phone number'">
+                  <app-icon [name]="showFullPhone() ? 'eye-off' : 'eye'" [size]="13"></app-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+          <!-- Badges & Action -->
+          <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <span *ngIf="profile.isPhoneVerified"
+              class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50"
+              appTooltip="Mobile phone number verified via OTP" tooltipPlacement="top">
+              <app-icon name="check" [size]="10"></app-icon>
+              <span>Verified</span>
+            </span>
+            <button (click)="openVerification('phone')"
+              [appTooltip]="profile.isPhoneVerified ? 'Change registered phone number' : 'Verify mobile phone via OTP'"
+              tooltipPlacement="top"
+              class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-sm cursor-pointer border-0 flex items-center gap-1"
+              [ngClass]="profile.isPhoneVerified
+                ? 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'">
+              <span>{{ profile.isPhoneVerified ? 'Update' : 'Verify' }}</span>
+              <app-icon name="arrow-right" [size]="11"></app-icon>
+            </button>
+          </div>
+        </div>
+        <!-- Desktop Only Text (Full Width below Header Row — No truncation!) -->
+        <div class="hidden md:block min-w-0 w-full mt-2">
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">Mobile Security OTP</h4>
+          <div class="flex items-center gap-1.5 mt-1">
+            <span class="text-xs text-slate-500 dark:text-slate-400 font-mono select-all">{{ displayPhone() }}</span>
+            <button *ngIf="profile?.phone" type="button" (click)="toggleShowPhone()"
+              class="p-1 rounded text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent inline-flex items-center justify-center focus:outline-none"
+              [appTooltip]="showFullPhone() ? 'Hide phone number' : 'Show full phone number'" tooltipPlacement="top"
+              [attr.aria-label]="showFullPhone() ? 'Hide phone number' : 'Show phone number'">
+              <app-icon [name]="showFullPhone() ? 'eye-off' : 'eye'" [size]="13"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Recovery Contact Card / Box (Replaces KYC Box) -->
+      <div
+        class="p-4 sm:p-5 rounded-none md:rounded-2xl bg-transparent md:bg-white md:dark:bg-slate-900/60 border-0 md:border md:border-slate-200/80 md:dark:border-slate-800/80 flex flex-col md:justify-between gap-3 md:shadow-sm">
+        <!-- Top Bar: Icon on left, Actions on right (with mobile text beside icon) -->
+        <div class="flex items-center justify-between gap-2.5">
+          <div class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+            <div
+              class="w-9 h-9 rounded-xl bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0">
+              <app-icon name="user-check" [size]="18"></app-icon>
+            </div>
+            <!-- Mobile Only Text -->
+            <div class="min-w-0 flex-1 md:hidden">
+              <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">Emergency Contact</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5 select-all">
+                {{ recoveryContactSummary() }}
+              </p>
+            </div>
+          </div>
+          <!-- Badges & Action -->
+          <div class="flex flex-col sm:flex-row items-end sm:items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <span *ngIf="isRecoveryConfigured()"
+              class="inline-flex items-center gap-1 text-[9px] sm:text-[10px] font-extrabold px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50"
+              appTooltip="Emergency recovery contact is configured" tooltipPlacement="top">
+              <app-icon name="check" [size]="10"></app-icon>
+              <span>Configured</span>
+            </span>
+            <button (click)="openVerification('emergency')"
+              [appTooltip]="isRecoveryConfigured() ? 'Edit emergency recovery contact' : 'Add emergency recovery contact for account safety'"
+              tooltipPlacement="top"
+              class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-sm cursor-pointer border-0 flex items-center gap-1"
+              [ngClass]="isRecoveryConfigured()
+                ? 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                : 'bg-teal-600 hover:bg-teal-700 text-white shadow-teal-600/20'">
+              <span>{{ isRecoveryConfigured() ? 'Update' : 'Add' }}</span>
+              <app-icon name="arrow-right" [size]="11"></app-icon>
+            </button>
+          </div>
+        </div>
+        <!-- Desktop Only Text (Full Width below Header Row — No truncation!) -->
+        <div class="hidden md:block min-w-0 w-full mt-2">
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">Emergency Contact</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 truncate mt-1 select-all">
+            {{ recoveryContactSummary() }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 3. SECURITY & AUTHENTICATION ENGINE ── -->
+  <section class="space-y-4" aria-labelledby="security-heading">
+    <div class="flex items-center justify-between">
+      <h3 id="security-heading"
+        class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+        <app-icon name="lock" [size]="15" class="text-slate-400"></app-icon>
+        <span>Security & Authentication</span>
+      </h3>
+    </div>
+
+    <!-- Security Health Progress Card -->
+    <div class="p-5 rounded-2xl border transition-colors" [ngClass]="securityBgClasses()">
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="text-sm font-black" [ngClass]="securityColorClasses()">
+            Security Rating: {{ securityRating() }}
+          </span>
+          <span class="text-xs font-extrabold px-2.5 py-0.5 rounded-full border" [ngClass]="securityColorClasses()"
+            appTooltip="Your overall account security posture based on verification status" tooltipPlacement="top">
+            {{ securityScore() }}%
+          </span>
+        </div>
+        <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+          {{ securityScore() === 100 ? 'Maximum Protection' : 'Action Recommended' }}
+        </span>
+      </div>
+
+      <div class="w-full h-2 rounded-full bg-white/60 dark:bg-slate-800/60 overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-700 ease-out" [style.width.%]="securityScore()"
+          [ngClass]="securityScore() >= 80 ? 'bg-emerald-500' : securityScore() >= 60 ? 'bg-amber-500' : 'bg-rose-500'">
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-4 pt-2 border-t border-black/5 dark:border-white/5">
+        <div class="flex items-center gap-2 text-xs">
+          <app-icon [name]="profile.isEmailVerified ? 'check-circle' : 'circle'" [size]="15"
+            [ngClass]="profile.isEmailVerified ? 'text-emerald-500' : 'text-slate-400'"></app-icon>
+          <span
+            [ngClass]="profile.isEmailVerified ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400'">
+            Email Confirmation
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <app-icon [name]="profile.isPhoneVerified ? 'check-circle' : 'circle'" [size]="15"
+            [ngClass]="profile.isPhoneVerified ? 'text-emerald-500' : 'text-slate-400'"></app-icon>
+          <span
+            [ngClass]="profile.isPhoneVerified ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400'">
+            Mobile OTP Verification
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-xs">
+          <app-icon [name]="profile.isTwoFactorEnabled ? 'check-circle' : 'circle'" [size]="15"
+            [ngClass]="profile.isTwoFactorEnabled ? 'text-emerald-500' : 'text-slate-400'"></app-icon>
+          <span
+            [ngClass]="profile.isTwoFactorEnabled ? 'text-slate-800 dark:text-slate-200 font-semibold' : 'text-slate-400'">
+            Two-Factor Authentication
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Security Action Controls -->
+    <div
+      class="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden">
+
+      <!-- 2FA Toggle Row -->
+      <div class="p-5 flex flex-col gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <app-icon name="shield-check" [size]="20"></app-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Two-Factor Authentication (2FA)</h4>
+                <span class="text-[10px] font-black px-2 py-0.5 rounded-full border"
+                  [ngClass]="profile.isTwoFactorEnabled
+                    ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800/40'
+                    : 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'">
+                  {{ profile.isTwoFactorEnabled ? 'Enabled' : 'Disabled' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Add an additional layer of security requiring an authenticator code or SMS OTP on sign in.
+              </p>
+            </div>
+          </div>
+          <button (click)="toggleTwoFactor()" [disabled]="isToggling2FA()"
+            [appTooltip]="profile.isTwoFactorEnabled ? 'Disable two-factor authentication' : 'Enable two-factor authentication'"
+            tooltipPlacement="left"
+            class="px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm cursor-pointer border-0 flex items-center gap-1.5 self-start sm:self-center flex-shrink-0"
+            [ngClass]="profile.isTwoFactorEnabled
+              ? 'bg-rose-50 hover:bg-rose-100 text-rose-600 dark:bg-rose-950/30 dark:hover:bg-rose-950/50 dark:text-rose-400'
+              : 'bg-purple-600 hover:bg-purple-700 text-white shadow-purple-600/20'">
+            <app-icon *ngIf="isToggling2FA()" name="loader" [size]="13" class="animate-spin"></app-icon>
+            <span>{{ profile.isTwoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA' }}</span>
+          </button>
+        </div>
+
+        <!-- 2FA Management Action Buttons (when enabled) -->
+        <div *ngIf="profile.isTwoFactorEnabled"
+          class="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800/60 ml-0 sm:ml-[54px]">
+          <button (click)="openReconfigure2FA()" type="button"
+            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 hover:border-purple-200 dark:hover:border-purple-800/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
+            <app-icon name="refresh" [size]="12"></app-icon>
+            <span>Reconfigure Authenticator</span>
+          </button>
+
+          <button (click)="openViewBackupCodes()" type="button"
+            class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-purple-50 dark:hover:bg-purple-950/30 text-slate-700 dark:text-slate-300 hover:text-purple-700 dark:hover:text-purple-300 hover:border-purple-200 dark:hover:border-purple-800/40 text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 shadow-sm">
+            <app-icon name="key" [size]="12"></app-icon>
+            <span>Backup Codes</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Password Change Row -->
+      <div class="p-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-start gap-3.5">
+            <div
+              class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <app-icon name="key" [size]="20"></app-icon>
+            </div>
+            <div>
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white">Account Password</h4>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                Protect your confidential legal files with an 8+ character password.
+              </p>
+            </div>
+          </div>
+          <button (click)="togglePasswordSection()"
+            [appTooltip]="showPasswordSection() ? 'Close password update form' : 'Update account password'"
+            tooltipPlacement="left"
+            class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer shadow-sm self-start sm:self-center flex-shrink-0">
+            <span>{{ showPasswordSection() ? 'Cancel' : 'Change Password' }}</span>
+          </button>
+        </div>
+
+        <!-- Expandable Inline Password Form -->
+        <form *ngIf="showPasswordSection()" [formGroup]="passwordForm" (ngSubmit)="submitPasswordChange()"
+          class="mt-5 pt-5 border-t border-slate-100 dark:border-slate-800 space-y-4 animate-[fadeIn_0.2s_ease-out]">
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="space-y-1.5">
+              <label for="acc-curr-pass" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Current Password <span class="text-rose-500">*</span>
+              </label>
+              <input id="acc-curr-pass" type="password" formControlName="currentPassword"
+                autocomplete="current-password" placeholder="••••••••"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border text-xs text-slate-900 dark:text-white outline-none transition-all"
+                [ngClass]="isPasswordInvalid('currentPassword')
+                  ? 'border-rose-500 dark:border-rose-500 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+                  : 'border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10'" />
+              <p *ngIf="isPasswordInvalid('currentPassword')"
+                class="text-[11px] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+                <app-icon name="alert-circle" [size]="12" class="flex-shrink-0 text-rose-500"></app-icon>
+                <span>{{ getPasswordError('currentPassword') }}</span>
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <label for="acc-new-pass" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                New Password (Min 8 Chars) <span class="text-rose-500">*</span>
+              </label>
+              <input id="acc-new-pass" type="password" formControlName="newPassword" autocomplete="new-password"
+                placeholder="••••••••"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border text-xs text-slate-900 dark:text-white outline-none transition-all"
+                [ngClass]="isPasswordInvalid('newPassword')
+                  ? 'border-rose-500 dark:border-rose-500 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+                  : 'border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10'" />
+              <p *ngIf="isPasswordInvalid('newPassword')"
+                class="text-[11px] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+                <app-icon name="alert-circle" [size]="12" class="flex-shrink-0 text-rose-500"></app-icon>
+                <span>{{ getPasswordError('newPassword') }}</span>
+              </p>
+            </div>
+            <div class="space-y-1.5">
+              <label for="acc-conf-pass" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                Confirm New Password <span class="text-rose-500">*</span>
+              </label>
+              <input id="acc-conf-pass" type="password" formControlName="confirmPassword" autocomplete="new-password"
+                placeholder="••••••••"
+                class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border text-xs text-slate-900 dark:text-white outline-none transition-all"
+                [ngClass]="isPasswordInvalid('confirmPassword')
+                  ? 'border-rose-500 dark:border-rose-500 focus:border-rose-500 focus:ring-4 focus:ring-rose-500/10'
+                  : 'border-slate-200 dark:border-slate-800 focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10'" />
+              <p *ngIf="isPasswordInvalid('confirmPassword')"
+                class="text-[11px] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+                <app-icon name="alert-circle" [size]="12" class="flex-shrink-0 text-rose-500"></app-icon>
+                <span>{{ getPasswordError('confirmPassword') }}</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex justify-end gap-2 pt-2">
+            <button type="button" (click)="togglePasswordSection()" [appTooltip]="'Discard password updates'"
+              class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer border-0">
+              Cancel
+            </button>
+            <button type="submit" [disabled]="isChangingPassword()" [appTooltip]="'Save new password'"
+              class="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-md shadow-amber-500/20 cursor-pointer border-0 flex items-center gap-2">
+              <app-icon *ngIf="isChangingPassword()" name="loader" [size]="14" class="animate-spin"></app-icon>
+              <span>{{ isChangingPassword() ? 'Saving...' : 'Update Password' }}</span>
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 4. ACTIVE SESSIONS & DEVICE MANAGEMENT ── -->
+  <section class="space-y-3" aria-labelledby="sessions-heading">
+    <div class="flex items-center justify-between">
+      <h3 id="sessions-heading"
+        class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+        <app-icon name="smartphone" [size]="15" class="text-slate-400"></app-icon>
+        <span>Active Sessions & Connected Devices ({{ sessions().length }})</span>
+      </h3>
+      <button *ngIf="sessions().length > 1" (click)="revokeAllOtherSessions()"
+        appTooltip="Revoke all sessions on other devices immediately" tooltipPlacement="left"
+        class="text-xs font-bold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer bg-transparent border-0 flex items-center gap-1">
+        <span class="hidden sm:inline">Sign Out All Other Devices</span>
+        <span class="sm:hidden">Sign Out All</span>
+      </button>
+    </div>
+
+    <div
+      class="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden">
+
+      <!-- Skeleton Loading State -->
+      <div *ngIf="isLoadingSessions()" class="p-4 sm:p-5 space-y-4 animate-pulse">
+        <div *ngFor="let s of [1, 2]" class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3.5 min-w-0 flex-1">
+            <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
+            <div class="space-y-1.5 min-w-0 flex-1">
+              <div class="w-32 sm:w-44 h-3.5 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+              <div class="w-48 sm:w-64 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+              <div class="w-28 sm:w-36 h-2 bg-slate-100 dark:bg-slate-800/50 rounded-md"></div>
+            </div>
+          </div>
+          <div class="w-16 h-7 rounded-xl bg-slate-200/60 dark:bg-slate-800/40 flex-shrink-0"></div>
+        </div>
+      </div>
+
+      <!-- Loaded Sessions List -->
+      <ng-container *ngIf="!isLoadingSessions()">
+        <div *ngFor="let session of sessions(); trackBy: trackBySessionId"
+          class="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div
+              class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center flex-shrink-0">
+              <app-icon [name]="session.icon" [size]="20"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">
+                  {{ session.device }}
+                </h4>
+                <span *ngIf="session.isCurrent"
+                  class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50"
+                  appTooltip="Your active browser session on this device" tooltipPlacement="top">
+                  This Device
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                {{ session.browser }} • {{ session.os }} • {{ session.location }}
+              </p>
+              <p class="text-[10px] text-slate-400 font-mono mt-0.5">
+                IP: {{ session.ip }} • Last seen: {{ session.lastActive }}
+              </p>
+            </div>
+          </div>
+
+          <div class="flex items-center flex-shrink-0">
+            <button *ngIf="!session.isCurrent" (click)="revokeSession(session.id)"
+              [appTooltip]="'Sign out and revoke access from ' + session.device" tooltipPlacement="left"
+              class="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all cursor-pointer shadow-sm">
+              <span>Revoke</span>
+            </button>
+            <span *ngIf="session.isCurrent" appTooltip="Currently connected and authenticating via this device"
+              tooltipPlacement="left"
+              class="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1 cursor-default">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Active</span>
+            </span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </section>
+
+  <!-- ── 5. COMMUNICATION & NOTIFICATION PREFERENCES ── -->
+  <section class="space-y-3" aria-labelledby="notifications-heading">
+    <h3 id="notifications-heading"
+      class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+      <app-icon name="bell" [size]="15" class="text-slate-400"></app-icon>
+      <span>Notification Preferences</span>
+    </h3>
+
+    <div
+      class="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden">
+
+      <!-- Reusable Toggle Switch Template -->
+      <ng-template #toggleSwitch let-checked="checked" let-type="type" let-tooltip="tooltip" let-label="label">
+        <button type="button" (click)="onToggleSwitch(type)" [appTooltip]="tooltip" tooltipPlacement="left"
+          class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+          [ngClass]="checked ? 'bg-amber-500' : 'bg-slate-200 dark:bg-slate-700'" role="switch"
+          [attr.aria-checked]="checked" [attr.aria-label]="label">
+          <span aria-hidden="true"
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+            [ngClass]="checked ? 'translate-x-5' : 'translate-x-0'"></span>
+        </button>
+      </ng-template>
+
+      <!-- Case Notifications -->
+      <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            Case Dossier & Consultation Inquiries
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Instant alerts when a client inquires, books a slot, or an advocate updates case filings.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyEmailCases(),
+            type: 'emailCases',
+            tooltip: notifyEmailCases() ? 'Turn off case consultation notifications' : 'Turn on instant case consultation alerts',
+            label: 'Toggle case inquiry email notifications'
+          }"></ng-container>
+        </div>
+      </div>
+
+      <!-- Law Amendments -->
+      <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            Legal Updates & News
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Get notified about relevant legal updates, new rulings, and legislative changes.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyLawAmendments(),
+            type: 'lawAmendments',
+            tooltip: notifyLawAmendments() ? 'Turn off statutory and case precedent alerts' : 'Turn on automated statutory briefings',
+            label: 'Toggle statutory update notifications'
+          }"></ng-container>
+        </div>
+      </div>
+
+      <!-- Weekly Digest -->
+      <div class="p-4 sm:p-5 flex items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            Weekly Digest & Account Activity Summary
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            A weekly overview of your inquiries, active appointments, and profile visibility stats.
+          </p>
+        </div>
+        <div class="flex items-center gap-3">
+          <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyEmailDigest(),
+            type: 'emailDigest',
+            tooltip: notifyEmailDigest() ? 'Turn off weekly activity digest emails' : 'Turn on weekly activity digest',
+            label: 'Toggle weekly digest notifications'
+          }"></ng-container>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 6. DATA PRIVACY & PORTABILITY ── -->
+  <section class="space-y-3" aria-labelledby="privacy-heading">
+    <h3 id="privacy-heading"
+      class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-2">
+      <app-icon name="eye" [size]="15" class="text-slate-400"></app-icon>
+      <span>Privacy & Data Portability (DPDP & GDPR)</span>
+    </h3>
+
+    <div
+      class="rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden">
+
+      <!-- Search Engine Indexing Toggle (Lawyers Only) -->
+      <div *ngIf="!isClient()" class="p-4 sm:p-5 flex items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            Public Directory & Search Indexing
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Allow prospective clients to find your practice profile via Google, Bing, and LegalConnect search.
+          </p>
+        </div>
+        <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+          checked: isSearchIndexable(),
+          type: 'searchIndexable',
+          tooltip: isSearchIndexable() ? 'Hide profile from search engines' : 'Allow search engine indexing',
+          label: 'Toggle search engine indexing'
+        }"></ng-container>
+      </div>
+
+      <!-- Corporate Entity Toggle removed — no enterprise features in V1 -->
+
+      <!-- Export Data Button -->
+      <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            Export Personal Data Archive
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Download a machine-readable JSON copy of your personal details, credentials, and authentication logs.
+          </p>
+        </div>
+        <button (click)="exportPersonalData()" [disabled]="isExportingData()"
+          [appTooltip]="'Download personal data archive in JSON format (GDPR & DPDP compliant)'" tooltipPlacement="top"
+          class="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center gap-2 self-start sm:self-center flex-shrink-0">
+          <app-icon *ngIf="!isExportingData()" name="download" [size]="14"></app-icon>
+          <app-icon *ngIf="isExportingData()" name="loader" [size]="14" class="animate-spin"></app-icon>
+          <span>{{ isExportingData() ? 'Generating Archive...' : 'Download JSON' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 7. DANGER ZONE ── -->
+  <section class="space-y-3" aria-labelledby="danger-heading">
+    <h3 id="danger-heading"
+      class="text-[11px] font-black uppercase tracking-wider text-rose-500 dark:text-rose-400 flex items-center gap-2">
+      <app-icon name="alert-triangle" [size]="15" class="text-rose-500"></app-icon>
+      <span>Danger Zone</span>
+    </h3>
+
+    <div
+      class="rounded-2xl border border-rose-200 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/10 divide-y divide-rose-100 dark:divide-rose-900/30 overflow-hidden">
+
+      <!-- Deactivate -->
+      <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Deactivate Account</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Temporarily pause your profile visibility and active consultation availability. Reactivate at any time.
+          </p>
+        </div>
+        <button (click)="deactivateAccount()" [appTooltip]="'Temporarily pause account and hide from directory'"
+          tooltipPlacement="left"
+          class="px-4 py-2 rounded-xl border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 text-xs font-bold transition-all cursor-pointer self-start sm:self-center flex-shrink-0">
+          <span>Deactivate</span>
+        </button>
+      </div>
+
+      <!-- Delete Permanently -->
+      <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h4 class="text-xs sm:text-sm font-bold text-rose-600 dark:text-rose-400">Permanently Delete Account</h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Permanently erase your account, identity records, and access tokens. This action is irreversible.
+          </p>
+        </div>
+        <button (click)="deleteAccount()" [appTooltip]="'Permanently delete account, filings, and dossiers'"
+          tooltipPlacement="left"
+          class="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold transition-all shadow-md shadow-rose-600/20 cursor-pointer border-0 self-start sm:self-center flex-shrink-0">
+          <span>Delete Account</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+</div>
+
+<!-- ══════════ TWO-FACTOR AUTHENTICATION MODAL (BOTTOM-SHEET ON MOBILE, 2-COL MODAL ON DESKTOP) ══════════ -->
+<div *ngIf="show2FaModal()"
+  class="fixed inset-0 z-[3000] flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-6 md:p-8 overflow-hidden animate-[fadeIn_0.2s_ease-out]"
+  role="dialog" aria-modal="true" aria-labelledby="twofa-modal-title">
+
+  <!-- Backdrop click to dismiss -->
+  <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity" (click)="close2FaModal()"></div>
+
+  <!-- Modal Dialog Container (Full bottom-sheet on mobile, centered 2-col dialog on desktop) -->
+  <div (click)="$event.stopPropagation()"
+    class="relative w-full sm:max-w-3xl max-h-[92dvh] sm:max-h-[88vh] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border-t sm:border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden z-10 flex flex-col my-0 sm:my-auto transition-all animate-[slideUp_0.25s_cubic-bezier(0.16,1,0.3,1)] sm:animate-[scaleIn_0.2s_ease-out]">
+
+    <!-- Mobile Pull / Drag Indicator (Touch visual cue) -->
+    <div class="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0 bg-slate-50/50 dark:bg-slate-900/50">
+      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+    </div>
+
+    <!-- Modal Header -->
+    <div
+      class="px-5 sm:px-7 py-3.5 sm:py-5 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between bg-slate-50/50 dark:bg-slate-900/50 flex-shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" [ngClass]="{
+            'bg-purple-100 text-purple-600 dark:bg-purple-950/60 dark:text-purple-400': twoFaStep() === 'setup' || twoFaStep() === 'reconfigure',
+            'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400': twoFaStep() === 'view-backup',
+            'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400': twoFaStep() === 'disable'
+          }">
+          <app-icon
+            [name]="isReconfiguringState() ? 'refresh' : (twoFaStep() === 'setup' ? 'shield-check' : (twoFaStep() === 'reconfigure' ? 'refresh' : (twoFaStep() === 'view-backup' ? 'key' : 'alert-triangle')))"
+            [size]="20"></app-icon>
+        </div>
+        <div>
+          <h3 id="twofa-modal-title" class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
+            {{ isReconfiguringState() ? 'Link Replacement Authenticator' : (twoFaStep() === 'setup' ? 'Set Up Two-Factor
+            Authentication' :
+            (twoFaStep() === 'reconfigure' ? 'Reconfigure Authenticator' :
+            (twoFaStep() === 'view-backup' ? 'Emergency Backup Codes' : 'Disable Two-Factor Authentication'))) }}
+          </h3>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            {{ isReconfiguringState() ? 'Scan barcode on your new device. Your previous authenticator remains active
+            until confirmed.' : (twoFaStep() === 'setup' ? 'Protect your legal files & profile with Google Authenticator
+            or compatible app' :
+            (twoFaStep() === 'reconfigure' ? 'Confirm your password to link a new authenticator device' :
+            (twoFaStep() === 'view-backup' ? 'Check remaining backup codes or generate fresh recovery keys' : 'Confirm
+            security deactivation'))) }}
+          </p>
+        </div>
+      </div>
+      <button (click)="close2FaModal()"
+        [disabled]="isSubmitting2FA() || isLoadingBackupCodes() || isRegeneratingCodes()"
+        class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors border-0 bg-transparent cursor-pointer">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <!-- Modal Body (Scrollable between header and footer with hidden scrollbars) -->
+    <div id="twoFaScrollContainer"
+      class="p-5 sm:p-7 overflow-y-auto overflow-x-hidden space-y-5 flex-1 overscroll-contain no-scrollbar">
+
+      <!-- Error Alert Banner -->
+      <div *ngIf="twoFaError()"
+        class="p-3.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/40 flex items-start gap-3 text-rose-700 dark:text-rose-400 text-xs">
+        <app-icon name="alert-triangle" [size]="16" class="flex-shrink-0 mt-0.5 text-rose-500"></app-icon>
+        <div class="flex-1 font-medium leading-relaxed">{{ twoFaError() }}</div>
+      </div>
+
+      <!-- ─── 1. SETUP VIEW (2-COLUMN GRID ON DESKTOP) ─── -->
+      <div *ngIf="twoFaStep() === 'setup'" class="space-y-4">
+
+        <!-- Zero-Downtime Reconfiguration Active Banner -->
+        <div *ngIf="isReconfiguringState()"
+          class="p-3.5 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200/80 dark:border-purple-800/60 text-purple-900 dark:text-purple-300 text-xs flex items-center gap-3 shadow-sm">
+          <app-icon name="shield-check" [size]="18"
+            class="text-purple-600 dark:text-purple-400 flex-shrink-0"></app-icon>
+          <div class="leading-relaxed">
+            <span class="font-bold">Zero-Downtime Protection Active:</span> Your current 2FA device remains active until
+            you verify the new 6-digit code below. If you close this modal, your existing setup is untouched.
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-6">
+
+          <!-- BOX 1 (LEFT COLUMN): Step 1 - Scan QR in Authenticator -->
+          <div
+            class="flex flex-col justify-between p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
+            <div>
+              <div class="flex items-center justify-between gap-2 mb-1.5">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span
+                    class="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center flex-shrink-0 shadow-sm">1</span>
+                  <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">Scan QR in Authenticator
+                  </h4>
+                </div>
+                <!-- Regenerate Barcode Button -->
+                <button (click)="open2FaSetup(true)" [disabled]="isToggling2FA()" type="button"
+                  [appTooltip]="'Generate a brand new QR code and fresh secret key'"
+                  class="flex-shrink-0 whitespace-nowrap inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-purple-200/80 dark:border-purple-800/60 bg-purple-50/70 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/40 text-[11px] font-semibold text-purple-700 dark:text-purple-300 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50">
+                  <app-icon name="refresh" [size]="12" [class.animate-spin]="isToggling2FA()"></app-icon>
+                  <span>Regenerate</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 ml-7 mb-3 leading-relaxed">
+                Scan with Google Authenticator, Microsoft Authenticator, Authy, or 1Password:
+              </p>
+
+              <!-- Futuristic Scanner Reticle Card -->
+              <div
+                class="relative group mx-auto w-fit p-4 rounded-3xl bg-gradient-to-b from-slate-900 via-slate-900/95 to-slate-950 border border-purple-500/30 shadow-xl overflow-hidden flex flex-col items-center">
+                <!-- Ambient Glow Behind Scanner -->
+                <div
+                  class="absolute -inset-1 bg-gradient-to-r from-purple-600/20 via-indigo-600/10 to-purple-600/20 blur-xl opacity-60 pointer-events-none">
+                </div>
+
+                <!-- 4 Glowing Corner Viewfinder Reticles -->
+                <div
+                  class="scanner-reticle absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-purple-400/80 rounded-tl-lg">
+                </div>
+                <div
+                  class="scanner-reticle absolute top-3 right-3 w-5 h-5 border-t-2 border-r-2 border-purple-400/80 rounded-tr-lg">
+                </div>
+                <div
+                  class="scanner-reticle absolute bottom-3 left-3 w-5 h-5 border-b-2 border-l-2 border-purple-400/80 rounded-bl-lg">
+                </div>
+                <div
+                  class="scanner-reticle absolute bottom-3 right-3 w-5 h-5 border-b-2 border-r-2 border-purple-400/80 rounded-br-lg">
+                </div>
+
+                <!-- Inner White QR Frame with Generous Quiet Zone -->
+                <div
+                  class="relative p-3.5 bg-white rounded-2xl shadow-md border border-white/30 flex items-center justify-center overflow-hidden">
+                  <!-- Animated Scanning Laser Line -->
+                  <div class="scanner-laser-line"></div>
+
+                  <!-- QR Code (Unclipped clean matrix) -->
+                  <img *ngIf="qrCodeUrl()" [src]="qrCodeUrl()" alt="2FA QR Code"
+                    class="w-36 h-36 sm:w-44 sm:h-44 block object-contain select-none" />
+
+                  <div *ngIf="!qrCodeUrl()"
+                    class="w-36 h-36 sm:w-44 sm:h-44 flex flex-col items-center justify-center text-slate-400 gap-2">
+                    <app-icon name="loader" [size]="20" class="animate-spin text-purple-500"></app-icon>
+                    <span class="text-[11px] font-medium">Generating barcode...</span>
+                  </div>
+                </div>
+
+                <!-- Scan Guidance Subtitle -->
+                <div class="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 mt-3 relative z-10">
+                  <app-icon name="camera" [size]="13" class="text-purple-400"></app-icon>
+                  <span>Point camera or barcode reader here</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Helpful footnote at bottom of Box 1 -->
+            <div class="mt-3 pt-2 text-center border-t border-slate-200/50 dark:border-slate-800/50">
+              <span
+                class="inline-flex items-center justify-center gap-1.5 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+                <span>Can't scan the QR? Enter manual key in Step 2</span>
+                <app-icon name="arrow-right" [size]="11" class="text-purple-400 mt-0.5"></app-icon>
+              </span>
+            </div>
+          </div>
+
+          <!-- BOX 2 (RIGHT COLUMN): Rest (Step 2: Manual Key, Step 3: Backup Codes, Step 4: Verification) -->
+          <div
+            class="flex flex-col justify-between gap-3.5 p-4 sm:p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80">
+
+            <!-- STEP 2: Manual Secret Key -->
+            <div>
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center">2</span>
+                  <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Can't scan? Enter key manually</h4>
+                </div>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 ml-7 mb-2">
+                Type this key directly into your authenticator app:
+              </p>
+              <div class="ml-7 flex items-center gap-2">
+                <code
+                  class="flex-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 text-xs font-mono font-bold text-purple-700 dark:text-purple-300 tracking-wider truncate border border-slate-200/80 dark:border-slate-800/80 select-all shadow-sm">
+                  {{ secretKey() }}
+                </code>
+                <button (click)="copySecretKey()" type="button" [appTooltip]="secretCopied() ? 'Copied!' : 'Copy key'"
+                  class="px-3 py-1.5 rounded-lg bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/40 text-purple-700 dark:text-purple-300 text-xs font-bold transition-all border border-purple-200/60 dark:border-purple-800/40 cursor-pointer flex items-center gap-1.5 flex-shrink-0 active:scale-95">
+                  <app-icon [name]="secretCopied() ? 'check' : 'copy'" [size]="13"></app-icon>
+                  <span>{{ secretCopied() ? 'Copied' : 'Copy' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 3: Backup Codes -->
+            <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800/60">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center">3</span>
+                  <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Emergency Backup Codes</h4>
+                </div>
+                <button *ngIf="backupCodes().length > 0" (click)="copyBackupCodes()" type="button"
+                  class="text-[11px] font-bold text-purple-600 dark:text-purple-400 hover:underline border-0 bg-transparent cursor-pointer flex items-center gap-1">
+                  <app-icon [name]="backupCodesCopied() ? 'check' : 'copy'" [size]="11"></app-icon>
+                  <span>{{ backupCodesCopied() ? 'Copied all!' : 'Copy All' }}</span>
+                </button>
+              </div>
+
+              <!-- Notice when pending session is reused (codes are securely hashed on server) -->
+              <div *ngIf="isPendingReuse() && backupCodes().length === 0"
+                class="ml-7 p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40">
+                <p class="text-[11px] text-amber-800 dark:text-amber-300 leading-relaxed font-medium">
+                  Your setup barcode is saved from your earlier attempt. If you didn't save your backup codes, click
+                  <button (click)="open2FaSetup(true)" type="button"
+                    class="font-bold underline text-amber-900 dark:text-amber-200 border-0 bg-transparent cursor-pointer">Regenerate
+                    Barcode</button>
+                  to create fresh codes.
+                </p>
+              </div>
+
+              <!-- Standard Backup Codes Grid -->
+              <div *ngIf="backupCodes().length > 0">
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 ml-7 mb-2">
+                  Save these 8 one-time codes in a password manager if phone is lost:
+                </p>
+                <div class="ml-7 grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                  <div *ngFor="let code of backupCodes()"
+                    class="py-1 px-1.5 rounded-lg bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-800/60 text-center font-mono font-bold text-[11px] text-slate-800 dark:text-slate-200 tracking-wider shadow-sm">
+                    {{ code }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- STEP 4: Activation Verification Input -->
+            <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800/60">
+              <div class="flex items-center gap-2 mb-1">
+                <span
+                  class="w-5 h-5 rounded-full bg-purple-600 text-white text-[10px] font-black flex items-center justify-center">4</span>
+                <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Activation Code</h4>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 ml-7 mb-2">
+                Enter the 6-digit code currently shown in your authenticator app:
+              </p>
+              <div class="ml-7">
+                <div class="relative">
+                  <input type="text" [ngModel]="enteredCode()" (ngModelChange)="onCodeInput($event)" maxlength="6"
+                    placeholder="000000" (keydown.enter)="confirmEnable2FA()"
+                    class="w-full py-2.5 px-4 text-center font-mono text-xl sm:text-2xl font-black tracking-[0.4em] rounded-xl border-2 border-purple-400/60 dark:border-purple-600/60 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-500/10 transition-all shadow-sm" />
+                </div>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 text-center">
+                  Codes rotate every 30 seconds automatically
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div> <!-- End Step 1: setup -->
+
+      <!-- ─── 2. RECONFIGURE VIEW ─── -->
+      <div *ngIf="twoFaStep() === 'reconfigure'" class="space-y-4 max-w-lg mx-auto py-2">
+        <div
+          class="p-4 rounded-2xl bg-purple-50/90 dark:bg-purple-950/40 border border-purple-200 dark:border-purple-900/50 text-purple-900 dark:text-purple-300 text-xs leading-relaxed flex items-start gap-3 shadow-sm">
+          <app-icon name="shield-check" [size]="18"
+            class="text-purple-600 dark:text-purple-400 flex-shrink-0 mt-0.5"></app-icon>
+          <div>
+            <p class="font-bold text-sm mb-1">Reconfigure Authenticator App</p>
+            <p class="text-purple-800/90 dark:text-purple-300/90 leading-relaxed">
+              Generate a new barcode to transfer or link 2FA to a replacement device. Your existing 2FA protection
+              remains active until you link the new app.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Confirm your account password to generate a new key:
+          </label>
+          <input type="password" [ngModel]="reconfigurePassword()"
+            (ngModelChange)="onSecureInput(reconfigurePassword, $event)" placeholder="Enter your current password"
+            (keydown.enter)="confirmReconfigure()"
+            class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all shadow-sm" />
+        </div>
+      </div> <!-- End Step 2: reconfigure -->
+
+      <!-- ─── 3. VIEW & REGENERATE BACKUP CODES VIEW ─── -->
+      <div *ngIf="twoFaStep() === 'view-backup'" class="space-y-5 max-w-xl mx-auto py-2">
+
+        <!-- Initial Password Verification Step -->
+        <div *ngIf="!backupCodesLoaded()" class="space-y-4">
+          <div
+            class="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-900 dark:text-amber-300 text-xs leading-relaxed flex items-start gap-3 shadow-sm">
+            <app-icon name="key" [size]="18" class="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"></app-icon>
+            <div>
+              <p class="font-bold text-sm mb-1">Emergency Recovery Backup Codes</p>
+              <p class="text-amber-800/90 dark:text-amber-300/90 leading-relaxed">
+                Backup codes allow you to access your LegalConnect account if you lose your phone or authenticator
+                app.
+                Enter your password to view your backup status.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+            <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+              Enter your account password:
+            </label>
+            <input type="password" [ngModel]="backupPassword()" (ngModelChange)="onSecureInput(backupPassword, $event)"
+              placeholder="Enter your current password" (keydown.enter)="confirmViewBackupCodes()"
+              class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all shadow-sm" />
+          </div>
+        </div>
+
+        <!-- Unlocked View: Remaining Status & Regenerate Button -->
+        <div *ngIf="backupCodesLoaded()" class="space-y-4">
+          <!-- Status Banner -->
+          <div
+            class="p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 flex items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+              <div
+                class="w-11 h-11 rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0">
+                <app-icon name="key" [size]="20"></app-icon>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-slate-900 dark:text-white">Active Backup Codes</h4>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <span class="font-bold text-slate-800 dark:text-slate-200">{{ backupCodesRemaining() }}</span> of 8
+                  codes remaining unused.
+                </p>
+              </div>
+            </div>
+
+            <!-- Regenerate Button -->
+            <button (click)="confirmRegenerateBackupCodes()" [disabled]="isRegeneratingCodes()" type="button"
+              class="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold transition-all shadow-sm flex items-center gap-1.5 cursor-pointer border-0">
+              <app-icon name="refresh" [size]="13" [class.animate-spin]="isRegeneratingCodes()"></app-icon>
+              <span>{{ isRegeneratingCodes() ? 'Regenerating...' : 'Regenerate Codes' }}</span>
+            </button>
+          </div>
+
+          <!-- Newly Generated Plaintext Codes (One-time Display) -->
+          <div *ngIf="newBackupCodes().length > 0"
+            class="p-5 rounded-2xl bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200/80 dark:border-purple-800/60 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <h5 class="text-xs font-bold text-purple-900 dark:text-purple-200">8 New One-Time Backup Codes</h5>
+              </div>
+              <button (click)="copyNewBackupCodes()" type="button"
+                class="text-xs font-bold text-purple-700 dark:text-purple-300 hover:underline border-0 bg-transparent cursor-pointer flex items-center gap-1">
+                <app-icon [name]="newCodesCopied() ? 'check' : 'copy'" [size]="12"></app-icon>
+                <span>{{ newCodesCopied() ? 'Copied all!' : 'Copy All Codes' }}</span>
+              </button>
+            </div>
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div *ngFor="let code of newBackupCodes()"
+                class="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-900 border border-purple-200/60 dark:border-purple-800/40 text-center font-mono font-bold text-xs text-slate-800 dark:text-slate-200 tracking-wider shadow-sm">
+                {{ code }}
+              </div>
+            </div>
+            <p class="text-[11px] text-amber-700 dark:text-amber-400 font-medium">
+              ⚠️ Important: Please store these codes in a password manager or safe now. For security, previously
+              issued
+              codes are now invalidated and these codes will not be shown again.
+            </p>
+          </div>
+        </div>
+
+      </div> <!-- End Step 3: view-backup -->
+
+      <!-- ─── 4. DISABLE VIEW ─── -->
+      <div *ngIf="twoFaStep() === 'disable'" class="space-y-4 max-w-lg mx-auto py-2">
+        <div
+          class="p-4 rounded-2xl bg-amber-50/90 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/50 text-amber-800 dark:text-amber-300 text-xs leading-relaxed flex items-start gap-3 shadow-sm">
+          <app-icon name="alert-triangle" [size]="18"
+            class="text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"></app-icon>
+          <div>
+            <p class="font-bold text-sm mb-1">Warning: Disabling 2FA reduces your account security rating.</p>
+            <p class="text-amber-700/90 dark:text-amber-400/90 leading-relaxed">
+              Anyone who discovers your password will be able to access your consultations, confidential case files,
+              and account profile without needing secondary verification.
+            </p>
+          </div>
+        </div>
+
+        <div
+          class="p-5 rounded-2xl bg-slate-50/70 dark:bg-slate-950/40 border border-slate-200/80 dark:border-slate-800/80 space-y-2">
+          <label class="block text-xs font-bold text-slate-700 dark:text-slate-300">
+            Confirm your account password to proceed:
+          </label>
+          <input type="password" [ngModel]="disablePassword()" (ngModelChange)="onSecureInput(disablePassword, $event)"
+            placeholder="Enter your current password" (keydown.enter)="confirmDisable2FA()"
+            class="w-full px-4 py-2.5 text-xs rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500 transition-all shadow-sm" />
+        </div>
+      </div> <!-- End Step 4: disable -->
+
+    </div> <!-- End #twoFaScrollContainer -->
+
+    <!-- Modal Sticky Footer (Always Pinned at Bottom of Bottom-Sheet & Desktop Dialog) -->
+    <div
+      class="px-5 sm:px-7 py-3.5 sm:py-4 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md flex items-center justify-end gap-3 flex-shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom))]">
+      <button (click)="close2FaModal()"
+        [disabled]="isSubmitting2FA() || isLoadingBackupCodes() || isRegeneratingCodes()" type="button"
+        class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 border-0 bg-transparent transition-all cursor-pointer">
+        {{ (twoFaStep() === 'view-backup' && backupCodesLoaded()) ? 'Done' : 'Cancel' }}
+      </button>
+
+      <!-- SETUP: Verify & Activate -->
+      <button *ngIf="twoFaStep() === 'setup'" (click)="confirmEnable2FA()"
+        [disabled]="isSubmitting2FA() || enteredCode().length !== 6" type="button"
+        class="px-4 sm:px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-md shadow-purple-600/20 border-0 cursor-pointer flex items-center gap-2 active:scale-[0.98]">
+        <app-icon *ngIf="isSubmitting2FA()" name="loader" [size]="14" class="animate-spin"></app-icon>
+        <span class="hidden sm:inline">{{ isSubmitting2FA() ? 'Verifying...' : (isReconfiguringState() ? 'Confirm &
+          Switch Authenticator' :
+          'Verify & Activate 2FA') }}</span>
+        <span class="sm:hidden">{{ isSubmitting2FA() ? 'Verifying...' : (isReconfiguringState() ? 'Confirm & Switch' :
+          'Activate 2FA') }}</span>
+      </button>
+
+      <!-- RECONFIGURE: Continue to barcode -->
+      <button *ngIf="twoFaStep() === 'reconfigure'" (click)="confirmReconfigure()"
+        [disabled]="isSubmitting2FA() || !reconfigurePassword()" type="button"
+        class="px-4 sm:px-6 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-md shadow-purple-600/20 border-0 cursor-pointer flex items-center gap-2 active:scale-[0.98]">
+        <app-icon *ngIf="isSubmitting2FA()" name="loader" [size]="14" class="animate-spin"></app-icon>
+        <span>{{ isSubmitting2FA() ? 'Verifying...' : 'Continue to New Barcode' }}</span>
+      </button>
+
+      <!-- VIEW BACKUP: Unlock Codes -->
+      <button *ngIf="twoFaStep() === 'view-backup' && !backupCodesLoaded()" (click)="confirmViewBackupCodes()"
+        [disabled]="isLoadingBackupCodes() || !backupPassword()" type="button"
+        class="px-4 sm:px-6 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-md shadow-amber-600/20 border-0 cursor-pointer flex items-center gap-2 active:scale-[0.98]">
+        <app-icon *ngIf="isLoadingBackupCodes()" name="loader" [size]="14" class="animate-spin"></app-icon>
+        <span>{{ isLoadingBackupCodes() ? 'Verifying...' : 'Unlock Backup Codes' }}</span>
+      </button>
+
+      <!-- DISABLE: Confirm & Disable -->
+      <button *ngIf="twoFaStep() === 'disable'" (click)="confirmDisable2FA()"
+        [disabled]="isSubmitting2FA() || !disablePassword()" type="button"
+        class="px-4 sm:px-6 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-bold transition-all shadow-md shadow-rose-600/20 border-0 cursor-pointer flex items-center gap-2 active:scale-[0.98]">
+        <app-icon *ngIf="isSubmitting2FA()" name="loader" [size]="14" class="animate-spin"></app-icon>
+        <span>{{ isSubmitting2FA() ? 'Disabling...' : 'Confirm & Disable 2FA' }}</span>
+      </button>
+    </div> <!-- End Modal Sticky Footer -->
+
+  </div> <!-- End Modal Dialog Container -->
+</div> <!-- End Outer Modal Wrapper -->

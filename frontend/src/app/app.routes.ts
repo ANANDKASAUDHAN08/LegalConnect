@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { authGuard } from './guards/auth.guard';
 import { guestGuard } from './guards/guest.guard';
 import { roleGuard } from './guards/role.guard';
+import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
 
 export const routes: Routes = [
   // 1. Entry & Home Page
@@ -161,9 +162,30 @@ export const routes: Routes = [
     title: 'Client Portal | LegalConnect'
   },
   {
+    path: 'profile/identity',
+    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
+    title: 'Personal Identity | LegalConnect'
+  },
+  {
+    path: 'profile/credentials',
+    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
+    title: 'Professional Credentials | LegalConnect'
+  },
+  {
+    path: 'profile/verification',
+    loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
+    canActivate: [authGuard],
+    title: 'Account & Preferences | LegalConnect'
+  },
+  {
     path: 'profile',
     loadComponent: () => import('./pages/profile/profile.component').then(m => m.ProfileComponent),
     canActivate: [authGuard],
+    canDeactivate: [unsavedChangesGuard],
     title: 'My Profile | LegalConnect'
   },
   {

@@ -1,0 +1,168 @@
+<div *ngIf="isOpen"
+  class="fixed inset-0 z-[3000] flex items-center justify-center p-3 sm:p-6 overflow-hidden animate-[fadeIn_0.2s_ease-out]">
+
+  <!-- Backdrop -->
+  <div class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
+
+  <!-- Modal Container -->
+  <div
+    class="relative w-full max-w-2xl bg-white dark:bg-[#0d1829] border border-slate-200 dark:border-slate-800 rounded-3xl shadow-modal overflow-hidden z-10 max-h-[90vh] flex flex-col animate-[scaleIn_0.25s_ease-out]">
+
+    <!-- Studio Header Banner -->
+    <div class="px-6 py-3.5 bg-amber-500/10 border-b border-amber-500/20 flex items-center justify-between shrink-0">
+      <div class="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+        <app-icon name="eye" [size]="16"></app-icon>
+        <span class="text-xs font-black uppercase tracking-wider">Advocate Studio • Live Public Directory Preview</span>
+      </div>
+      <button (click)="closeModal()" [appTooltip]="'Close Preview'"
+        class="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center transition-colors cursor-pointer border-0 bg-transparent"
+        aria-label="Close modal">
+        <app-icon name="x" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <!-- Scrollable Preview Body -->
+    <div
+      class="overflow-y-auto overflow-x-hidden flex-1 p-5 sm:p-6 space-y-6 overscroll-contain no-scrollbar scrollbar-none">
+
+      <!-- The Public Card Simulation -->
+      <div
+        class="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/90 shadow-card-elevated overflow-hidden">
+
+        <!-- Chamber Banner Cover -->
+        <div class="relative h-36 sm:h-44 bg-gradient-to-r from-slate-900 via-amber-950 to-slate-900 overflow-hidden">
+          <img *ngIf="lawyerProfile?.bannerUrl" [src]="lawyerProfile?.bannerUrl" class="w-full h-full object-cover"
+            alt="Chamber banner" />
+          <div class="absolute inset-0 bg-black/25"></div>
+
+          <!-- Chamber Badge on Banner -->
+          <div class="absolute top-3.5 right-3.5 flex items-center gap-2">
+            <span
+              class="px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-black/50 backdrop-blur-md text-white border border-white/20">
+              Chamber Office
+            </span>
+          </div>
+        </div>
+
+        <!-- Identity Bar -->
+        <div class="px-6 pb-6 pt-0 relative">
+          <!-- Avatar Overlapping Banner -->
+          <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-12 sm:-mt-14 mb-4">
+            <div
+              class="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl ring-4 ring-white dark:ring-slate-900 shadow-xl overflow-hidden bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center text-white text-2xl font-black flex-shrink-0">
+              <img *ngIf="profile?.avatarUrl" [src]="profile?.avatarUrl" class="w-full h-full object-cover"
+                alt="Advocate portrait" />
+              <span *ngIf="!profile?.avatarUrl">{{ getInitials() }}</span>
+            </div>
+
+            <!-- Operational Badge / Status -->
+            <div class="flex items-center gap-2 self-start sm:self-auto">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold"
+                [ngClass]="lawyerProfile?.isAvailable !== false ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border border-emerald-200 dark:border-emerald-800/50' : 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 border border-rose-200 dark:border-rose-800/50'">
+                <span class="w-2 h-2 rounded-full"
+                  [ngClass]="lawyerProfile?.isAvailable !== false ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
+                <span>{{ lawyerProfile?.isAvailable !== false ? 'Accepting Clients' : 'Schedule Full' }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Name & Designation -->
+          <div class="space-y-1">
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white leading-tight">
+                Adv. {{ profile?.fullName }}
+              </h1>
+              <span class="text-amber-500" [appTooltip]="'Verified Advocate Standing'" tooltipPlacement="top">
+                <app-icon name="shield-check" [size]="20"></app-icon>
+              </span>
+            </div>
+
+            <p class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+              Advocate • {{ lawyerProfile?.city || profile?.clientCity || 'Delhi' }} Jurisdiction
+              <span *ngIf="lawyerProfile?.experienceYears">• {{ lawyerProfile?.experienceYears }} Years Active
+                Practice</span>
+            </p>
+
+            <!-- Bar Verification Tag -->
+            <div class="pt-1 flex items-center gap-2">
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-mono font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/60">
+                <app-icon name="badge-check" [size]="14"></app-icon>
+                <span>Bar Reg: {{ lawyerProfile?.barCouncilNumber || 'Pending Official Verification' }}</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Practice Areas -->
+          <div class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Practice Specializations</div>
+            <div class="flex flex-wrap gap-1.5">
+              <span *ngFor="let spec of getSpecializationList(); trackBy: trackByString"
+                class="px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                {{ spec }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Consultation Parameter Glance -->
+          <div
+            class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800 text-xs">
+            <div>
+              <span class="text-[10px] text-slate-400 font-bold uppercase">Video Consult</span>
+              <div class="font-bold text-slate-900 dark:text-white mt-0.5">
+                ₹{{ lawyerProfile?.consultationFee || 1500 }} <span class="text-[10px] font-normal text-slate-400">/ 30
+                  min</span>
+              </div>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 font-bold uppercase">Chamber Consult</span>
+              <div class="font-bold text-slate-900 dark:text-white mt-0.5">
+                ₹{{ lawyerProfile?.inPersonFee || 2500 }} <span class="text-[10px] font-normal text-slate-400">/ 45
+                  min</span>
+              </div>
+            </div>
+            <div class="col-span-2 sm:col-span-1">
+              <span class="text-[10px] text-slate-400 font-bold uppercase">Response Time</span>
+              <div class="font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+                {{ lawyerProfile?.responseTime || 'Within 2 hours' }}
+              </div>
+            </div>
+          </div>
+
+          <!-- Public Bio -->
+          <div class="mt-4 space-y-1">
+            <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">About Advocate</div>
+            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-4">
+              {{ lawyerProfile?.bio || profile?.clientBio || 'Dedicated legal advocate committed to providing
+              transparent, effective counsel across civil disputes, commercial law, and dispute resolution.' }}
+            </p>
+          </div>
+
+          <!-- Language Fluency -->
+          <div class="mt-3 flex items-center gap-2 text-xs">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Languages:</span>
+            <span class="font-semibold text-slate-700 dark:text-slate-300">{{ getLanguagesList().join(', ') }}</span>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div
+      class="px-6 py-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950/30 flex items-center justify-between gap-3 shrink-0">
+      <button (click)="navigateToPublicPage()" [appTooltip]="'Navigate to public advocate profile page'"
+        class="inline-flex items-center gap-2 text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer border-0 bg-transparent">
+        <span>Open Live Public URL</span>
+        <app-icon name="external-link" [size]="14"></app-icon>
+      </button>
+
+      <button (click)="closeModal()" [appTooltip]="'Return to profile editing'"
+        class="px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold transition-all cursor-pointer border-0">
+        Back to Editor
+      </button>
+    </div>
+
+  </div>
+</div>

@@ -1,524 +1,164 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed, ChangeDetectionStrategy, ViewChild, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { UserProfileService } from '../../services/user-profile.service';
 import { LawyerService, LawyerProfileData } from '../../services/lawyer.service';
 import { SnackbarService } from '../../services/snackbar.service';
+import { ScrollService } from '../../services/scroll.service';
+import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
+import { Subscription } from 'rxjs';
 
-// Subcomponents
-import { ClientOverviewTabComponent } from './components/client-overview-tab/client-overview-tab.component';
-import { PersonalInfoTabComponent } from './components/personal-info-tab/personal-info-tab.component';
-import { ProfessionalCredentialsTabComponent } from './components/professional-credentials-tab/professional-credentials-tab.component';
-import { SecuritySettingsTabComponent } from './components/security-settings-tab/security-settings-tab.component';
-import { DangerZoneTabComponent } from './components/danger-zone-tab/danger-zone-tab.component';
-import { VerificationTabComponent } from './components/verification-tab/verification-tab.component';
-import { MyCasesTabComponent } from './components/my-cases-tab/my-cases-tab.component';
-import { MyReviewsTabComponent } from './components/my-reviews-tab/my-reviews-tab.component';
-import { SavedLawsTabComponent } from './components/saved-laws-tab/saved-laws-tab.component';
-
+// Shared Design System & Subcomponents
+import { ProfileTabComponent } from './components/profile-tab/profile-tab.component';
+import { AccountTabComponent } from './components/account-tab/account-tab.component';
+import { MobileOverviewTabComponent } from './components/mobile-overview-tab/mobile-overview-tab.component';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
+import { AvatarEditorModalComponent } from './components/avatar-editor-modal/avatar-editor-modal.component';
+import { ProfileSkeletonComponent } from './components/profile-skeleton/profile-skeleton.component';
+import { VerificationModalComponent, VerificationFlowType } from './components/verification-modal/verification-modal.component';
+import { AdvocatePreviewModalComponent } from './components/advocate-preview-modal/advocate-preview-modal.component';
+import { IconComponent } from '../../components/icon/icon.component';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
-// Client tabs
-type ClientTab = 'overview' | 'profile-details' | 'activity-log' | 'security' | 'my-reviews';
+// ─── Responsive Tab Type System ──────────────────────────────────
+export type ProfileTab = 'overview' | 'profile' | 'account';
 
-// Lawyer tabs (tab-based behavior)
-type LawyerTab = 'overview' | 'profile-details' | 'verification' | 'cases' | 'reviews' | 'security';
-
-type AnyTab = ClientTab | LawyerTab;
-
-interface TabDef {
-  id: AnyTab;
+export interface TabDef {
+  id: ProfileTab;
   label: string;
   icon: string;
-  emoji: string;
 }
 
-interface ProfileStrengthItem {
-  label: string;
+export interface MilestoneStep {
+  title: string;
   done: boolean;
-  actionNeeded: boolean;
+}
+
+export interface TierMilestone {
+  tier: number;
+  title: string;
+  subtitle: string;
+  pct: number;
+  done: boolean;
+  steps: MilestoneStep[];
+  actionLabel?: string;
+  actionTab?: ProfileTab;
+  actionFlow?: VerificationFlowType;
 }
 
 @Component({
   selector: 'app-profile',
   standalone: true,
+  changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
     CommonModule,
-    FormsModule,
-    ClientOverviewTabComponent,
-    PersonalInfoTabComponent,
-    ProfessionalCredentialsTabComponent,
-    SecuritySettingsTabComponent,
-    DangerZoneTabComponent,
-    VerificationTabComponent,
-    MyCasesTabComponent,
-    MyReviewsTabComponent,
-    SavedLawsTabComponent,
-    ConfirmDialogComponent
+    RouterLink,
+    ProfileTabComponent,
+    AccountTabComponent,
+    MobileOverviewTabComponent,
+    ConfirmDialogComponent,
+    AvatarEditorModalComponent,
+    ProfileSkeletonComponent,
+    VerificationModalComponent,
+    AdvocatePreviewModalComponent,
+    IconComponent,
+    TooltipDirective
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']
 })
-export class ProfileComponent implements OnInit, OnDestroy {
-  // Modal Dialog variables
-  isConfirmOpen = false;
-  confirmTitle = '';
-  confirmMessage = '';
-  confirmType: 'danger' | 'warning' | 'info' = 'warning';
-  onConfirmAction: (() => void) | null = null;
+export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
+  private auth = inject(AuthService);
+  private userProfileService = inject(UserProfileService);
+  private lawyerService = inject(LawyerService);
+  private snackbar = inject(SnackbarService);
+  private route = inject(ActivatedRoute);
+  private router = inject(Router);
+  private scrollService = inject(ScrollService);
+  private scrollSub?: Subscription;
 
-  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
-    this.confirmTitle = title;
-    this.confirmMessage = message;
-    this.confirmType = type;
-    this.onConfirmAction = action;
-    this.isConfirmOpen = true;
-  }
+  @ViewChild(ProfileTabComponent) profileTab?: ProfileTabComponent;
 
-  onConfirmDialog() {
-    this.isConfirmOpen = false;
-    if (this.onConfirmAction) {
-      this.onConfirmAction();
+  // ─── Modern Signal State ─────────────────────────────────────
+  profile = signal<UserProfile | null>(null);
+  lawyerProfile = signal<LawyerProfileData | null>(null);
+  loading = signal<boolean>(true);
+  activeTab = signal<ProfileTab>('profile');
+  triggerProfileEdit = signal<boolean>(false);
+  isScrolled = signal<boolean>(false);
+
+  // Avatar Modal State
+  showAvatarEditor = signal<boolean>(false);
+  isSavingAvatar = signal<boolean>(false);
+
+  // Verification Modal State
+  showVerificationModal = signal<boolean>(false);
+  verificationFlow = signal<VerificationFlowType>('phone');
+
+  // Advocate Live Public Preview Studio State
+  showAdvocatePreview = signal<boolean>(false);
+
+  // Confirmation Dialog State
+  isConfirmOpen = signal<boolean>(false);
+  confirmTitle = signal<string>('');
+  confirmMessage = signal<string>('');
+  confirmType = signal<'danger' | 'warning' | 'info'>('warning');
+  private onConfirmAction: (() => void) | null = null;
+
+  // ─── Computed Projections ───────────────────────────────────
+  isClient = computed(() => this.profile()?.role !== 'Lawyer');
+
+  copiedAccountId = signal<boolean>(false);
+
+  accountId = computed(() => {
+    const prof = this.profile();
+    if (!prof) return 'LC-USR-94821';
+    if (!this.isClient()) {
+      const law = this.lawyerProfile();
+      if (law?.publicId) return law.publicId;
+      if (prof.publicId) return prof.publicId.startsWith('usr_') ? prof.publicId.replace('usr_', 'law_') : prof.publicId;
+    } else {
+      if (prof.publicId) return prof.publicId;
     }
-  }
+    const prefix = this.isClient() ? 'LC-USR' : 'LC-ADV';
+    const hash = ((prof.id * 2654435761 + 1013904223) >>> 0).toString(16).toUpperCase().padStart(6, '0').slice(-6);
+    return `${prefix}-${hash}`;
+  });
 
-  onCancelDialog() {
-    this.isConfirmOpen = false;
-    this.onConfirmAction = null;
-  }
+  securityScore = computed<number>(() => {
+    let score = 40;
+    const u = this.profile();
+    if (u?.isEmailVerified) score += 20;
+    if (u?.isPhoneVerified) score += 20;
+    if (u?.isTwoFactorEnabled) score += 20;
+    return score;
+  });
 
-  profile: UserProfile | null = null;
-  lawyerProfile: LawyerProfileData | null = null;
-  loading = true;
-  activeTab: AnyTab = 'overview';
-  triggerProfileEdit = false;
-  reviewsGivenCount: number | null = null;
-  private observer: IntersectionObserver | null = null;
+  securityRating = computed<string>(() => {
+    const s = this.securityScore();
+    if (s >= 80) return 'Strong';
+    if (s >= 60) return 'Moderate';
+    return 'Weak';
+  });
 
-  // Avatar uploading and cropping state
-  showAvatarMenu = false;
-  showCropModal = false;
-  rawImage: string | null = null;
-  baseScale = 1;
-  zoomScale = 1;
-  rotation = 0;
-  dragX = 0;
-  dragY = 0;
-  isDragging = false;
-  startX = 0;
-  startY = 0;
-  isSavingAvatar = false;
+  securityColor = computed<string>(() => {
+    const s = this.securityScore();
+    if (s >= 80) return 'text-emerald-500 border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-500/5';
+    if (s >= 60) return 'text-amber-500 border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/5';
+    return 'text-rose-500 border-rose-500/20 bg-rose-500/10 dark:bg-rose-500/5';
+  });
 
-  updateBodyScroll() {
-    if (typeof document !== 'undefined') {
-      if (this.showAvatarMenu || this.showCropModal) {
-        document.body.classList.add('overflow-hidden');
-      } else {
-        document.body.classList.remove('overflow-hidden');
-      }
-    }
-  }
-
-  openAvatarMenu() {
-    this.showAvatarMenu = true;
-    this.updateBodyScroll();
-  }
-
-  closeAvatarMenu() {
-    this.showAvatarMenu = false;
-    this.updateBodyScroll();
-  }
-
-  openCropModal() {
-    this.showCropModal = true;
-    this.updateBodyScroll();
-  }
-
-  closeCropModal() {
-    if (this.isSavingAvatar) return;
-    this.showCropModal = false;
-    this.rawImage = null;
-    this.updateBodyScroll();
-  }
-
-  triggerAvatarUpload() {
-    const fileInput = document.getElementById('avatar-file-input') as HTMLInputElement;
-    if (fileInput) {
-      fileInput.value = ''; // Reset
-      fileInput.click();
-    }
-  }
-
-  onFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-
-    const file = input.files[0];
-    const reader = new FileReader();
-    reader.onload = () => {
-      this.rawImage = reader.result as string;
-      this.closeAvatarMenu();
-      this.openCropModal();
-      // Reset cropping
-      this.zoomScale = 1;
-      this.rotation = 0;
-      this.dragX = 0;
-      this.dragY = 0;
-    };
-    reader.readAsDataURL(file);
-  }
-
-  onImageLoaded(event: Event) {
-    const img = event.target as HTMLImageElement;
-    const viewportSize = 256;
-
-    // Fit to cover
-    const scaleX = viewportSize / img.naturalWidth;
-    const scaleY = viewportSize / img.naturalHeight;
-    this.baseScale = Math.max(scaleX, scaleY);
-  }
-
-  onDragStart(event: MouseEvent | TouchEvent) {
-    this.isDragging = true;
-    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
-    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
-    this.startX = clientX - this.dragX;
-    this.startY = clientY - this.dragY;
-    if (event instanceof MouseEvent) {
-      event.preventDefault();
-    }
-  }
-
-  onDrag(event: MouseEvent | TouchEvent) {
-    if (!this.isDragging) return;
-    const clientX = event instanceof MouseEvent ? event.clientX : event.touches[0].clientX;
-    const clientY = event instanceof MouseEvent ? event.clientY : event.touches[0].clientY;
-    this.dragX = clientX - this.startX;
-    this.dragY = clientY - this.startY;
-  }
-
-  onDragEnd() {
-    this.isDragging = false;
-  }
-
-  rotateImage() {
-    this.rotation = (this.rotation + 90) % 360;
-  }
-
-  saveCroppedImage() {
-    if (!this.rawImage || !this.profile) return;
-    this.isSavingAvatar = true;
-
-    const img = new Image();
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      // Clean background
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, 256, 256);
-
-      // Center
-      ctx.translate(128, 128);
-      ctx.rotate((this.rotation * Math.PI) / 180);
-      const scale = this.baseScale * this.zoomScale;
-      ctx.scale(scale, scale);
-      ctx.translate(this.dragX / scale, this.dragY / scale);
-      ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
-
-      const croppedBase64 = canvas.toDataURL('image/jpeg', 0.85);
-
-      this.userProfileService.updateProfile({ avatarUrl: croppedBase64 }).subscribe({
-        next: () => {
-          this.isSavingAvatar = false;
-          this.closeCropModal();
-          this.snackbar.show('Profile picture updated successfully!', 'success');
-
-          if (this.profile) {
-            this.profile.avatarUrl = croppedBase64;
-            this.onProfileUpdated({ avatarUrl: croppedBase64 });
-          }
-        },
-        error: () => {
-          this.isSavingAvatar = false;
-          this.snackbar.show('Failed to save profile picture.', 'error');
-        }
-      });
-    };
-    img.src = this.rawImage;
-  }
-
-  deleteAvatar() {
-    if (!this.profile) return;
-    this.triggerConfirm(
-      'Remove Profile Picture',
-      'Are you sure you want to remove your profile picture? This will revert it to the default initials placeholder.',
-      'danger',
-      () => {
-        this.userProfileService.updateProfile({ avatarUrl: '' }).subscribe({
-          next: () => {
-            this.closeAvatarMenu();
-            this.snackbar.show('Profile picture removed successfully!', 'success');
-            if (this.profile) {
-              this.profile.avatarUrl = undefined;
-              this.onProfileUpdated({ avatarUrl: undefined });
-            }
-          },
-          error: () => {
-            this.snackbar.show('Failed to remove profile picture.', 'error');
-          }
-        });
-      }
-    );
-  }
-
-  constructor(
-    private auth: AuthService,
-    private userProfileService: UserProfileService,
-    private lawyerService: LawyerService,
-    private snackbar: SnackbarService,
-    private route: ActivatedRoute
-  ) { }
-
-  ngOnInit() {
-    this.route.queryParams.subscribe(params => {
-      const tab = params['tab'];
-      if (tab) {
-        if (tab === 'bookmarks' || tab === 'inquiries') {
-          this.activeTab = this.profile?.role === 'Lawyer' ? 'cases' : 'activity-log';
-        } else {
-          this.activeTab = tab as AnyTab;
-        }
-      }
-    });
-    this.loadProfile();
-  }
-
-  ngOnDestroy() {
-    this.observer?.disconnect();
-    if (typeof document !== 'undefined') {
-      document.body.classList.remove('overflow-hidden');
-    }
-  }
-
-  // ─── Data Loading ───────────────────────────────────────────
-  loadProfile() {
-    this.loading = true;
-    this.userProfileService.getProfile().subscribe({
-      next: (res) => {
-        this.profile = res;
-        // Set default tab per role
-        if (!this.route.snapshot.queryParams['tab']) {
-          this.activeTab = 'overview';
-        }
-        if (res.role === 'Lawyer') {
-          this.loadLawyerProfile();
-        } else {
-          this.loadClientReviewsCount();
-        }
-      },
-      error: () => {
-        this.snackbar.show('Failed to load profile. Please sign in again.', 'error');
-        setTimeout(() => this.loading = false, 500);
-      }
-    });
-  }
-
-  loadClientReviewsCount() {
-    this.lawyerService.getMyReviews().subscribe({
-      next: (reviews) => {
-        this.reviewsGivenCount = reviews ? reviews.length : 0;
-        setTimeout(() => this.loading = false, 300);
-      },
-      error: () => {
-        this.reviewsGivenCount = 0;
-        setTimeout(() => this.loading = false, 300);
-      }
-    });
-  }
-
-  loadLawyerProfile() {
-    this.lawyerService.getProfile().subscribe({
-      next: (res) => {
-        this.lawyerProfile = res;
-        setTimeout(() => this.loading = false, 500);
-      },
-      error: () => {
-        setTimeout(() => this.loading = false, 500);
-      }
-    });
-  }
-
-  // ─── Tab Navigation ─────────────────────────────────────────
-  isClient(): boolean { return this.profile?.role !== 'Lawyer'; }
-
-  setTab(tab: AnyTab) {
-    this.activeTab = tab;
-  }
-
-  /** Navigate to Profile Details tab AND immediately activate edit mode. */
-  editProfileAndSwitch() {
-    this.activeTab = 'profile-details';
-    this.triggerProfileEdit = true;
-    // Reset after one cycle so the flag can fire again next time
-    setTimeout(() => this.triggerProfileEdit = false, 0);
-  }
-
-  scrollToSection(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
-
-  // Client-only: tab is active panel
-  isActiveClientTab(tab: ClientTab): boolean {
-    return this.profile?.role !== 'Lawyer' && this.activeTab === tab;
-  }
-
-  // Lawyer-only: tab is active panel
-  isActiveLawyerTab(tab: LawyerTab): boolean {
-    return this.profile?.role === 'Lawyer' && this.activeTab === tab;
-  }
-
-  getTabActiveClasses(tabId: string): string {
-    if (this.activeTab !== tabId) {
-      return 'text-slate-500 dark:text-slate-400 border-b-2 border-transparent hover:text-slate-800 dark:hover:text-white font-semibold';
-    }
-
-    if (this.profile?.role === 'Lawyer') {
-      return 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 font-extrabold';
-    }
-
-    switch (tabId) {
-      case 'overview':
-        return 'text-blue-600 dark:text-blue-400 border-b-2 border-blue-500 bg-blue-50/50 dark:bg-blue-950/30 font-extrabold';
-      case 'profile-details':
-        return 'text-indigo-600 dark:text-indigo-400 border-b-2 border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/30 font-extrabold';
-      case 'activity-log':
-        return 'text-violet-650 dark:text-violet-400 border-b-2 border-violet-500 bg-violet-50/50 dark:bg-violet-950/30 font-extrabold';
-      case 'security':
-        return 'text-red-600 dark:text-red-400 border-b-2 border-red-500 bg-red-50/50 dark:bg-red-950/30 font-extrabold';
-      case 'my-reviews':
-        return 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 font-extrabold';
-      default:
-        return 'text-amber-600 dark:text-amber-400 border-b-2 border-amber-500 bg-amber-50/50 dark:bg-amber-950/30 font-extrabold';
-    }
-  }
-
-  // ─── Lawyer scroll-spy ──────────────────────────────────────
-  setupScrollSpy() {
-    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
-    this.observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          const id = entry.target.getAttribute('id') as LawyerTab;
-          if (id) this.activeTab = id;
-        }
-      });
-    }, { root: null, rootMargin: '-80px 0px -60% 0px', threshold: 0 });
-    document.querySelectorAll('.scroll-section').forEach(s => this.observer?.observe(s));
-  }
-
-  // ─── Profile Events ─────────────────────────────────────────
-  onProfileUpdated(updated: Partial<UserProfile>) {
-    if (this.profile) this.profile = { ...this.profile, ...updated };
-  }
-
-  onLawyerProfileUpdated(updated: LawyerProfileData) {
-    this.lawyerProfile = updated;
-  }
-
-  // ─── Computed Helpers ────────────────────────────────────────
-  getInitials(): string {
-    const name = this.profile?.fullName || '';
+  initials = computed(() => {
+    const name = this.profile()?.fullName || '';
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-  }
+  });
 
-  getRoleBadgeClass(): string {
-    return this.profile?.role === 'Lawyer'
-      ? 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'
-      : 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50';
-  }
-
-  getCompletionPct(): number {
-    if (!this.profile) return 0;
-    let score = 0;
-    let total = 6;
-    if (this.profile.fullName) score++;
-    if (this.profile.avatarUrl) score++;
-    if (this.profile.isEmailVerified) score++;
-    if (this.profile.isPhoneVerified) score++;
-    if (this.profile.isTwoFactorEnabled) score++;
-    if (this.profile.gender || this.profile.dateOfBirth) score++;
-    if (this.profile.role === 'Lawyer' && this.lawyerProfile) {
-      total += 4;
-      if (this.lawyerProfile.barCouncilNumber && this.lawyerProfile.barCouncilNumber !== 'PENDING') score++;
-      if (this.lawyerProfile.specialization) score++;
-      if (this.lawyerProfile.experienceYears > 0) score++;
-      if (this.lawyerProfile.bio) score++;
-    }
-    return Math.round((score / total) * 100);
-  }
-
-  getStrengthColor(): string {
-    const pct = this.getCompletionPct();
-    if (pct >= 80) return 'from-emerald-400 to-emerald-600';
-    if (pct >= 50) return 'from-amber-400 to-amber-600';
-    return 'from-red-400 to-red-600';
-  }
-
-  getStrengthTextColor(): string {
-    const pct = this.getCompletionPct();
-    if (pct >= 80) return 'text-emerald-600 dark:text-emerald-400';
-    if (pct >= 50) return 'text-amber-600 dark:text-amber-400';
-    return 'text-red-600 dark:text-red-400';
-  }
-
-  getStrengthItems(): ProfileStrengthItem[] {
-    if (!this.profile) return [];
-    const items = [
-      { label: 'Basic Info', done: !!this.profile.fullName, actionNeeded: !this.profile.fullName },
-      { label: 'Profile Photo', done: !!this.profile.avatarUrl, actionNeeded: !this.profile.avatarUrl },
-      { label: 'Phone Verified', done: !!this.profile.isPhoneVerified, actionNeeded: !this.profile.isPhoneVerified },
-      { label: 'Identity Verified', done: !!this.profile.isEmailVerified, actionNeeded: !this.profile.isEmailVerified },
-      { label: '2FA Enabled', done: !!this.profile.isTwoFactorEnabled, actionNeeded: !this.profile.isTwoFactorEnabled }
-    ];
-
-    if (this.profile.role === 'Lawyer' && this.lawyerProfile) {
-      items.push({
-        label: 'Bar Credentials',
-        done: !!this.lawyerProfile.barCouncilNumber && this.lawyerProfile.barCouncilNumber !== 'PENDING',
-        actionNeeded: !this.lawyerProfile.barCouncilNumber || this.lawyerProfile.barCouncilNumber === 'PENDING'
-      });
-      items.push({
-        label: 'Professional Bio',
-        done: !!this.lawyerProfile.bio,
-        actionNeeded: !this.lawyerProfile.bio
-      });
-    }
-
-    return items;
-  }
-
-  getMemberSinceLabel(): string {
-    if (!this.profile?.createdAt) return '4 mo.';
+  memberSince = computed(() => {
+    const p = this.profile();
+    if (!p?.createdAt) return 'Member';
     const now = new Date();
-    const created = new Date(this.profile.createdAt);
-    const diffMs = now.getTime() - created.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays < 30) return `${diffDays}d ago`;
-    const diffMonths = Math.floor(diffDays / 30);
-    if (diffMonths < 12) return `${diffMonths} mo.`;
-    return `${Math.floor(diffMonths / 12)}yr ago`;
-  }
-
-  getMemberSinceFull(): string {
-    if (!this.profile?.createdAt) return '4 months ago';
-    const now = new Date();
-    const created = new Date(this.profile.createdAt);
+    const created = new Date(p.createdAt);
     const diffMs = now.getTime() - created.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     if (diffDays < 30) return `${diffDays} days ago`;
@@ -526,6 +166,412 @@ export class ProfileComponent implements OnInit, OnDestroy {
     if (diffMonths < 12) return `${diffMonths} month${diffMonths > 1 ? 's' : ''} ago`;
     const years = Math.floor(diffMonths / 12);
     return `${years} year${years > 1 ? 's' : ''} ago`;
+  });
+
+  // ─── Responsive Tab Definitions (Overview is mobile-first) ──
+  readonly tabs: TabDef[] = [
+    { id: 'overview', label: 'Overview', icon: 'layout' },
+    { id: 'profile', label: 'Profile', icon: 'user' },
+    { id: 'account', label: 'Account & Preferences', icon: 'shield-check' }
+  ];
+
+  isMobile = signal<boolean>(typeof window !== 'undefined' ? window.innerWidth < 1024 : false);
+
+  visibleTabs = computed(() => {
+    return this.isMobile() ? this.tabs : this.tabs.filter(t => t.id !== 'overview');
+  });
+
+  // ─── Simplified 3-Tier Milestone Framework ──────────────────
+  fourTierMilestones = computed<TierMilestone[]>(() => {
+    const u = this.profile();
+    const l = this.lawyerProfile();
+    const isLawyerRole = u?.role === 'Lawyer';
+
+    const tier1Steps: MilestoneStep[] = [
+      { title: 'Full Name', done: !!u?.fullName },
+      { title: 'Profile Photo', done: !!u?.avatarUrl }
+    ];
+    const tier1Done = tier1Steps.every(s => s.done);
+
+    const tier2Steps: MilestoneStep[] = [
+      { title: 'Verified Email', done: !!u?.isEmailVerified },
+      { title: 'Verified Phone', done: !!u?.isPhoneVerified }
+    ];
+    const tier2Done = tier2Steps.every(s => s.done);
+
+    const tier3Steps: MilestoneStep[] = [
+      { title: 'City & Location', done: !!(u?.clientCity || u?.clientState) },
+      ...(isLawyerRole ? [] : [{ title: 'Preferred Language', done: !!u?.clientLanguage }])
+    ];
+    const tier3Done = tier3Steps.every(s => s.done);
+
+    const tier4Steps: MilestoneStep[] = isLawyerRole
+      ? [
+        { title: 'Bar Council Registration', done: !!l?.barCouncilNumber && l.barCouncilNumber !== 'PENDING' },
+        { title: 'Practice Areas & Specialization', done: !!l?.specialization },
+        { title: 'Two-Factor Security (2FA)', done: !!u?.isTwoFactorEnabled }
+      ]
+      : [
+        { title: 'Identity Completed', done: tier1Done && tier2Done },
+        { title: 'Two-Factor Security (2FA)', done: !!u?.isTwoFactorEnabled },
+        { title: 'Account in Good Standing', done: true }
+      ];
+    const tier4Done = tier4Steps.every(s => s.done);
+
+    return [
+      {
+        tier: 1, title: 'Basic Identity', subtitle: 'Name & Photo',
+        pct: 25, done: tier1Done, steps: tier1Steps,
+        actionLabel: !tier1Done ? 'Add Photo / Name' : undefined,
+        actionTab: 'profile'
+      },
+      {
+        tier: 2, title: 'Contact Verification', subtitle: 'Email & Phone',
+        pct: 50, done: tier2Done, steps: tier2Steps,
+        actionLabel: !tier2Done ? 'Verify Contact' : undefined,
+        actionFlow: !u?.isPhoneVerified ? 'phone' : 'email'
+      },
+      {
+        tier: 3, title: 'Location & Preferences', subtitle: 'City & Language',
+        pct: 75, done: tier3Done, steps: tier3Steps,
+        actionLabel: !tier3Done ? 'Add Location' : undefined,
+        actionTab: 'profile'
+      },
+      {
+        tier: 4,
+        title: isLawyerRole ? 'Bar Council Credentials' : 'Verified Standing',
+        subtitle: isLawyerRole ? 'License & 2FA Security' : 'Full Access & 2FA',
+        pct: 100, done: tier4Done, steps: tier4Steps,
+        actionLabel: !tier4Done ? (!u?.isTwoFactorEnabled ? 'Setup 2FA' : (isLawyerRole && !tier4Steps[0].done ? 'Verify Bar License' : undefined)) : undefined,
+        actionTab: 'account'
+      }
+    ];
+  });
+
+  overallCompletionPct = computed<number>(() => {
+    const milestones = this.fourTierMilestones();
+    let completedWeight = 0;
+    milestones.forEach(m => {
+      const stepScore = m.steps.filter(s => s.done).length / (m.steps.length || 1);
+      completedWeight += stepScore * 25;
+    });
+    return Math.round(completedWeight);
+  });
+
+  nextMilestoneAction = computed(() => {
+    const milestones = this.fourTierMilestones();
+    for (const m of milestones) {
+      if (!m.done) {
+        return {
+          tier: m.tier,
+          title: m.title,
+          label: m.actionLabel || 'Complete Step',
+          tab: m.actionTab,
+          actionFlow: m.actionFlow
+        };
+      }
+    }
+    return null;
+  });
+
+  // ─── CanDeactivate Implementation ───────────────────────────
+  hasUnsavedChanges(): boolean {
+    return this.profileTab?.isDirty || false;
+  }
+
+  // ─── Lifecycle ───────────────────────────────────────────────
+  ngOnInit() {
+    this.scrollSub = this.scrollService.isScrolled$.subscribe(scrolled => {
+      this.isScrolled.set(scrolled);
+    });
+
+    const isMobileScreen = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
+    this.isMobile.set(isMobileScreen);
+
+    const currentUrl = this.router.url;
+    if (currentUrl.includes('/profile/credentials') || currentUrl.includes('/profile/identity')) {
+      this.activeTab.set('profile');
+    } else if (currentUrl.includes('/profile/verification') || currentUrl.includes('/profile/security')) {
+      this.activeTab.set('account');
+    } else {
+      // Mobile view default is 'overview', desktop view default is 'profile'
+      this.activeTab.set(isMobileScreen ? 'overview' : 'profile');
+    }
+
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab) {
+        if (tab === 'overview') {
+          this.activeTab.set(this.isMobile() ? 'overview' : 'profile');
+        } else if (tab === 'profile' || tab === 'identity' || tab === 'credentials' || tab === 'profile-details') {
+          this.activeTab.set('profile');
+        } else if (tab === 'account' || tab === 'verification' || tab === 'security') {
+          this.activeTab.set('account');
+        } else if (tab === 'cases' || tab === 'activity-log' || tab === 'bookmarks' || tab === 'inquiries') {
+          this.navigateToDashboard();
+        }
+      }
+    });
+
+    this.loadProfile();
+  }
+
+  ngOnDestroy() {
+    this.scrollSub?.unsubscribe();
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('overflow-hidden');
+    }
+  }
+
+  // ─── Data Ingestion ─────────────────────────────────────────
+  loadProfile() {
+    this.loading.set(true);
+    this.userProfileService.getProfile().subscribe({
+      next: (res) => {
+        this.profile.set(res);
+        if (res.role === 'Lawyer') {
+          this.loadLawyerProfile();
+        } else {
+          this.loading.set(false);
+        }
+      },
+      error: () => {
+        this.snackbar.show('Failed to load profile. Please sign in again.', 'error');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  loadLawyerProfile() {
+    this.lawyerService.getProfile().subscribe({
+      next: (res) => {
+        this.lawyerProfile.set(res);
+        this.loading.set(false);
+      },
+      error: () => {
+        this.loading.set(false);
+      }
+    });
+  }
+
+  // ─── Tab Operations ──────────────────────────────────────────
+  setTab(tab: ProfileTab) {
+    this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
+  }
+
+  @HostListener('window:resize')
+  onWindowResize() {
+    if (typeof window !== 'undefined') {
+      const mobile = window.innerWidth < 1024;
+      if (this.isMobile() !== mobile) {
+        this.isMobile.set(mobile);
+        if (!mobile && this.activeTab() === 'overview') {
+          this.setTab('profile');
+        }
+      }
+    }
+  }
+
+  onTabKeydown(event: KeyboardEvent, currentTab: ProfileTab) {
+    const currentVisible = this.visibleTabs();
+    const currentIndex = currentVisible.findIndex(t => t.id === currentTab);
+    let newIndex = currentIndex;
+
+    if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+      event.preventDefault();
+      newIndex = (currentIndex + 1) % currentVisible.length;
+    } else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      newIndex = (currentIndex - 1 + currentVisible.length) % currentVisible.length;
+    } else if (event.key === 'Home') {
+      event.preventDefault();
+      newIndex = 0;
+    } else if (event.key === 'End') {
+      event.preventDefault();
+      newIndex = currentVisible.length - 1;
+    }
+
+    if (newIndex !== currentIndex && newIndex >= 0) {
+      this.setTab(currentVisible[newIndex].id);
+      // Focus the new tab button
+      setTimeout(() => {
+        const tabEl = document.getElementById(`profile-tab-${currentVisible[newIndex].id}`);
+        tabEl?.focus();
+      });
+    }
+  }
+
+  editProfileAndSwitch() {
+    this.setTab('profile');
+    this.triggerProfileEdit.set(true);
+    setTimeout(() => this.triggerProfileEdit.set(false), 50);
+  }
+
+  // ─── Global Keyboard Accelerators (Ctrl+S / Esc) ───────────
+  @HostListener('window:keydown', ['$event'])
+  handleGlobalShortcuts(event: KeyboardEvent) {
+    if ((event.ctrlKey || event.metaKey) && event.key === 's') {
+      event.preventDefault();
+      if (this.activeTab() === 'profile' && this.profileTab?.isEditing()) {
+        this.profileTab.saveProfile();
+      }
+    } else if (event.key === 'Escape') {
+      if (this.activeTab() === 'profile' && this.profileTab?.isEditing()) {
+        this.profileTab.cancelEdit();
+      }
+    }
+  }
+
+  handleNextMilestone() {
+    const next = this.nextMilestoneAction();
+    if (!next) return;
+    if (next.actionFlow) {
+      this.openVerificationModal(next.actionFlow);
+    } else if (next.tab) {
+      this.setTab(next.tab);
+    }
+  }
+
+  // ─── Modal Triggers ──────────────────────────────────────────
+  openAdvocatePreview() {
+    this.showAdvocatePreview.set(true);
+  }
+
+  closeAdvocatePreview() {
+    this.showAdvocatePreview.set(false);
+  }
+
+  openVerificationModal(flow: VerificationFlowType = 'phone') {
+    this.verificationFlow.set(flow);
+    this.showVerificationModal.set(true);
+  }
+
+  closeVerificationModal() {
+    this.showVerificationModal.set(false);
+  }
+
+  // ─── Cross-Module Navigation Hub ────────────────────────────
+  navigateToDashboard() {
+    if (this.profile()?.role === 'Lawyer') {
+      this.router.navigate(['/lawyer/workstation']);
+    } else {
+      this.router.navigate(['/client/portal']);
+    }
+  }
+
+  navigateToLawyers() {
+    this.router.navigate(['/lawyers']);
+  }
+
+  navigateToLaws() {
+    this.router.navigate(['/laws']);
+  }
+
+  navigateToLawyerDetail(id: string) {
+    this.router.navigate(['/lawyers', id]);
+  }
+
+  copyAccountId() {
+    const id = this.accountId();
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(id).then(() => {
+        this.copiedAccountId.set(true);
+        this.snackbar.show(`${this.isClient() ? 'Client ID' : 'Advocate ID'} copied to clipboard!`, 'success');
+        setTimeout(() => this.copiedAccountId.set(false), 2000);
+      }).catch(() => {
+        this.snackbar.show(`Account ID: ${id}`, 'info');
+      });
+    } else {
+      this.snackbar.show(`Account ID: ${id}`, 'info');
+    }
+  }
+
+  handleConfirmRequest(event: { title: string; message: string; type: 'danger' | 'warning' | 'info'; action: () => void }) {
+    this.triggerConfirm(event.title, event.message, event.type, event.action);
+  }
+
+  // ─── Profile Update Handlers ────────────────────────────────
+  onProfileUpdated(updated: Partial<UserProfile>) {
+    const curr = this.profile();
+    if (curr) {
+      this.profile.set({ ...curr, ...updated });
+    }
+    this.auth.updateCurrentUser(updated);
+  }
+
+  onLawyerProfileUpdated(updated: LawyerProfileData) {
+    this.lawyerProfile.set(updated);
+  }
+
+  // ─── Modular Avatar Handlers ────────────────────────────────
+  openAvatarModal() {
+    this.showAvatarEditor.set(true);
+  }
+
+  closeAvatarModal() {
+    this.showAvatarEditor.set(false);
+  }
+
+  onSaveCroppedAvatar(croppedBase64: string) {
+    this.isSavingAvatar.set(true);
+    this.userProfileService.updateProfile({ avatarUrl: croppedBase64 }).subscribe({
+      next: () => {
+        this.isSavingAvatar.set(false);
+        this.closeAvatarModal();
+        this.snackbar.show('Profile photo updated successfully!', 'success');
+        this.onProfileUpdated({ avatarUrl: croppedBase64 });
+      },
+      error: () => {
+        this.isSavingAvatar.set(false);
+        this.snackbar.show('Failed to save profile photo.', 'error');
+      }
+    });
+  }
+
+  onRemoveAvatar() {
+    this.triggerConfirm(
+      'Remove Profile Photo',
+      'Are you sure you want to remove your profile photo? Your avatar will revert to initials.',
+      'danger',
+      () => {
+        this.userProfileService.updateProfile({ avatarUrl: '' }).subscribe({
+          next: () => {
+            this.closeAvatarModal();
+            this.snackbar.show('Profile photo removed.', 'success');
+            this.onProfileUpdated({ avatarUrl: '' });
+          },
+          error: () => {
+            this.snackbar.show('Failed to remove photo.', 'error');
+          }
+        });
+      }
+    );
+  }
+
+  // ─── Confirmation Dialog System ─────────────────────────────
+  triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
+    this.confirmTitle.set(title);
+    this.confirmMessage.set(message);
+    this.confirmType.set(type);
+    this.onConfirmAction = action;
+    this.isConfirmOpen.set(true);
+  }
+
+  onConfirmDialog() {
+    this.isConfirmOpen.set(false);
+    if (this.onConfirmAction) {
+      this.onConfirmAction();
+    }
+  }
+
+  onCancelDialog() {
+    this.isConfirmOpen.set(false);
+    this.onConfirmAction = null;
   }
 
   logout() {
@@ -533,80 +579,16 @@ export class ProfileComponent implements OnInit, OnDestroy {
     this.auth.logout().subscribe();
   }
 
-  // ─── Tab Definitions ─────────────────────────────────────────
-  get clientTabs(): TabDef[] {
-    return [
-      {
-        id: 'overview' as ClientTab,
-        label: 'Overview',
-        emoji: '🏠',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />`
-      },
-      {
-        id: 'profile-details' as ClientTab,
-        label: 'Profile Details',
-        emoji: '👤',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />`
-      },
-      {
-        id: 'activity-log' as ClientTab,
-        label: 'Activity Log',
-        emoji: '📋',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />`
-      },
-      {
-        id: 'security' as ClientTab,
-        label: 'Security',
-        emoji: '🔒',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />`
-      },
-      {
-        id: 'my-reviews' as ClientTab,
-        label: 'My Reviews',
-        emoji: '⭐',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.24.588 1.81l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.175 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 10.1c-.773-.57-.375-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />`
-      }
-    ];
+  // ─── TrackBy Optimizers ─────────────────────────────────────
+  trackByTabId(_index: number, tab: TabDef): string {
+    return tab.id;
   }
 
-  get lawyerTabs(): TabDef[] {
-    return [
-      {
-        id: 'overview' as LawyerTab,
-        label: 'Overview',
-        emoji: '🏠',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />`
-      },
-      {
-        id: 'profile-details' as LawyerTab,
-        label: 'Profile Details',
-        emoji: '👤',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />`
-      },
-      {
-        id: 'verification' as LawyerTab,
-        label: 'Verification',
-        emoji: '✅',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.624 5.372 12 12 12s12-5.376 12-12c0-2.17-.578-4.204-1.598-5.956L12 2.714z" />`
-      },
-      {
-        id: 'cases' as LawyerTab,
-        label: 'My Clients',
-        emoji: '💼',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />`
-      },
-      {
-        id: 'reviews' as LawyerTab,
-        label: 'Reviews',
-        emoji: '⭐',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.961 0 1.36 1.24.588 1.81l-3.97 2.883a1 1 0 00-.364 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.971-2.883a1 1 0 00-1.175 0l-3.97 2.883c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.364-1.118L2.98 10.1c-.773-.57-.375-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z" />`
-      },
-      {
-        id: 'security' as LawyerTab,
-        label: 'Security & Privacy',
-        emoji: '🔒',
-        icon: `<path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />`
-      }
-    ];
+  trackByTier(_index: number, tier: TierMilestone): number {
+    return tier.tier;
+  }
+
+  trackByStepTitle(_index: number, step: MilestoneStep): string {
+    return step.title;
   }
 }
