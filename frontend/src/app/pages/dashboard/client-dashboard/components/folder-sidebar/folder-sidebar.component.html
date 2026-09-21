@@ -9,7 +9,7 @@
   <div class="flex flex-col flex-1 overflow-hidden">
     <!-- All (Fixed top) -->
     <button (click)="selectCollection('All')"
-      [class]="selectedCollection === 'All' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+      [class]="(activeTab === 'bookmarks' && selectedCollection === 'All') ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
       class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0"
       appTooltip="View all saved items">
       <span class="flex items-center gap-2">
@@ -23,7 +23,7 @@
 
     <!-- Unassigned (Fixed top) -->
     <button (click)="selectCollection('Unassigned')"
-      [class]="selectedCollection === 'Unassigned' ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+      [class]="(activeTab === 'bookmarks' && selectedCollection === 'Unassigned') ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
       class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 shrink-0"
       appTooltip="Saved items not assigned to any folder">
       <span class="flex items-center gap-2">
@@ -70,7 +70,7 @@
       </div>
 
       <div *ngFor="let folder of filteredSidebarFolders; trackBy: trackByFolder"
-        [class]="selectedCollection === folder ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+        [class]="(activeTab === 'bookmarks' && selectedCollection === folder) ? 'bg-indigo-50/60 text-indigo-600 dark:bg-indigo-950/20 dark:text-indigo-400 font-bold' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
         class="group/folder w-full px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 select-none"
         appTooltip="Filter by folder: {{ folder }}">
         <span (click)="selectCollection(folder)" class="flex items-center gap-2 truncate pr-2 cursor-pointer flex-1">
@@ -164,6 +164,23 @@
         <span *ngIf="reportsCount === 0"
           class="text-[9px] px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 font-bold uppercase tracking-wider">
           Track
+        </span>
+      </button>
+      <button (click)="selectFeedbackSystemDirectory()"
+        [class]="activeTab === 'feedback' ? 'bg-teal-50/70 text-teal-600 dark:bg-teal-950/30 dark:text-teal-400 font-bold ring-1 ring-teal-500/20' : 'text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 font-medium'"
+        class="w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition-colors border-0 cursor-pointer mt-1"
+        appTooltip="View Consultation Feedback & Advocate Reviews">
+        <span class="flex items-center gap-2">
+          <app-icon name="star" [size]="13" class="text-teal-500 dark:text-teal-400 shrink-0"></app-icon>
+          Feedback &amp; Reviews
+        </span>
+        <span *ngIf="feedbackCount > 0"
+          class="text-[10px] px-1.5 py-0.5 rounded-full bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold border border-teal-500/20">
+          {{ feedbackCount }}
+        </span>
+        <span *ngIf="feedbackCount === 0"
+          class="text-[9px] px-1.5 py-0.5 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 font-bold uppercase tracking-wider">
+          Review
         </span>
       </button>
     </div>

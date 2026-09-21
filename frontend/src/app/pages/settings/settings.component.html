@@ -1366,6 +1366,177 @@
               </button>
             </div>
 
+            <!-- Password Management Card -->
+            <div
+              class="p-5 md:p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900/60 shadow-sm flex flex-col gap-4">
+              <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/60">
+                <div
+                  class="w-8 h-8 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Change Password</h3>
+                  <p class="text-[0.72rem] text-slate-400">Ensure your account uses a strong, unique password.</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    class="text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Current
+                    Password</label>
+                  <div class="relative">
+                    <input [type]="showCurrentPwd ? 'text' : 'password'" [(ngModel)]="currentPassword"
+                      placeholder="••••••••"
+                      class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors pr-9" />
+                    <button type="button" (click)="showCurrentPwd = !showCurrentPwd"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                      <svg *ngIf="!showCurrentPwd" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <svg *ngIf="showCurrentPwd" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label class="text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">New
+                    Password</label>
+                  <div class="relative">
+                    <input [type]="showNewPwd ? 'text' : 'password'" [(ngModel)]="newPassword" placeholder="••••••••"
+                      class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors pr-9" />
+                    <button type="button" (click)="showNewPwd = !showNewPwd"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                      <svg *ngIf="!showNewPwd" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <svg *ngIf="showNewPwd" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                        stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="flex flex-col gap-1.5">
+                  <label
+                    class="text-[0.7rem] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Confirm
+                    Password</label>
+                  <div class="relative">
+                    <input [type]="showConfirmPwd ? 'text' : 'password'" [(ngModel)]="confirmPassword"
+                      placeholder="••••••••"
+                      class="w-full px-3.5 py-2 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-xs text-slate-800 dark:text-slate-200 focus:outline-none focus:border-blue-500 transition-colors pr-9" />
+                    <button type="button" (click)="showConfirmPwd = !showConfirmPwd"
+                      class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+                      <svg *ngIf="!showConfirmPwd" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                      <svg *ngIf="showConfirmPwd" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                        stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                          d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-1">
+                <button (click)="changePassword()" [disabled]="pwdLoading"
+                  class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-600/20 disabled:opacity-50 flex items-center gap-2">
+                  <svg *ngIf="pwdLoading" class="animate-spin w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                  </svg>
+                  {{ pwdLoading ? 'Updating Password...' : 'Update Password' }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Two-Factor Authentication Card -->
+            <div
+              class="p-5 md:p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white dark:bg-slate-900/60 shadow-sm flex flex-col gap-4">
+              <div
+                class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-3 border-b border-slate-100 dark:border-slate-800/60">
+                <div class="flex items-center gap-3">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2">
+                      <h3 class="text-sm font-bold text-slate-800 dark:text-slate-100">Two-Factor Authentication (2FA)
+                      </h3>
+                      <span class="px-2 py-0.5 rounded-full text-[9px] font-extrabold"
+                        [ngClass]="twoFaEnabled ? 'bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/40' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'">
+                        {{ twoFaEnabled ? 'Active ✓' : 'Disabled' }}
+                      </span>
+                    </div>
+                    <p class="text-[0.72rem] text-slate-400">Protect account actions using a secondary authenticator app
+                      code (Google Authenticator, Authy).</p>
+                  </div>
+                </div>
+
+                <button (click)="toggle2FA()" [disabled]="twoFaLoading"
+                  class="px-4 py-2 rounded-xl text-xs font-bold transition-all self-start sm:self-center cursor-pointer"
+                  [ngClass]="twoFaEnabled ? 'bg-red-50 hover:bg-red-100 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-200/50' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm shadow-emerald-600/20'">
+                  {{ twoFaEnabled ? 'Disable 2FA' : 'Configure 2FA' }}
+                </button>
+              </div>
+
+              <!-- 2FA Setup Flow Panel -->
+              <div *ngIf="show2FaSetup"
+                class="p-4 md:p-5 rounded-xl border border-amber-200/80 dark:border-amber-800/40 bg-amber-50/40 dark:bg-amber-950/15 flex flex-col md:flex-row gap-5 items-start animate-scale-up">
+                <div *ngIf="qrCodeUrl"
+                  class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex-shrink-0 self-center md:self-start">
+                  <img [src]="qrCodeUrl" class="w-32 h-32 object-contain" alt="2FA QR Code" />
+                </div>
+                <div class="flex-1 flex flex-col gap-3">
+                  <h4 class="text-xs font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider">Scan with
+                    Authenticator App</h4>
+                  <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Open your authenticator app and scan this QR code. If unable to scan, enter this manual setup key:
+                  </p>
+                  <code
+                    class="font-mono bg-white dark:bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-amber-600 dark:text-amber-400 font-bold text-xs select-all w-fit">{{ secretKey }}</code>
+
+                  <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 pt-2">
+                    <input type="text" [(ngModel)]="twoFaCode" placeholder="Enter 6-digit OTP" maxlength="6"
+                      class="px-3.5 py-2 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-mono text-center tracking-widest text-slate-800 dark:text-white focus:outline-none focus:border-emerald-500 w-full sm:w-44" />
+                    <button (click)="enable2FA()" [disabled]="twoFaLoading || twoFaCode.length < 6"
+                      class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all disabled:opacity-50 cursor-pointer">
+                      Verify & Activate
+                    </button>
+                    <button (click)="show2FaSetup = false; twoFaCode = ''"
+                      class="px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs font-semibold hover:bg-slate-50 dark:hover:bg-slate-800 cursor-pointer">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             <!-- Active Sessions List -->
             <div class="flex flex-col gap-4">
               <h3 class="text-[0.9rem] font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2.5">

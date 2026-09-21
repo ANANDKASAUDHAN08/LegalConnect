@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { SettingsService } from '../../services/settings.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { UserProfileService } from '../../services/user-profile.service';
@@ -55,6 +55,7 @@ export class SettingsComponent implements OnInit {
   private userProfileService = inject(UserProfileService);
   private snackbar = inject(SnackbarService);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   activeTab = 'appearance';
   viewMode: 'overview' | 'focused' = 'overview';
@@ -117,6 +118,23 @@ export class SettingsComponent implements OnInit {
   isLoadingHistory = false;
   currentSessionId: string | null = null;
 
+  // Password change state
+  currentPassword = '';
+  newPassword = '';
+  confirmPassword = '';
+  showCurrentPwd = false;
+  showNewPwd = false;
+  showConfirmPwd = false;
+  pwdLoading = false;
+
+  // 2FA state
+  twoFaEnabled = false;
+  show2FaSetup = false;
+  twoFaCode = '';
+  twoFaLoading = false;
+  qrCodeUrl = '';
+  secretKey = '';
+
   // Modal control
   showDeleteConfirm = false;
   deleteConfirmText = '';
@@ -138,6 +156,19 @@ export class SettingsComponent implements OnInit {
     this.loadLoginHistory();
     this.authService.currentUser$.subscribe(user => {
       this.currentUser = user;
+      if (user) {
+        this.twoFaEnabled = !!user.isTwoFactorEnabled;
+      }
+    });
+
+    this.route.queryParams.subscribe(params => {
+      const tab = params['tab'];
+      if (tab) {
+        const matchingTab = this.tabs.find(t => t.id === tab);
+        if (matchingTab) {
+          this.setTab(tab);
+        }
+      }
     });
   }
 
@@ -375,6 +406,111 @@ export class SettingsComponent implements OnInit {
         });
       }
     );
+  }
+
+  // --- Password Management ---
+  changePassword() {
+    if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
+      this.snackbar.show('Please fill in all password fields.', 'warning');
+      return;
+    }
+    if (this.newPassword !== this.confirmPassword) {
+      this.snackbar.show('New passwords do not match.', 'error');
+      return;
+    }
+    if (this.newPassword.length < 6) {
+      this.snackbar.show('Password must be at least 6 characters.', 'warning');
+      return;
+    }
+
+    this.pwdLoading = true;
+    this.userProfileService.changePassword(this.currentPassword, this.newPassword).subscribe({
+      next: () => {
+        this.pwdLoading = false;
+        this.currentPassword = '';
+        this.newPassword = '';
+        this.confirmPassword = '';
+        this.showCurrentPwd = false;
+        this.showNewPwd = false;
+        this.showConfirmPwd = false;
+        this.snackbar.show('Password changed successfully!', 'success');
+      },
+      error: (err) => {
+        this.pwdLoading = false;
+        this.snackbar.show(err.error || 'Failed to change password.', 'error');
+      }
+    });
+  }
+
+  // --- Two-Factor Authentication ---
+  toggle2FA() {
+    if (!this.twoFaEnabled) {
+      this.twoFaLoading = true;
+      this.userProfileService.get2FASetup().subscribe({
+        next: (res) => {
+          this.twoFaLoading = false;
+          this.qrCodeUrl = res.qrCodeUrl;
+          this.secretKey = res.secret;
+          this.show2FaSetup = true;
+        },
+        error: (err) => {
+          this.twoFaLoading = false;
+          this.snackbar.show(err.error || 'Failed to initialize 2FA setup.', 'error');
+        }
+      });
+    } else {
+      this.triggerConfirm(
+        'Disable Two-Factor Authentication',
+        'Disabling 2FA reduces your account security. Are you sure you want to disable it?',
+        'danger',
+        () => {
+          this.confirmDisable2FA();
+        }
+      );
+    }
+  }
+
+  confirmDisable2FA() {
+    this.twoFaLoading = true;
+    this.userProfileService.toggle2FA(false, '').subscribe({
+      next: () => {
+        this.twoFaLoading = false;
+        this.twoFaEnabled = false;
+        this.show2FaSetup = false;
+        this.snackbar.show('2FA disabled successfully.', 'success');
+        if (this.currentUser) {
+          this.currentUser.isTwoFactorEnabled = false;
+        }
+      },
+      error: (err) => {
+        this.twoFaLoading = false;
+        this.snackbar.show(err.error || 'Failed to disable 2FA.', 'error');
+      }
+    });
+  }
+
+  enable2FA() {
+    if (!this.twoFaCode.trim()) {
+      this.snackbar.show('Please enter the verification code.', 'warning');
+      return;
+    }
+    this.twoFaLoading = true;
+    this.userProfileService.toggle2FA(true, this.twoFaCode).subscribe({
+      next: () => {
+        this.twoFaLoading = false;
+        this.twoFaEnabled = true;
+        this.show2FaSetup = false;
+        this.twoFaCode = '';
+        this.snackbar.show('2FA enabled successfully!', 'success');
+        if (this.currentUser) {
+          this.currentUser.isTwoFactorEnabled = true;
+        }
+      },
+      error: (err) => {
+        this.twoFaLoading = false;
+        this.snackbar.show(err.error || 'Invalid verification code. Use 123456 for demo.', 'error');
+      }
+    });
   }
 
   // --- Export Data ---

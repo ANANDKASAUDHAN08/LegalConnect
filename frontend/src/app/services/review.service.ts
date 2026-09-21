@@ -78,11 +78,16 @@ export class ReviewService {
     return req$;
   }
 
+  getMyReviews(): Observable<ReviewItem[]> {
+    return this.http.get<ReviewItem[]>(`${this.apiUrl}/mine`, { withCredentials: true });
+  }
+
   submitReview(reviewData: {
     rating: number;
     content: string;
     targetName: string;
     authorName?: string;
+    consultationId?: number;
   }): Observable<ReviewItem> {
     this.clearCache();
     return this.http.post<ReviewItem>(this.apiUrl, reviewData, { withCredentials: true });

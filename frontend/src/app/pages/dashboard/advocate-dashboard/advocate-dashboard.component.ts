@@ -1,10 +1,10 @@
 import { Component, OnInit, OnDestroy, HostListener, signal, computed, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { RouterLink, Router } from '@angular/router';
+import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { Subscription, forkJoin } from 'rxjs';
 import { AuthService, UserProfile } from '../../../services/auth.service';
-import { LawyerService, Consultation, AdvocateInsightsData } from '../../../services/lawyer.service';
+import { LawyerService, Consultation, AdvocateInsightsData, LawyerProfileData } from '../../../services/lawyer.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { StatCardComponent } from '../../../components/stat-card/stat-card.component';
 import { TooltipDirective } from '../../../directives/tooltip.directive';
@@ -14,6 +14,7 @@ import { DonutChartComponent, DonutCategory } from '../../../components/analytic
 import { FunnelMetricComponent, FunnelStep } from '../../../components/analytics/funnel-metric/funnel-metric.component';
 import { DataExportService } from '../../../services/data-export.service';
 import { PrintExportService } from '../../../services/print-export.service';
+import { IconComponent } from '../../../components/icon/icon.component';
 
 export interface AdvocateBasicAnalytics {
   totalViews: number;
@@ -54,7 +55,8 @@ export interface AdvocateReviewItem {
     ReviewCardComponent,
     TrendChartComponent,
     DonutChartComponent,
-    FunnelMetricComponent
+    FunnelMetricComponent,
+    IconComponent
   ],
   templateUrl: './advocate-dashboard.component.html',
   styleUrls: ['./advocate-dashboard.component.scss'],
@@ -65,7 +67,7 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
   currentUser: UserProfile | null = null;
 
   // Active Tab
-  activeTab = signal<'inbox' | 'preview' | 'reviews' | 'analytics'>('inbox');
+  activeTab = signal<'inbox' | 'preview' | 'reviews' | 'analytics' | 'operations'>('inbox');
 
   // Loading States
   minTimeElapsed = signal(false);
@@ -98,6 +100,27 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
   lastSyncedTime = signal<string>('Just now');
   isMobileActionSheetOpen = signal<boolean>(false);
   activeKpiSlide = signal<number>(0);
+
+  // ─── Practice Operations & Booking Slots Signals (Decoupled from Profile) ───
+  lawyerProfileData = signal<LawyerProfileData | null>(null);
+  isAvailable = signal<boolean>(true);
+  consultationFee = signal<number>(1500);
+  inPersonFee = signal<number>(2500);
+  responseTime = signal<string>('Responds within 24 hours');
+  workingHours = signal<string>('Mon - Fri: 9:00 AM - 6:00 PM');
+  timeSlotsList = signal<{ day: string; time: string; isBooked: boolean }[]>([]);
+  isSavingOperations = signal<boolean>(false);
+  operationsLoaded = signal<boolean>(false);
+
+  newSlotDay = signal<string>('Monday');
+  newSlotTime = signal<string>('10:00 AM - 11:00 AM');
+  daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  responseTimes = [
+    'Responds within 1 hour',
+    'Responds within 2 hours',
+    'Responds within 24 hours',
+    'Responds within 2-3 days'
+  ];
 
   // Active Insights (Real Database & Cached Snapshot)
   activeInsights = computed<AdvocateInsightsData>(() => {
@@ -192,13 +215,23 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
     private snackbar: SnackbarService,
     private dataExportService: DataExportService,
     private printExportService: PrintExportService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) { }
 
   ngOnInit() {
     setTimeout(() => {
       this.minTimeElapsed.set(true);
     }, 500);
+
+    this.sub.add(
+      this.route.queryParams.subscribe(params => {
+        const tab = params['tab'];
+        if (tab === 'operations' || tab === 'inbox' || tab === 'preview' || tab === 'reviews' || tab === 'analytics') {
+          this.setActiveTab(tab);
+        }
+      })
+    );
 
     this.sub.add(
       this.authService.currentUser$.subscribe(user => {
@@ -522,11 +555,85 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
-  setActiveTab(tab: 'inbox' | 'preview' | 'reviews' | 'analytics') {
+  setActiveTab(tab: 'inbox' | 'preview' | 'reviews' | 'analytics' | 'operations') {
     this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
     if (tab === 'analytics') {
       this.loadInsights(this.selectedRange());
+    } else if (tab === 'operations') {
+      this.loadLawyerProfile();
     }
+  }
+
+  // ─── Practice Operations & Booking Management Methods ───
+  loadLawyerProfile() {
+    this.lawyerService.getProfile().subscribe({
+      next: (profile) => {
+        this.lawyerProfileData.set(profile);
+        this.isAvailable.set(profile.isAvailable !== false);
+        this.consultationFee.set(profile.consultationFee || 1500);
+        this.inPersonFee.set(profile.inPersonFee || 2500);
+        this.responseTime.set(profile.responseTime || 'Responds within 24 hours');
+        this.workingHours.set(profile.workingHours || 'Mon - Fri: 9:00 AM - 6:00 PM');
+        try {
+          this.timeSlotsList.set(profile.timeSlotsJson ? JSON.parse(profile.timeSlotsJson) : []);
+        } catch {
+          this.timeSlotsList.set([]);
+        }
+        this.operationsLoaded.set(true);
+      },
+      error: () => {
+        this.operationsLoaded.set(true);
+      }
+    });
+  }
+
+  savePracticeOperations() {
+    this.isSavingOperations.set(true);
+    const payload = {
+      isAvailable: this.isAvailable(),
+      consultationFee: Number(this.consultationFee()),
+      inPersonFee: Number(this.inPersonFee()),
+      responseTime: this.responseTime(),
+      workingHours: this.workingHours(),
+      timeSlotsJson: JSON.stringify(this.timeSlotsList())
+    };
+
+    this.lawyerService.updateProfile(payload).subscribe({
+      next: () => {
+        this.isSavingOperations.set(false);
+        this.snackbar.show('Practice operations & booking rates updated successfully!', 'success');
+      },
+      error: () => {
+        this.isSavingOperations.set(false);
+        this.snackbar.show('Failed to save practice operations. Please try again.', 'error');
+      }
+    });
+  }
+
+  addTimeSlot() {
+    const current = this.timeSlotsList();
+    this.timeSlotsList.set([
+      ...current,
+      { day: this.newSlotDay(), time: this.newSlotTime(), isBooked: false }
+    ]);
+    this.snackbar.show(`Added ${this.newSlotDay()} ${this.newSlotTime()} slot. Click Save Changes to apply.`, 'info');
+  }
+
+  removeTimeSlot(index: number) {
+    const current = [...this.timeSlotsList()];
+    current.splice(index, 1);
+    this.timeSlotsList.set(current);
+  }
+
+  toggleTimeSlotBooked(index: number) {
+    const current = [...this.timeSlotsList()];
+    current[index].isBooked = !current[index].isBooked;
+    this.timeSlotsList.set(current);
   }
 
   setFilter(status: any) {
@@ -586,5 +693,9 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
 
   trackByStar(index: number, item: { stars: number }): number {
     return item.stars;
+  }
+
+  trackByNumber(_index: number, item: number): number {
+    return item;
   }
 }

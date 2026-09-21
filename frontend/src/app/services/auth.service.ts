@@ -8,6 +8,7 @@ import { normalizeMediaUrl } from '../core/utils/url-utils';
 
 export interface UserProfile {
   id: number;
+  publicId?: string;
   fullName: string;
   email: string;
   role: string;
@@ -30,6 +31,29 @@ export interface UserProfile {
   identityDocumentUrl?: string;
   isAuthenticated?: boolean;
   token?: string;
+  legalEntityName?: string;
+  specialStatus?: string;
+  pronouns?: string;
+  emergencyContactName?: string;
+  emergencyContactPhone?: string;
+  emergencyContactRelation?: string;
+  corporateRfpOpen?: boolean;
+  isSearchIndexable?: boolean;
+  isCorporateEntity?: boolean;
+  // Enterprise / MNC Corporate Compliance
+  cin?: string;
+  entityType?: string;
+  gstin?: string;
+  incorporationNumber?: string;
+  industryVertical?: string;
+  companySize?: string;
+  legalBudgetCeiling?: number;
+  panNumber?: string;
+  currency?: string;
+  msaAccepted?: boolean;
+  msaAcceptedAt?: string;
+  dpoContactName?: string;
+  dpoContactEmail?: string;
 }
 
 /** Routes that do not require authentication. Used to avoid redirecting public pages to login. */
@@ -213,6 +237,22 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/logout`, {}, this.httpOptions).pipe(
       catchError(() => of(null))
     );
+  }
+
+  /**
+   * Updates local current user profile and caches the updated state.
+   * Broadcasts to all subscribers of currentUser$ (including navbar and menus).
+   */
+  updateCurrentUser(partial: Partial<UserProfile>): void {
+    const current = this._currentUser.value;
+    if (current) {
+      if (partial.avatarUrl !== undefined) {
+        partial.avatarUrl = partial.avatarUrl ? normalizeMediaUrl(partial.avatarUrl) : '';
+      }
+      const updated = { ...current, ...partial };
+      this._currentUser.next(updated);
+      this.tokenStorage.setCachedUser(updated);
+    }
   }
 
   /** Initiates the password reset flow by sending a reset email. */

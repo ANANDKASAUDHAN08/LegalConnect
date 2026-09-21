@@ -50,10 +50,13 @@ export interface LawyerApiResponse<T> {
 
 export interface Consultation {
   id: number;
+  publicId?: string;
   clientId?: number;
+  clientPublicId?: string;
   clientName: string;
   clientEmail: string;
   lawyerId: number;
+  lawyerPublicId?: string;
   lawyerName?: string;
   lawyerEmail?: string;
   message: string;
@@ -62,6 +65,7 @@ export interface Consultation {
 }
 
 export interface LawyerProfileData {
+  publicId?: string;
   userId?: number;
   fullName?: string;
   email?: string;

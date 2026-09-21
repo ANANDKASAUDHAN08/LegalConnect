@@ -22,6 +22,7 @@ export class FolderSidebarComponent {
   @Input() casePacksCount = 0;
   @Input() savedContactsCount = 0;
   @Input() reportsCount = 0;
+  @Input() feedbackCount = 0;
   @Input() sidebarFolderSearchQuery = '';
   @Input() showMobileFolderSearch = false;
   @Input() activeTab: any = 'bookmarks';
@@ -38,6 +39,8 @@ export class FolderSidebarComponent {
   @Output() selectSavedContacts = new EventEmitter<void>();
   @Output() selectAnalytics = new EventEmitter<void>();
   @Output() selectReports = new EventEmitter<void>();
+  @Output() selectFeedback = new EventEmitter<void>();
+  @Output() selectBookmarksTab = new EventEmitter<void>();
 
   selectCasePacksSystemDirectory() {
     this.selectCasePacks.emit();
@@ -55,6 +58,10 @@ export class FolderSidebarComponent {
     this.selectReports.emit();
   }
 
+  selectFeedbackSystemDirectory() {
+    this.selectFeedback.emit();
+  }
+
   get filteredSidebarFolders(): string[] {
     if (!this.sidebarFolderSearchQuery || !this.sidebarFolderSearchQuery.trim()) {
       return this.customCollections;
@@ -70,6 +77,9 @@ export class FolderSidebarComponent {
   selectCollection(folder: string) {
     this.selectedCollection = folder;
     this.selectedCollectionChange.emit(folder);
+    if (this.activeTab !== 'bookmarks') {
+      this.selectBookmarksTab.emit();
+    }
   }
 
   onSearchQueryChange(val: string) {

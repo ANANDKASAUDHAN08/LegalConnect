@@ -1,6 +1,6 @@
 <div
   class="page-wrapper min-h-screen relative overflow-x-clip pt-[80px] md:pt-[100px] pb-4 bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100/80 dark:from-[#090b14] dark:via-[#0f1224] dark:to-[#05060b] text-slate-900 dark:text-white transition-colors duration-300">
-  <div class="w-full max-w-[1380px] mx-auto px-4 md:px-0">
+  <div class="w-full max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
 
     <!-- SKELETON LOADER — shown while isPageLoading is true -->
     <div *ngIf="isPageLoading()" class="space-y-4 md:space-y-6 animate-pulse">
@@ -16,7 +16,7 @@
 
       <!-- Skeleton: Stats Cards -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-4 !mt-2 md:!mt-3">
-        <div *ngFor="let i of [1,2,3,4]"
+        <div *ngFor="let i of [1,2,3,4]; trackBy: trackByNumber"
           class="skeleton-card p-2.5 sm:p-4 rounded-2xl flex items-center gap-2 sm:gap-4">
           <div class="skeleton-bar w-7 h-7 sm:w-10 sm:h-10 rounded-md sm:rounded-xl shrink-0"></div>
           <div class="flex-1 min-w-0 space-y-1.5 sm:space-y-2">
@@ -60,7 +60,8 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
-            <div *ngFor="let i of [1,2,3,4]" class="skeleton-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
+            <div *ngFor="let i of [1,2,3,4]; trackBy: trackByNumber"
+              class="skeleton-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <div class="skeleton-bar h-5 w-12 sm:w-14 rounded-md"></div>
@@ -82,7 +83,7 @@
               </div>
             </div>
 
-            <div *ngFor="let i of [5,6]"
+            <div *ngFor="let i of [5,6]; trackBy: trackByNumber"
               class="skeleton-card rounded-2xl p-4 sm:p-5 space-y-3 sm:space-y-4 hidden sm:block">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
@@ -183,7 +184,7 @@
       </section>
 
       <!-- Main Layout Stack: Sidebar (Folders) + Main panel -->
-      <div class="flex flex-col lg:flex-row gap-8 items-start !mt-3 md:!mt-4">
+      <div class="flex flex-col lg:flex-row gap-6 xl:gap-8 items-start !mt-3 md:!mt-4 w-full min-w-0">
 
         <!-- SIDEBAR: Collections & Folders Manager (Desktop Only) -->
         <app-folder-sidebar layout="desktop" [activeTab]="activeTab()" [selectedCollection]="selectedCollection()"
@@ -192,7 +193,9 @@
           [casePacksCount]="totalCasePacksCount()" (selectCasePacks)="setActiveTab('case-packs')"
           [savedContactsCount]="totalSavedContactsCount()" (selectSavedContacts)="setActiveTab('saved-directory')"
           [reportsCount]="userReports().length" (selectAnalytics)="setActiveTab('analytics')"
-          (selectReports)="setActiveTab('reports')" [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
+          (selectReports)="setActiveTab('reports')" [feedbackCount]="clientReviews().length"
+          (selectFeedback)="setActiveTab('feedback')" (selectBookmarksTab)="setActiveTab('bookmarks')"
+          [sidebarFolderSearchQuery]="sidebarFolderSearchQuery()"
           (sidebarFolderSearchQueryChange)="sidebarFolderSearchQuery.set($event)"
           [showMobileFolderSearch]="showMobileFolderSearch()"
           (showMobileFolderSearchChange)="showMobileFolderSearch.set($event)"
@@ -201,7 +204,7 @@
         </app-folder-sidebar>
 
         <!-- MAIN WINDOW RESULTS AREA -->
-        <main id="content-section" class="flex-1 w-full space-y-1">
+        <main id="content-section" class="flex-1 min-w-0 w-full space-y-2">
 
           <!-- ═══════════════════════════════════════════════════════════════ -->
           <!-- 1. MOBILE RESPONSIVE DASHBOARD HEADER & TAB CONTROLS (XS-LG)    -->
@@ -242,62 +245,69 @@
 
           <!-- DESKTOP VIEW: Tabs Controls (lg+) -->
           <div id="dashboard-tabs"
-            class="hidden lg:flex border-b border-slate-200 dark:border-slate-800 gap-3.5 min-[360px]:gap-4.5 sm:gap-6 overflow-x-auto scrollbar-none w-full scroll-mt-16 md:scroll-mt-20">
+            class="hidden lg:flex border-b border-slate-200 dark:border-slate-800 gap-3 xl:gap-6 overflow-x-auto scrollbar-none w-full scroll-mt-16 md:scroll-mt-20 items-center">
             <!-- Research Library Tab (Amber) -->
             <button (click)="setActiveTab('bookmarks')"
               [class]="activeTab() === 'bookmarks' ? 'border-b-2 border-amber-500 dark:border-amber-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
               appTooltip="View and manage bookmarked legal acts & folders">
               <app-icon name="bookmark" [size]="15" class="text-amber-500 dark:text-amber-400 shrink-0"></app-icon>
-              Research Library ({{ bookmarks().length }})
+              Library ({{ bookmarks().length }})
             </button>
 
             <!-- Case Pack Tab (Indigo) -->
             <button (click)="setActiveTab('case-packs')"
               [class]="activeTab() === 'case-packs' ? 'border-b-2 border-indigo-500 dark:border-indigo-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
               appTooltip="View and manage saved case packs and roadmap dossiers">
               <app-icon name="folder" [size]="15" class="text-indigo-500 dark:text-indigo-400 shrink-0"></app-icon>
-              Case Pack Dossiers ({{ savedCasePacks().length }})
+              Case Packs ({{ savedCasePacks().length }})
             </button>
 
             <!-- Saved (Lawyers + Helplines + Resources) Tab (Purple) -->
             <button (click)="setActiveTab('saved-directory')"
               [class]="activeTab() === 'saved-directory' ? 'border-b-2 border-purple-500 dark:border-purple-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
               appTooltip="View saved lawyers, helplines, and legal aid centers">
               <app-icon name="users" [size]="15" class="text-purple-500 dark:text-purple-400 shrink-0"></app-icon>
-              Professional Directory ({{ savedLawyersDetails().length +
-              savedHelplinesDetails().length +
-              savedResourcesDetails().length }})
+              Directory ({{ totalSavedContactsCount() }})
             </button>
 
             <!-- Inquiries Tab (Sky) -->
             <button (click)="setActiveTab('inquiries')"
               [class]="activeTab() === 'inquiries' ? 'border-b-2 border-sky-500 dark:border-sky-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
               appTooltip="View sent legal consultation inquiries">
               <app-icon name="mail" [size]="15" class="text-sky-500 dark:text-sky-400 shrink-0"></app-icon>
-              Consult Requests ({{ inquiries().length }})
+              Inquiries ({{ inquiries().length }})
             </button>
 
             <!-- Spend & Case Insights Tab (Emerald) -->
             <button (click)="setActiveTab('analytics')"
               [class]="activeTab() === 'analytics' ? 'border-b-2 border-emerald-500 dark:border-emerald-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
               appTooltip="View Legal Spend, Milestone Pipeline & Document Readiness">
               <app-icon name="circle-dollar" [size]="15"
                 class="text-emerald-500 dark:text-emerald-400 shrink-0"></app-icon>
-              Spend & Insights
+              Insights
             </button>
 
             <!-- My Reports Tab (Rose) -->
             <button (click)="setActiveTab('reports')"
               [class]="activeTab() === 'reports' ? 'border-b-2 border-rose-500 dark:border-rose-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
-              class="pb-3 text-[12px] min-[360px]:text-[13px] sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 sm:gap-2 whitespace-nowrap"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
               appTooltip="Track submitted content reports and moderator resolutions">
               <app-icon name="shield" [size]="15" class="text-rose-500 dark:text-rose-400 shrink-0"></app-icon>
-              My Reports ({{ userReports().length }})
+              Reports ({{ userReports().length }})
+            </button>
+
+            <!-- Feedback & Reviews Tab (Teal) -->
+            <button (click)="setActiveTab('feedback')"
+              [class]="activeTab() === 'feedback' ? 'border-b-2 border-teal-500 dark:border-teal-400 text-slate-950 dark:text-white font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-medium'"
+              class="pb-2.5 sm:pb-3 text-xs sm:text-sm transition-all bg-transparent border-0 cursor-pointer flex items-center gap-1.5 whitespace-nowrap shrink-0"
+              appTooltip="View and manage consultation reviews and advocate testimonials">
+              <app-icon name="star" [size]="15" class="text-teal-500 dark:text-teal-400 shrink-0"></app-icon>
+              Feedback ({{ clientReviews().length }})
             </button>
           </div>
 
@@ -329,7 +339,7 @@
 
               <!-- Grid matching your card structure -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-3">
-                <div *ngFor="let i of [1,2,3,4]"
+                <div *ngFor="let i of [1,2,3,4]; trackBy: trackByNumber"
                   class="skeleton-card p-4 md:p-5 rounded-2xl space-y-4 border-l-[5px] border-l-slate-200 dark:border-l-slate-800 flex flex-col justify-between">
 
                   <!-- 1. Top Badges & Trash Icon -->
@@ -385,7 +395,8 @@
 
             <!-- 2. Consult Requests Tab Skeleton -->
             <div *ngIf="activeTab() === 'inquiries'" class="space-y-3 mt-4">
-              <div *ngFor="let i of [1,2]" class="skeleton-card p-5 rounded-2xl space-y-4 relative overflow-hidden">
+              <div *ngFor="let i of [1,2]; trackBy: trackByNumber"
+                class="skeleton-card p-5 rounded-2xl space-y-4 relative overflow-hidden">
                 <div class="absolute left-0 top-0 bottom-0 w-1.5 bg-slate-200 dark:bg-slate-800"></div>
                 <div
                   class="flex justify-between items-center pb-3.5 pl-2 border-b border-slate-100 dark:border-slate-800/80">
@@ -454,7 +465,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div *ngFor="let card of [1,2]"
+                  <div *ngFor="let card of [1,2]; trackBy: trackByNumber"
                     class="skeleton-card p-3.5 sm:p-4 rounded-xl flex flex-col justify-between gap-3">
                     <!-- Top Row -->
                     <div class="flex items-start justify-between gap-2.5">
@@ -492,7 +503,7 @@
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                  <div *ngFor="let card of [1,2]"
+                  <div *ngFor="let card of [1,2]; trackBy: trackByNumber"
                     class="skeleton-card p-3.5 sm:p-4 rounded-xl flex flex-col justify-between gap-3">
                     <div class="flex items-start justify-between gap-2.5">
                       <div class="flex items-start gap-3 min-w-0 flex-1">
@@ -526,7 +537,8 @@
 
               <!-- Roadmaps grid skeleton -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 md:gap-4">
-                <div *ngFor="let i of [1,2]" class="skeleton-card p-4 md:p-5 rounded-2xl space-y-5">
+                <div *ngFor="let i of [1,2]; trackBy: trackByNumber"
+                  class="skeleton-card p-4 md:p-5 rounded-2xl space-y-5">
                   <div class="flex justify-between items-center">
                     <div class="skeleton-bar h-5 w-20 rounded-md"></div>
                     <div class="skeleton-bar h-8 w-8 rounded-full"></div>
@@ -608,7 +620,7 @@
                   <div class="h-3.5 sm:h-4 w-36 sm:w-40 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
                 </div>
                 <div class="hidden md:grid md:grid-cols-4 gap-3">
-                  <div *ngFor="let step of [1,2,3,4]"
+                  <div *ngFor="let step of [1,2,3,4]; trackBy: trackByNumber"
                     class="p-3.5 bg-slate-50 dark:bg-slate-950/40 rounded-2xl space-y-2">
                     <div class="flex justify-between">
                       <div class="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800"></div>
@@ -619,7 +631,7 @@
                   </div>
                 </div>
                 <div class="block md:hidden space-y-3 pl-4 border-l-2 border-slate-200 dark:border-slate-800">
-                  <div *ngFor="let step of [1,2,3,4]" class="space-y-1.5 py-1">
+                  <div *ngFor="let step of [1,2,3,4]; trackBy: trackByNumber" class="space-y-1.5 py-1">
                     <div class="h-3.5 w-28 sm:w-32 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
                     <div class="h-2.5 w-20 bg-slate-200/60 dark:bg-slate-800/60 rounded-md"></div>
                   </div>
@@ -637,7 +649,8 @@
                     <div class="h-6 w-14 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
                   </div>
                   <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
-                    <div *ngFor="let row of [1,2]" class="py-3 flex items-center justify-between gap-3">
+                    <div *ngFor="let row of [1,2]; trackBy: trackByNumber"
+                      class="py-3 flex items-center justify-between gap-3">
                       <div class="space-y-1.5 flex-1 min-w-0">
                         <div class="h-3.5 w-28 sm:w-36 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
                         <div class="h-2.5 w-20 sm:w-24 bg-slate-200/60 dark:bg-slate-800/60 rounded-md"></div>
@@ -678,7 +691,7 @@
             <div *ngIf="activeTab() === 'reports'" class="space-y-4 sm:space-y-5 pt-1">
               <!-- KPI Cards Skeleton -->
               <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3.5">
-                <div *ngFor="let i of [1, 2, 3, 4]"
+                <div *ngFor="let i of [1, 2, 3, 4]; trackBy: trackByNumber"
                   class="skeleton-card p-3 sm:p-4 rounded-2xl flex flex-col justify-between h-[96px] sm:h-[112px]">
                   <div class="flex items-center justify-between w-full">
                     <div class="skeleton-bar h-3 sm:h-3.5 w-18 sm:w-22 rounded-md"></div>
@@ -702,7 +715,8 @@
 
               <!-- Ticket Cards Skeleton (2 cards) -->
               <div class="space-y-3.5 sm:space-y-4">
-                <div *ngFor="let card of [1, 2]" class="skeleton-card p-3.5 sm:p-5 rounded-2xl space-y-3">
+                <div *ngFor="let card of [1, 2]; trackBy: trackByNumber"
+                  class="skeleton-card p-3.5 sm:p-5 rounded-2xl space-y-3">
                   <!-- Row 1: Status & Ref -->
                   <div
                     class="flex items-center justify-between gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/70">
@@ -755,6 +769,108 @@
               </div>
             </div>
 
+            <!-- 7. Feedback & Reviews Tab Skeleton (Matches Compact UI) -->
+            <div *ngIf="activeTab() === 'feedback'" class="space-y-3 sm:space-y-4 pt-1">
+
+              <!-- Header Toolbar Skeleton -->
+              <div
+                class="flex items-center justify-between gap-2.5 sm:gap-3 pb-1.5 border-b border-slate-200/60 dark:border-slate-800/60">
+                <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                  <div class="skeleton-bar w-7 h-7 sm:w-9 sm:h-9 rounded-xl shrink-0"></div>
+                  <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
+                    <div class="skeleton-bar h-4 sm:h-5 w-32 sm:w-56 rounded-md"></div>
+                    <div class="skeleton-bar h-4 sm:h-4.5 w-6 sm:w-8 rounded-full shrink-0"></div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                  <div class="skeleton-bar w-7 sm:w-8 h-7 sm:h-8 rounded-xl"></div>
+                  <div class="skeleton-bar h-7 sm:h-8 w-18 sm:w-26 rounded-xl"></div>
+                </div>
+              </div>
+
+              <!-- Pending Alert Ribbon Skeleton (Matches Slim Alert) -->
+              <div class="skeleton-card p-2 sm:px-4 sm:py-2.5 rounded-xl flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 sm:gap-2.5 flex-1 min-w-0">
+                  <div class="skeleton-bar w-6 h-6 sm:w-7 sm:h-7 rounded-lg shrink-0"></div>
+                  <div class="skeleton-bar h-3.5 sm:h-4 w-48 sm:w-80 max-w-[70%] rounded-md"></div>
+                </div>
+                <div class="flex items-center gap-1 shrink-0">
+                  <div class="skeleton-bar h-6 w-14 sm:w-18 rounded-lg"></div>
+                  <div class="skeleton-bar w-5 h-5 rounded-md"></div>
+                </div>
+              </div>
+
+              <!-- 4 KPI Summary Cards Skeleton (Matches loaded KPI grid) -->
+              <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div *ngFor="let k of [1, 2, 3, 4]; trackBy: trackByNumber"
+                  class="skeleton-card px-3 sm:px-4 py-2 rounded-xl flex items-center justify-between">
+                  <div class="space-y-1.5">
+                    <div class="skeleton-bar h-2.5 sm:h-3 w-16 sm:w-20 rounded"></div>
+                    <div class="skeleton-bar h-6 sm:h-7 w-8 sm:w-12 rounded"></div>
+                  </div>
+                  <div class="skeleton-bar w-9 h-9 rounded-xl shrink-0"></div>
+                </div>
+              </div>
+
+              <!-- Search & Filter Toolbar Skeleton -->
+              <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+                <div class="skeleton-bar h-9 flex-1 max-w-md rounded-xl"></div>
+                <div class="skeleton-bar h-8 w-48 sm:w-64 rounded-xl shrink-0"></div>
+              </div>
+
+              <!-- Review Cards Skeleton (Matches review-card layout) -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 lg:gap-5">
+                <div *ngFor="let i of [1, 2]; trackBy: trackByNumber"
+                  class="skeleton-card p-3.5 sm:p-4 rounded-2xl flex flex-col justify-between gap-3 min-h-[195px] sm:min-h-[210px]">
+                  <div class="space-y-3">
+                    <!-- Header -->
+                    <div class="flex items-start justify-between gap-3 pt-0.5">
+                      <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                        <div class="skeleton-bar w-9 h-9 sm:w-10 sm:h-10 rounded-full shrink-0"></div>
+                        <div class="space-y-1.5 min-w-0">
+                          <div class="skeleton-bar w-24 sm:w-28 h-3.5 rounded-md"></div>
+                          <div class="flex items-center gap-1.5 sm:gap-2">
+                            <div class="skeleton-bar w-11 h-3.5 rounded-full"></div>
+                            <div class="skeleton-bar w-14 sm:w-16 h-3 rounded-md"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-1 shrink-0">
+                        <div class="skeleton-bar w-6 h-6 rounded-lg"></div>
+                        <div class="skeleton-bar w-6 h-6 rounded-lg"></div>
+                      </div>
+                    </div>
+
+                    <!-- Star rating + Advocate target -->
+                    <div class="flex items-center justify-between gap-2 pt-0.5">
+                      <div class="flex items-center gap-1">
+                        <div class="skeleton-bar w-20 sm:w-24 h-3.5 rounded-xs"></div>
+                      </div>
+                      <div class="skeleton-bar w-24 sm:w-28 h-4.5 rounded-lg"></div>
+                    </div>
+
+                    <!-- Content Lines -->
+                    <div class="space-y-2 pt-0.5">
+                      <div class="skeleton-bar w-full h-3 rounded-md"></div>
+                      <div class="skeleton-bar w-11/12 h-3 rounded-md"></div>
+                      <div class="skeleton-bar w-3/4 h-3 rounded-md"></div>
+                    </div>
+                  </div>
+
+                  <!-- Footer -->
+                  <div
+                    class="pt-2.5 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between mt-auto">
+                    <div class="flex items-center gap-2">
+                      <div class="skeleton-bar w-12 sm:w-14 h-5.5 rounded-full"></div>
+                      <div class="skeleton-bar w-6 h-5.5 rounded-lg"></div>
+                    </div>
+                    <div class="skeleton-bar w-14 sm:w-16 h-3 rounded"></div>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
           </div>
 
           <!-- TAB 1: BOOKMARKS GRID -->
@@ -805,6 +921,15 @@
           <div *ngIf="!isTabLoading() && activeTab() === 'reports'" class="pt-3 sm:pt-4 w-full">
             <app-reports-tab (reportsChange)="userReports.set($event)"
               (openTarget)="handleReportTargetNavigation($event)"></app-reports-tab>
+          </div>
+          }
+
+          <!-- TAB 7: FEEDBACK & REVIEWS -->
+          @defer (when activeTab() === 'feedback') {
+          <div *ngIf="!isTabLoading() && activeTab() === 'feedback'" class="pt-3 sm:pt-4 w-full">
+            <app-feedback-tab [reviews]="clientReviews()" [inquiries]="inquiries()" [loading]="loadingReviews()"
+              [currentUser]="currentUser()" (refreshReviews)="loadClientReviews()">
+            </app-feedback-tab>
           </div>
           }
         </main>
@@ -890,7 +1015,9 @@
 </app-reader-modal>
 }
 
+@defer (when showQrModal()) {
 <app-qr-modal [isOpen]="showQrModal()" [qrData]="qrModalItem()" (closed)="closeQrModal()"></app-qr-modal>
+}
 
 <!-- MOBILE TAB NAVIGATION BOTTOM SHEET MODAL -->
 <div *ngIf="showMobileTabSheet()" class="fixed inset-0 z-[2000] flex flex-col justify-end">
@@ -1050,7 +1177,7 @@
             <app-icon name="shield" [size]="18" class="text-rose-500 dark:text-rose-400"></app-icon>
           </div>
           <div class="min-w-0">
-            <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">My Reports &amp; Feedback</h4>
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">My Reports</h4>
             <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Reported inaccuracies &amp; Trust
               resolutions</p>
           </div>
@@ -1065,6 +1192,34 @@
             Track
           </span>
           <app-icon *ngIf="activeTab() === 'reports'" name="check-circle" [size]="15" class="text-rose-500"></app-icon>
+        </div>
+      </button>
+
+      <!-- 7. Feedback & Reviews -->
+      <button (click)="setActiveTab('feedback')"
+        [class]="activeTab() === 'feedback' ? 'bg-teal-500/10 border-teal-500/30 dark:bg-teal-950/20 ring-1 ring-teal-500/20' : 'bg-slate-50 dark:bg-slate-950/40 border-slate-200/60 dark:border-slate-800/80 hover:bg-slate-100/80 dark:hover:bg-slate-800/50'"
+        class="w-full p-3.5 rounded-2xl border text-left flex items-center justify-between gap-3 transition-all cursor-pointer">
+        <div class="flex items-center gap-3 min-w-0">
+          <div
+            class="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/20 flex items-center justify-center shrink-0">
+            <app-icon name="star" [size]="18" class="text-teal-500 dark:text-teal-400"></app-icon>
+          </div>
+          <div class="min-w-0">
+            <h4 class="text-xs font-bold text-slate-900 dark:text-white truncate">Feedback &amp; Reviews</h4>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">Advocate ratings &amp;
+              consultation testimonials</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <span *ngIf="clientReviews().length > 0"
+            class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+            {{ clientReviews().length }}
+          </span>
+          <span *ngIf="clientReviews().length === 0"
+            class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20 uppercase tracking-wider">
+            Review
+          </span>
+          <app-icon *ngIf="activeTab() === 'feedback'" name="check-circle" [size]="15" class="text-teal-500"></app-icon>
         </div>
       </button>
 

@@ -15,6 +15,7 @@ import { PrintService } from '../../../services/print.service';
 import { PrintExportService } from '../../../services/print-export.service';
 import { DataExportService } from '../../../services/data-export.service';
 import { ModerationReportService } from '../../../services/moderation-report.service';
+import { ReviewService, ReviewItem } from '../../../services/review.service';
 import { Observable, Subscription, Subject, debounceTime, distinctUntilChanged, map, switchMap, catchError, of } from 'rxjs';
 
 import { ConfirmDialogComponent } from '../../../components/confirm-dialog/confirm-dialog.component';
@@ -36,6 +37,7 @@ import { ReaderModeModalComponent } from '../../search/components/reader-modal/r
 import { QrModalComponent } from '../../../components/qr-modal/qr-modal.component';
 import { AnalyticsTabComponent } from './components/analytics-tab/analytics-tab.component';
 import { ReportsTabComponent } from './components/reports-tab/reports-tab.component';
+import { FeedbackTabComponent } from './components/feedback-tab/feedback-tab.component';
 import { IconComponent } from '../../../components/icon/icon.component';
 
 @Component({
@@ -64,6 +66,7 @@ import { IconComponent } from '../../../components/icon/icon.component';
     QrModalComponent,
     AnalyticsTabComponent,
     ReportsTabComponent,
+    FeedbackTabComponent,
     IconComponent
   ],
   templateUrl: './client-dashboard.component.html',
@@ -88,6 +91,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
 
   // User Reports tab signal
   userReports = signal<any[]>([]);
+
+  // ── Feedback & Consultations Reviews Tab Signals (Step 1 & Step 4 Specification) ──
+  clientReviews = signal<ReviewItem[]>([]);
+  loadingReviews = signal<boolean>(false);
 
   // QR Modal signals
   showQrModal = signal<boolean>(false);
@@ -187,6 +194,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           count: reportsCount,
           tooltip: `Export ${reportsCount} platform community feedback and incident reports`,
           badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+        };
+      case 'feedback':
+        const feedbackCount = this.clientReviews().length;
+        return {
+          label: 'Export Feedback Dossier',
+          mobileLabel: 'Export',
+          count: feedbackCount,
+          tooltip: `Export ${feedbackCount} consultation reviews & ratings as PDF, CSV or JSON`,
+          badgeClass: 'bg-teal-500/20 text-teal-300 border-teal-500/30'
         };
       default:
         return {
@@ -355,7 +371,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     private printService: PrintService,
     private printExportService: PrintExportService,
     private dataExportService: DataExportService,
-    private moderationService: ModerationReportService
+    private moderationService: ModerationReportService,
+    private reviewService: ReviewService
   ) {
     this.savedLawyersDetails = toSignal(
       toObservable(this.savedItemsService.savedLawyers).pipe(
@@ -516,19 +533,20 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     // Support switching tab if query param matches
     this.sub.add(
       this.route.queryParams.subscribe(params => {
-        if (params['tab'] === 'inquiries' || params['tab'] === 'bookmarks') {
+        if (params['tab']) {
           this.activeTab.set(params['tab']);
         }
       })
     );
 
-    // Load inquiries and synced case packs once user resolves
+    // Load inquiries, case packs, and reviews once user resolves
     this.sub.add(
       this.authService.currentUser$.subscribe(user => {
         if (user) {
           this.loadInquiries();
           this.loadSyncedCasePacks();
           this.loadUserReports();
+          this.loadClientReviews();
         }
       })
     );
@@ -1229,7 +1247,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     const totalCasePacks = this.savedCasePacks().length;
     const totalInquiries = this.inquiries().length;
     const totalReports = this.userReports().length;
-    const grandTotal = totalBookmarks + totalDirectory + totalCasePacks + totalInquiries + totalReports;
+    const totalReviews = this.clientReviews().length;
+    const grandTotal = totalBookmarks + totalDirectory + totalCasePacks + totalInquiries + totalReports + totalReviews;
 
     // Auto-select scope matching the active tab
     let defaultScope = 'bookmarks';
@@ -1244,6 +1263,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       defaultScope = 'analytics';
     } else if (currentTab === 'reports') {
       defaultScope = 'reports';
+    } else if (currentTab === 'feedback') {
+      defaultScope = 'feedback';
     } else {
       defaultScope = 'bookmarks';
     }
@@ -1290,6 +1311,12 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           description: 'Community statutory integrity reports and moderation review tickets'
         },
         {
+          id: 'feedback',
+          label: `Consultation Feedback & Reviews (${totalReviews} Items)`,
+          count: totalReviews,
+          description: 'Client consultation reviews, verified ratings, and moderation statuses'
+        },
+        {
           id: 'fullDossier',
           label: `Full Account Dossier (${grandTotal} Total Items)`,
           count: grandTotal,
@@ -1315,6 +1342,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
             this.executePrintAnalytics(params);
           } else if (params.scope === 'reports') {
             this.executePrintReports(params);
+          } else if (params.scope === 'feedback') {
+            this.executePrintFeedback(params);
           } else if (params.scope === 'bookmarks') {
             this.executePrintBookmarks(collectionName, params);
           } else {
@@ -1406,6 +1435,22 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         Status: rep.status || 'Pending',
         SubmittedAt: rep.createdAt || 'N/A',
       }));
+    } else if (scope === 'feedback') {
+      scopeLabel = 'Consultation-Reviews';
+      const list = this.clientReviews();
+      if (format === 'csv') {
+        scopeData = list.map((r: any) => ({
+          ReviewId: r.id || '',
+          Advocate: r.targetName || 'Advocate',
+          Rating: `${r.rating || 5} Stars`,
+          ReviewContent: r.content || '',
+          ModerationStatus: r.moderationStatus || 'Approved',
+          ConsultationRef: r.consultationId ? `LC-TKT-${r.consultationId}` : 'Direct',
+          SubmittedDate: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : 'Recent',
+        }));
+      } else {
+        scopeData = list;
+      }
     } else {
       scopeLabel = 'Full-Account-Dossier';
       if (format === 'json') {
@@ -1423,6 +1468,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
             totalCasePacks: this.savedCasePacks().length,
             totalInquiries: this.inquiries().length,
             totalReports: this.userReports().length,
+            totalReviews: this.clientReviews().length,
           },
           bookmarks: this.allBookmarks(),
           directory: {
@@ -1433,6 +1479,7 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           casePacks: this.savedCasePacks(),
           inquiries: this.inquiries(),
           reports: this.userReports(),
+          reviews: this.clientReviews(),
         };
       } else {
         // Uniform Tabular Ledger for CSV / Excel
@@ -1489,6 +1536,15 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
             Title: rep.targetTitle || 'Reported Target',
             Detail: `${rep.reasonCategory} (${rep.severity})`,
             Status: rep.status || 'Pending',
+          });
+        });
+        this.clientReviews().forEach((r: any) => {
+          ledger.push({
+            Domain: 'Consultation Feedback',
+            Identifier: `#${r.id || ''}`,
+            Title: `Adv. ${r.targetName || 'Counsel'} (${r.rating || 5}★)`,
+            Detail: r.content || 'Consultation Review',
+            Status: r.moderationStatus || 'Approved',
           });
         });
         scopeData = ledger.length > 0 ? ledger : [{ Status: 'Empty Account Dossier' }];
@@ -1825,6 +1881,34 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
       });
     }
 
+    // ── PART VI: CONSULTATION REVIEWS & FEEDBACK ──
+    const reviews = this.clientReviews();
+    if (reviews.length > 0) {
+      contentHtml += `
+        <div class="lc-part-header">
+          <span class="lc-part-title">Part VI &bull; Verified Consultation Reviews &amp; Advocate Ratings</span>
+          <span class="lc-part-badge">${reviews.length} Reviews</span>
+        </div>
+      `;
+      const rows = reviews.map((r: any) => ({
+        id: `#${r.id || ''}`,
+        target: r.targetName ? `Adv. ${r.targetName}` : 'Advocate',
+        rating: `${r.rating || 5} ★`,
+        review: this.printService.escapeHtml(r.content || ''),
+        status: `<span class="lc-pill lc-pill-${r.moderationStatus === 'Approved' ? 'success' : (r.moderationStatus === 'Rejected' ? 'danger' : 'warning')}">${this.printService.escapeHtml(r.moderationStatus || 'Approved')}</span>`,
+      }));
+      contentHtml += this.printService.buildTable({
+        columns: [
+          { key: 'id', label: 'Review #', mono: true, bold: true },
+          { key: 'target', label: 'Advocate' },
+          { key: 'rating', label: 'Rating', align: 'center' },
+          { key: 'review', label: 'Feedback / Testimonial' },
+          { key: 'status', label: 'Status', align: 'center' },
+        ],
+        rows,
+      });
+    }
+
     this.printService.print({
       title: 'Complete Client Case & Practice Dossier',
       subtitle: 'Official Comprehensive Legal Archive & Saved Directory',
@@ -1997,6 +2081,55 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  private executePrintFeedback(params: any) {
+    const list = this.clientReviews();
+    let contentHtml = '';
+
+    if (!list || list.length === 0) {
+      contentHtml = '<p style="color:#64748b;font-size:12px">No consultation reviews or feedback entries recorded.</p>';
+    } else {
+      const rows = list.map((r: any) => ({
+        id: `#${r.id || 'N/A'}`,
+        target: r.targetName || 'Advocate',
+        rating: `${r.rating || 5} ★`,
+        review: this.printService.escapeHtml(r.content || ''),
+        status: `<span style="font-weight:bold;color:${r.moderationStatus === 'Approved' ? '#059669' : (r.moderationStatus === 'Rejected' ? '#dc2626' : '#d97706')}">${this.printService.escapeHtml(r.moderationStatus || 'Approved')}</span>`,
+        date: r.createdAt ? new Date(r.createdAt).toLocaleDateString('en-IN') : 'Recent',
+      }));
+
+      contentHtml += this.printService.buildTable({
+        title: 'Client Consultation Testimonials & Ratings Registry',
+        badge: `${list.length} Reviews`,
+        columns: [
+          { key: 'id', label: 'Review #', mono: true, bold: true },
+          { key: 'target', label: 'Advocate / Counsel', bold: true },
+          { key: 'rating', label: 'Rating', align: 'center' },
+          { key: 'review', label: 'Feedback / Testimonial' },
+          { key: 'status', label: 'Moderation', align: 'center' },
+          { key: 'date', label: 'Date', align: 'right' },
+        ],
+        rows,
+      });
+    }
+
+    const avgRating = list.length
+      ? (list.reduce((acc: number, r: any) => acc + (r.rating || 0), 0) / list.length).toFixed(1)
+      : '5.0';
+
+    this.printService.print({
+      title: 'Client Consultations & Feedback Dossier',
+      subtitle: 'Verified Legal Consultation Ratings, Advocate Reviews & Moderation Statuses',
+      content: contentHtml,
+      watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+      sealText: 'Verified Client Reviews • LegalConnect Platform',
+      extraMeta: [
+        { label: 'Total Reviews', value: `${list.length}` },
+        { label: 'Average Rating', value: `${avgRating} ★` },
+      ],
+    });
+  }
+
   loadUserReports() {
     this.moderationService.getMyReports(1, 50).subscribe({
       next: (res: any) => {
@@ -2023,6 +2156,10 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     return item._id || index.toString();
   }
 
+  trackByNumber(_index: number, item: number): number {
+    return item;
+  }
+
   openMobileTabSheet() {
     this.showMobileTabSheet.set(true);
     this.updateScrollLock();
@@ -2047,6 +2184,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         return { name: 'Spend & Insights', count: null, icon: 'circle-dollar' as any, color: 'text-emerald-500 dark:text-emerald-400' };
       case 'reports':
         return { name: 'My Reports & Feedback', count: null, icon: 'shield' as any, color: 'text-amber-500 dark:text-amber-400' };
+      case 'feedback':
+        return { name: 'My Consultations & Feedback', count: this.clientReviews().length, icon: 'star' as any, color: 'text-amber-500 dark:text-amber-400' };
       default:
         return { name: 'Research Library', count: this.bookmarks().length, icon: 'bookmark' as any, color: 'text-amber-500 dark:text-amber-400' };
     }
@@ -2059,17 +2198,38 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
     if (this.activeTab() === tab) return;
     this.isTabLoading.set(true);
     this.activeTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab },
+      queryParamsHandling: 'merge'
+    });
     this.scrollToTabs();
 
     // If actual backend reloading is needed, trigger it here:
     if (tab === 'inquiries') {
       this.loadInquiries();
+    } else if (tab === 'feedback') {
+      this.loadClientReviews();
     }
 
     // Brief timeout to allow the skeleton loader to smoothly fade in/out
     setTimeout(() => {
       this.isTabLoading.set(false);
-    }, 1000);
+    }, 400);
+  }
+
+  // ─── Client Feedback & Reviews CRUD Methods ───
+  loadClientReviews() {
+    this.loadingReviews.set(true);
+    this.reviewService.getMyReviews().subscribe({
+      next: (reviews) => {
+        this.clientReviews.set(reviews || []);
+        this.loadingReviews.set(false);
+      },
+      error: () => {
+        this.loadingReviews.set(false);
+      }
+    });
   }
 
   selectCollectionFromSidebar(collection: string) {
@@ -2094,6 +2254,14 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
           top: Math.max(0, offsetPosition),
           behavior: 'smooth'
         });
+
+        // Ensure active tab button is scrolled into horizontal view in the tab bar
+        if (!isMobile) {
+          const activeBtn = document.querySelector('#dashboard-tabs .font-bold') as HTMLElement;
+          if (activeBtn) {
+            activeBtn.scrollIntoView({ behavior: 'smooth', inline: 'nearest', block: 'nearest' });
+          }
+        }
       }
     }, delayMs);
   }

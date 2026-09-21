@@ -90,7 +90,7 @@ export class LoginComponent implements OnInit, OnDestroy {
     if (!this.codeTouched() && !this.formSubmitted()) return null;
     const val = (this.twoFactorCode || '').trim();
     if (!val) return 'Verification code is required.';
-    if (val.length < 6) return 'Verification code must be 6 digits.';
+    if (val.length < 6) return 'Verification code must be at least 6 characters.';
     return null;
   }
 
