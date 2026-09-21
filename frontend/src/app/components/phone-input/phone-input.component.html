@@ -1,0 +1,78 @@
+<div class="space-y-1.5">
+  <!-- Label Row -->
+  <div class="flex items-center justify-between" *ngIf="label">
+    <label [attr.for]="inputId"
+      class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-widest">
+      {{ label }}
+    </label>
+    <span *ngIf="isVerified"
+      class="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-bold">
+      <app-icon name="check-circle" [size]="12"></app-icon>
+      <span>Verified</span>
+    </span>
+  </div>
+
+  <!-- Input Group -->
+  <div class="w-full flex items-center rounded-xl transition-all duration-200 relative"
+    [class]="disabled()
+      ? 'bg-slate-100 dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 cursor-not-allowed opacity-60'
+      : 'bg-slate-50/50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 focus-within:border-amber-500 focus-within:ring-4 focus-within:ring-amber-500/10'">
+
+    <!-- Country Code Button -->
+    <div class="relative flex-shrink-0">
+      <button type="button" (click)="toggleDropdown()" [disabled]="disabled()"
+        class="flex items-center gap-2 px-3 py-2.5 text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none select-none border-0 border-r bg-transparent"
+        [class.cursor-pointer]="!disabled()" [class.cursor-not-allowed]="disabled()"
+        [attr.aria-expanded]="showDropdown()" aria-haspopup="listbox"
+        [attr.aria-label]="'Country code: ' + selectedCountry().name + ' ' + selectedCountry().code">
+        <img [src]="'https://flagcdn.com/w20/' + selectedCountry().short.toLowerCase() + '.png'"
+          class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" [alt]="selectedCountry().name + ' flag'" />
+        <span class="text-xs">{{ selectedCountry().code }}</span>
+        <app-icon name="chevron-down" [size]="12" class="text-slate-400 transition-transform duration-200"
+          [class.rotate-180]="showDropdown()"></app-icon>
+      </button>
+
+      <!-- Backdrop -->
+      <div *ngIf="showDropdown()" class="fixed inset-0 z-45 bg-transparent" (click)="closeDropdown()"></div>
+
+      <!-- Country List Dropdown -->
+      <div *ngIf="showDropdown()"
+        class="absolute z-50 left-0 mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl shadow-slate-950/10 dark:shadow-black/50 animate-[fadeIn_0.12s_ease-out] flex flex-col overflow-hidden"
+        role="listbox" [attr.aria-label]="'Select country code'">
+
+        <!-- Search -->
+        <div class="p-1.5 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+          <input #searchInput type="text" [ngModel]="searchText()" (ngModelChange)="searchText.set($event)"
+            (click)="$event.stopPropagation()" placeholder="Search countries..." aria-label="Search countries"
+            class="w-full px-2.5 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-slate-200 focus:border-amber-500 transition-all placeholder:text-slate-400" />
+        </div>
+
+        <!-- Scrollable List -->
+        <div class="overflow-y-auto max-h-48 scrollbar-none">
+          <button *ngFor="let country of filteredCountries(); trackBy: trackByCountryCode" type="button"
+            (click)="selectCountry(country)" role="option"
+            [attr.aria-selected]="selectedCountry().short === country.short"
+            class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left transition-colors border-0 bg-transparent outline-none cursor-pointer"
+            [ngClass]="selectedCountry().short === country.short ? 'bg-amber-50 dark:bg-amber-900/20' : ''">
+            <img [src]="'https://flagcdn.com/w20/' + country.short.toLowerCase() + '.png'"
+              class="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" [alt]="country.name + ' flag'" />
+            <span class="text-[11px] font-bold text-slate-800 dark:text-slate-200 uppercase truncate">{{ country.short
+              }}</span>
+            <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium ml-auto flex-shrink-0">{{
+              country.code }}</span>
+          </button>
+          <div *ngIf="filteredCountries().length === 0"
+            class="px-3 py-4 text-center text-[10px] text-slate-400 dark:text-slate-500 font-medium">
+            No matches found
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Phone Number Input -->
+    <input type="text" [id]="inputId" [value]="phoneBody()" (input)="onPhoneInput($event)"
+      (keypress)="onPhoneKeypress($event)" (blur)="onBlur()" [disabled]="disabled()" placeholder="Phone number"
+      autocomplete="tel-national" maxlength="10" [attr.aria-describedby]="errorId || null"
+      class="w-full flex-1 bg-transparent px-3 py-2.5 outline-none border-0 text-sm text-slate-900 dark:text-white transition-all duration-200 placeholder:text-slate-400 dark:placeholder:text-slate-600" />
+  </div>
+</div>
