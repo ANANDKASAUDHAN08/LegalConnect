@@ -59,6 +59,7 @@ namespace CoreApi.Controllers
                     user = new
                     {
                         id = user.Id,
+                        publicId = user.PublicId,
                         fullName = user.FullName,
                         email = user.Email,
                         role = user.Role,
@@ -111,6 +112,7 @@ namespace CoreApi.Controllers
                 user = new
                 {
                     id = user.Id,
+                    publicId = user.PublicId,
                     fullName = user.FullName,
                     email = user.Email,
                     role = user.Role,
@@ -156,6 +158,7 @@ namespace CoreApi.Controllers
                 user = new
                 {
                     id = user.Id,
+                    publicId = user.PublicId,
                     fullName = user.FullName,
                     email = user.Email,
                     role = user.Role,

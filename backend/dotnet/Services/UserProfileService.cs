@@ -10,11 +10,19 @@ using CoreApi.Data;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
 namespace CoreApi.Services
 {
+    public class PendingReconfigureSession
+    {
+        public string Secret { get; set; } = string.Empty;
+        public List<string> HashedBackupCodes { get; set; } = new();
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    }
+
     public class UserProfileService : IUserProfileService
     {
         private readonly AppDbContext _context;
@@ -22,19 +30,22 @@ namespace CoreApi.Services
         private readonly IConfiguration _configuration;
         private readonly ILawyerSyncService _syncService;
         private readonly ILogger<UserProfileService> _logger;
+        private readonly IMemoryCache _cache;
 
         public UserProfileService(
             AppDbContext context,
             IWebHostEnvironment env,
             IConfiguration configuration,
             ILawyerSyncService syncService,
-            ILogger<UserProfileService> logger)
+            ILogger<UserProfileService> logger,
+            IMemoryCache cache)
         {
             _context = context;
             _env = env;
             _configuration = configuration;
             _syncService = syncService;
             _logger = logger;
+            _cache = cache;
         }
 
         public async Task<UserProfileResponseDto?> GetProfileAsync(int userId)
@@ -67,6 +78,36 @@ namespace CoreApi.Services
             if (request.NotifyLawAmendments.HasValue) user.NotifyLawAmendments = request.NotifyLawAmendments.Value;
             if (request.NotifyEmailDigest.HasValue) user.NotifyEmailDigest = request.NotifyEmailDigest.Value;
             if (request.NotifyPushEnabled.HasValue) user.NotifyPushEnabled = request.NotifyPushEnabled.Value;
+
+            if (request.Pronouns != null) user.Pronouns = request.Pronouns;
+            if (request.SpecialStatus != null) user.SpecialStatus = request.SpecialStatus;
+            if (request.LegalEntityName != null) user.LegalEntityName = request.LegalEntityName;
+            if (request.EmergencyContactName != null) user.EmergencyContactName = request.EmergencyContactName;
+            if (request.EmergencyContactPhone != null) user.EmergencyContactPhone = request.EmergencyContactPhone;
+            if (request.EmergencyContactRelation != null) user.EmergencyContactRelation = request.EmergencyContactRelation;
+            if (request.CorporateRfpOpen.HasValue) user.CorporateRfpOpen = request.CorporateRfpOpen.Value;
+            // 2FA state is securely managed exclusively via Toggle2FaAsync with TOTP verification
+            if (request.IsSearchIndexable.HasValue) user.IsSearchIndexable = request.IsSearchIndexable.Value;
+            if (request.IsCorporateEntity.HasValue) user.IsCorporateEntity = request.IsCorporateEntity.Value;
+
+            // ── Enterprise / MNC Corporate Compliance ────────────────────
+            if (request.CIN != null) user.CIN = request.CIN;
+            if (request.EntityType != null) user.EntityType = request.EntityType;
+            if (request.Gstin != null) user.Gstin = request.Gstin;
+            if (request.IncorporationNumber != null) user.IncorporationNumber = request.IncorporationNumber;
+            if (request.IndustryVertical != null) user.IndustryVertical = request.IndustryVertical;
+            if (request.CompanySize != null) user.CompanySize = request.CompanySize;
+            if (request.LegalBudgetCeiling.HasValue) user.LegalBudgetCeiling = request.LegalBudgetCeiling.Value;
+            if (request.PanNumber != null) user.PanNumber = request.PanNumber;
+            if (request.Currency != null) user.Currency = request.Currency;
+            if (request.MsaAccepted.HasValue)
+            {
+                user.MsaAccepted = request.MsaAccepted.Value;
+                if (request.MsaAccepted.Value && user.MsaAcceptedAt == null)
+                    user.MsaAcceptedAt = DateTime.UtcNow;
+            }
+            if (request.DpoContactName != null) user.DpoContactName = request.DpoContactName;
+            if (request.DpoContactEmail != null) user.DpoContactEmail = request.DpoContactEmail;
 
             await _context.SaveChangesAsync();
 
@@ -295,28 +336,64 @@ namespace CoreApi.Services
             return true;
         }
 
-        public async Task<object?> Get2FaSetupAsync(int userId)
+        public async Task<object?> Get2FaSetupAsync(int userId, bool force = false)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
 
-            var secret = user.TwoFactorSecret;
-            if (string.IsNullOrEmpty(secret))
+            string secret;
+            List<string> backupCodes;
+            bool isPendingReuse = false;
+
+            // ── Idempotent Pending State ──────────────────────────────────
+            // If a pending secret exists (not yet verified) and is fresh (< 30 min), reuse it unless forced
+            bool hasFreshPending = !force
+                && !user.IsTwoFactorEnabled
+                && !string.IsNullOrEmpty(user.TwoFactorSecret)
+                && user.TwoFactorPendingAt.HasValue
+                && (DateTime.UtcNow - user.TwoFactorPendingAt.Value).TotalMinutes < 30;
+
+            if (hasFreshPending)
             {
-                secret = TotpHelper.GenerateSecretKey();
+                secret = user.TwoFactorSecret!;
+                // Cannot reverse BCrypt hashes — return empty list with reuse flag
+                backupCodes = new List<string>();
+                isPendingReuse = true;
+            }
+            else
+            {
+                // Generate fresh 20-character Base32 secret for setup
+                secret = TotpHelper.GenerateSecretKey(20);
+
+                // Generate 8 one-time alphanumeric backup codes
+                backupCodes = new List<string>();
+                var hashedCodes = new List<string>();
+                for (int i = 0; i < 8; i++)
+                {
+                    var code = TotpHelper.GenerateBackupCode();
+                    backupCodes.Add(code);
+                    hashedCodes.Add(BCrypt.Net.BCrypt.HashPassword(code, 10));
+                }
+
+                // Store pending secret and backup codes (IsTwoFactorEnabled remains false until verified)
                 user.TwoFactorSecret = secret;
+                user.TwoFactorBackupCodes = JsonSerializer.Serialize(hashedCodes);
+                user.TwoFactorPendingAt = DateTime.UtcNow;
                 await _context.SaveChangesAsync();
             }
 
             var issuer = Uri.EscapeDataString("LegalConnect");
             var email = Uri.EscapeDataString(user.Email);
-            var totpUri = $"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}";
+            var totpUri = $"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}&digits=6&period=30&algorithm=SHA1";
             var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(totpUri)}";
 
             return new
             {
                 secret,
-                qrCodeUrl
+                qrCodeUrl,
+                qrUri = totpUri,
+                backupCodes,
+                isPendingReuse
             };
         }
 
@@ -327,25 +404,177 @@ namespace CoreApi.Services
 
             if (request.Enable)
             {
+                // ── Zero-Downtime Reconfiguration Verification ──────────
+                // Check if user is verifying a pending reconfiguration session
+                if (_cache.TryGetValue<PendingReconfigureSession>($"2fa_reconfigure_{userId}", out var pendingReconfigure) && pendingReconfigure != null)
+                {
+                    if (!TotpHelper.ValidateCode(pendingReconfigure.Secret, request.Code))
+                    {
+                        return (false, "Invalid verification code from your new authenticator app. Please try again.", true);
+                    }
+
+                    // Verification succeeded! Now atomically promote pending secret to active
+                    user.TwoFactorSecret = pendingReconfigure.Secret;
+                    user.TwoFactorBackupCodes = JsonSerializer.Serialize(pendingReconfigure.HashedBackupCodes);
+                    user.IsTwoFactorEnabled = true;
+                    user.TwoFactorPendingAt = null;
+
+                    _cache.Remove($"2fa_reconfigure_{userId}");
+                    await _context.SaveChangesAsync();
+
+                    return (true, "Authenticator successfully reconfigured! Your replacement device is now active.", true);
+                }
+
+                // ── Standard Initial 2FA Setup Verification ─────────────
                 if (string.IsNullOrEmpty(user.TwoFactorSecret))
                 {
-                    return (false, "2FA setup has not been initialized.", false);
+                    return (false, "2FA setup has not been initialized. Please scan the QR code first.", false);
                 }
                 if (!TotpHelper.ValidateCode(user.TwoFactorSecret, request.Code))
                 {
-                    return (false, "Invalid verification code. Please check your authenticator app.", false);
+                    return (false, "Invalid verification code. Please check your authenticator app and try again.", false);
                 }
                 user.IsTwoFactorEnabled = true;
+                user.TwoFactorPendingAt = null;
             }
             else
             {
+                // If user was already enabled and password provided, verify password
+                if (user.IsTwoFactorEnabled && !string.IsNullOrEmpty(request.Password))
+                {
+                    bool isValid = VerifyUserPassword(user, request.Password);
+                    if (!isValid)
+                    {
+                        return (false, "Incorrect password. Please enter your valid account password to disable 2FA.", true);
+                    }
+                }
                 user.IsTwoFactorEnabled = false;
                 user.TwoFactorSecret = null;
+                user.TwoFactorBackupCodes = null;
+                user.TwoFactorPendingAt = null;
+                _cache.Remove($"2fa_reconfigure_{userId}");
             }
 
             await _context.SaveChangesAsync();
             var msg = user.IsTwoFactorEnabled ? "2FA activated successfully!" : "2FA deactivated successfully!";
             return (true, msg, user.IsTwoFactorEnabled);
+        }
+
+        // ── 2FA Reconfigure & Backup Code Management ─────────────────────
+
+        private bool VerifyUserPassword(User user, string password)
+        {
+            if (string.IsNullOrEmpty(password)) return false;
+            if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
+            {
+                return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
+            }
+            return user.PasswordHash == password;
+        }
+
+        public async Task<object?> Reconfigure2FaAsync(int userId, string password)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || !user.IsTwoFactorEnabled) return null;
+            if (!VerifyUserPassword(user, password)) return null;
+
+            // Generate a fresh TOTP secret for the replacement device
+            var secret = TotpHelper.GenerateSecretKey(20);
+
+            // Generate 8 fresh backup codes
+            var backupCodes = new List<string>();
+            var hashedCodes = new List<string>();
+            for (int i = 0; i < 8; i++)
+            {
+                var code = TotpHelper.GenerateBackupCode();
+                backupCodes.Add(code);
+                hashedCodes.Add(BCrypt.Net.BCrypt.HashPassword(code, 10));
+            }
+
+            // ZERO-DOWNTIME / ZERO-LOCKOUT PROTECTION:
+            // Do NOT overwrite user.TwoFactorSecret or backup codes in the database yet!
+            // Storing in a 15-minute sliding memory cache guarantees that if the user cancels,
+            // loses connection, or enters an invalid code, their existing authenticator remains 100% active.
+            var pendingSession = new PendingReconfigureSession
+            {
+                Secret = secret,
+                HashedBackupCodes = hashedCodes,
+                CreatedAt = DateTime.UtcNow
+            };
+            _cache.Set($"2fa_reconfigure_{userId}", pendingSession, TimeSpan.FromMinutes(15));
+
+            var issuer = Uri.EscapeDataString("LegalConnect");
+            var email = Uri.EscapeDataString(user.Email);
+            var totpUri = $"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}&digits=6&period=30&algorithm=SHA1";
+            var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(totpUri)}";
+
+            return new
+            {
+                secret,
+                qrCodeUrl,
+                qrUri = totpUri,
+                backupCodes,
+                isReconfiguring = true,
+                message = "New authenticator key generated. Please scan the QR code and enter the 6-digit confirmation code."
+            };
+        }
+
+        public bool CancelReconfigure2Fa(int userId)
+        {
+            _cache.Remove($"2fa_reconfigure_{userId}");
+            return true;
+        }
+
+        public async Task<object?> GetBackupCodesAsync(int userId, string password)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || !user.IsTwoFactorEnabled) return null;
+            if (!VerifyUserPassword(user, password)) return null;
+
+            // Count remaining backup codes (hashed, cannot be reversed)
+            int remaining = 0;
+            if (!string.IsNullOrEmpty(user.TwoFactorBackupCodes))
+            {
+                try
+                {
+                    var codes = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes);
+                    remaining = codes?.Count ?? 0;
+                }
+                catch { remaining = 0; }
+            }
+
+            return new
+            {
+                remaining,
+                total = 8,
+                message = $"{remaining} of 8 backup codes remaining."
+            };
+        }
+
+        public async Task<object?> RegenerateBackupCodesAsync(int userId, string password)
+        {
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null || !user.IsTwoFactorEnabled) return null;
+            if (!VerifyUserPassword(user, password)) return null;
+
+            // Generate 8 fresh one-time backup codes
+            var backupCodes = new List<string>();
+            var hashedCodes = new List<string>();
+            for (int i = 0; i < 8; i++)
+            {
+                var code = TotpHelper.GenerateBackupCode();
+                backupCodes.Add(code);
+                hashedCodes.Add(BCrypt.Net.BCrypt.HashPassword(code, 10));
+            }
+
+            user.TwoFactorBackupCodes = JsonSerializer.Serialize(hashedCodes);
+            await _context.SaveChangesAsync();
+
+            return new
+            {
+                backupCodes,
+                message = "8 new backup codes generated. Previous codes have been invalidated."
+            };
         }
 
         public async Task<(bool success, string message)> ChangePasswordAsync(int userId, ChangePasswordDto request)
@@ -367,6 +596,7 @@ namespace CoreApi.Services
             return new UserProfileResponseDto
             {
                 Id = user.Id,
+                PublicId = user.PublicId,
                 FullName = user.FullName,
                 Email = user.Email,
                 Role = user.Role,
@@ -386,7 +616,30 @@ namespace CoreApi.Services
                 ClientBio = user.ClientBio,
                 AvatarUrl = user.AvatarUrl,
                 IdentityStatus = user.IdentityStatus,
-                IdentityDocumentUrl = user.IdentityDocumentUrl
+                IdentityDocumentUrl = user.IdentityDocumentUrl,
+                Pronouns = user.Pronouns,
+                SpecialStatus = user.SpecialStatus,
+                LegalEntityName = user.LegalEntityName,
+                EmergencyContactName = user.EmergencyContactName,
+                EmergencyContactPhone = user.EmergencyContactPhone,
+                EmergencyContactRelation = user.EmergencyContactRelation,
+                CorporateRfpOpen = user.CorporateRfpOpen,
+                IsSearchIndexable = user.IsSearchIndexable,
+                IsCorporateEntity = user.IsCorporateEntity,
+                // Enterprise / MNC Corporate Compliance
+                CIN = user.CIN,
+                EntityType = user.EntityType,
+                Gstin = user.Gstin,
+                IncorporationNumber = user.IncorporationNumber,
+                IndustryVertical = user.IndustryVertical,
+                CompanySize = user.CompanySize,
+                LegalBudgetCeiling = user.LegalBudgetCeiling,
+                PanNumber = user.PanNumber,
+                Currency = user.Currency,
+                MsaAccepted = user.MsaAccepted,
+                MsaAcceptedAt = user.MsaAcceptedAt,
+                DpoContactName = user.DpoContactName,
+                DpoContactEmail = user.DpoContactEmail
             };
         }
 

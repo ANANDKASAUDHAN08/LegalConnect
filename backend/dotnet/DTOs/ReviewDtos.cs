@@ -6,6 +6,7 @@ namespace CoreApi.DTOs
         public string Content { get; set; } = string.Empty;
         public string? TargetName { get; set; }
         public string? AuthorName { get; set; } // Only utilized for Guests
+        public int? ConsultationId { get; set; }
     }
 
     public class UpdateReviewDto

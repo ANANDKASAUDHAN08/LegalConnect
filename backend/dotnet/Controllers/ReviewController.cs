@@ -176,13 +176,32 @@ namespace CoreApi.Controllers
                             review.UserId = user.Id;
 
                             // Validate actual completed consultation link for Verified Client status
-                            if (!string.Equals(review.TargetName, "Platform", StringComparison.OrdinalIgnoreCase))
+                            if (dto.ConsultationId.HasValue && dto.ConsultationId.Value > 0)
                             {
+                                var consult = await _context.Consultations
+                                    .Include(c => c.Lawyer)
+                                    .FirstOrDefaultAsync(c => c.Id == dto.ConsultationId.Value && c.ClientId == userId);
+                                if (consult != null)
+                                {
+                                    review.ConsultationId = consult.Id;
+                                    review.IsVerifiedClient = true;
+                                    if (consult.Lawyer != null && (string.IsNullOrWhiteSpace(dto.TargetName) || dto.TargetName == "Platform"))
+                                    {
+                                        review.TargetName = consult.Lawyer.FullName;
+                                    }
+                                }
+                            }
+
+                            if (!review.IsVerifiedClient && !string.Equals(review.TargetName, "Platform", StringComparison.OrdinalIgnoreCase))
+                            {
+                                string cleanTarget = review.TargetName.Replace("Adv.", "", StringComparison.OrdinalIgnoreCase).Replace("Adv ", "", StringComparison.OrdinalIgnoreCase).Trim();
                                 var matchingConsultation = await _context.Consultations
+                                    .Include(c => c.Lawyer)
                                     .FirstOrDefaultAsync(c => c.ClientId == userId &&
                                                          c.Lawyer != null &&
-                                                         c.Lawyer.FullName == review.TargetName &&
-                                                         c.Status == "completed");
+                                                         (c.Lawyer.FullName == review.TargetName || 
+                                                          c.Lawyer.FullName.ToLower().Contains(cleanTarget.ToLower()) || 
+                                                          cleanTarget.ToLower().Contains(c.Lawyer.FullName.ToLower())));
                                 if (matchingConsultation != null)
                                 {
                                     review.IsVerifiedClient = true;
@@ -260,6 +279,21 @@ namespace CoreApi.Controllers
                 review.Rating = dto.Rating;
                 review.Content = dto.Content.Trim();
                 review.TargetName = string.IsNullOrWhiteSpace(dto.TargetName) ? "Platform" : dto.TargetName.Trim();
+
+                // Re-run PII sanitization on edited review content
+                var piiResult = _piiSanitizer.Sanitize(review.Content);
+                if (piiResult.HasPii)
+                {
+                    review.RedactedContent = piiResult.SanitizedText;
+                    review.ModerationStatus = "Pending";
+                    review.FlagReason = $"[POLICY-103] Auto-detected PII: {string.Join(", ", piiResult.DetectedTypes)}";
+                }
+                else
+                {
+                    review.RedactedContent = null;
+                    review.ModerationStatus = "Approved";
+                    review.FlagReason = null;
+                }
 
                 await _context.SaveChangesAsync();
                 await SyncLawyerRatingToMongo(review.TargetName);
@@ -489,7 +523,7 @@ namespace CoreApi.Controllers
                 {
                     var reviews = await _context.Reviews
                         .AsNoTracking()
-                        .Where(r => r.UserId == userId)
+                        .Where(r => r.UserId == userId || (r.UserId == null && r.AuthorName == user.FullName && r.UserRole == user.Role))
                         .OrderByDescending(r => r.CreatedAt)
                         .ToListAsync();
                     return Ok(reviews);

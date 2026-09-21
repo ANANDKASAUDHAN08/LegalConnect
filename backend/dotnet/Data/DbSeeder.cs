@@ -45,6 +45,7 @@ namespace CoreApi.Data
             // Fast single-roundtrip batch column check
             EnsureColumnsBatch(context, new List<(string Table, string Column, string Definition)>
             {
+                ("Users", "PublicId", "VARCHAR(50) NULL"),
                 ("Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'"),
                 ("Users", "LastLoginAt", "DATETIME NULL"),
                 ("Users", "LastIpAddress", "VARCHAR(50) NULL"),
@@ -75,8 +76,44 @@ namespace CoreApi.Data
                 ("Reviews", "FlagReason", "VARCHAR(250) NULL"),
                 ("Reviews", "AdvocateReply", "VARCHAR(2000) NULL"),
                 ("Reviews", "AdvocateReplyStatus", "VARCHAR(30) NULL"),
-                ("Reviews", "IsVerifiedClient", "TINYINT(1) DEFAULT 0")
+                ("Reviews", "IsVerifiedClient", "TINYINT(1) DEFAULT 0"),
+                // ── Enterprise / MNC Corporate Compliance: Users ──────────
+                ("Users", "CIN", "VARCHAR(25) NULL"),
+                ("Users", "EntityType", "VARCHAR(50) NULL"),
+                ("Users", "Gstin", "VARCHAR(20) NULL"),
+                ("Users", "IncorporationNumber", "VARCHAR(50) NULL"),
+                ("Users", "IndustryVertical", "VARCHAR(100) NULL"),
+                ("Users", "CompanySize", "VARCHAR(30) NULL"),
+                ("Users", "LegalBudgetCeiling", "DECIMAL(18,2) NULL"),
+                ("Users", "PanNumber", "VARCHAR(10) NULL"),
+                ("Users", "Currency", "VARCHAR(5) NOT NULL DEFAULT 'INR'"),
+                ("Users", "MsaAccepted", "TINYINT(1) NOT NULL DEFAULT 0"),
+                ("Users", "MsaAcceptedAt", "DATETIME NULL"),
+                ("Users", "DpoContactName", "VARCHAR(100) NULL"),
+                ("Users", "DpoContactEmail", "VARCHAR(150) NULL"),
+                // ── Enterprise / MNC Counsel Compliance: LawyerProfiles ───
+                ("LawyerProfiles", "LawFirmName", "VARCHAR(200) NULL"),
+                ("LawyerProfiles", "PracticeStructure", "VARCHAR(50) NULL"),
+                ("LawyerProfiles", "ProfessionalIndemnityInsurer", "VARCHAR(150) NULL"),
+                ("LawyerProfiles", "ProfessionalIndemnityPolicyNo", "VARCHAR(80) NULL"),
+                ("LawyerProfiles", "ProfessionalIndemnityCoverage", "DECIMAL(18,2) NULL"),
+                ("LawyerProfiles", "ProfessionalIndemnityExpiryDate", "DATETIME NULL"),
+                ("LawyerProfiles", "HourlyRate", "DECIMAL(18,2) NULL"),
+                ("LawyerProfiles", "RetainerFee", "DECIMAL(18,2) NULL"),
+                ("LawyerProfiles", "ConflictCheckRequired", "TINYINT(1) NOT NULL DEFAULT 0"),
+                ("LawyerProfiles", "GstinLawyer", "VARCHAR(20) NULL"),
+                ("LawyerProfiles", "StateBarCouncil", "VARCHAR(100) NULL"),
+                ("LawyerProfiles", "DirectoryRankingsJson", "TEXT"),
+                ("LawyerProfiles", "RepresentativeMattersJson", "TEXT"),
+                ("LawyerProfiles", "MsaAccepted", "TINYINT(1) NOT NULL DEFAULT 0"),
+                ("LawyerProfiles", "Currency", "VARCHAR(5) NOT NULL DEFAULT 'INR'")
             });
+
+            try
+            {
+                context.Database.ExecuteSqlRaw("UPDATE `Users` SET `PublicId` = CONCAT('usr_', SUBSTRING(MD5(CONCAT(`Id`, `Email`)), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';");
+            }
+            catch { }
 
             // Activate all existing users whose IsActive default was set to false by EF migration
             var deactivatedUsers = context.Users.Where(u => !u.IsActive).ToList();
@@ -746,8 +783,65 @@ namespace CoreApi.Data
                 var colCount = Convert.ToInt32(checkCmd.ExecuteScalar());
 
                 using var markCmd = conn.CreateCommand();
-                markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4'), ('20260807055827_AddContactSubmissionExtendedFields', '8.0.4'), ('20260826151857_AddClientLegalBudget', '8.0.4');";
+                markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4'), ('20260807055827_AddContactSubmissionExtendedFields', '8.0.4'), ('20260826151857_AddClientLegalBudget', '8.0.4'), ('20260919143000_AddProfileExtendedAndPrivacyFields', '8.0.4'), ('20260920190000_AddTwoFactorPendingAt', '8.0.4');";
                 markCmd.ExecuteNonQuery();
+
+                // Idempotently ensure the extended profile & privacy columns exist in tables
+                var columnDefinitions = new (string Table, string Name, string Ddl)[]
+                {
+                    ("Users", "Pronouns", "VARCHAR(50) NULL"),
+                    ("Users", "SpecialStatus", "VARCHAR(100) NULL DEFAULT 'Standard Citizen'"),
+                    ("Users", "LegalEntityName", "VARCHAR(200) NULL"),
+                    ("Users", "EmergencyContactName", "VARCHAR(100) NULL"),
+                    ("Users", "EmergencyContactPhone", "VARCHAR(30) NULL"),
+                    ("Users", "EmergencyContactRelation", "VARCHAR(100) NULL"),
+                    ("Users", "CorporateRfpOpen", "TINYINT(1) NOT NULL DEFAULT 0"),
+                    ("Users", "IsSearchIndexable", "TINYINT(1) NOT NULL DEFAULT 1"),
+                    ("Users", "IsCorporateEntity", "TINYINT(1) NOT NULL DEFAULT 0"),
+                    ("Users", "TwoFactorPendingAt", "DATETIME(6) NULL"),
+                    ("Users", "PublicId", "VARCHAR(50) NULL"),
+                    ("LawyerProfiles", "PublicId", "VARCHAR(50) NULL"),
+                    ("Consultations", "PublicId", "VARCHAR(50) NULL")
+                };
+
+                foreach (var (tblName, colName, colDdl) in columnDefinitions)
+                {
+                    try
+                    {
+                        using var chkCol = conn.CreateCommand();
+                        chkCol.CommandText = $"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '{tblName}' AND column_name = '{colName}'";
+                        var exists = Convert.ToInt32(chkCol.ExecuteScalar());
+                        if (exists == 0)
+                        {
+                            using var addCol = conn.CreateCommand();
+                            addCol.CommandText = $"ALTER TABLE `{tblName}` ADD COLUMN `{colName}` {colDdl};";
+                            addCol.ExecuteNonQuery();
+                        }
+                    }
+                    catch
+                    {
+                        // Ignore non-fatal column addition errors
+                    }
+                }
+
+                try
+                {
+                    using var backfillUsers = conn.CreateCommand();
+                    backfillUsers.CommandText = "UPDATE `Users` SET `PublicId` = CONCAT('usr_', SUBSTRING(MD5(CONCAT(Id, Email, NOW())), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';";
+                    backfillUsers.ExecuteNonQuery();
+
+                    using var backfillLawyers = conn.CreateCommand();
+                    backfillLawyers.CommandText = "UPDATE `LawyerProfiles` SET `PublicId` = CONCAT('law_', SUBSTRING(MD5(CONCAT(Id, UserId, NOW())), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';";
+                    backfillLawyers.ExecuteNonQuery();
+
+                    using var backfillConsult = conn.CreateCommand();
+                    backfillConsult.CommandText = "UPDATE `Consultations` SET `PublicId` = CONCAT('inq_', SUBSTRING(MD5(CONCAT(Id, ClientEmail, NOW())), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';";
+                    backfillConsult.ExecuteNonQuery();
+                }
+                catch
+                {
+                    // Ignore non-fatal backfill errors
+                }
 
                 if (!wasOpen) conn.Close();
             }

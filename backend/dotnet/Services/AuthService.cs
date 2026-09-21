@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Security.Cryptography;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CoreApi.Data;
 using CoreApi.Models;
@@ -246,7 +248,43 @@ namespace CoreApi.Services
                 {
                     return (false, "2FA verification required.", true, null, null, null);
                 }
-                if (string.IsNullOrEmpty(user.TwoFactorSecret) || !TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode))
+
+                bool is2FaValid = false;
+                if (!string.IsNullOrEmpty(user.TwoFactorSecret))
+                {
+                    is2FaValid = TotpHelper.ValidateCode(user.TwoFactorSecret, request.TwoFactorCode);
+                }
+
+                // If TOTP failed, try backup code validation
+                if (!is2FaValid && !string.IsNullOrEmpty(user.TwoFactorBackupCodes))
+                {
+                    try
+                    {
+                        var hashedCodes = JsonSerializer.Deserialize<List<string>>(user.TwoFactorBackupCodes) ?? new List<string>();
+                        var normalizedInput = request.TwoFactorCode.Trim().ToUpperInvariant();
+                        int matchIndex = -1;
+                        for (int i = 0; i < hashedCodes.Count; i++)
+                        {
+                            if (BCrypt.Net.BCrypt.Verify(normalizedInput, hashedCodes[i]))
+                            {
+                                matchIndex = i;
+                                break;
+                            }
+                        }
+                        if (matchIndex >= 0)
+                        {
+                            // Consume the used backup code
+                            hashedCodes.RemoveAt(matchIndex);
+                            user.TwoFactorBackupCodes = JsonSerializer.Serialize(hashedCodes);
+                            await _context.SaveChangesAsync();
+                            is2FaValid = true;
+                            _logger.LogWarning("[Security Audit] User (Id: {UserId}, Email: {Email}) used a backup recovery code for 2FA login. Remaining: {Count}", user.Id, user.Email, hashedCodes.Count);
+                        }
+                    }
+                    catch { /* Corrupted backup codes — ignore and fail */ }
+                }
+
+                if (!is2FaValid)
                 {
                     _logger.LogWarning("[Security Audit] Failed 2FA verification attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
                     _context.LoginHistories.Add(new LoginHistory
@@ -258,7 +296,7 @@ namespace CoreApi.Services
                         Status = "Failed"
                     });
                     await _context.SaveChangesAsync();
-                    return (false, "Invalid 2FA verification code.", false, null, null, null);
+                    return (false, "Invalid 2FA verification code. Please check your authenticator app or enter a valid backup code.", false, null, null, null);
                 }
             }
 

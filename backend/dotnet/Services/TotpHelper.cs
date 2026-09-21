@@ -121,5 +121,24 @@ namespace CoreApi.Services
 
             return false;
         }
+
+        /// <summary>
+        /// Generates a secure 8-character alphanumeric backup recovery code excluding ambiguous characters (I, O, 0, 1).
+        /// </summary>
+        public static string GenerateBackupCode()
+        {
+            const string chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+            byte[] randomBytes = new byte[8];
+            using (var rng = RandomNumberGenerator.Create())
+            {
+                rng.GetBytes(randomBytes);
+            }
+            var code = new char[8];
+            for (int i = 0; i < 8; i++)
+            {
+                code[i] = chars[randomBytes[i] % chars.Length];
+            }
+            return new string(code);
+        }
     }
 }

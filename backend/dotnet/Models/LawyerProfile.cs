@@ -9,6 +9,13 @@ namespace CoreApi.Models
         [Key]
         public int Id { get; set; }
 
+        /// <summary>
+        /// Enterprise non-sequential public identifier exposed in APIs and client displays (e.g. law_89f210ad45b1c74e).
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
+        public string PublicId { get; set; } = CoreApi.Extensions.PublicIdGenerator.Generate("law");
+
         [Required]
         public int UserId { get; set; }
 
@@ -80,6 +87,62 @@ namespace CoreApi.Models
         public DateTime? CopExpiryDate { get; set; }
 
         public string? BannerUrl { get; set; }
+
+        // ── Enterprise / MNC Counsel Compliance Fields ───────────────────
+        /// <summary>Name of the law firm or chamber</summary>
+        [MaxLength(200)]
+        public string? LawFirmName { get; set; }
+
+        /// <summary>Practice structure: Solo / Partnership / LLP / AOP</summary>
+        [MaxLength(50)]
+        public string? PracticeStructure { get; set; }
+
+        /// <summary>Professional indemnity (E&O) insurance carrier name</summary>
+        [MaxLength(150)]
+        public string? ProfessionalIndemnityInsurer { get; set; }
+
+        /// <summary>E&O insurance policy number</summary>
+        [MaxLength(80)]
+        public string? ProfessionalIndemnityPolicyNo { get; set; }
+
+        /// <summary>E&O coverage amount</summary>
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? ProfessionalIndemnityCoverage { get; set; }
+
+        /// <summary>E&O policy expiry date</summary>
+        public DateTime? ProfessionalIndemnityExpiryDate { get; set; }
+
+        /// <summary>Hourly billing rate</summary>
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? HourlyRate { get; set; }
+
+        /// <summary>Monthly retainer fee</summary>
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? RetainerFee { get; set; }
+
+        /// <summary>Whether conflict-of-interest check is mandatory before engagement</summary>
+        public bool ConflictCheckRequired { get; set; } = false;
+
+        /// <summary>Lawyer/Firm GSTIN for GST-compliant invoicing</summary>
+        [MaxLength(20)]
+        public string? GstinLawyer { get; set; }
+
+        /// <summary>Issuing state bar council (e.g. Bar Council of Delhi)</summary>
+        [MaxLength(100)]
+        public string? StateBarCouncil { get; set; }
+
+        /// <summary>Chambers & Partners / Legal500 / RSG India structured rankings JSON</summary>
+        public string DirectoryRankingsJson { get; set; } = "[]";
+
+        /// <summary>Anonymized representative matters / deal sheet JSON</summary>
+        public string RepresentativeMattersJson { get; set; } = "[]";
+
+        /// <summary>Whether lawyer has accepted platform Master Service Agreement</summary>
+        public bool MsaAccepted { get; set; } = false;
+
+        /// <summary>Fee quotation currency: INR / USD / GBP / SGD / EUR</summary>
+        [MaxLength(5)]
+        public string Currency { get; set; } = "INR";
 
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

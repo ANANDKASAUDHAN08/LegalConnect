@@ -26,5 +26,21 @@ namespace CoreApi.DTOs
         public string TimeSlotsJson { get; set; } = string.Empty;
         public string SocialLinksJson { get; set; } = string.Empty;
         public string? BannerUrl { get; set; }
+        // ── Enterprise / MNC Counsel Compliance ──────────────────────────
+        public string? LawFirmName { get; set; }
+        public string? PracticeStructure { get; set; }
+        public string? ProfessionalIndemnityInsurer { get; set; }
+        public string? ProfessionalIndemnityPolicyNo { get; set; }
+        public decimal? ProfessionalIndemnityCoverage { get; set; }
+        public DateTime? ProfessionalIndemnityExpiryDate { get; set; }
+        public decimal? HourlyRate { get; set; }
+        public decimal? RetainerFee { get; set; }
+        public bool? ConflictCheckRequired { get; set; }
+        public string? GstinLawyer { get; set; }
+        public string? StateBarCouncil { get; set; }
+        public string? DirectoryRankingsJson { get; set; }
+        public string? RepresentativeMattersJson { get; set; }
+        public bool? MsaAccepted { get; set; }
+        public string? Currency { get; set; }
     }
 }

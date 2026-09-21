@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace CoreApi.Controllers
 {
@@ -80,7 +81,30 @@ namespace CoreApi.Controllers
                 clientBio = profile.ClientBio,
                 avatarUrl = profile.AvatarUrl,
                 identityStatus = profile.IdentityStatus,
-                identityDocumentUrl = profile.IdentityDocumentUrl
+                identityDocumentUrl = profile.IdentityDocumentUrl,
+                pronouns = profile.Pronouns,
+                specialStatus = profile.SpecialStatus,
+                legalEntityName = profile.LegalEntityName,
+                emergencyContactName = profile.EmergencyContactName,
+                emergencyContactPhone = profile.EmergencyContactPhone,
+                emergencyContactRelation = profile.EmergencyContactRelation,
+                corporateRfpOpen = profile.CorporateRfpOpen,
+                isSearchIndexable = profile.IsSearchIndexable,
+                isCorporateEntity = profile.IsCorporateEntity,
+                // Enterprise / MNC Corporate Compliance
+                cin = profile.CIN,
+                entityType = profile.EntityType,
+                gstin = profile.Gstin,
+                incorporationNumber = profile.IncorporationNumber,
+                industryVertical = profile.IndustryVertical,
+                companySize = profile.CompanySize,
+                legalBudgetCeiling = profile.LegalBudgetCeiling,
+                panNumber = profile.PanNumber,
+                currency = profile.Currency,
+                msaAccepted = profile.MsaAccepted,
+                msaAcceptedAt = profile.MsaAcceptedAt,
+                dpoContactName = profile.DpoContactName,
+                dpoContactEmail = profile.DpoContactEmail
             });
         }
 
@@ -90,7 +114,12 @@ namespace CoreApi.Controllers
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
             var updated = await _profileService.UpdateProfileAsync(userId, request);
-            return Ok(new { message = "Profile updated successfully!", fullName = updated.FullName });
+            return Ok(new
+            {
+                message = "Profile updated successfully!",
+                fullName = updated.FullName,
+                profile = updated
+            });
         }
 
         [Authorize]
@@ -202,15 +231,16 @@ namespace CoreApi.Controllers
 
         [Authorize]
         [HttpGet("2fa/setup")]
-        public async Task<IActionResult> Get2FaSetup()
+        public async Task<IActionResult> Get2FaSetup([FromQuery] bool force = false)
         {
             var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var setup = await _profileService.Get2FaSetupAsync(userId);
+            var setup = await _profileService.Get2FaSetupAsync(userId, force);
             if (setup == null) return NotFound("User not found.");
             return Ok(setup);
         }
 
         [Authorize]
+        [EnableRateLimiting("AuthPolicy")]
         [HttpPost("2fa/toggle")]
         public async Task<IActionResult> Toggle2Fa([FromBody] Toggle2FaDto request)
         {
@@ -218,6 +248,48 @@ namespace CoreApi.Controllers
             var result = await _profileService.Toggle2FaAsync(userId, request);
             if (!result.success) return BadRequest(new { message = result.message });
             return Ok(new { isTwoFactorEnabled = result.isTwoFactorEnabled, message = result.message });
+        }
+
+        [Authorize]
+        [EnableRateLimiting("AuthPolicy")]
+        [HttpPost("2fa/reconfigure")]
+        public async Task<IActionResult> Reconfigure2Fa([FromBody] ReconfigureDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _profileService.Reconfigure2FaAsync(userId, request.Password);
+            if (result == null) return BadRequest(new { message = "Invalid password or 2FA is not enabled." });
+            return Ok(result);
+        }
+
+        [Authorize]
+        [HttpPost("2fa/reconfigure/cancel")]
+        public IActionResult CancelReconfigure2Fa()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            _profileService.CancelReconfigure2Fa(userId);
+            return Ok(new { message = "Reconfiguration cancelled. Your active authenticator remains unchanged." });
+        }
+
+        [Authorize]
+        [EnableRateLimiting("AuthPolicy")]
+        [HttpPost("2fa/backup-codes")]
+        public async Task<IActionResult> GetBackupCodes([FromBody] PasswordConfirmDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _profileService.GetBackupCodesAsync(userId, request.Password);
+            if (result == null) return BadRequest(new { message = "Invalid password or 2FA is not enabled." });
+            return Ok(result);
+        }
+
+        [Authorize]
+        [EnableRateLimiting("AuthPolicy")]
+        [HttpPost("2fa/backup-codes/regenerate")]
+        public async Task<IActionResult> RegenerateBackupCodes([FromBody] PasswordConfirmDto request)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _profileService.RegenerateBackupCodesAsync(userId, request.Password);
+            if (result == null) return BadRequest(new { message = "Invalid password or 2FA is not enabled." });
+            return Ok(result);
         }
     }
 }

@@ -78,7 +78,9 @@ namespace CoreApi.Controllers
                 .Take(pageSize)
                 .Select(c => new {
                     c.Id,
+                    c.PublicId,
                     c.ClientId,
+                    ClientPublicId = c.Client != null ? c.Client.PublicId : string.Empty,
                     ClientName = c.Client != null ? c.Client.FullName : c.ClientName,
                     ClientEmail = c.Client != null ? c.Client.Email : c.ClientEmail,
                     c.LawyerId,
@@ -119,10 +121,12 @@ namespace CoreApi.Controllers
                 .Take(pageSize)
                 .Select(c => new {
                     c.Id,
+                    c.PublicId,
                     c.ClientId,
                     c.ClientName,
                     c.ClientEmail,
                     c.LawyerId,
+                    LawyerPublicId = c.Lawyer != null ? c.Lawyer.PublicId : string.Empty,
                     LawyerName = c.Lawyer != null ? c.Lawyer.FullName : "Advocate",
                     LawyerEmail = c.Lawyer != null ? c.Lawyer.Email : string.Empty,
                     c.Message,

@@ -9,6 +9,13 @@ namespace CoreApi.Models
         [Key]
         public int Id { get; set; }
 
+        /// <summary>
+        /// Enterprise non-sequential public identifier exposed in APIs and client displays (e.g. inq_10ad45b1c74e89f2).
+        /// </summary>
+        [Required]
+        [MaxLength(50)]
+        public string PublicId { get; set; } = CoreApi.Extensions.PublicIdGenerator.Generate("inq");
+
         public int? ClientId { get; set; }
         
         [ForeignKey("ClientId")]

@@ -20,8 +20,14 @@ namespace CoreApi.Services
         // Settings & Account Security
         Task<UserSettingsDto?> GetSettingsAsync(int userId);
         Task<bool> UpdateSettingsAsync(int userId, UpdateSettingsDto request);
-        Task<object?> Get2FaSetupAsync(int userId);
+        Task<object?> Get2FaSetupAsync(int userId, bool force = false);
         Task<(bool success, string message, bool isTwoFactorEnabled)> Toggle2FaAsync(int userId, Toggle2FaDto request);
         Task<(bool success, string message)> ChangePasswordAsync(int userId, ChangePasswordDto request);
+
+        // 2FA Reconfigure & Backup Code Management
+        Task<object?> Reconfigure2FaAsync(int userId, string password);
+        bool CancelReconfigure2Fa(int userId);
+        Task<object?> GetBackupCodesAsync(int userId, string password);
+        Task<object?> RegenerateBackupCodesAsync(int userId, string password);
     }
 }

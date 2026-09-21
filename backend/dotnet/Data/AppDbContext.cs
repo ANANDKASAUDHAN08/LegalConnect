@@ -247,6 +247,19 @@ namespace CoreApi.Data
 
             modelBuilder.Entity<ContentReport>()
                 .HasIndex(r => r.AssignedAdminEmail);
+
+            // Enterprise Non-Sequential PublicId unique indexes
+            modelBuilder.Entity<User>()
+                .HasIndex(u => u.PublicId)
+                .IsUnique();
+
+            modelBuilder.Entity<LawyerProfile>()
+                .HasIndex(l => l.PublicId)
+                .IsUnique();
+
+            modelBuilder.Entity<Consultation>()
+                .HasIndex(c => c.PublicId)
+                .IsUnique();
         }
     }
 }
