@@ -19,6 +19,7 @@ namespace CoreApi.Extensions
         public const string AuthPolicyName = "AuthPolicy";
         public const string AuthSessionPolicyName = "AuthSessionPolicy";
         public const string AdminModerationPolicyName = "AdminModerationPolicy";
+        public const string ProfilePolicyName = "ProfilePolicy";
 
         public static IServiceCollection AddAppRateLimiting(
             this IServiceCollection services,
@@ -28,6 +29,7 @@ namespace CoreApi.Extensions
             var authPermitLimit = configuration.GetValue("RateLimiting:Auth:PermitLimit", 30);
             var authSessionPermitLimit = configuration.GetValue("RateLimiting:AuthSession:PermitLimit", 120);
             var adminModerationPermitLimit = configuration.GetValue("RateLimiting:AdminModeration:PermitLimit", 50);
+            var profilePermitLimit = configuration.GetValue("RateLimiting:Profile:PermitLimit", 20);
 
             return services.AddRateLimiter(options =>
             {
@@ -79,6 +81,20 @@ namespace CoreApi.Extensions
                         factory: _ => new FixedWindowRateLimiterOptions
                         {
                             PermitLimit = adminModerationPermitLimit,
+                            Window = TimeSpan.FromMinutes(1),
+                            QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                            QueueLimit = 0
+                        }));
+
+                // 4. User/IP-partitioned rate limit for profile mutations
+                options.AddPolicy(ProfilePolicyName, httpContext =>
+                    RateLimitPartition.GetFixedWindowLimiter(
+                        partitionKey: httpContext.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value
+                            ?? httpContext.Connection.RemoteIpAddress?.ToString()
+                            ?? "anonymous-profile",
+                        factory: _ => new FixedWindowRateLimiterOptions
+                        {
+                            PermitLimit = profilePermitLimit,
                             Window = TimeSpan.FromMinutes(1),
                             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                             QueueLimit = 0

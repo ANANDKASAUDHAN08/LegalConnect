@@ -39,6 +39,7 @@ namespace CoreApi.Models
         [MaxLength(2000)]
         public string Bio { get; set; } = string.Empty;
 
+        /// <summary>Advocate's chamber / office contact phone number</summary>
         [MaxLength(20)]
         public string Phone { get; set; } = string.Empty;
 
@@ -48,9 +49,9 @@ namespace CoreApi.Models
         [Column(TypeName = "decimal(18, 2)")]
         public decimal InPersonFee { get; set; } = 0.00m;
 
-        public int CasesCompleted { get; set; } = 150;
+        public int CasesCompleted { get; set; } = 0;
 
-        public int SuccessRate { get; set; } = 95;
+        public int SuccessRate { get; set; } = 0;
 
         [MaxLength(500)]
         public string OfficeAddress { get; set; } = string.Empty;
@@ -130,12 +131,6 @@ namespace CoreApi.Models
         /// <summary>Issuing state bar council (e.g. Bar Council of Delhi)</summary>
         [MaxLength(100)]
         public string? StateBarCouncil { get; set; }
-
-        /// <summary>Chambers & Partners / Legal500 / RSG India structured rankings JSON</summary>
-        public string DirectoryRankingsJson { get; set; } = "[]";
-
-        /// <summary>Anonymized representative matters / deal sheet JSON</summary>
-        public string RepresentativeMattersJson { get; set; } = "[]";
 
         /// <summary>Whether lawyer has accepted platform Master Service Agreement</summary>
         public bool MsaAccepted { get; set; } = false;

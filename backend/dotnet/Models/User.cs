@@ -37,6 +37,21 @@ namespace CoreApi.Models
 
         public bool IsActive { get; set; } = true;
 
+        /// <summary>
+        /// Irreversible GDPR / DPDP soft-deletion flag. Prevents login.
+        /// </summary>
+        public bool IsDeleted { get; set; } = false;
+
+        /// <summary>
+        /// Administrative suspension flag for terms of service violations. Prevents login.
+        /// </summary>
+        public bool IsBanned { get; set; } = false;
+
+        /// <summary>
+        /// Temporary voluntary deactivation initiated by the user. Automatically cleared upon subsequent login.
+        /// </summary>
+        public bool IsDeactivatedByUser { get; set; } = false;
+
         // Security & Verification Fields
         public bool IsEmailVerified { get; set; } = false;
         
@@ -105,20 +120,19 @@ namespace CoreApi.Models
         [MaxLength(100)]
         public string? ClientCity { get; set; }
 
-        [MaxLength(200)]
-        public string? ClientInterest { get; set; }
-
         public DateTime? DateOfBirth { get; set; }
 
         [MaxLength(50)]
         public string? Gender { get; set; }
 
+        /// <summary>Residential / Street address for formal legal notice generation & court documents</summary>
         [MaxLength(200)]
         public string? AddressLine1 { get; set; }
 
         [MaxLength(100)]
         public string? ClientState { get; set; }
 
+        /// <summary>Postal PIN code for jurisdictional court & police station mapping</summary>
         [MaxLength(20)]
         public string? ClientZip { get; set; }
 
@@ -157,26 +171,18 @@ namespace CoreApi.Models
 
         public bool NotifyPushEnabled { get; set; } = false;
 
-        // ── Extended Profile & Standing Fields ─────────────────────────
-        [MaxLength(50)]
-        public string? Pronouns { get; set; }
+        public bool NotifyWhatsAppEnabled { get; set; } = false;
 
+        [MaxLength(30)]
+        public string? WhatsAppPhone { get; set; }
+
+        // ── Extended Profile & Standing Fields ─────────────────────────
+        /// <summary>Special legal status: Senior Citizen / Armed Forces / Differently Abled / BPL for statutory fee exemptions</summary>
         [MaxLength(100)]
         public string? SpecialStatus { get; set; } = "Standard Citizen";
 
         [MaxLength(200)]
         public string? LegalEntityName { get; set; }
-
-        [MaxLength(100)]
-        public string? EmergencyContactName { get; set; }
-
-        [MaxLength(30)]
-        public string? EmergencyContactPhone { get; set; }
-
-        [MaxLength(100)]
-        public string? EmergencyContactRelation { get; set; }
-
-        public bool CorporateRfpOpen { get; set; } = false;
 
         // ── Privacy & Visibility Preferences ────────────────────────────
         public bool IsSearchIndexable { get; set; } = true;
@@ -207,10 +213,6 @@ namespace CoreApi.Models
         /// <summary>Headcount band: 1-50 / 51-200 / 201-1000 / 1001-5000 / 5000+</summary>
         [MaxLength(30)]
         public string? CompanySize { get; set; }
-
-        /// <summary>Annual outside-counsel budget ceiling</summary>
-        [System.ComponentModel.DataAnnotations.Schema.Column(TypeName = "decimal(18,2)")]
-        public decimal? LegalBudgetCeiling { get; set; }
 
         /// <summary>PAN for TDS deduction at source (Section 194J — 10% on professional fees)</summary>
         [MaxLength(10)]

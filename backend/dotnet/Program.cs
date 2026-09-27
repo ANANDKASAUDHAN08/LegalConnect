@@ -49,8 +49,10 @@ builder.Services.AddScoped<IUserProfileService, UserProfileService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
+builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
 builder.Services.AddSingleton<IPiiSanitizerService, PiiSanitizerService>();
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("NodeSync", c => c.Timeout = TimeSpan.FromMilliseconds(800));
 
 // ── 4. Hosted Background Workers ──
 builder.Services.AddHostedService<ProfileSyncWorker>();

@@ -1,7 +1,55 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace CoreApi.DTOs
 {
+    public class UpdateProfileDto
+    {
+        [MinLength(2)]
+        [MaxLength(100)]
+        [RegularExpression(@"^[\p{L}\p{M}'\-\.\s]+$", ErrorMessage = "Name contains invalid characters.")]
+        public string? FullName { get; set; }
+
+        [MaxLength(20)]
+        [RegularExpression(@"^\+?[\d\s\-()]{7,20}$", ErrorMessage = "Invalid phone number format.")]
+        public string? Phone { get; set; }
+
+        [MaxLength(30)]
+        public string? ClientLanguage { get; set; }
+
+        [MaxLength(100)]
+        public string? ClientCity { get; set; }
+
+        [MaxLength(100)]
+        public string? ClientState { get; set; }
+
+        [MaxLength(1000)]
+        public string? ClientBio { get; set; }
+
+        [MaxLength(2_000_000)] // ~1.5MB base64 image limit
+        public string? AvatarUrl { get; set; }
+
+        [MaxLength(80)]
+        public string? PreferredTimezone { get; set; }
+
+        public bool? NotifyLawAmendments { get; set; }
+        public bool? NotifyEmailDigest { get; set; }
+        public bool? NotifyPushEnabled { get; set; }
+        public bool? NotifyWhatsAppEnabled { get; set; }
+
+        [MaxLength(20)]
+        [RegularExpression(@"^\+?[\d\s\-()]{7,20}$", ErrorMessage = "Invalid WhatsApp phone format.")]
+        public string? WhatsAppPhone { get; set; }
+
+        public DateTime? DateOfBirth { get; set; }
+
+        [MaxLength(50)]
+        public string? Gender { get; set; }
+
+        public bool? IsTwoFactorEnabled { get; set; }
+        public bool? IsSearchIndexable { get; set; }
+    }
+
     public class UserProfileResponseDto
     {
         public int Id { get; set; }
@@ -16,39 +64,13 @@ namespace CoreApi.DTOs
         public bool IsTwoFactorEnabled { get; set; }
         public string? ClientLanguage { get; set; }
         public string? ClientCity { get; set; }
-        public string? ClientInterest { get; set; }
-        public DateTime? DateOfBirth { get; set; }
-        public string? Gender { get; set; }
-        public string? AddressLine1 { get; set; }
         public string? ClientState { get; set; }
-        public string? ClientZip { get; set; }
         public string? ClientBio { get; set; }
         public string? AvatarUrl { get; set; }
-        public string IdentityStatus { get; set; } = string.Empty;
-        public string? IdentityDocumentUrl { get; set; }
-        public string? Pronouns { get; set; }
-        public string? SpecialStatus { get; set; }
-        public string? LegalEntityName { get; set; }
-        public string? EmergencyContactName { get; set; }
-        public string? EmergencyContactPhone { get; set; }
-        public string? EmergencyContactRelation { get; set; }
-        public bool CorporateRfpOpen { get; set; }
+        public DateTime? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
+        public bool NotifyWhatsAppEnabled { get; set; } = false;
+        public string? WhatsAppPhone { get; set; }
         public bool IsSearchIndexable { get; set; } = true;
-        public bool IsCorporateEntity { get; set; } = false;
-
-        // ── Enterprise / MNC Corporate Compliance ────────────────────────
-        public string? CIN { get; set; }
-        public string? EntityType { get; set; }
-        public string? Gstin { get; set; }
-        public string? IncorporationNumber { get; set; }
-        public string? IndustryVertical { get; set; }
-        public string? CompanySize { get; set; }
-        public decimal? LegalBudgetCeiling { get; set; }
-        public string? PanNumber { get; set; }
-        public string Currency { get; set; } = "INR";
-        public bool MsaAccepted { get; set; } = false;
-        public DateTime? MsaAcceptedAt { get; set; }
-        public string? DpoContactName { get; set; }
-        public string? DpoContactEmail { get; set; }
     }
 }

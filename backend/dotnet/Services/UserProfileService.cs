@@ -7,12 +7,14 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.Models;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using QRCoder;
 
 namespace CoreApi.Services
 {
@@ -31,6 +33,7 @@ namespace CoreApi.Services
         private readonly ILawyerSyncService _syncService;
         private readonly ILogger<UserProfileService> _logger;
         private readonly IMemoryCache _cache;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public UserProfileService(
             AppDbContext context,
@@ -38,7 +41,8 @@ namespace CoreApi.Services
             IConfiguration configuration,
             ILawyerSyncService syncService,
             ILogger<UserProfileService> logger,
-            IMemoryCache cache)
+            IMemoryCache cache,
+            IHttpClientFactory httpClientFactory)
         {
             _context = context;
             _env = env;
@@ -46,6 +50,7 @@ namespace CoreApi.Services
             _syncService = syncService;
             _logger = logger;
             _cache = cache;
+            _httpClientFactory = httpClientFactory;
         }
 
         public async Task<UserProfileResponseDto?> GetProfileAsync(int userId)
@@ -61,53 +66,26 @@ namespace CoreApi.Services
             var user = await _context.Users.FindAsync(userId);
             if (user == null) throw new KeyNotFoundException("User not found.");
 
-            if (request.FullName != null) user.FullName = request.FullName;
-            if (request.Phone != null) user.Phone = request.Phone;
-            if (request.ClientLanguage != null) user.ClientLanguage = request.ClientLanguage;
-            if (request.ClientCity != null) user.ClientCity = request.ClientCity;
-            if (request.ClientInterest != null) user.ClientInterest = request.ClientInterest;
-            if (request.DateOfBirth != null) user.DateOfBirth = request.DateOfBirth;
-            if (request.Gender != null) user.Gender = request.Gender;
-            if (request.AddressLine1 != null) user.AddressLine1 = request.AddressLine1;
-            if (request.ClientState != null) user.ClientState = request.ClientState;
-            if (request.ClientZip != null) user.ClientZip = request.ClientZip;
-            if (request.ClientBio != null) user.ClientBio = request.ClientBio;
-            if (request.AvatarUrl != null) user.AvatarUrl = SaveBase64File(request.AvatarUrl, "avatars", $"user_{userId}");
+            // Sanitize text inputs to prevent stored XSS
+            if (request.FullName != null) user.FullName = System.Net.WebUtility.HtmlEncode(request.FullName.Trim());
+            if (request.Phone != null) user.Phone = request.Phone.Trim();
+            if (request.ClientLanguage != null) user.ClientLanguage = System.Net.WebUtility.HtmlEncode(request.ClientLanguage.Trim());
+            if (request.ClientCity != null) user.ClientCity = System.Net.WebUtility.HtmlEncode(request.ClientCity.Trim());
+            if (request.ClientState != null) user.ClientState = System.Net.WebUtility.HtmlEncode(request.ClientState.Trim());
+            if (request.ClientBio != null) user.ClientBio = System.Net.WebUtility.HtmlEncode(request.ClientBio.Trim());
+            if (request.AvatarUrl != null) user.AvatarUrl = await SaveBase64FileAsync(request.AvatarUrl, "avatars", $"user_{userId}");
 
-            if (request.PreferredTimezone != null) user.PreferredTimezone = request.PreferredTimezone;
+            if (request.PreferredTimezone != null) user.PreferredTimezone = request.PreferredTimezone.Trim();
             if (request.NotifyLawAmendments.HasValue) user.NotifyLawAmendments = request.NotifyLawAmendments.Value;
             if (request.NotifyEmailDigest.HasValue) user.NotifyEmailDigest = request.NotifyEmailDigest.Value;
             if (request.NotifyPushEnabled.HasValue) user.NotifyPushEnabled = request.NotifyPushEnabled.Value;
+            if (request.NotifyWhatsAppEnabled.HasValue) user.NotifyWhatsAppEnabled = request.NotifyWhatsAppEnabled.Value;
+            if (request.WhatsAppPhone != null) user.WhatsAppPhone = request.WhatsAppPhone.Trim();
 
-            if (request.Pronouns != null) user.Pronouns = request.Pronouns;
-            if (request.SpecialStatus != null) user.SpecialStatus = request.SpecialStatus;
-            if (request.LegalEntityName != null) user.LegalEntityName = request.LegalEntityName;
-            if (request.EmergencyContactName != null) user.EmergencyContactName = request.EmergencyContactName;
-            if (request.EmergencyContactPhone != null) user.EmergencyContactPhone = request.EmergencyContactPhone;
-            if (request.EmergencyContactRelation != null) user.EmergencyContactRelation = request.EmergencyContactRelation;
-            if (request.CorporateRfpOpen.HasValue) user.CorporateRfpOpen = request.CorporateRfpOpen.Value;
-            // 2FA state is securely managed exclusively via Toggle2FaAsync with TOTP verification
+            if (request.DateOfBirth.HasValue) user.DateOfBirth = request.DateOfBirth.Value;
+            if (request.Gender != null) user.Gender = System.Net.WebUtility.HtmlEncode(request.Gender.Trim());
+
             if (request.IsSearchIndexable.HasValue) user.IsSearchIndexable = request.IsSearchIndexable.Value;
-            if (request.IsCorporateEntity.HasValue) user.IsCorporateEntity = request.IsCorporateEntity.Value;
-
-            // ── Enterprise / MNC Corporate Compliance ────────────────────
-            if (request.CIN != null) user.CIN = request.CIN;
-            if (request.EntityType != null) user.EntityType = request.EntityType;
-            if (request.Gstin != null) user.Gstin = request.Gstin;
-            if (request.IncorporationNumber != null) user.IncorporationNumber = request.IncorporationNumber;
-            if (request.IndustryVertical != null) user.IndustryVertical = request.IndustryVertical;
-            if (request.CompanySize != null) user.CompanySize = request.CompanySize;
-            if (request.LegalBudgetCeiling.HasValue) user.LegalBudgetCeiling = request.LegalBudgetCeiling.Value;
-            if (request.PanNumber != null) user.PanNumber = request.PanNumber;
-            if (request.Currency != null) user.Currency = request.Currency;
-            if (request.MsaAccepted.HasValue)
-            {
-                user.MsaAccepted = request.MsaAccepted.Value;
-                if (request.MsaAccepted.Value && user.MsaAcceptedAt == null)
-                    user.MsaAcceptedAt = DateTime.UtcNow;
-            }
-            if (request.DpoContactName != null) user.DpoContactName = request.DpoContactName;
-            if (request.DpoContactEmail != null) user.DpoContactEmail = request.DpoContactEmail;
 
             await _context.SaveChangesAsync();
 
@@ -127,8 +105,24 @@ namespace CoreApi.Services
             var userEmail = user.Email;
             var isLawyer = user.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase);
 
-            _context.Users.Remove(user);
+            // Soft-delete: mark as inactive and deleted, anonymize PII, set 30-day purge window
+            user.IsDeleted = true;
+            user.IsActive = false;
+            user.IsSearchIndexable = false;
+            user.FullName = "Deleted User";
+            user.Phone = null;
+            user.AvatarUrl = null;
+            user.ClientBio = null;
+            user.ClientCity = null;
+            user.ClientState = null;
+
+            // Revoke all active sessions and refresh tokens
+            await RevokeAllSessionsAsync(userId, "Account Deletion");
+
             await _context.SaveChangesAsync();
+
+            _logger.LogInformation("[Account Deletion] User {UserId} soft-deleted. PII anonymized. Hard purge scheduled for {PurgeDate}.",
+                user.Id, DateTime.UtcNow.AddDays(30));
 
             if (isLawyer)
             {
@@ -137,7 +131,7 @@ namespace CoreApi.Services
                     var nodeBaseUrl = _configuration["NodeServices:BaseUrl"] ?? (_env.IsDevelopment() ? "http://localhost:5000" : null);
                     if (!string.IsNullOrEmpty(nodeBaseUrl))
                     {
-                        using var httpClient = new HttpClient { Timeout = TimeSpan.FromMilliseconds(800) };
+                        var httpClient = _httpClientFactory.CreateClient("NodeSync");
                         var nodeUrl = $"{nodeBaseUrl}/api/lawyers/sync/{userEmail}";
                         await httpClient.DeleteAsync(nodeUrl);
                     }
@@ -151,50 +145,46 @@ namespace CoreApi.Services
             return true;
         }
 
-        public async Task<object> VerifyIdentityAsync(int userId, VerifyIdentityDto request)
+        public async Task<bool> DeactivateAccountAsync(int userId)
         {
             var user = await _context.Users.FindAsync(userId);
-            if (user == null) throw new KeyNotFoundException("User not found.");
+            if (user == null) return false;
 
-            var fileUrl = SaveBase64File(request.DocumentFile, "documents", $"identity_user_{userId}");
-            if (string.IsNullOrEmpty(fileUrl))
-            {
-                throw new ArgumentException("Invalid document file payload.");
-            }
+            user.IsDeactivatedByUser = true;
+            user.IsActive = false;
+            user.IsSearchIndexable = false;
 
-            user.IdentityStatus = "Verified";
-            user.IdentityDocumentUrl = fileUrl;
+            // Revoke all active sessions and refresh tokens
+            await RevokeAllSessionsAsync(userId, "Account Deactivation");
+
             await _context.SaveChangesAsync();
 
-            return new
-            {
-                message = "Identity document uploaded and verified successfully!",
-                identityStatus = user.IdentityStatus,
-                identityDocumentUrl = user.IdentityDocumentUrl
-            };
+            _logger.LogInformation("[Account Deactivation] User {UserId} ({Email}) deactivated their account. All sessions revoked.", user.Id, user.Email);
+            return true;
         }
 
-        public async Task<List<object>> GetActiveSessionsAsync(int userId, string? currentSessionId)
+
+        public async Task<List<SessionResponseDto>> GetActiveSessionsAsync(int userId, string? currentSessionId)
         {
             var sessions = await _context.ActiveSessions
                 .Where(s => s.UserId == userId)
                 .OrderByDescending(s => s.LastActive)
                 .ToListAsync();
 
-            var result = new List<object>();
+            var result = new List<SessionResponseDto>();
             foreach (var s in sessions)
             {
-                result.Add(new
+                result.Add(new SessionResponseDto
                 {
-                    id = s.Id,
-                    ipAddress = s.IpAddress,
-                    userAgent = s.UserAgent,
-                    deviceType = ParseDeviceFromUserAgent(s.UserAgent),
-                    browser = ParseBrowserFromUserAgent(s.UserAgent),
-                    location = GetLocationFromIp(s.IpAddress),
-                    createdAt = s.CreatedAt,
-                    lastActive = s.LastActive,
-                    isCurrentSession = (!string.IsNullOrEmpty(currentSessionId) && s.TokenId == currentSessionId)
+                    Id = s.Id,
+                    IpAddress = s.IpAddress ?? string.Empty,
+                    UserAgent = s.UserAgent ?? string.Empty,
+                    DeviceType = ParseDeviceFromUserAgent(s.UserAgent),
+                    Browser = ParseBrowserFromUserAgent(s.UserAgent),
+                    Location = GetLocationFromIp(s.IpAddress),
+                    CreatedAt = s.CreatedAt,
+                    LastActive = s.LastActive,
+                    IsCurrentSession = (!string.IsNullOrEmpty(currentSessionId) && s.TokenId == currentSessionId)
                 });
             }
 
@@ -241,7 +231,7 @@ namespace CoreApi.Services
             return true;
         }
 
-        public async Task<List<object>> GetLoginHistoryAsync(int userId)
+        public async Task<List<LoginHistoryResponseDto>> GetLoginHistoryAsync(int userId)
         {
             var history = await _context.LoginHistories
                 .Where(h => h.UserId == userId)
@@ -249,16 +239,16 @@ namespace CoreApi.Services
                 .Take(20)
                 .ToListAsync();
 
-            return history.Select(h => (object)new
+            return history.Select(h => new LoginHistoryResponseDto
             {
-                id = h.Id,
-                ipAddress = h.IpAddress,
-                userAgent = h.UserAgent,
-                deviceType = ParseDeviceFromUserAgent(h.UserAgent),
-                browser = ParseBrowserFromUserAgent(h.UserAgent),
-                location = GetLocationFromIp(h.IpAddress),
-                loginTime = h.LoginTime,
-                status = h.Status
+                Id = h.Id,
+                IpAddress = h.IpAddress ?? string.Empty,
+                UserAgent = h.UserAgent ?? string.Empty,
+                DeviceType = ParseDeviceFromUserAgent(h.UserAgent),
+                Browser = ParseBrowserFromUserAgent(h.UserAgent),
+                Location = GetLocationFromIp(h.IpAddress),
+                LoginTime = h.LoginTime,
+                Status = h.Status
             }).ToList();
         }
 
@@ -270,6 +260,28 @@ namespace CoreApi.Services
             var bookmarks = await _context.Bookmarks.Where(b => b.ClientId == userId).ToListAsync();
             var consultations = await _context.Consultations.Where(c => c.ClientId == userId || c.LawyerId == userId).ToListAsync();
             var reviews = await _context.Reviews.Where(r => r.UserId == userId).ToListAsync();
+
+            var loginHistory = await _context.LoginHistories
+                .Where(h => h.UserId == userId)
+                .OrderByDescending(h => h.LoginTime)
+                .Take(100)
+                .ToListAsync();
+
+            var consentPrefs = await _context.ConsentPreferences
+                .Where(c => c.UserId == userId)
+                .ToListAsync();
+
+            var favouriteLawyers = await _context.FavouriteLawyers
+                .Where(f => f.ClientId == userId)
+                .ToListAsync();
+
+            var favouriteResources = await _context.FavouriteResources
+                .Where(f => f.ClientId == userId)
+                .ToListAsync();
+
+            var notes = await _context.ResearchNotes
+                .Where(n => n.ClientId == userId)
+                .ToListAsync();
 
             var dataExport = new
             {
@@ -287,12 +299,16 @@ namespace CoreApi.Services
                     user.IdentityStatus,
                     user.ClientCity,
                     user.ClientLanguage,
-                    user.ClientInterest,
                     user.PreferredTimezone
                 },
                 bookmarks,
                 consultations,
-                reviews = reviews.Select(r => new { r.Id, r.Rating, r.Content, r.TargetName, r.CreatedAt })
+                reviews = reviews.Select(r => new { r.Id, r.Rating, r.Content, r.TargetName, r.CreatedAt }),
+                loginHistory = loginHistory.Select(h => new { h.Id, h.IpAddress, h.UserAgent, h.LoginTime, h.Status }),
+                consentPreferences = consentPrefs,
+                favouriteLawyers,
+                favouriteResources,
+                researchNotes = notes
             };
 
             var jsonString = JsonSerializer.Serialize(dataExport, new JsonSerializerOptions
@@ -336,7 +352,7 @@ namespace CoreApi.Services
             return true;
         }
 
-        public async Task<object?> Get2FaSetupAsync(int userId, bool force = false)
+        public async Task<TwoFactorSetupResponseDto?> Get2FaSetupAsync(int userId, bool force = false)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null) return null;
@@ -385,15 +401,15 @@ namespace CoreApi.Services
             var issuer = Uri.EscapeDataString("LegalConnect");
             var email = Uri.EscapeDataString(user.Email);
             var totpUri = $"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}&digits=6&period=30&algorithm=SHA1";
-            var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(totpUri)}";
+            var qrCodeUrl = GenerateQrCodeDataUrl(totpUri);
 
-            return new
+            return new TwoFactorSetupResponseDto
             {
-                secret,
-                qrCodeUrl,
-                qrUri = totpUri,
-                backupCodes,
-                isPendingReuse
+                Secret = secret,
+                QrCodeUrl = qrCodeUrl,
+                QrUri = totpUri,
+                BackupCodes = backupCodes,
+                IsPendingReuse = isPendingReuse
             };
         }
 
@@ -462,17 +478,33 @@ namespace CoreApi.Services
 
         // ── 2FA Reconfigure & Backup Code Management ─────────────────────
 
+        /// <summary>
+        /// Verifies a user's password against the stored hash.
+        /// If a legacy plaintext password is detected, it is auto-migrated to BCrypt on match.
+        /// Caller MUST call SaveChangesAsync after this method if the hash was migrated.
+        /// </summary>
         private bool VerifyUserPassword(User user, string password)
         {
-            if (string.IsNullOrEmpty(password)) return false;
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(user.PasswordHash)) return false;
+
+            // BCrypt hash verification (primary path)
             if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
             {
                 return BCrypt.Net.BCrypt.Verify(password, user.PasswordHash);
             }
-            return user.PasswordHash == password;
+
+            // Legacy plaintext match → auto-migrate to BCrypt on success
+            if (user.PasswordHash == password)
+            {
+                _logger.LogWarning("[Security] Auto-migrating plaintext password to BCrypt for UserId {UserId}. This indicates a legacy or seeded account.", user.Id);
+                user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(password);
+                return true;
+            }
+
+            return false;
         }
 
-        public async Task<object?> Reconfigure2FaAsync(int userId, string password)
+        public async Task<TwoFactorSetupResponseDto?> Reconfigure2FaAsync(int userId, string password)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null || !user.IsTwoFactorEnabled) return null;
@@ -506,16 +538,16 @@ namespace CoreApi.Services
             var issuer = Uri.EscapeDataString("LegalConnect");
             var email = Uri.EscapeDataString(user.Email);
             var totpUri = $"otpauth://totp/{issuer}:{email}?secret={secret}&issuer={issuer}&digits=6&period=30&algorithm=SHA1";
-            var qrCodeUrl = $"https://api.qrserver.com/v1/create-qr-code/?size=200x200&data={Uri.EscapeDataString(totpUri)}";
+            var qrCodeUrl = GenerateQrCodeDataUrl(totpUri);
 
-            return new
+            return new TwoFactorSetupResponseDto
             {
-                secret,
-                qrCodeUrl,
-                qrUri = totpUri,
-                backupCodes,
-                isReconfiguring = true,
-                message = "New authenticator key generated. Please scan the QR code and enter the 6-digit confirmation code."
+                Secret = secret,
+                QrCodeUrl = qrCodeUrl,
+                QrUri = totpUri,
+                BackupCodes = backupCodes,
+                IsReconfiguring = true,
+                Message = "New authenticator key generated. Please scan the QR code and enter the 6-digit confirmation code."
             };
         }
 
@@ -525,7 +557,7 @@ namespace CoreApi.Services
             return true;
         }
 
-        public async Task<object?> GetBackupCodesAsync(int userId, string password)
+        public async Task<BackupCodesResponseDto?> GetBackupCodesAsync(int userId, string password)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null || !user.IsTwoFactorEnabled) return null;
@@ -543,15 +575,15 @@ namespace CoreApi.Services
                 catch { remaining = 0; }
             }
 
-            return new
+            return new BackupCodesResponseDto
             {
-                remaining,
-                total = 8,
-                message = $"{remaining} of 8 backup codes remaining."
+                Remaining = remaining,
+                Total = 8,
+                Message = $"{remaining} of 8 backup codes remaining."
             };
         }
 
-        public async Task<object?> RegenerateBackupCodesAsync(int userId, string password)
+        public async Task<BackupCodesResponseDto?> RegenerateBackupCodesAsync(int userId, string password)
         {
             var user = await _context.Users.FindAsync(userId);
             if (user == null || !user.IsTwoFactorEnabled) return null;
@@ -570,10 +602,12 @@ namespace CoreApi.Services
             user.TwoFactorBackupCodes = JsonSerializer.Serialize(hashedCodes);
             await _context.SaveChangesAsync();
 
-            return new
+            return new BackupCodesResponseDto
             {
-                backupCodes,
-                message = "8 new backup codes generated. Previous codes have been invalidated."
+                BackupCodes = backupCodes,
+                Total = 8,
+                Remaining = 8,
+                Message = "8 new backup codes generated. Previous codes have been invalidated."
             };
         }
 
@@ -607,43 +641,18 @@ namespace CoreApi.Services
                 IsTwoFactorEnabled = user.IsTwoFactorEnabled,
                 ClientLanguage = user.ClientLanguage,
                 ClientCity = user.ClientCity,
-                ClientInterest = user.ClientInterest,
-                DateOfBirth = user.DateOfBirth,
-                Gender = user.Gender,
-                AddressLine1 = user.AddressLine1,
                 ClientState = user.ClientState,
-                ClientZip = user.ClientZip,
                 ClientBio = user.ClientBio,
                 AvatarUrl = user.AvatarUrl,
-                IdentityStatus = user.IdentityStatus,
-                IdentityDocumentUrl = user.IdentityDocumentUrl,
-                Pronouns = user.Pronouns,
-                SpecialStatus = user.SpecialStatus,
-                LegalEntityName = user.LegalEntityName,
-                EmergencyContactName = user.EmergencyContactName,
-                EmergencyContactPhone = user.EmergencyContactPhone,
-                EmergencyContactRelation = user.EmergencyContactRelation,
-                CorporateRfpOpen = user.CorporateRfpOpen,
-                IsSearchIndexable = user.IsSearchIndexable,
-                IsCorporateEntity = user.IsCorporateEntity,
-                // Enterprise / MNC Corporate Compliance
-                CIN = user.CIN,
-                EntityType = user.EntityType,
-                Gstin = user.Gstin,
-                IncorporationNumber = user.IncorporationNumber,
-                IndustryVertical = user.IndustryVertical,
-                CompanySize = user.CompanySize,
-                LegalBudgetCeiling = user.LegalBudgetCeiling,
-                PanNumber = user.PanNumber,
-                Currency = user.Currency,
-                MsaAccepted = user.MsaAccepted,
-                MsaAcceptedAt = user.MsaAcceptedAt,
-                DpoContactName = user.DpoContactName,
-                DpoContactEmail = user.DpoContactEmail
+                DateOfBirth = user.DateOfBirth,
+                Gender = user.Gender,
+                NotifyWhatsAppEnabled = user.NotifyWhatsAppEnabled,
+                WhatsAppPhone = user.WhatsAppPhone,
+                IsSearchIndexable = user.IsSearchIndexable
             };
         }
 
-        private string? SaveBase64File(string? base64Data, string subfolder, string fileNamePrefix)
+        private async Task<string?> SaveBase64FileAsync(string? base64Data, string subfolder, string fileNamePrefix)
         {
             if (string.IsNullOrEmpty(base64Data)) return null;
             if (base64Data.StartsWith("/") || base64Data.StartsWith("http") || !base64Data.Contains("base64,"))
@@ -672,7 +681,7 @@ namespace CoreApi.Services
 
                 var fileName = $"{fileNamePrefix}_{DateTime.UtcNow.Ticks}{extension}";
                 var filePath = Path.Combine(uploadsFolder, fileName);
-                File.WriteAllBytes(filePath, bytes);
+                await File.WriteAllBytesAsync(filePath, bytes);
 
                 return $"/uploads/{subfolder}/{fileName}";
             }
@@ -705,6 +714,15 @@ namespace CoreApi.Services
         {
             if (string.IsNullOrEmpty(ip) || ip == "127.0.0.1" || ip == "::1") return "Local Network (Dev)";
             return "India";
+        }
+        
+        private static string GenerateQrCodeDataUrl(string totpUri)
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(totpUri, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new PngByteQRCode(qrCodeData);
+            byte[] qrCodeBytes = qrCode.GetGraphic(20);
+            return $"data:image/png;base64,{Convert.ToBase64String(qrCodeBytes)}";
         }
     }
 }

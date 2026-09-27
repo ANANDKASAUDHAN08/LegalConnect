@@ -172,19 +172,65 @@ namespace CoreApi.Services
             return (true, "Registered and authenticated successfully!", user, sessionId, rawRefresh);
         }
 
-        public async Task<(bool isSuccess, string message, bool requires2fa, User? user, string? sessionId, string? rawRefreshToken)> LoginAsync(LoginDto request, string? ipAddress, string? userAgent)
+        public async Task<(bool isSuccess, string message, bool requires2fa, User? user, string? sessionId, string? rawRefreshToken, int? lockoutSeconds, int? attemptsRemaining)> LoginAsync(LoginDto request, string? ipAddress, string? userAgent)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
             bool isPasswordValid = false;
 
             if (user != null)
             {
-                // ── Progressive Account Lockout Check (M-07) ──
-                if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
+                // ── Account Standing & Suspension Verification ──
+                if (user.IsBanned)
                 {
-                    var remainingMinutes = (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes);
-                    _logger.LogWarning("[Security Audit] Locked account login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}. Locked for {Minutes} more minutes.", user.Id, user.Email, ipAddress, remainingMinutes);
-                    return (false, $"Account is temporarily locked due to too many failed login attempts. Please try again in {remainingMinutes} minute(s).", false, null, null, null);
+                    _logger.LogWarning("[Security Audit] Banned account login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
+                    return (false, "Your account has been suspended for terms of service violations. Please contact legal compliance.", false, null, null, null, null, null);
+                }
+
+                if (user.IsDeleted)
+                {
+                    _logger.LogWarning("[Security Audit] Deleted account login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
+                    return (false, "This account was deleted and cannot be accessed. Please register a new account.", false, null, null, null, null, null);
+                }
+
+                if (!user.IsActive && !user.IsDeactivatedByUser)
+                {
+                    _logger.LogWarning("[Security Audit] Inactive account login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
+                    return (false, "This account has been deactivated. Please contact support to reactivate your account.", false, null, null, null, null, null);
+                }
+
+                // ── Progressive Account Lockout Check (M-07) ──
+                if (user.LockoutEnd.HasValue)
+                {
+                    if (user.LockoutEnd.Value > DateTime.UtcNow)
+                    {
+                        var diff = user.LockoutEnd.Value - DateTime.UtcNow;
+                        var remainingSeconds = (int)Math.Max(1, Math.Ceiling(diff.TotalSeconds));
+                        var minPart = remainingSeconds / 60;
+                        var secPart = remainingSeconds % 60;
+                        string timeStr = minPart > 0 ? $"{minPart} minute(s) and {secPart} second(s)" : $"{secPart} second(s)";
+                        _logger.LogWarning("[Security Audit] Locked account login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}. Locked for {Seconds} more seconds.", user.Id, user.Email, ipAddress, remainingSeconds);
+                        return (false, $"Account is temporarily locked due to too many failed login attempts. Please try again in {timeStr}.", false, null, null, null, remainingSeconds, 0);
+                    }
+                    else
+                    {
+                        // The lockout period has elapsed: clear expired lock and give user a fresh set of attempts
+                        user.LockoutEnd = null;
+                        user.FailedLoginAttempts = 0;
+                    }
+                }
+                else if (user.FailedLoginAttempts > 0)
+                {
+                    // Sliding window: If last failed attempt was more than 15 minutes ago, reset the counter
+                    var lastFailed = await _context.LoginHistories
+                        .Where(h => h.UserId == user.Id && h.Status == "Failed")
+                        .OrderByDescending(h => h.LoginTime)
+                        .Select(h => (DateTime?)h.LoginTime)
+                        .FirstOrDefaultAsync();
+
+                    if (lastFailed.HasValue && lastFailed.Value.AddMinutes(15) < DateTime.UtcNow)
+                    {
+                        user.FailedLoginAttempts = 0;
+                    }
                 }
 
                 if (user.PasswordHash.StartsWith("$2a$") || user.PasswordHash.StartsWith("$2b$") || user.PasswordHash.StartsWith("$2y$"))
@@ -204,22 +250,35 @@ namespace CoreApi.Services
                 _logger.LogWarning("[Security Audit] Failed login attempt for Email: {Email}, IP: {IP}, UserAgent: {UserAgent}", request.Email, ipAddress, userAgent);
                 if (user != null)
                 {
-                    // ── Progressive Lockout Escalation ──
+                    // ── Progressive Lockout Escalation (MNC-grade smooth curve) ──
+                    // Tier:  1-4 = no lockout  |  5 = 1m  |  6 = 5m  |  7-8 = 15m  |  9-10 = 1h  |  11+ = 24h
                     user.FailedLoginAttempts++;
-                    if (user.FailedLoginAttempts >= 15)
+                    int attempts = user.FailedLoginAttempts;
+
+                    if (attempts >= 11)
                     {
                         user.LockoutEnd = DateTime.UtcNow.AddHours(24);
-                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 24 hours after {Attempts} failed attempts.", user.Id, user.FailedLoginAttempts);
+                        _logger.LogCritical("[Security Lockout] Account {UserId} locked for 24 HOURS after {Attempts} failed attempts. Possible brute-force attack.", user.Id, attempts);
                     }
-                    else if (user.FailedLoginAttempts >= 10)
+                    else if (attempts >= 9)
                     {
                         user.LockoutEnd = DateTime.UtcNow.AddHours(1);
-                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 1 hour after {Attempts} failed attempts.", user.Id, user.FailedLoginAttempts);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 1 hour after {Attempts} failed attempts.", user.Id, attempts);
                     }
-                    else if (user.FailedLoginAttempts >= 5)
+                    else if (attempts >= 7)
                     {
                         user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
-                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 15 minutes after {Attempts} failed attempts.", user.Id, user.FailedLoginAttempts);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 15 minutes after {Attempts} failed attempts.", user.Id, attempts);
+                    }
+                    else if (attempts >= 6)
+                    {
+                        user.LockoutEnd = DateTime.UtcNow.AddMinutes(5);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 5 minutes after {Attempts} failed attempts.", user.Id, attempts);
+                    }
+                    else if (attempts >= 5)
+                    {
+                        user.LockoutEnd = DateTime.UtcNow.AddMinutes(1);
+                        _logger.LogWarning("[Security Lockout] Account {UserId} locked for 1 minute after {Attempts} failed attempts.", user.Id, attempts);
                     }
 
                     _context.LoginHistories.Add(new LoginHistory
@@ -235,18 +294,35 @@ namespace CoreApi.Services
                     // Return lockout-specific message if newly locked
                     if (user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTime.UtcNow)
                     {
-                        var remainingMinutes = (int)Math.Ceiling((user.LockoutEnd.Value - DateTime.UtcNow).TotalMinutes);
-                        return (false, $"Too many failed login attempts. Account locked for {remainingMinutes} minute(s).", false, null, null, null);
+                        var diff = user.LockoutEnd.Value - DateTime.UtcNow;
+                        var remainingSeconds = (int)Math.Max(1, Math.Ceiling(diff.TotalSeconds));
+                        var minPart = remainingSeconds / 60;
+                        var secPart = remainingSeconds % 60;
+                        string timeStr = minPart > 0 ? $"{minPart} minute(s) and {secPart} second(s)" : $"{secPart} second(s)";
+                        return (false, $"Too many failed login attempts. Account locked for {timeStr}.", false, null, null, null, remainingSeconds, 0);
                     }
+
+                    // Warning: approaching lockout threshold (attempt 4 = 1 remaining)
+                    int attemptsRemaining = Math.Max(0, 5 - attempts);
+                    if (attempts == 4)
+                    {
+                        return (false, "Invalid credentials. Warning: 1 more failed attempt will temporarily lock your account.", false, null, null, null, null, attemptsRemaining);
+                    }
+                    if (attempts == 3)
+                    {
+                        return (false, "Invalid credentials. You have 2 attempts remaining before a temporary lock.", false, null, null, null, null, attemptsRemaining);
+                    }
+
+                    return (false, "Invalid credentials.", false, null, null, null, null, attemptsRemaining);
                 }
-                return (false, "Invalid credentials.", false, null, null, null);
+                return (false, "Invalid credentials.", false, null, null, null, null, null);
             }
 
             if (user.IsTwoFactorEnabled)
             {
                 if (string.IsNullOrEmpty(request.TwoFactorCode))
                 {
-                    return (false, "2FA verification required.", true, null, null, null);
+                    return (false, "2FA verification required.", true, null, null, null, null, null);
                 }
 
                 bool is2FaValid = false;
@@ -296,7 +372,7 @@ namespace CoreApi.Services
                         Status = "Failed"
                     });
                     await _context.SaveChangesAsync();
-                    return (false, "Invalid 2FA verification code. Please check your authenticator app or enter a valid backup code.", false, null, null, null);
+                    return (false, "Invalid 2FA verification code. Please check your authenticator app or enter a valid backup code.", false, null, null, null, null, null);
                 }
             }
 
@@ -304,7 +380,7 @@ namespace CoreApi.Services
             if (requireVerification && !user.IsEmailVerified)
             {
                 _logger.LogWarning("[Security Audit] Login blocked for unverified email. UserId: {UserId}, Email: {Email}", user.Id, user.Email);
-                return (false, "Please verify your email address before signing in.", false, null, null, null);
+                return (false, "Please verify your email address before signing in.", false, null, null, null, null, null);
             }
 
             // ── Reset lockout counter on successful authentication (M-07) ──
@@ -312,6 +388,14 @@ namespace CoreApi.Services
             {
                 user.FailedLoginAttempts = 0;
                 user.LockoutEnd = null;
+            }
+
+            // ── Auto-reactivate account if previously voluntarily deactivated ──
+            if (user.IsDeactivatedByUser)
+            {
+                user.IsDeactivatedByUser = false;
+                user.IsActive = true;
+                _logger.LogInformation("[Account Reactivation] User {UserId} ({Email}) logged in and reactivated their voluntary deactivated account.", user.Id, user.Email);
             }
 
             var sessionId = Guid.NewGuid().ToString("N");
@@ -341,7 +425,7 @@ namespace CoreApi.Services
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("[Security Audit] Successful login. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}, IP: {IP}", user.Id, user.Email, sessionId, ipAddress);
-            return (true, "Logged in successfully!", false, user, sessionId, rawRefresh);
+            return (true, "Logged in successfully!", false, user, sessionId, rawRefresh, null, null);
         }
 
         public async Task<(bool isSuccess, string message, User? user, string? sessionId, string? rawRefreshToken)> GoogleLoginAsync(GoogleLoginDto request, string? ipAddress, string? userAgent)
@@ -414,6 +498,25 @@ namespace CoreApi.Services
             }
             else
             {
+                // ── Account Standing & Suspension Verification ──
+                if (user.IsBanned)
+                {
+                    _logger.LogWarning("[Security Audit] Banned account Google login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
+                    return (false, "Your account has been suspended for terms of service violations. Please contact legal compliance.", null, null, null);
+                }
+
+                if (user.IsDeleted)
+                {
+                    _logger.LogWarning("[Security Audit] Deleted account Google login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
+                    return (false, "This account was deleted and cannot be accessed. Please register a new account.", null, null, null);
+                }
+
+                if (!user.IsActive && !user.IsDeactivatedByUser)
+                {
+                    _logger.LogWarning("[Security Audit] Inactive account Google login attempt for UserId: {UserId}, Email: {Email}, IP: {IP}", user.Id, user.Email, ipAddress);
+                    return (false, "This account has been deactivated. Please contact support to reactivate your account.", null, null, null);
+                }
+
                 bool modified = false;
                 if (string.IsNullOrEmpty(user.GoogleId))
                 {
@@ -438,9 +541,11 @@ namespace CoreApi.Services
                 }
             }
 
-            if (!user.IsActive)
+            if (user.IsDeactivatedByUser)
             {
-                return (false, "Your account has been deactivated. Please contact support.", null, null, null);
+                user.IsDeactivatedByUser = false;
+                user.IsActive = true;
+                _logger.LogInformation("[Account Reactivation] User {UserId} ({Email}) logged in via Google and reactivated their voluntary deactivated account.", user.Id, user.Email);
             }
 
             var sessionId = Guid.NewGuid().ToString("N");

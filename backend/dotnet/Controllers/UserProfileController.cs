@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.RateLimiting;
+using CoreApi.Extensions;
 
 namespace CoreApi.Controllers
 {
@@ -41,27 +42,17 @@ namespace CoreApi.Controllers
 
             if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
             {
-                return Ok(new { isAuthenticated = false });
+                return Unauthorized(new { isAuthenticated = false, message = "Authentication required." });
             }
 
             var profile = await _profileService.GetProfileAsync(userId);
-            if (profile == null) return Ok(new { isAuthenticated = false });
-
-            string? token = Request.Cookies["lc_token"];
-            if (string.IsNullOrEmpty(token))
-            {
-                var authHeader = Request.Headers["Authorization"].ToString();
-                if (authHeader.StartsWith("Bearer ", StringComparison.OrdinalIgnoreCase))
-                {
-                    token = authHeader.Substring(7);
-                }
-            }
+            if (profile == null) return Unauthorized(new { isAuthenticated = false, message = "Profile not found." });
 
             return Ok(new
             {
                 isAuthenticated = true,
-                token = token,
                 id = profile.Id,
+                publicId = profile.PublicId,
                 fullName = profile.FullName,
                 email = profile.Email,
                 role = profile.Role,
@@ -72,47 +63,29 @@ namespace CoreApi.Controllers
                 isTwoFactorEnabled = profile.IsTwoFactorEnabled,
                 clientLanguage = profile.ClientLanguage,
                 clientCity = profile.ClientCity,
-                clientInterest = profile.ClientInterest,
-                dateOfBirth = profile.DateOfBirth,
-                gender = profile.Gender,
-                addressLine1 = profile.AddressLine1,
                 clientState = profile.ClientState,
-                clientZip = profile.ClientZip,
                 clientBio = profile.ClientBio,
                 avatarUrl = profile.AvatarUrl,
-                identityStatus = profile.IdentityStatus,
-                identityDocumentUrl = profile.IdentityDocumentUrl,
-                pronouns = profile.Pronouns,
-                specialStatus = profile.SpecialStatus,
-                legalEntityName = profile.LegalEntityName,
-                emergencyContactName = profile.EmergencyContactName,
-                emergencyContactPhone = profile.EmergencyContactPhone,
-                emergencyContactRelation = profile.EmergencyContactRelation,
-                corporateRfpOpen = profile.CorporateRfpOpen,
-                isSearchIndexable = profile.IsSearchIndexable,
-                isCorporateEntity = profile.IsCorporateEntity,
-                // Enterprise / MNC Corporate Compliance
-                cin = profile.CIN,
-                entityType = profile.EntityType,
-                gstin = profile.Gstin,
-                incorporationNumber = profile.IncorporationNumber,
-                industryVertical = profile.IndustryVertical,
-                companySize = profile.CompanySize,
-                legalBudgetCeiling = profile.LegalBudgetCeiling,
-                panNumber = profile.PanNumber,
-                currency = profile.Currency,
-                msaAccepted = profile.MsaAccepted,
-                msaAcceptedAt = profile.MsaAcceptedAt,
-                dpoContactName = profile.DpoContactName,
-                dpoContactEmail = profile.DpoContactEmail
+                dateOfBirth = profile.DateOfBirth,
+                gender = profile.Gender,
+                notifyWhatsAppEnabled = profile.NotifyWhatsAppEnabled,
+                whatsAppPhone = profile.WhatsAppPhone,
+                isSearchIndexable = profile.IsSearchIndexable
             });
+        }
+
+        private bool TryGetUserId(out int userId)
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            return int.TryParse(userIdClaim, out userId);
         }
 
         [Authorize]
         [HttpPut("me")]
+        [EnableRateLimiting(RateLimitingExtensions.ProfilePolicyName)]
         public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var updated = await _profileService.UpdateProfileAsync(userId, request);
             return Ok(new
             {
@@ -126,7 +99,7 @@ namespace CoreApi.Controllers
         [HttpDelete("me")]
         public async Task<IActionResult> DeleteAccount()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var deleted = await _profileService.DeleteAccountAsync(userId);
             if (!deleted) return NotFound("User not found.");
 
@@ -137,23 +110,22 @@ namespace CoreApi.Controllers
         }
 
         [Authorize]
-        [HttpPost("verify-identity")]
-        public async Task<IActionResult> VerifyIdentity([FromBody] VerifyIdentityDto request)
+        [HttpPost("deactivate")]
+        public async Task<IActionResult> DeactivateAccount()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
-            var result = await _profileService.VerifyIdentityAsync(userId, request);
-            return Ok(result);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
+            var success = await _profileService.DeactivateAccountAsync(userId);
+            if (!success) return NotFound("User not found.");
+
+            _tokenService.ClearAuthCookies(Response);
+            return Ok(new { message = "Account deactivated successfully." });
         }
 
         [Authorize]
         [HttpGet("sessions")]
         public async Task<IActionResult> GetSessions()
         {
-            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (string.IsNullOrEmpty(userIdClaim) || !int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized("User ID claim not found.");
-            }
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
 
             var currentSessionId = User.FindFirst("SessionId")?.Value;
             var sessions = await _profileService.GetActiveSessionsAsync(userId, currentSessionId);
@@ -164,7 +136,7 @@ namespace CoreApi.Controllers
         [HttpDelete("sessions/{id:int}")]
         public async Task<IActionResult> RevokeSession(int id)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
             var success = await _profileService.RevokeSessionAsync(userId, id, ip);
             if (!success) return NotFound("Session not found.");
@@ -175,7 +147,7 @@ namespace CoreApi.Controllers
         [HttpDelete("sessions/all")]
         public async Task<IActionResult> RevokeAllOtherSessions()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var ip = Request.HttpContext.Connection.RemoteIpAddress?.ToString();
             await _profileService.RevokeAllSessionsAsync(userId, ip);
             return Ok(new { message = "All sessions revoked." });
@@ -185,7 +157,7 @@ namespace CoreApi.Controllers
         [HttpGet("login-history")]
         public async Task<IActionResult> GetLoginHistory()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var history = await _profileService.GetLoginHistoryAsync(userId);
             return Ok(history);
         }
@@ -194,16 +166,17 @@ namespace CoreApi.Controllers
         [HttpGet("export-data")]
         public async Task<IActionResult> ExportData()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var fileBytes = await _profileService.ExportUserDataAsync(userId);
             return File(fileBytes, "application/json", "legalconnect_user_data_export.json");
         }
 
         [Authorize]
         [HttpPut("change-password")]
+        [EnableRateLimiting("AuthPolicy")]
         public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var result = await _profileService.ChangePasswordAsync(userId, request);
             if (!result.success) return BadRequest(new { message = result.message });
             return Ok(new { message = result.message });
@@ -213,7 +186,7 @@ namespace CoreApi.Controllers
         [HttpGet("settings")]
         public async Task<IActionResult> GetSettings()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var settings = await _profileService.GetSettingsAsync(userId);
             if (settings == null) return NotFound("User not found.");
             return Ok(settings);
@@ -223,7 +196,7 @@ namespace CoreApi.Controllers
         [HttpPut("settings")]
         public async Task<IActionResult> UpdateSettings([FromBody] UpdateSettingsDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var success = await _profileService.UpdateSettingsAsync(userId, request);
             if (!success) return NotFound("User not found.");
             return Ok(new { message = "Settings saved successfully!" });
@@ -233,7 +206,7 @@ namespace CoreApi.Controllers
         [HttpGet("2fa/setup")]
         public async Task<IActionResult> Get2FaSetup([FromQuery] bool force = false)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var setup = await _profileService.Get2FaSetupAsync(userId, force);
             if (setup == null) return NotFound("User not found.");
             return Ok(setup);
@@ -244,7 +217,7 @@ namespace CoreApi.Controllers
         [HttpPost("2fa/toggle")]
         public async Task<IActionResult> Toggle2Fa([FromBody] Toggle2FaDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var result = await _profileService.Toggle2FaAsync(userId, request);
             if (!result.success) return BadRequest(new { message = result.message });
             return Ok(new { isTwoFactorEnabled = result.isTwoFactorEnabled, message = result.message });
@@ -255,7 +228,7 @@ namespace CoreApi.Controllers
         [HttpPost("2fa/reconfigure")]
         public async Task<IActionResult> Reconfigure2Fa([FromBody] ReconfigureDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var result = await _profileService.Reconfigure2FaAsync(userId, request.Password);
             if (result == null) return BadRequest(new { message = "Invalid password or 2FA is not enabled." });
             return Ok(result);
@@ -265,7 +238,7 @@ namespace CoreApi.Controllers
         [HttpPost("2fa/reconfigure/cancel")]
         public IActionResult CancelReconfigure2Fa()
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             _profileService.CancelReconfigure2Fa(userId);
             return Ok(new { message = "Reconfiguration cancelled. Your active authenticator remains unchanged." });
         }
@@ -275,7 +248,7 @@ namespace CoreApi.Controllers
         [HttpPost("2fa/backup-codes")]
         public async Task<IActionResult> GetBackupCodes([FromBody] PasswordConfirmDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var result = await _profileService.GetBackupCodesAsync(userId, request.Password);
             if (result == null) return BadRequest(new { message = "Invalid password or 2FA is not enabled." });
             return Ok(result);
@@ -286,7 +259,7 @@ namespace CoreApi.Controllers
         [HttpPost("2fa/backup-codes/regenerate")]
         public async Task<IActionResult> RegenerateBackupCodes([FromBody] PasswordConfirmDto request)
         {
-            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (!TryGetUserId(out int userId)) return Unauthorized("User identity could not be verified.");
             var result = await _profileService.RegenerateBackupCodesAsync(userId, request.Password);
             if (result == null) return BadRequest(new { message = "Invalid password or 2FA is not enabled." });
             return Ok(result);

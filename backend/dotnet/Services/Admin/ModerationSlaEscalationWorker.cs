@@ -55,7 +55,7 @@ namespace CoreApi.Services.Admin
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
             _logger.LogInformation(
-                "🛡️ ModerationSlaEscalationWorker started. Sweeping every {Interval} minutes. SLA thresholds: High={High}h, Medium={Medium}h, Low={Low}h.",
+                "[ModerationSlaEscalationWorker] Started. Sweeping every {Interval} minutes. SLA thresholds: High={High}h, Medium={Medium}h, Low={Low}h.",
                 SweepInterval.TotalMinutes,
                 SlaThresholds[ReportSeverity.High],
                 SlaThresholds[ReportSeverity.Medium],
@@ -90,7 +90,7 @@ namespace CoreApi.Services.Admin
                 }
             }
 
-            _logger.LogInformation("🛡️ ModerationSlaEscalationWorker stopped.");
+            _logger.LogInformation("[ModerationSlaEscalationWorker] Stopped.");
         }
 
         private async Task SweepAndEscalate(CancellationToken ct)
@@ -164,7 +164,7 @@ namespace CoreApi.Services.Admin
             }
 
             _logger.LogWarning(
-                "🚨 SLA sweep: {EscalatedCount}/{TotalChecked} reports auto-escalated to Critical due to SLA breach.",
+                "[SLA Sweep] {EscalatedCount}/{TotalChecked} reports auto-escalated to Critical due to SLA breach.",
                 escalated.Count,
                 unresolved.Count);
 

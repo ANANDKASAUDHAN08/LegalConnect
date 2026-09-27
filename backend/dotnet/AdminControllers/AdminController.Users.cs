@@ -176,7 +176,6 @@ namespace CoreApi.Controllers
                     user.ClientCity,
                     user.ClientState,
                     user.ClientLanguage,
-                    user.ClientInterest,
                     user.ClientBio,
                     user.AvatarUrl,
                     user.Gender,

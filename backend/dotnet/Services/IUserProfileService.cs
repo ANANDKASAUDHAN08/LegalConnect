@@ -10,24 +10,24 @@ namespace CoreApi.Services
         Task<UserProfileResponseDto?> GetProfileAsync(int userId);
         Task<UserProfileResponseDto> UpdateProfileAsync(int userId, UpdateProfileDto request);
         Task<bool> DeleteAccountAsync(int userId);
-        Task<object> VerifyIdentityAsync(int userId, VerifyIdentityDto request);
-        Task<List<object>> GetActiveSessionsAsync(int userId, string? currentSessionId);
+        Task<bool> DeactivateAccountAsync(int userId);
+        Task<List<SessionResponseDto>> GetActiveSessionsAsync(int userId, string? currentSessionId);
         Task<bool> RevokeSessionAsync(int userId, int sessionId, string? ipAddress);
         Task<bool> RevokeAllSessionsAsync(int userId, string? ipAddress);
-        Task<List<object>> GetLoginHistoryAsync(int userId);
+        Task<List<LoginHistoryResponseDto>> GetLoginHistoryAsync(int userId);
         Task<byte[]> ExportUserDataAsync(int userId);
         
         // Settings & Account Security
         Task<UserSettingsDto?> GetSettingsAsync(int userId);
         Task<bool> UpdateSettingsAsync(int userId, UpdateSettingsDto request);
-        Task<object?> Get2FaSetupAsync(int userId, bool force = false);
+        Task<TwoFactorSetupResponseDto?> Get2FaSetupAsync(int userId, bool force = false);
         Task<(bool success, string message, bool isTwoFactorEnabled)> Toggle2FaAsync(int userId, Toggle2FaDto request);
         Task<(bool success, string message)> ChangePasswordAsync(int userId, ChangePasswordDto request);
 
         // 2FA Reconfigure & Backup Code Management
-        Task<object?> Reconfigure2FaAsync(int userId, string password);
+        Task<TwoFactorSetupResponseDto?> Reconfigure2FaAsync(int userId, string password);
         bool CancelReconfigure2Fa(int userId);
-        Task<object?> GetBackupCodesAsync(int userId, string password);
-        Task<object?> RegenerateBackupCodesAsync(int userId, string password);
+        Task<BackupCodesResponseDto?> GetBackupCodesAsync(int userId, string password);
+        Task<BackupCodesResponseDto?> RegenerateBackupCodesAsync(int userId, string password);
     }
 }

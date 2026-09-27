@@ -42,76 +42,10 @@ namespace CoreApi.Data
             EnsureAdminSavedViewsTableExists(context);
             EnsureReviewAuditLogsTableExists(context);
 
-            // Fast single-roundtrip batch column check
-            EnsureColumnsBatch(context, new List<(string Table, string Column, string Definition)>
-            {
-                ("Users", "PublicId", "VARCHAR(50) NULL"),
-                ("Users", "AuthProvider", "VARCHAR(50) DEFAULT 'Email + Password'"),
-                ("Users", "LastLoginAt", "DATETIME NULL"),
-                ("Users", "LastIpAddress", "VARCHAR(50) NULL"),
-                ("Users", "TwoFactorBackupCodes", "varchar(2000) NULL"),
-                ("Users", "LegalBudget", "DECIMAL(18,2) NULL"),
-                ("Consultations", "AdminRemark", "TEXT NULL"),
-                ("Consultations", "AuditLogJson", "LONGTEXT NULL"),
-                ("LawyerProfiles", "VerificationRemarks", "TEXT NULL"),
-                ("LawyerProfiles", "CopExpiryDate", "DATETIME NULL"),
-                ("ContactSubmissions", "Priority", "VARCHAR(20) NOT NULL DEFAULT 'Normal'"),
-                ("ContactSubmissions", "Category", "VARCHAR(50) NOT NULL DEFAULT 'General'"),
-                ("ContactSubmissions", "AssignedAgent", "VARCHAR(100) NULL"),
-                ("ContactSubmissions", "SlaDueDate", "DATETIME NULL"),
-                ("ContactSubmissions", "InternalNotesJson", "VARCHAR(4000) NULL"),
-                ("ContactSubmissions", "ResolutionNote", "VARCHAR(2000) NULL"),
-                ("Reviews", "ConsultationId", "INT NULL"),
-                ("Reviews", "IPAddress", "VARCHAR(50) NULL"),
-                ("Reviews", "RiskScore", "INT DEFAULT 0"),
-                ("Reviews", "RedactedContent", "VARCHAR(2000) NULL"),
-                ("Reviews", "LastEditedAt", "DATETIME NULL"),
-                ("Reviews", "OriginalContent", "VARCHAR(2000) NULL"),
-                ("Reviews", "IsDisputeRequested", "TINYINT(1) DEFAULT 0"),
-                ("Reviews", "DisputeReason", "VARCHAR(500) NULL"),
-                ("Reviews", "DisputeRequestedAt", "DATETIME NULL"),
-                ("Reviews", "TargetId", "INT NULL"),
-                ("Reviews", "TargetType", "VARCHAR(50) NOT NULL DEFAULT 'Platform'"),
-                ("Reviews", "ModerationStatus", "VARCHAR(30) NOT NULL DEFAULT 'Approved'"),
-                ("Reviews", "FlagReason", "VARCHAR(250) NULL"),
-                ("Reviews", "AdvocateReply", "VARCHAR(2000) NULL"),
-                ("Reviews", "AdvocateReplyStatus", "VARCHAR(30) NULL"),
-                ("Reviews", "IsVerifiedClient", "TINYINT(1) DEFAULT 0"),
-                // ── Enterprise / MNC Corporate Compliance: Users ──────────
-                ("Users", "CIN", "VARCHAR(25) NULL"),
-                ("Users", "EntityType", "VARCHAR(50) NULL"),
-                ("Users", "Gstin", "VARCHAR(20) NULL"),
-                ("Users", "IncorporationNumber", "VARCHAR(50) NULL"),
-                ("Users", "IndustryVertical", "VARCHAR(100) NULL"),
-                ("Users", "CompanySize", "VARCHAR(30) NULL"),
-                ("Users", "LegalBudgetCeiling", "DECIMAL(18,2) NULL"),
-                ("Users", "PanNumber", "VARCHAR(10) NULL"),
-                ("Users", "Currency", "VARCHAR(5) NOT NULL DEFAULT 'INR'"),
-                ("Users", "MsaAccepted", "TINYINT(1) NOT NULL DEFAULT 0"),
-                ("Users", "MsaAcceptedAt", "DATETIME NULL"),
-                ("Users", "DpoContactName", "VARCHAR(100) NULL"),
-                ("Users", "DpoContactEmail", "VARCHAR(150) NULL"),
-                // ── Enterprise / MNC Counsel Compliance: LawyerProfiles ───
-                ("LawyerProfiles", "LawFirmName", "VARCHAR(200) NULL"),
-                ("LawyerProfiles", "PracticeStructure", "VARCHAR(50) NULL"),
-                ("LawyerProfiles", "ProfessionalIndemnityInsurer", "VARCHAR(150) NULL"),
-                ("LawyerProfiles", "ProfessionalIndemnityPolicyNo", "VARCHAR(80) NULL"),
-                ("LawyerProfiles", "ProfessionalIndemnityCoverage", "DECIMAL(18,2) NULL"),
-                ("LawyerProfiles", "ProfessionalIndemnityExpiryDate", "DATETIME NULL"),
-                ("LawyerProfiles", "HourlyRate", "DECIMAL(18,2) NULL"),
-                ("LawyerProfiles", "RetainerFee", "DECIMAL(18,2) NULL"),
-                ("LawyerProfiles", "ConflictCheckRequired", "TINYINT(1) NOT NULL DEFAULT 0"),
-                ("LawyerProfiles", "GstinLawyer", "VARCHAR(20) NULL"),
-                ("LawyerProfiles", "StateBarCouncil", "VARCHAR(100) NULL"),
-                ("LawyerProfiles", "DirectoryRankingsJson", "TEXT"),
-                ("LawyerProfiles", "RepresentativeMattersJson", "TEXT"),
-                ("LawyerProfiles", "MsaAccepted", "TINYINT(1) NOT NULL DEFAULT 0"),
-                ("LawyerProfiles", "Currency", "VARCHAR(5) NOT NULL DEFAULT 'INR'")
-            });
-
             try
             {
                 context.Database.ExecuteSqlRaw("UPDATE `Users` SET `PublicId` = CONCAT('usr_', SUBSTRING(MD5(CONCAT(`Id`, `Email`)), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';");
+                context.Database.ExecuteSqlRaw("UPDATE `LawyerProfiles` SET `PublicId` = CONCAT('law_', SUBSTRING(MD5(CONCAT(`Id`, `UserId`)), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';");
             }
             catch { }
 
@@ -400,9 +334,9 @@ namespace CoreApi.Data
                     new SystemAnnouncement
                     {
                         Version = "1.2.0",
-                        Title = "🚀 LegalConnect 1.2.0: Install App & Performance Upgrade",
+                        Title = "LegalConnect 1.2.0: Install App & Performance Upgrade",
                         Summary = "Download LegalConnect as an app for desktop and mobile! Experience offline bare act reading, faster law search, and mobile UX improvements.",
-                        DetailsMarkdown = "### What's New in Version 1.2.0\n\n- 📱 **Progressive Web App (PWA)**: Click 'Install App' in the menu to install LegalConnect as a native app on Windows, Mac, Android, and iOS!\n- ⚡ **Offline Bare Acts Reader**: Access your saved acts and statutes without an active internet connection.\n- 🛠️ **Mobile Share & Overlay Fix**: Fixed an issue where closing native share sheets triggered secondary overlays.\n- 🔔 **System Announcements**: Live notifications for platform updates and legal changes.",
+                        DetailsMarkdown = "### What's New in Version 1.2.0\n\n- **Progressive Web App (PWA)**: Click 'Install App' in the menu to install LegalConnect as a native app on Windows, Mac, Android, and iOS!\n- **Offline Bare Acts Reader**: Access your saved acts and statutes without an active internet connection.\n- **Mobile Share & Overlay Fix**: Fixed an issue where closing native share sheets triggered secondary overlays.\n- **System Announcements**: Live notifications for platform updates and legal changes.",
                         Type = AnnouncementType.MajorRelease,
                         IsModalTrigger = true,
                         IsActive = true,
@@ -412,7 +346,7 @@ namespace CoreApi.Data
                     new SystemAnnouncement
                     {
                         Version = "1.1.5",
-                        Title = "🛠️ Critical Fix: Mobile Navigation & Statute Filters",
+                        Title = "Critical Fix: Mobile Navigation & Statute Filters",
                         Summary = "Resolved filter reset glitches on statute browsing and optimized mobile navbar rendering speed.",
                         DetailsMarkdown = "### Bug Fixes & Refinements\n\n- Fixed an issue where statute category filters reset during fast scrolling.\n- Improved touch response times on low-power mobile devices.",
                         Type = AnnouncementType.MajorBugFix,
@@ -705,61 +639,6 @@ namespace CoreApi.Data
             }
         }
 
-        /// <summary>
-        /// Backward-compatible schema evolution via raw SQL ALTER TABLE.
-        /// 
-        /// This method bypasses EF Core migrations to dynamically add missing columns
-        /// at startup. This pattern is intentional for the following reasons:
-        ///   1. Supports zero-downtime deployments where migrations haven't run yet
-        ///   2. Handles development environments with divergent schema states
-        ///   3. Uses information_schema introspection to avoid duplicate column errors
-        /// 
-        /// WARNING: This is a MySQL-specific pattern. The backtick-quoted identifiers
-        /// and information_schema query will not work on SQL Server or PostgreSQL.
-        /// If migrating databases, this method must be adapted.
-        /// </summary>
-        private static void EnsureColumnsBatch(AppDbContext context, List<(string Table, string Column, string Definition)> columns)
-        {
-            try
-            {
-                var conn = context.Database.GetDbConnection();
-                bool wasOpen = conn.State == System.Data.ConnectionState.Open;
-                if (!wasOpen) conn.Open();
-
-                var existingColumns = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-                using (var cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = "SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = DATABASE();";
-                    using var reader = cmd.ExecuteReader();
-                    while (reader.Read())
-                    {
-                        var t = reader.GetString(0);
-                        var c = reader.GetString(1);
-                        existingColumns.Add($"{t}.{c}");
-                    }
-                }
-
-                foreach (var col in columns)
-                {
-                    if (!existingColumns.Contains($"{col.Table}.{col.Column}"))
-                    {
-                        try
-                        {
-                            string alterSql = $"ALTER TABLE `{col.Table}` ADD COLUMN `{col.Column}` {col.Definition};";
-                            context.Database.ExecuteSqlRaw(alterSql);
-                        }
-                        catch { }
-                    }
-                }
-
-                if (!wasOpen) conn.Close();
-            }
-            catch
-            {
-                // Ignore if schema check fails or column exists
-            }
-        }
-
         public static void SynchronizeEFMigrationsHistory(AppDbContext context)
         {
             try
@@ -777,7 +656,7 @@ namespace CoreApi.Data
                     );";
                 cmd.ExecuteNonQuery();
 
-                // If Users table already has AuthProvider column, mark 20260728162946_AddTwoFactorBackupCodes as applied in EF history table
+                // If Users table already has AuthProvider column, mark historical migrations as applied in EF history table
                 using var checkCmd = conn.CreateCommand();
                 checkCmd.CommandText = "SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = 'Users' AND column_name = 'AuthProvider'";
                 var colCount = Convert.ToInt32(checkCmd.ExecuteScalar());
@@ -786,44 +665,6 @@ namespace CoreApi.Data
                 markCmd.CommandText = "INSERT IGNORE INTO `__EFMigrationsHistory` (`MigrationId`, `ProductVersion`) VALUES ('20260728162946_AddTwoFactorBackupCodes', '8.0.4'), ('20260807055827_AddContactSubmissionExtendedFields', '8.0.4'), ('20260826151857_AddClientLegalBudget', '8.0.4'), ('20260919143000_AddProfileExtendedAndPrivacyFields', '8.0.4'), ('20260920190000_AddTwoFactorPendingAt', '8.0.4');";
                 markCmd.ExecuteNonQuery();
 
-                // Idempotently ensure the extended profile & privacy columns exist in tables
-                var columnDefinitions = new (string Table, string Name, string Ddl)[]
-                {
-                    ("Users", "Pronouns", "VARCHAR(50) NULL"),
-                    ("Users", "SpecialStatus", "VARCHAR(100) NULL DEFAULT 'Standard Citizen'"),
-                    ("Users", "LegalEntityName", "VARCHAR(200) NULL"),
-                    ("Users", "EmergencyContactName", "VARCHAR(100) NULL"),
-                    ("Users", "EmergencyContactPhone", "VARCHAR(30) NULL"),
-                    ("Users", "EmergencyContactRelation", "VARCHAR(100) NULL"),
-                    ("Users", "CorporateRfpOpen", "TINYINT(1) NOT NULL DEFAULT 0"),
-                    ("Users", "IsSearchIndexable", "TINYINT(1) NOT NULL DEFAULT 1"),
-                    ("Users", "IsCorporateEntity", "TINYINT(1) NOT NULL DEFAULT 0"),
-                    ("Users", "TwoFactorPendingAt", "DATETIME(6) NULL"),
-                    ("Users", "PublicId", "VARCHAR(50) NULL"),
-                    ("LawyerProfiles", "PublicId", "VARCHAR(50) NULL"),
-                    ("Consultations", "PublicId", "VARCHAR(50) NULL")
-                };
-
-                foreach (var (tblName, colName, colDdl) in columnDefinitions)
-                {
-                    try
-                    {
-                        using var chkCol = conn.CreateCommand();
-                        chkCol.CommandText = $"SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = DATABASE() AND table_name = '{tblName}' AND column_name = '{colName}'";
-                        var exists = Convert.ToInt32(chkCol.ExecuteScalar());
-                        if (exists == 0)
-                        {
-                            using var addCol = conn.CreateCommand();
-                            addCol.CommandText = $"ALTER TABLE `{tblName}` ADD COLUMN `{colName}` {colDdl};";
-                            addCol.ExecuteNonQuery();
-                        }
-                    }
-                    catch
-                    {
-                        // Ignore non-fatal column addition errors
-                    }
-                }
-
                 try
                 {
                     using var backfillUsers = conn.CreateCommand();
@@ -831,7 +672,7 @@ namespace CoreApi.Data
                     backfillUsers.ExecuteNonQuery();
 
                     using var backfillLawyers = conn.CreateCommand();
-                    backfillLawyers.CommandText = "UPDATE `LawyerProfiles` SET `PublicId` = CONCAT('law_', SUBSTRING(MD5(CONCAT(Id, UserId, NOW())), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = '';";
+                    backfillLawyers.CommandText = "UPDATE `LawyerProfiles` SET `PublicId` = CONCAT('law_', SUBSTRING(MD5(CONCAT(Id, UserId, NOW())), 1, 16)) WHERE `PublicId` IS NULL OR `PublicId` = ''; UPDATE `LawyerProfiles` SET `CasesCompleted` = 0 WHERE `CasesCompleted` = 150; UPDATE `LawyerProfiles` SET `SuccessRate` = 0 WHERE `SuccessRate` = 95;";
                     backfillLawyers.ExecuteNonQuery();
 
                     using var backfillConsult = conn.CreateCommand();

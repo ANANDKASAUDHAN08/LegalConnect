@@ -70,7 +70,6 @@ namespace CoreApi.Controllers
                         isTwoFactorEnabled = user.IsTwoFactorEnabled,
                         clientLanguage = user.ClientLanguage,
                         clientCity = user.ClientCity,
-                        clientInterest = user.ClientInterest,
                         avatarUrl = user.AvatarUrl,
                         identityStatus = user.IdentityStatus
                     }
@@ -95,7 +94,7 @@ namespace CoreApi.Controllers
                 {
                     return Ok(new { requires2fa = true, message = result.message });
                 }
-                return Unauthorized(new { message = result.message });
+                return Unauthorized(new { message = result.message, lockoutSeconds = result.lockoutSeconds, attemptsRemaining = result.attemptsRemaining });
             }
 
             var token = _tokenService.CreateAccessToken(result.user!, result.sessionId!);
@@ -123,7 +122,6 @@ namespace CoreApi.Controllers
                     isTwoFactorEnabled = user.IsTwoFactorEnabled,
                     clientLanguage = user.ClientLanguage,
                     clientCity = user.ClientCity,
-                    clientInterest = user.ClientInterest,
                     avatarUrl = user.AvatarUrl,
                     identityStatus = user.IdentityStatus
                 }
@@ -169,7 +167,6 @@ namespace CoreApi.Controllers
                     isTwoFactorEnabled = user.IsTwoFactorEnabled,
                     clientLanguage = user.ClientLanguage,
                     clientCity = user.ClientCity,
-                    clientInterest = user.ClientInterest,
                     avatarUrl = user.AvatarUrl,
                     identityStatus = user.IdentityStatus
                 }

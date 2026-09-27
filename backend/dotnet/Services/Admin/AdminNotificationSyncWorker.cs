@@ -34,7 +34,7 @@ namespace CoreApi.Services.Admin
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("🚀 AdminNotificationSyncWorker started. Syncing domain events every {Interval}s.", _syncInterval.TotalSeconds);
+            _logger.LogInformation("[AdminNotificationSyncWorker] Started. Syncing domain events every {Interval}s.", _syncInterval.TotalSeconds);
 
             try
             {

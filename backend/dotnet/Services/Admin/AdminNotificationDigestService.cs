@@ -33,7 +33,7 @@ namespace CoreApi.Services.Admin
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("📧 AdminNotificationDigestService started. Checking every {Interval} minutes.", CheckInterval.TotalMinutes);
+            _logger.LogInformation("[AdminNotificationDigestService] Started. Checking every {Interval} minutes.", CheckInterval.TotalMinutes);
 
             while (!stoppingToken.IsCancellationRequested)
             {
@@ -89,7 +89,7 @@ namespace CoreApi.Services.Admin
 
             // 3. Compose and dispatch email digest
             var adminEmail = configuration["SendGrid:AdminEmail"] ?? "admin@legalconnect.com";
-            var subject = $"🚨 LegalConnect: {unreadCriticals.Count} Unacknowledged Critical Alert(s)";
+            var subject = $"[Critical Alert Digest] LegalConnect: {unreadCriticals.Count} Unacknowledged Alert(s)";
 
             var alertList = string.Join("\n", unreadCriticals.Select((n, i) =>
                 $"  {i + 1}. [{n.Severity.ToUpper()}] {n.Title}\n     {n.Message}\n     Created: {n.CreatedAt:yyyy-MM-dd HH:mm} UTC"
@@ -119,7 +119,10 @@ This is an automated digest from LegalConnect AdminNotificationDigestService.";
             var htmlBody = $@"
 <div style='font-family: Inter, -apple-system, sans-serif; max-width: 600px; margin: 0 auto; background: #0f172a; border: 1px solid #1e293b; border-radius: 16px; overflow: hidden;'>
     <div style='background: linear-gradient(135deg, #1e1b4b, #312e81); padding: 24px; text-align: center;'>
-        <h1 style='color: #e0e7ff; font-size: 20px; margin: 0;'>🚨 Admin Alert Digest</h1>
+        <div style='display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 12px; background: rgba(244,63,94,0.18); border: 1px solid rgba(244,63,94,0.35); margin-bottom: 10px;'>
+            <span style='font-size: 20px; line-height: 1; color: #f43f5e;'>&#x26A0;</span>
+        </div>
+        <h1 style='color: #e0e7ff; font-size: 20px; margin: 0; font-weight: 800;'>Admin Alert Digest</h1>
         <p style='color: #a5b4fc; font-size: 13px; margin: 8px 0 0;'>{unreadCriticals.Count} unacknowledged critical alert(s)</p>
     </div>
     <div style='padding: 20px;'>
@@ -137,7 +140,7 @@ This is an automated digest from LegalConnect AdminNotificationDigestService.";
         </table>
         <div style='margin-top: 24px; text-align: center;'>
             <a href='{configuration["AdminAppUrl"] ?? "http://localhost:4201"}/notifications' style='display: inline-block; padding: 12px 28px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; text-decoration: none; border-radius: 12px; font-weight: bold; font-size: 14px;'>
-                Open Admin Dashboard →
+                Open Admin Dashboard &rarr;
             </a>
         </div>
     </div>
@@ -154,7 +157,7 @@ This is an automated digest from LegalConnect AdminNotificationDigestService.";
                     subject,
                     plainBody
                 );
-                _logger.LogInformation("📧 Email digest dispatched with {Count} critical alerts to {Email}", unreadCriticals.Count, adminEmail);
+                _logger.LogInformation("[Email Digest] Dispatched with {Count} critical alerts to {Email}", unreadCriticals.Count, adminEmail);
             }
             catch (Exception ex)
             {

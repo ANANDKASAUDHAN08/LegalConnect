@@ -354,7 +354,7 @@ namespace CoreApi.Controllers
                                 targetType = "Lawyer",
                                 fullName = lawyer.User?.FullName ?? "Advocate",
                                 email = lawyer.User?.Email ?? string.Empty,
-                                phone = !string.IsNullOrWhiteSpace(lawyer.Phone) ? lawyer.Phone : lawyer.User?.Phone,
+                                phone = !string.IsNullOrWhiteSpace(lawyer.Phone) ? lawyer.Phone : (lawyer.User?.Phone ?? string.Empty),
                                 barCouncilNumber = lawyer.BarCouncilNumber,
                                 specialization = lawyer.Specialization,
                                 city = lawyer.City,
