@@ -126,7 +126,7 @@ namespace CoreApi.Services
                     city = profile.City,
                     experience = profile.ExperienceYears,
                     bio = profile.Bio,
-                    phone = profile.Phone,
+                    phone = !string.IsNullOrWhiteSpace(profile.Phone) ? profile.Phone : (profile.User?.Phone ?? string.Empty),
                     email = profile.User?.Email ?? string.Empty,
                     isVerified = profile.IsVerified,
                     consultationFee = (double)profile.ConsultationFee,

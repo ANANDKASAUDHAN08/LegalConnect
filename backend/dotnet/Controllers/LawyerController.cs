@@ -65,7 +65,7 @@ namespace CoreApi.Controllers
                 isVerified = profile.IsVerified,
                 city = profile.City,
                 bio = profile.Bio,
-                phone = profile.Phone,
+                phone = !string.IsNullOrWhiteSpace(profile.Phone) ? profile.Phone : (profile.User?.Phone ?? string.Empty),
                 consultationFee = profile.ConsultationFee,
                 inPersonFee = profile.InPersonFee,
                 casesCompleted = profile.CasesCompleted,

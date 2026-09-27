@@ -38,8 +38,6 @@ namespace CoreApi.DTOs
         public bool? ConflictCheckRequired { get; set; }
         public string? GstinLawyer { get; set; }
         public string? StateBarCouncil { get; set; }
-        public string? DirectoryRankingsJson { get; set; }
-        public string? RepresentativeMattersJson { get; set; }
         public bool? MsaAccepted { get; set; }
         public string? Currency { get; set; }
     }

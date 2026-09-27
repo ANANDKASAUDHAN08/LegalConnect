@@ -56,7 +56,7 @@ namespace CoreApi.Services
             user.EmailVerificationToken = null;
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("✅ Email verified successfully for UserId: {UserId}, Email: {Email}", user.Id, user.Email);
+            _logger.LogInformation("[VERIFIED] Email verified successfully for UserId: {UserId}, Email: {Email}", user.Id, user.Email);
 
             return new VerificationResponseDto
             {
@@ -105,7 +105,7 @@ namespace CoreApi.Services
 
             await _emailService.SendVerificationEmailAsync(user.Email, newToken);
 
-            _logger.LogInformation("📧 Resent email verification link to UserId: {UserId}, Email: {Email}", user.Id, user.Email);
+            _logger.LogInformation("[EMAIL] Resent email verification link to UserId: {UserId}, Email: {Email}", user.Id, user.Email);
 
             return new VerificationResponseDto
             {
@@ -141,7 +141,7 @@ namespace CoreApi.Services
 
                     if (!verifyResponse.IsSuccessStatusCode)
                     {
-                        _logger.LogWarning("⚠️ Firebase token verification failed for UserId: {UserId}", userId);
+                        _logger.LogWarning("[WARNING] Firebase token verification failed for UserId: {UserId}", userId);
                         return new VerificationResponseDto
                         {
                             IsSuccess = false,
@@ -173,7 +173,7 @@ namespace CoreApi.Services
             }
             else
             {
-                _logger.LogWarning("⚠️ Phone verification attempted without Firebase token for UserId: {UserId}", userId);
+                _logger.LogWarning("[WARNING] Phone verification attempted without Firebase token for UserId: {UserId}", userId);
                 return new VerificationResponseDto
                 {
                     IsSuccess = false,
@@ -184,7 +184,7 @@ namespace CoreApi.Services
             user.IsPhoneVerified = true;
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("✅ Phone number verified for UserId: {UserId}, Phone: {Phone}", user.Id, user.Phone);
+            _logger.LogInformation("[VERIFIED] Phone number verified for UserId: {UserId}, Phone: {Phone}", user.Id, user.Phone);
 
             return new VerificationResponseDto
             {
@@ -204,7 +204,7 @@ namespace CoreApi.Services
                 user.IsEmailVerified = true;
                 user.EmailVerificationToken = null;
                 await _context.SaveChangesAsync();
-                _logger.LogInformation("✅ Email automatically verified via OAuth for UserId: {UserId}", userId);
+                _logger.LogInformation("[VERIFIED] Email automatically verified via OAuth for UserId: {UserId}", userId);
             }
         }
     }

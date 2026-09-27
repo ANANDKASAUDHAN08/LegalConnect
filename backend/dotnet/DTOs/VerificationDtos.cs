@@ -33,6 +33,40 @@ namespace CoreApi.DTOs
     {
         [Required]
         public string Phone { get; set; } = string.Empty;
+        public string Channel { get; set; } = "whatsapp"; // "whatsapp", "email", "sms"
+    }
+
+    public class VerifyPhoneOtpDto
+    {
+        [Required]
+        public string Phone { get; set; } = string.Empty;
+
+        [Required]
+        [RegularExpression(@"^\d{6}$", ErrorMessage = "Verification code must be exactly 6 digits.")]
+        public string Code { get; set; } = string.Empty;
+    }
+
+    public class PhoneOtpResponseDto
+    {
+        public bool IsSuccess { get; set; }
+        public string Message { get; set; } = string.Empty;
+        public string Channel { get; set; } = "whatsapp";
+        public string TargetPhone { get; set; } = string.Empty;
+        public int CooldownSeconds { get; set; } = 60;
+        public string? DirectWhatsAppUrl { get; set; }
+        public bool CanFallbackToEmail { get; set; }
+        public string? UserEmail { get; set; }
+    }
+
+    public class OtpSession
+    {
+        public int UserId { get; set; }
+        public string Phone { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public string Channel { get; set; } = "whatsapp";
+        public int AttemptsRemaining { get; set; } = 5;
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+        public DateTime ExpiresAt { get; set; } = DateTime.UtcNow.AddMinutes(10);
     }
 
     public class VerificationResponseDto

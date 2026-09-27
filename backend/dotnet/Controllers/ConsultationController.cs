@@ -8,6 +8,9 @@ using CoreApi.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using CoreApi.Services;
 
 namespace CoreApi.Controllers
 {
@@ -16,10 +19,17 @@ namespace CoreApi.Controllers
     public class ConsultationController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly ILogger<ConsultationController> _logger;
 
-        public ConsultationController(AppDbContext context)
+        public ConsultationController(
+            AppDbContext context,
+            IServiceScopeFactory serviceScopeFactory,
+            ILogger<ConsultationController> logger)
         {
             _context = context;
+            _serviceScopeFactory = serviceScopeFactory;
+            _logger = logger;
         }
 
         [HttpPost]
@@ -51,6 +61,36 @@ namespace CoreApi.Controllers
 
             _context.Consultations.Add(consultation);
             await _context.SaveChangesAsync();
+
+            // ── Automated WhatsApp Alert for Advocate with Independent DI Scope ──
+            if (lawyerUser.NotifyWhatsAppEnabled && !string.IsNullOrWhiteSpace(lawyerUser.WhatsAppPhone ?? lawyerUser.Phone))
+            {
+                var targetPhone = lawyerUser.WhatsAppPhone ?? lawyerUser.Phone!;
+                var advocateName = lawyerUser.FullName ?? "Advocate";
+                var clientName = request.ClientName;
+                var message = request.Message;
+                var consultationId = consultation.Id;
+
+                _ = Task.Run(async () =>
+                {
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var scopedWhatsApp = scope.ServiceProvider.GetRequiredService<IWhatsAppNotificationService>();
+                    var scopedLogger = scope.ServiceProvider.GetRequiredService<ILogger<ConsultationController>>();
+                    try
+                    {
+                        await scopedWhatsApp.SendConsultationInquiryAlertAsync(
+                            targetPhone,
+                            advocateName,
+                            clientName,
+                            message,
+                            consultationId);
+                    }
+                    catch (Exception ex)
+                    {
+                        scopedLogger.LogError(ex, "[WhatsApp Alert] Failed to dispatch inquiry alert to advocate {Phone}", targetPhone);
+                    }
+                });
+            }
 
             return Ok(new { message = "Inquiry sent successfully!", consultationId = consultation.Id });
         }
@@ -167,6 +207,41 @@ namespace CoreApi.Controllers
 
             consultation.Status = request.Status;
             await _context.SaveChangesAsync();
+
+            // ── Automated WhatsApp Alert for Client on Status Update with Independent DI Scope ──
+            if (consultation.ClientId.HasValue)
+            {
+                var clientUser = await _context.Users.FindAsync(consultation.ClientId.Value);
+                if (clientUser != null && clientUser.NotifyWhatsAppEnabled && !string.IsNullOrWhiteSpace(clientUser.WhatsAppPhone ?? clientUser.Phone))
+                {
+                    var lawyerUser = await _context.Users.FindAsync(lawyerId);
+                    var targetPhone = clientUser.WhatsAppPhone ?? clientUser.Phone!;
+                    var clientName = clientUser.FullName ?? consultation.ClientName;
+                    var advocateName = lawyerUser?.FullName ?? "Advocate";
+                    var currentStatus = consultation.Status;
+                    var consultationId = consultation.Id;
+
+                    _ = Task.Run(async () =>
+                    {
+                        using var scope = _serviceScopeFactory.CreateScope();
+                        var scopedWhatsApp = scope.ServiceProvider.GetRequiredService<IWhatsAppNotificationService>();
+                        var scopedLogger = scope.ServiceProvider.GetRequiredService<ILogger<ConsultationController>>();
+                        try
+                        {
+                            await scopedWhatsApp.SendConsultationStatusUpdateAlertAsync(
+                                targetPhone,
+                                clientName,
+                                advocateName,
+                                currentStatus,
+                                consultationId);
+                        }
+                        catch (Exception ex)
+                        {
+                            scopedLogger.LogError(ex, "[WhatsApp Alert] Failed to dispatch status update alert to client {Phone}", targetPhone);
+                        }
+                    });
+                }
+            }
 
             return Ok(new { message = "Status updated successfully!", status = consultation.Status });
         }

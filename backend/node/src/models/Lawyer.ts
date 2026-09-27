@@ -42,18 +42,18 @@ const LawyerSchema = new Schema<ILawyer>({
   bio: { type: String, required: true },
   phone: { type: String },
   email: { type: String },
-  isVerified: { type: Boolean, default: true },
+  isVerified: { type: Boolean, default: false },
   consultationFee: { type: Number, default: 0 },
   inPersonFee: { type: Number, default: 0 },
-  casesCompleted: { type: Number, default: 150 },
-  successRate: { type: Number, default: 95 },
+  casesCompleted: { type: Number, default: 0 },
+  successRate: { type: Number, default: 0 },
   officeAddress: { type: String, default: '' },
   education: { type: String, default: '' },
   languagesSpoken: [{ type: String }],
   isAvailable: { type: Boolean, default: true },
   avatarUrl: { type: String },
   bannerUrl: { type: String },
-  gender: { type: String, default: 'Male' },
+  gender: { type: String },
 
   // Premium schema properties
   activeCourts: [{ type: String }],
@@ -94,5 +94,6 @@ const LawyerSchema = new Schema<ILawyer>({
 
 LawyerSchema.index({ name: 'text', specializations: 'text', city: 'text', bio: 'text' });
 LawyerSchema.index({ city: 1 });
+LawyerSchema.index({ email: 1 });
 
 export default mongoose.model<ILawyer>('Lawyer', LawyerSchema);
