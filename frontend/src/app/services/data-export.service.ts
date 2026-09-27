@@ -69,7 +69,8 @@ export class DataExportService {
     txt += `Phone: ${profile.phone || profile.Phone || 'N/A'}\n`;
     txt += `Language: ${profile.clientLanguage || profile.ClientLanguage || 'N/A'}\n`;
     txt += `City: ${profile.clientCity || profile.ClientCity || 'N/A'}\n`;
-    txt += `Interest Area: ${profile.clientInterest || profile.ClientInterest || 'N/A'}\n`;
+    if (profile.gender) txt += `Gender: ${profile.gender}\n`;
+    if (profile.dateOfBirth) txt += `Date of Birth: ${this.formatDate(profile.dateOfBirth)}\n`;
     txt += `Bio: ${profile.clientBio || profile.ClientBio || 'N/A'}\n\n`;
 
     if ((profile.role === 'Lawyer' || profile.Role === 'Lawyer') && lawyerProfile) {

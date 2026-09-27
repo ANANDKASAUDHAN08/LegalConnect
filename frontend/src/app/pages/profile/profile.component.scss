@@ -17,3 +17,63 @@
 .input:focus {
   box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1);
 }
+
+:host {
+  --profile-header-height: 84px;
+
+  /* Responsive navbar height offsets from global design tokens */
+  --profile-nav-offset: var(--navbar-height-mobile, 64px);
+  --profile-nav-offset-scrolled: var(--navbar-height-mobile-scrolled, 54px);
+
+  @media (min-width: 768px) {
+    --profile-nav-offset: var(--navbar-height, 70px);
+    --profile-nav-offset-scrolled: var(--navbar-height-scrolled, 60px);
+  }
+}
+
+.profile-layout-wrapper {
+  padding-top: var(--profile-nav-offset);
+  min-height: calc(100vh - var(--profile-nav-offset));
+  transition: padding-top 0.2s ease, min-height 0.2s ease;
+
+  &.is-scrolled {
+    padding-top: var(--profile-nav-offset-scrolled);
+    min-height: calc(100vh - var(--profile-nav-offset-scrolled));
+  }
+}
+
+.profile-sticky-header {
+  top: var(--profile-nav-offset);
+  transition: top 0.2s ease;
+
+  &.is-scrolled {
+    top: var(--profile-nav-offset-scrolled);
+  }
+}
+
+.profile-sticky-sidebar {
+  @media (min-width: 1024px) {
+    top: calc(var(--profile-nav-offset) + var(--profile-header-height));
+    transition: top 0.2s ease;
+
+    &.is-scrolled {
+      top: calc(var(--profile-nav-offset-scrolled) + var(--profile-header-height) - 4px);
+    }
+  }
+}
+
+.avatar-gradient-client {
+  @apply bg-gradient-to-br from-blue-500 to-indigo-600;
+}
+
+.avatar-gradient-lawyer {
+  @apply bg-gradient-to-br from-amber-400 to-amber-600;
+}
+
+.card-surface {
+  @apply rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm;
+}
+
+.badge-pill {
+  @apply px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border;
+}

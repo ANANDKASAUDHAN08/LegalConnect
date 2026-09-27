@@ -1,0 +1,321 @@
+<div class="space-y-4 sm:space-y-6">
+
+  <!-- ── 5. COMMUNICATION & NOTIFICATION PREFERENCES ── -->
+  <section class="space-y-3" aria-labelledby="notifications-heading">
+    <div class="flex items-center justify-between gap-2">
+      <h3 id="notifications-heading"
+        class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5 min-w-0">
+        <app-icon name="bell" [size]="15" class="text-slate-400 dark:text-slate-500 flex-shrink-0"></app-icon>
+        <span>Notification Preferences</span>
+      </h3>
+      <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">
+        Auto-saved to account
+      </span>
+    </div>
+
+    <div
+      class="rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-2xl dark:shadow-black/30 divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden transition-all">
+
+      <!-- Reusable Modern Toggle Switch Template (Premium Micro-Interaction) -->
+      <ng-template #toggleSwitch let-checked="checked" let-type="type" let-tooltip="tooltip" let-label="label">
+        <button type="button" (click)="onToggleSwitch(type)" [appTooltip]="tooltip" tooltipPlacement="left"
+          class="group relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full p-0.5 transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900 select-none"
+          [ngClass]="checked
+            ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 dark:from-indigo-500 dark:to-indigo-600 border border-indigo-400/40 shadow-[0_0_14px_rgba(99,102,241,0.35),inset_0_1px_1px_rgba(255,255,255,0.2)]'
+            : 'bg-slate-200/90 dark:bg-slate-800 border border-slate-300/80 dark:border-slate-700/80 shadow-[inset_0_1px_2px_rgba(0,0,0,0.08)] hover:bg-slate-300/70 dark:hover:bg-slate-750'"
+          role="switch" [attr.aria-checked]="checked" [attr.aria-label]="label">
+          <span aria-hidden="true"
+            class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-[0_2px_5px_rgba(0,0,0,0.2),0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-black/5 dark:ring-white/10 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]"
+            [ngClass]="checked ? 'translate-x-5' : 'translate-x-0'"></span>
+        </button>
+      </ng-template>
+
+      <!-- 1. Case Dossier & Consultation Inquiries -->
+      <div class="p-4 sm:p-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+        <div class="flex items-start justify-between gap-3 sm:gap-4">
+          <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div
+              class="w-10 h-10 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/15 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+              <app-icon name="briefcase" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <!-- Mobile Overline Kicker Badge (Prevents title breaking) -->
+              <div *ngIf="notifyEmailCases()" class="mb-0.5 sm:hidden">
+                <span
+                  class="inline-flex text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  Instant Alerts
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                  Case Dossier & Consultation Inquiries
+                </h4>
+                <!-- Desktop Inline Badge -->
+                <span *ngIf="notifyEmailCases()"
+                  class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20">
+                  Instant Alerts
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Instant alerts when a client inquires, books a consultation slot, or updates case filings.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center flex-shrink-0 mt-0.5">
+            <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyEmailCases(),
+            type: 'emailCases',
+            tooltip: notifyEmailCases() ? 'Turn off case consultation notifications' : 'Turn on instant case alerts',
+            label: 'Toggle case inquiry notifications'
+          }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Legal Updates & Statutory News -->
+      <div class="p-4 sm:p-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+        <div class="flex items-start justify-between gap-3 sm:gap-4">
+          <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div
+              class="w-10 h-10 rounded-2xl bg-purple-500/10 dark:bg-purple-500/15 border border-purple-500/20 text-purple-600 dark:text-purple-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+              <app-icon name="book-open" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <!-- Mobile Overline Kicker Badge -->
+              <div *ngIf="notifyLawAmendments()" class="mb-0.5 sm:hidden">
+                <span
+                  class="inline-flex text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                  Regulatory
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                  Legal Updates & News
+                </h4>
+                <!-- Desktop Inline Badge -->
+                <span *ngIf="notifyLawAmendments()"
+                  class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+                  Regulatory
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Get notified about relevant high court rulings, statutory revisions, and legal changes.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center flex-shrink-0 mt-0.5">
+            <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyLawAmendments(),
+            type: 'lawAmendments',
+            tooltip: notifyLawAmendments() ? 'Turn off statutory and case precedent alerts' : 'Turn on automated statutory briefings',
+            label: 'Toggle statutory update notifications'
+          }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Weekly Digest & Practice Summary -->
+      <div class="p-4 sm:p-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+        <div class="flex items-start justify-between gap-3 sm:gap-4">
+          <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div
+              class="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+              <app-icon name="calendar" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <!-- Mobile Overline Kicker Badge -->
+              <div *ngIf="notifyEmailDigest()" class="mb-0.5 sm:hidden">
+                <span
+                  class="inline-flex text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Weekly Summary
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                  <span class="sm:hidden">Weekly Practice Digest</span>
+                  <span class="hidden sm:inline">Weekly Digest & Account Activity Summary</span>
+                </h4>
+                <!-- Desktop Inline Badge -->
+                <span *ngIf="notifyEmailDigest()"
+                  class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Weekly Summary
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                A weekly overview of your inquiries, active appointments, and profile visibility stats.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center flex-shrink-0 mt-0.5">
+            <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyEmailDigest(),
+            type: 'emailDigest',
+            tooltip: notifyEmailDigest() ? 'Turn off weekly activity digest emails' : 'Turn on weekly activity digest',
+            label: 'Toggle weekly digest notifications'
+          }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. WhatsApp Hearing & Case Alerts -->
+      <div class="p-4 sm:p-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+        <div class="flex items-start justify-between gap-3 sm:gap-4">
+          <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div
+              class="w-10 h-10 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/15 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+              <app-icon name="whatsapp" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <!-- Mobile Overline Kicker Badge -->
+              <div *ngIf="notifyWhatsAppAlerts()" class="mb-0.5 sm:hidden">
+                <span
+                  class="inline-flex text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Instant WhatsApp
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                  <span class="sm:hidden">WhatsApp Case Alerts</span>
+                  <span class="hidden sm:inline">WhatsApp Direct Hearing & Consultation Alerts</span>
+                </h4>
+                <!-- Desktop Inline Badge -->
+                <span *ngIf="notifyWhatsAppAlerts()"
+                  class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                  Instant WhatsApp
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Direct WhatsApp reminders for scheduled consultations, case hearing schedules, and urgent advocate
+                replies.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center flex-shrink-0 mt-0.5">
+            <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: notifyWhatsAppAlerts(),
+            type: 'whatsAppAlerts',
+            tooltip: notifyWhatsAppAlerts() ? 'Turn off WhatsApp direct alerts' : 'Turn on instant WhatsApp case & hearing alerts',
+            label: 'Toggle WhatsApp alerts'
+          }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── 6. DATA PRIVACY & PORTABILITY ── -->
+  <section class="space-y-3" aria-labelledby="privacy-heading">
+    <div class="flex items-center justify-between gap-2">
+      <h3 id="privacy-heading"
+        class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5 min-w-0">
+        <app-icon name="eye" [size]="15" class="text-slate-400 dark:text-slate-500 flex-shrink-0"></app-icon>
+        <span>Privacy & Data Portability</span>
+      </h3>
+      <span
+        class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
+        DPDP & GDPR Compliant
+      </span>
+    </div>
+
+    <div
+      class="rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-2xl dark:shadow-black/30 divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden transition-all">
+
+      <!-- Search Engine Indexing Toggle (Lawyers Only) -->
+      <div *ngIf="!isClient()" class="p-4 sm:p-5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+        <div class="flex items-start justify-between gap-3 sm:gap-4">
+          <div class="flex items-start gap-3 sm:gap-4 min-w-0 flex-1">
+            <div
+              class="w-10 h-10 rounded-2xl bg-teal-500/10 dark:bg-teal-500/15 border border-teal-500/20 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+              <app-icon name="globe" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <!-- Mobile Overline Kicker Badge -->
+              <div class="mb-0.5 sm:hidden">
+                <span class="inline-flex text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  [ngClass]="isSearchIndexable() ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'">
+                  {{ isSearchIndexable() ? 'Searchable' : 'Unlisted' }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                  <span class="sm:hidden">Directory & Search Indexing</span>
+                  <span class="hidden sm:inline">Public Directory & Search Indexing</span>
+                </h4>
+                <!-- Desktop Inline Badge -->
+                <span
+                  class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+                  [ngClass]="isSearchIndexable() ? 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border border-slate-200 dark:border-slate-700'">
+                  {{ isSearchIndexable() ? 'Searchable' : 'Unlisted' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                Allow prospective clients to find your practice profile via Google, Bing, and LegalConnect search.
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center flex-shrink-0 mt-0.5">
+            <ng-container *ngTemplateOutlet="toggleSwitch; context: {
+            checked: isSearchIndexable(),
+            type: 'searchIndexable',
+            tooltip: isSearchIndexable() ? 'Hide profile from search engines' : 'Allow search engine indexing',
+            label: 'Toggle search engine indexing'
+          }"></ng-container>
+          </div>
+        </div>
+      </div>
+
+      <!-- Export Data Card -->
+      <div class="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-3 min-w-0 flex-1">
+          <div
+            class="w-10 h-10 rounded-2xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/20 text-sky-600 dark:text-sky-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5 sm:mt-0">
+            <app-icon name="file-text" [size]="18"></app-icon>
+          </div>
+          <div class="min-w-0 flex-1">
+            <!-- Mobile Overline Kicker Badge -->
+            <div class="mb-1 sm:hidden">
+              <span
+                class="inline-flex text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                JSON Dossier
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+                <span class="sm:hidden">Export Personal Archive</span>
+                <span class="hidden sm:inline">Export Personal Data Archive</span>
+              </h4>
+              <!-- Desktop Inline Badge -->
+              <span
+                class="hidden sm:inline-flex text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-600 dark:text-sky-400 border border-sky-500/20">
+                JSON Dossier
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              Download a machine-readable JSON copy of your personal details, credentials, and authentication logs.
+            </p>
+            <div
+              class="flex items-center gap-0.5 md:gap-2 mt-2 text-[10px] text-slate-400 dark:text-slate-500 flex-wrap">
+              <span>Full audit history</span>
+              <span>&bull;</span>
+              <span>Portable format</span>
+              <span>&bull;</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Immediate Download</span>
+            </div>
+          </div>
+        </div>
+
+        <button (click)="exportPersonalData()" [disabled]="isExportingData()"
+          [appTooltip]="'Download personal data archive in JSON format (GDPR & DPDP compliant)'" tooltipPlacement="top"
+          class="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 hover:bg-slate-800 dark:hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer shadow-sm flex items-center justify-center gap-2 flex-shrink-0 group disabled:opacity-50">
+          <app-icon *ngIf="!isExportingData()" name="download" [size]="14"
+            class="group-hover:translate-y-0.5 transition-transform"></app-icon>
+          <app-icon *ngIf="isExportingData()" name="loader" [size]="14" class="animate-spin"></app-icon>
+          <span>{{ isExportingData() ? 'Generating Archive...' : 'Download JSON' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+</div>

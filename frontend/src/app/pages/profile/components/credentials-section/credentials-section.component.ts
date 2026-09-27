@@ -106,9 +106,6 @@ export class CredentialsSectionComponent implements OnInit, OnDestroy {
   readonly bioMaxLength = 1000;
   bioLength = signal(0);
 
-  readonly daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-  activeDayDropdownIndex = signal<number | null>(null);
-
   // ─── Lifecycle ───────────────────────────────────────────────
   ngOnInit(): void {
     this.buildForm();

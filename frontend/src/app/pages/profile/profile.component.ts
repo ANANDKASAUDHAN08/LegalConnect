@@ -8,6 +8,7 @@ import { SnackbarService } from '../../services/snackbar.service';
 import { ScrollService } from '../../services/scroll.service';
 import { HasUnsavedChanges } from '../../guards/unsaved-changes.guard';
 import { Subscription } from 'rxjs';
+import { calculateSecurityScore, getSecurityRating } from '../../utils/profile-helpers';
 
 // Shared Design System & Subcomponents
 import { ProfileTabComponent } from './components/profile-tab/profile-tab.component';
@@ -107,13 +108,19 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
   private onConfirmAction: (() => void) | null = null;
 
   // ─── Computed Projections ───────────────────────────────────
-  isClient = computed(() => this.profile()?.role !== 'Lawyer');
+  isClient = computed(() => {
+    const profRole = this.profile()?.role;
+    if (profRole) return profRole !== 'Lawyer';
+    const cachedRole = this.auth.currentUser?.role;
+    if (cachedRole) return cachedRole !== 'Lawyer';
+    return true;
+  });
 
   copiedAccountId = signal<boolean>(false);
 
   accountId = computed(() => {
     const prof = this.profile();
-    if (!prof) return 'LC-USR-94821';
+    if (!prof) return '';
     if (!this.isClient()) {
       const law = this.lawyerProfile();
       if (law?.publicId) return law.publicId;
@@ -122,32 +129,13 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
       if (prof.publicId) return prof.publicId;
     }
     const prefix = this.isClient() ? 'LC-USR' : 'LC-ADV';
-    const hash = ((prof.id * 2654435761 + 1013904223) >>> 0).toString(16).toUpperCase().padStart(6, '0').slice(-6);
+    const seed = prof.id ?? (prof.email ? prof.email.split('').reduce((acc, c) => (acc * 31 + c.charCodeAt(0)) >>> 0, 0) : 1);
+    const hash = (((seed * 2654435761 + 1013904223) >>> 0)).toString(16).toUpperCase().padStart(6, '0').slice(-6);
     return `${prefix}-${hash}`;
   });
 
-  securityScore = computed<number>(() => {
-    let score = 40;
-    const u = this.profile();
-    if (u?.isEmailVerified) score += 20;
-    if (u?.isPhoneVerified) score += 20;
-    if (u?.isTwoFactorEnabled) score += 20;
-    return score;
-  });
-
-  securityRating = computed<string>(() => {
-    const s = this.securityScore();
-    if (s >= 80) return 'Strong';
-    if (s >= 60) return 'Moderate';
-    return 'Weak';
-  });
-
-  securityColor = computed<string>(() => {
-    const s = this.securityScore();
-    if (s >= 80) return 'text-emerald-500 border-emerald-500/20 bg-emerald-500/10 dark:bg-emerald-500/5';
-    if (s >= 60) return 'text-amber-500 border-amber-500/20 bg-amber-500/10 dark:bg-amber-500/5';
-    return 'text-rose-500 border-rose-500/20 bg-rose-500/10 dark:bg-rose-500/5';
-  });
+  securityScore = computed<number>(() => calculateSecurityScore(this.profile()));
+  securityRating = computed<string>(() => getSecurityRating(this.securityScore()));
 
   initials = computed(() => {
     const name = this.profile()?.fullName || '';
@@ -288,28 +276,18 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
     const isMobileScreen = typeof window !== 'undefined' ? window.innerWidth < 1024 : false;
     this.isMobile.set(isMobileScreen);
 
-    const currentUrl = this.router.url;
-    if (currentUrl.includes('/profile/credentials') || currentUrl.includes('/profile/identity')) {
-      this.activeTab.set('profile');
-    } else if (currentUrl.includes('/profile/verification') || currentUrl.includes('/profile/security')) {
-      this.activeTab.set('account');
-    } else {
-      // Mobile view default is 'overview', desktop view default is 'profile'
-      this.activeTab.set(isMobileScreen ? 'overview' : 'profile');
-    }
-
     this.route.queryParams.subscribe(params => {
       const tab = params['tab'];
-      if (tab) {
-        if (tab === 'overview') {
-          this.activeTab.set(this.isMobile() ? 'overview' : 'profile');
-        } else if (tab === 'profile' || tab === 'identity' || tab === 'credentials' || tab === 'profile-details') {
-          this.activeTab.set('profile');
-        } else if (tab === 'account' || tab === 'verification' || tab === 'security') {
-          this.activeTab.set('account');
-        } else if (tab === 'cases' || tab === 'activity-log' || tab === 'bookmarks' || tab === 'inquiries') {
-          this.navigateToDashboard();
-        }
+      if (tab === 'overview') {
+        this.activeTab.set(this.isMobile() ? 'overview' : 'profile');
+      } else if (['profile', 'identity', 'credentials', 'profile-details'].includes(tab)) {
+        this.activeTab.set('profile');
+      } else if (['account', 'verification', 'security'].includes(tab)) {
+        this.activeTab.set('account');
+      } else if (['cases', 'activity-log', 'bookmarks', 'inquiries'].includes(tab)) {
+        this.navigateToDashboard();
+      } else {
+        this.activeTab.set(this.isMobile() ? 'overview' : 'profile');
       }
     });
 
@@ -350,6 +328,7 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
       },
       error: () => {
         this.loading.set(false);
+        this.snackbar.show('Failed to load practice credentials. Some details may be unavailable.', 'warning');
       }
     });
   }
@@ -462,18 +441,6 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
     } else {
       this.router.navigate(['/client/portal']);
     }
-  }
-
-  navigateToLawyers() {
-    this.router.navigate(['/lawyers']);
-  }
-
-  navigateToLaws() {
-    this.router.navigate(['/laws']);
-  }
-
-  navigateToLawyerDetail(id: string) {
-    this.router.navigate(['/lawyers', id]);
   }
 
   copyAccountId() {

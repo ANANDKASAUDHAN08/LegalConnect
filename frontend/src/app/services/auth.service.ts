@@ -7,7 +7,7 @@ import { UserProfileService } from './user-profile.service';
 import { normalizeMediaUrl } from '../core/utils/url-utils';
 
 export interface UserProfile {
-  id: number;
+  id?: number;
   publicId?: string;
   fullName: string;
   email: string;
@@ -19,41 +19,16 @@ export interface UserProfile {
   isTwoFactorEnabled?: boolean;
   clientLanguage?: string;
   clientCity?: string;
-  clientInterest?: string;
+  clientState?: string;
+  clientBio?: string;
   dateOfBirth?: string;
   gender?: string;
-  addressLine1?: string;
-  clientState?: string;
-  clientZip?: string;
-  clientBio?: string;
   avatarUrl?: string;
-  identityStatus?: string;
-  identityDocumentUrl?: string;
   isAuthenticated?: boolean;
   token?: string;
-  legalEntityName?: string;
-  specialStatus?: string;
-  pronouns?: string;
-  emergencyContactName?: string;
-  emergencyContactPhone?: string;
-  emergencyContactRelation?: string;
-  corporateRfpOpen?: boolean;
+  notifyWhatsAppEnabled?: boolean;
+  whatsAppPhone?: string;
   isSearchIndexable?: boolean;
-  isCorporateEntity?: boolean;
-  // Enterprise / MNC Corporate Compliance
-  cin?: string;
-  entityType?: string;
-  gstin?: string;
-  incorporationNumber?: string;
-  industryVertical?: string;
-  companySize?: string;
-  legalBudgetCeiling?: number;
-  panNumber?: string;
-  currency?: string;
-  msaAccepted?: boolean;
-  msaAcceptedAt?: string;
-  dpoContactName?: string;
-  dpoContactEmail?: string;
 }
 
 /** Routes that do not require authentication. Used to avoid redirecting public pages to login. */

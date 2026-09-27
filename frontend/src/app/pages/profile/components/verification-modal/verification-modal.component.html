@@ -5,7 +5,7 @@
   <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" (click)="closeModal()"></div>
 
   <!-- Modal / Drawer Container -->
-  <div
+  <div role="dialog" aria-modal="true" aria-labelledby="verification-dialog-title"
     class="relative w-full sm:max-w-xl md:max-w-[620px] bg-white dark:bg-[#0d1829] border-t sm:border border-slate-200/90 dark:border-slate-800/90 rounded-t-[28px] sm:rounded-2xl shadow-2xl overflow-hidden z-10 max-h-[90dvh] sm:max-h-[85vh] flex flex-col my-0 sm:my-auto animate-[slideUp_0.25s_ease-out] transition-all">
 
     <!-- Mobile Drawer Pull Handle -->
@@ -22,7 +22,8 @@
           <app-icon name="shield-check" [size]="20"></app-icon>
         </div>
         <div class="min-w-0">
-          <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">Trust & Verification
+          <h2 id="verification-dialog-title"
+            class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white truncate">Trust & Verification
           </h2>
           <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">Secure credential authentication
           </p>
@@ -36,26 +37,28 @@
     </div>
 
     <!-- Segmented Flow Tabs (Responsive Scrollable on Mobile, Equal on Desktop) -->
-    <div
+    <div role="tablist" aria-label="Verification delivery methods"
       class="px-3 sm:px-6 pt-2.5 sm:pt-3 pb-2 sm:pb-2.5 bg-slate-50/80 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-none">
-      <button (click)="setFlow('phone')" [appTooltip]="'Authenticate mobile phone number with SMS OTP'"
+      <button role="tab" [attr.aria-selected]="activeFlow === 'phone'" (click)="setFlow('phone')"
+        [appTooltip]="'Authenticate mobile number via WhatsApp or Email OTP'"
         class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
         [ngClass]="activeFlow === 'phone' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
         <app-icon name="phone" [size]="14"></app-icon>
         <span>Mobile OTP</span>
       </button>
-      <button (click)="setFlow('email')" [appTooltip]="'Verify primary communication email address'"
+      <button role="tab" [attr.aria-selected]="activeFlow === 'email'" (click)="setFlow('email')"
+        [appTooltip]="'Verify primary communication email address'"
         class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
         [ngClass]="activeFlow === 'email' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
         <app-icon name="mail" [size]="14"></app-icon>
         <span>Email</span>
       </button>
-      <button (click)="setFlow('emergency')"
-        [appTooltip]="'Configure trusted recovery contact for identity verification & account safety'"
+      <button role="tab" [attr.aria-selected]="activeFlow === 'whatsapp'" (click)="setFlow('whatsapp')"
+        [appTooltip]="'Configure WhatsApp for instant hearing dates, booking reminders, and case updates'"
         class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
-        [ngClass]="activeFlow === 'emergency' ? 'bg-white dark:bg-slate-800 text-teal-600 dark:text-teal-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
-        <app-icon name="user-check" [size]="14"></app-icon>
-        <span>Recovery Contact</span>
+        [ngClass]="activeFlow === 'whatsapp' ? 'bg-white dark:bg-slate-800 text-emerald-600 dark:text-emerald-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
+        <app-icon name="whatsapp" [size]="14"></app-icon>
+        <span>WhatsApp Alerts</span>
       </button>
     </div>
 
@@ -63,19 +66,68 @@
     <div
       class="p-4 sm:p-6 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5 flex-1 overscroll-contain no-scrollbar scrollbar-none">
 
-      <!-- ══════════ FLOW 1: PHONE OTP ══════════ -->
+      <!-- ══════════ FLOW 1: PHONE OTP (WHATSAPP + EMAIL FALLBACK) ══════════ -->
       <div *ngIf="activeFlow === 'phone'" class="space-y-4">
+        <!-- Verification Method Selector (WhatsApp Primary vs Email Fallback) -->
+        <div>
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
+            Verification Delivery Method
+          </label>
+          <div class="grid grid-cols-2 gap-2">
+            <!-- Option 1: WhatsApp (Primary) -->
+            <button type="button" (click)="selectedOtpChannel = 'whatsapp'"
+              class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative"
+              [ngClass]="selectedOtpChannel === 'whatsapp' 
+                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30 shadow-xs' 
+                : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'">
+              <div
+                class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+                <app-icon name="whatsapp" [size]="16"></app-icon>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold truncate">WhatsApp OTP</span>
+                  <span
+                    class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">Fast</span>
+                </div>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">100% Free & Instant</p>
+              </div>
+            </button>
+
+            <!-- Option 2: Email OTP (Fallback) -->
+            <button type="button" (click)="selectedOtpChannel = 'email'"
+              class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative"
+              [ngClass]="selectedOtpChannel === 'email' 
+                ? 'bg-blue-500/10 border-blue-500/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/30 shadow-xs' 
+                : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'">
+              <div
+                class="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
+                <app-icon name="mail" [size]="16"></app-icon>
+              </div>
+              <div class="min-w-0">
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold truncate">Email OTP</span>
+                  <span
+                    class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300">Zero-Cost</span>
+                </div>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">Guaranteed backup</p>
+              </div>
+            </button>
+          </div>
+        </div>
+
         <div>
           <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Registered Mobile Number
+            Mobile Number to Verify
           </label>
           <p class="text-xs text-slate-500 dark:text-slate-400 mb-2.5">
-            We will send a 6-digit one-time passcode for two-tier trust verification.
+            {{ selectedOtpChannel === 'whatsapp' ? 'Enter your WhatsApp active mobile number to receive your 6-digit
+            security code.' : 'Enter your mobile number. The security code will be sent to your registered email.' }}
           </p>
 
           <!-- Input Group: Country code + digits -->
           <div
-            class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-blue-500 focus-within:ring-4 focus-within:ring-blue-500/10 transition-all relative">
+            class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all relative">
             <!-- Country Selector -->
             <div class="relative flex-shrink-0">
               <button type="button" (click)="toggleCountryDropdown()"
@@ -111,40 +163,104 @@
             <!-- Phone Digits -->
             <input type="text" [(ngModel)]="phoneBody" (keypress)="onlyNumbers($event)" (input)="filterPhoneDigits()"
               placeholder="10-digit mobile" maxlength="10"
-              class="w-full flex-1 bg-transparent px-3 py-2.5 outline-none border-0 text-sm font-semibold text-slate-900 dark:text-white placeholder:text-slate-400" />
+              class="w-full flex-1 bg-transparent px-3 py-2.5 outline-none border-0 text-sm font-semibold font-mono text-slate-900 dark:text-white placeholder:text-slate-400" />
           </div>
         </div>
 
         <!-- Trigger Button -->
         <button *ngIf="!showPhoneOtpInput" (click)="sendPhoneOtp()"
           [disabled]="resendLoading || phoneBody.length !== 10"
-          class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2 border-0">
-          <span>{{ resendLoading ? 'Sending OTP...' : 'Send Verification OTP' }}</span>
-          <app-icon name="arrow-right" [size]="16"></app-icon>
+          class="w-full py-3 rounded-xl disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 border-0"
+          [ngClass]="selectedOtpChannel === 'whatsapp' 
+            ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25' 
+            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'">
+          <app-icon *ngIf="resendLoading" name="loader" [size]="16" class="animate-spin"></app-icon>
+          <app-icon *ngIf="!resendLoading && selectedOtpChannel === 'whatsapp'" name="whatsapp" [size]="16"></app-icon>
+          <app-icon *ngIf="!resendLoading && selectedOtpChannel === 'email'" name="mail" [size]="16"></app-icon>
+          <span>{{ resendLoading ? 'Sending Security Code...' : (selectedOtpChannel === 'whatsapp' ? 'Send Code via
+            WhatsApp' : 'Send Code via Email') }}</span>
         </button>
 
         <!-- OTP Code Input Area -->
-        <div *ngIf="showPhoneOtpInput"
-          class="p-4 rounded-2xl bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-900/50 space-y-3 animate-[fadeIn_0.25s_ease-out]">
-          <div class="flex items-center justify-between">
-            <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Enter 6-Digit Code</span>
-            <span class="text-[11px] text-blue-600 dark:text-blue-400 font-mono">Demo: 123456</span>
+        <div *ngIf="showPhoneOtpInput" class="p-4 rounded-2xl border space-y-3.5 animate-[fadeIn_0.25s_ease-out]"
+          [ngClass]="otpSentChannel === 'whatsapp' 
+            ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50' 
+            : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50'">
+
+          <!-- Dispatch Notification & Helper Link -->
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                [ngClass]="otpSentChannel === 'whatsapp' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'">
+                <app-icon [name]="otpSentChannel === 'whatsapp' ? 'whatsapp' : 'mail'" [size]="14"></app-icon>
+              </div>
+              <div class="min-w-0">
+                <p class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                  {{ otpSentChannel === 'whatsapp' ? 'Code sent to WhatsApp' : 'Code sent to registered email' }}
+                </p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                  {{ otpSentChannel === 'whatsapp' ? (selectedCountry.code + ' ' + phoneBody) : profile?.email }}
+                </p>
+              </div>
+            </div>
+
+            <button *ngIf="otpSentChannel === 'whatsapp' && directWhatsAppOtpUrl" type="button"
+              (click)="openDirectWhatsAppOtp()"
+              class="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-bold transition-all flex items-center gap-1 cursor-pointer border-0 shadow-xs flex-shrink-0"
+              appTooltip="Open WhatsApp Web or App to read code">
+              <app-icon name="external-link" [size]="11"></app-icon>
+              <span>Open WhatsApp</span>
+            </button>
           </div>
 
-          <input type="text" [(ngModel)]="phoneOtpCode" placeholder="••••••" maxlength="6"
-            class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none text-center font-mono text-xl tracking-[0.4em] font-bold text-slate-900 dark:text-white transition-all" />
+          <!-- Code Input -->
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-slate-700 dark:text-slate-300">Enter 6-Digit Code</span>
+              <span class="text-[10px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                <app-icon name="clock" [size]="12"></app-icon>
+                <span>Valid for 10 min</span>
+              </span>
+            </div>
+            <input type="text" [(ngModel)]="phoneOtpCode" placeholder="••••••" maxlength="6"
+              (keypress)="onlyNumbers($event)"
+              class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none text-center font-mono text-2xl tracking-[0.4em] font-black text-slate-900 dark:text-white transition-all" />
+          </div>
 
+          <!-- 1-Click Fallback Option (If user does not receive on WhatsApp, or wants email) -->
+          <div *ngIf="canFallbackToEmail && otpSentChannel === 'whatsapp'"
+            class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-[11px] flex items-center justify-between gap-2">
+            <span class="text-slate-600 dark:text-slate-400">Not receiving WhatsApp code?</span>
+            <button type="button" (click)="switchChannelAndSend('email')" [disabled]="resendCooldown > 0"
+              class="text-blue-600 dark:text-blue-400 font-bold hover:underline border-0 bg-transparent cursor-pointer disabled:opacity-50 flex items-center gap-1">
+              <app-icon name="mail" [size]="12"></app-icon>
+              <span>Switch to Email OTP</span>
+            </button>
+          </div>
+
+          <div *ngIf="otpSentChannel === 'email'"
+            class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-[11px] flex items-center justify-between gap-2">
+            <span class="text-slate-600 dark:text-slate-400">Prefer WhatsApp instead?</span>
+            <button type="button" (click)="switchChannelAndSend('whatsapp')" [disabled]="resendCooldown > 0"
+              class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline border-0 bg-transparent cursor-pointer disabled:opacity-50 flex items-center gap-1">
+              <app-icon name="whatsapp" [size]="12"></app-icon>
+              <span>Switch to WhatsApp</span>
+            </button>
+          </div>
+
+          <!-- Bottom Action Buttons: Resend & Confirm -->
           <div class="flex items-center justify-between pt-1">
             <button (click)="resendPhoneOtp()" [disabled]="resendCooldown > 0"
               class="text-xs font-bold transition-colors disabled:opacity-50 border-0 bg-transparent"
-              [ngClass]="resendCooldown > 0 ? 'text-slate-400' : 'text-blue-600 dark:text-blue-400 hover:underline cursor-pointer'">
+              [ngClass]="resendCooldown > 0 ? 'text-slate-400' : 'text-slate-700 dark:text-slate-300 hover:text-emerald-600 dark:hover:text-emerald-400 cursor-pointer'">
               {{ resendCooldown > 0 ? 'Resend code in ' + resendCooldown + 's' : 'Resend Code' }}
             </button>
 
             <button (click)="verifyPhoneOtp()" [disabled]="otpLoading || phoneOtpCode.length < 6"
               class="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/20 cursor-pointer flex items-center gap-1.5 border-0">
-              <span>{{ otpLoading ? 'Verifying...' : 'Confirm OTP' }}</span>
-              <app-icon name="check" [size]="14"></app-icon>
+              <app-icon *ngIf="otpLoading" name="loader" [size]="14" class="animate-spin"></app-icon>
+              <app-icon *ngIf="!otpLoading" name="check" [size]="14"></app-icon>
+              <span>{{ otpLoading ? 'Verifying...' : 'Confirm & Verify' }}</span>
             </button>
           </div>
         </div>
@@ -187,104 +303,205 @@
         </div>
       </div>
 
-      <!-- ══════════ FLOW 3: EMERGENCY RECOVERY CONTACT ══════════ -->
-      <div *ngIf="activeFlow === 'emergency' || activeFlow === 'identity'" class="space-y-4">
+      <!-- ══════════ FLOW 3: WHATSAPP CASE & CONSULTATION ALERTS ══════════ -->
+      <div *ngIf="activeFlow === 'whatsapp'" class="space-y-4">
         <!-- Purpose Explainer Banner -->
         <div
-          class="p-3.5 rounded-2xl bg-teal-50/70 dark:bg-teal-950/30 border border-teal-200/60 dark:border-teal-900/40 flex items-start gap-3">
+          class="p-3.5 sm:p-4 rounded-2xl bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 flex items-start gap-3.5">
           <div
-            class="w-8 h-8 rounded-xl bg-teal-100 dark:bg-teal-900/50 text-teal-600 dark:text-teal-400 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <app-icon name="user-check" [size]="16"></app-icon>
+            class="w-9 h-9 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5 shadow-xs">
+            <app-icon name="whatsapp" [size]="18"></app-icon>
           </div>
-          <div class="text-xs text-teal-950 dark:text-teal-200 space-y-0.5">
-            <p class="font-bold">Trusted Account Recovery</p>
-            <p class="text-[11px] text-teal-800/80 dark:text-teal-300/80 leading-relaxed">
-              Designate a trusted individual who can help verify your identity and restore access if you ever lose your
-              phone or login credentials.
+          <div class="text-xs text-emerald-950 dark:text-emerald-200 space-y-1">
+            <p class="font-extrabold text-sm sm:text-base leading-tight">Instant WhatsApp Legal Notifications</p>
+            <p class="text-[11px] sm:text-xs text-emerald-800/90 dark:text-emerald-300/80 leading-relaxed">
+              Never miss a court date or consultation. Get automated hearing reminders, video meeting links from
+              advocates, and case status updates sent directly to your WhatsApp.
             </p>
           </div>
         </div>
 
         <!-- Currently Configured Status Card -->
-        <div *ngIf="isEmergencyConfigured"
-          class="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2.5 min-w-0">
+        <div *ngIf="isWhatsAppActive"
+          class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
             <div
-              class="w-8 h-8 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-              <app-icon name="check" [size]="14"></app-icon>
+              class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
+              <app-icon name="check" [size]="15"></app-icon>
             </div>
             <div class="min-w-0">
               <div class="flex items-center gap-2">
-                <span class="text-xs font-bold text-slate-900 dark:text-white truncate">{{ profile?.emergencyContactName
-                  }}</span>
+                <span class="text-xs font-bold text-slate-900 dark:text-white truncate">WhatsApp Active</span>
                 <span
-                  class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50">
-                  {{ profile?.emergencyContactRelation || 'Configured' }}
+                  class="text-[9px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/25">
+                  Connected
                 </span>
               </div>
-              <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">{{
-                profile?.emergencyContactPhone }}</p>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5 truncate">
+                {{ displayWhatsAppPhone || 'Using registered mobile' }}
+              </p>
             </div>
           </div>
-          <button type="button" (click)="removeEmergencyContact()" [disabled]="isRemovingEmergency"
+          <button type="button" (click)="disableWhatsAppAlerts()" [disabled]="isDisablingWhatsApp"
             class="text-[11px] font-bold text-rose-500 hover:text-rose-600 dark:hover:text-rose-400 hover:underline border-0 bg-transparent cursor-pointer flex-shrink-0">
-            {{ isRemovingEmergency ? 'Removing...' : 'Remove' }}
+            {{ isDisablingWhatsApp ? 'Disabling...' : 'Disconnect' }}
           </button>
         </div>
 
-        <!-- Form Inputs (2-Column Grid on Desktop) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
-          <!-- Field 1: Contact Full Name -->
-          <div>
-            <label
-              class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-              Contact Full Name <span class="text-rose-500">*</span>
-            </label>
+        <!-- Notification Highlights: What You Receive -->
+        <div class="space-y-2">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+            What alerts you will receive:
+          </label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
             <div
-              class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all px-3 py-2.5 h-[42px]">
-              <app-icon name="user" [size]="16" class="text-slate-400 mr-2 flex-shrink-0"></app-icon>
-              <input type="text" [(ngModel)]="emergencyName" placeholder="e.g. Rajesh Sharma"
-                class="w-full bg-transparent outline-none border-0 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400" />
+              class="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                <app-icon name="calendar" [size]="14" class="text-emerald-500"></app-icon>
+                <span>Hearing Alerts</span>
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                Reminders 24h & 2h before upcoming court dates and filings.
+              </p>
+            </div>
+            <div
+              class="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                <app-icon name="video" [size]="14" class="text-blue-500"></app-icon>
+                <span>Consultation Links</span>
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                Instant Meet/Zoom video links sent 15 mins before your session.
+              </p>
+            </div>
+            <div
+              class="p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900/60 space-y-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900 dark:text-white">
+                <app-icon name="message-square" [size]="14" class="text-purple-500"></app-icon>
+                <span>Advocate Replies</span>
+              </div>
+              <p class="text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
+                Real-time alerts when your assigned lawyer replies or shares documents.
+              </p>
             </div>
           </div>
+        </div>
 
-          <!-- Field 2: Relationship Dropdown -->
-          <div>
-            <label
-              class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-              Relationship <span class="text-rose-500">*</span>
-            </label>
-            <app-custom-select class="w-full block" [options]="relationOptions" [(ngModel)]="emergencyRelation"
-              placeholder="Select Relationship" width="100%" minWidth="100%" height="42px" size="mid" rounded="xl"
-              menuRounded="xl" [useBottomSheetOnMobile]="true" sheetTitle="Relationship to Contact"
-              [searchable]="false">
-            </app-custom-select>
+        <!-- Phone Selection -->
+        <div class="space-y-3 pt-2">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block">
+            Target WhatsApp Mobile Number
+          </label>
+
+          <!-- Option 1: Use primary registered phone -->
+          <div *ngIf="profile?.phone" (click)="usePrimaryPhoneForWhatsApp = true"
+            class="p-3 rounded-xl border transition-all cursor-pointer flex items-center justify-between"
+            [ngClass]="usePrimaryPhoneForWhatsApp ? 'bg-emerald-500/[0.06] border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <input type="radio" [checked]="usePrimaryPhoneForWhatsApp" (change)="usePrimaryPhoneForWhatsApp = true"
+                class="accent-emerald-600 cursor-pointer" />
+              <div>
+                <p class="text-xs font-bold text-slate-900 dark:text-white">Use Primary Mobile Number</p>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">{{ profile?.phone }}</p>
+              </div>
+            </div>
+            <span
+              class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+              Primary
+            </span>
           </div>
 
-          <!-- Field 3: Contact Phone Number -->
-          <div>
-            <label
-              class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1.5">
-              Contact Phone Number <span class="text-rose-500">*</span>
-            </label>
-            <div
-              class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-teal-500 focus-within:ring-4 focus-within:ring-teal-500/10 transition-all px-3 py-2.5 h-[42px]">
-              <app-icon name="phone" [size]="16" class="text-slate-400 mr-2 flex-shrink-0"></app-icon>
-              <input type="tel" [(ngModel)]="emergencyPhone" placeholder="e.g. +91 98765 43210"
-                class="w-full bg-transparent outline-none border-0 text-xs font-semibold text-slate-900 dark:text-white placeholder:text-slate-400 font-mono" />
+          <!-- Option 2: Custom WhatsApp Number -->
+          <div (click)="usePrimaryPhoneForWhatsApp = false"
+            class="p-3 rounded-xl border transition-all cursor-pointer space-y-2.5"
+            [ngClass]="!usePrimaryPhoneForWhatsApp ? 'bg-emerald-500/[0.06] border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'">
+            <div class="flex items-center gap-2.5">
+              <input type="radio" [checked]="!usePrimaryPhoneForWhatsApp" (change)="usePrimaryPhoneForWhatsApp = false"
+                class="accent-emerald-600 cursor-pointer" />
+              <p class="text-xs font-bold text-slate-900 dark:text-white">Use a Different WhatsApp Number</p>
+            </div>
+
+            <div *ngIf="!usePrimaryPhoneForWhatsApp" class="flex items-center gap-2 mt-2 pt-1">
+              <span
+                class="px-3 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 flex-shrink-0">
+                <img src="https://flagcdn.com/w20/in.png" class="w-4 h-3 object-cover rounded-sm" alt="IN" />
+                <span>+91</span>
+              </span>
+              <div
+                class="flex-1 flex items-center bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all px-3 py-2">
+                <input type="tel" [(ngModel)]="whatsAppPhoneBody" maxlength="10" placeholder="10-digit mobile number"
+                  (keypress)="onlyNumbers($event)"
+                  class="w-full bg-transparent outline-none border-0 text-xs font-semibold font-mono text-slate-900 dark:text-white placeholder:text-slate-400" />
+              </div>
             </div>
           </div>
+        </div>
 
-          <!-- Action Button: Perfectly aligned in 2nd column of row 2 on desktop -->
-          <div class="flex flex-col justify-end">
-            <button (click)="saveEmergencyContact()"
-              [disabled]="isSavingEmergency || !emergencyName.trim() || !emergencyPhone.trim()"
-              class="w-full h-[42px] rounded-xl bg-teal-600 hover:bg-teal-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-teal-600/20 cursor-pointer flex items-center justify-center gap-2 border-0">
-              <app-icon *ngIf="isSavingEmergency" name="loader" [size]="14" class="animate-spin"></app-icon>
-              <span>{{ isSavingEmergency ? 'Saving Details...' : (isEmergencyConfigured ? 'Update Recovery Contact' :
-                'Save Recovery Contact') }}</span>
-              <app-icon *ngIf="!isSavingEmergency" name="check" [size]="14"></app-icon>
+        <!-- Action Submit Button -->
+        <div class="pt-2">
+          <button (click)="saveWhatsAppAlerts(true)" [disabled]="isSavingWhatsApp"
+            class="w-full h-11 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-md shadow-emerald-600/25 cursor-pointer flex items-center justify-center gap-2 border-0">
+            <app-icon *ngIf="isSavingWhatsApp" name="loader" [size]="14" class="animate-spin"></app-icon>
+            <app-icon *ngIf="!isSavingWhatsApp" name="whatsapp" [size]="16"></app-icon>
+            <span>{{ isSavingWhatsApp ? 'Saving Preferences...' : (isWhatsAppActive ? 'Update WhatsApp Preferences' :
+              'Enable WhatsApp Alerts') }}</span>
+          </button>
+        </div>
+
+        <!-- ══════════ LIVE TEST WHATSAPP DISPATCHER ══════════ -->
+        <div
+          class="mt-4 p-3.5 sm:p-4 rounded-2xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="text-xs font-bold text-slate-900 dark:text-white">Live Alert Dispatch & Verification</span>
+            </div>
+            <span
+              class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold border border-emerald-500/20">
+              {{ gatewayStatus?.activeProvider || 'Universal Gateway' }}
+            </span>
+          </div>
+
+          <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            Verify real delivery to your WhatsApp right now. Trigger an automated test dispatch or immediately preview
+            and launch the exact alert on WhatsApp Web / Mobile app.
+          </p>
+
+          <div class="flex flex-wrap items-center gap-2 pt-1">
+            <button type="button" (click)="sendTestWhatsAppAlert()" [disabled]="isSendingTestWhatsApp"
+              class="px-4 py-2 rounded-xl bg-slate-900 dark:bg-slate-800 hover:bg-slate-800 dark:hover:bg-slate-700 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50 border-0">
+              <app-icon *ngIf="isSendingTestWhatsApp" name="loader" [size]="13" class="animate-spin"></app-icon>
+              <app-icon *ngIf="!isSendingTestWhatsApp" name="send" [size]="13" class="text-emerald-400"></app-icon>
+              <span>{{ isSendingTestWhatsApp ? 'Dispatching Test...' : 'Send Test WhatsApp Alert' }}</span>
             </button>
+
+            <button *ngIf="lastTestResult?.directWhatsAppUrl" type="button" (click)="openDirectWhatsApp()"
+              class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20 border-0 animate-[fadeIn_0.2s_ease-out]">
+              <app-icon name="whatsapp" [size]="15"></app-icon>
+              <span>Open in WhatsApp</span>
+            </button>
+          </div>
+
+          <!-- Test Dispatch Confirmation Card -->
+          <div *ngIf="lastTestResult"
+            class="p-3 rounded-xl bg-white dark:bg-slate-900/90 border border-emerald-500/30 text-xs space-y-2 animate-[fadeIn_0.25s_ease-out]">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                <app-icon name="check-circle" [size]="14"></app-icon>
+                <span>Alert Dispatched Successfully</span>
+              </span>
+              <span class="font-mono text-slate-500 dark:text-slate-400 text-[10px]">
+                {{ lastTestResult.provider }}
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-600 dark:text-slate-300 font-mono">
+              Target Phone: <span class="font-bold text-slate-900 dark:text-white">{{ lastTestResult.targetPhone
+                }}</span>
+            </p>
+            <div
+              class="p-2.5 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 text-[11px] text-slate-700 dark:text-slate-300 font-mono whitespace-pre-wrap leading-relaxed max-h-36 overflow-y-auto">
+              {{ lastTestResult.message }}
+            </div>
           </div>
         </div>
       </div>

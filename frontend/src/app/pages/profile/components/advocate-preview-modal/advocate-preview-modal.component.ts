@@ -48,9 +48,9 @@ export class AdvocatePreviewModalComponent {
 
   navigateToPublicPage() {
     this.closeModal();
-    const id = this.profile?.id;
-    if (id) {
-      this.router.navigate(['/lawyers', id]);
+    const target = this.profile?.publicId || this.profile?.id;
+    if (target) {
+      this.router.navigate(['/lawyers', target]);
     } else {
       this.router.navigate(['/lawyers']);
     }

@@ -1,28 +1,36 @@
-<div class="w-full bg-[#f8fafc] dark:bg-[#06080f] text-slate-900 dark:text-white transition-all duration-200" [ngClass]="isScrolled()
-    ? 'pt-[54px] md:pt-[60px] min-h-[calc(100vh-54px)] md:min-h-[calc(100vh-60px)]'
-    : 'pt-[64px] md:pt-[70px] min-h-[calc(100vh-64px)] md:min-h-[calc(100vh-70px)]'">
+<a href="#profile-main-content"
+  class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:top-2 focus:left-2 focus:px-4 focus:py-2 focus:bg-blue-600 focus:text-white focus:rounded-lg focus:shadow-lg">
+  Skip to profile content
+</a>
+
+<div
+  class="profile-layout-wrapper w-full bg-brand-surface-light dark:bg-brand-surface-dark text-slate-900 dark:text-white transition-all duration-200"
+  [class.is-scrolled]="isScrolled()">
 
   <!-- ══════════ SKELETON LOADER STATE ══════════ -->
-  <app-profile-skeleton *ngIf="loading()"></app-profile-skeleton>
+  <app-profile-skeleton *ngIf="loading()" [activeTab]="activeTab()" [isClient]="isClient()" [isScrolled]="isScrolled()"
+    (tabChange)="setTab($event)">
+  </app-profile-skeleton>
 
   <!-- ══════════ ACTIVE PROFILE VIEW ══════════ -->
   <ng-container *ngIf="!loading() && profile() as prof">
 
     <!-- ── TOP HEADER BAR ── -->
     <header
-      class="w-full bg-white dark:bg-[#0d1829] border-b border-slate-200 dark:border-slate-800/80 shadow-sm sticky z-30 transition-[top] duration-200"
-      [ngClass]="isScrolled() ? 'top-[54px] md:top-[60px]' : 'top-[64px] md:top-[70px]'">
+      class="profile-sticky-header w-full bg-white dark:bg-brand-card-dark border-b border-slate-200 dark:border-slate-800/80 shadow-sm sticky z-30"
+      [class.is-scrolled]="isScrolled()">
       <div class="w-full lg:w-[90%] mx-auto px-4 sm:px-6 lg:px-0 py-4">
 
         <!-- Desktop Row -->
         <div class="hidden sm:flex items-center justify-between gap-4">
           <!-- Avatar + Name + Role -->
           <div class="flex items-center gap-3.5 flex-shrink-0">
-            <div class="relative group cursor-pointer" (click)="openAvatarModal()"
-              appTooltip="Click to update profile photo" tooltipPlacement="bottom">
+            <div class="relative group cursor-pointer" (click)="openAvatarModal()" (keydown.enter)="openAvatarModal()"
+              (keydown.space)="openAvatarModal(); $event.preventDefault()" role="button" tabindex="0"
+              aria-label="Update profile photo" appTooltip="Click to update profile photo" tooltipPlacement="bottom">
               <div
                 class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-base font-black overflow-hidden ring-2 ring-white dark:ring-slate-800 shadow-md transition-transform group-hover:scale-105"
-                [ngClass]="isClient() ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-amber-400 to-amber-600'">
+                [ngClass]="isClient() ? 'avatar-gradient-client' : 'avatar-gradient-lawyer'">
                 <img *ngIf="prof.avatarUrl" [src]="prof.avatarUrl" class="w-full h-full object-cover" alt="avatar" />
                 <span *ngIf="!prof.avatarUrl">{{ initials() }}</span>
               </div>
@@ -46,8 +54,8 @@
                   tooltipPlacement="top">
                   <app-icon name="badge-check" [size]="16"></app-icon>
                 </span>
-                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border"
-                  [appTooltip]="isClient() ? 'Client Account' : 'Certified Legal Practitioner'" tooltipPlacement="top"
+                <span class="badge-pill" [appTooltip]="isClient() ? 'Client Account' : 'Certified Legal Practitioner'"
+                  tooltipPlacement="top"
                   [ngClass]="isClient()
                     ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50'
                     : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'">
@@ -123,10 +131,12 @@
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2.5 min-w-0 flex-1">
               <div class="relative group cursor-pointer flex-shrink-0" (click)="openAvatarModal()"
-                appTooltip="Click to update profile photo" tooltipPlacement="bottom">
+                (keydown.enter)="openAvatarModal()" (keydown.space)="openAvatarModal(); $event.preventDefault()"
+                role="button" tabindex="0" aria-label="Update profile photo" appTooltip="Click to update profile photo"
+                tooltipPlacement="bottom">
                 <div
                   class="w-12 h-12 rounded-xl flex items-center justify-center text-white text-sm font-black overflow-hidden ring-2 ring-white dark:ring-slate-800 shadow-md transition-transform active:scale-95"
-                  [ngClass]="isClient() ? 'bg-gradient-to-br from-blue-500 to-indigo-600' : 'bg-gradient-to-br from-amber-400 to-amber-600'">
+                  [ngClass]="isClient() ? 'avatar-gradient-client' : 'avatar-gradient-lawyer'">
                   <img *ngIf="prof.avatarUrl" [src]="prof.avatarUrl" class="w-full h-full object-cover" alt="avatar" />
                   <span *ngIf="!prof.avatarUrl">{{ initials() }}</span>
                 </div>
@@ -150,8 +160,7 @@
                   </span>
                 </div>
                 <div class="flex items-center gap-1.5 flex-nowrap mt-0.5">
-                  <span
-                    class="px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border flex-shrink-0"
+                  <span class="badge-pill flex-shrink-0"
                     [ngClass]="isClient()
                       ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800/50'
                       : 'bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50'">
@@ -225,18 +234,17 @@
     </header>
 
     <!-- ── MAIN BODY: SIDEBAR + CONTENT ── -->
-    <main class="w-full lg:w-[90%] mx-auto px-3.5 sm:px-6 lg:px-0 py-3 sm:py-4">
+    <main id="profile-main-content" tabindex="-1"
+      class="w-full lg:w-[90%] mx-auto px-3.5 sm:px-6 lg:px-0 py-3 sm:py-4 focus:outline-none">
 
       <div class="flex flex-col lg:flex-row gap-8">
 
         <!-- ── LEFT SIDEBAR: IDENTITY & NAVIGATION HUB (DESKTOP ONLY) ── -->
-        <aside class="hidden lg:block w-80 flex-shrink-0 space-y-4 lg:sticky self-start transition-[top] duration-200"
-          [ngClass]="isScrolled() ? 'lg:top-[140px]' : 'lg:top-[154px]'">
+        <aside class="profile-sticky-sidebar hidden lg:block w-80 flex-shrink-0 space-y-4 lg:sticky self-start"
+          [class.is-scrolled]="isScrolled()">
 
           <!-- ── 1. SIDEBAR NAVIGATION MENU (DESKTOP) ── -->
-          <nav
-            class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden"
-            aria-label="Profile section navigation">
+          <nav class="card-surface overflow-hidden" aria-label="Profile section navigation">
             <div
               class="px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
               <span
@@ -294,14 +302,13 @@
           </nav>
 
           <!-- Trust Standing Card -->
-          <div
-            class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden">
+          <div class="card-surface overflow-hidden">
             <div
               class="px-5 pt-4 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
               <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Account
                 Standing</span>
               <span
-                class="px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200/50"
+                class="badge-pill bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200/50"
                 appTooltip="Account is active and in good standing" tooltipPlacement="top">
                 Active
               </span>
@@ -356,15 +363,16 @@
           </div>
 
           <!-- Profile Completeness Card -->
-          <div
-            class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden">
+          <div class="card-surface overflow-hidden">
             <div
               class="px-5 pt-2 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
               <div>
                 <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">Profile
                   Completeness</span>
               </div>
-              <span class="text-xs font-black px-2.5 py-1 rounded-xl" [ngClass]="overallCompletionPct() >= 80
+              <span class="text-xs font-black px-2.5 py-1 rounded-xl cursor-help"
+                appTooltip="Complete all 4 tiers to unlock full platform trust and discovery features"
+                tooltipPlacement="top" [ngClass]="overallCompletionPct() >= 80
                   ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400'
                   : overallCompletionPct() >= 50
                     ? 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400'
@@ -429,41 +437,28 @@
             <app-mobile-overview-tab [profile]="prof" [lawyerProfile]="lawyerProfile()"
               [overallCompletionPct]="overallCompletionPct()" [fourTierMilestones]="fourTierMilestones()"
               [nextMilestoneAction]="nextMilestoneAction()" [securityScore]="securityScore()"
-              [securityRating]="securityRating()" [securityColor]="securityColor()" [memberSince]="memberSince()"
-              [isClient]="isClient()" (navigateTab)="setTab($event)"
-              (requestVerification)="openVerificationModal($event)" (logout)="logout()">
+              [securityRating]="securityRating()" [memberSince]="memberSince()" [isClient]="isClient()"
+              (navigateTab)="setTab($event)" (requestVerification)="openVerificationModal($event)" (logout)="logout()">
             </app-mobile-overview-tab>
           </div>
 
           <!-- TAB 1: Profile (Personal + Professional + Activity) -->
           <div *ngIf="activeTab() === 'profile'" [id]="'profile-panel-profile'" role="tabpanel"
             [attr.aria-labelledby]="'profile-tab-profile'" class="animate-[fadeIn_0.25s_ease-out]">
-            <app-profile-tab [profile]="prof" [lawyerProfile]="lawyerProfile()" [autoEdit]="triggerProfileEdit()"
-              [accountIdInput]="accountId()" (profileUpdated)="onProfileUpdated($event)"
+            <app-profile-tab [profile]="prof" [lawyerProfile]="lawyerProfile()" [accountId]="accountId()"
+              [autoEdit]="triggerProfileEdit()" (profileUpdated)="onProfileUpdated($event)"
               (lawyerProfileUpdated)="onLawyerProfileUpdated($event)" (triggerAvatarChange)="openAvatarModal()"
               (requestPhoneVerification)="openVerificationModal('phone')" (navigateTab)="setTab($event)">
             </app-profile-tab>
           </div>
 
-          <!-- TAB 2: Account & Preferences (Deferred) -->
-          @defer (when activeTab() === 'account') {
+          <!-- TAB 2: Account & Preferences -->
           <div *ngIf="activeTab() === 'account'" [id]="'profile-panel-account'" role="tabpanel"
             [attr.aria-labelledby]="'profile-tab-account'" class="animate-[fadeIn_0.25s_ease-out]">
             <app-account-tab [profile]="prof" (profileUpdated)="onProfileUpdated($event)"
               (requestVerification)="openVerificationModal($event)" (requestConfirm)="handleConfirmRequest($event)">
             </app-account-tab>
           </div>
-          } @loading (minimum 150ms) {
-          <div
-            class="p-4 sm:p-7 sm:rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 space-y-6 animate-pulse">
-            <div class="h-6 w-48 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-            <div class="space-y-4">
-              <div class="h-14 bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
-              <div class="h-14 bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
-              <div class="h-14 bg-slate-100 dark:bg-slate-800/50 rounded-xl"></div>
-            </div>
-          </div>
-          }
 
         </section>
 

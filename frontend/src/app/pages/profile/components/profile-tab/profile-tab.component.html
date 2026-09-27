@@ -107,6 +107,26 @@
         </span>
       </div>
 
+      <!-- Gender -->
+      <div class="py-2.5 sm:py-0 flex items-center justify-between sm:block">
+        <span
+          class="text-slate-500 dark:text-slate-400 sm:text-[10px] sm:font-bold sm:uppercase sm:tracking-wider sm:block">Gender</span>
+        <span class="font-bold text-slate-900 dark:text-white sm:mt-1 sm:block sm:text-sm">
+          {{ profileForm.controls.gender.value || '—' }}
+        </span>
+      </div>
+
+      <!-- Date of Birth -->
+      <div class="py-2.5 sm:py-0 flex items-center justify-between sm:block">
+        <span
+          class="text-slate-500 dark:text-slate-400 sm:text-[10px] sm:font-bold sm:uppercase sm:tracking-wider sm:block">Date
+          of Birth</span>
+        <span class="font-bold text-slate-900 dark:text-white sm:mt-1 sm:block sm:text-sm">
+          {{ profileForm.controls.dateOfBirth.value ? (profileForm.controls.dateOfBirth.value | date:'mediumDate') : '—'
+          }}
+        </span>
+      </div>
+
       <!-- Official Account / Advocate ID Reference -->
       <div class="py-2.5 sm:py-0 flex items-center justify-between sm:block">
         <span
@@ -222,6 +242,29 @@
         </div>
       </div>
 
+      <!-- Demographics Row (Gender & Date of Birth) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+        <div class="space-y-1.5">
+          <label class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Gender</label>
+          <app-custom-select class="w-full block" [options]="genderSelectOptions" formControlName="gender"
+            placeholder="Select gender" width="100%" minWidth="100%" size="mid" rounded="xl" menuRounded="lg"
+            sheetTitle="Gender">
+          </app-custom-select>
+        </div>
+        <div class="space-y-1.5">
+          <label for="prof-dob"
+            class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+            <span>Date of Birth</span>
+            <span class="text-slate-400 cursor-help"
+              [appTooltip]="'Must be 18 years or older for valid legal capacity and contracting'">
+              <app-icon name="info" [size]="12"></app-icon>
+            </span>
+          </label>
+          <input id="prof-dob" type="date" formControlName="dateOfBirth"
+            class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 text-xs text-slate-900 dark:text-white outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all" />
+        </div>
+      </div>
+
       <!-- Mobile Save Bar (only on small screens) -->
       <div class="sm:hidden flex items-center gap-3 pt-3 border-t border-slate-100 dark:border-slate-800/60">
         <button type="button" (click)="cancelEdit()"
@@ -256,7 +299,7 @@
   <!-- ═══════════════════════════════════════════════════════ -->
   <!-- ═══ ACTIVITY HUB (Client Users Only, Real API Data) ══ -->
   <!-- ═══════════════════════════════════════════════════════ -->
-  <div *ngIf="isClient()" class="space-y-6">
+  <div *ngIf="isClient()" id="client-activity-hub" class="space-y-6">
 
     <!-- Section Divider -->
     <div class="flex items-center gap-3">
@@ -270,7 +313,7 @@
     </div>
 
     <!-- ── 1. SAVED LAWYERS ── -->
-    <div
+    <div id="activity-section-lawyers"
       class="rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-sm transition-all duration-200 overflow-hidden">
 
       <!-- MNC Header (Mobile-optimized) -->
@@ -312,83 +355,92 @@
             <app-icon name="arrow-right" [size]="11"
               class="!hidden sm:!inline-flex group-hover:translate-x-0.5 transition-transform"></app-icon>
           </button>
+          <button type="button" (click)="toggleSection('lawyers')" [attr.aria-expanded]="isSectionExpanded('lawyers')"
+            aria-label="Toggle Saved Lawyers section"
+            class="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center">
+            <app-icon [name]="isSectionExpanded('lawyers') ? 'chevron-up' : 'chevron-down'" [size]="14"></app-icon>
+          </button>
         </div>
       </div>
 
-      <!-- Lawyers Grid (Responsive) -->
-      <div *ngIf="savedLawyers().length > 0 && !savedLawyersLoading()"
-        class="p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-        <div *ngFor="let lawyer of savedLawyers(); trackBy: trackByLawyerId"
-          (click)="navigateToLawyerDetail(lawyer._id)" (keydown.enter)="navigateToLawyerDetail(lawyer._id)" tabindex="0"
-          role="button" [attr.aria-label]="'View profile for ' + lawyer.name"
-          class="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/70 bg-white/60 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-800/50 hover:border-rose-300 dark:hover:border-rose-900/70 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 cursor-pointer group flex items-center justify-between gap-2.5 sm:gap-3">
+      <ng-container *ngIf="isSectionExpanded('lawyers')">
+        <!-- Lawyers Grid (Responsive) -->
+        <div *ngIf="savedLawyers().length > 0 && !savedLawyersLoading()"
+          class="p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+          <div *ngFor="let lawyer of savedLawyers(); trackBy: trackByLawyerId"
+            (click)="navigateToLawyerDetail(lawyer._id)" (keydown.enter)="navigateToLawyerDetail(lawyer._id)"
+            (keydown.space)="$event.preventDefault(); navigateToLawyerDetail(lawyer._id)" tabindex="0" role="button"
+            [attr.aria-label]="'View profile for ' + lawyer.name"
+            class="p-3 sm:p-3.5 rounded-xl border border-slate-200/80 dark:border-slate-800/70 bg-white/60 dark:bg-slate-900/40 hover:bg-white dark:hover:bg-slate-800/50 hover:border-rose-300 dark:hover:border-rose-900/70 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] transition-all duration-200 cursor-pointer group flex items-center justify-between gap-2.5 sm:gap-3">
 
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div
-              class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-xs font-black flex-shrink-0 overflow-hidden shadow-xs ring-2 ring-white/10">
-              <img *ngIf="lawyer.avatarUrl" [src]="lawyer.avatarUrl" class="w-full h-full object-cover" alt="" />
-              <span *ngIf="!lawyer.avatarUrl">{{ (lawyer.name || '?')[0] }}</span>
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5">
-                <h4
-                  class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
-                  {{ lawyer.name }}
-                </h4>
-                <app-icon *ngIf="lawyer.isVerified" name="badge-check" [size]="12"
-                  class="text-blue-500 flex-shrink-0"></app-icon>
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div
+                class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 text-white flex items-center justify-center text-xs font-black flex-shrink-0 overflow-hidden shadow-xs ring-2 ring-white/10">
+                <img *ngIf="lawyer.avatarUrl" [src]="lawyer.avatarUrl" class="w-full h-full object-cover" alt="" />
+                <span *ngIf="!lawyer.avatarUrl">{{ (lawyer.name || '?')[0] }}</span>
               </div>
-              <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
-                {{ lawyer.specializations[0] || 'Advocate' }}
-                <span *ngIf="lawyer.city" class="text-slate-300 dark:text-slate-600 mx-0.5">•</span>
-                <span *ngIf="lawyer.city">{{ lawyer.city }}</span>
-              </p>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5">
+                  <h4
+                    class="text-xs font-bold text-slate-900 dark:text-white truncate group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors">
+                    {{ lawyer.name }}
+                  </h4>
+                  <app-icon *ngIf="lawyer.isVerified" name="badge-check" [size]="12"
+                    class="text-blue-500 flex-shrink-0"></app-icon>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {{ lawyer.specializations[0] || 'Advocate' }}
+                  <span *ngIf="lawyer.city" class="text-slate-300 dark:text-slate-600 mx-0.5">•</span>
+                  <span *ngIf="lawyer.city">{{ lawyer.city }}</span>
+                </p>
+              </div>
+            </div>
+
+            <div
+              class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 group-hover:bg-rose-50 dark:group-hover:bg-rose-950/40 group-hover:translate-x-0.5 transition-all flex-shrink-0">
+              <app-icon name="arrow-right" [size]="12"></app-icon>
             </div>
           </div>
+        </div>
 
+        <!-- Empty State -->
+        <div *ngIf="savedLawyers().length === 0 && !savedLawyersLoading()"
+          class="px-4 sm:px-6 py-8 sm:py-10 text-center">
           <div
-            class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg flex items-center justify-center text-slate-400 group-hover:text-rose-600 dark:group-hover:text-rose-400 group-hover:bg-rose-50 dark:group-hover:bg-rose-950/40 group-hover:translate-x-0.5 transition-all flex-shrink-0">
-            <app-icon name="arrow-right" [size]="12"></app-icon>
+            class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-500 flex items-center justify-center mx-auto border border-rose-100 dark:border-rose-900/40 shadow-xs mb-3">
+            <app-icon name="heart" [size]="20"></app-icon>
           </div>
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">No saved advocates yet</h4>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            Shortlist verified legal practitioners while browsing to quickly consult them here anytime.
+          </p>
+          <button (click)="navigateToLawyers()"
+            class="mt-3.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer border-0 inline-flex items-center gap-1.5">
+            <app-icon name="search" [size]="13"></app-icon>
+            <span>Find Lawyers</span>
+          </button>
         </div>
-      </div>
 
-      <!-- Empty State -->
-      <div *ngIf="savedLawyers().length === 0 && !savedLawyersLoading()" class="px-4 sm:px-6 py-8 sm:py-10 text-center">
-        <div
-          class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-rose-50 dark:bg-rose-950/30 text-rose-500 flex items-center justify-center mx-auto border border-rose-100 dark:border-rose-900/40 shadow-xs mb-3">
-          <app-icon name="heart" [size]="20"></app-icon>
-        </div>
-        <h4 class="text-xs font-bold text-slate-900 dark:text-white">No saved advocates yet</h4>
-        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-          Shortlist verified legal practitioners while browsing to quickly consult them here anytime.
-        </p>
-        <button (click)="navigateToLawyers()"
-          class="mt-3.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer border-0 inline-flex items-center gap-1.5">
-          <app-icon name="search" [size]="13"></app-icon>
-          <span>Find Lawyers</span>
-        </button>
-      </div>
-
-      <!-- Loading Skeleton Cards -->
-      <div *ngIf="savedLawyersLoading()"
-        class="p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
-        <div *ngFor="let s of [1, 2, 3]"
-          class="p-3 sm:p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/40 dark:bg-slate-900/30 flex items-center justify-between gap-3 animate-pulse">
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
-            <div class="space-y-1.5 min-w-0 flex-1">
-              <div class="w-24 sm:w-28 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-              <div class="w-32 sm:w-36 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+        <!-- Loading Skeleton Cards -->
+        <div *ngIf="savedLawyersLoading()"
+          class="p-3 sm:p-5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2.5 sm:gap-3">
+          <div *ngFor="let s of [1, 2, 3]"
+            class="p-3 sm:p-3.5 rounded-xl border border-slate-200/60 dark:border-slate-800/60 bg-white/40 dark:bg-slate-900/30 flex items-center justify-between gap-3 animate-pulse">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <div class="w-24 sm:w-28 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+                <div class="w-32 sm:w-36 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+              </div>
             </div>
+            <div class="w-6 h-6 rounded-lg bg-slate-200/60 dark:bg-slate-800/40 flex-shrink-0"></div>
           </div>
-          <div class="w-6 h-6 rounded-lg bg-slate-200/60 dark:bg-slate-800/40 flex-shrink-0"></div>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- ── 2. CONSULTATION INQUIRIES ── -->
-    <div
+    <div id="activity-section-inquiries"
       class="rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-sm transition-all duration-200 overflow-hidden">
 
       <!-- MNC Header (Mobile-optimized) -->
@@ -430,96 +482,105 @@
             <app-icon name="arrow-right" [size]="11"
               class="!hidden sm:!inline-flex group-hover:translate-x-0.5 transition-transform"></app-icon>
           </button>
+          <button type="button" (click)="toggleSection('inquiries')"
+            [attr.aria-expanded]="isSectionExpanded('inquiries')" aria-label="Toggle Consultation Inquiries section"
+            class="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center">
+            <app-icon [name]="isSectionExpanded('inquiries') ? 'chevron-up' : 'chevron-down'" [size]="14"></app-icon>
+          </button>
         </div>
       </div>
 
-      <!-- Inquiry List (Responsive) -->
-      <div *ngIf="sentInquiries().length > 0 && !sentInquiriesLoading()"
-        class="divide-y divide-slate-100 dark:divide-slate-800/60">
-        <div *ngFor="let inq of sentInquiries(); trackBy: trackByInquiryId" (click)="navigateToInquiryDetail(inq)"
-          (keydown.enter)="navigateToInquiryDetail(inq)" tabindex="0" role="button"
-          [attr.aria-label]="'View consultation inquiry with ' + (inq.lawyerName || inq.lawyerEmail || 'advocate')"
-          class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group">
+      <ng-container *ngIf="isSectionExpanded('inquiries')">
+        <!-- Inquiry List (Responsive) -->
+        <div *ngIf="sentInquiries().length > 0 && !sentInquiriesLoading()"
+          class="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <div *ngFor="let inq of sentInquiries(); trackBy: trackByInquiryId" (click)="navigateToInquiryDetail(inq)"
+            (keydown.enter)="navigateToInquiryDetail(inq)"
+            (keydown.space)="$event.preventDefault(); navigateToInquiryDetail(inq)" tabindex="0" role="button"
+            [attr.aria-label]="'View consultation inquiry with ' + (inq.lawyerName || inq.lawyerEmail || 'advocate')"
+            class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group">
 
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
-              {{ (inq.lawyerName || 'A')[0].toUpperCase() }}
-            </div>
-
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5 sm:gap-2">
-                <h4
-                  (click)="$event.stopPropagation(); inq.lawyerId ? navigateToLawyerDetail(inq.lawyerId) : navigateToInquiryDetail(inq)"
-                  class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px] xs:max-w-[190px] sm:max-w-none group-hover:text-indigo-600 dark:group-hover:text-indigo-400 hover:underline transition-colors"
-                  [appTooltip]="inq.lawyerId ? 'Click to view lawyer profile' : 'Click to view in Client Portal'">
-                  {{ inq.lawyerName || inq.lawyerEmail || 'Legal Counsel' }}
-                </h4>
-                <span
-                  class="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border flex-shrink-0"
-                  [ngClass]="getInquiryStatusClasses(inq.status)">
-                  <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getInquiryStatusDot(inq.status)"></span>
-                  <span>{{ inq.status }}</span>
-                </span>
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-950/50 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                {{ (inq.lawyerName || 'A')[0].toUpperCase() }}
               </div>
-              <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                {{ inq.message || 'Consultation inquiry submitted' }}
-              </p>
-            </div>
-          </div>
 
-          <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{
-              formatRelativeTime(inq.createdAt) }}</span>
-            <div
-              class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all">
-              <app-icon name="arrow-right" [size]="11"></app-icon>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Empty State -->
-      <div *ngIf="sentInquiries().length === 0 && !sentInquiriesLoading()"
-        class="px-4 sm:px-6 py-8 sm:py-10 text-center">
-        <div
-          class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 flex items-center justify-center mx-auto border border-indigo-100 dark:border-indigo-900/40 shadow-xs mb-3">
-          <app-icon name="message-square" [size]="20"></app-icon>
-        </div>
-        <h4 class="text-xs font-bold text-slate-900 dark:text-white">No consultation inquiries yet</h4>
-        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-          Reach out to expert advocates for case evaluation, advice, or in-person court representation.
-        </p>
-        <button (click)="navigateToLawyers()"
-          class="mt-3.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer border-0 inline-flex items-center gap-1.5">
-          <app-icon name="search" [size]="13"></app-icon>
-          <span>Consult a Lawyer</span>
-        </button>
-      </div>
-
-      <!-- Loading Skeleton Rows -->
-      <div *ngIf="sentInquiriesLoading()" class="divide-y divide-slate-100 dark:divide-slate-800/60 animate-pulse">
-        <div *ngFor="let s of [1, 2, 3]" class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
-            <div class="space-y-1.5 min-w-0 flex-1">
-              <div class="flex items-center gap-2">
-                <div class="w-28 sm:w-36 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-                <div class="w-14 h-3.5 bg-slate-100 dark:bg-slate-800/60 rounded-full"></div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <h4
+                    (click)="$event.stopPropagation(); inq.lawyerId ? navigateToLawyerDetail(inq.lawyerId) : navigateToInquiryDetail(inq)"
+                    class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[120px] xs:max-w-[190px] sm:max-w-none group-hover:text-indigo-600 dark:group-hover:text-indigo-400 hover:underline transition-colors"
+                    [appTooltip]="inq.lawyerId ? 'Click to view lawyer profile' : 'Click to view in Client Portal'">
+                    {{ inq.lawyerName || inq.lawyerEmail || 'Legal Counsel' }}
+                  </h4>
+                  <span
+                    class="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border flex-shrink-0"
+                    [ngClass]="getInquiryStatusClasses(inq.status)">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getInquiryStatusDot(inq.status)"></span>
+                    <span>{{ inq.status }}</span>
+                  </span>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                  {{ inq.message || 'Consultation inquiry submitted' }}
+                </p>
               </div>
-              <div class="w-48 sm:w-64 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{
+                formatRelativeTime(inq.createdAt) }}</span>
+              <div
+                class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:translate-x-0.5 transition-all">
+                <app-icon name="arrow-right" [size]="11"></app-icon>
+              </div>
             </div>
           </div>
-          <div class="flex items-center gap-2 flex-shrink-0">
-            <div class="w-12 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
-            <div class="w-5 h-5 rounded-md bg-slate-200/60 dark:bg-slate-800/40"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="sentInquiries().length === 0 && !sentInquiriesLoading()"
+          class="px-4 sm:px-6 py-8 sm:py-10 text-center">
+          <div
+            class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 text-indigo-500 flex items-center justify-center mx-auto border border-indigo-100 dark:border-indigo-900/40 shadow-xs mb-3">
+            <app-icon name="message-square" [size]="20"></app-icon>
+          </div>
+          <h4 class="text-xs font-bold text-slate-900 dark:text-white">No consultation inquiries yet</h4>
+          <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
+            Reach out to expert advocates for case evaluation, advice, or in-person court representation.
+          </p>
+          <button (click)="navigateToLawyers()"
+            class="mt-3.5 px-3.5 sm:px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm cursor-pointer border-0 inline-flex items-center gap-1.5">
+            <app-icon name="search" [size]="13"></app-icon>
+            <span>Consult a Lawyer</span>
+          </button>
+        </div>
+
+        <!-- Loading Skeleton Rows -->
+        <div *ngIf="sentInquiriesLoading()" class="divide-y divide-slate-100 dark:divide-slate-800/60 animate-pulse">
+          <div *ngFor="let s of [1, 2, 3]"
+            class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <div class="flex items-center gap-2">
+                  <div class="w-28 sm:w-36 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+                  <div class="w-14 h-3.5 bg-slate-100 dark:bg-slate-800/60 rounded-full"></div>
+                </div>
+                <div class="w-48 sm:w-64 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 flex-shrink-0">
+              <div class="w-12 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
+              <div class="w-5 h-5 rounded-md bg-slate-200/60 dark:bg-slate-800/40"></div>
+            </div>
           </div>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- ── 3. SAVED LAW SECTIONS ── -->
-    <div *ngIf="savedSectionCount() > 0"
+    <div *ngIf="savedSectionCount() > 0" id="activity-section-bookmarks"
       class="rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-sm transition-all duration-200 overflow-hidden">
 
       <!-- MNC Header (Mobile-optimized) -->
@@ -561,55 +622,64 @@
             <app-icon name="arrow-right" [size]="11"
               class="!hidden sm:!inline-flex group-hover:translate-x-0.5 transition-transform"></app-icon>
           </button>
+          <button type="button" (click)="toggleSection('bookmarks')"
+            [attr.aria-expanded]="isSectionExpanded('bookmarks')" aria-label="Toggle Saved Law Sections"
+            class="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center">
+            <app-icon [name]="isSectionExpanded('bookmarks') ? 'chevron-up' : 'chevron-down'" [size]="14"></app-icon>
+          </button>
         </div>
       </div>
 
-      <!-- Saved Sections List -->
-      <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
-        <div *ngFor="let bm of savedSections(); trackBy: trackByBookmark"
-          (click)="navigateToSection(bm.actShortName, bm.section.section_number)"
-          (keydown.enter)="navigateToSection(bm.actShortName, bm.section.section_number)" tabindex="0" role="button"
-          [attr.aria-label]="'Read section ' + bm.section.section_number + ' of ' + bm.actShortName"
-          class="px-3.5 sm:px-6 py-3 sm:py-3.5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group flex items-center justify-between gap-2.5 sm:gap-3">
+      <ng-container *ngIf="isSectionExpanded('bookmarks')">
+        <!-- Saved Sections List -->
+        <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <div *ngFor="let bm of savedSections(); trackBy: trackByBookmark"
+            (click)="navigateToSection(bm.actShortName, bm.section.section_number)"
+            (keydown.enter)="navigateToSection(bm.actShortName, bm.section.section_number)"
+            (keydown.space)="$event.preventDefault(); navigateToSection(bm.actShortName, bm.section.section_number)"
+            tabindex="0" role="button"
+            [attr.aria-label]="'Read section ' + bm.section.section_number + ' of ' + bm.actShortName"
+            class="px-3.5 sm:px-6 py-3 sm:py-3.5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group flex items-center justify-between gap-2.5 sm:gap-3">
 
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div
-              class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
-              <app-icon name="bookmark" [size]="14"></app-icon>
-            </div>
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5 sm:gap-2">
-                <span
-                  class="text-[9px] sm:text-[10px] font-black tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 flex-shrink-0">
-                  {{ bm.actShortName }}
-                </span>
-                <span class="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex-shrink-0">
-                  Section {{ bm.section.section_number }}
-                </span>
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-500/10 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-500/20 flex items-center justify-center flex-shrink-0">
+                <app-icon name="bookmark" [size]="14"></app-icon>
               </div>
-              <p
-                class="text-[11px] sm:text-xs font-medium text-slate-900 dark:text-slate-100 mt-1 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {{ bm.section.title }}
-              </p>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <span
+                    class="text-[9px] sm:text-[10px] font-black tracking-wide px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800/50 flex-shrink-0">
+                    {{ bm.actShortName }}
+                  </span>
+                  <span class="text-[11px] sm:text-xs font-bold text-slate-700 dark:text-slate-300 flex-shrink-0">
+                    Section {{ bm.section.section_number }}
+                  </span>
+                </div>
+                <p
+                  class="text-[11px] sm:text-xs font-medium text-slate-900 dark:text-slate-100 mt-1 truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {{ bm.section.title }}
+                </p>
+              </div>
             </div>
-          </div>
 
-          <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            <span
-              class="hidden md:inline-block text-[11px] font-semibold text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-              Read Clause
-            </span>
-            <div
-              class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all">
-              <app-icon name="arrow-right" [size]="11"></app-icon>
+            <div class="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+              <span
+                class="hidden md:inline-block text-[11px] font-semibold text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                Read Clause
+              </span>
+              <div
+                class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all">
+                <app-icon name="arrow-right" [size]="11"></app-icon>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- ── 4. MY REVIEWS ── -->
-    <div *ngIf="myReviews().length > 0 || myReviewsLoading()"
+    <div *ngIf="myReviews().length > 0 || myReviewsLoading()" id="activity-section-reviews"
       class="rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-sm transition-all duration-200 overflow-hidden">
 
       <!-- MNC Header (Mobile-optimized) -->
@@ -651,66 +721,73 @@
             <app-icon name="arrow-right" [size]="11"
               class="!hidden sm:!inline-flex group-hover:translate-x-0.5 transition-transform"></app-icon>
           </button>
+          <button type="button" (click)="toggleSection('reviews')" [attr.aria-expanded]="isSectionExpanded('reviews')"
+            aria-label="Toggle Reviews section"
+            class="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center">
+            <app-icon [name]="isSectionExpanded('reviews') ? 'chevron-up' : 'chevron-down'" [size]="14"></app-icon>
+          </button>
         </div>
       </div>
 
-      <!-- Reviews Loading Skeleton -->
-      <div *ngIf="myReviewsLoading()" class="p-4 sm:p-5 space-y-3 animate-pulse">
-        <div *ngFor="let s of [1, 2]"
-          class="p-3 sm:p-4 rounded-xl border border-slate-200/60 dark:border-slate-800/60 space-y-2">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center gap-2">
-              <div class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
-              <div class="w-32 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+      <ng-container *ngIf="isSectionExpanded('reviews')">
+        <!-- Reviews Loading Skeleton -->
+        <div *ngIf="myReviewsLoading()" class="p-4 sm:p-5 space-y-3 animate-pulse">
+          <div *ngFor="let s of [1, 2]"
+            class="p-3 sm:p-4 rounded-xl border border-slate-200/60 dark:border-slate-800/60 space-y-2">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                <div class="w-32 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+              </div>
+              <div class="w-16 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
             </div>
-            <div class="w-16 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+            <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
           </div>
-          <div class="w-full h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
         </div>
-      </div>
 
-      <!-- Reviews List (Responsive) -->
-      <div *ngIf="!myReviewsLoading() && myReviews().length > 0"
-        class="divide-y divide-slate-100 dark:divide-slate-800/60">
-        <div *ngFor="let rev of myReviews(); trackBy: trackByReviewId" (click)="navigateToReview(rev)"
-          (keydown.enter)="navigateToReview(rev)" tabindex="0" role="button"
-          [attr.aria-label]="'View review for ' + rev.targetName"
-          class="px-3.5 sm:px-6 py-3 sm:py-3.5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group">
+        <!-- Reviews List (Responsive) -->
+        <div *ngIf="!myReviewsLoading() && myReviews().length > 0"
+          class="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <div *ngFor="let rev of myReviews(); trackBy: trackByReviewId" (click)="navigateToReview(rev)"
+            (keydown.enter)="navigateToReview(rev)" (keydown.space)="$event.preventDefault(); navigateToReview(rev)"
+            tabindex="0" role="button" [attr.aria-label]="'View review for ' + rev.targetName"
+            class="px-3.5 sm:px-6 py-3 sm:py-3.5 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group">
 
-          <div class="flex items-center justify-between gap-2.5 sm:gap-3">
-            <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
-              <div
-                class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-400/10 text-amber-500 border border-amber-400/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                <app-icon name="star" [size]="12"></app-icon>
+            <div class="flex items-center justify-between gap-2.5 sm:gap-3">
+              <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+                <div
+                  class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-amber-400/10 text-amber-500 border border-amber-400/20 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                  <app-icon name="star" [size]="12"></app-icon>
+                </div>
+                <h4
+                  class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[110px] xs:max-w-[180px] sm:max-w-none group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {{ rev.targetName || 'Legal Advocate' }}
+                </h4>
+                <div class="flex items-center gap-0.5 flex-shrink-0 ml-1">
+                  <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="10"
+                    [ngClass]="s <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'"></app-icon>
+                </div>
               </div>
-              <h4
-                class="text-xs font-bold text-slate-900 dark:text-white truncate max-w-[110px] xs:max-w-[180px] sm:max-w-none group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
-                {{ rev.targetName || 'Legal Advocate' }}
-              </h4>
-              <div class="flex items-center gap-0.5 flex-shrink-0 ml-1">
-                <app-icon *ngFor="let s of [1,2,3,4,5]" name="star" [size]="10"
-                  [ngClass]="s <= rev.rating ? 'text-amber-400 fill-amber-400' : 'text-slate-200 dark:text-slate-700'"></app-icon>
+              <div class="flex items-center gap-2 flex-shrink-0">
+                <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{
+                  formatRelativeTime(rev.createdAt) }}</span>
+                <div
+                  class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all">
+                  <app-icon name="arrow-right" [size]="11"></app-icon>
+                </div>
               </div>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-              <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{
-                formatRelativeTime(rev.createdAt) }}</span>
-              <div
-                class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 group-hover:translate-x-0.5 transition-all">
-                <app-icon name="arrow-right" [size]="11"></app-icon>
-              </div>
-            </div>
+            <p
+              class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-1 sm:mt-1.5 line-clamp-2 pl-8 sm:pl-9.5">
+              "{{ rev.content }}"
+            </p>
           </div>
-          <p
-            class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-1 sm:mt-1.5 line-clamp-2 pl-8 sm:pl-9.5">
-            "{{ rev.content }}"
-          </p>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- ── 5. SUPPORT DESK & HELP TICKETS ── -->
-    <div *ngIf="supportTicketCount() > 0 || supportTicketsLoading()"
+    <div *ngIf="supportTicketCount() > 0 || supportTicketsLoading()" id="activity-section-tickets"
       class="rounded-xl bg-white dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800/80 shadow-xs hover:shadow-sm transition-all duration-200 overflow-hidden">
 
       <!-- MNC Header (Mobile-optimized) -->
@@ -752,66 +829,75 @@
             <app-icon name="arrow-right" [size]="11"
               class="!hidden sm:!inline-flex group-hover:translate-x-0.5 transition-transform"></app-icon>
           </button>
+          <button type="button" (click)="toggleSection('tickets')" [attr.aria-expanded]="isSectionExpanded('tickets')"
+            aria-label="Toggle Support Tickets section"
+            class="p-1 sm:p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border-0 bg-transparent flex items-center justify-center">
+            <app-icon [name]="isSectionExpanded('tickets') ? 'chevron-up' : 'chevron-down'" [size]="14"></app-icon>
+          </button>
         </div>
       </div>
 
-      <!-- Tickets Loading Skeleton -->
-      <div *ngIf="supportTicketsLoading()" class="divide-y divide-slate-100 dark:divide-slate-800/60 animate-pulse">
-        <div *ngFor="let s of [1, 2]" class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3">
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
-            <div class="space-y-1.5 min-w-0 flex-1">
-              <div class="w-24 sm:w-32 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-              <div class="w-48 sm:w-56 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
-            </div>
-          </div>
-          <div class="w-12 h-3 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
-        </div>
-      </div>
-
-      <!-- Ticket List (Responsive) -->
-      <div *ngIf="!supportTicketsLoading() && recentSupportTickets().length > 0"
-        class="divide-y divide-slate-100 dark:divide-slate-800/60">
-        <div *ngFor="let t of recentSupportTickets(); trackBy: trackByTicketId" (click)="navigateToSupportTickets()"
-          (keydown.enter)="navigateToSupportTickets()" tabindex="0" role="button"
-          [attr.aria-label]="'View support ticket ' + (t.ticketId || 'LC-REF')"
-          class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group">
-
-          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
-            <div
-              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 border border-sky-200/60 dark:border-sky-800/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
-              <app-icon name="file-text" [size]="14"></app-icon>
-            </div>
-
-            <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-1.5 sm:gap-2">
-                <span class="font-mono text-xs font-bold text-slate-900 dark:text-white truncate">
-                  {{ t.ticketId || 'LC-REF' }}
-                </span>
-                <span
-                  class="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border flex-shrink-0"
-                  [ngClass]="getTicketStatusClasses(t.status)">
-                  <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getTicketStatusDot(t.status)"></span>
-                  <span>{{ getTicketStatusLabel(t.status) }}</span>
-                </span>
+      <ng-container *ngIf="isSectionExpanded('tickets')">
+        <!-- Tickets Loading Skeleton -->
+        <div *ngIf="supportTicketsLoading()" class="divide-y divide-slate-100 dark:divide-slate-800/60 animate-pulse">
+          <div *ngFor="let s of [1, 2]" class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <div class="w-24 sm:w-32 h-3 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
+                <div class="w-48 sm:w-56 h-2.5 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
               </div>
-              <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
-                {{ t.subject ? (t.subject + ' • ' + (t.type || 'Ticket')) : (t.message || 'Support inquiry registered')
-                }}
-              </p>
             </div>
+            <div class="w-12 h-3 bg-slate-100 dark:bg-slate-800/60 rounded-md"></div>
           </div>
+        </div>
 
-          <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-            <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{
-              formatRelativeTime(t.timestamp) }}</span>
-            <div
-              class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all">
-              <app-icon name="arrow-right" [size]="11"></app-icon>
+        <!-- Ticket List (Responsive) -->
+        <div *ngIf="!supportTicketsLoading() && recentSupportTickets().length > 0"
+          class="divide-y divide-slate-100 dark:divide-slate-800/60">
+          <div *ngFor="let t of recentSupportTickets(); trackBy: trackByTicketId" (click)="navigateToSupportTickets()"
+            (keydown.enter)="navigateToSupportTickets()"
+            (keydown.space)="$event.preventDefault(); navigateToSupportTickets()" tabindex="0" role="button"
+            [attr.aria-label]="'View support ticket ' + (t.ticketId || 'LC-REF')"
+            class="px-3.5 sm:px-6 py-3 sm:py-3.5 flex items-center justify-between gap-2.5 sm:gap-3 hover:bg-slate-50/70 dark:hover:bg-slate-800/40 active:bg-slate-100/70 dark:active:bg-slate-800/60 transition-colors cursor-pointer group">
+
+            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+              <div
+                class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-sky-500/10 text-sky-600 dark:bg-sky-950/50 dark:text-sky-400 border border-sky-200/60 dark:border-sky-800/60 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                <app-icon name="file-text" [size]="14"></app-icon>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-1.5 sm:gap-2">
+                  <span class="font-mono text-xs font-bold text-slate-900 dark:text-white truncate">
+                    {{ t.ticketId || 'LC-REF' }}
+                  </span>
+                  <span
+                    class="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold px-1.5 sm:px-2 py-0.5 rounded-full border flex-shrink-0"
+                    [ngClass]="getTicketStatusClasses(t.status)">
+                    <span class="w-1.5 h-1.5 rounded-full" [ngClass]="getTicketStatusDot(t.status)"></span>
+                    <span>{{ getTicketStatusLabel(t.status) }}</span>
+                  </span>
+                </div>
+                <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                  {{ t.subject ? (t.subject + ' • ' + (t.type || 'Ticket')) : (t.message || 'Support inquiry
+                  registered')
+                  }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium whitespace-nowrap">{{
+                formatRelativeTime(t.timestamp) }}</span>
+              <div
+                class="w-5 h-5 sm:w-6 sm:h-6 rounded-md flex items-center justify-center text-slate-400 group-hover:text-sky-600 dark:group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all">
+                <app-icon name="arrow-right" [size]="11"></app-icon>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </ng-container>
     </div>
 
     <!-- ── QUICK ACTIONS BAR (Mobile-optimized) ── -->

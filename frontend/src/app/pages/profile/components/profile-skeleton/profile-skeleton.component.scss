@@ -1,0 +1,77 @@
+:host {
+  --profile-header-height: 84px;
+
+  /* Responsive navbar height offsets from global design tokens */
+  --profile-nav-offset: var(--navbar-height-mobile, 64px);
+  --profile-nav-offset-scrolled: var(--navbar-height-mobile-scrolled, 54px);
+
+  @media (min-width: 768px) {
+    --profile-nav-offset: var(--navbar-height, 70px);
+    --profile-nav-offset-scrolled: var(--navbar-height-scrolled, 60px);
+  }
+}
+
+.profile-sticky-header {
+  top: var(--profile-nav-offset);
+  transition: top 0.2s ease;
+
+  &.is-scrolled {
+    top: var(--profile-nav-offset-scrolled);
+  }
+}
+
+.profile-sticky-sidebar {
+  @media (min-width: 1024px) {
+    top: calc(var(--profile-nav-offset) + var(--profile-header-height));
+    transition: top 0.2s ease;
+
+    &.is-scrolled {
+      top: calc(var(--profile-nav-offset-scrolled) + var(--profile-header-height) - 4px);
+    }
+  }
+}
+
+@keyframes skeletonShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(226 232 240 / 0.75); // slate-200/75
+
+  :host-context(.dark) & {
+    background-color: rgb(30 41 59 / 0.65); // slate-800/65
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.45) 50%,
+        transparent 100%);
+    animation: skeletonShimmer 1.8s infinite ease-in-out;
+  }
+
+  :host-context(.dark) &::after {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.07) 50%,
+        transparent 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after {
+    animation: none !important;
+  }
+}

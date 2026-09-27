@@ -1,0 +1,156 @@
+<!-- ── 4. ACTIVE SESSIONS & DEVICE MANAGEMENT ── -->
+<section class="space-y-3" aria-labelledby="sessions-heading">
+  <div class="flex items-center justify-between gap-2">
+    <h3 id="sessions-heading"
+      class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5 min-w-0">
+      <app-icon name="smartphone" [size]="15" class="text-slate-400 dark:text-slate-500 flex-shrink-0"></app-icon>
+      <span class="truncate">
+        <span class="sm:hidden">Connected Devices</span>
+        <span class="hidden sm:inline">Active Sessions & Connected Devices</span>
+      </span>
+      <span
+        class="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60 flex-shrink-0">
+        {{ sessions().length }}
+      </span>
+    </h3>
+
+    <!-- Clean direct navigation to security settings -->
+    <button (click)="navigateToSecuritySettings()" type="button"
+      class="text-[11px] sm:text-xs font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300 flex items-center gap-1 transition-colors flex-shrink-0 cursor-pointer bg-transparent border-0">
+      <span>Manage All</span>
+      <app-icon name="chevron-right" [size]="13"></app-icon>
+    </button>
+  </div>
+
+  <div
+    class="rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/90 dark:border-slate-800 shadow-sm dark:shadow-2xl dark:shadow-black/30 overflow-hidden divide-y divide-slate-100 dark:divide-slate-800/70 transition-all">
+
+    <!-- Skeleton Loading State (3-Row Layout) -->
+    <div *ngIf="isLoadingSessions()"
+      class="p-4 sm:p-5 space-y-4 animate-pulse divide-y divide-slate-100 dark:divide-slate-800/60">
+      <div *ngFor="let i of [1, 2, 3]" class="flex items-center justify-between gap-3 pt-3 first:pt-0">
+        <div class="flex items-center gap-3.5 min-w-0 flex-1">
+          <div class="w-11 h-11 rounded-2xl bg-slate-200 dark:bg-slate-800 flex-shrink-0"></div>
+          <div class="space-y-1.5 min-w-0 flex-1">
+            <div class="h-4 bg-slate-200 dark:bg-slate-800 rounded-md"
+              [style.width]="i === 1 ? '45%' : i === 2 ? '55%' : '40%'"></div>
+            <div class="h-3 bg-slate-100 dark:bg-slate-800/60 rounded-md"
+              [style.width]="i === 1 ? '60%' : i === 2 ? '70%' : '50%'"></div>
+            <div class="h-2.5 bg-slate-100 dark:bg-slate-800/50 rounded-md"
+              [style.width]="i === 1 ? '35%' : i === 2 ? '40%' : '30%'"></div>
+          </div>
+        </div>
+        <div class="w-20 h-7 rounded-xl bg-slate-200/60 dark:bg-slate-800/40 flex-shrink-0"></div>
+      </div>
+    </div>
+
+    <!-- Loaded Sessions State -->
+    <ng-container *ngIf="!isLoadingSessions()">
+      <!-- 1. Current Active Device (This Device) -->
+      <div *ngIf="currentSession()"
+        class="p-4 sm:p-5 relative overflow-hidden bg-gradient-to-r from-emerald-500/[0.04] via-emerald-500/[0.01] to-transparent dark:from-emerald-500/[0.08]">
+        <div class="flex items-start gap-3.5">
+          <!-- Sleek Glow Icon -->
+          <div
+            class="w-11 h-11 rounded-2xl bg-emerald-500/10 dark:bg-emerald-500/20 border border-emerald-500/20 dark:border-emerald-500/30 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 shadow-xs mt-0.5">
+            <app-icon [name]="currentSession()!.icon" [size]="20" class="sm:scale-110"></app-icon>
+          </div>
+
+          <!-- Device Information -->
+          <div class="min-w-0 flex-1">
+            <!-- Top Row: Device Name & Single Integrated Badge -->
+            <div class="flex items-center justify-between gap-2">
+              <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">
+                {{ currentSession()!.device }}
+              </h4>
+
+              <!-- Sleek Status Pill: "This Device" with pulsing green indicator -->
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] md:text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border border-emerald-500/30 shadow-2xs flex-shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>This Device</span>
+              </span>
+            </div>
+
+            <!-- Browser & OS line -->
+            <p class="text-[10px] md:text-[11px] text-slate-600 dark:text-slate-300 font-medium mt-1">
+              {{ currentSession()!.browser }} &bull; {{ currentSession()!.os }}
+            </p>
+
+            <!-- Location, IP & Active Indicator -->
+            <div
+              class="flex items-center gap-1 md:gap-2 mt-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80 text-[10px] md:text-[11px] text-slate-400 dark:text-slate-500 flex-wrap">
+              <span class="inline-flex items-center gap-1 text-slate-600 dark:text-slate-400 font-medium">
+                <app-icon name="map-pin" [size]="12" class="text-slate-400 flex-shrink-0"></app-icon>
+                <span>{{ currentSession()!.location }}</span>
+              </span>
+              <span>&bull;</span>
+              <span
+                class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                IP: {{ currentSession()!.ip }}
+              </span>
+              <span>&bull;</span>
+              <span class="text-emerald-600 dark:text-emerald-400 font-semibold text-[10px] uppercase tracking-wider">
+                Active Now
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Other Sessions Summary & Revoke Action -->
+      <div *ngIf="otherSessionsCount() > 0" class="p-4 sm:p-5 bg-slate-50/50 dark:bg-slate-900/40">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <!-- Left Info with Icon -->
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-10 h-10 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 shadow-xs">
+              <app-icon name="smartphone" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                {{ otherSessionsCount() }} other session{{ otherSessionsCount() === 1 ? '' : 's' }} active
+              </h5>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                Logged in across other browsers and mobile devices
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <button (click)="revokeAllOtherSessions()" type="button"
+            [appTooltip]="'Terminate all active sessions on other devices and browsers'" tooltipPlacement="left"
+            class="w-full sm:w-auto px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-500/10 dark:hover:bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-500/30 text-xs font-bold transition-all flex items-center justify-center gap-1.5 shadow-sm cursor-pointer flex-shrink-0 group">
+            <app-icon name="log-out" [size]="13" class="group-hover:-translate-x-0.5 transition-transform"></app-icon>
+            <span>Sign Out Others</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 3. Footer Action: View & Manage All in Settings -->
+      <button (click)="navigateToSecuritySettings()" type="button"
+        class="w-full px-4 py-3 sm:px-5 sm:py-3.5 flex items-center justify-between bg-slate-50/30 hover:bg-slate-100/70 dark:bg-slate-900/30 dark:hover:bg-slate-800/50 transition-all text-left group cursor-pointer border-0">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span
+            class="w-7 h-7 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 group-hover:bg-indigo-500/20 transition-colors">
+            <app-icon name="shield-check" [size]="15"></app-icon>
+          </span>
+          <div class="min-w-0">
+            <span
+              class="text-xs font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors block truncate">
+              Manage all {{ sessions().length }} sessions in Security Settings
+            </span>
+            <span class="text-[10px] text-slate-400 dark:text-slate-500 block truncate">
+              Audit device fingerprints, IP addresses, and revoke individual logins
+            </span>
+          </div>
+        </div>
+        <div
+          class="flex items-center gap-1 text-slate-400 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors flex-shrink-0 ml-2">
+          <app-icon name="chevron-right" [size]="15"
+            class="group-hover:translate-x-0.5 transition-transform"></app-icon>
+        </div>
+      </button>
+    </ng-container>
+  </div>
+</section>

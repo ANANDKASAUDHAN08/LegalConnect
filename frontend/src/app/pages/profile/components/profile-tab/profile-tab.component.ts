@@ -1,7 +1,9 @@
 import {
-  Component, Input, Output, EventEmitter, OnInit, OnChanges,
-  SimpleChanges, inject, signal, computed, effect, untracked, ChangeDetectionStrategy
+  Component, Input, Output, EventEmitter, OnInit, OnChanges, AfterViewInit,
+  SimpleChanges, inject, signal, computed, effect, untracked, ChangeDetectionStrategy,
+  DestroyRef
 } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import {
@@ -21,7 +23,18 @@ import { SavedItemsService, SavedLawyerInfo } from '../../../../services/saved-i
 import { BookmarkService, Bookmark } from '../../../../services/bookmark.service';
 import { ReviewService, ReviewItem } from '../../../../services/review.service';
 import { InfoApiService } from '../../../info/services/info-api.service';
-import { of, switchMap, map, catchError } from 'rxjs';
+import { of, map, catchError } from 'rxjs';
+import { maskPhone, copyToClipboard } from '../../../../utils/profile-helpers';
+
+export interface SupportTicket {
+  ticketId: string;
+  subject?: string;
+  status?: string;
+  timestamp?: string;
+  category?: string;
+  type?: string;
+  message?: string;
+}
 
 // ─── Custom Reactive Form Validators ────────────────────────────
 export function trimmedRequired(control: AbstractControl): ValidationErrors | null {
@@ -48,6 +61,8 @@ export interface ProfileFormModel {
   language: FormControl<string>;
   city: FormControl<string>;
   state: FormControl<string>;
+  gender: FormControl<string>;
+  dateOfBirth: FormControl<string>;
 }
 
 @Component({
@@ -65,13 +80,11 @@ export interface ProfileFormModel {
   ],
   templateUrl: './profile-tab.component.html'
 })
-export class ProfileTabComponent implements OnInit, OnChanges {
+export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() profile!: UserProfile;
   @Input() lawyerProfile: LawyerProfileData | null = null;
+  @Input() accountId = '';
   @Input() autoEdit = false;
-  @Input() accountIdInput?: string;
-
-  copiedId = signal(false);
 
   @Output() profileUpdated = new EventEmitter<Partial<UserProfile>>();
   @Output() lawyerProfileUpdated = new EventEmitter<LawyerProfileData>();
@@ -89,11 +102,13 @@ export class ProfileTabComponent implements OnInit, OnChanges {
   private authService = inject(AuthService);
   private infoApi = inject(InfoApiService);
   private snackbar = inject(SnackbarService);
+  private destroyRef = inject(DestroyRef);
 
   // ─── Form & Edit State ────────────────────────────────────────
   profileForm!: FormGroup<ProfileFormModel>;
   isEditing = signal(false);
   isSaving = signal(false);
+  copiedId = signal(false);
 
   // ─── Select Options ───────────────────────────────────────────
   readonly languageSelectOptions: SelectOption[] = [
@@ -109,16 +124,18 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     { value: 'Punjabi', label: 'Punjabi', icon: 'globe' }
   ];
 
-  // ─── Computed Projections ─────────────────────────────────────
+  readonly genderSelectOptions: SelectOption[] = [
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
+    { value: 'Other', label: 'Other' },
+    { value: 'Prefer not to say', label: 'Prefer not to say' }
+  ];
+
   isLawyer = computed(() => this.profile?.role === 'Lawyer');
   isClient = computed(() => this.profile?.role !== 'Lawyer');
 
-  initials = computed(() => {
-    const name = this.profile?.fullName || '';
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) || '?';
-  });
-
   // ─── Activity Hub State (Client Users Only, Real APIs) ────────
+  activityLoaded = signal(false);
   savedLawyers = signal<Lawyer[]>([]);
   savedLawyersLoading = signal(false);
   savedLawyerCount = computed(() => this.savedItemsService.savedLawyers().length);
@@ -131,7 +148,7 @@ export class ProfileTabComponent implements OnInit, OnChanges {
   inquiryCount = computed(() => this.allInquiries().length);
   sentInquiries = computed(() => this.allInquiries().slice(0, 4));
 
-  supportTickets = signal<any[]>([]);
+  supportTickets = signal<SupportTicket[]>([]);
   supportTicketsLoading = signal(false);
   supportTicketCount = computed(() => this.supportTickets().length);
   recentSupportTickets = computed(() => this.supportTickets().slice(0, 4));
@@ -141,15 +158,50 @@ export class ProfileTabComponent implements OnInit, OnChanges {
   reviewCount = computed(() => this.allReviews().length);
   myReviews = computed(() => this.allReviews().slice(0, 4));
 
+  // ─── On-Demand Lazy Loading State ─────────────────────────────
+  lawyersLoaded = signal(false);
+  inquiriesLoaded = signal(false);
+  ticketsLoaded = signal(false);
+  reviewsLoaded = signal(false);
+
+  // ─── Section Expansion / Accordion State ──────────────────────
+  expandedSections = signal<Record<string, boolean>>({
+    lawyers: true,
+    inquiries: true,
+    bookmarks: true,
+    reviews: true,
+    tickets: true
+  });
+
+  isSectionExpanded(sectionKey: string): boolean {
+    return this.expandedSections()[sectionKey] ?? true;
+  }
+
+  toggleSection(sectionKey: 'lawyers' | 'inquiries' | 'bookmarks' | 'reviews' | 'tickets'): void {
+    const current = this.expandedSections();
+    const isNowExpanded = !current[sectionKey];
+    this.expandedSections.set({ ...current, [sectionKey]: isNowExpanded });
+
+    if (isNowExpanded) {
+      if (sectionKey === 'lawyers') this.loadLawyersOnDemand();
+      else if (sectionKey === 'inquiries') this.loadInquiriesOnDemand();
+      else if (sectionKey === 'reviews') this.loadReviewsOnDemand();
+      else if (sectionKey === 'tickets') this.loadTicketsOnDemand();
+    }
+  }
+
   constructor() {
     effect(() => {
       const saved = this.savedItemsService.savedLawyers();
       const isClient = this.isClient();
+      const loaded = this.lawyersLoaded();
       untracked(() => {
-        if (isClient && saved.length > 0) {
-          this.fetchSavedLawyerDetails(saved);
-        } else if (isClient && saved.length === 0) {
-          this.savedLawyers.set([]);
+        if (isClient && loaded) {
+          if (saved.length > 0) {
+            this.fetchSavedLawyerDetails(saved);
+          } else {
+            this.savedLawyers.set([]);
+          }
         }
       });
     }, { allowSignalWrites: true });
@@ -162,8 +214,29 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     if (this.autoEdit) {
       this.startEdit();
     }
-    if (this.isClient()) {
-      this.loadClientActivity();
+  }
+
+  ngAfterViewInit(): void {
+    if (typeof window !== 'undefined' && 'IntersectionObserver' in window && this.isClient()) {
+      const hubEl = document.getElementById('client-activity-hub');
+      if (hubEl) {
+        const observer = new IntersectionObserver((entries) => {
+          if (entries[0].isIntersecting) {
+            this.loadClientActivity();
+            observer.disconnect();
+          }
+        }, { rootMargin: '250px' });
+        observer.observe(hubEl);
+        return;
+      }
+    }
+
+    if (this.isClient() && !this.activityLoaded()) {
+      if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+        (window as any).requestIdleCallback(() => this.loadClientActivity(), { timeout: 2500 });
+      } else {
+        setTimeout(() => this.loadClientActivity(), 800);
+      }
     }
   }
 
@@ -174,10 +247,6 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     if (changes['profile'] && !changes['profile'].firstChange) {
       this.patchFormFromProfile();
     }
-  }
-
-  ngOnDestroy(): void {
-    // Cleanup if needed
   }
 
   // ─── Form Setup ───────────────────────────────────────────────
@@ -203,7 +272,9 @@ export class ProfileTabComponent implements OnInit, OnChanges {
       state: this.fb.control('', {
         nonNullable: true,
         validators: [Validators.maxLength(60)]
-      })
+      }),
+      gender: this.fb.control('', { nonNullable: true }),
+      dateOfBirth: this.fb.control('', { nonNullable: true })
     });
   }
 
@@ -217,7 +288,9 @@ export class ProfileTabComponent implements OnInit, OnChanges {
       phone: this.profile.phone || '',
       language: this.profile.clientLanguage || 'English',
       city: this.profile.clientCity || '',
-      state: this.profile.clientState || ''
+      state: this.profile.clientState || '',
+      gender: this.profile.gender || '',
+      dateOfBirth: this.profile.dateOfBirth ? this.profile.dateOfBirth.split('T')[0] : ''
     }, { emitEvent: false });
 
     this.profileForm.markAsPristine();
@@ -261,7 +334,9 @@ export class ProfileTabComponent implements OnInit, OnChanges {
       phone: 'Mobile phone number',
       language: 'Preferred language',
       city: 'City',
-      state: 'State'
+      state: 'State',
+      gender: 'Gender',
+      dateOfBirth: 'Date of birth'
     };
     return labels[fieldName] || fieldName;
   }
@@ -315,12 +390,14 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     this.isSaving.set(true);
     const fullName = `${v.firstName} ${v.lastName}`.trim();
 
-    const updatePayload: any = {
+    const updatePayload: Partial<UserProfile> = {
       fullName,
       phone: v.phone,
       clientLanguage: v.language,
       clientCity: v.city,
-      clientState: v.state
+      clientState: v.state,
+      gender: v.gender || undefined,
+      dateOfBirth: v.dateOfBirth ? new Date(v.dateOfBirth).toISOString() : undefined
     };
 
     this.userProfileService.updateProfile(updatePayload).subscribe({
@@ -354,32 +431,17 @@ export class ProfileTabComponent implements OnInit, OnChanges {
   }
 
   getMaskedPhone(): string {
-    const phone = this.profile?.phone;
-    if (!phone) return '—';
-    if (phone.length <= 4) return phone;
-    const last4 = phone.slice(-4);
-    return `+91 ••••• ••${last4}`;
+    return maskPhone(this.profile?.phone);
   }
 
-  get accountId(): string {
-    if (this.accountIdInput) return this.accountIdInput;
-    if (this.profile?.publicId) return this.profile.publicId;
-    const prefix = this.isClient() ? 'LC-USR' : 'LC-ADV';
-    const id = this.profile?.id || 1;
-    const hash = ((id * 2654435761 + 1013904223) >>> 0).toString(16).toUpperCase().padStart(6, '0').slice(-6);
-    return `${prefix}-${hash}`;
-  }
-
-  copyAccountId(): void {
+  async copyAccountId(): Promise<void> {
     const id = this.accountId;
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(id).then(() => {
-        this.copiedId.set(true);
-        this.snackbar.show(`${this.isClient() ? 'Client ID' : 'Advocate ID'} copied to clipboard!`, 'success');
-        setTimeout(() => this.copiedId.set(false), 2000);
-      }).catch(() => {
-        this.snackbar.show(`Account ID: ${id}`, 'info');
-      });
+    if (!id) return;
+    const copied = await copyToClipboard(id);
+    if (copied) {
+      this.copiedId.set(true);
+      this.snackbar.show(`${this.isClient() ? 'Client ID' : 'Advocate ID'} copied to clipboard!`, 'success');
+      setTimeout(() => this.copiedId.set(false), 2000);
     } else {
       this.snackbar.show(`Account ID: ${id}`, 'info');
     }
@@ -389,31 +451,75 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     this.lawyerProfileUpdated.emit(data);
   }
 
-  // ─── Client Activity Methods ─────────────────────────────────
-  loadClientActivity(): void {
-    this.fetchSavedLawyerDetails(this.savedItemsService.savedLawyers());
-    this.loadSentInquiries();
-    this.loadSupportTickets();
+  // ─── Client Activity Methods (On-Demand Lazy-Load) ─────────────
+  loadLawyersOnDemand(): void {
+    if (this.lawyersLoaded()) return;
+    this.lawyersLoaded.set(true);
+    const saved = this.savedItemsService.savedLawyers();
+    if (saved && saved.length > 0) {
+      this.fetchSavedLawyerDetails(saved);
+    }
+  }
 
+  loadInquiriesOnDemand(): void {
+    if (this.inquiriesLoaded()) return;
+    this.inquiriesLoaded.set(true);
+    this.loadSentInquiries();
+  }
+
+  loadTicketsOnDemand(): void {
+    if (this.ticketsLoaded()) return;
+    this.ticketsLoaded.set(true);
+    this.loadSupportTickets();
+  }
+
+  loadReviewsOnDemand(): void {
+    if (this.reviewsLoaded()) return;
+    this.reviewsLoaded.set(true);
+    this.loadReviews();
+  }
+
+  loadReviews(): void {
     this.myReviewsLoading.set(true);
-    this.reviewService.getMyReviews().subscribe({
-      next: (reviews) => {
-        this.allReviews.set(reviews || []);
-        this.myReviewsLoading.set(false);
-      },
-      error: () => this.myReviewsLoading.set(false)
-    });
+    this.reviewService.getMyReviews()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (reviews) => {
+          this.allReviews.set(reviews || []);
+          this.myReviewsLoading.set(false);
+        },
+        error: () => this.myReviewsLoading.set(false)
+      });
+  }
+
+  loadClientActivity(): void {
+    if (this.activityLoaded()) return;
+    this.activityLoaded.set(true);
+
+    this.loadLawyersOnDemand();
+
+    // Stagger secondary activity queries to avoid network blocking on profile load
+    setTimeout(() => {
+      this.loadInquiriesOnDemand();
+    }, 80);
+
+    setTimeout(() => {
+      this.loadTicketsOnDemand();
+      this.loadReviewsOnDemand();
+    }, 200);
   }
 
   loadSentInquiries(): void {
     this.sentInquiriesLoading.set(true);
-    this.lawyerService.getSentInquiries().subscribe({
-      next: (consultations) => {
-        this.allInquiries.set(Array.isArray(consultations) ? consultations : []);
-        this.sentInquiriesLoading.set(false);
-      },
-      error: () => this.sentInquiriesLoading.set(false)
-    });
+    this.lawyerService.getSentInquiries()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (consultations) => {
+          this.allInquiries.set(Array.isArray(consultations) ? consultations : []);
+          this.sentInquiriesLoading.set(false);
+        },
+        error: () => this.sentInquiriesLoading.set(false)
+      });
   }
 
   loadSupportTickets(): void {
@@ -425,6 +531,7 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     }
 
     this.infoApi.trackTicket(userEmail).pipe(
+      takeUntilDestroyed(this.destroyRef),
       map((res) => {
         let tickets = (res && res.success && res.tickets) ? res.tickets : [];
 
@@ -469,8 +576,10 @@ export class ProfileTabComponent implements OnInit, OnChanges {
     }
     this.savedLawyersLoading.set(true);
     const ids = savedInfos.map(l => l.lawyerId);
-    this.lawyerService.getLawyersByIds(ids).subscribe({
-      next: (res) => {
+    this.lawyerService.getLawyersByIds(ids)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (res) => {
         if (res.success && res.data) {
           this.savedLawyers.set(res.data.slice(0, 4));
         }

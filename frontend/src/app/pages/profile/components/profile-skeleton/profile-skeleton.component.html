@@ -1,151 +1,446 @@
-<div class="w-full animate-[fadeIn_0.3s_ease-out]">
+<div class="w-full animate-[fadeIn_0.2s_ease-out]">
 
-  <!-- Top Header Bar Skeleton -->
-  <div class="w-full bg-white dark:bg-[#0d1829] border-b border-slate-200 dark:border-slate-800/80 shadow-sm">
+  <header
+    class="profile-sticky-header w-full bg-white dark:bg-brand-card-dark border-b border-slate-200 dark:border-slate-800/80 shadow-sm sticky z-30"
+    [class.is-scrolled]="isScrolled">
     <div class="w-full lg:w-[90%] mx-auto px-4 sm:px-6 lg:px-0 py-4">
-      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <!-- Avatar + Name -->
-        <div class="flex items-center gap-3.5">
-          <div class="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse flex-shrink-0"></div>
-          <div class="space-y-2">
-            <div class="w-36 h-4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
+
+      <!-- Desktop Header Row (hidden on < sm) -->
+      <div class="hidden sm:flex items-center justify-between gap-4">
+        <!-- Avatar + Name + Metadata -->
+        <div class="flex items-center gap-3.5 flex-shrink-0">
+          <div
+            class="w-12 h-12 rounded-xl skeleton-shimmer flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800 shadow-md">
+          </div>
+          <div class="flex flex-col gap-0.5">
             <div class="flex items-center gap-2">
-              <div class="w-44 h-3 bg-slate-200/80 dark:bg-slate-800/70 animate-pulse rounded-md"></div>
-              <div class="w-16 h-4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-full"></div>
+              <div class="w-36 h-4 skeleton-shimmer rounded-md"></div>
+              <div class="w-14 h-4 skeleton-shimmer rounded-full"></div>
+              <div class="w-20 h-4 skeleton-shimmer rounded-md"></div>
             </div>
+            <div class="w-48 h-3 skeleton-shimmer rounded-md mt-1"></div>
           </div>
         </div>
-        <!-- Milestone Banner Skeleton (Desktop) -->
-        <div class="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800/80">
-          <div class="w-28 h-4 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-md"></div>
-          <div class="w-16 h-6 bg-slate-200 dark:bg-slate-700 animate-pulse rounded-lg"></div>
+
+        <!-- Milestone Banner Placeholder (Desktop Only) -->
+        <div
+          class="hidden lg:flex items-center gap-2.5 px-3.5 py-1.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/60">
+          <div class="w-36 h-3.5 skeleton-shimmer rounded-md"></div>
+          <div class="w-20 h-6 skeleton-shimmer rounded-lg"></div>
         </div>
 
-        <!-- Actions -->
-        <div class="hidden sm:flex items-center gap-3">
-          <div class="w-24 h-9 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-          <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
+        <!-- Header Actions Placeholder (Desktop) -->
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <div *ngIf="!isClient" class="w-28 h-9 rounded-xl skeleton-shimmer"></div>
+          <div class="w-24 h-9 rounded-xl skeleton-shimmer"></div>
+          <div class="w-10 h-10 rounded-xl skeleton-shimmer"></div>
         </div>
       </div>
-    </div>
 
-    <!-- Tab Bar Skeleton (Mobile Only, lg:hidden) -->
-    <div
-      class="w-full bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800/50 py-2 lg:hidden">
-      <div class="w-full mx-auto px-4 flex justify-center gap-2">
-        <div class="w-24 h-8 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-        <div class="w-20 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse"></div>
-        <div class="w-20 h-8 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse"></div>
+      <!-- Mobile Header Row (sm:hidden) -->
+      <div class="sm:hidden space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <div
+              class="w-12 h-12 rounded-xl skeleton-shimmer flex-shrink-0 ring-2 ring-slate-100 dark:ring-slate-800 shadow-md">
+            </div>
+            <div class="flex flex-col gap-0.5 min-w-0 flex-1">
+              <div class="w-28 h-3.5 skeleton-shimmer rounded-md"></div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <div class="w-12 h-3.5 skeleton-shimmer rounded-full"></div>
+                <div class="w-16 h-3.5 skeleton-shimmer rounded-md"></div>
+              </div>
+              <div class="w-32 h-2.5 skeleton-shimmer rounded-md mt-0.5"></div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5 flex-shrink-0">
+            <div *ngIf="!isClient" class="w-9 h-9 rounded-xl skeleton-shimmer"></div>
+            <div class="w-16 h-9 rounded-xl skeleton-shimmer"></div>
+            <div class="w-9 h-9 rounded-xl skeleton-shimmer"></div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
 
-  <!-- Main Content Skeleton -->
-  <div class="w-full lg:w-[90%] mx-auto px-3.5 sm:px-6 lg:px-0 py-3 sm:py-4">
+    </div>
+
+    <!-- ── ACCESSIBLE TAB BAR SKELETON (MOBILE / TABLET ONLY, lg:hidden) ── -->
+    <nav class="w-full bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-100 dark:border-slate-800/50 lg:hidden"
+      aria-label="Profile navigation">
+      <div class="w-full mx-auto px-4 py-2 flex items-center justify-center gap-1.5 sm:gap-2" role="tablist">
+        <!-- Overview Pill -->
+        <button type="button" (click)="onSelectTab('overview')"
+          class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer border-0"
+          [ngClass]="activeTab === 'overview'
+            ? (isClient ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25' : 'bg-amber-500 text-white shadow-sm shadow-amber-500/25')
+            : 'bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'">
+          <div class="w-3.5 h-3.5 rounded-sm" [ngClass]="activeTab === 'overview' ? 'bg-white/70' : 'skeleton-shimmer'">
+          </div>
+          <span>Overview</span>
+        </button>
+
+        <!-- Profile Pill -->
+        <button type="button" (click)="onSelectTab('profile')"
+          class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer border-0"
+          [ngClass]="activeTab === 'profile'
+            ? (isClient ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25' : 'bg-amber-500 text-white shadow-sm shadow-amber-500/25')
+            : 'bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'">
+          <div class="w-3.5 h-3.5 rounded-sm" [ngClass]="activeTab === 'profile' ? 'bg-white/70' : 'skeleton-shimmer'">
+          </div>
+          <span>Profile</span>
+        </button>
+
+        <!-- Account Pill -->
+        <button type="button" (click)="onSelectTab('account')"
+          class="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 rounded-xl text-xs font-bold transition-all flex-shrink-0 cursor-pointer border-0"
+          [ngClass]="activeTab === 'account'
+            ? (isClient ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25' : 'bg-amber-500 text-white shadow-sm shadow-amber-500/25')
+            : 'bg-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'">
+          <div class="w-3.5 h-3.5 rounded-sm" [ngClass]="activeTab === 'account' ? 'bg-white/70' : 'skeleton-shimmer'">
+          </div>
+          <span class="sm:hidden">Account</span>
+          <span class="hidden sm:inline">Account & Preferences</span>
+        </button>
+      </div>
+    </nav>
+  </header>
+
+  <!-- ── 2. MAIN BODY SKELETON ── -->
+  <main class="w-full lg:w-[90%] mx-auto px-3.5 sm:px-6 lg:px-0 py-3 sm:py-4">
     <div class="flex flex-col lg:flex-row gap-8">
 
-      <!-- Left Sidebar Skeleton -->
-      <div class="w-full lg:w-80 flex-shrink-0 space-y-4 order-2 lg:order-1">
-        <!-- Sidebar Navigation Skeleton Card (Desktop Only) -->
-        <div
-          class="hidden lg:block rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 p-2 space-y-1">
-          <div class="h-9 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-          <div class="h-9 rounded-xl bg-slate-100 dark:bg-slate-800/50 animate-pulse"></div>
-        </div>
+      <!-- ── LEFT SIDEBAR SKELETON (DESKTOP ONLY) ── -->
+      <aside class="profile-sticky-sidebar hidden lg:block w-80 flex-shrink-0 space-y-4 lg:sticky self-start"
+        [class.is-scrolled]="isScrolled">
 
-        <!-- Account Standing Card -->
-        <div
-          class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 overflow-hidden">
+        <!-- 1. Navigation Menu Skeleton -->
+        <nav
+          class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden"
+          aria-label="Profile section navigation">
           <div
-            class="px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
-            <div class="w-28 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
-            <div class="w-16 h-5 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-full"></div>
+            class="px-4 pt-3 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+            <div class="w-24 h-2.5 skeleton-shimmer rounded"></div>
+            <div class="w-12 h-3.5 skeleton-shimmer rounded-full"></div>
           </div>
-          <div class="divide-y divide-slate-100 dark:divide-slate-800/60">
+
+          <div class="p-2 space-y-1">
+            <button type="button" (click)="onSelectTab('profile')"
+              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border-0 text-left"
+              [ngClass]="activeTab === 'profile'
+                ? (isClient ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25' : 'bg-amber-500 text-white shadow-sm shadow-amber-500/25')
+                : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'">
+              <div class="flex items-center gap-2.5">
+                <div class="w-4 h-4 rounded" [ngClass]="activeTab === 'profile' ? 'bg-white/70' : 'skeleton-shimmer'">
+                </div>
+                <span>Profile Details</span>
+              </div>
+            </button>
+
+            <button type="button" (click)="onSelectTab('account')"
+              class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer border-0 text-left"
+              [ngClass]="activeTab === 'account'
+                ? (isClient ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/25' : 'bg-amber-500 text-white shadow-sm shadow-amber-500/25')
+                : 'bg-transparent text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60'">
+              <div class="flex items-center gap-2.5">
+                <div class="w-4 h-4 rounded" [ngClass]="activeTab === 'account' ? 'bg-white/70' : 'skeleton-shimmer'">
+                </div>
+                <span>Account & Preferences</span>
+              </div>
+              <div class="w-10 h-4 rounded skeleton-shimmer"></div>
+            </button>
+          </div>
+        </nav>
+
+        <!-- 2. Account Standing Card Skeleton -->
+        <div
+          class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden">
+          <div
+            class="px-5 pt-4 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+            <div class="w-28 h-2.5 skeleton-shimmer rounded-md"></div>
+            <div class="w-14 h-4 skeleton-shimmer rounded-full"></div>
+          </div>
+          <div class="divide-y divide-slate-100 dark:divide-slate-800/60 text-xs">
             <div class="flex items-center justify-between px-5 py-3">
-              <div class="w-24 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
-              <div class="w-16 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
+              <div class="w-24 h-3 skeleton-shimmer rounded-md"></div>
+              <div class="w-16 h-3 skeleton-shimmer rounded-md"></div>
             </div>
             <div class="flex items-center justify-between px-5 py-3">
-              <div class="w-32 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
-              <div class="w-14 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
+              <div class="w-16 h-3 skeleton-shimmer rounded-md"></div>
+              <div class="w-14 h-3 skeleton-shimmer rounded-md"></div>
             </div>
             <div class="flex items-center justify-between px-5 py-3">
-              <div class="w-28 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
-              <div class="w-14 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
+              <div class="w-16 h-3 skeleton-shimmer rounded-md"></div>
+              <div class="w-14 h-3 skeleton-shimmer rounded-md"></div>
+            </div>
+            <div class="flex items-center justify-between px-5 py-3">
+              <div class="w-28 h-3 skeleton-shimmer rounded-md"></div>
+              <div class="w-14 h-3 skeleton-shimmer rounded-md"></div>
             </div>
           </div>
         </div>
 
-        <!-- Milestone Card -->
+        <!-- 3. Profile Completeness Card Skeleton -->
         <div
-          class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 overflow-hidden">
-          <div class="px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800/60">
-            <div class="w-28 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md mb-2"></div>
-            <div class="w-44 h-4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
+          class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/70 dark:border-slate-800/80 shadow-sm overflow-hidden">
+          <div
+            class="px-5 pt-2 pb-2 border-b border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+            <div class="w-32 h-2.5 skeleton-shimmer rounded-md"></div>
+            <div class="w-10 h-5 skeleton-shimmer rounded-xl"></div>
           </div>
           <div class="p-4 space-y-3">
-            <div *ngFor="let i of [1,2,3,4]" class="p-3 rounded-xl border border-slate-200/60 dark:border-slate-800/60">
-              <div class="flex items-center gap-2 mb-2">
-                <div class="w-5 h-5 rounded-lg bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-                <div class="w-28 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
+            <div *ngFor="let i of [1,2,3,4]"
+              class="p-3 rounded-xl border border-slate-100 dark:border-slate-800/60 space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-5 h-5 rounded-lg skeleton-shimmer flex-shrink-0"></div>
+                  <div class="w-24 h-3 skeleton-shimmer rounded-md"></div>
+                </div>
+                <div class="w-8 h-2.5 skeleton-shimmer rounded-md"></div>
               </div>
-              <div class="space-y-1.5 pl-7">
-                <div class="w-36 h-2.5 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-md"></div>
-                <div class="w-28 h-2.5 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-md"></div>
+              <div class="pl-7 space-y-1">
+                <div class="w-32 h-2 skeleton-shimmer rounded-md"></div>
+                <div class="w-28 h-2 skeleton-shimmer rounded-md"></div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <!-- Main Content Card -->
-      <div class="flex-1 min-w-0 order-1 lg:order-2">
-        <div class="p-5 sm:p-7 rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+      <!-- ── RIGHT CONTENT PANEL SKELETON (ADAPTS TO ACTIVE TAB) ── -->
+      <section class="flex-1 min-w-0">
 
-          <!-- Section Header -->
-          <div class="flex items-center gap-3.5 mb-6 pb-4 border-b border-slate-100 dark:border-slate-800/60">
-            <div class="w-14 h-14 rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-            <div class="space-y-2">
-              <div class="w-40 h-4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
-              <div class="w-60 h-3 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-md"></div>
+        <!-- ══════════ A) ACCOUNT TAB SKELETON ══════════ -->
+        <div *ngIf="activeTab === 'account'" class="space-y-4 sm:space-y-6 animate-[fadeIn_0.2s_ease-out]">
+
+          <!-- 1. Header -->
+          <div class="flex items-start gap-3.5 sm:gap-4">
+            <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl skeleton-shimmer flex-shrink-0"></div>
+            <div class="flex-1 min-w-0">
+              <div class="w-44 sm:w-52 h-5 sm:h-6 skeleton-shimmer rounded-md"></div>
+              <div class="w-60 sm:w-80 h-3 skeleton-shimmer rounded-md mt-1.5"></div>
+              <div class="mt-2 h-[1.5px] w-full bg-slate-200/60 dark:bg-slate-800/60"></div>
             </div>
           </div>
 
-          <!-- Form Fields Grid -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div *ngFor="let i of [1,2,3,4,5,6]" class="space-y-2">
-              <div class="w-16 h-2 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-sm"></div>
-              <div class="h-4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"
-                [style.width]="(50 + (i * 12)) + '%'"></div>
+          <!-- 2. Trust & Verification Credentials -->
+          <section class="space-y-3 sm:space-y-4">
+            <div class="w-48 h-3.5 skeleton-shimmer rounded-md"></div>
+            <!-- Inset List on Mobile, 3-Card Grid on Desktop (md:) -->
+            <div
+              class="rounded-xl md:rounded-none bg-white md:bg-transparent dark:bg-slate-900/60 md:dark:bg-transparent border md:border-0 border-slate-200/80 dark:border-slate-800/80 shadow-sm md:shadow-none divide-y divide-slate-100 dark:divide-slate-800/80 md:divide-y-0 md:grid md:grid-cols-3 md:gap-4">
+              <div *ngFor="let i of [1,2,3]"
+                class="p-4 sm:p-5 rounded-none md:rounded-2xl bg-transparent md:bg-white md:dark:bg-slate-900/60 border-0 md:border md:border-slate-200/80 md:dark:border-slate-800/80 flex flex-col md:justify-between gap-3 md:shadow-sm">
+                <div class="flex items-center justify-between gap-2.5">
+                  <div class="flex items-center gap-3 min-w-0 flex-1 md:flex-initial">
+                    <div class="w-9 h-9 rounded-xl skeleton-shimmer flex-shrink-0"></div>
+                    <div class="space-y-1 min-w-0 flex-1 md:hidden">
+                      <div class="w-24 h-3 skeleton-shimmer rounded-md"></div>
+                      <div class="w-32 h-2.5 skeleton-shimmer rounded-md"></div>
+                    </div>
+                  </div>
+                  <div class="w-16 h-5 skeleton-shimmer rounded-full flex-shrink-0"></div>
+                </div>
+                <div class="hidden md:block space-y-1 w-full mt-2">
+                  <div class="w-24 h-3 skeleton-shimmer rounded-md"></div>
+                  <div class="w-36 h-2.5 skeleton-shimmer rounded-md"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 3. Security & Authentication -->
+          <section class="space-y-4">
+            <div class="flex items-center justify-between">
+              <div class="w-48 h-3.5 skeleton-shimmer rounded-md"></div>
+              <div class="w-36 h-3 skeleton-shimmer rounded-md hidden sm:block"></div>
+            </div>
+            <!-- Security Health Progress Card -->
+            <div
+              class="p-5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 shadow-sm space-y-3.5">
+              <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl skeleton-shimmer flex-shrink-0"></div>
+                  <div class="space-y-1.5">
+                    <div class="w-32 h-3.5 skeleton-shimmer rounded-md"></div>
+                    <div class="w-28 h-2.5 skeleton-shimmer rounded-md"></div>
+                  </div>
+                </div>
+                <div class="w-16 h-6 rounded-full skeleton-shimmer flex-shrink-0"></div>
+              </div>
+              <div class="w-full h-2 rounded-full skeleton-shimmer"></div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1">
+                <div *ngFor="let i of [1,2,3]"
+                  class="p-3 rounded-xl border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+                  <div class="w-24 h-2.5 skeleton-shimmer rounded"></div>
+                  <div class="w-12 h-4 skeleton-shimmer rounded-md"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Security Action Controls -->
+            <div
+              class="rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/80 overflow-hidden">
+              <!-- 2FA Row -->
+              <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl skeleton-shimmer flex-shrink-0"></div>
+                  <div class="space-y-1.5 min-w-0 flex-1">
+                    <div class="flex items-center justify-between gap-2">
+                      <div class="w-40 sm:w-56 h-4 skeleton-shimmer rounded-md"></div>
+                      <div class="w-16 h-4 skeleton-shimmer rounded-full"></div>
+                    </div>
+                    <div class="w-full sm:w-4/5 h-2.5 skeleton-shimmer rounded-md"></div>
+                  </div>
+                </div>
+                <div class="w-full sm:w-28 h-9 rounded-xl skeleton-shimmer flex-shrink-0"></div>
+              </div>
+
+              <!-- Password Row -->
+              <div class="p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-3 sm:gap-3.5 min-w-0 flex-1">
+                  <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-2xl skeleton-shimmer flex-shrink-0"></div>
+                  <div class="space-y-1.5 min-w-0 flex-1">
+                    <div class="w-40 sm:w-48 h-4 skeleton-shimmer rounded-md"></div>
+                    <div class="w-full sm:w-4/5 h-2.5 skeleton-shimmer rounded-md"></div>
+                  </div>
+                </div>
+                <div class="w-full sm:w-36 h-9 rounded-xl skeleton-shimmer flex-shrink-0"></div>
+              </div>
+            </div>
+          </section>
+
+          <!-- 4. Notification Preferences Skeleton -->
+          <section class="space-y-3">
+            <div class="w-44 h-3.5 skeleton-shimmer rounded-md"></div>
+            <div
+              class="rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900/80 border border-slate-200/90 dark:border-slate-800 shadow-sm divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden">
+              <div *ngFor="let i of [1,2,3]" class="p-4 sm:p-5">
+                <div class="flex items-center justify-between gap-3">
+                  <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div class="w-10 h-10 rounded-2xl skeleton-shimmer flex-shrink-0"></div>
+                    <div class="space-y-1.5 min-w-0 flex-1">
+                      <div class="w-20 h-2.5 skeleton-shimmer rounded-full sm:hidden"></div>
+                      <div class="w-36 sm:w-48 h-3.5 skeleton-shimmer rounded-md"></div>
+                    </div>
+                  </div>
+                  <!-- Switch placeholder -->
+                  <div class="w-11 h-6 rounded-full skeleton-shimmer flex-shrink-0"></div>
+                </div>
+                <!-- Description placeholder spanning full width -->
+                <div class="mt-2 pl-[52px] sm:pl-[56px] space-y-1">
+                  <div class="w-full sm:w-4/5 h-2.5 skeleton-shimmer rounded-md"></div>
+                  <div class="w-3/4 sm:w-3/5 h-2.5 skeleton-shimmer rounded-md"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- ══════════ B) PROFILE TAB SKELETON ══════════ -->
+        <div *ngIf="activeTab === 'profile'" class="space-y-5 sm:space-y-6 animate-[fadeIn_0.2s_ease-out]">
+          <!-- Card 1: Personal Information Card (View Mode) -->
+          <div
+            class="p-4 sm:p-6 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+            <!-- Section Header -->
+            <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/60">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-9 h-9 rounded-xl skeleton-shimmer flex-shrink-0"></div>
+                <div class="space-y-1 min-w-0">
+                  <div class="w-36 h-4 skeleton-shimmer rounded-md"></div>
+                  <div class="w-56 h-2.5 skeleton-shimmer rounded-md"></div>
+                </div>
+              </div>
+              <div class="w-20 h-7 rounded-lg skeleton-shimmer flex-shrink-0"></div>
+            </div>
+
+            <!-- View Mode Metadata Grid (6 Items) -->
+            <div
+              class="divide-y divide-slate-100 dark:divide-slate-800/60 sm:divide-y-0 sm:grid sm:grid-cols-2 md:grid-cols-3 gap-y-0 sm:gap-4 pt-3">
+              <div *ngFor="let i of [1,2,3,4,5,6]" class="py-2.5 sm:py-0 flex items-center justify-between sm:block">
+                <div class="w-16 h-2.5 skeleton-shimmer rounded mb-1"></div>
+                <div class="w-28 sm:w-36 h-4 skeleton-shimmer rounded-md"></div>
+              </div>
             </div>
           </div>
 
-          <!-- Location Divider -->
-          <div class="flex items-center gap-3 my-6">
-            <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
-            <div class="w-20 h-3 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"></div>
-            <div class="h-px flex-1 bg-slate-100 dark:bg-slate-800/80"></div>
-          </div>
-
-          <!-- More Fields -->
-          <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div *ngFor="let i of [1,2,3]" class="space-y-2">
-              <div class="w-12 h-2 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-sm"></div>
-              <div class="h-4 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-md"
-                [style.width]="(40 + (i * 15)) + '%'"></div>
+          <!-- Card 2: Activity Hub Card -->
+          <div
+            class="p-4 sm:p-6 rounded-xl md:rounded-2xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm space-y-4">
+            <div class="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-slate-800/60">
+              <div class="w-9 h-9 rounded-xl skeleton-shimmer flex-shrink-0"></div>
+              <div class="space-y-1">
+                <div class="w-32 h-4 skeleton-shimmer rounded-md"></div>
+                <div class="w-48 h-2.5 skeleton-shimmer rounded-md"></div>
+              </div>
             </div>
-          </div>
 
-          <!-- Bio -->
-          <div class="mt-6 pt-4 border-t border-slate-100 dark:border-slate-800/60 space-y-2">
-            <div class="w-24 h-2 bg-slate-200 dark:bg-slate-800 animate-pulse rounded-sm"></div>
-            <div class="w-full h-3 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-md"></div>
-            <div class="w-3/4 h-3 bg-slate-100 dark:bg-slate-800/50 animate-pulse rounded-md"></div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+              <div *ngFor="let i of [1,2,3]"
+                class="p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 space-y-2">
+                <div class="w-20 h-2.5 skeleton-shimmer rounded"></div>
+                <div class="w-12 h-6 skeleton-shimmer rounded-lg"></div>
+                <div class="w-24 h-2 skeleton-shimmer rounded"></div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- ══════════ C) MOBILE OVERVIEW TAB SKELETON ══════════ -->
+        <div *ngIf="activeTab === 'overview'" class="space-y-4 sm:space-y-6 pb-8 animate-[fadeIn_0.2s_ease-out]">
+          <!-- Card 1: Trust Standing -->
+          <div
+            class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-3.5 sm:p-4">
+            <div
+              class="flex items-center justify-between pb-2.5 mb-2.5 border-b border-slate-100 dark:border-slate-800/60">
+              <div class="w-44 h-3.5 skeleton-shimmer rounded-md"></div>
+              <div class="w-20 h-4 skeleton-shimmer rounded-full"></div>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div
+                class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 h-10 flex items-center justify-between">
+                <div class="w-14 h-3 skeleton-shimmer rounded"></div>
+                <div class="w-12 h-3 skeleton-shimmer rounded-full"></div>
+              </div>
+              <div
+                class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 h-10 flex items-center justify-between">
+                <div class="w-14 h-3 skeleton-shimmer rounded"></div>
+                <div class="w-12 h-3 skeleton-shimmer rounded-full"></div>
+              </div>
+            </div>
+            <div
+              class="mt-2 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800 h-12 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg skeleton-shimmer"></div>
+                <div class="space-y-1">
+                  <div class="w-24 h-2.5 skeleton-shimmer rounded"></div>
+                  <div class="w-36 h-2 skeleton-shimmer rounded"></div>
+                </div>
+              </div>
+              <div class="w-14 h-3 skeleton-shimmer rounded-full"></div>
+            </div>
+          </div>
+
+          <!-- Card 2: Profile Completeness Stepper -->
+          <div
+            class="rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800/80 shadow-sm p-3.5 sm:p-4 space-y-3">
+            <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800/60">
+              <div class="w-36 h-3.5 skeleton-shimmer rounded-md"></div>
+              <div class="w-12 h-4 skeleton-shimmer rounded-full"></div>
+            </div>
+            <div *ngFor="let i of [1,2,3,4]"
+              class="p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <div class="w-5 h-5 rounded-lg skeleton-shimmer"></div>
+                <div class="w-28 h-3 skeleton-shimmer rounded"></div>
+              </div>
+              <div class="w-8 h-2.5 skeleton-shimmer rounded"></div>
+            </div>
+          </div>
+        </div>
+
+      </section>
 
     </div>
-  </div>
+  </main>
+
 </div>

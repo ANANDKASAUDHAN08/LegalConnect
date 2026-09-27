@@ -34,6 +34,13 @@ module.exports = {
           light: '#e8c96d',
           700: '#a68b3d',
         },
+        'brand-surface': {
+          light: '#f8fafc',
+          dark: '#06080f',
+        },
+        'brand-card': {
+          dark: '#0d1829',
+        },
         // Auth-specific mappings to CSS variables
         authAccent: 'var(--color-accent)',
         authAccentLight: 'var(--color-accent-light)',
@@ -54,7 +61,12 @@ module.exports = {
         '2xl': '32px',
         'auth': 'var(--radius-md)',
       },
+      spacing: {
+        '0.2': '0.05rem',
+      },
       boxShadow: {
+        '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.03)',
+        'xs': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
         'card-flat': '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
         'card-elevated': '0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.02)',
         'modal': '0 25px 50px -12px rgba(0, 0, 0, 0.25)',

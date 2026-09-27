@@ -1,22 +1,21 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { AuthService, UserProfile } from '../../../../services/auth.service';
+import { UserProfile } from '../../../../services/auth.service';
 import { UserProfileService } from '../../../../services/user-profile.service';
 import { VerificationService } from '../../../../services/verification.service';
-import { PhoneAuthService } from '../../../../services/phone-auth.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
+import { WhatsAppService, WhatsAppSendResult, WhatsAppStatusResponse } from '../../../../services/whatsapp.service';
 import { COUNTRIES } from '../../../../constants/countries.constant';
 import { IconComponent } from '../../../../components/icon/icon.component';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
-import { CustomSelectComponent, SelectOption } from '../../../../components/custom-select';
 
-export type VerificationFlowType = 'phone' | 'email' | 'emergency' | 'identity';
+export type VerificationFlowType = 'phone' | 'email' | 'whatsapp';
 
 @Component({
   selector: 'app-verification-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, TooltipDirective, CustomSelectComponent],
+  imports: [CommonModule, FormsModule, IconComponent, TooltipDirective],
   templateUrl: './verification-modal.component.html'
 })
 export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy {
@@ -31,11 +30,10 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     return (c?.code || '') + (c?.short || '') || index.toString();
   }
 
-  private auth = inject(AuthService);
   private userProfileService = inject(UserProfileService);
   private verificationService = inject(VerificationService);
-  private phoneAuth = inject(PhoneAuthService);
   private snackbar = inject(SnackbarService);
+  private whatsAppService = inject(WhatsAppService);
 
   activeFlow: VerificationFlowType = 'phone';
 
@@ -50,46 +48,52 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   otpLoading = false;
   resendLoading = false;
   resendCooldown = 0;
+  selectedOtpChannel: 'whatsapp' | 'email' = 'whatsapp';
+  otpSentChannel = '';
+  otpStatusMessage = '';
+  directWhatsAppOtpUrl: string | null = null;
+  canFallbackToEmail = true;
   private _cooldownInterval: ReturnType<typeof setInterval> | null = null;
 
   // ── Email Verification State ──
   emailResendLoading = false;
 
-  // ── Emergency Recovery Contact State ──
-  emergencyName = '';
-  emergencyPhone = '';
-  emergencyRelation = 'Family';
-  isSavingEmergency = false;
-  isRemovingEmergency = false;
+  // ── WhatsApp Alerts State ──
+  whatsAppPhoneBody = '';
+  usePrimaryPhoneForWhatsApp = true;
+  whatsAppHearingsEnabled = true;
+  whatsAppConsultationsEnabled = true;
+  whatsAppAdvocateRepliesEnabled = true;
+  isSavingWhatsApp = false;
+  isDisablingWhatsApp = false;
+  isSendingTestWhatsApp = false;
+  lastTestResult: WhatsAppSendResult | null = null;
+  gatewayStatus: WhatsAppStatusResponse | null = null;
 
-  relationOptions: SelectOption[] = [
-    { value: 'Family', label: 'Family Member / Spouse', icon: 'users' },
-    { value: 'Legal Proxy', label: 'Legal Representative / Proxy', icon: 'shield-check' },
-    { value: 'Associate', label: 'Legal Associate / Partner', icon: 'briefcase' },
-    { value: 'Colleague', label: 'Trusted Colleague', icon: 'user' },
-    { value: 'Friend', label: 'Trusted Friend', icon: 'user-check' },
-    { value: 'Other', label: 'Other', icon: 'help-circle' }
-  ];
+  get isWhatsAppActive(): boolean {
+    return !!this.profile?.notifyWhatsAppEnabled;
+  }
 
-  // ── Legacy Identity State (kept for backwards-compatibility) ──
-  indianIdType: 'Aadhaar' | 'PAN' | 'Voter ID' | 'Bar Council Card' = 'Aadhaar';
-  idNumber = '';
-  idUploadFileName = '';
-  uploadingId = false;
-
-  get isEmergencyConfigured(): boolean {
-    return !!(this.profile?.emergencyContactName && this.profile?.emergencyContactPhone);
+  get displayWhatsAppPhone(): string {
+    const p = this.profile?.whatsAppPhone || this.profile?.phone;
+    if (!p) return '';
+    return p.startsWith('+') ? p : `+91 ${p}`;
   }
 
   ngOnInit() {
-    this.activeFlow = (this.flow as any) === 'identity' ? 'emergency' : this.flow;
+    this.activeFlow = this.flow || 'phone';
     this.initFromProfile();
+    if (this.activeFlow === 'whatsapp') {
+      this.fetchGatewayStatus();
+    }
   }
 
   ngOnChanges(changes: SimpleChanges) {
     if (changes['flow']?.currentValue) {
-      const f = changes['flow'].currentValue;
-      this.activeFlow = f === 'identity' ? 'emergency' : f;
+      this.activeFlow = changes['flow'].currentValue;
+      if (this.activeFlow === 'whatsapp') {
+        this.fetchGatewayStatus();
+      }
     }
     if (changes['profile']?.currentValue) {
       this.initFromProfile();
@@ -100,35 +104,35 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     if (this._cooldownInterval) {
       clearInterval(this._cooldownInterval);
     }
-    this.phoneAuth.resetOtpSession();
   }
 
   initFromProfile() {
     if (!this.profile) return;
     this.initializePhone(this.profile.phone || '');
-    this.emergencyName = this.profile.emergencyContactName || '';
-    this.emergencyPhone = this.profile.emergencyContactPhone || '';
-    this.emergencyRelation = this.profile.emergencyContactRelation || 'Family';
-    if (this.profile.role === 'Lawyer') {
-      this.indianIdType = 'Bar Council Card';
-    } else {
-      this.indianIdType = 'Aadhaar';
-    }
+
+    // Initialize WhatsApp state
+    const currentWaPhone = this.profile.whatsAppPhone || this.profile.phone || '';
+    this.whatsAppPhoneBody = currentWaPhone.replace(/^\+91/, '').replace(/\D/g, '');
+    this.usePrimaryPhoneForWhatsApp = !this.profile.whatsAppPhone || (!!this.profile.phone && this.profile.whatsAppPhone === this.profile.phone);
   }
 
   setFlow(flow: VerificationFlowType) {
-    this.activeFlow = flow === 'identity' ? 'emergency' : flow;
+    this.activeFlow = flow;
     this.showPhoneOtpInput = false;
     this.phoneOtpCode = '';
+    this.otpStatusMessage = '';
+    if (flow === 'whatsapp') {
+      this.fetchGatewayStatus();
+    }
   }
 
   closeModal() {
     this.showPhoneOtpInput = false;
     this.phoneOtpCode = '';
+    this.otpStatusMessage = '';
     if (this._cooldownInterval) {
       clearInterval(this._cooldownInterval);
     }
-    this.phoneAuth.resetOtpSession();
     this.close.emit();
   }
 
@@ -181,82 +185,114 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     this.phoneBody = this.phoneBody.replace(/\D/g, '');
   }
 
-  // ── Phone OTP Actions ──
-  sendPhoneOtp() {
+  // ── Production Phone OTP Actions ──
+  sendPhoneOtp(channel?: 'whatsapp' | 'email') {
+    if (channel) {
+      this.selectedOtpChannel = channel;
+    }
     if (this.phoneBody.trim().length !== 10) {
       this.snackbar.show('Please enter a valid 10-digit mobile number.', 'warning');
       return;
     }
     const fullPhone = `${this.selectedCountry.code}${this.phoneBody}`.trim();
     this.resendLoading = true;
+    this.otpStatusMessage = '';
 
-    this.phoneAuth.sendSmsOtp(fullPhone).subscribe({
-      next: () => {
+    this.verificationService.sendPhoneOtp(fullPhone, this.selectedOtpChannel).subscribe({
+      next: (res) => {
         this.resendLoading = false;
         this.showPhoneOtpInput = true;
-        this.startCooldown();
-        this.snackbar.show(`OTP sent to ${fullPhone}. Enter the 6-digit code.`, 'info');
+        this.otpSentChannel = res.channel || this.selectedOtpChannel;
+        this.directWhatsAppOtpUrl = res.directWhatsAppUrl || null;
+        this.canFallbackToEmail = res.canFallbackToEmail ?? true;
+        this.otpStatusMessage = res.message;
+        this.startCooldown(res.cooldownSeconds || 60);
+
+        if (this.otpSentChannel === 'whatsapp') {
+          this.snackbar.show('Verification code sent via WhatsApp! Check your messages.', 'success');
+        } else {
+          this.snackbar.show('Verification code sent to your registered email!', 'info');
+        }
       },
       error: (err: any) => {
         this.resendLoading = false;
-        this.snackbar.show(err?.message || err?.error || 'Failed to send OTP code.', 'error');
+        const msg = err?.error?.message || err?.message || 'Failed to dispatch verification code.';
+        this.snackbar.show(msg, 'error');
+        if (err?.error?.cooldownSeconds) {
+          this.startCooldown(err.error.cooldownSeconds);
+        }
       }
     });
   }
 
+  switchChannelAndSend(channel: 'whatsapp' | 'email') {
+    if (this.resendCooldown > 0) {
+      this.snackbar.show(`Please wait ${this.resendCooldown}s before requesting a new code.`, 'warning');
+      return;
+    }
+    this.phoneOtpCode = '';
+    this.sendPhoneOtp(channel);
+  }
+
   verifyPhoneOtp() {
     if (this.phoneOtpCode.trim().length < 6) {
-      this.snackbar.show('Please enter the 6-digit OTP code.', 'warning');
+      this.snackbar.show('Please enter the complete 6-digit verification code.', 'warning');
       return;
     }
     const fullPhone = `${this.selectedCountry.code}${this.phoneBody}`.trim();
     this.otpLoading = true;
 
-    this.phoneAuth.verifySmsOtp(this.phoneOtpCode.trim()).subscribe({
+    this.verificationService.verifyPhoneOtp(fullPhone, this.phoneOtpCode.trim()).subscribe({
       next: (res) => {
-        this.phoneAuth.saveVerifiedPhoneToBackend(fullPhone, res.idToken).subscribe({
-          next: () => {
-            this.otpLoading = false;
-            this.showPhoneOtpInput = false;
-            this.snackbar.show('Mobile number verified successfully!', 'success');
-            this.profileUpdated.emit({
-              phone: fullPhone,
-              isPhoneVerified: true
-            });
-            this.closeModal();
-          },
-          error: (_backendErr: any) => {
-            // Token verified by Firebase; even if backend sync encounters an issue, update profile state
-            this.otpLoading = false;
-            this.showPhoneOtpInput = false;
-            this.snackbar.show('Mobile number verified successfully!', 'success');
-            this.profileUpdated.emit({
-              phone: fullPhone,
-              isPhoneVerified: true
-            });
-            this.closeModal();
-          }
-        });
+        this.otpLoading = false;
+        this.showPhoneOtpInput = false;
+        this.phoneOtpCode = '';
+        this.snackbar.show(res?.message || 'Mobile number verified successfully! WhatsApp alerts activated.', 'success');
+
+        const updatedData: Partial<UserProfile> = {
+          phone: fullPhone,
+          isPhoneVerified: true,
+          whatsAppPhone: fullPhone,
+          notifyWhatsAppEnabled: true
+        };
+
+        if (this.profile) {
+          this.profile.phone = fullPhone;
+          this.profile.isPhoneVerified = true;
+          this.profile.whatsAppPhone = fullPhone;
+          this.profile.notifyWhatsAppEnabled = true;
+        }
+
+        this.profileUpdated.emit(updatedData);
+        this.closeModal();
       },
       error: (err: any) => {
         this.otpLoading = false;
-        this.snackbar.show(err?.message || err?.error || 'Invalid OTP code. Try again.', 'error');
+        const msg = err?.error?.message || err?.message || 'Invalid or expired verification code.';
+        this.snackbar.show(msg, 'error');
       }
     });
   }
 
-  resendPhoneOtp() {
-    if (this.resendCooldown > 0) return;
-    this.sendPhoneOtp();
+  openDirectWhatsAppOtp() {
+    if (this.directWhatsAppOtpUrl) {
+      window.open(this.directWhatsAppOtpUrl, '_blank', 'noopener,noreferrer');
+    }
   }
 
-  startCooldown() {
-    this.resendCooldown = 45;
+  resendPhoneOtp() {
+    if (this.resendCooldown > 0) return;
+    this.sendPhoneOtp(this.selectedOtpChannel);
+  }
+
+  private startCooldown(seconds: number = 60) {
+    this.resendCooldown = seconds;
     if (this._cooldownInterval) clearInterval(this._cooldownInterval);
     this._cooldownInterval = setInterval(() => {
       this.resendCooldown--;
       if (this.resendCooldown <= 0) {
         clearInterval(this._cooldownInterval!);
+        this._cooldownInterval = null;
       }
     }, 1000);
   }
@@ -277,111 +313,138 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     });
   }
 
-  // ── Identity / KYC Actions ──
-  selectedIdBase64 = '';
+  // ── WhatsApp Alerts Actions ──
+  saveWhatsAppAlerts(enable: boolean = true) {
+    let targetPhone = '';
+    if (enable) {
+      if (this.usePrimaryPhoneForWhatsApp) {
+        targetPhone = this.profile?.phone || '';
+      } else {
+        const cleaned = this.whatsAppPhoneBody.replace(/\D/g, '').trim();
+        if (cleaned.length !== 10) {
+          this.snackbar.show('Please enter a valid 10-digit WhatsApp number.', 'warning');
+          return;
+        }
+        targetPhone = `+91${cleaned}`;
+      }
 
-  onIdFileSelected(event: Event) {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files.length > 0) {
-      const file = input.files[0];
-      this.idUploadFileName = file.name;
-      const reader = new FileReader();
-      reader.onload = () => {
-        this.selectedIdBase64 = reader.result as string;
-      };
-      reader.readAsDataURL(file);
+      if (!targetPhone) {
+        this.snackbar.show('Please enter a WhatsApp phone number.', 'warning');
+        return;
+      }
     }
+
+    this.isSavingWhatsApp = true;
+    const payload: Partial<UserProfile> = {
+      notifyWhatsAppEnabled: enable,
+      whatsAppPhone: enable ? targetPhone : ''
+    };
+
+    this.userProfileService.updateProfile(payload).subscribe({
+      next: () => {
+        this.isSavingWhatsApp = false;
+        if (this.profile) {
+          this.profile.notifyWhatsAppEnabled = enable;
+          this.profile.whatsAppPhone = payload.whatsAppPhone;
+        }
+        this.snackbar.show(
+          enable ? 'WhatsApp consultation & case alerts enabled successfully!' : 'WhatsApp alerts disabled.',
+          enable ? 'success' : 'info'
+        );
+        this.profileUpdated.emit(payload);
+        this.closeModal();
+      },
+      error: (err: any) => {
+        this.isSavingWhatsApp = false;
+        const msg = err?.error?.message || err?.error || 'Failed to update WhatsApp alerts.';
+        this.snackbar.show(msg, 'error');
+      }
+    });
   }
 
-  submitIdentityVerification() {
-    if (!this.idNumber.trim()) {
-      this.snackbar.show('Please enter your document registration number.', 'warning');
-      return;
-    }
-    this.uploadingId = true;
-    const documentPayload = this.selectedIdBase64 || `data:text/plain;base64,${btoa(this.idNumber.trim())}`;
-    this.userProfileService.verifyIdentity(this.indianIdType, documentPayload).subscribe({
+  disableWhatsAppAlerts() {
+    this.isDisablingWhatsApp = true;
+    const payload: Partial<UserProfile> = {
+      notifyWhatsAppEnabled: false
+    };
+
+    this.userProfileService.updateProfile(payload).subscribe({
+      next: () => {
+        this.isDisablingWhatsApp = false;
+        if (this.profile) {
+          this.profile.notifyWhatsAppEnabled = false;
+        }
+        this.snackbar.show('WhatsApp alerts disabled.', 'info');
+        this.profileUpdated.emit(payload);
+      },
+      error: (err: any) => {
+        this.isDisablingWhatsApp = false;
+        const msg = err?.error?.message || err?.error || 'Failed to disable WhatsApp alerts.';
+        this.snackbar.show(msg, 'error');
+      }
+    });
+  }
+
+  fetchGatewayStatus() {
+    this.whatsAppService.getStatus().subscribe({
       next: (res) => {
-        this.uploadingId = false;
-        this.snackbar.show(res?.message || 'Identity document uploaded and verified successfully!', 'success');
-        this.profileUpdated.emit({
-          identityStatus: res?.identityStatus || 'Verified',
-          identityDocumentUrl: res?.identityDocumentUrl
-        });
-        this.closeModal();
+        this.gatewayStatus = res;
       },
       error: () => {
-        this.uploadingId = false;
-        this.snackbar.show('Failed to submit identity verification. Please try again.', 'error');
+        this.gatewayStatus = {
+          isConfigured: false,
+          activeProvider: 'Universal Gateway',
+          hasMetaCredentials: false,
+          hasTwilioCredentials: false,
+          hasBrevoCredentials: false,
+          userHasWhatsAppEnabled: !!this.profile?.notifyWhatsAppEnabled,
+          userWhatsAppPhone: this.profile?.whatsAppPhone || this.profile?.phone
+        };
       }
     });
   }
 
-  // ── Emergency Recovery Contact Actions ──
-  saveEmergencyContact() {
-    if (!this.emergencyName.trim()) {
-      this.snackbar.show('Please enter the contact person\'s full name.', 'warning');
-      return;
+  sendTestWhatsAppAlert() {
+    let targetPhone = '';
+    if (this.usePrimaryPhoneForWhatsApp) {
+      targetPhone = this.profile?.phone || '';
+    } else {
+      const cleaned = this.whatsAppPhoneBody.replace(/\D/g, '').trim();
+      if (cleaned.length === 10) {
+        targetPhone = `+91${cleaned}`;
+      } else if (cleaned.length > 10) {
+        targetPhone = `+${cleaned}`;
+      }
     }
-    if (!this.emergencyPhone.trim()) {
-      this.snackbar.show('Please enter a valid emergency contact phone number.', 'warning');
+
+    if (!targetPhone) {
+      targetPhone = this.profile?.whatsAppPhone || this.profile?.phone || '';
+    }
+
+    if (!targetPhone) {
+      this.snackbar.show('Please provide a mobile number to test WhatsApp dispatch.', 'warning');
       return;
     }
 
-    this.isSavingEmergency = true;
-    const payload: Partial<UserProfile> = {
-      emergencyContactName: this.emergencyName.trim(),
-      emergencyContactPhone: this.emergencyPhone.trim(),
-      emergencyContactRelation: this.emergencyRelation || 'Family'
-    };
-
-    this.userProfileService.updateProfile(payload).subscribe({
-      next: () => {
-        this.isSavingEmergency = false;
-        if (this.profile) {
-          this.profile.emergencyContactName = payload.emergencyContactName;
-          this.profile.emergencyContactPhone = payload.emergencyContactPhone;
-          this.profile.emergencyContactRelation = payload.emergencyContactRelation;
-        }
-        this.snackbar.show('Emergency recovery contact updated successfully!', 'success');
-        this.profileUpdated.emit(payload);
-        this.closeModal();
+    this.isSendingTestWhatsApp = true;
+    this.lastTestResult = null;
+    this.whatsAppService.sendTestAlert(targetPhone).subscribe({
+      next: (res) => {
+        this.isSendingTestWhatsApp = false;
+        this.lastTestResult = res;
+        this.snackbar.show(`WhatsApp alert dispatched successfully via ${res.provider}!`, 'success');
       },
       error: (err: any) => {
-        this.isSavingEmergency = false;
-        const msg = err?.error?.message || err?.error || 'Failed to update emergency recovery contact.';
+        this.isSendingTestWhatsApp = false;
+        const msg = err?.error?.message || err?.error || 'Failed to send WhatsApp test alert.';
         this.snackbar.show(msg, 'error');
       }
     });
   }
 
-  removeEmergencyContact() {
-    this.isRemovingEmergency = true;
-    const payload: Partial<UserProfile> = {
-      emergencyContactName: '',
-      emergencyContactPhone: '',
-      emergencyContactRelation: ''
-    };
-
-    this.userProfileService.updateProfile(payload).subscribe({
-      next: () => {
-        this.isRemovingEmergency = false;
-        this.emergencyName = '';
-        this.emergencyPhone = '';
-        this.emergencyRelation = 'Family';
-        if (this.profile) {
-          this.profile.emergencyContactName = '';
-          this.profile.emergencyContactPhone = '';
-          this.profile.emergencyContactRelation = '';
-        }
-        this.snackbar.show('Emergency recovery contact removed.', 'info');
-        this.profileUpdated.emit(payload);
-      },
-      error: (err: any) => {
-        this.isRemovingEmergency = false;
-        const msg = err?.error?.message || err?.error || 'Failed to remove emergency contact.';
-        this.snackbar.show(msg, 'error');
-      }
-    });
+  openDirectWhatsApp() {
+    if (this.lastTestResult?.directWhatsAppUrl) {
+      window.open(this.lastTestResult.directWhatsAppUrl, '_blank', 'noopener,noreferrer');
+    }
   }
 }

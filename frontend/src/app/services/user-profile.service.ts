@@ -15,10 +15,10 @@ export class UserProfileService {
   // In-memory cache for pending setup data (dies on page refresh, safe)
   private pendingSetupData: any = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   private normalizeProfile(profile: UserProfile): UserProfile {
-    return normalizeObjectMediaUrls(profile, ['avatarUrl', 'identityDocumentUrl']);
+    return normalizeObjectMediaUrls(profile, ['avatarUrl']);
   }
 
   getProfile(): Observable<UserProfile> {
@@ -33,6 +33,10 @@ export class UserProfileService {
 
   deleteAccount(): Observable<any> {
     return this.http.delete<any>(`${this.apiUrl}/me`, this.httpOptions);
+  }
+
+  deactivateAccount(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deactivate`, {}, this.httpOptions);
   }
 
   changePassword(currentPassword: string, newPassword: string): Observable<any> {
@@ -80,10 +84,6 @@ export class UserProfileService {
 
   toggle2FA(enable: boolean, code: string, password?: string): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/2fa/toggle`, { enable, code, password }, this.httpOptions);
-  }
-
-  verifyIdentity(documentType: string, documentFile: string): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/verify-identity`, { documentType, documentFile }, this.httpOptions);
   }
 
   getActiveSessions(): Observable<any[]> {

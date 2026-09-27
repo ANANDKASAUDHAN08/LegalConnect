@@ -1,0 +1,27 @@
+:host {
+  display: block;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(250%);
+  }
+}
+
+.animate-shimmer {
+  animation: shimmer 2.8s infinite ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-shimmer {
+    animation: none !important;
+  }
+
+  :host ::ng-deep .animate-pulse {
+    animation: none !important;
+  }
+}

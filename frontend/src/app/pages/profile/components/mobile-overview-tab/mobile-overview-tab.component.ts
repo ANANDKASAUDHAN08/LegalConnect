@@ -22,7 +22,6 @@ export class MobileOverviewTabComponent {
   @Input() nextMilestoneAction: any = null;
   @Input() securityScore = 0;
   @Input() securityRating = 'Strong';
-  @Input() securityColor = '';
   @Input() memberSince = 'Member';
   @Input() isClient = true;
 
