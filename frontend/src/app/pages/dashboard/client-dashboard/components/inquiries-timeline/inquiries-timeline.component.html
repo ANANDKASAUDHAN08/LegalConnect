@@ -1,69 +1,54 @@
 <div class="mt-4 space-y-3 md:space-y-6">
 
-  <!-- ── 1. Premium Branded Loader State (Custom SVG & Logo Component) ── -->
-  <div *ngIf="loadingInquiries"
-    class="py-10 sm:py-14 px-4 flex flex-col items-center justify-center text-center animate-[fadeIn_0.3s_ease-out]">
+  <!-- ── 1. Skeleton Loader State (Standard Dashboard Shimmer) ── -->
+  <div *ngIf="loadingInquiries" class="space-y-3 sm:space-y-4 animate-[fadeIn_0.2s_ease-out]">
 
-    <!-- Custom Made SVG Loader Emblem with Ambient Glow & Orbital Spinner Ring -->
-    <div class="relative flex items-center justify-center mb-5">
-      <!-- Ambient Glow Aura -->
-      <div
-        class="absolute -inset-3 bg-gradient-to-r from-indigo-500/20 via-sky-500/20 to-purple-500/20 rounded-full blur-xl animate-pulse">
-      </div>
-
-      <!-- Outer Orbital Spinning Ring with Gradient / Dashed Arc -->
-      <div
-        class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl sm:rounded-3xl border-2 border-dashed border-indigo-500/50 dark:border-indigo-400/50 animate-[spin_5s_linear_infinite] flex items-center justify-center">
-      </div>
-
-      <!-- Custom Made SVG Logo Component Emblem -->
-      <div
-        class="absolute inset-1.5 sm:inset-2 rounded-xl sm:rounded-2xl bg-white dark:bg-slate-900/90 backdrop-blur-md border border-indigo-100 dark:border-indigo-900/60 shadow-lg shadow-indigo-500/10 flex items-center justify-center p-2">
-        <app-logo mode="icon" size="sm" [animated]="true"></app-logo>
-      </div>
-
-      <!-- Floating Micro-Loader Pill Badge -->
-      <div
-        class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-indigo-600 dark:bg-indigo-500 text-white flex items-center justify-center shadow-md ring-2 ring-white dark:ring-slate-900">
-        <app-icon name="loader" [size]="12" [spin]="true"></app-icon>
-      </div>
+    <!-- Skeleton: Segmented Filter Bar -->
+    <div class="flex items-center gap-1.5 p-1 w-fit">
+      <div class="skeleton-bar h-7 w-24 sm:w-28 rounded-xl"></div>
+      <div class="skeleton-bar h-7 w-32 sm:w-40 rounded-xl"></div>
+      <div class="skeleton-bar h-7 w-28 sm:w-36 rounded-xl"></div>
     </div>
 
-    <!-- Title & Informational Subtitle -->
-    <div class="space-y-1 max-w-md">
-      <h3
-        class="text-sm sm:text-base font-bold text-slate-800 dark:text-slate-100 flex items-center justify-center gap-2">
-        <span>Synchronizing Inquiries & Timeline</span>
-      </h3>
-      <p class="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
-        Verifying advocate correspondence, consult milestones, and support desk SLA status...
-      </p>
-    </div>
+    <!-- Skeleton: Timeline Cards (mirrors exact card layout) -->
+    <div class="grid grid-cols-1 gap-3 sm:gap-4">
+      <div *ngFor="let i of [1, 2, 3]" class="skeleton-card p-3 md:p-5 rounded-2xl flex flex-col gap-3 md:gap-4"
+        [style.border-left]="'4px solid ' + (i === 1 ? 'rgba(245, 158, 11, 0.3)' : i === 2 ? 'rgba(59, 130, 246, 0.3)' : 'rgba(16, 185, 129, 0.3)')">
 
-    <!-- Shimmer Skeleton Timeline Cards (MNC Standard zero-layout-shift preview) -->
-    <div class="w-full max-w-3xl mt-8 space-y-3 sm:space-y-4 text-left">
-      <div *ngFor="let i of [1, 2]"
-        class="card-glass p-4 sm:p-5 rounded-2xl border-l-4 border-l-indigo-400/40 dark:border-l-indigo-500/40 animate-pulse space-y-3.5">
-        <div class="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800/80">
-          <div class="flex items-center gap-2.5">
-            <div class="w-8 h-8 rounded-xl bg-slate-200 dark:bg-slate-800 shrink-0"></div>
-            <div class="space-y-1.5">
-              <div class="h-3.5 w-36 sm:w-48 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-              <div class="h-2.5 w-24 sm:w-32 bg-slate-200/60 dark:bg-slate-800/60 rounded"></div>
+        <!-- Skeleton: Header Row (Name + Type Badge + Date + Status) -->
+        <div
+          class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2.5 sm:gap-4 border-b border-slate-200/50 dark:border-slate-800/60 pb-3 sm:pb-3.5 pl-1 sm:pl-2">
+          <div class="space-y-1.5">
+            <div class="flex items-center gap-2 flex-wrap">
+              <div class="skeleton-bar h-3.5 sm:h-4 w-28 sm:w-40 rounded-md"></div>
+              <div class="skeleton-bar h-4 w-24 sm:w-32 rounded-full"></div>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <div class="skeleton-bar h-2.5 w-3 rounded-sm shrink-0"></div>
+              <div class="skeleton-bar h-2.5 w-36 sm:w-48 rounded"></div>
             </div>
           </div>
-          <div class="flex items-center gap-2">
-            <div class="h-3 w-16 bg-slate-200/60 dark:bg-slate-800/60 rounded"></div>
-            <div class="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+          <div class="flex items-center gap-2 sm:gap-3">
+            <div class="skeleton-bar h-2.5 w-20 sm:w-24 rounded"></div>
+            <div class="skeleton-bar h-5 w-16 sm:w-20 rounded-full"></div>
           </div>
         </div>
-        <div class="space-y-2 pl-1">
-          <div class="h-3 w-11/12 bg-slate-200/70 dark:bg-slate-800/70 rounded"></div>
-          <div class="h-3 w-3/4 bg-slate-200/50 dark:bg-slate-800/50 rounded"></div>
+
+        <!-- Skeleton: Message Body -->
+        <div class="space-y-2 pl-1 sm:pl-2">
+          <div class="skeleton-bar h-3 w-full rounded"></div>
+          <div class="skeleton-bar h-3 w-11/12 rounded"></div>
+          <div class="skeleton-bar h-3 w-3/4 rounded"></div>
         </div>
-        <div class="flex justify-between items-center pt-3 border-t border-slate-100 dark:border-slate-800/60">
-          <div class="h-2.5 w-20 bg-slate-200/50 dark:bg-slate-800/50 rounded"></div>
-          <div class="h-2.5 w-32 bg-slate-200/50 dark:bg-slate-800/50 rounded"></div>
+
+        <!-- Skeleton: Footer Row (ID + Status text) -->
+        <div
+          class="pl-1 sm:pl-2 pt-3 sm:pt-3.5 border-t border-slate-200/50 dark:border-slate-800/60 flex justify-between items-center">
+          <div class="skeleton-bar h-2.5 w-24 sm:w-28 rounded"></div>
+          <div class="flex items-center gap-1.5">
+            <div class="skeleton-bar h-3 w-3 rounded-sm shrink-0"></div>
+            <div class="skeleton-bar h-2.5 w-36 sm:w-48 rounded"></div>
+          </div>
         </div>
       </div>
     </div>

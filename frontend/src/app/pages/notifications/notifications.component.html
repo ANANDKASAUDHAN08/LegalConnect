@@ -135,12 +135,12 @@
                       <span class="text-slate-400 font-semibold">• {{ formatDate(item.publishedAt) }}</span>
                     </div>
 
-                    <h3 class="text-sm font-extrabold text-slate-905 dark:text-white leading-tight">
-                      {{ item.title }}
+                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-white leading-tight"
+                      [innerHTML]="replaceEmojis(item.title)">
                     </h3>
 
-                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
-                      {{ item.summary }}
+                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
+                      [innerHTML]="replaceEmojis(item.summary)">
                     </p>
                   </div>
                 </div>

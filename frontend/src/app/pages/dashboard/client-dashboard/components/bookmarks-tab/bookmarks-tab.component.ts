@@ -7,16 +7,18 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import { Bookmark } from '../../../../../services/bookmark.service';
 import { BookmarkCardComponent } from '../bookmark-card/bookmark-card.component';
 import { TooltipDirective } from '../../../../../directives/tooltip.directive';
+import { IconComponent } from '../../../../../components/icon/icon.component';
 
 @Component({
   selector: 'app-bookmarks-tab',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, BookmarkCardComponent, TooltipDirective],
+  imports: [CommonModule, RouterLink, FormsModule, BookmarkCardComponent, TooltipDirective, IconComponent],
   templateUrl: './bookmarks-tab.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BookmarksTabComponent implements OnInit, OnChanges, OnDestroy {
   @Input() bookmarks: Bookmark[] = [];
+  @Input() loadingBookmarks = false;
   @Input() selectedCollection = 'All';
   @Input() customCollections: string[] = [];
   @Input() actFilter = '';

@@ -6,6 +6,7 @@ import { SystemAnnouncementService, SystemAnnouncement } from '../../services/sy
 import { SnackbarService } from '../../services/snackbar.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
+import { replaceEmojisWithSvg } from '../../utils/emoji-to-svg.util';
 
 export interface GroupedAnnouncements {
   label: string;
@@ -22,6 +23,10 @@ export interface GroupedAnnouncements {
 export class NotificationsComponent implements OnInit {
   activeTab: 'all' | 'system' | 'laws' = 'all';
   followedActs: FollowedAct[] = [];
+
+  replaceEmojis(text: string): string {
+    return replaceEmojisWithSvg(text);
+  }
 
   systemAnnouncementService = inject(SystemAnnouncementService);
   notificationService = inject(NotificationService);

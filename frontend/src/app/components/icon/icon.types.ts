@@ -125,7 +125,9 @@ export type IconName =
   | 'thumbs-up-filled'
   | 'more-horizontal'
   | 'more-vertical'
-  | 'code';
+  | 'code'
+  | 'rocket'
+  | 'tools';
 
 export interface IconDefinition {
   name: string;

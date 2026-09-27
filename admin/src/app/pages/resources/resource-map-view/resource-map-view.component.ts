@@ -275,7 +275,7 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
 
     filtered.forEach(r => {
       if (!r.coordinates || typeof r.coordinates.lat !== 'number' || typeof r.coordinates.lng !== 'number' ||
-          (r.coordinates.lat === 0 && r.coordinates.lng === 0)) {
+        (r.coordinates.lat === 0 && r.coordinates.lng === 0)) {
         return;
       }
 
@@ -339,8 +339,9 @@ export class ResourceMapViewComponent implements AfterViewInit, OnChanges, OnDes
         <p style="margin: 0 0 6px 0; font-size: 11px; color: #64748b; line-height: 1.4;">
           ${r.address || ((r.district || r.city || '') + ', ' + r.state)}
         </p>
-        <div style="font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 8px;">
-          📞 ${phone}
+        <div style="font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 8px; display: flex; align-items: center; gap: 4px;">
+          <svg style="width: 12px; height: 12px; display: inline-block; vertical-align: middle;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          <span>${phone}</span>
         </div>
         <button onclick="window._adminInspectResourceById('${resId}')"
           style="width: 100%; padding: 6px 12px; background: #4f46e5; color: #ffffff; font-size: 11px; font-weight: 700; border: none; border-radius: 8px; cursor: pointer;">

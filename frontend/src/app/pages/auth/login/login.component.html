@@ -131,66 +131,279 @@
       </div>
 
       <form (submit)="onLogin()" class="space-y-4">
-        <!-- Error Alert Component -->
-        @if (error()) {
-        <div
-          class="p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-start justify-between gap-3 animate-[fadeIn_0.2s_ease-out] shadow-sm">
-          <div class="flex items-start gap-2.5">
-            <svg class="w-4 h-4 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
-              stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div class="space-y-1">
-              <span class="font-medium leading-relaxed block">{{ error() }}</span>
+        <!-- Real-Time Lockout Alert with Live Countdown (per-email scoped) -->
+        @if (isCurrentEmailLocked() && !lockoutBannerDismissed()) {
+        <div role="alert" aria-live="assertive"
+          class="p-4 bg-rose-500/10 dark:bg-rose-950/40 border border-rose-500/30 dark:border-rose-800/60 rounded-2xl text-xs space-y-3 animate-[fadeIn_0.2s_ease-out] shadow-md shadow-rose-950/20">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-start gap-3">
+              <div
+                class="w-9 h-9 rounded-xl bg-rose-500/20 border border-rose-500/30 flex items-center justify-center flex-shrink-0 text-rose-500 dark:text-rose-400">
+                <svg class="w-5 h-5 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div class="space-y-1">
+                <span class="font-bold text-rose-700 dark:text-rose-300 uppercase tracking-wider block text-[0.7rem]">
+                  Account Temporarily Locked
+                </span>
+                <p class="text-slate-600 dark:text-slate-300 leading-relaxed text-[0.75rem]">
+                  Too many consecutive failed login attempts. For your security, password sign-in is temporarily paused.
+                </p>
+              </div>
             </div>
-          </div>
-          <button type="button" (click)="error.set(null)"
-            class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 transition-colors p-0.5 rounded-lg">
-            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        }
-
-        <!-- 2FA OTP Panel (shown after requires2fa response) -->
-        @if (requires2fa()) {
-        <div class="space-y-5 animate-[slideUp_0.25s_ease-out]">
-          <div class="flex flex-col items-center text-center gap-3 py-2">
-            <div
-              class="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 flex items-center justify-center">
-              <svg class="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="1.5">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.624 5.372 12 12 12s12-5.376 12-12c0-2.17-.578-4.204-1.598-5.956L12 2.714z" />
+            <button type="button" (click)="dismissLockoutBanner()"
+              class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 transition-colors p-1 rounded-lg"
+              aria-label="Dismiss lockout alert">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-slate-900 dark:text-white">Two-Factor Verification</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Enter the 6-digit code from your authenticator
-                app to complete sign in.</p>
-            </div>
+            </button>
           </div>
 
+          <!-- Live Timer Display Badge -->
+          <div
+            class="flex items-center justify-between gap-2 p-2.5 rounded-xl bg-white/70 dark:bg-rose-950/70 border border-rose-200/80 dark:border-rose-800/60">
+            <span class="text-[0.75rem] font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+              Unlocks automatically in:
+            </span>
+            <span class="font-mono font-extrabold text-sm text-rose-600 dark:text-rose-400 tracking-wider">
+              {{ formatLockoutTime(lockoutSeconds()) }}
+            </span>
+          </div>
+
+          <!-- Quick bypass action -->
+          <div
+            class="pt-1 flex items-center justify-between gap-2 text-[0.7rem] border-t border-rose-200/60 dark:border-rose-900/40 pt-2">
+            <span class="text-slate-500 dark:text-slate-400">Need immediate access?</span>
+            <button type="button" (click)="loginWithGoogle()"
+              class="font-semibold text-amber-600 dark:text-amber-400 hover:underline flex items-center gap-1">
+              Sign in with Google →
+            </button>
+          </div>
+        </div>
+        } @else if (error() && !isCurrentEmailLocked()) {
+
+        <!-- Pre-Lockout Warning Banner (amber — shown at attempt 3 or 4) -->
+        @if (attemptsRemaining() !== null && attemptsRemaining()! <= 2 && attemptsRemaining()!> 0) {
+          <div
+            class="p-3 sm:p-3.5 bg-amber-50/80 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-800/50 rounded-xl text-xs animate-[fadeIn_0.2s_ease-out] shadow-sm">
+            <div class="flex items-start gap-2 sm:gap-2.5">
+              <svg class="w-4 h-4 text-amber-500 dark:text-amber-400 flex-shrink-0 mt-0.5 animate-pulse" fill="none"
+                viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div class="flex-1 min-w-0">
+                <span
+                  class="font-bold text-amber-700 dark:text-amber-300 uppercase tracking-wider text-[0.65rem] sm:text-[0.7rem] block">
+                  Account Protection Warning
+                </span>
+                <p class="text-amber-600/90 dark:text-amber-400/80 leading-relaxed mt-0.5 text-[0.7rem] sm:text-xs">
+                  @if (attemptsRemaining() === 1) {
+                  <strong>Last attempt!</strong> Your account will be temporarily locked after the next failed try.
+                  } @else {
+                  You have <strong>{{ attemptsRemaining() }} attempts</strong> remaining before a temporary lock.
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+          }
+
+          <!-- Standard Error Banner -->
+          <div
+            class="p-3 sm:p-3.5 bg-rose-50 dark:bg-rose-950/40 border border-rose-200/80 dark:border-rose-800/60 text-rose-700 dark:text-rose-300 rounded-xl text-xs flex items-start justify-between gap-2 sm:gap-3 animate-[fadeIn_0.2s_ease-out] shadow-sm">
+            <div class="flex items-start gap-2 sm:gap-2.5 flex-1 min-w-0">
+              <svg class="w-4 h-4 text-rose-500 dark:text-rose-400 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24"
+                stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <div class="space-y-1 flex-1 min-w-0">
+                <span class="font-medium leading-relaxed block break-words">{{ error() }}</span>
+              </div>
+            </div>
+            <button type="button" (click)="error.set(null); attemptsRemaining.set(null)"
+              class="text-rose-400 hover:text-rose-600 dark:hover:text-rose-200 transition-colors p-0.5 rounded-lg shrink-0"
+              aria-label="Dismiss error">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+          }
+
+          <!-- 2FA OTP Panel (shown after requires2fa response) -->
+          @if (requires2fa()) {
+          <div class="space-y-5 animate-[slideUp_0.25s_ease-out]">
+            <div class="flex flex-col items-center text-center gap-3 py-2">
+              <div
+                class="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/20 flex items-center justify-center">
+                <svg class="w-8 h-8 text-amber-600 dark:text-amber-400" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor" stroke-width="1.5">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.955 11.955 0 003 12c0 6.624 5.372 12 12 12s12-5.376 12-12c0-2.17-.578-4.204-1.598-5.956L12 2.714z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-slate-900 dark:text-white">Two-Factor Verification</h3>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">Enter the 6-digit code from your
+                  authenticator
+                  app to complete sign in.</p>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label for="twoFactorCode" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Verification
+                Code</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                  <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round"
+                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                  </svg>
+                </span>
+                <input type="text" id="twoFactorCode" name="twoFactorCode" [(ngModel)]="twoFactorCode"
+                  (input)="onInputChange()" placeholder="6-digit code or backup code" maxlength="8"
+                  class="w-full pl-11 pr-4 py-3 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm text-center font-mono tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
+              </div>
+              <p class="text-[0.7rem] text-slate-400 dark:text-slate-500 text-center">Enter the code from your
+                authenticator app or an 8-character backup code.</p>
+            </div>
+
+            <button type="submit" [disabled]="loading()"
+              class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-950 dark:bg-amber-600 dark:hover:bg-amber-500 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
+              @if (loading()) {
+              <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
+                viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                </path>
+              </svg>
+              <span>Verifying...</span>
+              } @else {
+              <span>Verify & Sign In</span>
+              }
+            </button>
+
+            <button type="button" (click)="requires2fa.set(false); twoFactorCode = ''; error.set(null)"
+              class="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors text-center bg-transparent border-none cursor-pointer py-1">
+              ← Back to sign in
+            </button>
+          </div>
+          } @else {
+
+          <!-- Email Input -->
           <div class="space-y-1">
-            <label for="twoFactorCode" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Verification
-              Code</label>
+            <label for="email" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
             <div class="relative">
               <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                   <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                    d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
                 </svg>
               </span>
-              <input type="text" id="twoFactorCode" name="twoFactorCode" [(ngModel)]="twoFactorCode"
-                (input)="onInputChange()" placeholder="6-digit code or backup code" maxlength="8"
-                class="w-full pl-11 pr-4 py-3 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm text-center font-mono tracking-[0.25em] focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
+              <input type="email" id="email" name="email" required [(ngModel)]="loginData.email"
+                (input)="onInputChange('email')" (blur)="markTouched('email')" placeholder="name@example.com"
+                [class.border-rose-500]="emailError()"
+                class="w-full pl-11 pr-10 py-2.5 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
+              @if (loginData.email) {
+              <button type="button" (click)="loginData.email = ''; onInputChange('email')"
+                class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                aria-label="Clear email">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              }
             </div>
-            <p class="text-[0.7rem] text-slate-400 dark:text-slate-500 text-center">Enter the code from your authenticator app or an 8-character backup code.</p>
+            @if (emailError()) {
+            <p
+              class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>{{ emailError() }}</span>
+            </p>
+            }
           </div>
 
-          <button type="submit" [disabled]="loading()"
+          <!-- Password Input -->
+          <div class="space-y-1">
+            <div class="flex justify-between items-center">
+              <label for="password" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
+              <button type="button" (click)="openForgotPasswordModal()"
+                class="text-xs font-semibold text-amber-600 hover:text-amber-500 transition-colors bg-transparent border-none p-0 cursor-pointer">Forgot
+                Password?</button>
+            </div>
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
+                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </span>
+              <input [type]="showPassword() ? 'text' : 'password'" id="password" name="password" required
+                [(ngModel)]="loginData.password" (input)="onInputChange('password')" (blur)="markTouched('password')"
+                placeholder="" [class.border-rose-500]="passwordError()"
+                class="w-full pl-11 pr-16 py-2.5 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
+              @if (loginData.password) {
+              <button type="button" (click)="loginData.password = ''; onInputChange('password')"
+                class="absolute inset-y-0 right-8 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                aria-label="Clear password">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              }
+              <button type="button" (click)="togglePassword()"
+                class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
+                <svg *ngIf="showPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg *ngIf="!showPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+                  stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M3 10c3 5.5 15 5.5 18 0" />
+                  <path d="M6 12l-1.5 2.5" />
+                  <path d="M9 13.5l-0.5 3" />
+                  <path d="M12 14v3" />
+                  <path d="M15 13.5l0.5 3" />
+                  <path d="M18 12l1.5 2.5" />
+                </svg>
+              </button>
+            </div>
+            @if (passwordError()) {
+            <p
+              class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
+              <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>{{ passwordError() }}</span>
+            </p>
+            }
+          </div>
+
+          <!-- Remember Me Checkbox -->
+          <div class="flex items-center">
+            <input type="checkbox" id="rememberMe" name="rememberMe" [ngModel]="rememberMe()"
+              (ngModelChange)="rememberMe.set($event)"
+              class="w-4 h-4 text-amber-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded focus:ring-amber-500/20 focus:ring-2" />
+            <label for="rememberMe"
+              class="ml-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 select-none">Remember this
+              device</label>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" [disabled]="loading() || isCurrentEmailLocked()"
             class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-950 dark:bg-amber-600 dark:hover:bg-amber-500 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
             @if (loading()) {
             <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
@@ -200,140 +413,19 @@
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
               </path>
             </svg>
-            <span>Verifying...</span>
+            <span>Signing In...</span>
+            } @else if (isCurrentEmailLocked()) {
+            <svg class="w-4 h-4 text-white/80 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor"
+              stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <span>Locked ({{ formatLockoutTime(lockoutSeconds()) }})</span>
             } @else {
-            <span>Verify & Sign In</span>
+            <span>Sign In</span>
             }
           </button>
-
-          <button type="button" (click)="requires2fa.set(false); twoFactorCode = ''; error.set(null)"
-            class="w-full text-xs text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 transition-colors text-center bg-transparent border-none cursor-pointer py-1">
-            ← Back to sign in
-          </button>
-        </div>
-        } @else {
-
-        <!-- Email Input -->
-        <div class="space-y-1">
-          <label for="email" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Email Address</label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
-              </svg>
-            </span>
-            <input type="email" id="email" name="email" required [(ngModel)]="loginData.email"
-              (input)="onInputChange('email')" (blur)="markTouched('email')" placeholder="name@example.com"
-              [class.border-rose-500]="emailError()"
-              class="w-full pl-11 pr-10 py-2.5 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
-            @if (loginData.email) {
-            <button type="button" (click)="loginData.email = ''; onInputChange('email')"
-              class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-              aria-label="Clear email">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            }
-          </div>
-          @if (emailError()) {
-          <p
-            class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
-            <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>{{ emailError() }}</span>
-          </p>
           }
-        </div>
-
-        <!-- Password Input -->
-        <div class="space-y-1">
-          <div class="flex justify-between items-center">
-            <label for="password" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
-            <button type="button" (click)="openForgotPasswordModal()"
-              class="text-xs font-semibold text-amber-600 hover:text-amber-500 transition-colors bg-transparent border-none p-0 cursor-pointer">Forgot
-              Password?</button>
-          </div>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400">
-              <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-              </svg>
-            </span>
-            <input [type]="showPassword() ? 'text' : 'password'" id="password" name="password" required
-              [(ngModel)]="loginData.password" (input)="onInputChange('password')" (blur)="markTouched('password')"
-              placeholder="" [class.border-rose-500]="passwordError()"
-              class="w-full pl-11 pr-16 py-2.5 bg-slate-50/80 hover:bg-slate-100/70 dark:bg-white/5 dark:hover:bg-white/8 border border-slate-200/80 dark:border-white/10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 transition-all duration-200" />
-            @if (loginData.password) {
-            <button type="button" (click)="loginData.password = ''; onInputChange('password')"
-              class="absolute inset-y-0 right-8 pr-2 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-              aria-label="Clear password">
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            }
-            <button type="button" (click)="togglePassword()"
-              class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
-              <svg *ngIf="showPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                <circle cx="12" cy="12" r="3" />
-              </svg>
-              <svg *ngIf="!showPassword()" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M3 10c3 5.5 15 5.5 18 0" />
-                <path d="M6 12l-1.5 2.5" />
-                <path d="M9 13.5l-0.5 3" />
-                <path d="M12 14v3" />
-                <path d="M15 13.5l0.5 3" />
-                <path d="M18 12l1.5 2.5" />
-              </svg>
-            </button>
-          </div>
-          @if (passwordError()) {
-          <p
-            class="text-[0.72rem] text-rose-500 dark:text-rose-400 font-medium mt-1 animate-[fadeIn_0.15s_ease-out] flex items-center gap-1">
-            <svg class="w-3 h-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <span>{{ passwordError() }}</span>
-          </p>
-          }
-        </div>
-
-        <!-- Remember Me Checkbox -->
-        <div class="flex items-center">
-          <input type="checkbox" id="rememberMe" name="rememberMe" [ngModel]="rememberMe()"
-            (ngModelChange)="rememberMe.set($event)"
-            class="w-4 h-4 text-amber-600 bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded focus:ring-amber-500/20 focus:ring-2" />
-          <label for="rememberMe"
-            class="ml-2.5 text-xs font-semibold text-slate-600 dark:text-slate-400 select-none">Remember this
-            device</label>
-        </div>
-
-        <!-- Submit Button -->
-        <button type="submit" [disabled]="loading()"
-          class="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-950 dark:bg-amber-600 dark:hover:bg-amber-500 text-white font-semibold rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed">
-          @if (loading()) {
-          <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none"
-            viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-            <path class="opacity-75" fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-            </path>
-          </svg>
-          <span>Signing In...</span>
-          } @else {
-          <span>Sign In</span>
-          }
-        </button>
-        }
       </form>
 
       <!-- Divider -->
