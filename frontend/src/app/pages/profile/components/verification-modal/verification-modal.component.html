@@ -40,7 +40,7 @@
     <div role="tablist" aria-label="Verification delivery methods"
       class="px-3 sm:px-6 pt-2.5 sm:pt-3 pb-2 sm:pb-2.5 bg-slate-50/80 dark:bg-slate-900/40 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1.5 sm:gap-2 overflow-x-auto no-scrollbar scrollbar-none">
       <button role="tab" [attr.aria-selected]="activeFlow === 'phone'" (click)="setFlow('phone')"
-        [appTooltip]="'Authenticate mobile number via WhatsApp or Email OTP'"
+        [appTooltip]="'Authenticate mobile number via WhatsApp or SMS OTP'"
         class="flex-1 min-w-fit px-3 sm:px-4 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border-0"
         [ngClass]="activeFlow === 'phone' ? 'bg-white dark:bg-slate-800 text-blue-600 dark:text-blue-400 shadow-sm' : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent'">
         <app-icon name="phone" [size]="14"></app-icon>
@@ -63,8 +63,9 @@
     </div>
 
     <!-- Modal Body Content (Scrollable) -->
-    <div
-      class="p-4 sm:p-6 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5 flex-1 overscroll-contain no-scrollbar scrollbar-none">
+    <div #modalBody
+      class="p-4 sm:p-6 overflow-y-auto overflow-x-hidden space-y-4 sm:space-y-5 flex-1 overscroll-contain no-scrollbar scrollbar-none transition-all duration-300"
+      [class.pb-72]="showCountryDropdown" [class.sm:pb-80]="showCountryDropdown">
 
       <!-- ══════════ FLOW 1: PHONE OTP (WHATSAPP + EMAIL FALLBACK) ══════════ -->
       <div *ngIf="activeFlow === 'phone'" class="space-y-4">
@@ -73,89 +74,215 @@
           <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-2">
             Verification Delivery Method
           </label>
-          <div class="grid grid-cols-2 gap-2">
-            <!-- Option 1: WhatsApp (Primary) -->
+          <div class="grid grid-cols-2 gap-2 sm:gap-2.5">
+            <!-- Option 1: WhatsApp (Primary / Direct to Phone) -->
             <button type="button" (click)="selectedOtpChannel = 'whatsapp'"
-              class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative"
+              class="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer relative"
               [ngClass]="selectedOtpChannel === 'whatsapp' 
-                ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 ring-2 ring-emerald-500/30 shadow-xs' 
-                : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'">
-              <div
-                class="w-8 h-8 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0">
-                <app-icon name="whatsapp" [size]="16"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-bold truncate">WhatsApp OTP</span>
+                ? 'bg-emerald-500/10 border-emerald-500 text-emerald-950 dark:text-emerald-100 ring-2 ring-emerald-500/30 shadow-xs' 
+                : 'bg-white dark:bg-slate-900/60 border-slate-300 dark:border-slate-700/80 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40'">
+
+              <!-- Mobile Layout (< sm): Stacked vertical card -->
+              <div class="sm:hidden flex flex-col justify-between w-full h-full">
+                <div class="flex items-center justify-between w-full mb-1.5">
+                  <div
+                    class="w-7 h-7 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 ring-1 ring-emerald-500/20">
+                    <app-icon name="whatsapp" [size]="16"></app-icon>
+                  </div>
                   <span
-                    class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">Fast</span>
+                    class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0">Direct</span>
                 </div>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">100% Free & Instant</p>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-900 dark:text-white block truncate leading-tight">WhatsApp
+                    OTP</span>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight">Direct to
+                    Mobile</p>
+                </div>
+              </div>
+
+              <!-- Desktop Layout (>= sm): Horizontal card -->
+              <div class="hidden sm:flex sm:items-center sm:gap-3 w-full">
+                <div
+                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 ring-1 ring-emerald-500/20">
+                  <app-icon name="whatsapp" [size]="18"></app-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1.5">
+                    <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">WhatsApp
+                      OTP</span>
+                    <span
+                      class="text-[8px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md sm:rounded-full bg-emerald-500/20 text-emerald-700 dark:text-emerald-300 shrink-0 whitespace-nowrap">Direct
+                      Phone</span>
+                  </div>
+                  <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">Fast & Free
+                    to Mobile</p>
+                </div>
               </div>
             </button>
 
-            <!-- Option 2: Email OTP (Fallback) -->
-            <button type="button" (click)="selectedOtpChannel = 'email'"
-              class="p-2.5 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2.5 relative"
-              [ngClass]="selectedOtpChannel === 'email' 
-                ? 'bg-blue-500/10 border-blue-500/40 text-blue-900 dark:text-blue-200 ring-2 ring-blue-500/30 shadow-xs' 
-                : 'bg-white dark:bg-slate-900/60 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800/40'">
-              <div
-                class="w-8 h-8 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0">
-                <app-icon name="mail" [size]="16"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <span class="text-xs font-bold truncate">Email OTP</span>
+            <!-- Option 2: SMS OTP (Direct Cellular SMS) -->
+            <button type="button" (click)="selectedOtpChannel = 'sms'"
+              class="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl border text-left transition-all cursor-pointer relative"
+              [ngClass]="selectedOtpChannel === 'sms' 
+                ? 'bg-indigo-500/10 border-indigo-500 text-indigo-950 dark:text-indigo-100 ring-2 ring-indigo-500/30 shadow-xs' 
+                : 'bg-white dark:bg-slate-900/60 border-slate-300 dark:border-slate-700/80 hover:border-slate-400 dark:hover:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40'">
+
+              <!-- Mobile Layout (< sm): Stacked vertical card -->
+              <div class="sm:hidden flex flex-col justify-between w-full h-full">
+                <div class="flex items-center justify-between w-full mb-1.5">
+                  <div
+                    class="w-7 h-7 rounded-lg bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 ring-1 ring-indigo-500/20">
+                    <app-icon name="message-square" [size]="16"></app-icon>
+                  </div>
                   <span
-                    class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-full bg-blue-500/20 text-blue-700 dark:text-blue-300">Zero-Cost</span>
+                    class="text-[8px] font-extrabold uppercase px-1.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0">SMS</span>
                 </div>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 truncate">Guaranteed backup</p>
+                <div class="min-w-0">
+                  <span class="text-xs font-bold text-slate-900 dark:text-white block truncate leading-tight">SMS
+                    OTP</span>
+                  <p class="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight">Cellular SMS
+                  </p>
+                </div>
+              </div>
+
+              <!-- Desktop Layout (>= sm): Horizontal card -->
+              <div class="hidden sm:flex sm:items-center sm:gap-3 w-full">
+                <div
+                  class="w-8 h-8 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center flex-shrink-0 ring-1 ring-indigo-500/20">
+                  <app-icon name="message-square" [size]="18"></app-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center justify-between gap-1.5">
+                    <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">SMS OTP</span>
+                    <span
+                      class="text-[8px] sm:text-[9px] font-extrabold uppercase px-1.5 py-0.5 rounded-md sm:rounded-full bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 shrink-0 whitespace-nowrap">Direct
+                      Phone</span>
+                  </div>
+                  <p class="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">Cellular SMS
+                    Delivery</p>
+                </div>
               </div>
             </button>
           </div>
         </div>
 
         <div>
+          <!-- State 1: When phone is NOT added yet -->
+          <div *ngIf="!profile?.phone"
+            class="mb-3 p-3 rounded-xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/70 dark:border-blue-900/40 flex items-start gap-2.5 text-xs text-blue-900 dark:text-blue-200 animate-[fadeIn_0.2s_ease-out]">
+            <div
+              class="w-5 h-5 rounded-lg bg-blue-500/15 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <app-icon name="info" [size]="13"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold leading-tight">No mobile number linked yet</p>
+              <p class="text-[11px] text-blue-700/90 dark:text-blue-300/80 mt-0.5 leading-normal">
+                Enter your mobile number below to link and verify your phone in one step.
+              </p>
+            </div>
+          </div>
+
+          <!-- State 2: When phone IS added and awaiting verification -->
+          <div *ngIf="profile?.phone && !profile?.isPhoneVerified"
+            class="mb-3 p-3 rounded-xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 flex items-start gap-2.5 text-xs text-amber-900 dark:text-amber-200 animate-[fadeIn_0.2s_ease-out]">
+            <div
+              class="w-5 h-5 rounded-lg bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <app-icon name="shield" [size]="13"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold leading-tight">Registered mobile awaiting verification</p>
+              <p class="text-[11px] text-amber-700/90 dark:text-amber-300/80 mt-0.5 leading-normal">
+                Pre-filled from your profile. If you notice a typo, edit the digits below before requesting the code.
+              </p>
+            </div>
+          </div>
+
+          <!-- State 3: When phone is already verified and user is updating -->
+          <div *ngIf="profile?.phone && profile?.isPhoneVerified"
+            class="mb-3 p-3 rounded-xl bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200/70 dark:border-emerald-900/40 flex items-start gap-2.5 text-xs text-emerald-900 dark:text-emerald-200 animate-[fadeIn_0.2s_ease-out]">
+            <div
+              class="w-5 h-5 rounded-lg bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <app-icon name="check-circle" [size]="13"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="font-bold leading-tight">Mobile number is verified & active</p>
+              <p class="text-[11px] text-emerald-700/90 dark:text-emerald-300/80 mt-0.5 leading-normal">
+                To change your registered mobile, enter a new number below and confirm with a one-time security code.
+              </p>
+            </div>
+          </div>
+
           <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Mobile Number to Verify
+            {{ !profile?.phone ? 'Add & Verify Mobile Number' : (profile?.isPhoneVerified ? 'Update Verified Mobile
+            Number' : 'Verify Registered Mobile Number') }}
           </label>
           <p class="text-xs text-slate-500 dark:text-slate-400 mb-2.5">
-            {{ selectedOtpChannel === 'whatsapp' ? 'Enter your WhatsApp active mobile number to receive your 6-digit
-            security code.' : 'Enter your mobile number. The security code will be sent to your registered email.' }}
+            {{ selectedOtpChannel === 'whatsapp'
+            ? 'We will send a 6-digit verification code directly to your WhatsApp.'
+            : 'We will send a 6-digit verification code to your phone via SMS text message.' }}
           </p>
 
           <!-- Input Group: Country code + digits -->
-          <div
-            class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all relative">
+          <div #phoneInputGroup
+            class="flex items-center bg-slate-50 dark:bg-slate-950/40 border border-slate-200 dark:border-slate-800 rounded-xl focus-within:border-emerald-500 focus-within:ring-4 focus-within:ring-emerald-500/10 transition-all relative"
+            [class.z-30]="showCountryDropdown">
             <!-- Country Selector -->
             <div class="relative flex-shrink-0">
               <button type="button" (click)="toggleCountryDropdown()"
-                class="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none cursor-pointer">
+                class="flex items-center gap-2 px-3 py-2.5 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/40 rounded-l-xl transition-colors border-r border-slate-200 dark:border-slate-800 outline-none cursor-pointer"
+                [attr.aria-expanded]="showCountryDropdown"
+                [attr.aria-label]="'Selected country: ' + selectedCountry.name + ' ' + selectedCountry.code">
                 <img [src]="'https://flagcdn.com/w20/' + selectedCountry.short.toLowerCase() + '.png'"
-                  class="w-5 h-3.5 object-cover rounded-sm" alt="flag" />
+                  class="w-5 h-3.5 object-cover rounded-sm" [alt]="selectedCountry.name + ' flag'" />
                 <span class="text-xs font-bold">{{ selectedCountry.code }}</span>
-                <app-icon name="chevron-down" [size]="12"></app-icon>
+                <app-icon name="chevron-down" [size]="12" class="transition-transform duration-200"
+                  [class.rotate-180]="showCountryDropdown"></app-icon>
               </button>
 
-              <!-- Country List Dropdown -->
+              <!-- Backdrop to close dropdown -->
               <div *ngIf="showCountryDropdown" class="fixed inset-0 z-40 bg-transparent"
                 (click)="showCountryDropdown = false"></div>
-              <div *ngIf="showCountryDropdown"
-                class="absolute z-50 left-0 mt-1.5 w-52 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl overflow-hidden animate-[fadeIn_0.15s_ease-out]">
-                <div class="p-2 border-b border-slate-100 dark:border-slate-800">
-                  <input type="text" [(ngModel)]="countrySearchText" placeholder="Search country..."
-                    class="w-full px-2.5 py-1 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-white" />
+
+              <!-- Country List Dropdown (Full country name + short + dial code + responsive width) -->
+              <div #countryDropdown *ngIf="showCountryDropdown"
+                class="absolute z-50 left-0 mt-1.5 w-72 sm:w-80 max-w-[calc(100vw-3rem)] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl overflow-hidden animate-[fadeIn_0.15s_ease-out]">
+                <!-- Search input with icon and clear button -->
+                <div
+                  class="p-2 border-b border-slate-100 dark:border-slate-800 sticky top-0 bg-white dark:bg-slate-900 z-10">
+                  <div class="relative flex items-center">
+                    <app-icon name="search" [size]="13"
+                      class="absolute left-2.5 text-slate-400 pointer-events-none"></app-icon>
+                    <input #countrySearchInput type="text" [(ngModel)]="countrySearchText"
+                      placeholder="Search country, code (+91, IN)..."
+                      class="w-full pl-8 pr-7 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg outline-none text-slate-800 dark:text-white placeholder:text-slate-400 focus:border-emerald-500 transition-colors" />
+                    <button *ngIf="countrySearchText" type="button" (click)="countrySearchText = ''"
+                      class="absolute right-2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer border-0 bg-transparent"
+                      aria-label="Clear search">
+                      <app-icon name="x" [size]="12"></app-icon>
+                    </button>
+                  </div>
                 </div>
-                <div class="max-h-48 overflow-y-auto">
+                <!-- Scrollable country list with full name, ISO short code, and dialing code -->
+                <div
+                  class="max-h-56 overflow-y-auto divide-y divide-slate-100/60 dark:divide-slate-800/40 overscroll-contain">
                   <button *ngFor="let c of getFilteredCountries(); trackBy: trackByCountryCode" type="button"
                     (click)="selectCountry(c)"
-                    class="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 text-left transition-colors cursor-pointer border-0 bg-transparent">
+                    class="w-full flex items-center gap-2.5 px-3 py-2 text-xs text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/70 text-left transition-colors cursor-pointer border-0 bg-transparent group"
+                    [ngClass]="selectedCountry.short === c.short && selectedCountry.code === c.code ? 'bg-emerald-50/80 dark:bg-emerald-950/40 font-bold text-emerald-900 dark:text-emerald-200' : ''">
                     <img [src]="'https://flagcdn.com/w20/' + c.short.toLowerCase() + '.png'"
-                      class="w-4 h-3 object-cover rounded-sm" alt="flag" />
-                    <span>{{ c.short }}</span>
-                    <span class="text-slate-400 font-normal ml-auto">{{ c.code }}</span>
+                      class="w-4 h-3 object-cover rounded-xs shrink-0 shadow-2xs" [alt]="c.name + ' flag'" />
+                    <span class="truncate flex-1 font-medium group-hover:text-slate-900 dark:group-hover:text-white">{{
+                      c.name }}</span>
+                    <span
+                      class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase shrink-0 px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800/80">{{
+                      c.short }}</span>
+                    <span class="font-mono text-xs font-semibold text-slate-600 dark:text-slate-300 ml-1 shrink-0">{{
+                      c.code }}</span>
                   </button>
+                  <div *ngIf="getFilteredCountries().length === 0"
+                    class="py-6 px-3 text-center text-xs text-slate-400 dark:text-slate-500">
+                    No country found matching "{{ countrySearchText }}"
+                  </div>
                 </div>
               </div>
             </div>
@@ -173,33 +300,33 @@
           class="w-full py-3 rounded-xl disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md cursor-pointer flex items-center justify-center gap-2 border-0"
           [ngClass]="selectedOtpChannel === 'whatsapp' 
             ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/25' 
-            : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'">
+            : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/25'">
           <app-icon *ngIf="resendLoading" name="loader" [size]="16" class="animate-spin"></app-icon>
           <app-icon *ngIf="!resendLoading && selectedOtpChannel === 'whatsapp'" name="whatsapp" [size]="16"></app-icon>
-          <app-icon *ngIf="!resendLoading && selectedOtpChannel === 'email'" name="mail" [size]="16"></app-icon>
+          <app-icon *ngIf="!resendLoading && selectedOtpChannel === 'sms'" name="message-square" [size]="16"></app-icon>
           <span>{{ resendLoading ? 'Sending Security Code...' : (selectedOtpChannel === 'whatsapp' ? 'Send Code via
-            WhatsApp' : 'Send Code via Email') }}</span>
+            WhatsApp' : 'Send Code via SMS') }}</span>
         </button>
 
         <!-- OTP Code Input Area -->
-        <div *ngIf="showPhoneOtpInput" class="p-4 rounded-2xl border space-y-3.5 animate-[fadeIn_0.25s_ease-out]"
+        <div *ngIf="showPhoneOtpInput" class="p-4 rounded-xl border space-y-3.5 animate-[fadeIn_0.25s_ease-out]"
           [ngClass]="otpSentChannel === 'whatsapp' 
             ? 'bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-200 dark:border-emerald-900/50' 
-            : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/50'">
+            : 'bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-200 dark:border-indigo-900/50'">
 
           <!-- Dispatch Notification & Helper Link -->
           <div class="flex items-start justify-between gap-3">
             <div class="flex items-center gap-2">
               <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
-                [ngClass]="otpSentChannel === 'whatsapp' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-blue-500/20 text-blue-600 dark:text-blue-400'">
-                <app-icon [name]="otpSentChannel === 'whatsapp' ? 'whatsapp' : 'mail'" [size]="14"></app-icon>
+                [ngClass]="otpSentChannel === 'whatsapp' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-indigo-500/20 text-indigo-600 dark:text-indigo-400'">
+                <app-icon [name]="otpSentChannel === 'whatsapp' ? 'whatsapp' : 'message-square'" [size]="14"></app-icon>
               </div>
               <div class="min-w-0">
                 <p class="text-xs font-bold text-slate-800 dark:text-slate-200">
-                  {{ otpSentChannel === 'whatsapp' ? 'Code sent to WhatsApp' : 'Code sent to registered email' }}
+                  {{ otpSentChannel === 'whatsapp' ? 'Code sent to WhatsApp' : 'Code sent via SMS' }}
                 </p>
                 <p class="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
-                  {{ otpSentChannel === 'whatsapp' ? (selectedCountry.code + ' ' + phoneBody) : profile?.email }}
+                  {{ selectedCountry.code + ' ' + phoneBody }}
                 </p>
               </div>
             </div>
@@ -227,21 +354,23 @@
               class="w-full px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none text-center font-mono text-2xl tracking-[0.4em] font-black text-slate-900 dark:text-white transition-all" />
           </div>
 
-          <!-- 1-Click Fallback Option (If user does not receive on WhatsApp, or wants email) -->
-          <div *ngIf="canFallbackToEmail && otpSentChannel === 'whatsapp'"
+          <!-- 1-Click Fallback Option (Between WhatsApp and SMS) -->
+          <div *ngIf="otpSentChannel === 'whatsapp'"
             class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-[11px] flex items-center justify-between gap-2">
             <span class="text-slate-600 dark:text-slate-400">Not receiving WhatsApp code?</span>
-            <button type="button" (click)="switchChannelAndSend('email')" [disabled]="resendCooldown > 0"
-              class="text-blue-600 dark:text-blue-400 font-bold hover:underline border-0 bg-transparent cursor-pointer disabled:opacity-50 flex items-center gap-1">
-              <app-icon name="mail" [size]="12"></app-icon>
-              <span>Switch to Email OTP</span>
+            <button type="button" (click)="switchChannelAndSend('sms')" [disabled]="resendCooldown > 0"
+              appTooltip="Switch delivery method to cellular SMS"
+              class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline border-0 bg-transparent cursor-pointer disabled:opacity-50 flex items-center gap-1">
+              <app-icon name="message-square" [size]="12"></app-icon>
+              <span>Switch to SMS OTP</span>
             </button>
           </div>
 
-          <div *ngIf="otpSentChannel === 'email'"
+          <div *ngIf="otpSentChannel === 'sms'"
             class="p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-slate-800 text-[11px] flex items-center justify-between gap-2">
             <span class="text-slate-600 dark:text-slate-400">Prefer WhatsApp instead?</span>
             <button type="button" (click)="switchChannelAndSend('whatsapp')" [disabled]="resendCooldown > 0"
+              appTooltip="Switch delivery method to WhatsApp OTP"
               class="text-emerald-600 dark:text-emerald-400 font-bold hover:underline border-0 bg-transparent cursor-pointer disabled:opacity-50 flex items-center gap-1">
               <app-icon name="whatsapp" [size]="12"></app-icon>
               <span>Switch to WhatsApp</span>
@@ -290,10 +419,15 @@
           filings and court hearing alerts.
         </p>
 
-        <button *ngIf="!profile?.isEmailVerified" (click)="resendEmailVerification()" [disabled]="emailResendLoading"
-          class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer flex items-center justify-center gap-2">
-          <span>{{ emailResendLoading ? 'Sending Link...' : 'Resend Verification Link' }}</span>
-          <app-icon name="arrow-right" [size]="16"></app-icon>
+        <button *ngIf="!profile?.isEmailVerified" (click)="resendEmailVerification()"
+          [disabled]="emailResendLoading || emailCooldown > 0"
+          appTooltip="Send a fresh verification link to your registered email"
+          class="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-sm transition-all shadow-md shadow-blue-600/20 cursor-pointer disabled:cursor-not-allowed flex items-center justify-center gap-2 border-0">
+          <app-icon *ngIf="emailResendLoading" name="loader" [size]="15" [spin]="true"></app-icon>
+          <app-icon *ngIf="!emailResendLoading && emailCooldown > 0" name="clock" [size]="15"></app-icon>
+          <app-icon *ngIf="!emailResendLoading && emailCooldown === 0" name="refresh" [size]="15"></app-icon>
+          <span>{{ emailResendLoading ? 'Sending Link...' : emailCooldown > 0 ? 'Resend in ' + emailCooldown + 's' :
+            'Resend Verification Link' }}</span>
         </button>
 
         <div *ngIf="profile?.isEmailVerified"
@@ -416,9 +550,11 @@
             class="p-3 rounded-xl border transition-all cursor-pointer space-y-2.5"
             [ngClass]="!usePrimaryPhoneForWhatsApp ? 'bg-emerald-500/[0.06] border-emerald-500/40 ring-1 ring-emerald-500/30' : 'bg-slate-50/60 dark:bg-slate-900/40 border-slate-200 dark:border-slate-800'">
             <div class="flex items-center gap-2.5">
-              <input type="radio" [checked]="!usePrimaryPhoneForWhatsApp" (change)="usePrimaryPhoneForWhatsApp = false"
-                class="accent-emerald-600 cursor-pointer" />
-              <p class="text-xs font-bold text-slate-900 dark:text-white">Use a Different WhatsApp Number</p>
+              <input *ngIf="profile?.phone" type="radio" [checked]="!usePrimaryPhoneForWhatsApp"
+                (change)="usePrimaryPhoneForWhatsApp = false" class="accent-emerald-600 cursor-pointer" />
+              <p class="text-xs font-bold text-slate-900 dark:text-white">
+                {{ profile?.phone ? 'Use a Different WhatsApp Number' : 'Enter WhatsApp Mobile Number' }}
+              </p>
             </div>
 
             <div *ngIf="!usePrimaryPhoneForWhatsApp" class="flex items-center gap-2 mt-2 pt-1">
@@ -450,7 +586,7 @@
 
         <!-- ══════════ LIVE TEST WHATSAPP DISPATCHER ══════════ -->
         <div
-          class="mt-4 p-3.5 sm:p-4 rounded-2xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
+          class="mt-4 p-3.5 sm:p-4 rounded-xl border border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 space-y-3">
           <div class="flex items-center justify-between gap-2">
             <div class="flex items-center gap-2">
               <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>

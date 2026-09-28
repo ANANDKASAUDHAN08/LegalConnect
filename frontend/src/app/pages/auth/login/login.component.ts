@@ -1,17 +1,20 @@
-import { Component, OnInit, OnDestroy, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink, Router, ActivatedRoute } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../../services/auth.service';
 import { GoogleAuthService } from '../../../services/google-auth.service';
+import { VerificationService } from '../../../services/verification.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { ForgotPasswordComponent } from '../../forgot-password/forgot-password.component';
+import { IconComponent } from '../../../components/icon/icon.component';
+import { TooltipDirective } from '../../../directives/tooltip.directive';
 import { extractErrorMessage } from '../../../core/utils/error-utils';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ForgotPasswordComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ForgotPasswordComponent, IconComponent, TooltipDirective],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
 })
@@ -35,9 +38,20 @@ export class LoginComponent implements OnInit, OnDestroy {
   // Forgot Password Modal state
   showForgotPasswordModal = signal(false);
 
+  // Email verification resend state
+  isResendingVerification = signal<boolean>(false);
+  resendVerificationCooldown = signal<number>(0);
+  private resendVerificationTimer: any = null;
+
+  isEmailUnverifiedError = computed(() => {
+    const err = (this.error() || '').toLowerCase();
+    return err.includes('verify your email') || err.includes('unverified email');
+  });
+
   constructor(
     private auth: AuthService,
     private googleAuth: GoogleAuthService,
+    private verificationService: VerificationService,
     private router: Router,
     private route: ActivatedRoute,
     private snackbar: SnackbarService
@@ -52,6 +66,14 @@ export class LoginComponent implements OnInit, OnDestroy {
 
     // Check for an active lockout timer saved across page reloads
     this.checkPersistedLockout();
+
+    if (this.route.snapshot.queryParams['verificationSent'] === 'true') {
+      this.snackbar.show('Account created! A verification link has been sent to your email. Please verify before signing in.', 'info', 8000);
+    } else if (this.route.snapshot.queryParams['sessionExpired'] === 'true') {
+      this.snackbar.show('Your session expired or was revoked. Please sign in again.', 'warning', 6000);
+    } else if (this.route.snapshot.queryParams['verified'] === 'true') {
+      this.snackbar.show('Email verified successfully! You can now log in to your account.', 'success', 6000);
+    }
   }
 
   togglePassword() {
@@ -174,6 +196,48 @@ export class LoginComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     document.body.style.overflow = '';
     this.stopLockoutTimer();
+    if (this.resendVerificationTimer) {
+      clearInterval(this.resendVerificationTimer);
+      this.resendVerificationTimer = null;
+    }
+  }
+
+  resendVerificationEmail() {
+    const email = (this.loginData.email || '').trim();
+    if (!email || this.isResendingVerification() || this.resendVerificationCooldown() > 0) return;
+
+    this.isResendingVerification.set(true);
+    this.verificationService.resendEmailVerification(email).subscribe({
+      next: (res) => {
+        this.isResendingVerification.set(false);
+        const msg = res?.message || `Verification link sent to ${email}! Please check your inbox.`;
+        this.snackbar.show(msg, 'success');
+        this.startResendCooldown(60);
+      },
+      error: (err) => {
+        this.isResendingVerification.set(false);
+        const msg = err?.error?.message || err?.message || 'Failed to dispatch verification email. Please try again.';
+        this.snackbar.show(msg, 'error');
+        this.startResendCooldown(15);
+      }
+    });
+  }
+
+  private startResendCooldown(seconds: number) {
+    if (this.resendVerificationTimer) clearInterval(this.resendVerificationTimer);
+    this.resendVerificationCooldown.set(seconds);
+    this.resendVerificationTimer = setInterval(() => {
+      const rem = this.resendVerificationCooldown() - 1;
+      if (rem <= 0) {
+        this.resendVerificationCooldown.set(0);
+        if (this.resendVerificationTimer) {
+          clearInterval(this.resendVerificationTimer);
+          this.resendVerificationTimer = null;
+        }
+      } else {
+        this.resendVerificationCooldown.set(rem);
+      }
+    }, 1000);
   }
 
   // Touched state signals for real-world field validation

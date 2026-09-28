@@ -39,6 +39,11 @@ export const routes: Routes = [
     canActivate: [guestGuard],
     title: 'Reset Password | LegalConnect'
   },
+  {
+    path: 'verify-email',
+    loadComponent: () => import('./pages/auth/verify-email/verify-email.component').then(m => m.VerifyEmailComponent),
+    title: 'Verify Email | LegalConnect'
+  },
   { path: 'auth', redirectTo: 'login', pathMatch: 'full' },
 
   // 3. Indian Laws Reference Library (Public)

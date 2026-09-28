@@ -1,0 +1,272 @@
+<div
+  class="w-full min-h-[calc(100vh-72px)] mt-[72px] flex items-center justify-center bg-gradient-to-br from-slate-50 via-indigo-50/10 to-slate-100/80 dark:from-[#090b14] dark:via-[#0f1224] dark:to-[#05060b] relative overflow-hidden text-slate-900 dark:text-white font-sans transition-colors duration-300 p-4 sm:p-6">
+
+  <!-- Ambient Blurred Blobs -->
+  <div
+    class="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 dark:bg-amber-500/5 rounded-full blur-3xl pointer-events-none">
+  </div>
+  <div
+    class="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500/10 dark:bg-blue-500/5 rounded-full blur-3xl pointer-events-none">
+  </div>
+
+  <!-- Verification Card Container -->
+  <div
+    class="relative z-10 w-full max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200/90 dark:border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl shadow-slate-900/5 dark:shadow-black/50 text-center animate-[fadeIn_0.25s_ease-out]">
+
+    <!-- ══════════ 1. LOADING STATE ══════════ -->
+    <div *ngIf="status() === 'loading'" class="space-y-5 py-6">
+      <div
+        class="w-16 h-16 rounded-2xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center ring-4 ring-blue-500/10 mx-auto animate-pulse">
+        <app-icon name="loader" [size]="32" [spin]="true"></app-icon>
+      </div>
+
+      <div class="space-y-3">
+        <h2 class="text-xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Verifying Security Credentials
+        </h2>
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
+          Connecting to cryptographic registry and activating your citizen legal dossier...
+        </p>
+      </div>
+
+      <!-- Skeleton shimmer bars -->
+      <div class="space-y-2.5 max-w-xs mx-auto pt-2">
+        <div class="h-3 w-3/4 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto skeleton-shimmer"></div>
+        <div class="h-3 w-1/2 bg-slate-100 dark:bg-slate-800/60 rounded-full mx-auto skeleton-shimmer"></div>
+      </div>
+    </div>
+
+    <!-- ══════════ 2. SUCCESS STATE ══════════ -->
+    <div *ngIf="status() === 'success'" class="space-y-5 py-2">
+      <!-- Animated Checkmark Badge -->
+      <div
+        class="w-16 h-16 rounded-2xl bg-emerald-500/15 dark:bg-emerald-500/25 text-emerald-600 dark:text-emerald-400 flex items-center justify-center ring-4 ring-emerald-500/20 mx-auto animate-[scaleIn_0.3s_ease-out]">
+        <app-icon name="badge-check" [size]="38"></app-icon>
+      </div>
+
+      <div class="space-y-1.5">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Email Verified!
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          Your primary email address (<strong class="text-slate-900 dark:text-white font-bold select-all">{{
+            verifiedEmail() || resendEmail() }}</strong>)
+          is officially confirmed and attached to your verified citizen dossier.
+        </p>
+      </div>
+
+      <!-- Feature Activation Checklist -->
+      <div
+        class="p-4 bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/80 dark:border-emerald-900/40 rounded-2xl text-left space-y-2.5">
+        <div class="flex items-center gap-2.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+          <app-icon name="check" [size]="15" class="text-emerald-600 flex-shrink-0"></app-icon>
+          <span>Direct advocate consultations unlocked</span>
+        </div>
+        <div class="flex items-center gap-2.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+          <app-icon name="check" [size]="15" class="text-emerald-600 flex-shrink-0"></app-icon>
+          <span>Automated court hearing notifications enabled</span>
+        </div>
+        <div class="flex items-center gap-2.5 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+          <app-icon name="check" [size]="15" class="text-emerald-600 flex-shrink-0"></app-icon>
+          <span>Statutory legal dossier protection active</span>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button type="button" (click)="continueToDashboard()" appTooltip="Access your citizen workstation"
+        class="w-full py-3.5 px-4 rounded-xl bg-slate-900 hover:bg-slate-950 dark:bg-amber-600 dark:hover:bg-amber-500 text-white font-bold text-sm transition-all shadow-md shadow-slate-900/10 dark:shadow-amber-600/20 flex items-center justify-center gap-2 cursor-pointer border-0">
+        <span>Continue to Dashboard</span>
+        <app-icon name="arrow-right" [size]="16"></app-icon>
+      </button>
+    </div>
+
+    <!-- ══════════ 3. MANUAL OTP CODE ENTRY STATE ══════════ -->
+    <div *ngIf="status() === 'manual'" class="space-y-5 py-2">
+      <!-- Shield Keyhole Icon -->
+      <div
+        class="w-16 h-16 rounded-2xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center ring-4 ring-amber-500/10 mx-auto">
+        <app-icon name="shield" [size]="34"></app-icon>
+      </div>
+
+      <div class="space-y-1.5">
+        <h2 class="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Verify Your Email
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          Enter the 6-digit numeric verification code sent to
+          <span class="font-bold text-slate-900 dark:text-white select-all">{{ resendEmail() || 'your email' }}</span>.
+        </p>
+      </div>
+
+      <!-- Code Entry Card -->
+      <div
+        class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200/90 dark:border-slate-800 rounded-2xl space-y-4 text-left">
+
+        <!-- Email field if empty or editable -->
+        <div *ngIf="!resendEmail()" class="space-y-1">
+          <label for="manualEmail" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+            Registered Email Address
+          </label>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <app-icon name="mail" [size]="16"></app-icon>
+            </span>
+            <input type="email" id="manualEmail" [(ngModel)]="resendEmail" placeholder="name@example.com"
+              class="w-full pl-10 pr-3 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+          </div>
+        </div>
+
+        <!-- 6-Digit OTP Input -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label for="otpInput"
+              class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+              6-Digit Security Code
+            </label>
+            <span class="text-[11px] text-slate-400 font-medium">Auto-verifies on 6th digit</span>
+          </div>
+          <div class="relative">
+            <input type="text" id="otpInput" [ngModel]="otpCode()" (ngModelChange)="onOtpInput($event)"
+              placeholder="••••••" maxlength="6" inputmode="numeric" autocomplete="one-time-code"
+              class="w-full py-3 px-4 bg-white dark:bg-slate-900 border-2 border-slate-200 dark:border-slate-700 rounded-2xl text-center text-2xl sm:text-3xl font-mono font-extrabold tracking-[0.35em] text-slate-900 dark:text-white placeholder-slate-300 dark:placeholder-slate-700 focus:outline-none focus:ring-4 focus:ring-amber-500/15 focus:border-amber-500 transition-all shadow-inner" />
+          </div>
+        </div>
+
+        <!-- Actions Row: Verify Button & Webmail -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+          <button type="button" (click)="verifyWithOtp()"
+            [disabled]="isVerifyingOtp() || otpCode().length !== 6 || !resendEmail()"
+            class="w-full py-2.5 px-3 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed border-0">
+            <app-icon *ngIf="isVerifyingOtp()" name="loader" [size]="14" [spin]="true"></app-icon>
+            <app-icon *ngIf="!isVerifyingOtp()" name="badge-check" [size]="15"></app-icon>
+            <span>{{ isVerifyingOtp() ? 'Verifying...' : 'Verify Code' }}</span>
+          </button>
+
+          <button *ngIf="webmailInfo()" type="button" (click)="openWebmail()"
+            appTooltip="Open your webmail inbox in a new tab to find the code"
+            class="w-full py-2.5 px-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+            <app-icon name="mail" [size]="14" class="text-blue-500"></app-icon>
+            <span>{{ webmailInfo()?.label }}</span>
+            <app-icon name="external-link" [size]="12" class="opacity-60"></app-icon>
+          </button>
+        </div>
+
+        <!-- Resend Link -->
+        <div
+          class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 flex items-center justify-between text-xs">
+          <span class="text-slate-500 dark:text-slate-400">Didn't receive the email?</span>
+          <button type="button" (click)="resendVerification()"
+            [disabled]="isResending() || resendCooldown() > 0 || !resendEmail()"
+            class="text-amber-600 dark:text-amber-400 hover:underline font-bold disabled:opacity-50 disabled:no-underline cursor-pointer disabled:cursor-not-allowed bg-transparent border-0 p-0 inline-flex items-center gap-1">
+            <app-icon *ngIf="isResending()" name="loader" [size]="12" [spin]="true"></app-icon>
+            <span>{{ isResending() ? 'Resending...' : resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' :
+              'Resend Code' }}</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1">
+        <a routerLink="/login" class="font-bold text-amber-600 hover:text-amber-500 transition-colors"
+          appTooltip="Return to the sign-in screen">Back to Sign In</a>
+        <span>&bull;</span>
+        <a routerLink="/home" class="font-medium hover:text-slate-800 dark:hover:text-white transition-colors"
+          appTooltip="Return to homepage">Home</a>
+      </div>
+    </div>
+
+    <!-- ══════════ 4. ERROR STATE WITH RECOVERY ══════════ -->
+    <div *ngIf="status() === 'error'" class="space-y-5 py-2">
+      <!-- Alert Badge -->
+      <div
+        class="w-16 h-16 rounded-2xl bg-rose-500/15 dark:bg-rose-500/25 text-rose-600 dark:text-rose-400 flex items-center justify-center ring-4 ring-rose-500/20 mx-auto">
+        <app-icon name="alert-triangle" [size]="34"></app-icon>
+      </div>
+
+      <div class="space-y-1.5">
+        <h2 class="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          Verification Expired or Invalid
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+          {{ errorMessage() || 'This verification link is invalid, corrupted, or has exceeded its 24-hour validity
+          window.' }}
+        </p>
+      </div>
+
+      <!-- Quick Recovery Box: Enter 6-digit Code or Resend -->
+      <div
+        class="p-5 bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 rounded-2xl space-y-4 text-left">
+
+        <!-- 6-Digit Code Fallback Entry -->
+        <div class="space-y-1.5">
+          <label for="errOtpInput"
+            class="block text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+            Enter 6-Digit Backup Code
+          </label>
+          <div class="flex gap-2">
+            <input type="text" id="errOtpInput" [ngModel]="otpCode()" (ngModelChange)="onOtpInput($event)"
+              placeholder="••••••" maxlength="6" inputmode="numeric"
+              class="w-full py-2.5 px-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-center text-lg sm:text-xl font-mono font-bold tracking-widest text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+
+            <button type="button" (click)="verifyWithOtp()"
+              [disabled]="isVerifyingOtp() || otpCode().length !== 6 || !resendEmail()"
+              class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1 cursor-pointer disabled:cursor-not-allowed border-0 shrink-0">
+              <app-icon *ngIf="isVerifyingOtp()" name="loader" [size]="14" [spin]="true"></app-icon>
+              <span>Verify</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Direct Webmail Button if applicable -->
+        <div *ngIf="webmailInfo()" class="pt-1">
+          <button type="button" (click)="openWebmail()"
+            class="w-full py-2.5 px-3 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200 dark:border-slate-700 font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer">
+            <app-icon name="mail" [size]="14" class="text-blue-500"></app-icon>
+            <span>{{ webmailInfo()?.label }}</span>
+            <app-icon name="external-link" [size]="12" class="opacity-60"></app-icon>
+          </button>
+        </div>
+
+        <!-- Resend Section -->
+        <div class="pt-2 border-t border-slate-200/80 dark:border-slate-700/60 space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="errResendEmail" class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Request a Fresh Code
+            </label>
+          </div>
+          <div class="relative">
+            <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-slate-400">
+              <app-icon name="mail" [size]="16"></app-icon>
+            </span>
+            <input type="email" id="errResendEmail" [(ngModel)]="resendEmail" placeholder="name@example.com"
+              class="w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all" />
+          </div>
+
+          <button type="button" (click)="resendVerification()"
+            [disabled]="isResending() || resendCooldown() > 0 || !resendEmail()"
+            class="w-full py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold text-xs transition-all shadow-sm flex items-center justify-center gap-1.5 cursor-pointer disabled:cursor-not-allowed border-0">
+            <app-icon *ngIf="isResending()" name="loader" [size]="14" [spin]="true"></app-icon>
+            <app-icon *ngIf="!isResending() && resendCooldown() === 0" name="refresh" [size]="14"></app-icon>
+            <app-icon *ngIf="!isResending() && resendCooldown() > 0" name="clock" [size]="14"></app-icon>
+            <span>
+              {{ isResending() ? 'Sending Link...' : resendCooldown() > 0 ? 'Resend in ' + resendCooldown() + 's' :
+              'Resend Verification Link' }}
+            </span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Navigation Links -->
+      <div class="flex items-center justify-center gap-4 text-xs text-slate-500 dark:text-slate-400 pt-1">
+        <a routerLink="/login" class="font-bold text-amber-600 hover:text-amber-500 transition-colors"
+          appTooltip="Return to the sign-in screen">Back to Sign In</a>
+        <span>&bull;</span>
+        <a routerLink="/home" class="font-medium hover:text-slate-800 dark:hover:text-white transition-colors"
+          appTooltip="Return to homepage">Home</a>
+      </div>
+    </div>
+
+  </div>
+</div>

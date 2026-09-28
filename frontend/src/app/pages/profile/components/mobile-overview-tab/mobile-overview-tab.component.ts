@@ -27,6 +27,7 @@ export class MobileOverviewTabComponent {
 
   @Output() navigateTab = new EventEmitter<ProfileTab>();
   @Output() requestVerification = new EventEmitter<VerificationFlowType>();
+  @Output() requestEditProfile = new EventEmitter<void>();
   @Output() logout = new EventEmitter<void>();
 
   openTab(tab: ProfileTab) {

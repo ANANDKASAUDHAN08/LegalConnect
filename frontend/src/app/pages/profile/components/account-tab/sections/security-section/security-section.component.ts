@@ -40,6 +40,7 @@ export class SecuritySectionComponent implements OnInit {
 
   @Output() open2FaModal = new EventEmitter<TwoFaModalStep>();
   @Output() requestVerification = new EventEmitter<VerificationFlowType>();
+  @Output() requestEditProfile = new EventEmitter<void>();
   @Output() passwordChanged = new EventEmitter<void>();
 
   private userProfileService = inject(UserProfileService);
@@ -113,6 +114,15 @@ export class SecuritySectionComponent implements OnInit {
   // ─── Verification Trigger ────────────────────────────────────
   triggerVerification(flow: VerificationFlowType): void {
     this.requestVerification.emit(flow);
+  }
+
+  handlePhoneClick(): void {
+    if (this.profile?.isPhoneVerified) return;
+    if (!this.profile?.phone) {
+      this.requestEditProfile.emit();
+    } else {
+      this.triggerVerification('phone');
+    }
   }
 
   // ─── Password Update ─────────────────────────────────────────

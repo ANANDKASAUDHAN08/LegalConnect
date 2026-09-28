@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, OnDestroy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, inject, OnDestroy, HostListener, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { UserProfile } from '../../../../services/auth.service';
@@ -34,12 +34,16 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   private verificationService = inject(VerificationService);
   private snackbar = inject(SnackbarService);
   private whatsAppService = inject(WhatsAppService);
-
   activeFlow: VerificationFlowType = 'phone';
+
+  @ViewChild('modalBody') modalBody?: ElementRef<HTMLDivElement>;
+  @ViewChild('phoneInputGroup') phoneInputGroup?: ElementRef<HTMLDivElement>;
+  @ViewChild('countryDropdown') countryDropdown?: ElementRef<HTMLDivElement>;
+  @ViewChild('countrySearchInput') countrySearchInput?: ElementRef<HTMLInputElement>;
 
   // ── Phone Verification State ──
   countries = COUNTRIES;
-  selectedCountry = this.countries[0];
+  selectedCountry = this.countries.find(c => c.short === 'IN' || c.code === '+91') || this.countries[0];
   showCountryDropdown = false;
   phoneBody = '';
   countrySearchText = '';
@@ -48,7 +52,7 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   otpLoading = false;
   resendLoading = false;
   resendCooldown = 0;
-  selectedOtpChannel: 'whatsapp' | 'email' = 'whatsapp';
+  selectedOtpChannel: 'whatsapp' | 'sms' = 'whatsapp';
   otpSentChannel = '';
   otpStatusMessage = '';
   directWhatsAppOtpUrl: string | null = null;
@@ -57,6 +61,8 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
 
   // ── Email Verification State ──
   emailResendLoading = false;
+  emailCooldown = 0;
+  private _emailCooldownInterval: ReturnType<typeof setInterval> | null = null;
 
   // ── WhatsApp Alerts State ──
   whatsAppPhoneBody = '';
@@ -80,15 +86,81 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     return p.startsWith('+') ? p : `+91 ${p}`;
   }
 
+  @HostListener('window:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent) {
+    if (!this.isOpen) return;
+
+    if (event.key === 'Escape') {
+      if (this.showCountryDropdown) {
+        this.showCountryDropdown = false;
+        event.stopPropagation();
+      } else {
+        this.closeModal();
+      }
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      this.trapFocus(event);
+    }
+  }
+
+  private trapFocus(event: KeyboardEvent) {
+    const container = (this.modalBody?.nativeElement?.closest('.relative.bg-white') ||
+                       this.modalBody?.nativeElement) as HTMLElement | null;
+    if (!container) return;
+
+    const focusable = container.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    if (!focusable || focusable.length === 0) return;
+
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+
+    if (event.shiftKey && (document.activeElement === first || !container.contains(document.activeElement))) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && (document.activeElement === last || !container.contains(document.activeElement))) {
+      event.preventDefault();
+      first.focus();
+    }
+  }
+
   ngOnInit() {
     this.activeFlow = this.flow || 'phone';
     this.initFromProfile();
+    if (this.isOpen) {
+      this.lockBodyScroll();
+    }
     if (this.activeFlow === 'whatsapp') {
       this.fetchGatewayStatus();
     }
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (changes['isOpen']) {
+      if (changes['isOpen'].currentValue === true) {
+        this.activeFlow = this.flow || 'phone';
+        this.showCountryDropdown = false;
+        this.showPhoneOtpInput = false;
+        this.phoneOtpCode = '';
+        this.otpStatusMessage = '';
+        this.initFromProfile();
+        this.lockBodyScroll();
+        if (this.activeFlow === 'whatsapp') {
+          this.fetchGatewayStatus();
+        }
+        setTimeout(() => {
+          if (this.modalBody?.nativeElement) {
+            this.modalBody.nativeElement.scrollTop = 0;
+          }
+        }, 30);
+      } else {
+        this.showCountryDropdown = false;
+        this.unlockBodyScroll();
+      }
+    }
     if (changes['flow']?.currentValue) {
       this.activeFlow = changes['flow'].currentValue;
       if (this.activeFlow === 'whatsapp') {
@@ -101,23 +173,44 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   ngOnDestroy() {
+    this.unlockBodyScroll();
     if (this._cooldownInterval) {
       clearInterval(this._cooldownInterval);
+    }
+    if (this._emailCooldownInterval) {
+      clearInterval(this._emailCooldownInterval);
+    }
+  }
+
+  private lockBodyScroll() {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  private unlockBodyScroll() {
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
     }
   }
 
   initFromProfile() {
-    if (!this.profile) return;
-    this.initializePhone(this.profile.phone || '');
+    const rawPhone = this.profile?.phone || this.profile?.whatsAppPhone || '';
+    this.initializePhone(rawPhone);
 
     // Initialize WhatsApp state
-    const currentWaPhone = this.profile.whatsAppPhone || this.profile.phone || '';
+    const currentWaPhone = this.profile?.whatsAppPhone || this.profile?.phone || '';
     this.whatsAppPhoneBody = currentWaPhone.replace(/^\+91/, '').replace(/\D/g, '');
-    this.usePrimaryPhoneForWhatsApp = !this.profile.whatsAppPhone || (!!this.profile.phone && this.profile.whatsAppPhone === this.profile.phone);
+    if (!this.profile?.phone) {
+      this.usePrimaryPhoneForWhatsApp = false;
+    } else {
+      this.usePrimaryPhoneForWhatsApp = !this.profile?.whatsAppPhone || (this.profile?.whatsAppPhone === this.profile?.phone);
+    }
   }
 
   setFlow(flow: VerificationFlowType) {
     this.activeFlow = flow;
+    this.showCountryDropdown = false;
     this.showPhoneOtpInput = false;
     this.phoneOtpCode = '';
     this.otpStatusMessage = '';
@@ -130,6 +223,8 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     this.showPhoneOtpInput = false;
     this.phoneOtpCode = '';
     this.otpStatusMessage = '';
+    this.showCountryDropdown = false;
+    this.unlockBodyScroll();
     if (this._cooldownInterval) {
       clearInterval(this._cooldownInterval);
     }
@@ -139,7 +234,44 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   // ── Country Selector ──
   toggleCountryDropdown() {
     this.showCountryDropdown = !this.showCountryDropdown;
-    if (this.showCountryDropdown) this.countrySearchText = '';
+    if (this.showCountryDropdown) {
+      this.countrySearchText = '';
+      this.autoScrollToCountryDropdown();
+    }
+  }
+
+  autoScrollToCountryDropdown() {
+    // Wait for Angular change detection to apply dynamic bottom padding and render dropdown
+    setTimeout(() => {
+      if (!this.showCountryDropdown) return;
+      const container = this.modalBody?.nativeElement;
+      const target = this.phoneInputGroup?.nativeElement;
+      if (!container || !target) return;
+
+      const containerRect = container.getBoundingClientRect();
+      const targetRect = target.getBoundingClientRect();
+
+      // Calculate target's absolute position inside scrollable container
+      const currentScrollTop = container.scrollTop;
+      const relativeTop = targetRect.top - containerRect.top;
+      const targetScrollTop = currentScrollTop + relativeTop;
+
+      // Scroll so that the phone input group sits 12px below the tabs header,
+      // giving full vertical clearance for the dropdown on both mobile and desktop
+      const desiredScrollTop = Math.max(0, targetScrollTop - 12);
+
+      container.scrollTo({
+        top: desiredScrollTop,
+        behavior: 'smooth'
+      });
+
+      // On desktop, auto-focus search input for instant filtering
+      if (typeof window !== 'undefined' && window.innerWidth >= 640) {
+        setTimeout(() => {
+          this.countrySearchInput?.nativeElement?.focus();
+        }, 120);
+      }
+    }, 60);
   }
 
   selectCountry(country: any) {
@@ -148,31 +280,74 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   getFilteredCountries() {
-    if (!this.countrySearchText.trim()) return this.countries;
-    const s = this.countrySearchText.toLowerCase().trim();
-    return this.countries.filter(c =>
-      c.name.toLowerCase().includes(s) ||
-      c.short.toLowerCase().includes(s) ||
-      c.code.includes(s)
-    );
+    const raw = this.countrySearchText.trim().toLowerCase();
+    if (!raw) return this.countries;
+    const rawNoPlus = raw.replace(/^\+/, '');
+
+    const matches = this.countries.filter(c => {
+      const name = c.name.toLowerCase();
+      const short = c.short.toLowerCase();
+      const code = c.code.toLowerCase();
+      const codeNoPlus = code.replace(/^\+/, '');
+      return (
+        name.includes(raw) ||
+        short.includes(raw) ||
+        code.includes(raw) ||
+        codeNoPlus.includes(rawNoPlus)
+      );
+    });
+
+    return matches.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aShort = a.short.toLowerCase();
+      const bShort = b.short.toLowerCase();
+      const aCode = a.code.replace(/^\+/, '');
+      const bCode = b.code.replace(/^\+/, '');
+
+      const aExactShort = aShort === raw ? 1 : 0;
+      const bExactShort = bShort === raw ? 1 : 0;
+      if (aExactShort !== bExactShort) return bExactShort - aExactShort;
+
+      const aStartsName = aName.startsWith(raw) ? 1 : 0;
+      const bStartsName = bName.startsWith(raw) ? 1 : 0;
+      if (aStartsName !== bStartsName) return bStartsName - aStartsName;
+
+      const aStartsCode = aCode.startsWith(rawNoPlus) ? 1 : 0;
+      const bStartsCode = bCode.startsWith(rawNoPlus) ? 1 : 0;
+      if (aStartsCode !== bStartsCode) return bStartsCode - aStartsCode;
+
+      return aName.localeCompare(bName);
+    });
   }
 
   initializePhone(fullPhone: string) {
+    const defaultIndia = this.countries.find(c => c.short === 'IN' || c.code === '+91') || this.countries[0];
     if (!fullPhone) {
-      this.selectedCountry = this.countries[0];
+      this.selectedCountry = defaultIndia;
       this.phoneBody = '';
       return;
     }
+    const cleanPhone = fullPhone.trim().replace(/[\s\-\(\)]/g, '');
     const sorted = [...this.countries].sort((a, b) => b.code.length - a.code.length);
     for (const c of sorted) {
-      if (fullPhone.startsWith(c.code)) {
+      if (cleanPhone.startsWith(c.code)) {
         this.selectedCountry = c;
-        this.phoneBody = fullPhone.substring(c.code.length).replace(/\D/g, '').trim();
+        let digits = cleanPhone.substring(c.code.length).replace(/\D/g, '').trim();
+        if (digits.startsWith('0') && digits.length === 11) {
+          digits = digits.substring(1);
+        }
+        this.phoneBody = digits;
         return;
       }
     }
-    this.selectedCountry = this.countries[0];
-    this.phoneBody = fullPhone.replace(/\D/g, '').trim();
+    // Default to India (+91) for standard 10-digit numbers or un-prefixed values
+    this.selectedCountry = defaultIndia;
+    let digits = cleanPhone.replace(/\D/g, '').trim();
+    if (digits.startsWith('0') && digits.length === 11) {
+      digits = digits.substring(1);
+    }
+    this.phoneBody = digits;
   }
 
   onlyNumbers(event: KeyboardEvent) {
@@ -186,7 +361,7 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
   }
 
   // ── Production Phone OTP Actions ──
-  sendPhoneOtp(channel?: 'whatsapp' | 'email') {
+  sendPhoneOtp(channel?: 'whatsapp' | 'sms') {
     if (channel) {
       this.selectedOtpChannel = channel;
     }
@@ -204,14 +379,14 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
         this.showPhoneOtpInput = true;
         this.otpSentChannel = res.channel || this.selectedOtpChannel;
         this.directWhatsAppOtpUrl = res.directWhatsAppUrl || null;
-        this.canFallbackToEmail = res.canFallbackToEmail ?? true;
+        this.canFallbackToEmail = false;
         this.otpStatusMessage = res.message;
         this.startCooldown(res.cooldownSeconds || 60);
 
         if (this.otpSentChannel === 'whatsapp') {
           this.snackbar.show('Verification code sent via WhatsApp! Check your messages.', 'success');
         } else {
-          this.snackbar.show('Verification code sent to your registered email!', 'info');
+          this.snackbar.show('Verification code sent via SMS to your mobile phone!', 'success');
         }
       },
       error: (err: any) => {
@@ -225,7 +400,7 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
     });
   }
 
-  switchChannelAndSend(channel: 'whatsapp' | 'email') {
+  switchChannelAndSend(channel: 'whatsapp' | 'sms') {
     if (this.resendCooldown > 0) {
       this.snackbar.show(`Please wait ${this.resendCooldown}s before requesting a new code.`, 'warning');
       return;
@@ -247,7 +422,7 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
         this.otpLoading = false;
         this.showPhoneOtpInput = false;
         this.phoneOtpCode = '';
-        this.snackbar.show(res?.message || 'Mobile number verified successfully! WhatsApp alerts activated.', 'success');
+        this.snackbar.show(res?.message || 'Mobile number verified successfully!', 'success');
 
         const updatedData: Partial<UserProfile> = {
           phone: fullPhone,
@@ -299,18 +474,32 @@ export class VerificationModalComponent implements OnInit, OnChanges, OnDestroy 
 
   // ── Email Verification Actions ──
   resendEmailVerification() {
-    if (!this.profile?.email) return;
+    if (!this.profile?.email || this.emailResendLoading || this.emailCooldown > 0) return;
     this.emailResendLoading = true;
     this.verificationService.resendEmailVerification(this.profile.email).subscribe({
-      next: () => {
+      next: (res: any) => {
         this.emailResendLoading = false;
-        this.snackbar.show('Verification link sent! Check your inbox.', 'success');
+        this.snackbar.show(res?.message || 'Verification link sent! Check your inbox.', 'success');
+        this.startEmailCooldown(60);
       },
       error: (err: any) => {
         this.emailResendLoading = false;
-        this.snackbar.show(err?.error || err?.message || 'Failed to send email verification.', 'error');
+        this.snackbar.show(err?.error?.message || err?.error || err?.message || 'Failed to send email verification.', 'error');
+        this.startEmailCooldown(15);
       }
     });
+  }
+
+  private startEmailCooldown(seconds: number = 60) {
+    this.emailCooldown = seconds;
+    if (this._emailCooldownInterval) clearInterval(this._emailCooldownInterval);
+    this._emailCooldownInterval = setInterval(() => {
+      this.emailCooldown--;
+      if (this.emailCooldown <= 0) {
+        clearInterval(this._emailCooldownInterval!);
+        this._emailCooldownInterval = null;
+      }
+    }, 1000);
   }
 
   // ── WhatsApp Alerts Actions ──

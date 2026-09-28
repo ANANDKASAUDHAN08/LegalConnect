@@ -28,7 +28,9 @@ export function maskPhone(phone: string | null | undefined): string {
   const clean = phone.trim();
   if (clean.length <= 4) return clean;
   const last4 = clean.slice(-4);
-  return `+91 •••••••${last4}`;
+  const match = clean.match(/^(\+\d{1,4})/);
+  const prefix = match ? match[1] : '+91';
+  return `${prefix} •••••••${last4}`;
 }
 
 /** Shared clipboard copy helper */

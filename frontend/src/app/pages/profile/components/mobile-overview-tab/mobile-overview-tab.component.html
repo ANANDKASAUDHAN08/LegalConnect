@@ -24,16 +24,18 @@
           <app-icon name="mail" [size]="13" class="text-slate-400 flex-shrink-0"></app-icon>
           <span class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate">Email</span>
         </div>
-        <span *ngIf="profile.isEmailVerified"
-          appTooltip="Primary email address confirmed and verified" tooltipPlacement="top"
+        <span *ngIf="profile.isEmailVerified" appTooltip="Primary email address confirmed and verified"
+          tooltipPlacement="top"
           class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 cursor-default">
           <app-icon name="check" [size]="12"></app-icon>
           <span>Verified</span>
         </span>
         <button *ngIf="!profile.isEmailVerified" (click)="requestVerification.emit('email')"
-          class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0 group"
           appTooltip="Verify your registered email address" tooltipPlacement="top">
-          Verify Now
+          <span>Verify</span>
+          <app-icon name="chevron-right" [size]="11"
+            class="group-hover:translate-x-0.5 transition-transform"></app-icon>
         </button>
       </div>
 
@@ -44,16 +46,26 @@
           <app-icon name="phone" [size]="13" class="text-slate-400 flex-shrink-0"></app-icon>
           <span class="text-[11px] text-slate-600 dark:text-slate-300 font-medium truncate">Phone OTP</span>
         </div>
-        <span *ngIf="profile.isPhoneVerified"
-          appTooltip="Mobile phone number verified via OTP" tooltipPlacement="top"
+        <span *ngIf="profile.isPhoneVerified" appTooltip="Mobile phone number verified via OTP" tooltipPlacement="top"
           class="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-600 dark:text-emerald-400 flex-shrink-0 cursor-default">
           <app-icon name="check" [size]="12"></app-icon>
           <span>Verified</span>
         </span>
-        <button *ngIf="!profile.isPhoneVerified" (click)="requestVerification.emit('phone')"
-          class="text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0"
+        <!-- State 2: Added but Unverified -->
+        <button *ngIf="!profile.isPhoneVerified && profile.phone" (click)="requestVerification.emit('phone')"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-amber-600 dark:text-amber-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0 group"
           appTooltip="Verify mobile phone via OTP" tooltipPlacement="top">
-          Verify OTP
+          <span>Verify</span>
+          <app-icon name="chevron-right" [size]="11"
+            class="group-hover:translate-x-0.5 transition-transform"></app-icon>
+        </button>
+        <!-- State 3: Not Added (Empty) -->
+        <button *ngIf="!profile.phone" (click)="requestEditProfile.emit()"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 p-0 cursor-pointer flex-shrink-0 group"
+          appTooltip="Add mobile phone number in profile" tooltipPlacement="top">
+          <span>Add</span>
+          <app-icon name="chevron-right" [size]="11"
+            class="group-hover:translate-x-0.5 transition-transform"></app-icon>
         </button>
       </div>
     </div>
@@ -305,7 +317,8 @@
     </div>
 
     <!-- Progress Bar -->
-    <div class="space-y-1.5" [appTooltip]="'Overall profile completeness: ' + overallCompletionPct + '%'" tooltipPlacement="top">
+    <div class="space-y-1.5" [appTooltip]="'Overall profile completeness: ' + overallCompletionPct + '%'"
+      tooltipPlacement="top">
       <div class="w-full h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
         <div class="h-full rounded-full transition-all duration-500"
           [ngClass]="overallCompletionPct >= 80 ? 'bg-emerald-500' : overallCompletionPct >= 50 ? 'bg-amber-500' : 'bg-red-500'"

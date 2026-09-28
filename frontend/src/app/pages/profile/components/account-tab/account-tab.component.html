@@ -102,14 +102,14 @@
               <app-icon name="check" [size]="10"></app-icon>
               <span>Verified</span>
             </span>
-            <button (click)="openVerification('phone')"
-              [appTooltip]="profile.isPhoneVerified ? 'Change registered phone number' : 'Verify mobile phone via OTP'"
+            <button (click)="handlePhoneAction()"
+              [appTooltip]="profile.isPhoneVerified ? 'Change registered phone number' : (profile.phone ? 'Verify mobile phone via OTP' : 'Add mobile phone number in profile')"
               tooltipPlacement="top"
               class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition-all shadow-sm cursor-pointer border-0 flex items-center gap-1"
               [ngClass]="profile.isPhoneVerified
                 ? 'bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                : 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20'">
-              <span>{{ profile.isPhoneVerified ? 'Update' : 'Verify' }}</span>
+                : (profile.phone ? 'bg-amber-500 hover:bg-amber-600 text-white shadow-amber-500/20' : 'bg-blue-600 hover:bg-blue-700 text-white shadow-blue-600/20')">
+              <span>{{ profile.isPhoneVerified ? 'Update' : (profile.phone ? 'Verify' : 'Add Phone') }}</span>
               <app-icon name="arrow-right" [size]="11"></app-icon>
             </button>
           </div>
@@ -181,7 +181,8 @@
 
   <!-- ── 3. SECURITY & AUTHENTICATION ENGINE (Extracted Sub-Component) ── -->
   <app-security-section class="block" [profile]="profile" [isToggling2FA]="isToggling2FA()"
-    (open2FaModal)="handleOpen2FaModal($event)" (requestVerification)="openVerification($event)">
+    (open2FaModal)="handleOpen2FaModal($event)" (requestVerification)="openVerification($event)"
+    (requestEditProfile)="requestEditProfile.emit()">
   </app-security-section>
 
   <!-- ── 4. ACTIVE SESSIONS & DEVICE MANAGEMENT (Extracted Sub-Component) ── -->

@@ -41,6 +41,7 @@ export class AccountTabComponent implements OnDestroy {
   @Input({ required: true }) profile!: UserProfile;
   @Output() profileUpdated = new EventEmitter<Partial<UserProfile>>();
   @Output() requestVerification = new EventEmitter<VerificationFlowType>();
+  @Output() requestEditProfile = new EventEmitter<void>();
   @Output() requestConfirm = new EventEmitter<{
     title: string;
     message: string;
@@ -118,6 +119,14 @@ export class AccountTabComponent implements OnDestroy {
 
   openVerification(flow: VerificationFlowType): void {
     this.requestVerification.emit(flow);
+  }
+
+  handlePhoneAction(): void {
+    if (!this.profile?.phone) {
+      this.requestEditProfile.emit();
+    } else {
+      this.openVerification('phone');
+    }
   }
 
   handleOpen2FaModal(step: TwoFaStep): void {

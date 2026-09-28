@@ -21,6 +21,7 @@ import { VerificationModalComponent, VerificationFlowType } from './components/v
 import { AdvocatePreviewModalComponent } from './components/advocate-preview-modal/advocate-preview-modal.component';
 import { IconComponent } from '../../components/icon/icon.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { EmailVerificationBannerComponent } from '../../components/email-verification-banner/email-verification-banner.component';
 
 // ─── Responsive Tab Type System ──────────────────────────────────
 export type ProfileTab = 'overview' | 'profile' | 'account';
@@ -64,7 +65,8 @@ export interface TierMilestone {
     VerificationModalComponent,
     AdvocatePreviewModalComponent,
     IconComponent,
-    TooltipDirective
+    TooltipDirective,
+    EmailVerificationBannerComponent
   ],
   templateUrl: './profile.component.html',
   styleUrls: ['./profile.component.scss']

@@ -237,6 +237,9 @@
     <main id="profile-main-content" tabindex="-1"
       class="w-full lg:w-[90%] mx-auto px-3.5 sm:px-6 lg:px-0 py-3 sm:py-4 focus:outline-none">
 
+      <!-- Ambient Email Verification Alert Banner -->
+      <app-email-verification-banner></app-email-verification-banner>
+
       <div class="flex flex-col lg:flex-row gap-8">
 
         <!-- ── LEFT SIDEBAR: IDENTITY & NAVIGATION HUB (DESKTOP ONLY) ── -->
@@ -318,24 +321,56 @@
                 <span class="text-slate-500 dark:text-slate-400 font-medium">Member Since</span>
                 <span class="font-bold text-slate-800 dark:text-slate-200">{{ memberSince() }}</span>
               </div>
-              <div class="flex items-center justify-between px-5 py-3">
+              <!-- Email Row -->
+              <div class="flex items-center justify-between px-5 py-3 transition-colors group"
+                [ngClass]="!prof.isEmailVerified ? 'cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/40' : ''"
+                (click)="!prof.isEmailVerified ? openVerificationModal('email') : null"
+                [appTooltip]="!prof.isEmailVerified ? 'Click to verify your email address' : 'Primary email verified'"
+                tooltipPlacement="top">
                 <span class="text-slate-500 dark:text-slate-400 font-medium">Email</span>
                 <span *ngIf="prof.isEmailVerified"
                   class="text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-1">
                   <span>Verified</span>
                   <app-icon name="check" [size]="12"></app-icon>
                 </span>
-                <span *ngIf="!prof.isEmailVerified" class="text-amber-500 font-bold">Unverified</span>
+                <span *ngIf="!prof.isEmailVerified"
+                  class="text-amber-600 dark:text-amber-400 font-bold inline-flex items-center gap-1 group-hover:underline">
+                  <span>Verify Email</span>
+                  <app-icon name="chevron-right" [size]="11"
+                    class="group-hover:translate-x-0.5 transition-transform"></app-icon>
+                </span>
               </div>
-              <div class="flex items-center justify-between px-5 py-3">
+
+              <!-- Phone Row -->
+              <div class="flex items-center justify-between px-5 py-3 transition-colors group"
+                [ngClass]="!prof.isPhoneVerified ? 'cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/40' : ''"
+                (click)="!prof.phone ? editProfileAndSwitch() : (!prof.isPhoneVerified ? openVerificationModal('phone') : null)"
+                [appTooltip]="!prof.phone ? 'Click to add mobile phone number in profile' : (!prof.isPhoneVerified ? 'Click to verify mobile phone via OTP' : 'Mobile phone verified')"
+                tooltipPlacement="top">
                 <span class="text-slate-500 dark:text-slate-400 font-medium">Phone</span>
+                <!-- State 1: Verified -->
                 <span *ngIf="prof.isPhoneVerified"
                   class="text-emerald-600 dark:text-emerald-400 font-bold inline-flex items-center gap-1">
                   <span>Verified</span>
                   <app-icon name="check" [size]="12"></app-icon>
                 </span>
-                <span *ngIf="!prof.isPhoneVerified" class="text-amber-500 font-bold">Unverified</span>
+                <!-- State 2: Phone Added but Unverified -->
+                <span *ngIf="!prof.isPhoneVerified && prof.phone"
+                  class="text-amber-600 dark:text-amber-400 font-bold inline-flex items-center gap-1 group-hover:underline">
+                  <span>Verify Phone</span>
+                  <app-icon name="chevron-right" [size]="11"
+                    class="group-hover:translate-x-0.5 transition-transform"></app-icon>
+                </span>
+                <!-- State 3: Phone Not Added (Empty) -->
+                <span *ngIf="!prof.phone"
+                  class="text-blue-600 dark:text-blue-400 font-bold inline-flex items-center gap-1 group-hover:underline">
+                  <span>Add Phone</span>
+                  <app-icon name="chevron-right" [size]="11"
+                    class="group-hover:translate-x-0.5 transition-transform"></app-icon>
+                </span>
               </div>
+
+              <!-- 2-Factor Auth (2FA) -->
               <div (click)="setTab('account')"
                 class="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors group"
                 appTooltip="Manage Two-Factor Authentication" tooltipPlacement="top">
@@ -438,7 +473,8 @@
               [overallCompletionPct]="overallCompletionPct()" [fourTierMilestones]="fourTierMilestones()"
               [nextMilestoneAction]="nextMilestoneAction()" [securityScore]="securityScore()"
               [securityRating]="securityRating()" [memberSince]="memberSince()" [isClient]="isClient()"
-              (navigateTab)="setTab($event)" (requestVerification)="openVerificationModal($event)" (logout)="logout()">
+              (navigateTab)="setTab($event)" (requestVerification)="openVerificationModal($event)"
+              (requestEditProfile)="editProfileAndSwitch()" (logout)="logout()">
             </app-mobile-overview-tab>
           </div>
 
@@ -448,7 +484,8 @@
             <app-profile-tab [profile]="prof" [lawyerProfile]="lawyerProfile()" [accountId]="accountId()"
               [autoEdit]="triggerProfileEdit()" (profileUpdated)="onProfileUpdated($event)"
               (lawyerProfileUpdated)="onLawyerProfileUpdated($event)" (triggerAvatarChange)="openAvatarModal()"
-              (requestPhoneVerification)="openVerificationModal('phone')" (navigateTab)="setTab($event)">
+              (requestPhoneVerification)="openVerificationModal('phone')"
+              (requestEmailVerification)="openVerificationModal('email')" (navigateTab)="setTab($event)">
             </app-profile-tab>
           </div>
 
@@ -456,7 +493,8 @@
           <div *ngIf="activeTab() === 'account'" [id]="'profile-panel-account'" role="tabpanel"
             [attr.aria-labelledby]="'profile-tab-account'" class="animate-[fadeIn_0.25s_ease-out]">
             <app-account-tab [profile]="prof" (profileUpdated)="onProfileUpdated($event)"
-              (requestVerification)="openVerificationModal($event)" (requestConfirm)="handleConfirmRequest($event)">
+              (requestVerification)="openVerificationModal($event)" (requestEditProfile)="editProfileAndSwitch()"
+              (requestConfirm)="handleConfirmRequest($event)">
             </app-account-tab>
           </div>
 

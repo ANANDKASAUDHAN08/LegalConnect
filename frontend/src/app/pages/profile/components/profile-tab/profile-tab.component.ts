@@ -90,6 +90,7 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
   @Output() lawyerProfileUpdated = new EventEmitter<LawyerProfileData>();
   @Output() triggerAvatarChange = new EventEmitter<void>();
   @Output() requestPhoneVerification = new EventEmitter<void>();
+  @Output() requestEmailVerification = new EventEmitter<void>();
   @Output() navigateTab = new EventEmitter<'overview' | 'profile' | 'account'>();
 
   private fb = inject(FormBuilder);
@@ -125,10 +126,10 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
   ];
 
   readonly genderSelectOptions: SelectOption[] = [
-    { value: 'Male', label: 'Male' },
-    { value: 'Female', label: 'Female' },
-    { value: 'Other', label: 'Other' },
-    { value: 'Prefer not to say', label: 'Prefer not to say' }
+    { value: 'Male', label: 'Male', icon: 'gender-male', iconColor: '#38bdf8' },
+    { value: 'Female', label: 'Female', icon: 'gender-female', iconColor: '#f472b6' },
+    { value: 'Other', label: 'Other', icon: 'gender-other', iconColor: '#a78bfa' },
+    { value: 'Prefer not to say', label: 'Prefer not to say', icon: 'eye-off', iconColor: '#94a3b8' }
   ];
 
   isLawyer = computed(() => this.profile?.role === 'Lawyer');
@@ -428,6 +429,10 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
 
   triggerVerifyPhone(): void {
     this.requestPhoneVerification.emit();
+  }
+
+  triggerVerifyEmail(): void {
+    this.requestEmailVerification.emit();
   }
 
   getMaskedPhone(): string {

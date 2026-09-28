@@ -7,11 +7,13 @@ import { GoogleAuthService } from '../../../services/google-auth.service';
 import { SnackbarService } from '../../../services/snackbar.service';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { extractErrorMessage } from '../../../core/utils/error-utils';
+import { IconComponent } from '../../../components/icon/icon.component';
+import { TooltipDirective } from '../../../directives/tooltip.directive';
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule],
+  imports: [CommonModule, RouterLink, FormsModule, IconComponent, TooltipDirective],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss'],
   animations: [
@@ -236,7 +238,7 @@ export class RegisterComponent implements OnInit {
       next: (res) => {
         this.loading.set(false);
         if (res?.token && res?.user) {
-          this.snackbar.show('Account created successfully! Welcome to LegalConnect.', 'success');
+          this.snackbar.show('Account created! A verification link has been sent to your email. Please verify before signing in.', 'success', 8000);
           const role = (res.user?.role || '').toLowerCase();
           const defaultDestination = role === 'lawyer' ? '/lawyer/workstation' : '/client/portal';
           const returnUrl = this.route.snapshot.queryParams['returnUrl'] || defaultDestination;
@@ -254,7 +256,7 @@ export class RegisterComponent implements OnInit {
             });
           });
         } else {
-          const msg = res?.message || 'Account created! Please check your email to verify your account before signing in.';
+          const msg = res?.message || 'Account created! A verification link has been sent to your email. Please verify before signing in.';
           this.snackbar.show(msg, 'info', 8000);
           this.router.navigate(['/login'], { queryParams: { verificationSent: 'true' } });
         }

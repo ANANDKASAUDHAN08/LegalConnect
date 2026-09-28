@@ -91,6 +91,12 @@ function decodeJwtPayload(token: string | null): any | null {
  * the session by validating the existing access token or performing a silent
  * refresh using the HttpOnly cookie.
  *
+ * ## Multi-Tab Synchronization
+ * - `storage` event in {@link TokenStorageService} keeps in-memory token caches in sync.
+ * - `BroadcastChannel` propagates LOGIN, LOGOUT, and TOKEN_REFRESHED events to all tabs.
+ * - TOKEN_REFRESHED prevents the thundering-herd problem: only one tab performs the
+ *   refresh HTTP call, and all other tabs adopt the new tokens immediately.
+ *
  * @see {@link TokenStorageService} for token persistence.
  * @see {@link authInterceptor} for automatic token attachment and 401 recovery.
  */
@@ -246,11 +252,15 @@ export class AuthService {
    * Rehydrates the session on application startup or page refresh.
    *
    * Strategy:
-   * 1. If an access token exists in `localStorage`, validates it by fetching the user profile.
+   * 1. If an access token exists and is NOT expired, validates it by fetching the user profile.
    *    If the token is expired, the interceptor will transparently refresh it.
-   * 2. If no access token exists, attempts a silent refresh using the HttpOnly cookie.
-   *    Since JavaScript cannot inspect HttpOnly cookies, this is a "try and verify" approach —
-   *    the server will accept or reject based on cookie presence.
+   * 2. If an access token exists but IS expired (e.g., returning the next day), performs
+   *    a dedicated silent refresh BEFORE firing any profile/API requests — preventing a
+   *    storm of 401s from components that mount in parallel.
+   * 3. If no access token exists but a session hint flag is present (user was previously
+   *    logged in), attempts a silent refresh using the stored refresh token or HttpOnly cookie.
+   * 4. If no access token AND no session hint exist (first-time guest), resolves `false`
+   *    immediately WITHOUT making any HTTP calls — eliminating the red 401 error in DevTools.
    *
    * @returns Observable that emits `true` if the session was successfully restored.
    */
@@ -258,39 +268,26 @@ export class AuthService {
     const currentToken = this.getToken();
 
     if (currentToken) {
+      // Check if token is already expired before using it
+      const payload = decodeJwtPayload(currentToken);
+      if (payload?.exp && (payload.exp * 1000) <= Date.now()) {
+        // Token expired (e.g., user returns the next morning).
+        // Refresh FIRST, then fetch profile — prevents 401 storms from parallel component mounts.
+        return this.refreshThenFetchProfile();
+      }
+      // Token still valid — use it directly
       return this.fetchAndSetProfile();
     }
 
-    return new Observable<boolean>(subscriber => {
-      this.refreshTokenAsPromise()
-        .then(newToken => {
-          if (newToken) {
-            this.fetchAndSetProfile().subscribe({
-              next: result => {
-                subscriber.next(result);
-                subscriber.complete();
-              },
-              error: () => {
-                this._isSessionLoaded.next(true);
-                this.softClear();
-                subscriber.next(false);
-                subscriber.complete();
-              }
-            });
-          } else {
-            this._isSessionLoaded.next(true);
-            this.softClear();
-            subscriber.next(false);
-            subscriber.complete();
-          }
-        })
-        .catch(() => {
-          this._isSessionLoaded.next(true);
-          this.softClear();
-          subscriber.next(false);
-          subscriber.complete();
-        });
-    });
+    // No token — only attempt refresh if a session hint exists (user was previously logged in)
+    if (!this.tokenStorage.hasSessionHint()) {
+      // Guest / first-time visitor — resolve immediately without any HTTP call
+      this._isSessionLoaded.next(true);
+      return of(false);
+    }
+
+    // Has session hint but no access token — attempt silent refresh via cookie/stored refresh token
+    return this.refreshThenFetchProfile();
   }
 
   // ─── Token Refresh ──────────────────────────────────────────────────────────
@@ -304,6 +301,10 @@ export class AuthService {
    * Uses a singleton Promise to deduplicate concurrent refresh attempts.
    * The Promise is cleared via `queueMicrotask` after resolution to ensure
    * all dependent `.then()` chains execute before the next cycle can begin.
+   *
+   * Includes Render cold-start resilience: retries on status 0/502/503/504
+   * with exponential backoff calibrated to cover 30–50s container boot time
+   * (3s → 8s → 20s cumulative ≈ 31s).
    *
    * @returns Promise resolving to the new access token, or rejecting on failure.
    */
@@ -321,11 +322,12 @@ export class AuthService {
     this._refreshPromise = firstValueFrom(
       this.http.post<any>(`${this.apiUrl}/refresh`, payload, this.httpOptions).pipe(
         retry({
-          count: 2,
+          count: 3,
           delay: (error: HttpErrorResponse, retryCount: number) => {
-            // If backend is waking up from Render cold start (status 0, 502, 503, 504), retry with backoff
+            // Render cold-start resilience: 3s → 8s → 20s (covers 30-50s boot window)
             if (error?.status === 0 || (error?.status >= 502 && error?.status <= 504)) {
-              return timer(retryCount * 2500);
+              const delayMs = Math.min(3000 * Math.pow(2.5, retryCount - 1), 25000);
+              return timer(delayMs);
             }
             throw error;
           }
@@ -342,6 +344,9 @@ export class AuthService {
         if (res?.refreshToken) {
           this.tokenStorage.setRefreshToken(res.refreshToken);
         }
+        // Notify other tabs — they adopt the new tokens without making their own refresh calls.
+        // This prevents the multi-tab thundering-herd problem.
+        this.broadcastTokenRefresh(newToken, res?.refreshToken);
         return newToken;
       })
       .catch((err: HttpErrorResponse) => {
@@ -451,7 +456,8 @@ export class AuthService {
 
   /**
    * Processes a successful authentication response.
-   * Stores the access token, caches the user profile, and schedules proactive refresh.
+   * Stores the access token, caches the user profile, schedules proactive refresh,
+   * and sets the session hint flag for future startup recovery.
    * The refresh token cookie is set automatically by the browser from the `Set-Cookie` header.
    */
   private handleLoginSuccess(res: any): void {
@@ -462,6 +468,8 @@ export class AuthService {
     if (res.refreshToken) {
       this.tokenStorage.setRefreshToken(res.refreshToken);
     }
+    // Set session hint so future page loads know to attempt recovery
+    this.tokenStorage.setSessionHint();
     if (res.user) {
       if (res.user.avatarUrl) {
         res.user.avatarUrl = normalizeMediaUrl(res.user.avatarUrl);
@@ -476,9 +484,27 @@ export class AuthService {
     this._isSessionLoaded.next(true);
   }
 
-  /** Fetches the user profile from the server and updates local authentication state. */
+  /**
+   * Fetches the user profile from the server and updates local authentication state.
+   *
+   * Includes Render cold-start resilience: retries on transient errors (status 0, 502–504)
+   * with exponential backoff calibrated for 30–50s container boot time.
+   * Transient failures do NOT clear the session — the user's refresh token is still valid.
+   */
   private fetchAndSetProfile(): Observable<boolean> {
     return this.userProfileService.getProfile().pipe(
+      // Render cold-start resilience: retry on transient infrastructure errors
+      retry({
+        count: 3,
+        delay: (error: HttpErrorResponse, retryCount: number) => {
+          if (error?.status === 0 || (error?.status >= 502 && error?.status <= 504)) {
+            // 3s → 8s → 20s (covers 30-50s Render boot window)
+            const delayMs = Math.min(3000 * Math.pow(2.5, retryCount - 1), 25000);
+            return timer(delayMs);
+          }
+          throw error; // Non-transient error — don't retry
+        }
+      }),
       map((res: any) => {
         this._isSessionLoaded.next(true);
         if (res && res.isAuthenticated) {
@@ -496,8 +522,13 @@ export class AuthService {
           return false;
         }
       }),
-      catchError(() => {
+      catchError((err: HttpErrorResponse) => {
         this._isSessionLoaded.next(true);
+        // Do NOT clear session on transient/cold-start errors —
+        // the user's refresh token is still valid and will work once Render boots.
+        if (err?.status === 0 || (err?.status >= 502 && err?.status <= 504)) {
+          return of(false);
+        }
         this.softClear();
         return of(false);
       })
@@ -505,8 +536,47 @@ export class AuthService {
   }
 
   /**
+   * Performs a silent refresh followed by profile fetch.
+   * Used when the access token is expired or missing but a session hint exists.
+   * Centralizes the refresh-then-profile pattern to avoid code duplication.
+   */
+  private refreshThenFetchProfile(): Observable<boolean> {
+    return new Observable<boolean>(subscriber => {
+      this.refreshTokenAsPromise()
+        .then(newToken => {
+          if (newToken) {
+            this.fetchAndSetProfile().subscribe({
+              next: result => {
+                subscriber.next(result);
+                subscriber.complete();
+              },
+              error: () => {
+                this._isSessionLoaded.next(true);
+                this.softClear();
+                subscriber.next(false);
+                subscriber.complete();
+              }
+            });
+          } else {
+            this._isSessionLoaded.next(true);
+            this.softClear();
+            subscriber.next(false);
+            subscriber.complete();
+          }
+        })
+        .catch(() => {
+          this._isSessionLoaded.next(true);
+          this.softClear();
+          subscriber.next(false);
+          subscriber.complete();
+        });
+    });
+  }
+
+  /**
    * Soft clear: removes the access token and resets in-memory state.
    * The HttpOnly refresh cookie is preserved for potential session recovery.
+   * The session hint is NOT cleared — transient failures should not prevent future recovery.
    */
   private softClear(): void {
     this.cancelProactiveRefresh();
@@ -516,8 +586,9 @@ export class AuthService {
   }
 
   /**
-   * Hard clear: removes all client-side authentication state.
+   * Hard clear: removes all client-side authentication state including the session hint.
    * The HttpOnly cookie is cleared server-side via the `/auth/logout` endpoint.
+   * Only called during: explicit logout, confirmed server-side token revocation (401/403 on refresh).
    */
   private hardClear(): void {
     this.cancelProactiveRefresh();
@@ -589,6 +660,9 @@ export class AuthService {
    *
    * - `LOGOUT` event: immediately clears state and redirects to login in all tabs.
    * - `LOGIN` event: triggers a silent refresh to synchronize the new session.
+   * - `TOKEN_REFRESHED` event: adopts the new tokens from the tab that performed
+   *   the refresh — prevents the multi-tab thundering-herd problem where multiple
+   *   tabs simultaneously attempt to refresh and cascade replay detections.
    */
   private initMultiTabSync(): void {
     if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
@@ -604,6 +678,21 @@ export class AuthService {
                 this.fetchAndSetProfile().subscribe();
               })
               .catch(() => { });
+          } else if (event.data?.type === 'TOKEN_REFRESHED') {
+            // Another tab already refreshed — adopt its tokens directly.
+            // This prevents this tab from making its own refresh call (which would
+            // rotate the token again and potentially trigger replay detection).
+            if (event.data.accessToken) {
+              this.tokenStorage.setToken(event.data.accessToken);
+              this.scheduleProactiveRefresh(event.data.accessToken);
+            }
+            if (event.data.refreshToken) {
+              this.tokenStorage.setRefreshToken(event.data.refreshToken);
+            }
+            // Re-hydrate profile if we're in a session-hint state but not yet logged in
+            if (!this._currentUser.value && event.data.accessToken) {
+              this.fetchAndSetProfile().subscribe();
+            }
           }
         };
       } catch {
@@ -617,6 +706,24 @@ export class AuthService {
     if (this.authChannel) {
       try {
         this.authChannel.postMessage({ type });
+      } catch {
+        // Silently ignore broadcast failures
+      }
+    }
+  }
+
+  /**
+   * Broadcasts a TOKEN_REFRESHED event to all other tabs with the new token pair.
+   * Other tabs adopt these tokens directly instead of making their own refresh calls.
+   */
+  private broadcastTokenRefresh(accessToken: string | null, refreshToken?: string): void {
+    if (this.authChannel) {
+      try {
+        this.authChannel.postMessage({
+          type: 'TOKEN_REFRESHED',
+          accessToken,
+          refreshToken
+        });
       } catch {
         // Silently ignore broadcast failures
       }

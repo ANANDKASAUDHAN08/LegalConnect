@@ -13,6 +13,11 @@ import { Injectable } from '@angular/core';
  *   `SameSite` cookie (`__session`) managed entirely by the server. This token never enters
  *   JavaScript execution context, making it immune to XSS exfiltration.
  *
+ * ## Cross-Tab Synchronization
+ * Listens to browser `storage` events to keep in-memory caches synchronized across
+ * all open tabs. When Tab A rotates a token, Tab B immediately receives the update
+ * via the `storage` event (which fires only in other tabs, not the originator).
+ *
  * @see {@link AuthService} for session lifecycle management.
  * @see {@link AuthInterceptor} for automatic token attachment and 401 recovery.
  */
@@ -20,6 +25,7 @@ import { Injectable } from '@angular/core';
 export class TokenStorageService {
   private static readonly ACCESS_TOKEN_KEY = 'lc_access_token';
   private static readonly REFRESH_TOKEN_KEY = 'lc_refresh_token';
+  private static readonly SESSION_HINT_KEY = 'lc_has_session';
 
   private inMemoryToken: string | null = null;
   private inMemoryRefreshToken: string | null = null;
@@ -29,8 +35,52 @@ export class TokenStorageService {
     if (typeof window !== 'undefined') {
       this.inMemoryToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_KEY);
       this.inMemoryRefreshToken = localStorage.getItem(TokenStorageService.REFRESH_TOKEN_KEY);
+
+      // Cross-tab sync: when another tab writes to localStorage, update in-memory caches.
+      // The `storage` event fires ONLY in other tabs (not the one that wrote), which is
+      // exactly the behavior needed to prevent multi-tab token desynchronization.
+      window.addEventListener('storage', (event) => {
+        if (event.key === TokenStorageService.ACCESS_TOKEN_KEY) {
+          this.inMemoryToken = event.newValue;
+        }
+        if (event.key === TokenStorageService.REFRESH_TOKEN_KEY) {
+          this.inMemoryRefreshToken = event.newValue;
+        }
+      });
     }
   }
+
+  // ─── Session Hint ────────────────────────────────────────────────────────────
+
+  /**
+   * Returns `true` if the user was previously logged in (session hint flag exists
+   * or a refresh token is present in storage). Used by `checkSession()` to avoid
+   * firing a blind `POST /api/auth/refresh` for unauthenticated guests.
+   */
+  hasSessionHint(): boolean {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem(TokenStorageService.SESSION_HINT_KEY) === '1'
+        || !!this.getRefreshToken();
+  }
+
+  /** Marks the current browser as having an active session. Set on login success. */
+  setSessionHint(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(TokenStorageService.SESSION_HINT_KEY, '1');
+    }
+  }
+
+  /**
+   * Clears the session hint. Called ONLY during explicit logout or confirmed
+   * server-side token revocation. Must NOT be called on transient failures.
+   */
+  clearSessionHint(): void {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem(TokenStorageService.SESSION_HINT_KEY);
+    }
+  }
+
+  // ─── Access Token ────────────────────────────────────────────────────────────
 
   /** Returns the current access token, preferring the in-memory cache over `localStorage`. */
   getToken(): string | null {
@@ -55,19 +105,24 @@ export class TokenStorageService {
     }
   }
 
-  /** Returns the current refresh token (used as cross-origin fallback when cookies are blocked). */
+  // ─── Refresh Token ───────────────────────────────────────────────────────────
+
+  /**
+   * Returns the current refresh token with cross-tab freshness guarantee.
+   *
+   * Always cross-checks `localStorage` to detect updates written by another tab
+   * that may not yet have been received via the `storage` event (e.g., event
+   * fired but JS event loop hasn't processed it yet).
+   */
   getRefreshToken(): string | null {
-    if (this.inMemoryRefreshToken) {
-      return this.inMemoryRefreshToken;
-    }
     if (typeof window !== 'undefined') {
       const stored = localStorage.getItem(TokenStorageService.REFRESH_TOKEN_KEY);
-      if (stored) {
-        this.inMemoryRefreshToken = stored;
+      if (stored && stored !== this.inMemoryRefreshToken) {
+        this.inMemoryRefreshToken = stored; // Another tab updated it
       }
-      return stored;
+      return this.inMemoryRefreshToken;
     }
-    return null;
+    return this.inMemoryRefreshToken;
   }
 
   /** Persists the refresh token to both in-memory cache and `localStorage`. */
@@ -85,6 +140,8 @@ export class TokenStorageService {
       localStorage.removeItem(TokenStorageService.REFRESH_TOKEN_KEY);
     }
   }
+
+  // ─── Clear Operations ────────────────────────────────────────────────────────
 
   /**
    * Performs a soft clear — removes only the access token.
@@ -115,12 +172,15 @@ export class TokenStorageService {
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TokenStorageService.ACCESS_TOKEN_KEY);
       localStorage.removeItem(TokenStorageService.REFRESH_TOKEN_KEY);
+      localStorage.removeItem(TokenStorageService.SESSION_HINT_KEY);
       localStorage.removeItem('lc_refresh_hint');
       localStorage.removeItem('lc_token');
       localStorage.removeItem('lc_user_profile');
       localStorage.removeItem('lc_has_session');
     }
   }
+
+  // ─── User Cache ──────────────────────────────────────────────────────────────
 
   /** Returns the cached user profile object, if available. */
   getCachedUser(): any | null {
