@@ -58,7 +58,7 @@ export class LawResultCardComponent implements OnDestroy {
     const speakerId = `${this.result?.shortName}_${this.result?.section_number}`;
     return this.speechService.isSpeaking && this.speechService.activeSpeakerId === speakerId;
   }
-  compareDiff: { oldText: string; newText: SafeHtml } = { oldText: '', newText: '' };
+  compareDiff: { oldText: string; newText: SafeHtml } | null = null;
 
   readonly mobileTools = [
     {
@@ -225,10 +225,10 @@ export class LawResultCardComponent implements OnDestroy {
       this.isCompoundable = val.criminalDetails?.compoundable?.toLowerCase() === 'compoundable';
 
       const rawCompare = this.legalService.getMockCompareDiff(val);
-      this.compareDiff = {
+      this.compareDiff = rawCompare ? {
         oldText: rawCompare.oldText,
         newText: this.sanitizer.bypassSecurityTrustHtml(rawCompare.newText)
-      };
+      } : null;
 
       // Reset explanation when result changes to reload dynamically
       this.laymanExplanation = '';

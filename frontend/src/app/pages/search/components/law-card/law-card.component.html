@@ -413,7 +413,7 @@
       <button (click)="toggleInlineCompare()"
         class="text-indigo-400 hover:text-red-500 text-xs bg-transparent border-0 cursor-pointer transition-colors">Close</button>
     </div>
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+    <div *ngIf="compareDiff && compareDiff.oldText" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
       <div class="p-3 bg-white/60 dark:bg-slate-900/60 rounded-xl border border-slate-200/40 dark:border-slate-800/40">
         <div class="font-bold text-slate-500 mb-1">Old Historical Code Text:</div>
         <p class="text-slate-600 dark:text-slate-300 leading-relaxed m-0">{{ compareDiff.oldText }}</p>
@@ -422,6 +422,12 @@
         <div class="font-bold text-indigo-500 mb-1">New Enacted Reform (With Highlighted Diffs):</div>
         <p class="text-slate-700 dark:text-slate-200 leading-relaxed m-0" [innerHTML]="compareDiff.newText"></p>
       </div>
+    </div>
+    <div *ngIf="!compareDiff || !compareDiff.oldText"
+      class="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
+      <p class="m-0 font-medium">Detailed clause-by-clause textual diff not cataloged for this statutory provision.</p>
+      <p class="m-0 text-[10px] text-slate-400 dark:text-slate-500 mt-1">Please refer to the Reform Map or official
+        legislative gazette for comprehensive cross-code tracking.</p>
     </div>
   </div>
 
@@ -507,23 +513,44 @@
             </div>
             <p class="text-slate-500 dark:text-slate-400 mt-2 leading-relaxed m-0">{{ prec.holding }}</p>
           </div>
-          <div *ngIf="cachedPrecedents.length === 0" class="text-center py-6 text-slate-400 text-xs">No precedents
-            loaded.</div>
+          <div *ngIf="cachedPrecedents.length === 0"
+            class="flex flex-col items-center justify-center py-6 px-4 text-center">
+            <svg class="w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor"
+              stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+            </svg>
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 m-0">No verified judicial precedents
+              cataloged yet.</p>
+            <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-1 m-0">Search published court judgments or
+              consult an advocate for latest case rulings.</p>
+          </div>
         </div>
 
         <!-- 2. Amendment Timeline -->
-        <div *ngIf="activeMobileTool === 'timeline'"
-          class="pl-3 border-l border-slate-200 dark:border-slate-800 ml-2 flex flex-col gap-4">
-          <div *ngFor="let item of cachedTimeline; trackBy: trackByTimelineItem" class="relative pl-4">
-            <div
-              class="absolute -left-[19px] top-1.5 w-2 h-2 rounded-full bg-accent border-2 border-white dark:border-slate-900">
+        <div *ngIf="activeMobileTool === 'timeline'" class="flex flex-col">
+          <div *ngIf="cachedTimeline.length > 0"
+            class="pl-3 border-l border-slate-200 dark:border-slate-800 ml-2 flex flex-col gap-4">
+            <div *ngFor="let item of cachedTimeline; trackBy: trackByTimelineItem" class="relative pl-4">
+              <div
+                class="absolute -left-[19px] top-1.5 w-2 h-2 rounded-full bg-accent border-2 border-white dark:border-slate-900">
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="font-black font-mono text-[9px] text-accent bg-accent/10 px-1.5 py-0.5 rounded">{{
+                  item.year }}</span>
+                <span class="font-bold text-xs text-slate-800 dark:text-slate-200">{{ item.title }}</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ item.desc }}</p>
             </div>
-            <div class="flex items-center gap-2">
-              <span class="font-black font-mono text-[9px] text-accent bg-accent/10 px-1.5 py-0.5 rounded">{{ item.year
-                }}</span>
-              <span class="font-bold text-xs text-slate-800 dark:text-slate-200">{{ item.title }}</span>
-            </div>
-            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ item.desc }}</p>
+          </div>
+          <div *ngIf="cachedTimeline.length === 0"
+            class="flex flex-col items-center justify-center py-6 px-4 text-center">
+            <svg class="w-8 h-8 text-slate-300 dark:text-slate-600 mb-2" fill="none" stroke="currentColor"
+              stroke-width="1.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 m-0">Historical amendment timeline not
+              available for this statutory provision.</p>
           </div>
         </div>
 
@@ -670,6 +697,20 @@
           </div>
           <p class="text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ prec.holding }}</p>
         </div>
+        <div *ngIf="cachedPrecedents.length === 0"
+          class="flex items-center gap-3 p-3 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/40 text-xs text-slate-500 dark:text-slate-400">
+          <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round"
+              d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <div>
+            <span class="font-bold text-slate-700 dark:text-slate-300">No verified judicial precedents currently
+              cataloged for this section.</span>
+            <p class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 m-0">Search published high court & Supreme
+              Court judgments or consult a verified advocate for relevant rulings.</p>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -699,19 +740,29 @@
         </svg>
       </button>
 
-      <div *ngIf="expandedTimeline"
-        class="pl-3 mt-3 border-l border-slate-200 dark:border-slate-800 ml-2 flex flex-col gap-4 animate-fade-in">
-        <div *ngFor="let item of cachedTimeline; trackBy: trackByTimelineItem" class="relative pl-4">
-          <div
-            class="absolute -left-[19px] top-1.5 w-2 h-2 rounded-full bg-accent border-2 border-white dark:border-slate-900">
+      <div *ngIf="expandedTimeline" class="animate-fade-in">
+        <div *ngIf="cachedTimeline.length > 0"
+          class="pl-3 mt-3 border-l border-slate-200 dark:border-slate-800 ml-2 flex flex-col gap-4">
+          <div *ngFor="let item of cachedTimeline; trackBy: trackByTimelineItem" class="relative pl-4">
+            <div
+              class="absolute -left-[19px] top-1.5 w-2 h-2 rounded-full bg-accent border-2 border-white dark:border-slate-900">
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                class="font-black font-mono text-[10px] text-accent tracking-wider bg-accent/10 px-1.5 py-0.5 rounded">{{
+                item.year }}</span>
+              <span class="font-bold text-xs text-slate-800 dark:text-slate-200">{{ item.title }}</span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ item.desc }}</p>
           </div>
-          <div class="flex items-center gap-2">
-            <span
-              class="font-black font-mono text-[10px] text-accent tracking-wider bg-accent/10 px-1.5 py-0.5 rounded">{{
-              item.year }}</span>
-            <span class="font-bold text-xs text-slate-800 dark:text-slate-200">{{ item.title }}</span>
-          </div>
-          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">{{ item.desc }}</p>
+        </div>
+        <div *ngIf="cachedTimeline.length === 0"
+          class="flex items-center gap-3 p-3 mt-2 rounded-lg bg-slate-50/50 dark:bg-slate-900/30 border border-slate-200/50 dark:border-slate-800/40 text-xs text-slate-500 dark:text-slate-400">
+          <svg class="w-5 h-5 text-slate-400 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5"
+            viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span class="font-medium">Historical amendment timeline not available for this statutory provision.</span>
         </div>
       </div>
     </div>

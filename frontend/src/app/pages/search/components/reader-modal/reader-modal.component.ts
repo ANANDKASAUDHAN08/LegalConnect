@@ -229,6 +229,9 @@ export class ReaderModeModalComponent implements OnInit, OnDestroy, AfterViewIni
 
   isTranslationFallback(): boolean {
     if (this.readerLanguage !== 'HI' || !this.readerSection) return false;
+    if (this.readerSection.isFallbackTranslation === true || this.readerSection.translationFallback === true) {
+      return true;
+    }
     const content = this.readerSection.content_hi || '';
     return content.includes('अनुवाद अनुपलब्ध') || content.includes('Mock Translation') || content.includes('GEMINI_API_KEY');
   }

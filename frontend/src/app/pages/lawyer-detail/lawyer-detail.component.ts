@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, ActivatedRoute, Router } from '@angular/router';
@@ -12,6 +12,11 @@ import { InteractiveLikeComponent } from '../../components/interactive-like/inte
 import { ReportTriggerComponent } from '../../components/report-modal/report-trigger/report-trigger.component';
 import { InteractionService } from '../../services/interaction.service';
 import { UniversalBookmarkService } from '../../services/universal-bookmark.service';
+
+import { VerificationService } from '../../services/verification.service';
+import { IconComponent } from '../../components/icon/icon.component';
+import { TooltipDirective } from '../../directives/tooltip.directive';
+import { getWebmailLauncher, WebmailProvider } from '../../core/utils/webmail-helper';
 
 interface ContactForm {
   name: string;
@@ -35,7 +40,9 @@ interface ReviewForm {
     RouterLink,
     BookmarkButtonComponent,
     InteractiveLikeComponent,
-    ReportTriggerComponent
+    ReportTriggerComponent,
+    IconComponent,
+    TooltipDirective
   ],
   templateUrl: './lawyer-detail.component.html',
   styleUrls: ['./lawyer-detail.component.scss']
@@ -59,6 +66,7 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
 
   // Consultation Inquiry Modal State
   showInquiryModal = false;
+  isSubmittingInquiry = false;
   contactForm: ContactForm = { name: '', email: '', message: '', lawyerId: '' };
   private autoSaveInterval: any;
   private readonly DRAFT_KEY = 'lawyer_detail_contact';
@@ -77,6 +85,18 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
   previewImageUrl: string | null = null;
   previewIsBanner = false;
 
+  // Pillar 5: Email Verification Gating Interlock
+  showVerificationInterlockModal = false;
+  interlockOtpCode = '';
+  isVerifyingInterlockOtp = false;
+  isResendingInterlock = false;
+  interlockCooldown = 0;
+  private interlockCooldownTimer: any = null;
+
+  get interlockWebmail(): WebmailProvider | null {
+    return getWebmailLauncher(this.currentUser?.email);
+  }
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -86,7 +106,8 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
     private snackbar: SnackbarService,
     private auth: AuthService,
     private interactionService: InteractionService,
-    private bookmarkService: UniversalBookmarkService
+    private bookmarkService: UniversalBookmarkService,
+    private verificationService: VerificationService
   ) { }
 
   ngOnInit() {
@@ -107,6 +128,10 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
 
   ngOnDestroy() {
     clearInterval(this.autoSaveInterval);
+    if (this.interlockCooldownTimer) {
+      clearInterval(this.interlockCooldownTimer);
+      this.interlockCooldownTimer = null;
+    }
     document.body.classList.remove('overflow-hidden');
   }
 
@@ -166,12 +191,101 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
     return name.replace('Adv. ', '').split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
   }
 
+  // --- Pillar 5: Email Verification Gating Interlock Handlers ---
+  closeVerificationInterlock() {
+    this.showVerificationInterlockModal = false;
+    this.interlockOtpCode = '';
+    if (!this.previewImageUrl && !this.showInquiryModal) {
+      document.body.classList.remove('overflow-hidden');
+    }
+  }
+
+  onInterlockOtpInput(val: string) {
+    const numeric = val.replace(/\D/g, '').slice(0, 6);
+    this.interlockOtpCode = numeric;
+    if (numeric.length === 6 && this.currentUser?.email) {
+      this.verifyInterlockOtp();
+    }
+  }
+
+  verifyInterlockOtp() {
+    const code = this.interlockOtpCode.trim();
+    const email = this.currentUser?.email?.trim();
+    if (!email || code.length !== 6 || this.isVerifyingInterlockOtp) return;
+
+    this.isVerifyingInterlockOtp = true;
+    this.verificationService.verifyEmail(code, email).subscribe({
+      next: () => {
+        this.isVerifyingInterlockOtp = false;
+        this.auth.updateCurrentUser({ isEmailVerified: true });
+        this.snackbar.show('Email confirmed successfully! Proceeding with your consultation request.', 'success');
+        this.closeVerificationInterlock();
+        // Automatically unlock and launch consultation modal seamlessly
+        this.openInquiry();
+      },
+      error: (err) => {
+        this.isVerifyingInterlockOtp = false;
+        const msg = err?.error?.message || err?.message || 'Invalid or expired 6-digit code. Please request a new code.';
+        this.snackbar.show(msg, 'error');
+      }
+    });
+  }
+
+  resendInterlockVerification() {
+    const email = this.currentUser?.email?.trim();
+    if (!email || this.isResendingInterlock || this.interlockCooldown > 0) return;
+
+    this.isResendingInterlock = true;
+    this.verificationService.resendEmailVerification(email).subscribe({
+      next: () => {
+        this.isResendingInterlock = false;
+        this.snackbar.show(`A fresh verification code was sent to ${email}.`, 'success');
+        this.startInterlockCooldown(60);
+      },
+      error: (err) => {
+        this.isResendingInterlock = false;
+        this.snackbar.show(err?.error?.message || 'Failed to resend code. Please try again.', 'error');
+        this.startInterlockCooldown(15);
+      }
+    });
+  }
+
+  openInterlockWebmail() {
+    const webmail = this.interlockWebmail;
+    if (webmail) {
+      window.open(webmail.url, '_blank', 'noopener,noreferrer');
+    }
+  }
+
+  private startInterlockCooldown(seconds: number) {
+    if (this.interlockCooldownTimer) {
+      clearInterval(this.interlockCooldownTimer);
+    }
+    this.interlockCooldown = seconds;
+    this.interlockCooldownTimer = setInterval(() => {
+      this.interlockCooldown--;
+      if (this.interlockCooldown <= 0) {
+        this.interlockCooldown = 0;
+        clearInterval(this.interlockCooldownTimer);
+        this.interlockCooldownTimer = null;
+      }
+    }, 1000);
+  }
+
   // --- Consultation Dialog & SessionStorage Draft ---
   openInquiry() {
     if (!this.currentUser) {
       this.snackbar.show('Please log in to submit a consultation request.', 'warning');
       return;
     }
+
+    // Pillar 5: High-Trust Gating Interlock
+    if (this.currentUser.isEmailVerified === false) {
+      this.showVerificationInterlockModal = true;
+      document.body.classList.add('overflow-hidden');
+      return;
+    }
+
     if (!this.lawyer) return;
 
     this.showInquiryModal = true;
@@ -208,18 +322,26 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
   closeInquiry() {
     clearInterval(this.autoSaveInterval);
     this.showInquiryModal = false;
-    if (!this.previewImageUrl) {
+    if (!this.previewImageUrl && !this.showVerificationInterlockModal) {
       document.body.classList.remove('overflow-hidden');
     }
   }
 
   submitInquiry() {
+    if (this.currentUser?.isEmailVerified === false) {
+      this.closeInquiry();
+      this.showVerificationInterlockModal = true;
+      document.body.classList.add('overflow-hidden');
+      return;
+    }
+
     if (!this.contactForm.name || !this.contactForm.email || !this.contactForm.message) {
       this.snackbar.show('Please complete all form fields.', 'warning');
       return;
     }
     if (!this.lawyer) return;
 
+    this.isSubmittingInquiry = true;
     this.lawyerService.sendInquiry({
       clientName: this.contactForm.name,
       clientEmail: this.contactForm.email,
@@ -227,13 +349,22 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
       message: this.contactForm.message
     }).subscribe({
       next: () => {
+        this.isSubmittingInquiry = false;
         this.draft.clear(this.DRAFT_KEY);
         this.selectedSlot = null;
         this.closeInquiry();
         this.snackbar.show('Your consultation request has been sent successfully!', 'success');
       },
       error: (err) => {
-        this.snackbar.show(err.error?.message || 'Failed to submit request. Please try again.', 'error');
+        this.isSubmittingInquiry = false;
+        if (err?.error?.code === 'EMAIL_NOT_VERIFIED' || err?.error?.requiresEmailVerification) {
+          this.closeInquiry();
+          this.showVerificationInterlockModal = true;
+          document.body.classList.add('overflow-hidden');
+          this.snackbar.show(err.error?.message || 'Email verification is required before booking a consultation.', 'warning');
+        } else {
+          this.snackbar.show(err?.error?.message || 'Failed to submit request. Please try again.', 'error');
+        }
       }
     });
   }
@@ -375,6 +506,44 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
     this.previewImageUrl = null;
     if (!this.showInquiryModal) {
       document.body.classList.remove('overflow-hidden');
+    }
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeydown(event: KeyboardEvent) {
+    const isAnyModalOpen = this.showInquiryModal || this.showVerificationInterlockModal || !!this.previewImageUrl;
+    if (!isAnyModalOpen) return;
+
+    if (event.key === 'Escape') {
+      if (this.previewImageUrl) {
+        this.closeImagePreview();
+      } else if (this.showVerificationInterlockModal) {
+        this.closeVerificationInterlock();
+      } else if (this.showInquiryModal) {
+        this.closeInquiry();
+      }
+      return;
+    }
+
+    if (event.key === 'Tab') {
+      const activeModal = document.querySelector('.fixed.inset-0.z-50, .fixed.inset-0.z-\\[100\\]') as HTMLElement | null;
+      if (!activeModal) return;
+
+      const focusable = activeModal.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      );
+      if (!focusable || focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (event.shiftKey && (document.activeElement === first || !activeModal.contains(document.activeElement))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && (document.activeElement === last || !activeModal.contains(document.activeElement))) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   }
 }

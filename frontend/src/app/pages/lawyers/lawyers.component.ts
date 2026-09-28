@@ -8,13 +8,15 @@ import { AuthService, UserProfile } from '../../services/auth.service';
 import { LawyerCardComponent } from '../../components/lawyer-card/lawyer-card.component';
 import { LocationService } from '../../services/location.service';
 import { LocationMapModalComponent } from '../../components/location-map-modal/location-map-modal.component';
+import { IconComponent } from '../../components/icon/icon.component';
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 declare var google: any;
 
 @Component({
   selector: 'app-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent, LocationMapModalComponent],
+  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent, LocationMapModalComponent, IconComponent, TooltipDirective],
   templateUrl: './lawyers.component.html',
   styleUrls: ['./lawyers.component.scss']
 })

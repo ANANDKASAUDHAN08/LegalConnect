@@ -39,6 +39,7 @@ import { AnalyticsTabComponent } from './components/analytics-tab/analytics-tab.
 import { ReportsTabComponent } from './components/reports-tab/reports-tab.component';
 import { FeedbackTabComponent } from './components/feedback-tab/feedback-tab.component';
 import { IconComponent } from '../../../components/icon/icon.component';
+import { EmailVerificationBannerComponent } from '../../../components/email-verification-banner/email-verification-banner.component';
 
 @Component({
   selector: 'app-client-dashboard',
@@ -67,7 +68,8 @@ import { IconComponent } from '../../../components/icon/icon.component';
     AnalyticsTabComponent,
     ReportsTabComponent,
     FeedbackTabComponent,
-    IconComponent
+    IconComponent,
+    EmailVerificationBannerComponent
   ],
   templateUrl: './client-dashboard.component.html',
   styleUrls: ['./client-dashboard.component.scss'],

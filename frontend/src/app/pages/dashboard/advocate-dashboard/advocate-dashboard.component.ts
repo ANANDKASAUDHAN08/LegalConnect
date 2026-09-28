@@ -15,6 +15,7 @@ import { FunnelMetricComponent, FunnelStep } from '../../../components/analytics
 import { DataExportService } from '../../../services/data-export.service';
 import { PrintExportService } from '../../../services/print-export.service';
 import { IconComponent } from '../../../components/icon/icon.component';
+import { EmailVerificationBannerComponent } from '../../../components/email-verification-banner/email-verification-banner.component';
 
 export interface AdvocateBasicAnalytics {
   totalViews: number;
@@ -56,7 +57,8 @@ export interface AdvocateReviewItem {
     TrendChartComponent,
     DonutChartComponent,
     FunnelMetricComponent,
-    IconComponent
+    IconComponent,
+    EmailVerificationBannerComponent
   ],
   templateUrl: './advocate-dashboard.component.html',
   styleUrls: ['./advocate-dashboard.component.scss'],

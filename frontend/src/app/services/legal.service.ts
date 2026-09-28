@@ -514,9 +514,9 @@ export class LegalService {
     return this.http.delete<any>(`${this.apiUrl}/case-packs/${id}`, { withCredentials: true });
   }
 
-  // --- Client-Side Mock Data Fallbacks (Production Readiness Extraction) ---
+  // --- Curated Domain Data Fallbacks (Production Hardened) ---
   getMockPrecedents(val: any): Array<{ caseName: string; citation: string; holding: string }> {
-    const num = val.section_number;
+    const num = String(val.section_number || '').trim();
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is302 = num === '302' || num === '101';
     const is138 = num === '138';
@@ -540,15 +540,13 @@ export class LegalService {
       return [
         { caseName: 'Nopany Investments (P) Ltd. v. Santokh Singh', citation: '(2008) 2 SCC 728', holding: 'Validity of notice under Section 106 TPA does not automatically expire if landlord accepts rent post-notice.' }
       ];
-    } else {
-      return [
-        { caseName: 'Hari Prasad v. State of UP', citation: '2021 SC 109', holding: 'Strict interpretation of statutory intent of section clauses.' }
-      ];
     }
+    // Return empty array for sections without curated precedents rather than hallucinating/fabricating citations
+    return [];
   }
 
   getMockTimeline(val: any): Array<{ year: string; title: string; desc: string }> {
-    const num = val.section_number;
+    const num = String(val.section_number || '').trim();
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is302 = num === '302' || num === '101';
 
@@ -568,17 +566,19 @@ export class LegalService {
         { year: '1882', title: 'Original Enactment', desc: 'Enacted to establish uniform rules for transfer of immovable properties.' },
         { year: '2002', title: 'Notice Period Amendment', desc: 'Simplified notice rules under Section 106, preventing dismissal on technical errors.' }
       ];
-    } else {
+    } else if (short === 'NI ACT' || num === '138') {
       return [
         { year: '1988', title: 'Act Revision', desc: 'Amended criminal penalty liabilities.' },
         { year: '2002', title: 'Fines Doubled', desc: 'Penalty limit increased to twice the cheque amount.' },
         { year: '2018', title: 'Interim Compensation', desc: 'Courts empowered to order 20% interim deposit.' }
       ];
     }
+    // Return empty array if no verified timeline exists
+    return [];
   }
 
   getMockProSeGuide(val: any): { court: string; fee: string; prep: string } {
-    const num = val.section_number;
+    const num = String(val.section_number || '').trim();
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is138 = num === '138';
     const isTPA = short === 'TPA' || short.includes('PROPERTY');
@@ -586,18 +586,18 @@ export class LegalService {
     return {
       court: short === 'RENT CONTROL ACT' ? 'Rent Tribunal' :
         (short === 'IPC' || short === 'BNS' ? 'Judicial Magistrate Court' :
-          (short.includes('ARCHITECT') ? 'Council of Architecture / High Court (Writ)' : 'Civil Court (Senior Division)')),
+          (short.includes('ARCHITECT') ? 'Council of Architecture / High Court (Writ)' : 'Competent Civil / Commercial Court')),
       fee: is138 ? '10% of bounced cheque value (max 10,000)' :
-        (short.includes('ARCHITECT') ? 'Standard regulatory appeal fee (Rs. 1,000)' : 'Flat Rs. 200 standard judicial filing stamps'),
+        (short.includes('ARCHITECT') ? 'Standard regulatory appeal fee (Rs. 1,000)' : 'State-specific court fees schedule / judicial stamp duty'),
       prep: is138 ? '30-day statutory legal notice served to drawer; 15 days wait period.' :
         (isTPA ? 'Serve 15-day prior written notice of termination under Section 106.' :
           (short.includes('ARCHITECT') ? 'Submit formal representation to the Registrar or Central Government within 30 days.' :
-            'Consult statutory compliance guidelines under the governing act.'))
+            'Verify mandatory notice requirements and statutory pre-institution mediation rules.'))
     };
   }
 
-  getMockCompareDiff(val: any): { oldText: string; newText: string } {
-    const num = val.section_number;
+  getMockCompareDiff(val: any): { oldText: string; newText: string } | null {
+    const num = String(val.section_number || '').trim();
     const is302 = num === '302' || num === '101';
     const is378 = num === '378' || num === '379' || num === '303';
 
@@ -611,12 +611,8 @@ export class LegalService {
         oldText: 'Whoever, intending to take dishonestly any moveable property out of the possession of any person without consent, moves that property in order to such taking, is said to commit theft.',
         newText: 'Whoever, intending to take dishonestly any movable property <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">including digital assets or data</ins> out of the possession of any person without consent... is said to commit theft.'
       };
-    } else {
-      return {
-        oldText: 'Whoever commits the offense specified under this section shall be liable to standard prosecution, fine, or imprisonment.',
-        newText: 'Whoever commits the offense under this section shall be liable to standard prosecution. <ins class="text-green-600 bg-green-500/10 font-bold px-1 rounded">Fines have been increased by 100% and provisions for community service have been introduced as alternative punishment.</ins>'
-      };
     }
+    return null;
   }
 
   // ── Legal Resources Directory API (with SWR Client Cache) ──
