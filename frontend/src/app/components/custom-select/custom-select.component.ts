@@ -13,8 +13,7 @@ import {
   inject,
   NgZone,
   ViewChild,
-  Optional,
-  Self
+  Renderer2
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NgControl, FormsModule } from '@angular/forms';
@@ -86,7 +85,12 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   @Input() searchPlaceholder: string = 'Search...';
   @Input() emptyText: string = 'No options found';
   @Input() clearable: boolean = false;
-  @Input() closeOnScroll: boolean = false;
+  @Input() closeOnScroll: boolean = true;
+  @Input() scrollCloseDelay: number = 0; // ms to delay closing on scroll (0 = immediate)
+  @Input() scrollCloseThreshold: number = 0; // px of scroll before closing (0 = any scroll)
+  @Input() closeDelay: number = 0; // ms to delay closing on selection (0 = immediate)
+  @Input() lockBodyScroll: boolean = true; // lock body scroll when mobile bottom sheet is open
+  @Input() sheetDismissThreshold: number = 60; // px of touch drag down to dismiss bottom sheet
   @Input() required: boolean = false;
   @Input() ariaLabel?: string;
   @Input() hideScrollbar: boolean = false;
@@ -134,10 +138,15 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   private rafId: number | null = null;
   private typeaheadBuffer = '';
   private typeaheadTimer: any = null;
+  private scrollCloseTimer: any = null;
+  private selectionCloseTimer: any = null;
+  private initialScrollX = 0;
+  private initialScrollY = 0;
 
   private elementRef = inject(ElementRef);
   private cdr = inject(ChangeDetectorRef);
   private zone = inject(NgZone);
+  private renderer = inject(Renderer2);
   private ngControl = inject(NgControl, { optional: true, self: true });
 
   constructor() {
@@ -174,37 +183,53 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     // High performance RAF scroll listener
     this.zone.runOutsideAngular(() => {
       this.scrollListener = (event: Event) => {
-        if (!this.isOpen || (this.isMobileView && this.useBottomSheetOnMobile)) return;
+        if (!this.isOpen) return;
+        // On mobile bottom sheet with body scroll locked, ignore window scrolls
+        if (this.isMobileView && this.useBottomSheetOnMobile && this.lockBodyScroll) return;
 
         const target = event.target as Node;
-        // Ignore scrolls inside the dropdown menu options list itself
+        // Ignore scrolls inside the dropdown menu / sheet options list itself
         if (target && this.portalContainer?.nativeElement?.contains(target)) {
           return;
         }
 
-        if (this.rafId !== null) {
-          cancelAnimationFrame(this.rafId);
+        // Check if cumulative scroll delta exceeds threshold
+        if (typeof window !== 'undefined' && this.scrollCloseThreshold > 0) {
+          const currentX = window.scrollX || window.pageXOffset || 0;
+          const currentY = window.scrollY || window.pageYOffset || 0;
+          const delta = Math.hypot(currentX - this.initialScrollX, currentY - this.initialScrollY);
+          if (delta < this.scrollCloseThreshold) {
+            // Keep repositioning without closing yet
+            this.scheduleReposition();
+            return;
+          }
         }
 
-        this.rafId = requestAnimationFrame(() => {
-          if (this.isElementOutOfView()) {
-            this.zone.run(() => {
-              this.close();
-            });
+        if (this.closeOnScroll) {
+          if (this.scrollCloseDelay > 0) {
+            // Reposition smoothly during the delay window
+            this.scheduleReposition();
+
+            if (!this.scrollCloseTimer) {
+              this.scrollCloseTimer = setTimeout(() => {
+                this.zone.run(() => {
+                  this.close();
+                });
+                this.scrollCloseTimer = null;
+              }, this.scrollCloseDelay);
+            }
             return;
           }
 
-          if (this.closeOnScroll) {
-            this.zone.run(() => {
-              this.close();
-            });
-          } else {
-            this.recalculatePosition();
-            this.zone.run(() => {
-              this.cdr.markForCheck();
-            });
-          }
-        });
+          // Immediate close on scroll with zero latency
+          this.zone.run(() => {
+            this.close();
+          });
+          return;
+        }
+
+        // When closeOnScroll is false: smoothly reposition on scroll and only close if occluded
+        this.scheduleReposition();
       };
       window.addEventListener('scroll', this.scrollListener, true);
 
@@ -237,7 +262,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     if (typeof document !== 'undefined' && this.portalContainer?.nativeElement) {
       const portalEl = this.portalContainer.nativeElement;
       if ((this.isOpen || this.isClosing) && portalEl.parentElement !== document.body) {
-        document.body.appendChild(portalEl);
+        this.renderer.appendChild(document.body, portalEl);
         if (!this.isMobileView || !this.useBottomSheetOnMobile) {
           this.recalculatePosition();
           this.cdr.markForCheck();
@@ -257,7 +282,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     if (typeof document !== 'undefined' && this.portalContainer?.nativeElement) {
       const portalEl = this.portalContainer.nativeElement;
       if (portalEl.parentElement === document.body) {
-        document.body.removeChild(portalEl);
+        this.renderer.removeChild(document.body, portalEl);
       }
     }
 
@@ -276,6 +301,14 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     }
     if (this.typeaheadTimer) {
       clearTimeout(this.typeaheadTimer);
+    }
+    if (this.scrollCloseTimer) {
+      clearTimeout(this.scrollCloseTimer);
+      this.scrollCloseTimer = null;
+    }
+    if (this.selectionCloseTimer) {
+      clearTimeout(this.selectionCloseTimer);
+      this.selectionCloseTimer = null;
     }
   }
 
@@ -557,7 +590,9 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     }
 
     if (this.isMobileView && this.useBottomSheetOnMobile) {
-      this.handleBodyScrollLock(true);
+      if (this.lockBodyScroll) {
+        this.handleBodyScrollLock(true);
+      }
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('lc-nested-sheet-change', {
           detail: { open: true, selectId: this.instanceId }
@@ -565,6 +600,11 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
       }
     } else {
       this.recalculatePosition();
+    }
+
+    if (typeof window !== 'undefined') {
+      this.initialScrollX = window.scrollX || window.pageXOffset || 0;
+      this.initialScrollY = window.scrollY || window.pageYOffset || 0;
     }
 
     this.opened.emit();
@@ -581,6 +621,15 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
 
   close(): void {
     if (!this.isOpen || this.isClosing) return;
+
+    if (this.scrollCloseTimer) {
+      clearTimeout(this.scrollCloseTimer);
+      this.scrollCloseTimer = null;
+    }
+    if (this.selectionCloseTimer) {
+      clearTimeout(this.selectionCloseTimer);
+      this.selectionCloseTimer = null;
+    }
 
     if (this.isMobileView && this.useBottomSheetOnMobile) {
       // Smooth slide-down exit animation for mobile bottom sheet
@@ -610,6 +659,12 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
       this.searchTerm = '';
       this.focusedIndex = -1;
       this.handleBodyScrollLock(false);
+      if (typeof document !== 'undefined' && this.portalContainer?.nativeElement) {
+        const portalEl = this.portalContainer.nativeElement;
+        if (portalEl.parentElement === document.body) {
+          this.renderer.removeChild(document.body, portalEl);
+        }
+      }
       this.onTouched();
       this.closed.emit();
       this.cdr.markForCheck();
@@ -638,7 +693,7 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   onSheetTouchEnd(): void {
     if (!this.isDraggingSheet) return;
     this.isDraggingSheet = false;
-    if (this.sheetTranslateY > 60) {
+    if (this.sheetTranslateY > this.sheetDismissThreshold) {
       this.close();
     } else {
       this.sheetTranslateY = 0;
@@ -672,7 +727,19 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     this.onChange(this.value);
     this.valueChange.emit(this.value);
     this.selectionChange.emit(option);
-    this.close();
+
+    if (this.closeDelay > 0) {
+      this.cdr.markForCheck();
+      if (this.selectionCloseTimer) {
+        clearTimeout(this.selectionCloseTimer);
+      }
+      this.selectionCloseTimer = setTimeout(() => {
+        this.close();
+        this.selectionCloseTimer = null;
+      }, this.closeDelay);
+    } else {
+      this.close();
+    }
 
     // Restore focus to trigger for keyboard users
     setTimeout(() => {
@@ -822,6 +889,25 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     };
   }
 
+  private scheduleReposition(): void {
+    if (this.rafId !== null) {
+      cancelAnimationFrame(this.rafId);
+    }
+    this.rafId = requestAnimationFrame(() => {
+      if (this.isElementOutOfView()) {
+        this.zone.run(() => {
+          this.close();
+        });
+        return;
+      }
+
+      this.recalculatePosition();
+      this.zone.run(() => {
+        this.cdr.markForCheck();
+      });
+    });
+  }
+
   private isElementOutOfView(): boolean {
     if (typeof window === 'undefined') return false;
     const el = this.triggerButton?.nativeElement || this.elementRef.nativeElement;
@@ -830,8 +916,33 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
     const viewportHeight = window.innerHeight || document.documentElement.clientHeight;
     const viewportWidth = window.innerWidth || document.documentElement.clientWidth;
 
-    // Viewport bounds check
-    return rect.bottom <= 0 || rect.top >= viewportHeight || rect.right <= 0 || rect.left >= viewportWidth;
+    // Viewport bounds check - also check if it scrolled under sticky/fixed header (top < 64px)
+    if (rect.bottom <= 64 || rect.top >= viewportHeight || rect.right <= 0 || rect.left >= viewportWidth) {
+      return true;
+    }
+
+    // Parent overflow container bounds check
+    let parent = el.parentElement;
+    while (parent && parent !== document.body && parent !== document.documentElement) {
+      const style = window.getComputedStyle(parent);
+      const overflowY = style.overflowY;
+      const overflow = style.overflow;
+      if (
+        overflowY === 'auto' ||
+        overflowY === 'scroll' ||
+        overflow === 'auto' ||
+        overflow === 'scroll' ||
+        overflowY === 'hidden'
+      ) {
+        const parentRect = parent.getBoundingClientRect();
+        if (rect.bottom <= parentRect.top || rect.top >= parentRect.bottom) {
+          return true;
+        }
+      }
+      parent = parent.parentElement;
+    }
+
+    return false;
   }
 
   @HostListener('keydown', ['$event'])

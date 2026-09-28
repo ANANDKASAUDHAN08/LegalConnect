@@ -1,0 +1,110 @@
+/* ═══ Ultra Rich Email Verification Banner ═══ */
+
+.email-banner-card {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.6) 25%, rgba(251, 191, 36, 0.95) 50%, rgba(245, 158, 11, 0.6) 75%, transparent 100%);
+    opacity: 0.9;
+    z-index: 2;
+  }
+}
+
+/* Ambient Radial Glow Orbs */
+.banner-ambient-glow-1 {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 180px;
+  height: 180px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(245, 158, 11, 0.16) 0%, rgba(245, 158, 11, 0) 70%);
+  filter: blur(28px);
+  pointer-events: none;
+  z-index: 0;
+  animation: ambientFloat 8s ease-in-out infinite alternate;
+}
+
+.banner-ambient-glow-2 {
+  position: absolute;
+  bottom: -40px;
+  left: 20%;
+  width: 140px;
+  height: 140px;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(251, 146, 60, 0.12) 0%, rgba(251, 146, 60, 0) 70%);
+  filter: blur(24px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes ambientFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.7;
+  }
+
+  100% {
+    transform: translate(-20px, 15px) scale(1.15);
+    opacity: 1;
+  }
+}
+
+/* Interactive Shimmer Button Effect */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(60deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.22) 50%,
+        transparent 70%);
+    transform: rotate(25deg) translateX(-100%);
+    animation: shimmerSlide 4.5s ease-in-out infinite;
+  }
+}
+
+@keyframes shimmerSlide {
+  0% {
+    transform: rotate(25deg) translateX(-120%);
+  }
+
+  20%,
+  100% {
+    transform: rotate(25deg) translateX(120%);
+  }
+}
+
+/* Micro Cooldown Progress Line */
+.cooldown-progress-track {
+  height: 2px;
+  width: 100%;
+  background: rgba(245, 158, 11, 0.15);
+  overflow: hidden;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.cooldown-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  transition: width 1s linear;
+}

@@ -1,11 +1,13 @@
 import {
-  Component, forwardRef, Input, OnDestroy, signal, computed,
+  Component, forwardRef, Input, Output, EventEmitter, OnDestroy, signal, computed,
   ChangeDetectionStrategy, ElementRef, ViewChild, HostListener
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, FormsModule } from '@angular/forms';
 import { COUNTRIES, CountryData } from '../../constants/countries.constant';
 import { IconComponent } from '../icon/icon.component';
+
+import { TooltipDirective } from '../../directives/tooltip.directive';
 
 /**
  * Shared Phone Input with Country Code Dropdown
@@ -19,7 +21,7 @@ import { IconComponent } from '../icon/icon.component';
 @Component({
   selector: 'app-phone-input',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent],
+  imports: [CommonModule, FormsModule, IconComponent, TooltipDirective],
   changeDetection: ChangeDetectionStrategy.OnPush,
   providers: [
     {
@@ -34,9 +36,11 @@ export class PhoneInputComponent implements ControlValueAccessor, OnDestroy {
   @Input() label = 'Phone Number';
   @Input() inputId = 'phone-input';
   @Input() errorId = '';
-  @Input() isVerified = false;
+  @Input() isVerified: boolean | null = null;
   @Input() showVerifyAction = false;
   @Input() accent: 'blue' | 'amber' = 'amber';
+
+  @Output() verify = new EventEmitter<void>();
 
   @ViewChild('searchInput') searchInput!: ElementRef<HTMLInputElement>;
 
@@ -55,11 +59,42 @@ export class PhoneInputComponent implements ControlValueAccessor, OnDestroy {
   filteredCountries = computed(() => {
     const search = this.searchText().toLowerCase().trim();
     if (!search) return this.countries;
-    return this.countries.filter(c =>
-      c.name.toLowerCase().includes(search) ||
-      c.short.toLowerCase().includes(search) ||
-      c.code.includes(search)
-    );
+    const searchNoPlus = search.replace(/^\+/, '');
+    const matches = this.countries.filter(c => {
+      const name = c.name.toLowerCase();
+      const short = c.short.toLowerCase();
+      const code = c.code.toLowerCase();
+      const codeNoPlus = code.replace(/^\+/, '');
+      return (
+        name.includes(search) ||
+        short.includes(search) ||
+        code.includes(search) ||
+        codeNoPlus.includes(searchNoPlus)
+      );
+    });
+
+    return matches.sort((a, b) => {
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      const aShort = a.short.toLowerCase();
+      const bShort = b.short.toLowerCase();
+      const aCode = a.code.replace(/^\+/, '');
+      const bCode = b.code.replace(/^\+/, '');
+
+      const aExactShort = aShort === search ? 1 : 0;
+      const bExactShort = bShort === search ? 1 : 0;
+      if (aExactShort !== bExactShort) return bExactShort - aExactShort;
+
+      const aStartsName = aName.startsWith(search) ? 1 : 0;
+      const bStartsName = bName.startsWith(search) ? 1 : 0;
+      if (aStartsName !== bStartsName) return bStartsName - aStartsName;
+
+      const aStartsCode = aCode.startsWith(searchNoPlus) ? 1 : 0;
+      const bStartsCode = bCode.startsWith(searchNoPlus) ? 1 : 0;
+      if (aStartsCode !== bStartsCode) return bStartsCode - aStartsCode;
+
+      return aName.localeCompare(bName);
+    });
   });
 
   // ─── ControlValueAccessor ────────────────────────────────────
@@ -138,6 +173,12 @@ export class PhoneInputComponent implements ControlValueAccessor, OnDestroy {
 
   onBlur(): void {
     this.onTouched();
+  }
+
+  onVerifyClick(event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+    this.verify.emit();
   }
 
   @HostListener('document:click', ['$event'])

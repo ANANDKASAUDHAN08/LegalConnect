@@ -1,0 +1,142 @@
+<div *ngIf="shouldShow()"
+  class="email-banner-card w-full rounded-xl sm:rounded-2xl p-3.5 sm:p-4 mb-4 bg-gradient-to-br from-amber-500/[0.07] via-amber-500/[0.12] to-orange-500/[0.07] dark:from-amber-950/40 dark:via-slate-900/95 dark:to-orange-950/30 border border-amber-300/50 dark:border-amber-500/30 shadow-[0_4px_24px_-4px_rgba(245,158,11,0.10)] dark:shadow-[0_8px_32px_-6px_rgba(0,0,0,0.5)] backdrop-blur-xl text-slate-800 dark:text-slate-100 transition-all duration-300 animate-[fadeIn_0.2s_ease-out]"
+  role="alert" aria-live="polite" aria-label="Email verification notice">
+
+  <!-- Ambient Luxury Glow Spots -->
+  <div class="banner-ambient-glow-1" aria-hidden="true"></div>
+  <div class="banner-ambient-glow-2" aria-hidden="true"></div>
+
+  <div class="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-3 sm:gap-4">
+
+    <!-- ── Left: Compact Hero Icon & Message Details ── -->
+    <div class="flex items-start gap-2.5 sm:gap-3.5 min-w-0 flex-1">
+
+      <!-- Compact 3D Holographic Icon Box -->
+      <div
+        class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-amber-400/25 via-amber-500/20 to-orange-500/30 dark:from-amber-400/20 dark:via-amber-500/15 dark:to-orange-500/20 border border-amber-300/70 dark:border-amber-400/40 shadow-inner flex items-center justify-center flex-shrink-0 relative mt-0.5 group">
+        <!-- Live Ping Radar Beacon -->
+        <span class="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5" aria-hidden="true">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+          <span
+            class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500 border border-white dark:border-slate-900"></span>
+        </span>
+
+        <app-icon name="mail" [size]="18"
+          class="text-amber-700 dark:text-amber-300 drop-shadow-xs transition-transform duration-300 group-hover:scale-110"></app-icon>
+      </div>
+
+      <!-- Main Content Details -->
+      <div class="min-w-0 flex-1">
+        <!-- Row 1: Badges + Title (Integrated & Compact) -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+            <span
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-extrabold uppercase tracking-wider bg-amber-500/15 dark:bg-amber-400/15 text-amber-900 dark:text-amber-300 border border-amber-400/35 select-none shrink-0">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+              <span>Security Action Required</span>
+            </span>
+
+            <span class="text-xs sm:text-sm font-extrabold text-slate-950 dark:text-white leading-tight truncate">
+              Confirm Email to Secure Account
+            </span>
+            <app-icon name="shield" [size]="13"
+              class="text-amber-500 dark:text-amber-400 shrink-0 hidden sm:inline-block" aria-hidden="true"></app-icon>
+          </div>
+
+          <!-- Mobile Close Button (shown top-right on small screens) -->
+          <button type="button" (click)="dismissBanner()" appTooltip="Dismiss notice" tooltipPlacement="left"
+            aria-label="Dismiss notice"
+            class="lg:hidden w-6 h-6 -mr-1 -mt-1 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-amber-500/15 dark:hover:bg-amber-500/20 transition-all border-0 bg-transparent cursor-pointer shrink-0">
+            <app-icon name="x" [size]="13"></app-icon>
+          </button>
+        </div>
+
+        <!-- Row 2: Message with Copyable Email Chip -->
+        <p class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-1 leading-snug">
+          <span>Verification link sent to </span>
+          <button type="button" (click)="copyEmail()"
+            [appTooltip]="copiedEmail() ? 'Copied to clipboard!' : 'Click to copy email address'" tooltipPlacement="top"
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 mx-0.5 rounded-md font-mono text-[10px] sm:text-[11px] font-bold bg-amber-500/15 hover:bg-amber-500/25 dark:bg-amber-400/10 dark:hover:bg-amber-400/20 text-amber-950 dark:text-amber-200 border border-amber-400/35 transition-all cursor-pointer shadow-2xs group/chip align-middle">
+            <span class="truncate max-w-[170px] sm:max-w-[280px]">{{ userEmail() }}</span>
+            <app-icon [name]="copiedEmail() ? 'check' : 'copy'" [size]="10" [class.text-emerald-600]="copiedEmail()"
+              [class.dark:text-emerald-400]="copiedEmail()"
+              class="text-amber-700 dark:text-amber-300 transition-transform group-hover/chip:scale-110"></app-icon>
+          </button>
+          <span>. Please Confirm to activate advocate consults & encrypted client files.</span>
+        </p>
+
+        <!-- Row 3: Security & Privilege Perks Pills (Tighter Spacing) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 mt-1.5 flex-wrap text-[9px] sm:text-[10px]">
+          <span
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/60 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 font-medium">
+            <app-icon name="lock" [size]="9" class="text-amber-600 dark:text-amber-400"></app-icon>
+            <span>Encrypted Dossiers</span>
+          </span>
+          <span
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/60 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 font-medium">
+            <app-icon name="user-check" [size]="9" class="text-amber-600 dark:text-amber-400"></app-icon>
+            <span>Advocate Privilege</span>
+          </span>
+          <span
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-white/60 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-700/50 text-slate-600 dark:text-slate-300 font-medium hidden sm:inline-flex">
+            <app-icon name="zap" [size]="9" class="text-amber-600 dark:text-amber-400"></app-icon>
+            <span>Instant Alerts</span>
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Right: Action Buttons (Side-by-side on mobile, horizontal row on desktop) ── -->
+    <div class="grid grid-cols-2 sm:flex sm:flex-row items-center gap-2 flex-shrink-0 pt-1 lg:pt-0">
+
+      <!-- Webmail Direct Launcher -->
+      @if (webmailInfo(); as webmail) {
+      <button type="button" (click)="openWebmail()" [appTooltip]="'Open ' + webmail.provider + ' in a new browser tab'"
+        tooltipPlacement="top"
+        class="h-9 px-3 rounded-xl bg-white/85 hover:bg-white dark:bg-slate-800/85 dark:hover:bg-slate-750 text-slate-800 dark:text-slate-100 font-bold text-[11px] sm:text-xs border border-amber-300/40 dark:border-slate-700/70 shadow-2xs hover:shadow-xs transition-all cursor-pointer flex items-center justify-center gap-1.5 group">
+        <app-icon [name]="webmail.icon" [size]="13"
+          class="text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform"></app-icon>
+        <span class="truncate">{{ webmail.label }}</span>
+        <app-icon name="external-link" [size]="10"
+          class="text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200"></app-icon>
+      </button>
+      }
+
+      <!-- Primary Action: Resend Verification Button -->
+      <button type="button" (click)="resendVerification()" [disabled]="isSending() || cooldownSeconds() > 0"
+        [appTooltip]="cooldownSeconds() > 0 ? ('Rate limit active. Please wait ' + cooldownSeconds() + 's') : 'Send a fresh verification link'"
+        tooltipPlacement="top" [class.col-span-2]="!webmailInfo()"
+        class="btn-shimmer h-9 px-3 sm:px-3.5 rounded-xl bg-gradient-to-r from-amber-500 via-amber-600 to-orange-600 hover:from-amber-400 hover:via-amber-500 hover:to-orange-500 active:scale-[0.98] disabled:opacity-60 disabled:pointer-events-none text-white font-extrabold text-[11px] sm:text-xs transition-all shadow-xs shadow-amber-500/20 hover:shadow-sm hover:shadow-amber-500/30 cursor-pointer flex items-center justify-center gap-1.5 border-0">
+        <!-- Spinner when sending -->
+        <app-icon *ngIf="isSending()" name="loader" [size]="13" [spin]="true"></app-icon>
+
+        <!-- Checkmark on freshly sent -->
+        <app-icon *ngIf="!isSending() && sentSuccess()" name="check" [size]="13" class="text-white"></app-icon>
+
+        <!-- Standard Refresh Icon -->
+        <app-icon *ngIf="!isSending() && !sentSuccess() && cooldownSeconds() === 0" name="refresh"
+          [size]="13"></app-icon>
+
+        <!-- Clock icon when in cooldown -->
+        <app-icon *ngIf="!isSending() && !sentSuccess() && cooldownSeconds() > 0" name="clock" [size]="13"></app-icon>
+
+        <span class="truncate">
+          {{ isSending() ? 'Sending...' : sentSuccess() ? 'Sent to Inbox!' : cooldownSeconds() > 0 ? (cooldownSeconds()
+          + 's') : 'Resend' }}
+        </span>
+      </button>
+
+      <!-- Desktop Dismiss Button -->
+      <button type="button" (click)="dismissBanner()" appTooltip="Dismiss notice for this session"
+        tooltipPlacement="left" aria-label="Dismiss notice"
+        class="hidden lg:flex w-8 h-8 rounded-lg items-center justify-center text-slate-400 hover:text-slate-800 dark:hover:text-white hover:bg-amber-500/15 dark:hover:bg-amber-500/20 transition-all border-0 bg-transparent cursor-pointer">
+        <app-icon name="x" [size]="14"></app-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Micro Cooldown Progress Line along bottom -->
+  <div *ngIf="cooldownSeconds() > 0" class="cooldown-progress-track" aria-hidden="true">
+    <div class="cooldown-progress-bar" [style.width.%]="cooldownPercent()"></div>
+  </div>
+</div>

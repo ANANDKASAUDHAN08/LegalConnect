@@ -1,5 +1,5 @@
-<div class="relative inline-block select-none font-sans max-w-full" [class.z-[70]]="isOpen" [style.width]="width"
-  [style.min-width]="minWidth" [style.max-width]="maxWidth" [attr.aria-expanded]="isOpen"
+<div class="relative inline-block select-none font-sans max-w-full" [class.z-10]="isOpen" [style.width]="width"
+  [style.height]="height" [style.min-width]="minWidth" [style.max-width]="maxWidth" [attr.aria-expanded]="isOpen"
   [attr.aria-haspopup]="'listbox'" [attr.aria-label]="ariaLabel || placeholder">
 
   <!-- ── Trigger Button ── -->
@@ -28,7 +28,8 @@
       <span class="w-4 h-4 flex items-center justify-center shrink-0"
         [style.color]="selectedOption?.iconColor || iconColor || ''"
         [ngClass]="!selectedOption?.iconColor && !iconColor ? 'text-amber-500 dark:text-amber-400' : ''">
-        <app-icon [name]="selectedOption?.icon || icon || ''" [size]="(size === 'sm' || size === 'mid' || size === 'base') ? 14 : size === 'lg' ? 18 : 15"
+        <app-icon [name]="selectedOption?.icon || icon || ''"
+          [size]="(size === 'sm' || size === 'mid' || size === 'base') ? 14 : size === 'lg' ? 18 : 15"
           [color]="selectedOption?.iconColor || iconColor">
         </app-icon>
       </span>
@@ -86,12 +87,14 @@
       <!-- Arrow Chevron or Loading Spinner -->
       @if (loading || isLoading) {
       <div class="flex items-center justify-center text-indigo-500 dark:text-indigo-400">
-        <app-icon name="loader" [size]="(size === 'sm' || size === 'mid' || size === 'base') ? 12 : 13" [spin]="true"></app-icon>
+        <app-icon name="loader" [size]="(size === 'sm' || size === 'mid' || size === 'base') ? 12 : 13"
+          [spin]="true"></app-icon>
       </div>
       } @else {
       <div class="flex items-center justify-center text-slate-400 dark:text-slate-500 transition-transform duration-200"
         [class.rotate-180]="isOpen" [class.text-amber-500]="isOpen">
-        <app-icon name="chevron-down" [size]="(size === 'sm' || size === 'mid' || size === 'base') ? 12 : 13"></app-icon>
+        <app-icon name="chevron-down"
+          [size]="(size === 'sm' || size === 'mid' || size === 'base') ? 12 : 13"></app-icon>
       </div>
       }
     </div>
