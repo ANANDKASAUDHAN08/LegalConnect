@@ -42,13 +42,49 @@ namespace CoreApi.Services
                 };
             }
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.EmailVerificationToken == token);
-            if (user == null)
+            var cleanEmail = email.Trim();
+            var cleanToken = Uri.UnescapeDataString(token).Trim();
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == cleanEmail);
+            if (user == null || string.IsNullOrEmpty(user.EmailVerificationToken))
             {
                 return new VerificationResponseDto
                 {
                     IsSuccess = false,
-                    Message = "Invalid or expired email verification link."
+                    Message = "Invalid or expired email verification link or code."
+                };
+            }
+
+            bool isTokenMatch = false;
+
+            // Check 1: Direct exact match (e.g. clicked the magic link with the full token or legacy token)
+            if (string.Equals(user.EmailVerificationToken, cleanToken, StringComparison.Ordinal))
+            {
+                isTokenMatch = true;
+            }
+            // Check 2: 6-digit numeric OTP submitted
+            else if (cleanToken.Length == 6 && cleanToken.All(char.IsDigit) &&
+                     (user.EmailVerificationToken.StartsWith(cleanToken + ":", StringComparison.Ordinal) ||
+                      string.Equals(user.EmailVerificationToken, cleanToken, StringComparison.Ordinal)))
+            {
+                isTokenMatch = true;
+            }
+            // Check 3: Magic link containing secret part after colon
+            else if (user.EmailVerificationToken.Contains(':'))
+            {
+                var parts = user.EmailVerificationToken.Split(':', 2);
+                if (parts.Length == 2 && (string.Equals(parts[1], cleanToken, StringComparison.Ordinal) || string.Equals(parts[0], cleanToken, StringComparison.Ordinal)))
+                {
+                    isTokenMatch = true;
+                }
+            }
+
+            if (!isTokenMatch)
+            {
+                return new VerificationResponseDto
+                {
+                    IsSuccess = false,
+                    Message = "Invalid or expired email verification code or link."
                 };
             }
 
@@ -99,11 +135,11 @@ namespace CoreApi.Services
                 };
             }
 
-            var newToken = AuthService.GenerateSecureToken();
+            var (newToken, otpCode) = AuthService.GenerateEmailVerificationToken();
             user.EmailVerificationToken = newToken;
             await _context.SaveChangesAsync();
 
-            await _emailService.SendVerificationEmailAsync(user.Email, newToken);
+            await _emailService.SendVerificationEmailAsync(user.Email, newToken, otpCode);
 
             _logger.LogInformation("[EMAIL] Resent email verification link to UserId: {UserId}, Email: {Email}", user.Id, user.Email);
 

@@ -53,12 +53,14 @@ builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationSer
 builder.Services.AddSingleton<IPiiSanitizerService, PiiSanitizerService>();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpClient("NodeSync", c => c.Timeout = TimeSpan.FromMilliseconds(800));
+builder.Services.AddHttpClient("TwilioSmsClient", c => c.Timeout = TimeSpan.FromSeconds(10));
 
 // ── 4. Hosted Background Workers ──
 builder.Services.AddHostedService<ProfileSyncWorker>();
 builder.Services.AddHostedService<AdminNotificationDigestService>();
 builder.Services.AddHostedService<AdminNotificationSyncWorker>();
 builder.Services.AddHostedService<ModerationSlaEscalationWorker>();
+builder.Services.AddHostedService<TokenCleanupWorker>();
 
 builder.Services.AddSignalR();
 builder.Services.AddEndpointsApiExplorer();

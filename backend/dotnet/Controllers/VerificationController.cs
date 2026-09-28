@@ -1,6 +1,10 @@
 using System;
+using System.Collections.Generic;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Security.Cryptography;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using CoreApi.Data;
@@ -11,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using CoreApi.Utils;
@@ -29,6 +34,8 @@ namespace CoreApi.Controllers
         private readonly AppDbContext _context;
         private readonly ILogger<VerificationController> _logger;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IConfiguration _configuration;
+        private readonly IHttpClientFactory _httpClientFactory;
 
         public VerificationController(
             IVerificationService verificationService,
@@ -37,7 +44,9 @@ namespace CoreApi.Controllers
             IMemoryCache memoryCache,
             AppDbContext context,
             ILogger<VerificationController> logger,
-            IServiceScopeFactory serviceScopeFactory)
+            IServiceScopeFactory serviceScopeFactory,
+            IConfiguration configuration,
+            IHttpClientFactory httpClientFactory)
         {
             _verificationService = verificationService;
             _whatsAppService = whatsAppService;
@@ -46,12 +55,37 @@ namespace CoreApi.Controllers
             _context = context;
             _logger = logger;
             _serviceScopeFactory = serviceScopeFactory;
+            _configuration = configuration;
+            _httpClientFactory = httpClientFactory;
         }
 
         [HttpGet("email/verify")]
-        public async Task<IActionResult> VerifyEmail([FromQuery] string token, [FromQuery] string email)
+        public async Task<IActionResult> VerifyEmail([FromQuery] string? token, [FromQuery] string? code, [FromQuery] string email)
         {
-            var result = await _verificationService.VerifyEmailTokenAsync(email, token);
+            var tokenOrCode = !string.IsNullOrWhiteSpace(code) ? code : token;
+            if (string.IsNullOrWhiteSpace(tokenOrCode))
+            {
+                return BadRequest(new { message = "Verification code or token is required." });
+            }
+
+            var result = await _verificationService.VerifyEmailTokenAsync(email, tokenOrCode);
+            if (!result.IsSuccess)
+            {
+                return BadRequest(new { message = result.Message });
+            }
+            return Ok(new { message = result.Message, verifiedField = result.VerifiedField, verifiedValue = result.VerifiedValue });
+        }
+
+        [HttpPost("email/verify")]
+        public async Task<IActionResult> VerifyEmailPost([FromBody] VerifyEmailDto request)
+        {
+            var tokenOrCode = !string.IsNullOrWhiteSpace(request.Code) ? request.Code : request.Token;
+            if (string.IsNullOrWhiteSpace(tokenOrCode))
+            {
+                return BadRequest(new { message = "Verification code or token is required." });
+            }
+
+            var result = await _verificationService.VerifyEmailTokenAsync(request.Email, tokenOrCode);
             if (!result.IsSuccess)
             {
                 return BadRequest(new { message = result.Message });
@@ -179,6 +213,94 @@ namespace CoreApi.Controllers
             _memoryCache.Set(rateLimitKey, hourlyCount + 1, TimeSpan.FromHours(1));
 
             // 5. Dispatch via Selected Channel
+            if (channel == "sms")
+            {
+                var twilioSid = _configuration["WhatsApp:Twilio:AccountSid"];
+                var twilioToken = _configuration["WhatsApp:Twilio:AuthToken"];
+                var twilioFrom = _configuration["WhatsApp:Twilio:FromPhoneNumber"];
+                var hasTwilio = !string.IsNullOrWhiteSpace(twilioSid) && !string.IsNullOrWhiteSpace(twilioToken) && !twilioSid.Contains("YOUR_");
+
+                if (!hasTwilio)
+                {
+                    _logger.LogWarning("[SMS OTP] Cellular SMS gateway (Twilio) is not configured. Redirecting to WhatsApp/Email fallback for {Phone}", normalizedPhone);
+                    return StatusCode(503, new PhoneOtpResponseDto
+                    {
+                        IsSuccess = false,
+                        Message = "Direct SMS cellular service is currently not configured on this server. Please use WhatsApp OTP or verify via Email.",
+                        Channel = "sms",
+                        TargetPhone = normalizedPhone,
+                        CooldownSeconds = 15,
+                        CanFallbackToEmail = true,
+                        UserEmail = user.Email
+                    });
+                }
+
+                try
+                {
+                    var twilioUrl = $"https://api.twilio.com/2010-04-01/Accounts/{twilioSid}/Messages.json";
+                    var fromPhone = string.IsNullOrWhiteSpace(twilioFrom) ? "+14155238886" : twilioFrom;
+                    var message = $"[LEGALCONNECT] Your mobile verification security code is: {otpCode}. Valid for 10 minutes.";
+
+                    var postData = new Dictionary<string, string>
+                    {
+                        { "To", normalizedPhone },
+                        { "From", fromPhone },
+                        { "Body", message }
+                    };
+
+                    using var req = new HttpRequestMessage(HttpMethod.Post, twilioUrl);
+                    var authBytes = Encoding.ASCII.GetBytes($"{twilioSid}:{twilioToken}");
+                    req.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(authBytes));
+                    req.Content = new FormUrlEncodedContent(postData);
+
+                    var client = _httpClientFactory.CreateClient("TwilioSmsClient");
+                    var resp = await client.SendAsync(req);
+                    if (resp.IsSuccessStatusCode)
+                    {
+                        _logger.LogInformation("[SMS OTP] Twilio SMS dispatched successfully to {Phone}", normalizedPhone);
+                        return Ok(new PhoneOtpResponseDto
+                        {
+                            IsSuccess = true,
+                            Message = $"Verification code sent via SMS to {normalizedPhone}! Check your phone's messages inbox.",
+                            Channel = "sms",
+                            TargetPhone = normalizedPhone,
+                            CooldownSeconds = 60,
+                            CanFallbackToEmail = false,
+                            UserEmail = user.Email
+                        });
+                    }
+                    else
+                    {
+                        var errBody = await resp.Content.ReadAsStringAsync();
+                        _logger.LogWarning("[SMS OTP] Twilio SMS returned HTTP {StatusCode}: {Error} for {Phone}", resp.StatusCode, errBody, normalizedPhone);
+                        return StatusCode(502, new PhoneOtpResponseDto
+                        {
+                            IsSuccess = false,
+                            Message = "SMS cellular gateway was unable to deliver verification code. Please try WhatsApp OTP or Email verification.",
+                            Channel = "sms",
+                            TargetPhone = normalizedPhone,
+                            CooldownSeconds = 15,
+                            CanFallbackToEmail = true,
+                            UserEmail = user.Email
+                        });
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error dispatching SMS OTP to {Phone}", normalizedPhone);
+                    return StatusCode(503, new PhoneOtpResponseDto
+                    {
+                        IsSuccess = false,
+                        Message = "Could not contact cellular SMS provider. Please verify via WhatsApp or Email.",
+                        Channel = "sms",
+                        TargetPhone = normalizedPhone,
+                        CooldownSeconds = 15,
+                        CanFallbackToEmail = true,
+                        UserEmail = user.Email
+                    });
+                }
+            }
+
             if (channel == "email")
             {
                 try
@@ -202,7 +324,7 @@ namespace CoreApi.Controllers
                     return StatusCode(500, new PhoneOtpResponseDto
                     {
                         IsSuccess = false,
-                        Message = "Could not send verification code via email. Please try WhatsApp.",
+                        Message = "Could not send verification code via email. Please try WhatsApp or SMS.",
                         CooldownSeconds = 10,
                         CanFallbackToEmail = false,
                         UserEmail = user.Email
@@ -221,12 +343,12 @@ namespace CoreApi.Controllers
                     IsSuccess = true,
                     Message = waResult.IsSuccess
                         ? "Verification code sent to your WhatsApp!"
-                        : "WhatsApp message initiated. If you do not receive it shortly, click 'Email OTP' below.",
+                        : "WhatsApp message initiated. If you do not receive it shortly, click 'SMS OTP' below.",
                     Channel = "whatsapp",
                     TargetPhone = normalizedPhone,
                     CooldownSeconds = 60,
                     DirectWhatsAppUrl = waResult.DirectWhatsAppUrl,
-                    CanFallbackToEmail = true,
+                    CanFallbackToEmail = false,
                     UserEmail = user.Email
                 });
             }
@@ -236,11 +358,11 @@ namespace CoreApi.Controllers
                 return Ok(new PhoneOtpResponseDto
                 {
                     IsSuccess = true,
-                    Message = "WhatsApp service busy. Click below to verify via Email OTP.",
+                    Message = "WhatsApp service busy. Click below to verify via SMS OTP.",
                     Channel = "whatsapp",
                     TargetPhone = normalizedPhone,
                     CooldownSeconds = 30,
-                    CanFallbackToEmail = true,
+                    CanFallbackToEmail = false,
                     UserEmail = user.Email
                 });
             }

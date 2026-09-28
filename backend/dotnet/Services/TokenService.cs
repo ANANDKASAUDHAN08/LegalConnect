@@ -124,7 +124,7 @@ namespace CoreApi.Services
                 Secure = isSecure,
                 SameSite = sameSiteMode,
                 Expires = DateTime.UtcNow.AddMinutes(15),
-                Path = "/"
+                Path = "/api"  // Scoped to API paths only — prevents expired cookie from triggering JWT warnings on page loads
             };
             response.Cookies.Append("lc_token", accessToken, tokenCookieOptions);
 
@@ -149,7 +149,7 @@ namespace CoreApi.Services
                 HttpOnly = true,
                 Secure = isSecure,
                 SameSite = sameSiteMode,
-                Path = "/"
+                Path = "/api"  // Must match the path used when setting
             });
 
             response.Cookies.Delete("__session", new CookieOptions

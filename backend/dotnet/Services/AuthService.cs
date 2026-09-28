@@ -8,6 +8,7 @@ using CoreApi.Data;
 using CoreApi.Models;
 using Google.Apis.Auth;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -20,19 +21,22 @@ namespace CoreApi.Services
         private readonly IEmailService _emailService;
         private readonly ITokenService _tokenService;
         private readonly ILogger<AuthService> _logger;
+        private readonly IMemoryCache _cache;
 
         public AuthService(
             AppDbContext context,
             IConfiguration configuration,
             IEmailService emailService,
             ITokenService tokenService,
-            ILogger<AuthService> logger)
+            ILogger<AuthService> logger,
+            IMemoryCache cache)
         {
             _context = context;
             _configuration = configuration;
             _emailService = emailService;
             _tokenService = tokenService;
             _logger = logger;
+            _cache = cache;
         }
 
         /// <summary>
@@ -46,6 +50,19 @@ namespace CoreApi.Services
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
         }
 
+        /// <summary>
+        /// Generates an email verification token payload containing a 6-digit numeric OTP and a cryptographic secret:
+        /// Format: "{6-digit-otp}:{cryptographic-secret}"
+        /// Example: "482910:c74e89f210ad45b19e234a..."
+        /// </summary>
+        public static (string fullToken, string otpCode) GenerateEmailVerificationToken()
+        {
+            var otp = RandomNumberGenerator.GetInt32(100000, 1000000).ToString("D6");
+            var secret = GenerateSecureToken(32);
+            var fullToken = $"{otp}:{secret}";
+            return (fullToken, otp);
+        }
+
         public async Task<(bool isSuccess, string message, User? user)> RegisterAsync(RegisterDto request, string? ipAddress)
         {
             if (await _context.Users.AnyAsync(u => u.Email == request.Email))
@@ -55,7 +72,7 @@ namespace CoreApi.Services
             }
 
             var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
-            var emailToken = GenerateSecureToken();
+            var (emailToken, otpCode) = GenerateEmailVerificationToken();
 
             var user = new User
             {
@@ -90,7 +107,7 @@ namespace CoreApi.Services
 
             if (requireVerification)
             {
-                await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
+                await _emailService.SendVerificationEmailAsync(user.Email, emailToken, otpCode);
                 return (true, "User registered successfully! Please check your email to verify your account.", user);
             }
 
@@ -106,7 +123,7 @@ namespace CoreApi.Services
             }
 
             var requireVerification = _configuration.GetValue<bool>("Auth:RequireEmailVerification");
-            var emailToken = GenerateSecureToken();
+            var (emailToken, otpCode) = GenerateEmailVerificationToken();
 
             var user = new User
             {
@@ -134,13 +151,14 @@ namespace CoreApi.Services
                     UpdatedAt = DateTime.UtcNow
                 };
                 _context.LawyerProfiles.Add(lawyerProfile);
+                await _context.SaveChangesAsync();
             }
 
             if (requireVerification)
             {
-                await _context.SaveChangesAsync();
-                await _emailService.SendVerificationEmailAsync(user.Email, emailToken);
-                return (true, "User registered successfully! Please check your email to verify your account.", user, null, null);
+                await _emailService.SendVerificationEmailAsync(user.Email, emailToken, otpCode);
+                _logger.LogInformation("[Email Dispatch] Verification email dispatched to advocate {Email}", user.Email);
+                return (true, "Advocate account registered successfully! Please check your email to verify your account before signing in.", user, null, null);
             }
 
             var sessionId = Guid.NewGuid().ToString("N");
@@ -168,7 +186,7 @@ namespace CoreApi.Services
 
             await _context.SaveChangesAsync();
 
-            _logger.LogInformation("[Security Audit] Atomic registration & session creation succeeded. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}", user.Id, user.Email, sessionId);
+            _logger.LogInformation("[Security Audit] Atomic progressive registration & session creation succeeded. UserId: {UserId}, Email: {Email}, SessionId: {SessionId}", user.Id, user.Email, sessionId);
             return (true, "Registered and authenticated successfully!", user, sessionId, rawRefresh);
         }
 
@@ -605,7 +623,8 @@ namespace CoreApi.Services
 
             if (storedToken.RevokedAt != null)
             {
-                // Grace Period (45s): Handle network retry or concurrent request cleanly
+                // Grace Period (45 seconds): Handle multi-tab token rotation, browser tab background
+                // throttling, and network latency cleanly without exposing a wide replay vulnerability window.
                 if (storedToken.RevokedAt.Value.AddSeconds(45) > DateTime.UtcNow)
                 {
                     var existingSession = await _context.ActiveSessions.FirstOrDefaultAsync(s => s.TokenId == storedToken.SessionId);
@@ -622,9 +641,12 @@ namespace CoreApi.Services
                     }
                 }
 
-                _logger.LogWarning("[Security Audit] Token replay attack detected for UserId: {UserId}, IP: {IP}", storedToken.UserId, ipAddress);
-                await RevokeAllUserRefreshTokensAsync(storedToken.UserId, $"REPLAY:{ipAddress}");
-                return (false, "Token reuse detected. All sessions revoked.", null, null);
+                // Beyond grace period — revoke only the compromised session, not all user sessions.
+                // This prevents a stale tab from logging out the user's phone, other laptop, etc.
+                _logger.LogWarning("[Security Audit] Stale token reuse beyond grace period. UserId: {UserId}, SessionId: {SessionId}, IP: {IP}",
+                    storedToken.UserId, storedToken.SessionId, ipAddress);
+                await RevokeSessionRefreshTokensAsync(storedToken.SessionId, $"STALE_REUSE:{ipAddress}");
+                return (false, "Session expired. Please log in again.", null, null);
             }
 
             if (storedToken.ExpiresAt <= DateTime.UtcNow)
@@ -729,6 +751,11 @@ namespace CoreApi.Services
             return (true, "Password has been reset successfully! You can now log in.");
         }
 
+        /// <summary>
+        /// Revokes all refresh tokens for a specific user across all devices.
+        /// Reserved for explicit security actions: password change, "Log out all devices",
+        /// admin force-logout. NOT used for stale token replay detection.
+        /// </summary>
         private async Task RevokeAllUserRefreshTokensAsync(int userId, string reason)
         {
             var tokens = await _context.RefreshTokens
@@ -739,6 +766,38 @@ namespace CoreApi.Services
                 t.RevokedAt = DateTime.UtcNow;
                 t.RevokedByIp = reason;
             }
+            await _context.SaveChangesAsync();
+        }
+
+        /// <summary>
+        /// Revokes all refresh tokens for a specific session and removes the ActiveSession entry.
+        /// Also invalidates the MemoryCache entry to ensure OnTokenValidated rejects the session
+        /// immediately rather than waiting for the 60-second cache TTL to expire.
+        /// Used for stale token replay detection — isolates the impact to a single session
+        /// instead of nuking all sessions across all devices.
+        /// </summary>
+        private async Task RevokeSessionRefreshTokensAsync(string sessionId, string reason)
+        {
+            var tokens = await _context.RefreshTokens
+                .Where(r => r.SessionId == sessionId && r.RevokedAt == null)
+                .ToListAsync();
+            foreach (var t in tokens)
+            {
+                t.RevokedAt = DateTime.UtcNow;
+                t.RevokedByIp = reason;
+            }
+
+            // Remove the ActiveSession so OnTokenValidated rejects cached JWTs for this session
+            var session = await _context.ActiveSessions
+                .FirstOrDefaultAsync(s => s.TokenId == sessionId);
+            if (session != null)
+            {
+                _context.ActiveSessions.Remove(session);
+            }
+
+            // Invalidate MemoryCache entry immediately — don't wait for 60s TTL expiry
+            _cache.Remove($"ActiveSession_{sessionId}");
+
             await _context.SaveChangesAsync();
         }
     }

@@ -42,6 +42,32 @@ namespace CoreApi.Controllers
                 clientId = parsedId;
             }
 
+            if (clientId.HasValue)
+            {
+                var client = await _context.Users.FindAsync(clientId.Value);
+                if (client != null && !client.IsEmailVerified)
+                {
+                    return BadRequest(new { 
+                        message = "Email verification is required before submitting a consultation request to an advocate. Please verify your email to ensure confidential correspondence.", 
+                        code = "EMAIL_NOT_VERIFIED",
+                        requiresEmailVerification = true 
+                    });
+                }
+            }
+            else if (!string.IsNullOrWhiteSpace(request.ClientEmail))
+            {
+                var cleanEmail = request.ClientEmail.Trim().ToLower();
+                var client = await _context.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == cleanEmail);
+                if (client != null && !client.IsEmailVerified)
+                {
+                    return BadRequest(new { 
+                        message = "Email verification is required before submitting a consultation request to an advocate. Please verify your email to ensure confidential correspondence.", 
+                        code = "EMAIL_NOT_VERIFIED",
+                        requiresEmailVerification = true 
+                    });
+                }
+            }
+
             var lawyerUser = await _context.Users.FirstOrDefaultAsync(u => u.Email == request.LawyerEmail);
             if (lawyerUser == null || !lawyerUser.Role.Equals("Lawyer", StringComparison.OrdinalIgnoreCase))
             {

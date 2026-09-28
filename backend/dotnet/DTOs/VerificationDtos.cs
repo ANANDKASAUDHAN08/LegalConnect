@@ -12,14 +12,24 @@ namespace CoreApi.DTOs
         public string? Role { get; set; } = "Client";
     }
 
-    public class VerifyEmailDto
+    public class VerifyEmailDto : IValidatableObject
     {
-        [Required]
-        public string Token { get; set; } = string.Empty;
+        public string? Token { get; set; }
+        public string? Code { get; set; }
 
         [Required]
         [EmailAddress]
         public string Email { get; set; } = string.Empty;
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (string.IsNullOrWhiteSpace(Token) && string.IsNullOrWhiteSpace(Code))
+            {
+                yield return new ValidationResult(
+                    "Either verification 'Token' or 6-digit 'Code' must be provided.",
+                    new[] { nameof(Token), nameof(Code) });
+            }
+        }
     }
 
     public class ResendEmailVerificationDto

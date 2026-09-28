@@ -76,6 +76,22 @@ namespace CoreApi.Data
             modelBuilder.Entity<RefreshToken>()
                 .HasIndex(r => r.Token);
 
+            // Composite index for session-scoped revocation queries:
+            // RevokeSessionRefreshTokensAsync queries WHERE SessionId = X AND RevokedAt IS NULL
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(r => new { r.SessionId, r.RevokedAt })
+                .HasDatabaseName("IX_RefreshTokens_SessionId_RevokedAt");
+
+            // Indexes for TokenCleanupWorker queries:
+            // CleanupExpiredTokensAsync queries WHERE ExpiresAt < cutoff OR (RevokedAt IS NOT NULL AND RevokedAt < cutoff)
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(r => r.ExpiresAt)
+                .HasDatabaseName("IX_RefreshTokens_ExpiresAt");
+
+            modelBuilder.Entity<RefreshToken>()
+                .HasIndex(r => r.RevokedAt)
+                .HasDatabaseName("IX_RefreshTokens_RevokedAt");
+
             // Configure ActiveSession & LoginHistory relationships
             modelBuilder.Entity<ActiveSession>()
                 .HasOne(s => s.User)
