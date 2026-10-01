@@ -1,143 +1,126 @@
-<!-- Floating Bottom Navigation Capsule -->
-<div class="bottom-nav-container md:hidden" [class.nav-hidden]="isKeyboardVisible || !showNav">
-  <div class="bottom-nav-inner grid grid-cols-5 items-center justify-items-center relative w-full h-[52px]">
+<!-- Primary Accessible Mobile Bottom Navigation Bar -->
+<nav class="bottom-nav-container md:hidden" role="navigation" aria-label="Mobile Primary Navigation"
+  [class.nav-hidden]="isKeyboardVisible || !showNav">
 
-    <!-- Active Slider Dot/Pill -->
-    <div class="active-indicator-pill" [attr.data-active-tab]="activeTab"></div>
+  <div class="bottom-nav-inner grid grid-cols-5 items-center justify-items-center relative w-full h-[52px]"
+    role="tablist">
+
+    <!-- Active Indicator Pill -->
+    <div class="active-indicator-pill" [attr.data-active-tab]="activeTab" aria-hidden="true"></div>
 
     <!-- Tab 1: Home -->
-    <a routerLink="/" class="bottom-nav-item" [class.active]="activeTab === 'home'">
-      <app-icon name="home" [size]="20"></app-icon>
-      <span class="text-[0.6rem] font-bold mt-0.5">Home</span>
+    <a routerLink="/home" class="bottom-nav-item" [class.active]="activeTab === 'home'" role="tab"
+      [attr.aria-selected]="activeTab === 'home'" [attr.aria-current]="activeTab === 'home' ? 'page' : null"
+      aria-label="Home" appTooltip="Home Feed" tooltipPlacement="top">
+      <app-icon name="home" [size]="20" aria-hidden="true"></app-icon>
+      <span class="tab-label">Home</span>
     </a>
 
     <!-- Tab 2: Laws -->
-    <a routerLink="/laws" class="bottom-nav-item" [class.active]="activeTab === 'laws'">
-      <app-icon name="book-open" [size]="20"></app-icon>
-      <span class="text-[0.6rem] font-bold mt-0.5">Laws</span>
+    <a routerLink="/laws" class="bottom-nav-item" [class.active]="activeTab === 'laws'" role="tab"
+      [attr.aria-selected]="activeTab === 'laws'" [attr.aria-current]="activeTab === 'laws' ? 'page' : null"
+      aria-label="Bare Acts and Laws" appTooltip="Bare Acts & Laws" tooltipPlacement="top">
+      <app-icon name="book-open" [size]="20" aria-hidden="true"></app-icon>
+      <span class="tab-label">Laws</span>
     </a>
 
-    <!-- Tab 3: SOS Beacon (Center High-Contrast Action) -->
-    <button (click)="toggleSos($event)" class="bottom-nav-sos-btn" [class.sos-active]="showSosOverlay">
-      <!-- Lifesaver pulsing SVGs -->
-      <span class="sos-glow-ring"></span>
-      <span class="sos-glow-ring-2"></span>
-      <app-icon name="alert-triangle" [size]="16" class="text-white mb-0.5"></app-icon>
-      <span class="text-[0.45rem] text-white font-black uppercase tracking-wide leading-none">
+    <!-- Tab 3: Center High-Contrast SOS Beacon -->
+    <button (click)="toggleSos($event)" class="bottom-nav-sos-btn" [class.sos-active]="showSosOverlay" type="button"
+      role="button" [attr.aria-expanded]="showSosOverlay" aria-haspopup="dialog" aria-controls="emergency-sos-sheet"
+      aria-label="Emergency SOS and Free Legal Aid Console" appTooltip="Emergency SOS Console" tooltipPlacement="top">
+
+      <!-- Pulsing Beacon Rings -->
+      <span class="sos-glow-ring" aria-hidden="true"></span>
+      <span class="sos-glow-ring-2" aria-hidden="true"></span>
+
+      <app-icon name="alert-triangle" [size]="18" class="text-white mb-0.5" aria-hidden="true"></app-icon>
+      <span class="text-[0.52rem] text-white font-black uppercase tracking-wider leading-none">
         SOS
       </span>
     </button>
 
-    <!-- Tab 4: Role-Adaptive Directory / Lawyers Link -->
+    <!-- Tab 4: Role-Adaptive Lawyers / Directory Link -->
     <ng-container *ngIf="(auth.currentUser$ | async) as user; else guestTab4">
-      <!-- For Lawyer: Legal Resources & Aid Directory -->
       <a *ngIf="user.role === 'Lawyer'" routerLink="/legal-resources" class="bottom-nav-item"
-        [class.active]="activeTab === 'lawyers'">
-        <app-icon name="landmark" [size]="20"></app-icon>
-        <span class="text-[0.6rem] font-bold mt-0.5">Directory</span>
+        [class.active]="activeTab === 'lawyers'" role="tab" [attr.aria-selected]="activeTab === 'lawyers'"
+        [attr.aria-current]="activeTab === 'lawyers' ? 'page' : null" aria-label="Legal Directory"
+        appTooltip="Legal Aid & Court Directory" tooltipPlacement="top">
+        <app-icon name="landmark" [size]="20" aria-hidden="true"></app-icon>
+        <span class="tab-label">Directory</span>
       </a>
 
-      <!-- For Client: Find Lawyers -->
       <a *ngIf="user.role !== 'Lawyer'" routerLink="/lawyers" class="bottom-nav-item"
-        [class.active]="activeTab === 'lawyers'">
-        <app-icon name="users" [size]="20"></app-icon>
-        <span class="text-[0.6rem] font-bold mt-0.5">Lawyers</span>
+        [class.active]="activeTab === 'lawyers'" role="tab" [attr.aria-selected]="activeTab === 'lawyers'"
+        [attr.aria-current]="activeTab === 'lawyers' ? 'page' : null" aria-label="Find Lawyers"
+        appTooltip="Find Verified Advocates" tooltipPlacement="top">
+        <app-icon name="users" [size]="20" aria-hidden="true"></app-icon>
+        <span class="tab-label">Lawyers</span>
       </a>
     </ng-container>
 
     <ng-template #guestTab4>
-      <a routerLink="/lawyers" class="bottom-nav-item" [class.active]="activeTab === 'lawyers'">
-        <app-icon name="users" [size]="20"></app-icon>
-        <span class="text-[0.6rem] font-bold mt-0.5">Lawyers</span>
+      <a routerLink="/lawyers" class="bottom-nav-item" [class.active]="activeTab === 'lawyers'" role="tab"
+        [attr.aria-selected]="activeTab === 'lawyers'" [attr.aria-current]="activeTab === 'lawyers' ? 'page' : null"
+        aria-label="Find Lawyers" appTooltip="Find Verified Advocates" tooltipPlacement="top">
+        <app-icon name="users" [size]="20" aria-hidden="true"></app-icon>
+        <span class="tab-label">Lawyers</span>
       </a>
     </ng-template>
 
-    <!-- Tab 5: Dashboard / Workspace -->
+    <!-- Tab 5: Workspace / Dashboard / Account -->
     <ng-container *ngIf="(auth.currentUser$ | async) as user; else guestTab">
       <a [routerLink]="getDashboardRoute(user)" class="bottom-nav-item relative"
-        [class.active]="activeTab === 'dashboard'">
-        <!-- Ambient pulsing ring for live video/call consultations -->
-        <span *ngIf="hasUpcomingAppointment" class="live-consultation-pulse-ring"
-          appTooltip="Upcoming consultation active!" tooltipPlacement="top"></span>
-        <app-icon name="layout" [size]="20"></app-icon>
-        <span class="text-[0.6rem] font-bold mt-0.5">{{ user.role === 'Lawyer' ? 'Workspace' : 'Portal' }}</span>
+        [class.active]="activeTab === 'dashboard'" role="tab" [attr.aria-selected]="activeTab === 'dashboard'"
+        [attr.aria-current]="activeTab === 'dashboard' ? 'page' : null"
+        [attr.aria-label]="user.role === 'Lawyer' ? 'Advocate Workstation' : 'Client Dashboard'"
+        [appTooltip]="user.role === 'Lawyer' ? 'Advocate Workstation' : 'Client Dashboard'" tooltipPlacement="top">
+
+        <!-- Live appointment ambient indicator ring -->
+        <span *ngIf="hasUpcomingAppointment" class="live-consultation-pulse-ring" aria-hidden="true"></span>
+
+        <app-icon [name]="user.role === 'Lawyer' ? 'briefcase' : 'layout'" [size]="20" aria-hidden="true"></app-icon>
+        <span class="tab-label">{{ user.role === 'Lawyer' ? 'Workstation' : 'Dashboard' }}</span>
       </a>
     </ng-container>
 
     <ng-template #guestTab>
-      <a routerLink="/login" class="bottom-nav-item" [class.active]="activeTab === 'dashboard'">
-        <app-icon name="user" [size]="20"></app-icon>
-        <span class="text-[0.6rem] font-bold mt-0.5">Profile</span>
+      <a routerLink="/login" class="bottom-nav-item" [class.active]="activeTab === 'dashboard'" role="tab"
+        [attr.aria-selected]="activeTab === 'dashboard'" aria-label="Sign In or User Profile"
+        appTooltip="Sign In / Account" tooltipPlacement="top">
+        <app-icon name="user" [size]="20" aria-hidden="true"></app-icon>
+        <span class="tab-label">Profile</span>
       </a>
     </ng-template>
 
   </div>
-</div>
+</nav>
 
-<!-- Immersive Emergency SOS Bottom Sheet -->
-<div *ngIf="showSosOverlay" class="fixed inset-0 z-[1500] overflow-hidden" [class.active-sheet]="showSosOverlay">
-  <!-- Backdrop Blur -->
-  <div
-    class="sos-backdrop absolute inset-0 bg-slate-950/70 backdrop-blur-md transition-opacity duration-300 pointer-events-auto"
-    (click)="closeSos()"></div>
+<!-- Desktop Floating Emergency SOS Beacon FAB -->
+<button (click)="toggleSos($event)"
+  class="desktop-sos-fab hidden md:flex flex-col items-center justify-center fixed bottom-6 right-6 z-[2001] w-14 h-14 rounded-full text-white transition-all duration-200 border cursor-pointer select-none"
+  [ngClass]="showSosOverlay 
+    ? 'bg-slate-900 border-red-500/60 shadow-[0_8px_24px_rgba(0,0,0,0.6)] hover:bg-slate-800' 
+    : 'bg-gradient-to-br from-red-500 via-rose-600 to-red-650 border-white/25 shadow-[0_8px_24px_rgba(220,38,38,0.45)] hover:shadow-[0_12px_32px_rgba(220,38,38,0.65)] hover:scale-105 active:scale-95'"
+  type="button" role="button" [attr.aria-expanded]="showSosOverlay" aria-haspopup="dialog"
+  aria-controls="emergency-sos-sheet"
+  [attr.aria-label]="showSosOverlay ? 'Close Emergency Console' : 'Emergency Assistance Console'"
+  [appTooltip]="showSosOverlay ? 'Close Emergency Console' : 'Emergency SOS Console (112, 1091, 1930, 15100)'"
+  tooltipPlacement="left">
 
-  <!-- Bottom Drawer Box -->
-  <div
-    class="sos-sheet-panel absolute bottom-0 left-0 right-0 max-w-[600px] mx-auto bg-gradient-to-b from-slate-900 to-slate-950 border-t border-red-500/30 text-white rounded-t-[2.5rem] p-6 pb-10 shadow-2xl transition-transform duration-300 ease-out pointer-events-auto flex flex-col items-center">
+  <!-- Radar ping ring when idle/closed -->
+  <span class="absolute -inset-1 rounded-full border border-red-500/40 animate-ping pointer-events-none"
+    *ngIf="!showSosOverlay"></span>
 
-    <!-- Drag handle / accent indicator -->
-    <div class="w-12 h-1 bg-red-500/20 rounded-full mb-6"></div>
+  <app-icon [name]="showSosOverlay ? 'x' : 'alert-triangle'" [size]="showSosOverlay ? 20 : 18" class="text-white"
+    [class.animate-pulse]="!showSosOverlay" aria-hidden="true"></app-icon>
+  <span class="text-[0.58rem] font-black uppercase tracking-wider leading-none mt-0.5">
+    {{ showSosOverlay ? 'CLOSE' : 'SOS' }}
+  </span>
+</button>
 
-    <div
-      class="w-16 h-16 rounded-full bg-red-600/10 border border-red-500/40 flex items-center justify-center text-red-500 shadow-[0_0_24px_rgba(220,38,38,0.25)] animate-pulse mb-3">
-      <app-icon name="lifebuoy" [size]="32"></app-icon>
-    </div>
-
-    <h2 class="text-xl font-black text-center tracking-tight text-white mb-1">EMERGENCY ASSISTANCE</h2>
-    <p class="text-xs text-red-400 font-bold uppercase tracking-wider text-center mb-6">SOS Quick Actions Console</p>
-
-    <!-- Emergency Action Grid -->
-    <div class="grid grid-cols-1 gap-3.5 w-full max-w-sm mb-6">
-
-      <!-- Action 1: Call Emergency Helpline (112) -->
-      <a href="tel:112" class="sos-action-btn emergency-call-btn">
-        <span class="p-3 bg-red-600 rounded-xl mr-4 text-white">
-          <app-icon name="phone" [size]="20"></app-icon>
-        </span>
-        <div class="flex flex-col text-left">
-          <span class="text-[0.92rem] font-extrabold text-white">Call National Helpline</span>
-          <span class="text-[0.7rem] text-red-300 font-bold">Instantly dial 112</span>
-        </div>
-      </a>
-
-      <!-- Action 2: Share GPS Location with Advocate -->
-      <button class="sos-action-btn location-share-btn">
-        <span class="p-3 bg-blue-600 rounded-xl mr-4 text-white">
-          <app-icon name="navigation" [size]="20"></app-icon>
-        </span>
-        <div class="flex flex-col text-left">
-          <span class="text-[0.92rem] font-extrabold text-white">Share Live Location</span>
-          <span class="text-[0.7rem] text-blue-300 font-bold">Ping coordinates to main advocate</span>
-        </div>
-      </button>
-
-      <!-- Action 3: Quick Rights Checklist -->
-      <a routerLink="/find-help" (click)="closeSos()" class="sos-action-btn checklist-btn">
-        <span class="p-3 bg-amber-600 rounded-xl mr-4 text-white">
-          <app-icon name="file-check" [size]="20"></app-icon>
-        </span>
-        <div class="flex flex-col text-left">
-          <span class="text-[0.92rem] font-extrabold text-white">Know Your Core Rights</span>
-          <span class="text-[0.7rem] text-amber-300 font-bold">Quick arrest & search guides</span>
-        </div>
-      </a>
-
-    </div>
-
-    <!-- Close SOS Panel button -->
-    <button (click)="closeSos()"
-      class="w-full max-w-sm py-3 rounded-2xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white font-bold transition-all text-sm tracking-wider uppercase active:scale-[0.98]">
-      Dismiss Console
-    </button>
-  </div>
-</div>
+<!-- Lazy-Loaded Emergency Assistance Console Component -->
+@defer (when showSosOverlay) {
+@if (showSosOverlay) {
+<app-sos-modal [isOpen]="showSosOverlay" (closeModal)="closeSos()"></app-sos-modal>
+}
+}

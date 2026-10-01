@@ -1,72 +1,85 @@
-import { Component, OnInit, OnDestroy, HostListener, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive, NavigationEnd } from '@angular/router';
-import { AsyncPipe, NgClass, NgIf, UpperCasePipe } from '@angular/common';
+import {
+  Component,
+  OnInit,
+  OnDestroy,
+  HostListener,
+  ChangeDetectorRef,
+  ChangeDetectionStrategy,
+  inject
+} from '@angular/core';
+import { Router, RouterLink, NavigationEnd } from '@angular/router';
+import { AsyncPipe, NgClass, NgIf } from '@angular/common';
+import { Subscription } from 'rxjs';
+import { filter, take } from 'rxjs/operators';
+
 import { AuthService } from '../../services/auth.service';
-import { ScrollService } from '../../services/scroll.service';
 import { LawyerService } from '../../services/lawyer.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { IconComponent } from '../icon/icon.component';
-import { Subscription, filter } from 'rxjs';
+import { SosModalComponent } from '../sos-modal/sos-modal.component';
+
+export type BottomNavTab = 'home' | 'lawyers' | 'laws' | 'dashboard' | 'sos' | 'none';
 
 @Component({
   selector: 'app-bottom-nav',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent],
+  imports: [
+    RouterLink,
+    AsyncPipe,
+    NgClass,
+    NgIf,
+    IconComponent,
+    TooltipDirective,
+    SosModalComponent
+  ],
   templateUrl: './bottom-nav.component.html',
   styleUrls: ['./bottom-nav.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class BottomNavComponent implements OnInit, OnDestroy {
+  public auth = inject(AuthService);
+  private lawyerService = inject(LawyerService);
+  private router = inject(Router);
+  private cdr = inject(ChangeDetectorRef);
+
   showNav = true;
   isKeyboardVisible = false;
   showSosOverlay = false;
-  initialHeight = window.innerHeight;
   hasUpcomingAppointment = false;
+  activeTab: BottomNavTab = 'home';
 
-  activeTab: 'home' | 'laws' | 'sos' | 'lawyers' | 'dashboard' | 'none' = 'home';
-
-  private scrollSub!: Subscription;
+  private initialHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
   private routerSub!: Subscription;
   private authSub!: Subscription;
 
-  constructor(
-    public auth: AuthService,
-    private scrollService: ScrollService,
-    private router: Router,
-    private cdr: ChangeDetectorRef,
-    private lawyerService: LawyerService
-  ) { }
-
-  ngOnInit() {
-    // 1. Scroll tracking to hide/show bar
-    this.scrollSub = this.scrollService.scrollDirection$.subscribe(dir => {
-      this.showNav = dir === 'up';
-      this.cdr.markForCheck();
-    });
-
-    // 2. Active tab route tracking
+  ngOnInit(): void {
+    // 1. Initial route tab tracking
     this.updateActiveTab(this.router.url);
+
+    // 2. Route change tracking
     this.routerSub = this.router.events.pipe(
-      filter(event => event instanceof NavigationEnd)
-    ).subscribe((event: any) => {
+      filter((event): event is NavigationEnd => event instanceof NavigationEnd)
+    ).subscribe((event) => {
       this.updateActiveTab(event.urlAfterRedirects || event.url);
+      if (this.showSosOverlay) {
+        this.closeSos();
+      }
     });
 
-    // 3. Upcoming appointment check
-    this.authSub = this.auth.currentUser$.subscribe(user => {
+    // 3. Upcoming appointment indicator (safe single-shot subscription per auth update)
+    this.authSub = this.auth.currentUser$.subscribe((user) => {
       if (user) {
-        const getInquiries$ = user.role === 'Lawyer'
+        const inquiries$ = user.role === 'Lawyer'
           ? this.lawyerService.getReceivedInquiries()
           : this.lawyerService.getSentInquiries();
 
-        getInquiries$.subscribe({
+        inquiries$.pipe(take(1)).subscribe({
           next: (inquiries) => {
-            // Check if there is any inquiry with status 'approved' or 'pending'
-            this.hasUpcomingAppointment = inquiries && inquiries.some(i => i.status === 'approved' || i.status === 'pending');
+            this.hasUpcomingAppointment = Array.isArray(inquiries) &&
+              inquiries.some((i) => i.status === 'approved' || i.status === 'pending');
             this.cdr.markForCheck();
           },
-          error: (err) => {
-            console.warn('Could not fetch inquiries for bottom nav badge', err);
+          error: () => {
             this.hasUpcomingAppointment = false;
             this.cdr.markForCheck();
           }
@@ -78,38 +91,50 @@ export class BottomNavComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnDestroy() {
-    if (this.scrollSub) this.scrollSub.unsubscribe();
+  ngOnDestroy(): void {
     if (this.routerSub) this.routerSub.unsubscribe();
     if (this.authSub) this.authSub.unsubscribe();
   }
 
   @HostListener('window:resize')
-  onResize() {
-    // If current window height is significantly smaller than initial (keyboard open)
-    this.isKeyboardVisible = window.innerHeight < this.initialHeight - 150;
-    this.cdr.markForCheck();
+  onResize(): void {
+    if (typeof window !== 'undefined') {
+      this.isKeyboardVisible = window.innerHeight < this.initialHeight - 150;
+      this.cdr.markForCheck();
+    }
   }
 
-  toggleSos(event: Event) {
+  // Keyboard shortcut: Escape to dismiss SOS Console
+  @HostListener('document:keydown.escape')
+  onEscapeKey(): void {
+    if (this.showSosOverlay) {
+      this.closeSos();
+    }
+  }
+
+  toggleSos(event: Event): void {
     event.stopPropagation();
     this.showSosOverlay = !this.showSosOverlay;
+    this.triggerHaptic(this.showSosOverlay ? 'emergency' : 'light');
     this.cdr.markForCheck();
   }
 
-  closeSos() {
+  closeSos(): void {
     this.showSosOverlay = false;
     this.cdr.markForCheck();
   }
 
-  private updateActiveTab(url: string) {
+  private updateActiveTab(url: string): void {
     const cleanUrl = url.split('?')[0].split('#')[0];
 
     if (cleanUrl === '/' || cleanUrl === '/home') {
       this.activeTab = 'home';
     } else if (cleanUrl.startsWith('/laws')) {
       this.activeTab = 'laws';
-    } else if (cleanUrl.startsWith('/lawyers') || cleanUrl.startsWith('/specializations') || cleanUrl.startsWith('/legal-resources')) {
+    } else if (
+      cleanUrl.startsWith('/lawyers') ||
+      cleanUrl.startsWith('/specializations')
+    ) {
       this.activeTab = 'lawyers';
     } else if (
       cleanUrl.startsWith('/client') ||
@@ -124,7 +149,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
       cleanUrl.startsWith('/notifications')
     ) {
       this.activeTab = 'dashboard';
-    } else if (cleanUrl.startsWith('/find-help')) {
+    } else if (cleanUrl.startsWith('/find-help') || cleanUrl.startsWith('/legal-resources')) {
       this.activeTab = 'sos';
     } else {
       this.activeTab = 'none';
@@ -132,10 +157,19 @@ export class BottomNavComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
-  // Generate dynamic routing for the workstation tab based on roles
   getDashboardRoute(user: any): string {
     if (!user) return '/login';
     if (user.role === 'Lawyer') return '/lawyer/workstation';
     return '/client/portal';
+  }
+
+  private triggerHaptic(type: 'light' | 'emergency'): void {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      try {
+        navigator.vibrate(type === 'emergency' ? [40, 80, 40] : 15);
+      } catch {
+        // Ignore if vibration is restricted by browser policy
+      }
+    }
   }
 }

@@ -1,0 +1,239 @@
+:host {
+  display: contents;
+}
+
+/* Backdrop */
+.sos-backdrop {
+  opacity: 1;
+  animation: backdropFadeIn 0.25s ease-out forwards;
+}
+
+@keyframes backdropFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+/* Panel Animations */
+.sos-modal-panel {
+  will-change: transform, opacity;
+  animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @media (min-width: 768px) {
+    transform-origin: bottom right;
+    animation: desktopWidgetPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.8;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes desktopWidgetPop {
+  from {
+    transform: scale(0.92) translateY(14px);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+/* 2x2 Quick Dial Cards */
+.sos-quick-dial-card {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 12px;
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  -webkit-tap-highlight-color: transparent;
+
+  .quick-title {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #ffffff;
+    line-height: 1.15;
+    margin-top: 2px;
+  }
+
+  .quick-sub {
+    font-size: 0.62rem;
+    font-weight: 500;
+    line-height: 1.2;
+    margin-top: 2px;
+  }
+
+  .quick-icon-pill {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &:hover,
+  &:focus {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+.dial-112 {
+  border-color: rgba(239, 68, 68, 0.25);
+
+  .quick-sub {
+    color: #fca5a5;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: rgba(239, 68, 68, 0.5);
+    background: rgba(239, 68, 68, 0.1);
+  }
+}
+
+.dial-1091 {
+  border-color: rgba(244, 63, 94, 0.25);
+
+  .quick-sub {
+    color: #fda4af;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: rgba(244, 63, 94, 0.5);
+    background: rgba(244, 63, 94, 0.1);
+  }
+}
+
+.dial-15100 {
+  border-color: rgba(99, 102, 241, 0.25);
+
+  .quick-sub {
+    color: #c7d2fe;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: rgba(99, 102, 241, 0.5);
+    background: rgba(99, 102, 241, 0.1);
+  }
+}
+
+.dial-1930 {
+  border-color: rgba(245, 158, 11, 0.25);
+
+  .quick-sub {
+    color: #fde68a;
+  }
+
+  &:hover,
+  &:focus {
+    border-color: rgba(245, 158, 11, 0.5);
+    background: rgba(245, 158, 11, 0.1);
+  }
+}
+
+/* Banner Action Rows */
+.sos-banner-btn {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+
+  .banner-icon-pill {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    margin-right: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &:hover,
+  &:focus {
+    transform: translateY(-1px);
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.location-btn {
+  border-color: rgba(59, 130, 246, 0.25);
+
+  &:hover,
+  &:focus {
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(59, 130, 246, 0.1);
+  }
+}
+
+.find-help-btn {
+  border-color: rgba(244, 63, 94, 0.25);
+
+  &:hover,
+  &:focus {
+    border-color: rgba(244, 63, 94, 0.55);
+    background: rgba(244, 63, 94, 0.12);
+  }
+}
+
+.rights-btn {
+  border-color: rgba(16, 185, 129, 0.25);
+
+  &:hover,
+  &:focus {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.1);
+  }
+}
+
+/* Pill Badges */
+.sos-pill-badge {
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+}

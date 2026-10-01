@@ -1,0 +1,180 @@
+<!-- Immersive Accessible Emergency SOS Modal / Bottom Sheet -->
+<div *ngIf="isOpen" id="emergency-sos-sheet" role="dialog" aria-modal="true" aria-labelledby="sos-modal-title"
+  aria-describedby="sos-modal-desc"
+  class="fixed inset-0 z-[2000] overflow-hidden flex items-end justify-center md:items-end md:justify-end md:pointer-events-none">
+
+  <!-- Backdrop Blur with Dismiss Trigger (Strict pointer event capture) -->
+  <div
+    class="sos-backdrop fixed inset-0 bg-slate-950/80 md:bg-slate-950/25 md:backdrop-blur-[1.5px] transition-opacity duration-300 pointer-events-auto"
+    (click)="dismiss()" aria-hidden="true"></div>
+
+  <!-- Sheet / Dialog Panel (Mobile Drawer & Desktop Docked Widget) -->
+  <div
+    class="sos-modal-panel relative w-full max-w-[480px] mx-auto md:mx-0 md:fixed md:bottom-20 md:right-6 md:w-[410px] md:max-w-[410px] bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-t md:border border-red-500/30 text-white rounded-t-[2rem] md:rounded-2xl p-5 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] md:p-4.5 md:pb-4 shadow-[0_-12px_48px_rgba(0,0,0,0.8)] md:shadow-[0_24px_60px_rgba(0,0,0,0.65),0_0_35px_rgba(239,68,68,0.18)] flex flex-col items-center pointer-events-auto z-10 max-h-[92vh] md:max-h-[min(650px,calc(100vh-100px))] overflow-y-auto scrollbar-none">
+
+    <!-- Top-Right Close Button -->
+    <button (click)="dismiss()" type="button"
+      class="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-all cursor-pointer border border-white/10 active:scale-90"
+      aria-label="Close Emergency Console" appTooltip="Close Console" tooltipPlacement="left">
+      <app-icon name="x" [size]="15" aria-hidden="true"></app-icon>
+    </button>
+
+    <!-- Drag Handle (Mobile indicator) -->
+    <div class="w-10 h-1 bg-slate-700/80 rounded-full mb-3 md:hidden" aria-hidden="true"></div>
+
+    <!-- Header Section -->
+    <div class="flex items-center gap-2 mb-1">
+      <div
+        class="w-8 h-8 rounded-full bg-red-600/20 border border-red-500/40 flex items-center justify-center text-red-500 shadow-[0_0_16px_rgba(220,38,38,0.3)] animate-pulse"
+        aria-hidden="true">
+        <app-icon name="alert-triangle" [size]="16"></app-icon>
+      </div>
+      <h2 id="sos-modal-title" class="text-base font-black tracking-tight text-white m-0">
+        EMERGENCY ASSISTANCE
+      </h2>
+    </div>
+
+    <p id="sos-modal-desc" class="text-[0.65rem] text-red-400 font-bold uppercase tracking-wider text-center mb-2">
+      Immediate Help & Legal Protection Console
+    </p>
+
+    <!-- Offline Reassurance Pill -->
+    <div
+      class="flex items-center gap-1.5 text-[0.65rem] text-slate-400 bg-white/5 border border-white/10 px-2.5 py-0.5 rounded-full mb-3.5">
+      <app-icon name="shield-check" [size]="12" class="text-emerald-400" aria-hidden="true"></app-icon>
+      <span>Direct Cellular Hotlines • No Internet Required</span>
+    </div>
+
+    <!-- 2x2 Primary Helpline Grid (High-Impact, Compact, Thumb-Friendly) -->
+    <div class="grid grid-cols-2 gap-2.5 w-full mb-2.5" role="group" aria-label="Emergency Helplines">
+
+      <!-- Action 1: Call 112 (National All-in-One Helpline) -->
+      <a href="tel:112" class="sos-quick-dial-card dial-112" aria-label="Call National Emergency Helpline 112"
+        appTooltip="Direct dial Police, Fire & Medical 112" tooltipPlacement="top">
+        <div class="flex items-center justify-between w-full mb-1">
+          <span class="quick-icon-pill bg-red-600 text-white" aria-hidden="true">
+            <app-icon name="phone" [size]="14"></app-icon>
+          </span>
+          <span class="sos-pill-badge bg-red-500/20 text-red-300 border border-red-500/30">112</span>
+        </div>
+        <span class="quick-title">National Help</span>
+        <span class="quick-sub">Police & Ambulance</span>
+      </a>
+
+      <!-- Action 2: Call Women Helpline (1091) -->
+      <a href="tel:1091" class="sos-quick-dial-card dial-1091" aria-label="Call Women Distress Helpline 1091"
+        appTooltip="Direct dial Women Distress Helpline 1091" tooltipPlacement="top">
+        <div class="flex items-center justify-between w-full mb-1">
+          <span class="quick-icon-pill bg-rose-600 text-white" aria-hidden="true">
+            <app-icon name="phone" [size]="14"></app-icon>
+          </span>
+          <span class="sos-pill-badge bg-rose-500/20 text-rose-300 border border-rose-500/30">1091</span>
+        </div>
+        <span class="quick-title">Women Safety</span>
+        <span class="quick-sub">Domestic Abuse Line</span>
+      </a>
+
+      <!-- Action 3: Call Legal Aid NALSA (15100) -->
+      <a href="tel:15100" class="sos-quick-dial-card dial-15100"
+        aria-label="Call National Free Legal Aid Helpline 15100" appTooltip="Direct dial Free Legal Aid Helpline 15100"
+        tooltipPlacement="top">
+        <div class="flex items-center justify-between w-full mb-1">
+          <span class="quick-icon-pill bg-indigo-600 text-white" aria-hidden="true">
+            <app-icon name="scale" [size]="14"></app-icon>
+          </span>
+          <span class="sos-pill-badge bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">15100</span>
+        </div>
+        <span class="quick-title">Legal Aid NALSA</span>
+        <span class="quick-sub">Duty Advocates</span>
+      </a>
+
+      <!-- Action 4: Call Cyber Crime (1930) -->
+      <a href="tel:1930" class="sos-quick-dial-card dial-1930" aria-label="Call Cyber Crime and Bank Fraud Hotline 1930"
+        appTooltip="Direct dial Cyber Fraud Helpline 1930" tooltipPlacement="top">
+        <div class="flex items-center justify-between w-full mb-1">
+          <span class="quick-icon-pill bg-amber-600 text-white" aria-hidden="true">
+            <app-icon name="zap" [size]="14"></app-icon>
+          </span>
+          <span class="sos-pill-badge bg-amber-500/20 text-amber-300 border border-amber-500/30">1930</span>
+        </div>
+        <span class="quick-title">Cyber Fraud</span>
+        <span class="quick-sub">Freeze Bank Accounts</span>
+      </a>
+
+    </div>
+
+    <!-- Live GPS Location Broadcast Row -->
+    <button (click)="shareLiveLocation()" [disabled]="isSharingLocation" class="sos-banner-btn location-btn w-full mb-2"
+      type="button" aria-label="Broadcast live GPS coordinates via SMS alert"
+      appTooltip="Acquire GPS coordinates & send emergency SMS" tooltipPlacement="top">
+      <span class="banner-icon-pill bg-blue-600 text-white" aria-hidden="true">
+        <app-icon [name]="isSharingLocation ? 'loader' : 'navigation'" [size]="16"
+          [spin]="isSharingLocation"></app-icon>
+      </span>
+      <div class="flex flex-col text-left flex-1 min-w-0 mr-2">
+        <span class="text-xs font-black text-white leading-tight">
+          {{ isSharingLocation ? 'Acquiring GPS Coordinates...' : 'Broadcast Live GPS Location' }}
+        </span>
+        <span class="text-[0.65rem] text-blue-300 font-medium truncate">
+          Copy coordinates & send SMS emergency alert
+        </span>
+      </div>
+      <span class="sos-pill-badge bg-blue-500/20 text-blue-300 border border-blue-500/30">
+        {{ isSharingLocation ? 'LOCATING...' : 'SEND SMS' }}
+      </span>
+    </button>
+
+    <!-- Find Emergency Help Hub Menu Row (Matching Platform Menu Standards) -->
+    <a routerLink="/find-help" (click)="dismiss()" class="sos-banner-btn find-help-btn w-full mb-2 group"
+      aria-label="Find Emergency Help and Legal Aid Directory"
+      appTooltip="Browse free legal aid clinics, police stations & court directory" tooltipPlacement="top">
+      <span
+        class="banner-icon-pill bg-gradient-to-br from-rose-500 to-red-600 text-white shadow-[0_2px_8px_rgba(225,29,72,0.4)]"
+        aria-hidden="true">
+        <app-icon name="lifebuoy" [size]="16"
+          class="group-hover:rotate-45 transition-transform duration-300"></app-icon>
+      </span>
+      <div class="flex flex-col text-left flex-1 min-w-0 mr-2">
+        <span class="text-xs font-black text-white leading-tight group-hover:text-rose-300 transition-colors">
+          Find Help & Legal Aid Hub
+        </span>
+        <span class="text-[0.65rem] text-rose-200/70 font-medium truncate">
+          Emergency centers, DLSA clinics & court directory
+        </span>
+      </div>
+      <app-icon name="chevron-right" [size]="14"
+        class="text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0"
+        aria-hidden="true">
+      </app-icon>
+    </a>
+
+    <!-- Know Your Arrest Rights Banner Row -->
+    <a routerLink="/find-help" [queryParams]="{tab: 'rights'}" (click)="dismiss()"
+      class="sos-banner-btn rights-btn w-full mb-3 group"
+      aria-label="Browse citizen arrest rights and legal protection guidelines"
+      appTooltip="View arrest guidelines & free legal aid" tooltipPlacement="top">
+      <span class="banner-icon-pill bg-emerald-600 text-white shadow-[0_2px_8px_rgba(16,185,129,0.3)]"
+        aria-hidden="true">
+        <app-icon name="shield" [size]="16" class="group-hover:scale-110 transition-transform duration-200"></app-icon>
+      </span>
+      <div class="flex flex-col text-left flex-1 min-w-0 mr-2">
+        <span class="text-xs font-black text-white leading-tight group-hover:text-emerald-300 transition-colors">
+          Know Your Arrest Rights
+        </span>
+        <span class="text-[0.65rem] text-emerald-200/70 font-medium truncate">
+          Free legal aid, DLSA/NALSA & search guidelines
+        </span>
+      </div>
+      <app-icon name="chevron-right" [size]="14"
+        class="text-slate-400 group-hover:text-white group-hover:translate-x-1 transition-all flex-shrink-0"
+        aria-hidden="true">
+      </app-icon>
+    </a>
+
+    <!-- Dismiss Console Button -->
+    <button (click)="dismiss()" type="button"
+      class="w-full py-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 border border-slate-700/80 text-slate-300 hover:text-white font-bold transition-all text-xs tracking-wider uppercase active:scale-[0.98]">
+      Dismiss Console
+    </button>
+  </div>
+</div>
