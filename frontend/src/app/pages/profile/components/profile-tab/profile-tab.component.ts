@@ -37,6 +37,15 @@ export interface SupportTicket {
 }
 
 // ─── Custom Reactive Form Validators ────────────────────────────
+export const NAME_PATTERN = /^[\p{L}\p{M}\p{N}\d'\-\.\s_#&,()/@+]+$/u;
+
+export function nameValidator(control: AbstractControl): ValidationErrors | null {
+  if (!control.value || typeof control.value !== 'string' || control.value.trim().length === 0) {
+    return null;
+  }
+  return NAME_PATTERN.test(control.value.trim()) ? null : { invalidNameChars: true };
+}
+
 export function trimmedRequired(control: AbstractControl): ValidationErrors | null {
   if (!control.value || typeof control.value !== 'string' || control.value.trim().length === 0) {
     return { required: true };
@@ -255,11 +264,11 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
     this.profileForm = this.fb.group<ProfileFormModel>({
       firstName: this.fb.control('', {
         nonNullable: true,
-        validators: [trimmedRequired, Validators.minLength(2), Validators.maxLength(50)]
+        validators: [trimmedRequired, Validators.minLength(2), Validators.maxLength(50), nameValidator]
       }),
       lastName: this.fb.control('', {
         nonNullable: true,
-        validators: [Validators.maxLength(50)]
+        validators: [Validators.maxLength(50), nameValidator]
       }),
       phone: this.fb.control('', {
         nonNullable: true,
@@ -276,6 +285,18 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
       }),
       gender: this.fb.control('', { nonNullable: true }),
       dateOfBirth: this.fb.control('', { nonNullable: true })
+    });
+
+    // Auto-clear server-side errors when user edits an affected field
+    Object.keys(this.profileForm.controls).forEach((key) => {
+      const ctrl = this.profileForm.get(key as keyof ProfileFormModel);
+      ctrl?.valueChanges.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+        if (ctrl.errors && ctrl.errors['serverError']) {
+          const errors = { ...ctrl.errors };
+          delete errors['serverError'];
+          ctrl.setErrors(Object.keys(errors).length > 0 ? errors : null);
+        }
+      });
     });
   }
 
@@ -310,6 +331,9 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
     if (!control || !control.errors || (!control.touched && !control.dirty)) return null;
 
     const errors = control.errors;
+    if (errors['serverError']) {
+      return errors['serverError'];
+    }
     if (errors['required']) {
       return `${this.getFieldLabel(fieldName)} is required.`;
     }
@@ -318,6 +342,9 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
     }
     if (errors['maxlength']) {
       return `${this.getFieldLabel(fieldName)} cannot exceed ${errors['maxlength'].requiredLength} characters.`;
+    }
+    if (errors['invalidNameChars']) {
+      return `${this.getFieldLabel(fieldName)} contains invalid characters.`;
     }
     if (errors['minDigits']) {
       return `Phone number must be at least ${errors['minDigits'].requiredLength} digits.`;
@@ -411,11 +438,85 @@ export class ProfileTabComponent implements OnInit, OnChanges, AfterViewInit {
           ...updatePayload
         });
       },
-      error: () => {
+      error: (err) => {
         this.isSaving.set(false);
-        this.snackbar.show('Failed to save profile. Please try again.', 'error');
+        this.handleSaveError(err);
       }
     });
+  }
+
+  private handleSaveError(err: any): void {
+    // 1. ProblemDetails validation errors map (RFC 9110 / RFC 7807 compliant)
+    const validationErrors: Record<string, string[]> | undefined = err?.error?.errors;
+
+    if (validationErrors && typeof validationErrors === 'object') {
+      const fieldMap: Record<string, keyof ProfileFormModel> = {
+        fullname: 'firstName',
+        firstname: 'firstName',
+        lastname: 'lastName',
+        phone: 'phone',
+        clientlanguage: 'language',
+        language: 'language',
+        clientcity: 'city',
+        city: 'city',
+        clientstate: 'state',
+        state: 'state',
+        gender: 'gender',
+        dateofbirth: 'dateOfBirth'
+      };
+
+      let mappedFieldCount = 0;
+      let firstErrorMessage = '';
+      let firstInvalidControlName: keyof ProfileFormModel | null = null;
+
+      for (const [rawKey, messages] of Object.entries(validationErrors)) {
+        if (!Array.isArray(messages) || messages.length === 0) continue;
+        const normalizedKey = rawKey.toLowerCase();
+        const formField = fieldMap[normalizedKey];
+        const errorMsg = messages[0];
+
+        if (!firstErrorMessage) {
+          firstErrorMessage = errorMsg;
+        }
+
+        if (formField) {
+          const ctrl = this.profileForm.get(formField);
+          if (ctrl) {
+            ctrl.setErrors({ ...(ctrl.errors || {}), serverError: errorMsg });
+            ctrl.markAsTouched();
+            ctrl.markAsDirty();
+            mappedFieldCount++;
+            if (!firstInvalidControlName) {
+              firstInvalidControlName = formField;
+            }
+          }
+        }
+      }
+
+      if (mappedFieldCount > 0) {
+        // Automatically focus the first invalid field
+        if (firstInvalidControlName) {
+          const el = document.getElementById(`prof-${firstInvalidControlName}`);
+          el?.focus?.();
+        }
+
+        const toastMsg = mappedFieldCount === 1 && firstErrorMessage
+          ? firstErrorMessage
+          : 'Please correct the highlighted fields and try again.';
+        this.snackbar.show(toastMsg, 'warning');
+        return;
+      }
+    }
+
+    // 2. Specific API error message or title
+    const apiMessage = err?.error?.message || err?.error?.title || err?.message;
+    if (typeof apiMessage === 'string' && apiMessage.trim().length > 0 && !apiMessage.includes('One or more validation errors')) {
+      this.snackbar.show(apiMessage.trim(), 'error');
+      return;
+    }
+
+    // 3. Fallback
+    this.snackbar.show('Failed to save profile. Please check your details and try again.', 'error');
   }
 
   // ─── Helpers ──────────────────────────────────────────────────

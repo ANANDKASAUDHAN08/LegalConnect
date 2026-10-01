@@ -305,7 +305,25 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
 
   // ─── Data Ingestion ─────────────────────────────────────────
   loadProfile() {
-    this.loading.set(true);
+    // Stale-While-Revalidate (SWR): If the AuthService already has a cached user
+    // (from synchronous localStorage hydration at t=0), render the profile shell
+    // immediately without showing the skeleton loader. The full skeleton only
+    // displays when the cache is completely empty (e.g., first visit after login).
+    const cachedUser = this.auth.currentUser;
+    if (cachedUser) {
+      this.profile.set(cachedUser);
+      this.loading.set(false);
+
+      if (cachedUser.role === 'Lawyer') {
+        this.loadLawyerProfile();
+      }
+    } else {
+      this.loading.set(true);
+    }
+
+    // Background refresh: fetch fresh data from server silently.
+    // If cached data was displayed, this updates any stale fields without
+    // flashing the skeleton. If no cache existed, this is the primary load.
     this.userProfileService.getProfile().subscribe({
       next: (res) => {
         this.profile.set(res);
@@ -316,7 +334,10 @@ export class ProfileComponent implements OnInit, OnDestroy, HasUnsavedChanges {
         }
       },
       error: () => {
-        this.snackbar.show('Failed to load profile. Please sign in again.', 'error');
+        // Only show error if we had no cached data to fall back on
+        if (!cachedUser) {
+          this.snackbar.show('Failed to load profile. Please sign in again.', 'error');
+        }
         this.loading.set(false);
       }
     });
