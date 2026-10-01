@@ -1,117 +1,694 @@
-<!-- Backdrop -->
-<div *ngIf="isOpen" class="palette-backdrop" (click)="close()"></div>
+<!-- Global Search Command Center Overlay -->
+<div *ngIf="isOpen"
+  class="palette-backdrop fixed inset-0 bg-slate-950/60 backdrop-blur-md z-[99998] transition-opacity duration-200"
+  (click)="close()" aria-hidden="true"></div>
 
-<!-- Palette Panel -->
-<div *ngIf="isOpen" class="palette-container">
-    <div class="palette-panel" #palettePanel appFocusTrap>
-        <!-- Search Input -->
-        <div class="palette-input-wrapper">
-            <app-icon name="search" [size]="18" class="palette-search-icon"></app-icon>
-            <input #searchInput type="text" [(ngModel)]="query" (ngModelChange)="onQueryChange()"
-                (keydown)="onInputKeydown($event)" placeholder="Search laws, navigate, or type a command..."
-                class="palette-input" autocomplete="off" spellcheck="false" />
-            <div class="palette-shortcut-badge">
-                <kbd>ESC</kbd>
-            </div>
-        </div>
+<div *ngIf="isOpen"
+  class="fixed inset-0 z-[99999] flex flex-col items-center justify-start md:pt-[min(8vh,65px)] pointer-events-none"
+  role="dialog" aria-modal="true" aria-label="Global Legal Search and Navigation Command Center">
 
-        <!-- Results List -->
-        <div class="palette-results custom-scrollbar" *ngIf="filteredActions.length > 0 || query.trim()">
-            <!-- Recent Searches -->
-            <div *ngIf="recentActions.length > 0 && !query.trim()">
-                <div class="palette-category-header">
-                    <span>Recent Searches</span>
-                    <button class="palette-clear-btn" (click)="clearRecents($event)">Clear</button>
-                </div>
-                <button *ngFor="let action of recentActions; let i = index; trackBy: trackByActionId" class="palette-item"
-                    [class.palette-item-active]="selectedIndex === i" (click)="executeAction(action)"
-                    (mouseenter)="selectedIndex = i">
-                    <div class="palette-item-icon palette-item-icon-recent">
-                        <app-icon name="clock" [size]="16"></app-icon>
-                    </div>
-                    <span class="palette-item-label">{{ action.label }}</span>
-                    <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
-                </button>
-            </div>
+  <!-- Main Modal Dialog Panel -->
+  <div
+    class="palette-panel pointer-events-auto relative w-full h-[100dvh] md:h-auto md:max-h-[84vh] md:w-[720px] md:max-w-[94vw] bg-white dark:bg-slate-900 md:border md:border-slate-200/90 md:dark:border-slate-800 md:rounded-2xl shadow-2xl flex flex-col overflow-hidden transition-all duration-200"
+    appFocusTrap>
 
-            <!-- Quick Actions (shown when no query) -->
-            <div *ngIf="quickActions.length > 0 && !query.trim()">
-                <div class="palette-category-header">Quick Actions</div>
-                <button *ngFor="let action of quickActions; let i = index; trackBy: trackByActionId" class="palette-item"
-                    [class.palette-item-active]="selectedIndex === (recentActions.length + i)"
-                    (click)="executeAction(action)" (mouseenter)="selectedIndex = recentActions.length + i">
-                    <div class="palette-item-icon">
-                        <app-icon [name]="action.icon" [size]="16"></app-icon>
-                    </div>
-                    <div class="palette-item-content">
-                        <span class="palette-item-label">{{ action.label }}</span>
-                        <span class="palette-item-desc" *ngIf="action.description">{{ action.description }}</span>
-                    </div>
-                    <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
-                </button>
-            </div>
-
-            <!-- Filtered Results (when typing) -->
-            <div *ngIf="query.trim() && filteredActions.length > 0">
-                <div class="palette-category-header">Results</div>
-                <button *ngFor="let action of filteredActions; let i = index; trackBy: trackByActionId" class="palette-item"
-                    [class.palette-item-active]="selectedIndex === i" (click)="executeAction(action)"
-                    (mouseenter)="selectedIndex = i">
-                    <div class="palette-item-icon">
-                        <app-icon [name]="action.icon" [size]="16"></app-icon>
-                    </div>
-                    <div class="palette-item-content">
-                        <span class="palette-item-label">{{ action.label }}</span>
-                        <span class="palette-item-desc" *ngIf="action.description">{{ action.description }}</span>
-                    </div>
-                    <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
-                </button>
-            </div>
-
-            <!-- Search fallback -->
-            <div *ngIf="query.trim()" class="palette-search-fallback">
-                <button class="palette-item" [class.palette-item-active]="selectedIndex === filteredActions.length"
-                    (click)="searchForQuery()" (mouseenter)="selectedIndex = filteredActions.length">
-                    <div class="palette-item-icon palette-item-icon-search">
-                        <app-icon name="search" [size]="16"></app-icon>
-                    </div>
-                    <div class="palette-item-content">
-                        <span class="palette-item-label">Search for "{{ query }}"</span>
-                        <span class="palette-item-desc">Full legal search across all acts & sections</span>
-                    </div>
-                    <kbd class="palette-item-shortcut">↵</kbd>
-                </button>
-            </div>
-        </div>
-
-        <!-- Empty State (no query, no recents) -->
-        <div *ngIf="!query.trim() && recentActions.length === 0 && quickActions.length > 0" class="palette-results">
-            <div class="palette-category-header">Quick Actions</div>
-            <button *ngFor="let action of quickActions; let i = index; trackBy: trackByActionId" class="palette-item"
-                [class.palette-item-active]="selectedIndex === i" (click)="executeAction(action)"
-                (mouseenter)="selectedIndex = i">
-                <div class="palette-item-icon">
-                    <app-icon [name]="action.icon" [size]="16"></app-icon>
-                </div>
-                <div class="palette-item-content">
-                    <span class="palette-item-label">{{ action.label }}</span>
-                    <span class="palette-item-desc" *ngIf="action.description">{{ action.description }}</span>
-                </div>
-                <kbd class="palette-item-shortcut" *ngIf="action.shortcut">{{ action.shortcut }}</kbd>
-            </button>
-        </div>
-
-        <!-- Footer -->
-        <div class="palette-footer">
-            <div class="palette-footer-hint">
-                <kbd>↑</kbd><kbd>↓</kbd> navigate
-            </div>
-            <div class="palette-footer-hint">
-                <kbd>↵</kbd> select
-            </div>
-            <div class="palette-footer-hint">
-                <kbd>esc</kbd> close
-            </div>
-        </div>
+    <!-- Screen-Reader Live Announcement Region -->
+    <div class="sr-only" aria-live="polite" aria-atomic="true">
+      {{ screenReaderAnnouncement }}
     </div>
+
+    <!-- Top Search Header & Input Bar -->
+    <header
+      class="flex items-center gap-2 px-3 py-2.5 md:gap-3 md:px-5 md:py-3.5 border-b border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-900 shrink-0 pt-[max(0.75rem,env(safe-area-inset-top,0.75rem))] md:pt-3.5">
+      <!-- Mobile back / dismiss button -->
+      <button type="button"
+        class="md:hidden flex items-center justify-center w-8 h-8 -ml-1 text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer border-0 bg-transparent shrink-0"
+        (click)="close()" aria-label="Close search">
+        <app-icon name="arrow-left" [size]="18"></app-icon>
+      </button>
+
+      <!-- Search Icon with live loading spinner (hidden on small mobile when back button is present) -->
+      <div
+        class="hidden sm:flex items-center justify-center w-5 h-5 md:w-6 md:h-6 text-slate-400 dark:text-slate-500 shrink-0">
+        <app-icon *ngIf="!isLoadingResults && !isLoadingSuggestions" name="search" [size]="18"></app-icon>
+        <span *ngIf="isLoadingResults || isLoadingSuggestions" class="palette-spinner" aria-hidden="true"></span>
+      </div>
+      <!-- Spinner on small screens during active search -->
+      <div *ngIf="(isLoadingResults || isLoadingSuggestions)"
+        class="sm:hidden flex items-center justify-center w-5 h-5 text-slate-400 shrink-0">
+        <span class="palette-spinner" aria-hidden="true"></span>
+      </div>
+
+      <!-- Main Search Input with Adaptive Placeholder & ARIA Combobox Spec -->
+      <input #searchInput type="text" [(ngModel)]="query" (ngModelChange)="onQueryInput($event)"
+        [placeholder]="searchPlaceholder"
+        class="palette-search-input flex-1 bg-transparent border-0 outline-none text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 text-[15px] md:text-base font-medium leading-normal min-w-0 p-0"
+        autocomplete="off" spellcheck="false" role="combobox" aria-autocomplete="list" [attr.aria-expanded]="isOpen"
+        [attr.aria-activedescendant]="activeItemId" aria-controls="palette-results-list"
+        aria-label="Global legal search query" />
+
+      <!-- Voice Search Button (Indian English Speech Recognition) -->
+      <button type="button"
+        class="flex items-center justify-center w-7 h-7 rounded-lg transition-all cursor-pointer border-0 bg-transparent shrink-0"
+        [ngClass]="isVoiceListening 
+          ? 'text-rose-600 bg-rose-500/15 animate-pulse ring-2 ring-rose-500/40' 
+          : 'text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+        (click)="toggleVoiceSearch()" [attr.aria-pressed]="isVoiceListening"
+        [appTooltip]="isVoiceListening ? 'Listening... click to stop' : 'Search by voice (Speech Recognition)'"
+        tooltipPlacement="bottom" aria-label="Search by voice">
+        <app-icon [name]="isVoiceListening ? 'mic' : 'mic'" [size]="16"></app-icon>
+      </button>
+
+      <!-- Clear Query Button (visible when query present) -->
+      <button *ngIf="query.trim()" type="button"
+        class="flex items-center justify-center w-7 h-7 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition-all cursor-pointer border-0 bg-transparent"
+        (click)="clearQuery()" aria-label="Clear search input" appTooltip="Clear text" tooltipPlacement="bottom">
+        <app-icon name="x" [size]="15"></app-icon>
+      </button>
+
+      <!-- Desktop Esc Hint Badge -->
+      <div
+        class="hidden md:flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/60 rounded"
+        aria-hidden="true">
+        <kbd class="font-sans font-semibold">ESC</kbd>
+      </div>
+    </header>
+
+    <!-- Category / Scope Navigation Pills -->
+    <div
+      class="palette-scopes-wrapper relative shrink-0 border-b border-slate-200/70 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-900/80 backdrop-blur-sm">
+      <nav #scopesNav
+        class="palette-scopes-nav flex items-center gap-1.5 md:gap-2 px-3 py-1.5 md:px-5 md:py-2.5 overflow-x-auto scrollbar-none pr-8 md:pr-5"
+        role="tablist" aria-label="Search category filters">
+        <button *ngFor="let s of scopes; let sIdx = index" type="button"
+          class="palette-chip shrink-0 group inline-flex items-center gap-1.5 px-2.5 py-1 md:px-3.5 md:py-1.5 rounded-full text-xs font-medium cursor-pointer select-none active:scale-[0.97]"
+          [ngClass]="activeScope === s.id ? 'palette-chip-active' : 'palette-chip-inactive'" (click)="setScope(s.id)"
+          role="tab" [attr.aria-selected]="activeScope === s.id"
+          [appTooltip]="'Filter by ' + s.label + ' (Alt+' + (sIdx + 1) + ')'" tooltipPlacement="bottom">
+          <app-icon [name]="s.icon" [size]="12"
+            [class]="activeScope === s.id ? 'text-white' : 'text-slate-400 dark:text-slate-400 group-hover:text-blue-500 transition-colors'"
+            class="shrink-0"></app-icon>
+          <span>{{ s.label }}</span>
+          <!-- Scope Badge Count -->
+          <span *ngIf="query.trim() && !isLoadingResults && hasPreviewForScope(s.id)"
+            class="inline-flex items-center justify-center px-1.5 min-w-[18px] h-4 text-[10px] font-bold rounded-full transition-colors"
+            [ngClass]="activeScope === s.id 
+              ? 'bg-white/25 text-white' 
+              : 'bg-blue-500/15 dark:bg-blue-500/25 text-blue-600 dark:text-blue-400'">
+            {{ getScopeCount(s.id) }}
+          </span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Scrollable Results & Discovery Center -->
+    <main #resultsScrollContainer
+      class="palette-body flex-1 overflow-y-auto px-3 py-3 md:px-5 md:py-4 space-y-4 md:space-y-5 custom-scrollbar"
+      id="palette-results-list" role="region" aria-label="Search results and recommendations">
+
+      <!-- ======================================================== -->
+      <!-- STATE 1: INITIAL DISCOVERY STATE (Query is Empty)       -->
+      <!-- ======================================================== -->
+      <div *ngIf="!query.trim()" class="space-y-4 md:space-y-5">
+
+        <!-- 1. Universal Recent Searches (Works for all citizens & auth synced) -->
+        <section *ngIf="recentSearches.length > 0" class="flex flex-col gap-2">
+          <div
+            class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+            <div class="flex items-center gap-1.5">
+              <app-icon name="clock" [size]="14" class="text-blue-500"></app-icon>
+              <span>Recent Searches</span>
+            </div>
+            <button type="button"
+              class="text-[11px] font-semibold text-rose-600 dark:text-rose-400 hover:underline cursor-pointer bg-transparent border-0 p-0"
+              (click)="clearAllRecents($event)" appTooltip="Clear all saved search history" tooltipPlacement="left">
+              Clear History
+            </button>
+          </div>
+
+          <div class="flex flex-col gap-1" role="listbox" aria-label="Recent searches">
+            <div *ngFor="let rec of recentSearches; let i = index; trackBy: trackByIndex" id="recent-{{ i }}"
+              class="palette-item group flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-all border border-transparent min-h-[46px]"
+              [class.is-keyboard-active]="isItemSelected('recent-' + i)" (click)="applySearchQuery(rec)" role="option"
+              [attr.aria-selected]="isItemSelected('recent-' + i)">
+              <div
+                class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                <app-icon name="history" [size]="15"></app-icon>
+              </div>
+              <span class="flex-1 truncate text-sm font-medium text-slate-800 dark:text-slate-200">{{ rec }}</span>
+              <button type="button"
+                class="opacity-60 md:opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center w-6 h-6 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer border-0 bg-transparent"
+                (click)="deleteRecentSearch($event, rec)" aria-label="Remove from history"
+                appTooltip="Remove this search" tooltipPlacement="left">
+                <app-icon name="x" [size]="12"></app-icon>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. Trending Legal Topics (Real Backend Data) -->
+        <section class="flex flex-col gap-2">
+          <div
+            class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+            <div class="flex items-center gap-1.5">
+              <app-icon name="trending-up" [size]="14" class="text-indigo-500"></app-icon>
+              <span>Trending Legal Topics</span>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-400 dark:text-slate-500">Live Indian Benchmarks</span>
+          </div>
+
+          <!-- Real Trending Topics Grid (Instant Zero-Latency Render) -->
+          <div *ngIf="paletteMeta?.trendingTopics" class="grid grid-cols-2 gap-2" role="listbox"
+            aria-label="Trending legal topics">
+            <div *ngFor="let topic of visibleTrendingTopics; let i = index; trackBy: trackByIndex" id="trending-{{ i }}"
+              class="palette-item group flex items-center gap-2 p-2 sm:gap-2.5 sm:p-2.5 md:gap-3 md:p-3 rounded-xl border border-slate-200/80 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/50 hover:border-blue-500/40 hover:bg-blue-500/5 dark:hover:bg-blue-500/10 transition-all cursor-pointer select-none min-h-[46px] sm:min-h-[52px]"
+              [class.trending-ai-item]="topic.name === 'Other / Not Sure'"
+              [class.is-keyboard-active]="isItemSelected('trending-' + i)"
+              [attr.aria-selected]="isItemSelected('trending-' + i)" role="option"
+              (click)="applySearchQuery(topic.sampleQuery || topic.name)"
+              [appTooltip]="'Explore legal rights & sections for ' + topic.name" tooltipPlacement="top">
+
+              <!-- Topic Icon with Distinctive AI Accent for 'Other / Not Sure' -->
+              <div class="flex items-center justify-center w-7 h-7 md:w-8 md:h-8 rounded-lg shrink-0 transition-colors"
+                [ngClass]="topic.name === 'Other / Not Sure' 
+                  ? 'bg-violet-500/15 text-violet-600 dark:text-violet-400' 
+                  : 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400'">
+                <app-icon [name]="topic.name === 'Other / Not Sure' ? 'help-circle' : (topic.icon || 'shield')"
+                  [size]="15"></app-icon>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1">
+                  <h4
+                    class="text-xs md:text-[13px] font-bold text-slate-900 dark:text-white truncate m-0 leading-tight">
+                    {{ topic.name }}</h4>
+                  <span *ngIf="topic.name === 'Other / Not Sure'"
+                    class="hidden xs:inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-extrabold uppercase bg-violet-500/15 text-violet-600 dark:text-violet-400 border border-violet-500/25 shrink-0">
+                    AI
+                  </span>
+                </div>
+                <p
+                  class="text-[10px] md:text-[11px] text-slate-500 dark:text-slate-400 truncate m-0 leading-tight mt-0.5">
+                  {{ topic.description }}
+                </p>
+              </div>
+
+              <app-icon name="arrow-right" [size]="12"
+                class="hidden sm:block text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0"></app-icon>
+            </div>
+          </div>
+
+          <!-- Sleek Expand / Collapse Toggle -->
+          <button *ngIf="trendingTopicsCount > 4" type="button"
+            class="palette-trending-toggle flex items-center justify-between py-1.5 px-3 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 active:scale-[0.99] transition-all cursor-pointer border border-dashed border-slate-200 dark:border-slate-800 w-full bg-slate-50/50 dark:bg-slate-900/50"
+            (click)="toggleTrendingTopics()" [attr.aria-expanded]="isTrendingExpanded"
+            aria-label="Toggle all trending legal topics">
+            <span class="flex items-center gap-1.5">
+              <app-icon [name]="isTrendingExpanded ? 'chevron-up' : 'chevron-down'" [size]="13"
+                class="text-blue-500"></app-icon>
+              <span class="text-[11px] md:text-xs">
+                {{ isTrendingExpanded ? 'Show top 4 topics only' : 'View all ' + trendingTopicsCount + ' topics (Labour,
+                Business, AI Assistant...)' }}
+              </span>
+            </span>
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400">
+              {{ isTrendingExpanded ? 'Collapse' : '+4 More' }}
+            </span>
+          </button>
+        </section>
+
+        <!-- 3. Popular Searches & Landmark Acts (Keyboard Accessible) -->
+        <section *ngIf="paletteMeta?.popularSearches" class="flex flex-col gap-2">
+          <div
+            class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+            <div class="flex items-center gap-1.5">
+              <app-icon name="zap" [size]="14" class="text-amber-500"></app-icon>
+              <span>Popular Inquiries</span>
+            </div>
+            <span class="text-[10px] font-semibold text-slate-400 sm:hidden">Swipe →</span>
+          </div>
+
+          <!-- Popular Search Topic Chips -->
+          <div
+            class="popular-chips-track flex items-center gap-1.5 overflow-x-auto scrollbar-none -mx-3 px-3 py-0.5 md:mx-0 md:px-0 md:flex-wrap"
+            role="listbox" aria-label="Popular search topics">
+            <button *ngFor="let topic of paletteMeta?.popularSearches?.topics; let i = index; trackBy: trackByIndex"
+              type="button" id="popular-topic-{{ i }}" role="option"
+              [attr.aria-selected]="isItemSelected('popular-topic-' + i)"
+              class="palette-chip-item inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium border border-slate-200/90 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-800/60 text-slate-700 dark:text-slate-300 hover:border-blue-500/40 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/5 active:scale-95 transition-all cursor-pointer select-none shrink-0 whitespace-nowrap"
+              [class.is-keyboard-active]="isItemSelected('popular-topic-' + i)" (click)="applySearchQuery(topic)">
+              <app-icon name="search" [size]="11" class="text-slate-400 shrink-0"></app-icon>
+              <span>{{ topic }}</span>
+            </button>
+          </div>
+
+          <!-- Popular Statutory Acts -->
+          <div
+            class="flex items-center justify-between text-[11px] font-semibold text-slate-400 dark:text-slate-500 px-1 mt-1">
+            <span>Landmark Bare Acts & Codes</span>
+            <span class="text-[10px] font-semibold text-slate-400 sm:hidden">Swipe →</span>
+          </div>
+          <div
+            class="bare-acts-track flex items-center gap-1 md:gap-1.5 overflow-x-auto scrollbar-none -mx-3 px-3 py-0.5 md:mx-0 md:px-0 md:flex-nowrap"
+            role="listbox" aria-label="Landmark bare acts">
+            <button *ngFor="let law of paletteMeta?.popularSearches?.laws; let i = index; trackBy: trackByIndex"
+              type="button" id="popular-law-{{ i }}" role="option"
+              [attr.aria-selected]="isItemSelected('popular-law-' + i)"
+              class="palette-chip-item inline-flex items-center gap-1 px-2 py-1 md:px-2 md:py-1 rounded-lg text-xs font-bold border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800 hover:border-blue-500/40 hover:bg-blue-500/5 active:scale-95 transition-all cursor-pointer select-none shrink-0 whitespace-nowrap shadow-xs"
+              [class.is-keyboard-active]="isItemSelected('popular-law-' + i)" (click)="applySearchQuery(law.shortName)"
+              [appTooltip]="law.actName + ' (' + law.year + ')'" tooltipPlacement="top">
+              <span class="text-blue-600 dark:text-blue-400">{{ law.shortName === 'Constitution' ? 'Const.' :
+                law.shortName }}</span>
+              <span class="text-[10px] text-slate-400 font-normal">({{ law.year }})</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- 4. Quick Access Shortcuts -->
+        <section *ngIf="paletteMeta?.quickAccess" class="flex flex-col gap-2">
+          <div
+            class="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+            <app-icon name="compass" [size]="14" class="text-emerald-500"></app-icon>
+            <span>Quick Navigation</span>
+          </div>
+
+          <div class="flex flex-col gap-1" role="listbox" aria-label="Quick navigation links">
+            <a *ngFor="let qa of paletteMeta?.quickAccess; let i = index; trackBy: trackByIndex" id="quick-{{ i }}"
+              [routerLink]="[qa.route]" (click)="onItemClick($event)"
+              class="palette-item group flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-colors border border-transparent text-inherit no-underline"
+              [class.is-keyboard-active]="isItemSelected('quick-' + i)"
+              [attr.aria-selected]="isItemSelected('quick-' + i)" role="option">
+              <div
+                class="flex items-center justify-center w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shrink-0">
+                <app-icon [name]="qa.icon" [size]="15"></app-icon>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-xs md:text-sm font-semibold text-slate-800 dark:text-slate-200 truncate">{{ qa.label }}
+                </div>
+                <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">{{ qa.description }}</div>
+              </div>
+              <app-icon name="chevron-right" [size]="13"
+                class="text-slate-400 group-hover:text-slate-700 dark:group-hover:text-slate-200 group-hover:translate-x-0.5 transition-all shrink-0"></app-icon>
+            </a>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- ======================================================== -->
+      <!-- STATE 2: LIVE SEARCH PREVIEWS & RESULTS (Query Present) -->
+      <!-- ======================================================== -->
+      <div *ngIf="query.trim()" class="space-y-4">
+
+        <!-- Typeahead Suggestions Chips with Matched Highlighting -->
+        <div *ngIf="suggestions.length > 0"
+          class="flex items-center gap-2 pb-2.5 border-b border-slate-100 dark:border-slate-800/60 overflow-x-auto scrollbar-none"
+          role="listbox" aria-label="Search suggestions">
+          <span
+            class="text-[10px] md:text-[11px] font-bold text-slate-400 uppercase tracking-wider shrink-0">Suggestions:</span>
+          <div class="flex items-center gap-1.5">
+            <button *ngFor="let sug of suggestions; let i = index; trackBy: trackByIndex" type="button" id="sug-{{ i }}"
+              role="option" [attr.aria-selected]="isItemSelected('sug-' + i)"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-800 hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/80 dark:border-slate-700/60 transition-colors cursor-pointer select-none shrink-0"
+              [class.is-keyboard-active]="isItemSelected('sug-' + i)"
+              (click)="sug.route ? navigateToRoute(sug.route, sug.queryParams) : applySearchQuery(sug.text)">
+              <app-icon [name]="sug.type === 'section' ? 'file-text' : (sug.type === 'law' ? 'book-open' : 'search')"
+                [size]="11" class="text-blue-500 shrink-0"></app-icon>
+              <span class="truncate max-w-[180px] md:max-w-[240px]" [innerHTML]="highlightQuery(sug.text)"></span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Skeletons while fetching preview results during cold search (Zero-CLS Layout Reserved) -->
+        <div *ngIf="isLoadingResults && totalPreviewCount === 0 && suggestions.length === 0"
+          class="flex flex-col gap-1.5 py-0.5" role="status" aria-busy="true" aria-label="Loading search results">
+          <!-- Section Header Skeleton -->
+          <div class="flex items-center justify-between text-[11px] px-1 py-0.5">
+            <div class="flex items-center gap-2 animate-pulse">
+              <div class="w-3.5 h-3.5 rounded bg-slate-200 dark:bg-slate-700"></div>
+              <div class="h-3 w-36 rounded bg-slate-200 dark:bg-slate-700"></div>
+            </div>
+            <div class="h-2.5 w-16 rounded bg-slate-100 dark:bg-slate-800 animate-pulse"></div>
+          </div>
+
+          <!-- Result Items Skeleton List -->
+          <div class="flex flex-col gap-1">
+            <div *ngFor="let _ of [1, 2, 3, 4]"
+              class="flex items-start sm:items-center gap-3 p-3 rounded-xl bg-slate-100/60 dark:bg-slate-800/35 border border-transparent animate-pulse min-h-[62px]">
+              <!-- Badge Skeleton (matches 48x40px act badge & lawyer avatar) -->
+              <div class="min-w-[48px] h-10 rounded-lg bg-slate-200 dark:bg-slate-700/80 shrink-0 mt-0.5 sm:mt-0"></div>
+              <!-- Text Content Skeleton -->
+              <div class="flex-1 space-y-1.5 min-w-0">
+                <div class="flex items-center gap-2">
+                  <div class="h-3.5 bg-slate-200 dark:bg-slate-700/80 rounded w-3/5"></div>
+                  <div class="h-3 bg-slate-200/60 dark:bg-slate-700/50 rounded w-16 hidden xs:block"></div>
+                </div>
+                <div class="h-2.5 bg-slate-200/70 dark:bg-slate-700/60 rounded w-2/5"></div>
+                <div class="h-2 bg-slate-100 dark:bg-slate-800/50 rounded w-4/5"></div>
+              </div>
+              <!-- Action Icon Skeleton -->
+              <div class="w-4 h-4 rounded bg-slate-200/50 dark:bg-slate-700/40 shrink-0 hidden sm:block"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Search Previews & Results Container (Stale-While-Revalidate with zero flashing) -->
+        <div *ngIf="totalPreviewCount > 0 || suggestions.length > 0" [class.opacity-60]="isLoadingResults"
+          [class.pointer-events-none]="isLoadingResults" class="space-y-4 transition-opacity duration-150">
+
+          <!-- Cross-Scope Zero Results Switcher Banner -->
+          <div *ngIf="activeScope !== 'all' && getScopeCount(activeScope) === 0 && totalPreviewCount > 0"
+            class="flex items-center justify-between p-3 rounded-xl bg-blue-50/80 dark:bg-blue-950/40 border border-blue-200/80 dark:border-blue-800/60">
+            <div class="flex items-center gap-2 text-xs text-blue-900 dark:text-blue-200">
+              <app-icon name="info" [size]="15" class="text-blue-600 dark:text-blue-400 shrink-0"></app-icon>
+              <span>
+                No matches under <strong>{{ getScopeLabel(activeScope) }}</strong>, but <strong>{{ totalPreviewCount }}
+                  matches</strong>
+                found in other categories.
+              </span>
+            </div>
+            <button type="button"
+              class="px-2.5 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 bg-blue-100 dark:bg-blue-900/60 hover:bg-blue-200 dark:hover:bg-blue-800 rounded-lg transition-colors cursor-pointer border-0 shrink-0"
+              (click)="setScope('all')">
+              Show All ({{ totalPreviewCount }})
+            </button>
+          </div>
+
+          <!-- 1. Laws & Bare Acts Sections Preview -->
+          <section *ngIf="(activeScope === 'all' || activeScope === 'laws') && previewResults.laws.length > 0"
+            class="flex flex-col gap-1.5">
+            <div
+              class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+              <div class="flex items-center gap-1.5">
+                <app-icon name="book-open" [size]="14" class="text-blue-500"></app-icon>
+                <span>Statutory Laws & Sections</span>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400">{{ previewResults.laws.length }} matches</span>
+            </div>
+
+            <div class="flex flex-col gap-1" role="listbox" aria-label="Statutory laws and sections">
+              <a *ngFor="let law of previewResults.laws; let i = index; trackBy: trackByIndex" id="law-{{ i }}"
+                [routerLink]="getLawLink(law).route" [queryParams]="getLawLink(law).queryParams"
+                (click)="onItemClick($event)"
+                class="palette-item group flex items-start sm:items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-all border border-transparent text-inherit no-underline"
+                [class.is-keyboard-active]="isItemSelected('law-' + i)"
+                [attr.aria-selected]="isItemSelected('law-' + i)" role="option">
+                <!-- Act Code Badge -->
+                <div
+                  class="flex flex-col items-center justify-center min-w-[48px] h-10 px-1 rounded-lg bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 shrink-0 mt-0.5 sm:mt-0">
+                  <span class="font-extrabold text-[11px] leading-none">{{ law.shortName || 'ACT' }}</span>
+                  <span class="text-[9px] opacity-80 mt-0.5 font-semibold">Sec {{ law.section_number }}</span>
+                </div>
+
+                <!-- Content details with matched query highlight -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate"
+                      [innerHTML]="highlightQuery(law.title)">
+                    </span>
+                    <!-- Criminal Tag Pills -->
+                    <span *ngIf="law.criminalDetails?.isBailable === false"
+                      class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                      Non-Bailable
+                    </span>
+                    <span *ngIf="law.criminalDetails?.isBailable === true"
+                      class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Bailable
+                    </span>
+                  </div>
+
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <span class="font-medium text-slate-700 dark:text-slate-300">{{ law.actName }}</span>
+                    <span *ngIf="law.chapterNumber" class="mx-1">•</span>
+                    <span *ngIf="law.chapterNumber">Chapter {{ law.chapterNumber }}</span>
+                  </div>
+
+                  <!-- Highlight snippet preview -->
+                  <p *ngIf="law.snippet"
+                    class="text-[11px] text-slate-600 dark:text-slate-400 line-clamp-2 mt-1 leading-snug"
+                    [innerHTML]="law.snippet"></p>
+                </div>
+
+                <!-- Quick Action: Copy Citation -->
+                <button type="button"
+                  class="opacity-60 md:opacity-0 group-hover:opacity-100 focus:opacity-100 flex items-center justify-center w-7 h-7 rounded-md text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-500/10 transition-all cursor-pointer border-0 bg-transparent shrink-0"
+                  (click)="copyCitation($event, law)" aria-label="Copy citation" appTooltip="Copy citation"
+                  tooltipPlacement="top">
+                  <app-icon name="copy" [size]="13"></app-icon>
+                </button>
+
+                <app-icon name="arrow-right" [size]="14"
+                  class="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0 hidden sm:block"></app-icon>
+              </a>
+            </div>
+          </section>
+
+          <!-- 2. Verified Advocates Preview -->
+          <section *ngIf="(activeScope === 'all' || activeScope === 'lawyers') && previewResults.lawyers.length > 0"
+            class="flex flex-col gap-1.5">
+            <div
+              class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+              <div class="flex items-center gap-1.5">
+                <app-icon name="users" [size]="14" class="text-emerald-500"></app-icon>
+                <span>Verified Advocates</span>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400">{{ previewResults.lawyers.length }}
+                advocates</span>
+            </div>
+
+            <div class="flex flex-col gap-1" role="listbox" aria-label="Verified advocates">
+              <a *ngFor="let lawyer of previewResults.lawyers; let i = index; trackBy: trackByIndex" id="lawyer-{{ i }}"
+                [routerLink]="getLawyerLink(lawyer).route" [queryParams]="getLawyerLink(lawyer).queryParams"
+                (click)="onItemClick($event)"
+                class="palette-item group flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-all border border-transparent text-inherit no-underline"
+                [class.is-keyboard-active]="isItemSelected('lawyer-' + i)"
+                [attr.aria-selected]="isItemSelected('lawyer-' + i)" role="option">
+                <!-- Avatar or Initials -->
+                <div
+                  class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-indigo-650 flex items-center justify-center text-white font-bold text-xs shrink-0 overflow-hidden shadow-sm">
+                  <img *ngIf="lawyer.avatarUrl" [src]="lawyer.avatarUrl" [alt]="lawyer.name"
+                    class="w-full h-full object-cover rounded-full" />
+                  <span *ngIf="!lawyer.avatarUrl">{{ lawyer.name?.charAt(0) || 'L' }}</span>
+                </div>
+
+                <!-- Lawyer details with query highlight -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate"
+                      [innerHTML]="highlightQuery(lawyer.name)">
+                    </span>
+                    <app-icon name="check-circle" [size]="13" class="text-emerald-500 shrink-0"
+                      appTooltip="BCI Verified Advocate"></app-icon>
+                  </div>
+
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <span *ngIf="lawyer.specializations?.length" class="text-slate-700 dark:text-slate-300 font-medium">
+                      {{ lawyer.specializations.slice(0, 2).join(' • ') }}
+                    </span>
+                    <span *ngIf="lawyer.city" class="mx-1">•</span>
+                    <span *ngIf="lawyer.city">{{ lawyer.city }}</span>
+                    <span *ngIf="lawyer.experience" class="mx-1">•</span>
+                    <span *ngIf="lawyer.experience">{{ lawyer.experience }} yrs exp</span>
+                  </div>
+                </div>
+
+                <!-- Rating badge -->
+                <div *ngIf="lawyer.rating"
+                  class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0 text-xs font-bold">
+                  <app-icon name="star" [size]="11"></app-icon>
+                  <span>{{ lawyer.rating }}</span>
+                </div>
+              </a>
+            </div>
+          </section>
+
+          <!-- 3. Legal Resources & DLSA Clinics Preview -->
+          <section *ngIf="(activeScope === 'all' || activeScope === 'resources') && previewResults.resources.length > 0"
+            class="flex flex-col gap-1.5">
+            <div
+              class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+              <div class="flex items-center gap-1.5">
+                <app-icon name="landmark" [size]="14" class="text-purple-500"></app-icon>
+                <span>Legal Aid & Court Centers</span>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400">{{ previewResults.resources.length }}
+                centers</span>
+            </div>
+
+            <div class="flex flex-col gap-1" role="listbox" aria-label="Legal aid and court centers">
+              <a *ngFor="let res of previewResults.resources; let i = index; trackBy: trackByIndex"
+                id="resource-{{ i }}" [routerLink]="getResourceLink(res).route"
+                [queryParams]="getResourceLink(res).queryParams" (click)="onItemClick($event)"
+                class="palette-item group flex items-center gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-all border border-transparent text-inherit no-underline"
+                [class.is-keyboard-active]="isItemSelected('resource-' + i)"
+                [attr.aria-selected]="isItemSelected('resource-' + i)" role="option">
+                <!-- Resource Icon -->
+                <div
+                  class="flex items-center justify-center w-8 h-8 rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0">
+                  <app-icon
+                    [name]="res.type === 'PoliceStation' ? 'shield' : (res.type === 'Court' ? 'scale' : 'landmark')"
+                    [size]="15"></app-icon>
+                </div>
+
+                <!-- Details with query highlight -->
+                <div class="flex-1 min-w-0">
+                  <div class="flex flex-wrap items-center gap-1.5">
+                    <span class="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate"
+                      [innerHTML]="highlightQuery(res.name)">
+                    </span>
+                    <span *ngIf="res.feeType === 'FreeLegalAid'"
+                      class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                      Free Legal Aid
+                    </span>
+                  </div>
+
+                  <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                    <span>{{ res.city }}, {{ res.state }}</span>
+                    <span *ngIf="res.categories?.length" class="mx-1">•</span>
+                    <span *ngIf="res.categories?.length">{{ res.categories.join(', ') }}</span>
+                  </div>
+                </div>
+
+                <app-icon name="arrow-right" [size]="13"
+                  class="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all shrink-0"></app-icon>
+              </a>
+            </div>
+          </section>
+
+          <!-- 4. Platform FAQs Preview -->
+          <section *ngIf="(activeScope === 'all' || activeScope === 'faqs') && previewResults.faqs.length > 0"
+            class="flex flex-col gap-1.5">
+            <div
+              class="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 px-1">
+              <div class="flex items-center gap-1.5">
+                <app-icon name="help-circle" [size]="14" class="text-indigo-500"></app-icon>
+                <span>Platform FAQs & Rights</span>
+              </div>
+              <span class="text-[10px] font-semibold text-slate-400">{{ previewResults.faqs.length }} answers</span>
+            </div>
+
+            <div class="flex flex-col gap-1" role="listbox" aria-label="Platform FAQs">
+              <a *ngFor="let faq of previewResults.faqs; let i = index; trackBy: trackByIndex" id="faq-{{ i }}"
+                [routerLink]="getFaqLink(faq).route" (click)="onItemClick($event)"
+                class="palette-item group flex items-start gap-3 p-3 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800/60 cursor-pointer transition-all border border-transparent text-inherit no-underline"
+                [class.is-keyboard-active]="isItemSelected('faq-' + i)"
+                [attr.aria-selected]="isItemSelected('faq-' + i)" role="option">
+                <div
+                  class="flex items-center justify-center w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0 mt-0.5">
+                  <app-icon name="help-circle" [size]="15"></app-icon>
+                </div>
+
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs md:text-sm font-bold text-slate-900 dark:text-white"
+                      [innerHTML]="highlightQuery(faq.question)">
+                    </span>
+                    <span *ngIf="faq.badge"
+                      class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 shrink-0">
+                      {{ faq.badge }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 line-clamp-1 mt-0.5 mb-0">{{ faq.answer }}
+                  </p>
+                </div>
+              </a>
+            </div>
+          </section>
+
+          <!-- 5. Advanced Search Trigger Item (Keyboard Navigable & Semantic Anchor) -->
+          <section *ngIf="totalPreviewCount > 0 || suggestions.length > 0" class="pt-1">
+            <div role="listbox" aria-label="Deep full-text search">
+              <a id="advanced-cta" role="option" [routerLink]="['/search']" [queryParams]="getAdvancedSearchParams()"
+                (click)="onItemClick($event, true)"
+                class="palette-item group flex items-center justify-between p-3 rounded-xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 hover:border-blue-500/50 hover:bg-blue-500/5 dark:hover:bg-blue-500/10 cursor-pointer transition-all text-inherit no-underline"
+                [class.is-keyboard-active]="isItemSelected('advanced-cta')"
+                [attr.aria-selected]="isItemSelected('advanced-cta')">
+                <div class="flex items-center gap-3 min-w-0">
+                  <div
+                    class="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0">
+                    <app-icon name="filter" [size]="15"></app-icon>
+                  </div>
+                  <div class="min-w-0">
+                    <div class="text-xs md:text-sm font-bold text-slate-900 dark:text-white truncate">
+                      Search everywhere for "<span class="text-blue-600 dark:text-blue-400">{{ query }}</span>"
+                    </div>
+                    <div class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      Open full search with multi-tier filters and statutory roadmaps
+                    </div>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <kbd class="hidden md:inline-flex palette-kbd-cta text-[10px]">↵</kbd>
+                  <app-icon name="arrow-right" [size]="14"
+                    class="text-slate-400 group-hover:text-blue-500 group-hover:translate-x-0.5 transition-all"></app-icon>
+                </div>
+              </a>
+            </div>
+          </section>
+
+        </div>
+
+        <!-- No Results Empty State -->
+        <div *ngIf="!isLoadingResults && totalPreviewCount === 0 && suggestions.length === 0"
+          class="flex flex-col items-center justify-center text-center py-8 px-4 gap-2" role="listbox"
+          aria-label="No results action">
+          <div
+            class="flex items-center justify-center w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-400 mb-1">
+            <app-icon name="search" [size]="24"></app-icon>
+          </div>
+          <h3 class="text-sm md:text-base font-bold text-slate-900 dark:text-white m-0">No direct matches for "{{ query
+            }}"</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm m-0 leading-relaxed">
+            Check for spelling errors, search by Bare Act name (e.g. "BNS", "IPC"), or open Advanced Search for deep
+            full-text indexing.
+          </p>
+          <a id="advanced-cta" role="option" [routerLink]="['/search']" [queryParams]="getAdvancedSearchParams()"
+            (click)="onItemClick($event, true)"
+            class="palette-item inline-flex items-center gap-2 px-4 py-2 mt-2 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all cursor-pointer border-0 shadow-md no-underline"
+            [class.is-keyboard-active]="isItemSelected('advanced-cta')"
+            [attr.aria-selected]="isItemSelected('advanced-cta')">
+            <app-icon name="filter" [size]="13"></app-icon>
+            <span>Open in Advanced Search</span>
+          </a>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Palette Sticky Footer with Shortcuts & Advanced Search CTA -->
+    <footer
+      class="flex flex-col sm:flex-row items-center justify-between gap-2.5 px-3.5 py-2.5 md:px-5 md:py-3 border-t border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom,0.75rem))] md:pb-3">
+      <!-- Keyboard navigation hotkey legend (Desktop only) -->
+      <div
+        class="hidden sm:flex items-center gap-3.5 text-xs text-slate-400 dark:text-slate-500 select-none whitespace-nowrap">
+        <span class="inline-flex items-center gap-1.5">
+          <kbd class="palette-kbd">↑</kbd><kbd class="palette-kbd">↓</kbd>
+          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">navigate</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <kbd class="palette-kbd">↵</kbd>
+          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">select</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <kbd class="palette-kbd">tab</kbd>
+          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">scope</span>
+        </span>
+        <span class="inline-flex items-center gap-1.5">
+          <kbd class="palette-kbd">esc</kbd>
+          <span class="text-[11px] font-medium text-slate-500 dark:text-slate-400">close</span>
+        </span>
+      </div>
+
+      <!-- Advanced Search Primary CTA (Full width on mobile, sleek inline button on desktop) -->
+      <a [routerLink]="['/search']" [queryParams]="getAdvancedSearchParams()" (click)="onItemClick($event, true)"
+        class="w-full sm:w-auto inline-flex items-center justify-center gap-2 h-8 px-3.5 rounded-lg text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 shadow-sm shadow-blue-500/20 active:scale-[0.98] transition-all cursor-pointer border-0 sm:ml-auto no-underline"
+        appTooltip="Open full search page with multi-tier filters and statutory roadmaps (Ctrl+Enter)"
+        tooltipPlacement="top">
+        <app-icon name="filter" [size]="13"></app-icon>
+        <span>Open Advanced Search</span>
+        <kbd class="hidden md:inline-flex palette-kbd-cta">Ctrl+↵</kbd>
+      </a>
+    </footer>
+
+  </div>
 </div>

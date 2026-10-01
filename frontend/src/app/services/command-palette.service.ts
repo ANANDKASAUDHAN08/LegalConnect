@@ -1,16 +1,24 @@
-import { Injectable } from '@angular/core';
-import { Subject } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { GlobalSearchService } from './global-search.service';
 
 /**
- * Lightweight service to coordinate command palette open/close from anywhere in the app.
- * This avoids tight coupling between NavbarComponent and CommandPaletteComponent.
+ * CommandPaletteService — Backward-compatible wrapper delegating to GlobalSearchService.
  */
 @Injectable({ providedIn: 'root' })
 export class CommandPaletteService {
-  private toggleSubject = new Subject<void>();
-  toggle$ = this.toggleSubject.asObservable();
+  private globalSearch = inject(GlobalSearchService);
+
+  toggle$ = this.globalSearch.isOpen$;
+
+  open(query = '') {
+    this.globalSearch.open(query);
+  }
+
+  close() {
+    this.globalSearch.close();
+  }
 
   toggle() {
-    this.toggleSubject.next();
+    this.globalSearch.toggle();
   }
 }

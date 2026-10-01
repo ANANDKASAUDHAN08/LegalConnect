@@ -22,6 +22,7 @@ import { filter } from 'rxjs/operators';
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { SystemAnnouncementService } from '../../services/system-announcement.service';
 import { CommandPaletteService } from '../../services/command-palette.service';
+import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 
 declare var google: any;
 
@@ -89,7 +90,8 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
     private scrollService: ScrollService,
-    private commandPaletteService: CommandPaletteService
+    private commandPaletteService: CommandPaletteService,
+    private mapsLoader: GoogleMapsLoaderService
   ) { }
 
   ngOnInit() {
@@ -176,6 +178,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
     }
   }
 
+  openSearchPalette(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.commandPaletteService.open();
+  }
+
   @HostListener('document:keydown', ['$event'])
   handleKeyboardEvent(event: KeyboardEvent) {
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
@@ -199,7 +209,10 @@ export class NavbarComponent implements OnInit, OnDestroy {
     const isEditing = target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable || target.tagName === 'SELECT';
 
     if (!isEditing && !event.ctrlKey && !event.metaKey && !event.altKey) {
-      if ((event.key === 't' || event.key === 'T') && !this.router.url.startsWith('/laws/')) {
+      if (event.key === '/') {
+        event.preventDefault();
+        this.commandPaletteService.open();
+      } else if ((event.key === 't' || event.key === 'T') && !this.router.url.startsWith('/laws/')) {
         event.preventDefault();
         this.themeService.toggleTheme();
       } else if (event.key === 'h' || event.key === 'H') {
@@ -214,9 +227,13 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.dropdownOpen = !this.dropdownOpen;
     this.cdr.markForCheck();
     if (this.dropdownOpen) {
-      setTimeout(() => {
-        this.initNavbarAutocomplete();
-      }, 50);
+      this.mapsLoader.load().then((ready) => {
+        if (ready) {
+          setTimeout(() => {
+            this.initNavbarAutocomplete();
+          }, 50);
+        }
+      });
     }
   }
 
