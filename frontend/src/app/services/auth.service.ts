@@ -138,6 +138,17 @@ export class AuthService {
   ) {
     this.initMultiTabSync();
     this.initResumeListener();
+
+    // Synchronous session hydration from localStorage cache.
+    // If a cached user profile exists (persisted by TokenStorageService on login/profile fetch),
+    // emit it immediately so auth guards and route components resolve at t=0 without
+    // waiting for the background checkSession() network call.
+    const cachedUser = this.tokenStorage.getCachedUser();
+    if (cachedUser && this.tokenStorage.getToken()) {
+      this._currentUser.next({ ...cachedUser, isAuthenticated: true });
+      this._isLoggedIn.next(true);
+      this._isSessionLoaded.next(true);
+    }
   }
 
   // ─── Public API ─────────────────────────────────────────────────────────────

@@ -1434,12 +1434,10 @@ body.mobile-drawer-open .bottom-nav-container {
   outline-color: hsl(35, 92%, 55%);
 }
 
-/* Cards, buttons, and interactive elements get a subtle glow on focus */
+/* Cards, buttons, links, and interactive elements get a subtle glow on focus */
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
+[role="button"]:focus-visible,
 [tabindex]:focus-visible {
   outline: 2px solid var(--color-accent, hsl(35, 92%, 47%));
   outline-offset: 2px;
@@ -1448,11 +1446,53 @@ textarea:focus-visible,
 
 .dark button:focus-visible,
 .dark a:focus-visible,
-.dark input:focus-visible,
-.dark select:focus-visible,
-.dark textarea:focus-visible,
+.dark [role="button"]:focus-visible,
 .dark [tabindex]:focus-visible {
   box-shadow: 0 0 0 4px hsla(35, 92%, 55%, 0.2);
+}
+
+/* 
+ * Enterprise Form Inputs (MNC Standards: Google, Stripe, GitHub Primer):
+ * Text inputs use integrated border/glow focus instead of detached floating outlines.
+ */
+input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
+select,
+textarea {
+  &:focus-visible {
+    outline: none;
+    border-color: var(--color-accent, hsl(35, 92%, 47%));
+    box-shadow: 0 0 0 3px hsla(35, 92%, 47%, 0.2);
+  }
+}
+
+.dark input:not([type="button"]):not([type="submit"]):not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+  &:focus-visible {
+    box-shadow: 0 0 0 3px hsla(35, 92%, 55%, 0.25);
+  }
+}
+
+/* 
+ * Embedded & Seamless Search Inputs (Command Palette, Search Bars, Modals)
+ * (Linear, Raycast, macOS Spotlight, Notion standard):
+ * Strictly zero outline, border, or shadow. Active focus is indicated by container or cursor.
+ */
+input[type="search"],
+.palette-search-input,
+.main-search-input,
+.seamless-input,
+input.bg-transparent,
+input.border-0,
+.search-bar-container input {
+
+  &,
+  &:focus,
+  &:focus-visible {
+    outline: none !important;
+    outline-offset: 0 !important;
+    box-shadow: none !important;
+  }
 }
 
 /* Skip Navigation Link — screen-reader accessible, visible on Tab */
@@ -1548,5 +1588,39 @@ textarea:focus-visible,
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Mobile Viewport Clearance for Floating Bottom Navigation
+   ═══════════════════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  #main-content {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 16px));
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   WCAG 2.2 AA Loading Buttons & Focus Retention Standards
+   ═══════════════════════════════════════════════════════════ */
+button[aria-disabled="true"],
+[role="button"][aria-disabled="true"] {
+  pointer-events: none;
+  cursor: wait !important;
+  user-select: none;
+}
+
+button[aria-disabled="true"]:focus-visible,
+[role="button"][aria-disabled="true"]:focus-visible {
+  outline: 2px solid hsl(var(--h-accent), var(--s-accent), var(--l-accent));
+  outline-offset: 2px;
+}
+
+@media (hover: none) and (pointer: coarse) {
+
+  button:active:not([aria-disabled="true"]):not(:disabled),
+  [role="button"]:active:not([aria-disabled="true"]):not(:disabled) {
+    transform: scale(0.97);
+    transition: transform 0.08s ease-out;
   }
 }

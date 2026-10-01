@@ -1,41 +1,73 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" dir="ltr" class="scroll-smooth">
 
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+  <!-- 1. Critical FOUC & Theme Engine (Executes before first paint to prevent screen flashing) -->
   <script>
     (function () {
       try {
         const theme = localStorage.getItem('lc_theme') || localStorage.getItem('theme') || 'system';
         const isDark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-        if (isDark) document.documentElement.classList.add('dark');
+        if (isDark) {
+          document.documentElement.classList.add('dark');
+          document.documentElement.style.colorScheme = 'dark';
+        } else {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.style.colorScheme = 'light';
+        }
       } catch (e) { }
     })();
   </script>
-  <title>LegalConnect — Know Your Rights</title>
+
+  <!-- 2. Primary Meta & SEO -->
+  <title>LegalConnect — India's Premier Legal Intelligence Platform</title>
   <base href="/">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description"
-    content="LegalConnect - India's premier legal platform. Access bare acts, search new criminal laws (BNS, BNSS, BSA), know your rights, and connect with verified legal advocates.">
-  <meta name="keywords" content="LegalConnect, Indian Law, Bare Acts, Advocates, Legal Aid, IPC to BNS, Lawyer Directory, Legal Templates">
-  <meta name="robots" content="index, follow">
+    content="LegalConnect - India's premier legal platform. Access bare acts, search new criminal laws (BNS, BNSS, BSA), know your rights, and connect with verified legal advocates across India.">
+  <meta name="keywords"
+    content="LegalConnect, Indian Law, Bare Acts, Advocates, Legal Aid, IPC to BNS, Lawyer Directory, Legal Templates, High Court, Supreme Court">
+  <meta name="author" content="LegalConnect">
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
   <link rel="canonical" href="https://legalconnect.co/">
 
-  <!-- Open Graph / Social Media Preview -->
+  <!-- 3. Adaptive Mobile & Browser Chrome Theming -->
+  <meta name="color-scheme" content="light dark">
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f8fafc">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#080d17">
+  <meta name="format-detection" content="telephone=no, address=no, email=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LegalConnect">
+  <meta name="application-name" content="LegalConnect">
+
+  <!-- 4. Modern W3C Standard Favicons & App Manifest -->
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
+  <link rel="manifest" href="manifest.webmanifest">
+
+  <!-- 5. Open Graph / Social Media Preview -->
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="LegalConnect">
+  <meta property="og:locale" content="en_IN">
   <meta property="og:title" content="LegalConnect — Access to Justice for Every Citizen">
-  <meta property="og:description" content="India's premier legal platform. Search bare acts, navigate new criminal laws (BNS, BNSS, BSA), access legal document templates, and connect with verified legal advocates.">
+  <meta property="og:description"
+    content="India's premier legal platform. Search bare acts, navigate new criminal laws (BNS, BNSS, BSA), access legal document templates, and connect with verified legal advocates.">
   <meta property="og:image" content="https://legalconnect.co/assets/icons/icon-512x512.png">
   <meta property="og:url" content="https://legalconnect.co/">
 
-  <!-- Twitter Cards -->
+  <!-- 6. Twitter Cards -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="LegalConnect — Access to Justice for Every Citizen">
-  <meta name="twitter:description" content="India's premier legal platform. Search bare acts, navigate new criminal laws (BNS, BNSS, BSA), access legal document templates, and connect with verified legal advocates.">
+  <meta name="twitter:description"
+    content="India's premier legal platform. Search bare acts, navigate new criminal laws (BNS, BNSS, BSA), access legal document templates, and connect with verified legal advocates.">
   <meta name="twitter:image" content="https://legalconnect.co/assets/icons/icon-512x512.png">
 
-  <!-- Schema.org JSON-LD Structured Data -->
+  <!-- 7. Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
@@ -50,127 +82,137 @@
     }
   }
   </script>
-  <link rel="icon" type="image/svg+xml" href="favicon.svg?v=2">
-  <link rel="alternate icon" type="image/x-icon" href="favicon.ico?v=2">
-  <link rel="icon" type="image/png" sizes="96x96" href="assets/icons/favicon.svg?v=2">
-  <link rel="icon" type="image/png" sizes="192x192" href="assets/icons/favicon.svg?v=2">
-  <link rel="apple-touch-icon" href="assets/icons/favicon.svg?v=2">
-  <link rel="manifest" href="manifest.webmanifest">
-  <meta name="theme-color" content="#0f172a">
-  <script>
-    window.GOOGLE_MAPS_API_KEY = "AIzaSyCbDolXO7Xj46w-Ty1NqG-2cqDr69nsu4s"; // Insert your Google Maps API Key here
-  </script>
-  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCbDolXO7Xj46w-Ty1NqG-2cqDr69nsu4s&libraries=places&loading=async"
-    async defer></script>
+
+  <!-- 8. High-Performance Preconnects & Typography (Non-Blocking) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;family=Playfair+Display:wght@700;800&amp;display=swap"
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap"
     rel="stylesheet">
+
 </head>
 
-<body>
+<body class="bg-slate-50 text-slate-900 dark:bg-[#080d17] dark:text-slate-100 antialiased">
   <app-root>
     <style>
-      .app-initial-loader {
+      .lc-app-shell {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        position: fixed;
-        inset: 0;
-        z-index: 9999;
-        font-family: 'Inter', system-ui, -apple-system, sans-serif;
-        transition: background-color 0.2s ease;
         background-color: #f8fafc;
         color: #0f172a;
+        font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto, sans-serif;
+        user-select: none;
       }
 
-      html.dark .app-initial-loader {
-        background-color: #0b1220;
+      html.dark .lc-app-shell {
+        background-color: #080d17;
         color: #f8fafc;
       }
 
-      .loader-logo-wrapper {
-        position: relative;
+      .lc-logo-root {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+        animation: lc-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      .lc-logo-badge {
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 24px;
-      }
-
-      .loader-spinner {
-        position: absolute;
-        width: 64px;
-        height: 64px;
-        border: 2.5px solid transparent;
-        border-top-color: #2563eb;
-        border-radius: 50%;
-        animation: spin 1s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-      }
-
-      .loader-logo {
-        width: 38px;
-        height: 38px;
+        width: 44px;
+        height: 44px;
+        border-radius: 0.75rem;
         background: linear-gradient(135deg, #2563eb, #4f46e5);
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         color: #ffffff;
         box-shadow: 0 4px 14px rgba(79, 70, 229, 0.25);
-        animation: pulse 1.8s ease-in-out infinite;
+        flex-shrink: 0;
       }
 
-      .loader-title {
-        font-size: 18px;
-        font-weight: 900;
+      .lc-logo-text {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .lc-logo-name {
+        font-weight: 800;
+        font-size: 1.1rem;
         letter-spacing: -0.02em;
-        margin: 0;
+        line-height: 1.2;
+        color: #0f172a;
       }
 
-      .loader-subtitle {
-        font-size: 11px;
-        font-weight: 750;
-        color: #64748b;
-        margin-top: 6px;
+      html.dark .lc-logo-name {
+        color: #ffffff;
+      }
+
+      .lc-logo-tagline {
+        font-size: 0.62rem;
+        font-weight: 600;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
-        letter-spacing: 0.08em;
+        color: #94a3b8;
       }
 
-      html.dark .loader-subtitle {
-        color: #475569;
+      html.dark .lc-logo-tagline {
+        color: #64748b;
       }
 
-      @keyframes spin {
-        from {
-          transform: rotate(0deg);
-        }
-
-        to {
-          transform: rotate(360deg);
-        }
+      .lc-shell-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2.5px;
+        background: linear-gradient(90deg, transparent, #2563eb, #f59e0b, transparent);
+        background-size: 200% 100%;
+        animation: lc-shimmer 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       }
 
-      @keyframes pulse {
+      @keyframes lc-pulse {
 
         0%,
         100% {
           transform: scale(1);
+          opacity: 1;
         }
 
         50% {
-          transform: scale(1.05);
+          transform: scale(0.98);
+          opacity: 0.88;
+        }
+      }
+
+      @keyframes lc-shimmer {
+        0% {
+          background-position: -200% 0;
+        }
+
+        100% {
+          background-position: 200% 0;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+
+        .lc-logo-root,
+        .lc-shell-bar {
+          animation: none;
         }
       }
     </style>
-    <div class="app-initial-loader">
-      <div class="loader-logo-wrapper">
-        <div class="loader-spinner"></div>
-        <div class="loader-logo">
-          <!-- Mini Scale Logo SVG -->
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" class="w-5 h-5"
-            xmlns="http://www.w3.org/2000/svg" role="img" aria-label="LegalConnect Logo">
+    <div class="lc-app-shell" role="status" aria-label="Loading LegalConnect">
+      <div class="lc-shell-bar" aria-hidden="true"></div>
+      <div class="lc-logo-root" aria-hidden="true">
+        <div class="lc-logo-badge">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round"
+            stroke-linejoin="round" role="img" aria-label="LegalConnect Logo">
             <path d="M12 3v17M8 20h8" stroke-width="2.2" />
             <path d="M4 8h16" stroke-width="2.2" />
             <path d="M5 8l-2.5 5.5c0 2 5 2 5 0L5 8z" stroke-width="1.8" />
@@ -178,12 +220,21 @@
             <circle cx="12" cy="10.5" r="2.2" fill="currentColor" />
           </svg>
         </div>
+        <div class="lc-logo-text">
+          <span class="lc-logo-name">LegalConnect</span>
+          <span class="lc-logo-tagline">Legal help, simplified.</span>
+        </div>
       </div>
-      <h2 class="loader-title">LegalConnect</h2>
-      <span class="loader-subtitle">Loading workspace...</span>
     </div>
   </app-root>
-  <noscript>Please enable JavaScript to continue using this application.</noscript>
+  <noscript>
+    <div
+      style="font-family: sans-serif; text-align: center; padding: 40px; color: #0f172a; background: #f8fafc; min-height: 100vh;">
+      <h2>JavaScript Required</h2>
+      <p>LegalConnect requires JavaScript to be enabled in order to provide legal search, bare acts exploration, and
+        advocate matching.</p>
+    </div>
+  </noscript>
 </body>
 
 </html>

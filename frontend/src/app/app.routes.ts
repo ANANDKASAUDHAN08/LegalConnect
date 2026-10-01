@@ -1,8 +1,27 @@
-import { Routes } from '@angular/router';
+import { Routes, CanActivateFn, Router } from '@angular/router';
+import { inject } from '@angular/core';
 import { authGuard } from './guards/auth.guard';
 import { guestGuard } from './guards/guest.guard';
 import { roleGuard } from './guards/role.guard';
 import { unsavedChangesGuard } from './guards/unsaved-changes.guard';
+import { AuthService } from './services/auth.service';
+
+/**
+ * Functional route guard that redirects `/dashboard` to the appropriate
+ * role-specific workstation without mounting any intermediate component.
+ *
+ * Replaces the old DashboardComponent which rendered a full-screen spinner
+ * while subscribing to `currentUser$` to determine the redirect target.
+ * Now resolves synchronously from cached session state → 0ms redirect.
+ */
+export const dashboardRedirectGuard: CanActivateFn = () => {
+  const auth = inject(AuthService);
+  const router = inject(Router);
+  const role = auth.currentUser?.role;
+  return role === 'Lawyer'
+    ? router.createUrlTree(['/lawyer/workstation'])
+    : router.createUrlTree(['/client/portal']);
+};
 
 export const routes: Routes = [
   // 1. Entry & Home Page
@@ -148,8 +167,10 @@ export const routes: Routes = [
   // 5. User Workstations & Dashboards (Auth Required)
   {
     path: 'dashboard',
-    loadComponent: () => import('./pages/dashboard/dashboard.component').then(m => m.DashboardComponent),
-    canActivate: [authGuard],
+    canActivate: [authGuard, dashboardRedirectGuard],
+    // No component needed — the guard redirects before any DOM mounts.
+    // DashboardComponent (spinner) is now eliminated.
+    children: [],
     title: 'User Workstation | LegalConnect'
   },
   {

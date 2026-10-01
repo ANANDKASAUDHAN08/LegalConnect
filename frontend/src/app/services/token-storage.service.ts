@@ -26,6 +26,7 @@ export class TokenStorageService {
   private static readonly ACCESS_TOKEN_KEY = 'lc_access_token';
   private static readonly REFRESH_TOKEN_KEY = 'lc_refresh_token';
   private static readonly SESSION_HINT_KEY = 'lc_has_session';
+  private static readonly USER_PROFILE_KEY = 'lc_user_profile';
 
   private inMemoryToken: string | null = null;
   private inMemoryRefreshToken: string | null = null;
@@ -36,6 +37,19 @@ export class TokenStorageService {
       this.inMemoryToken = localStorage.getItem(TokenStorageService.ACCESS_TOKEN_KEY);
       this.inMemoryRefreshToken = localStorage.getItem(TokenStorageService.REFRESH_TOKEN_KEY);
 
+      // Synchronous user profile hydration from localStorage at t=0.
+      // This enables the app shell to render immediately with cached user data
+      // without waiting for any network requests.
+      try {
+        const cachedProfile = localStorage.getItem(TokenStorageService.USER_PROFILE_KEY);
+        if (cachedProfile) {
+          this.inMemoryUser = JSON.parse(cachedProfile);
+        }
+      } catch {
+        // Corrupted cache — will be refreshed from server
+        this.inMemoryUser = null;
+      }
+
       // Cross-tab sync: when another tab writes to localStorage, update in-memory caches.
       // The `storage` event fires ONLY in other tabs (not the one that wrote), which is
       // exactly the behavior needed to prevent multi-tab token desynchronization.
@@ -45,6 +59,13 @@ export class TokenStorageService {
         }
         if (event.key === TokenStorageService.REFRESH_TOKEN_KEY) {
           this.inMemoryRefreshToken = event.newValue;
+        }
+        if (event.key === TokenStorageService.USER_PROFILE_KEY) {
+          try {
+            this.inMemoryUser = event.newValue ? JSON.parse(event.newValue) : null;
+          } catch {
+            this.inMemoryUser = null;
+          }
         }
       });
     }
@@ -154,6 +175,7 @@ export class TokenStorageService {
     this.inMemoryUser = null;
     if (typeof window !== 'undefined') {
       localStorage.removeItem(TokenStorageService.ACCESS_TOKEN_KEY);
+      localStorage.removeItem(TokenStorageService.USER_PROFILE_KEY);
     }
   }
 
@@ -187,8 +209,25 @@ export class TokenStorageService {
     return this.inMemoryUser;
   }
 
-  /** Caches the user profile object in memory for fast synchronous access. */
+  /** Caches the user profile object in memory and localStorage for fast synchronous access. */
   setCachedUser(user: any): void {
     this.inMemoryUser = user;
+    if (typeof window !== 'undefined' && user) {
+      try {
+        // Persist only non-sensitive display metadata for instant shell rendering.
+        // Sensitive fields (tokens, full auth state) remain in separate keys.
+        const profileCache = {
+          fullName: user.fullName,
+          email: user.email,
+          role: user.role,
+          avatarUrl: user.avatarUrl || '',
+          isEmailVerified: user.isEmailVerified,
+          isAuthenticated: true
+        };
+        localStorage.setItem(TokenStorageService.USER_PROFILE_KEY, JSON.stringify(profileCache));
+      } catch {
+        // localStorage quota exceeded or unavailable — in-memory cache still works
+      }
+    }
   }
 }
