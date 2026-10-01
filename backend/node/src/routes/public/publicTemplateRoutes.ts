@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { AppError } from '../../utils/AppError';
-import { requireAuth, AuthenticatedRequest } from '../../middlewares/auth';
+import { requireAuth, optionalAuth, AuthenticatedRequest } from '../../middlewares/auth';
 import Draft from '../../models/Draft';
 import CustomTemplate from '../../models/CustomTemplate';
 
@@ -85,33 +85,28 @@ router.delete('/drafts', requireAuth, asyncHandler(async (req: AuthenticatedRequ
 // --- CUSTOM & PUBLIC TEMPLATES CRUD ENDPOINTS ---
 
 // GET /api/legal/templates - Retrieve templates (custom if authenticated, public default if not)
-router.get('/templates', asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
-  // If authorization header is provided, fetch custom templates for user
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
+router.get('/templates', optionalAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (req.userId) {
     try {
-      requireAuth(req, res, () => { });
-      if (req.userId) {
-        const templates = await CustomTemplate.find({ userId: req.userId }).sort({ createdAt: -1 }).lean();
-        const formattedTemplates = templates.map(t => ({
-          id: t.templateId,
-          title: t.title,
-          actRef: t.actRef,
-          category: t.category,
-          description: t.description,
-          fields: t.fields.map(f => ({
-            key: f.key,
-            label: f.label,
-            placeholder: f.placeholder,
-            type: f.type,
-            defaultValue: f.defaultValue,
-            helpTip: f.helpTip
-          })),
-          body: t.body,
-          isCustom: true
-        }));
-        return res.json({ success: true, count: formattedTemplates.length, data: formattedTemplates });
-      }
+      const templates = await CustomTemplate.find({ userId: req.userId }).sort({ createdAt: -1 }).lean();
+      const formattedTemplates = templates.map(t => ({
+        id: t.templateId,
+        title: t.title,
+        actRef: t.actRef,
+        category: t.category,
+        description: t.description,
+        fields: t.fields.map(f => ({
+          key: f.key,
+          label: f.label,
+          placeholder: f.placeholder,
+          type: f.type,
+          defaultValue: f.defaultValue,
+          helpTip: f.helpTip
+        })),
+        body: t.body,
+        isCustom: true
+      }));
+      return res.json({ success: true, count: formattedTemplates.length, data: formattedTemplates });
     } catch (e) {
       // Fallback to public default templates
     }

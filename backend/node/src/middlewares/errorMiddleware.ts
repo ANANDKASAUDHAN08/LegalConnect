@@ -112,6 +112,11 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  // If response headers have already been transmitted, delegate to default Express handler
+  if (res.headersSent) {
+    return next(err);
+  }
+
   let statusCode = err.statusCode || (typeof err.status === 'number' ? err.status : 500);
   let message = err.message || 'An unexpected internal error occurred.';
   let errorCode = err.errorCode || 'INTERNAL_SERVER_ERROR';
