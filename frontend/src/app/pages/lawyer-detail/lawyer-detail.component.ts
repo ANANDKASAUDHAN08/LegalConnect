@@ -15,6 +15,7 @@ import { UniversalBookmarkService } from '../../services/universal-bookmark.serv
 
 import { VerificationService } from '../../services/verification.service';
 import { IconComponent } from '../../components/icon/icon.component';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { getWebmailLauncher, WebmailProvider } from '../../core/utils/webmail-helper';
 
@@ -42,7 +43,8 @@ interface ReviewForm {
     InteractiveLikeComponent,
     ReportTriggerComponent,
     IconComponent,
-    TooltipDirective
+    TooltipDirective,
+    SpinnerComponent
   ],
   templateUrl: './lawyer-detail.component.html',
   styleUrls: ['./lawyer-detail.component.scss']

@@ -5,6 +5,7 @@ import {
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ThemeService } from '../../services/theme.service';
+import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { getGeoCentroid, INDIAN_GEO_CENTROIDS } from '../../core/constants/legal-resource.constants';
 
@@ -41,7 +42,8 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
   constructor(
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
-    private themeService: ThemeService
+    private themeService: ThemeService,
+    private mapsLoader: GoogleMapsLoaderService
   ) { }
 
   ngOnInit() {
@@ -51,7 +53,9 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
   }
 
   ngAfterViewInit() {
-    this.loadGoogleMaps().then(() => this.initMap()).catch(console.error);
+    this.mapsLoader.load().then((ready) => {
+      if (ready) this.initMap();
+    }).catch(console.error);
   }
 
   ngOnDestroy() {
@@ -59,27 +63,6 @@ export class LocationMapModalComponent implements OnInit, OnDestroy, AfterViewIn
     if (this.mapThemeUnregister) {
       this.mapThemeUnregister();
     }
-  }
-
-  private loadGoogleMaps(): Promise<void> {
-    if (window.hasOwnProperty('google') && (window as any).google?.maps) {
-      return Promise.resolve();
-    }
-    return new Promise((resolve, reject) => {
-      const existing = document.querySelector('script[src*="maps.googleapis.com"]');
-      if (existing) {
-        existing.addEventListener('load', () => resolve());
-        return;
-      }
-      const script = document.createElement('script');
-      const apiKey = (window as any).GOOGLE_MAPS_API_KEY || '';
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Google Maps'));
-      document.body.appendChild(script);
-    });
   }
 
   private initMap() {

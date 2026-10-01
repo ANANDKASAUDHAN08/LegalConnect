@@ -13,6 +13,7 @@ import { BookmarkService } from '../../services/bookmark.service';
 import { FormattingService } from '../../services/formatting.service';
 import { FreeAidService } from '../../services/free-aid.service';
 import { IconComponent } from '../../components/icon/icon.component';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
 
 // Standalone sub-components
 import { SearchBarComponent } from './components/search-bar/search-bar.component';
@@ -46,7 +47,8 @@ import { TrafficOffensesWidgetComponent } from './components/traffic-offenses-wi
     AiRoadmapWidgetComponent,
     EmergencyRightsWidgetComponent,
     TrafficOffensesWidgetComponent,
-    IconComponent
+    IconComponent,
+    SpinnerComponent
   ],
   templateUrl: './search.component.html',
   styleUrls: ['./search.component.scss'],

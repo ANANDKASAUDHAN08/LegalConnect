@@ -10,6 +10,7 @@ import { LocationService } from '../../services/location.service';
 import { LocationMapModalComponent } from '../../components/location-map-modal/location-map-modal.component';
 import { IconComponent } from '../../components/icon/icon.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 
 declare var google: any;
 
@@ -87,7 +88,8 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     private router: Router,
     private cdr: ChangeDetectorRef,
     private zone: NgZone,
-    private locationService: LocationService
+    private locationService: LocationService,
+    private mapsLoader: GoogleMapsLoaderService
   ) { }
 
   ngOnInit() {
@@ -126,7 +128,11 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.initSidebarLocationAutocomplete();
+    this.mapsLoader.load().then((ready) => {
+      if (ready) {
+        this.initSidebarLocationAutocomplete();
+      }
+    });
   }
 
   initSidebarLocationAutocomplete() {
@@ -272,17 +278,16 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     }
     this.lawyerService.getLawyers().subscribe({
       next: res => {
-        this.loadingTimeout = setTimeout(() => {
-          this.allLawyers = res.data;
-          this.applyFilters();
-          this.loading = false;
-        }, 500);
+        // Render data immediately on HTTP response — no artificial delay.
+        // Previously wrapped in setTimeout(..., 500) which made the directory
+        // feel sluggish even on fast networks.
+        this.allLawyers = res.data;
+        this.applyFilters();
+        this.loading = false;
       },
       error: () => {
-        this.loadingTimeout = setTimeout(() => {
-          this.error = 'Could not load lawyers. Please try again.';
-          this.loading = false;
-        }, 500);
+        this.error = 'Could not load lawyers. Please try again.';
+        this.loading = false;
       }
     });
   }

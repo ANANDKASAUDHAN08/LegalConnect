@@ -435,11 +435,16 @@
 
         <!-- Premium Map Loading Skeleton Overlay -->
         <div *ngIf="!isMapReady"
-          class="absolute inset-0 bg-slate-900/40 dark:bg-slate-950/65 backdrop-blur-[3px] flex flex-col items-center justify-center z-[10] animate-pulse">
-          <div
-            class="w-9 h-9 rounded-full border-4 border-slate-200 dark:border-slate-800 border-t-blue-600 dark:border-t-amber-400 animate-spin mb-3">
+          class="absolute inset-0 bg-slate-900/30 dark:bg-slate-950/65 backdrop-blur-[3px] flex flex-col items-center justify-center z-[10]"
+          role="status" aria-busy="true" aria-label="Initializing map">
+          <div class="relative flex items-center justify-center w-12 h-12 mb-2">
+            <div class="absolute inset-0 rounded-full bg-blue-500/20 dark:bg-amber-400/20 animate-ping"></div>
+            <div
+              class="relative w-9 h-9 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200 dark:border-slate-700 flex items-center justify-center text-blue-600 dark:text-amber-400 shadow-md">
+              <app-icon name="map-pin" [size]="18"></app-icon>
+            </div>
           </div>
-          <span class="text-[11px] font-black uppercase tracking-widest text-slate-700 dark:text-slate-300">Initializing
+          <span class="text-[11px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">Initializing
             Map...</span>
         </div>
 

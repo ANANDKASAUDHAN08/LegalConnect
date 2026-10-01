@@ -375,15 +375,14 @@
 
             <!-- Submit + Swap row -->
             <div class="flex gap-1 md:gap-2">
-              <button type="submit" [disabled]="loading" appTooltip="Find corresponding sections and differences"
-                tooltipPlacement="top" class="flex-1 !h-[34px] !min-h-0 md:!h-auto py-1.5 md:py-2.5 px-4 rounded-xl text-sm font-bold transition-all cursor-pointer border-none
+              <button type="submit" [attr.aria-disabled]="loading" [class.pointer-events-none]="loading"
+                [class.opacity-60]="loading" [class.cursor-wait]="loading"
+                appTooltip="Find corresponding sections and differences" tooltipPlacement="top" class="flex-1 !h-[34px] !min-h-0 md:!h-auto py-1.5 md:py-2.5 px-4 rounded-xl text-sm font-bold transition-all cursor-pointer border-none
                            flex items-center justify-center gap-2 shadow-md
                            bg-gradient-to-r from-[hsl(35,92%,47%)] to-[hsl(35,92%,37%)]
                            hover:shadow-lg hover:shadow-[hsl(35,92%,47%)]/20 text-white
                            disabled:opacity-50 disabled:cursor-not-allowed">
-                <span *ngIf="loading"
-                  class="w-3.5 h-3.5 md:w-4 md:h-4 border-2 border-white/20 border-t-white rounded-full animate-spin">
-                </span>
+                <app-spinner *ngIf="loading" size="xs" color="white" label="Finding correspondence..."></app-spinner>
                 <svg *ngIf="!loading" class="w-3.5 h-3.5 md:w-4 md:h-4" fill="none" stroke="currentColor"
                   viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -565,8 +564,9 @@
       </div>
     </div>
 
-    <!-- ─── LOADING STATE ─── -->
-    <div *ngIf="loading" id="result-section" class="flex flex-col gap-6 animate-pulse">
+    <!-- ─── LOADING STATE (Cold Search: No Prior Result) ─── -->
+    <div *ngIf="loading && !result" id="result-section" class="flex flex-col gap-6 animate-pulse" role="status"
+      aria-busy="true" aria-label="Mapping statutory sections">
       <div
         class="flex items-center gap-3 p-4 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200/60 dark:border-white/8">
         <div class="h-8 w-24 bg-slate-200 dark:bg-white/10 rounded-lg"></div>
@@ -655,9 +655,16 @@
     </div>
 
     <!-- ═══════════════════════════════════════════
-         RESULT DISPLAY
+         RESULT DISPLAY (Stale-While-Revalidate: Preserved with Shimmer During Search)
          ════════════════════════════════════════════ -->
-    <div *ngIf="result && !loading && !error" class="result-display-wrap">
+    <div *ngIf="result && !error" class="result-display-wrap relative" [class.opacity-70]="loading"
+      [class.pointer-events-none]="loading">
+
+      <!-- Revalidation Shimmer Line during background search -->
+      <div *ngIf="loading"
+        class="h-1 w-full bg-gradient-to-r from-transparent via-[hsl(35,92%,47%)] to-transparent rounded-full animate-pulse mb-3"
+        role="status" aria-label="Updating correspondence"></div>
+
       <div class="result-section flex flex-col gap-5 animate-fade-in" id="result-section">
 
         <!-- Transition Header Bar -->

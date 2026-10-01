@@ -24,6 +24,7 @@ import { SnackbarService } from '../../../../services/snackbar.service';
 import { ThemeService } from '../../../../services/theme.service';
 import { FreeAidService } from '../../../../services/free-aid.service';
 import { PrintService } from '../../../../services/print.service';
+import { GoogleMapsLoaderService } from '../../../../services/google-maps-loader.service';
 
 // Child Components
 import { FiltersPanelComponent } from '../filters-panel/filters-panel.component';
@@ -332,7 +333,8 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     private locationService: LocationService,
     private snackbar: SnackbarService,
     public themeService: ThemeService,
-    private printService: PrintService
+    private printService: PrintService,
+    private mapsLoader: GoogleMapsLoaderService
   ) { }
 
   ngOnInit() {
@@ -1204,24 +1206,6 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
     window.open(url, '_blank');
   }
 
-  // Dynamic Google Maps Map setup
-  private loadGoogleMaps(): Promise<void> {
-    if (window.hasOwnProperty('google') && (window as any).google.maps) {
-      return Promise.resolve();
-    }
-
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      const apiKey = (window as any).GOOGLE_MAPS_API_KEY || '';
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places`;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error('Failed to load Google Maps'));
-      document.body.appendChild(script);
-    });
-  }
-
   initMap() {
     const mapEl = document.getElementById('google-map-container');
     if (!mapEl) {
@@ -1229,7 +1213,8 @@ export class ResultsViewComponent implements OnInit, OnDestroy, OnChanges {
       return;
     }
 
-    this.loadGoogleMaps().then(() => {
+    this.mapsLoader.load().then((ready) => {
+      if (!ready) return;
       const latLng = { lat: this.mapCenter[0], lng: this.mapCenter[1] };
 
       if (this.map) {

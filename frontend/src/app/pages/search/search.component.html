@@ -439,8 +439,8 @@
         <div class="flex items-center justify-between px-1">
           <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Refine Laws &
             Acts</span>
-          <button *ngIf="hasActiveFilters" (click)="clearFilters()"
-            appTooltip="Reset all active law filters" tooltipPlacement="top"
+          <button *ngIf="hasActiveFilters" (click)="clearFilters()" appTooltip="Reset all active law filters"
+            tooltipPlacement="top"
             class="text-[10px] font-semibold text-rose-500 hover:text-rose-600 bg-transparent border-0 cursor-pointer flex items-center gap-1 transition-colors">
             <span>Clear Filters</span>
             <app-icon name="x" [size]="11"></app-icon>
@@ -491,23 +491,18 @@
       <!-- Skeleton loaders -->
 
       <!-- Decoupled Widget Subcomponents (Handling their own loading skeletons internally) -->
-      <app-ai-roadmap-widget
-        *ngIf="!dismissedRoadmap && (activeTab === 'all' || activeTab === 'laws')"
-        [roadmap]="aiRoadmap"
-        [loading]="aiRoadmapLoading"
-        (dismiss)="dismissRoadmap()">
+      <app-ai-roadmap-widget *ngIf="!dismissedRoadmap && (activeTab === 'all' || activeTab === 'laws')"
+        [roadmap]="aiRoadmap" [loading]="aiRoadmapLoading" (dismiss)="dismissRoadmap()">
       </app-ai-roadmap-widget>
 
       <app-emergency-rights-widget
         *ngIf="!dismissedEmergency && (lastQuery.toLowerCase().includes('arrest') || lastQuery.toLowerCase().includes('police') || lastQuery.toLowerCase().includes('summons')) && (activeTab === 'all' || activeTab === 'laws')"
-        [loading]="loading"
-        (dismiss)="dismissEmergency()">
+        [loading]="loading" (dismiss)="dismissEmergency()">
       </app-emergency-rights-widget>
 
       <app-traffic-offenses-widget
         *ngIf="!dismissedTraffic && (lastQuery.toLowerCase().includes('traffic') || lastQuery.toLowerCase().includes('fine') || lastQuery.toLowerCase().includes('driving')) && (activeTab === 'all' || activeTab === 'laws')"
-        [loading]="loading"
-        (dismiss)="dismissTraffic()">
+        [loading]="loading" (dismiss)="dismissTraffic()">
       </app-traffic-offenses-widget>
 
       <!-- Search Results Content Panel -->
@@ -543,9 +538,10 @@
           </div>
 
           <!-- Skeleton Cards -->
-          <div *ngIf="loading" class="flex flex-col gap-2 md:gap-4">
+          <div *ngIf="loading" class="flex flex-col gap-2 md:gap-4" role="status" aria-busy="true"
+            aria-label="Loading statutory sections">
             <app-law-card *ngFor="let x of (activeTab === 'all' ? [1, 2] : skeletonItems); trackBy: trackBySkeleton"
-              [loading]="true"></app-law-card>
+              [class.hidden]="x > 2" class="md:block" [loading]="true"></app-law-card>
           </div>
 
           <!-- Loaded Cards -->
@@ -572,11 +568,12 @@
 
             <!-- Load More Pagination Button -->
             <div *ngIf="activeTab === 'laws' && hasMoreLaws" class="flex justify-center mt-4">
-              <button (click)="loadMoreLaws()" [disabled]="loading || loadingMore"
-                class="px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-accent hover:border-accent/40 hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50">
+              <button (click)="loadMoreLaws()" [attr.aria-disabled]="loading || loadingMore"
+                [class.pointer-events-none]="loading || loadingMore"
+                class="px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-accent hover:border-accent/40 hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer shadow-xs">
                 <span *ngIf="!loadingMore">Load More Sections</span>
-                <span *ngIf="loadingMore"
-                  class="animate-spin h-3.5 w-3.5 border-2 border-indigo-500 border-t-transparent rounded-full"></span>
+                <app-spinner *ngIf="loadingMore" size="xs" color="accent"
+                  label="Loading more sections..."></app-spinner>
               </button>
             </div>
           </ng-container>
@@ -623,9 +620,10 @@
           </div>
 
           <!-- Skeleton Cards -->
-          <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6">
+          <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-6" role="status" aria-busy="true"
+            aria-label="Loading verified advocates">
             <app-lawyer-card *ngFor="let x of (activeTab === 'all' ? [1, 2] : skeletonItems); trackBy: trackBySkeleton"
-              [loading]="true"></app-lawyer-card>
+              [class.hidden]="x > 2" class="md:block" [loading]="true"></app-lawyer-card>
           </div>
 
           <!-- Loaded Cards -->
@@ -639,11 +637,12 @@
 
             <!-- Load More Advocates Pagination Button -->
             <div *ngIf="activeTab === 'lawyers' && hasMoreLawyers" class="flex justify-center mt-4">
-              <button (click)="loadMoreLawyers()" [disabled]="loading || loadingMoreLawyers"
-                class="px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-accent hover:border-accent/40 hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50">
+              <button (click)="loadMoreLawyers()" [attr.aria-disabled]="loading || loadingMoreLawyers"
+                [class.pointer-events-none]="loading || loadingMoreLawyers"
+                class="px-6 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 hover:text-accent hover:border-accent/40 hover:bg-slate-50 transition-all flex items-center gap-2 cursor-pointer shadow-xs">
                 <span *ngIf="!loadingMoreLawyers">Load More Advocates</span>
-                <span *ngIf="loadingMoreLawyers"
-                  class="animate-spin h-3.5 w-3.5 border-2 border-indigo-500 border-t-transparent rounded-full"></span>
+                <app-spinner *ngIf="loadingMoreLawyers" size="xs" color="accent"
+                  label="Loading more advocates..."></app-spinner>
               </button>
             </div>
           </ng-container>
@@ -692,10 +691,11 @@
               </div>
               <div class="w-full sm:w-[130px] h-9.5 bg-slate-200 dark:bg-slate-800/80 rounded-xl shrink-0"></div>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3" role="status" aria-busy="true"
+              aria-label="Loading help centers">
               <app-resource-card
                 *ngFor="let x of (activeTab === 'all' ? [1, 2] : skeletonItems); trackBy: trackBySkeleton"
-                [loading]="true"></app-resource-card>
+                [class.hidden]="x > 2" class="md:block" [loading]="true"></app-resource-card>
             </div>
           </ng-container>
 
@@ -799,10 +799,12 @@
             </div>
           </div>
 
-          <!-- Skeleton Cards -->
-          <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4">
+          <!-- Skeleton Cards (Zero-CLS Layout Reserved: 2 on mobile, 4 on desktop) -->
+          <div *ngIf="loading" class="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4" role="status" aria-busy="true"
+            aria-label="Loading legal templates">
             <div *ngFor="let x of (activeTab === 'all' ? [1, 2] : skeletonItems); trackBy: trackBySkeleton"
-              class="card p-6 flex flex-col justify-between gap-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b0e1a]/80 backdrop-blur-md rounded-2xl h-[185px] animate-pulse">
+              [class.hidden]="x > 2"
+              class="card p-6 flex flex-col justify-between gap-4 border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0b0e1a]/80 backdrop-blur-md rounded-2xl min-h-[185px] md:min-h-[210px] md:!flex animate-pulse">
               <div class="space-y-3">
                 <div class="h-3.5 bg-slate-200 dark:bg-slate-800/80 rounded-md w-16"></div>
                 <div class="h-5 bg-slate-200 dark:bg-slate-800/80 rounded w-3/4"></div>
@@ -997,8 +999,7 @@
           <p class="text-[9px] text-slate-400 dark:text-slate-500 m-0">Under Section 12 of LSA Act 1987</p>
         </div>
       </div>
-      <button (click)="closeFreeAidModal()"
-        appTooltip="Close free aid checker" tooltipPlacement="top"
+      <button (click)="closeFreeAidModal()" appTooltip="Close free aid checker" tooltipPlacement="top"
         class="p-1.5 rounded-lg text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-600 dark:hover:text-slate-200 transition-all cursor-pointer border-none bg-transparent flex items-center justify-center">
         <app-icon name="x" [size]="16"></app-icon>
       </button>

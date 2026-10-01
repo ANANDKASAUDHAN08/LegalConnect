@@ -14,6 +14,7 @@ import { PrintExportService } from '../../services/print-export.service';
 import { DataExportService } from '../../services/data-export.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { ShareMenuComponent } from '../../components/share-menu/share-menu.component';
+import { SpinnerComponent } from '../../components/spinner/spinner.component';
 
 interface PopularSection {
   act: string;
@@ -47,7 +48,7 @@ interface PinnedEntry {
   standalone: true,
   imports: [
     NgIf, NgFor, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, RouterLink,
-    FormsModule, TooltipDirective, ShareMenuComponent
+    FormsModule, TooltipDirective, ShareMenuComponent, SpinnerComponent
   ],
   templateUrl: './law-mapper.component.html',
   styleUrls: ['./law-mapper.component.scss'],

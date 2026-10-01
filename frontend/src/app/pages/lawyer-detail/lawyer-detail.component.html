@@ -752,10 +752,26 @@
             </span>
           </div>
 
-          <!-- Loading Spinner -->
-          <div *ngIf="loadingReviews" class="flex items-center justify-center py-10 gap-3 text-slate-400">
-            <div class="w-6 h-6 border-2 border-slate-200 border-t-amber-500 rounded-full animate-spin"></div>
-            <p class="text-xs font-semibold">Loading reviews...</p>
+          <!-- Review Skeleton Feed -->
+          <div *ngIf="loadingReviews" class="space-y-4 mb-6" role="status" aria-busy="true"
+            aria-label="Loading reviews">
+            <div *ngFor="let _ of [1, 2]"
+              class="flex flex-col gap-3 p-4 md:p-5 bg-slate-50/70 dark:bg-slate-950/40 border border-slate-100 dark:border-slate-800/60 rounded-2xl animate-pulse">
+              <div class="flex items-center justify-between gap-4 w-full">
+                <div class="flex items-center gap-3">
+                  <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800 shrink-0"></div>
+                  <div class="space-y-1.5">
+                    <div class="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                    <div class="h-2.5 w-16 bg-slate-100 dark:bg-slate-800/60 rounded"></div>
+                  </div>
+                </div>
+                <div class="h-3.5 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div>
+              </div>
+              <div class="space-y-2 mt-1">
+                <div class="h-3 w-full bg-slate-200/70 dark:bg-slate-800/70 rounded"></div>
+                <div class="h-3 w-4/5 bg-slate-200/50 dark:bg-slate-800/50 rounded"></div>
+              </div>
+            </div>
           </div>
 
           <!-- No Reviews Fallback -->
@@ -856,14 +872,12 @@
               </div>
 
               <!-- Submit button -->
-              <button (click)="submitReview()" [disabled]="submittingReview"
-                class="btn btn-accent btn-sm py-2.5 font-bold justify-center self-start">
-                <svg *ngIf="submittingReview" class="animate-spin w-3.5 h-3.5 text-white" fill="none"
-                  viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-                </svg>
-                Submit Review
+              <button (click)="submitReview()" [attr.aria-disabled]="submittingReview"
+                [class.pointer-events-none]="submittingReview"
+                class="btn btn-accent btn-sm py-2.5 font-bold justify-center self-start flex items-center gap-1.5">
+                <app-spinner *ngIf="submittingReview" size="xs" color="white"
+                  label="Submitting review..."></app-spinner>
+                <span>Submit Review</span>
               </button>
             </div>
           </div>
