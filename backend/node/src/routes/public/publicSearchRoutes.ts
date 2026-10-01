@@ -4,10 +4,12 @@ import { AppError } from '../../utils/AppError';
 import BareAct, { SectionModel } from '../../models/BareAct';
 import LegalResource from '../../models/LegalResource';
 import Lawyer from '../../models/Lawyer';
+import HelpCategory from '../../models/HelpCategory';
 import { getCache, setCache } from '../../services/statsService';
 import aiService from '../../services/AiService';
 import { calculateDistance, resolveCityAndStateFromText } from '../../utils/geoUtils';
 import actRegistry from '../../services/actRegistry';
+import { faqs, searchAnalyticsLogs } from './publicInfoRoutes';
 
 const router = Router();
 
@@ -420,17 +422,164 @@ router.get('/search-hub', asyncHandler(async (req: Request, res: Response) => {
     };
   });
 
+  const queryLower = query.toLowerCase();
+  const matchedFaqs = faqs
+    .filter(f =>
+      f.question.toLowerCase().includes(queryLower) ||
+      f.answer.toLowerCase().includes(queryLower) ||
+      (f.badge && f.badge.toLowerCase().includes(queryLower)) ||
+      f.category.toLowerCase().includes(queryLower)
+    )
+    .slice(0, limit)
+    .map(f => ({
+      id: f.id,
+      question: f.question,
+      answer: f.answer,
+      category: f.category,
+      badge: f.badge
+    }));
+
   const finalResponse = {
     success: true,
     data: {
       laws: mappedSections,
       lawyers,
-      resources
+      resources,
+      faqs: matchedFaqs
     }
   };
 
   await setCache(cacheKey, finalResponse, 300);
   res.json(finalResponse);
+}));
+
+// GET /search/palette-meta - Preloaded metadata for Global Search Command Center
+router.get('/search/palette-meta', asyncHandler(async (_req: Request, res: Response) => {
+  const cacheKey = 'legal:search:palette-meta';
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.json({ success: true, data: cached, fromCache: true });
+  }
+
+  // 1. Fetch real help categories from database
+  const dbCategories = await HelpCategory.find({}).lean();
+
+  // 2. Fetch popular Bare Acts
+  const acts = await BareAct.find({}, 'actName shortName year category description').limit(8).lean();
+
+  // 3. Dynamic Trending Topics calculated from DB categories
+  const trendingTopics = dbCategories.map(cat => ({
+    id: cat.id,
+    name: cat.name,
+    icon: cat.icon || 'shield',
+    description: cat.description,
+    subcategories: cat.subcategories || [],
+    sampleQuery: cat.subcategories && cat.subcategories.length > 0 ? cat.subcategories[0] : cat.name
+  }));
+
+  // 4. Derive popular searches from real telemetry + landmark statutory areas
+  const loggedQueries = searchAnalyticsLogs.map(l => l.query).filter(Boolean);
+  const fallbackPopularTopics = [
+    'Anticipatory Bail Application',
+    'Cheque Bounce Notice Sec 138',
+    'Consumer Dispute Complaint',
+    'RERA Delayed Possession',
+    'Mutual Consent Divorce Procedure',
+    'Cyber Crime Bank Fraud FIR'
+  ];
+
+  const popularTopics = loggedQueries.length >= 4
+    ? Array.from(new Set(loggedQueries)).slice(0, 6)
+    : fallbackPopularTopics;
+
+  const popularLaws = acts.map(a => ({
+    shortName: a.shortName,
+    actName: a.actName,
+    year: a.year,
+    category: a.category || 'Statutory Code'
+  }));
+
+  const popularCategories = dbCategories.slice(0, 6).map(c => ({
+    id: c.id,
+    name: c.name,
+    icon: c.icon
+  }));
+
+  const metaData = {
+    trendingTopics,
+    popularSearches: {
+      topics: popularTopics,
+      laws: popularLaws,
+      categories: popularCategories
+    },
+    quickAccess: [
+      { id: 'find-lawyer', label: 'Find Verified Lawyers', route: '/lawyers', icon: 'briefcase', description: 'Consult licensed advocates across high courts & district benches' },
+      { id: 'legal-resources', label: 'Legal Aid & DLSA Clinics', route: '/legal-resources', icon: 'landmark', description: 'Free legal aid, Lok Adalats & government legal aid clinics' },
+      { id: 'browse-laws', label: 'Browse Bare Acts & Codes', route: '/laws', icon: 'book-open', description: 'Search 1,200+ Indian Acts, sections, penalties & BNS cross-references' },
+      { id: 'faqs', label: 'Frequently Asked Questions', route: '/help', icon: 'help-circle', description: 'LegalConnect zero-commission rules, DPDP rights & user guides' },
+      { id: 'support', label: 'Contact Support & Help Desk', route: '/contact', icon: 'phone', description: '24/7 citizen support, statutory DPO officer & grievance redressal' }
+    ]
+  };
+
+  await setCache(cacheKey, metaData, 300);
+  res.json({ success: true, data: metaData });
+}));
+
+// GET /search/suggestions - Fast typeahead query suggestions across laws, sections, categories & FAQs
+router.get('/search/suggestions', asyncHandler(async (req: Request, res: Response) => {
+  const q = (req.query.q as string || '').trim();
+  if (!q || q.length < 1) {
+    return res.json({ success: true, data: [] });
+  }
+
+  const cacheKey = `legal:search:suggestions:${q.toLowerCase()}`;
+  const cached = await getCache(cacheKey);
+  if (cached) {
+    return res.json({ success: true, data: cached, fromCache: true });
+  }
+
+  const queryRegex = new RegExp(q.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+
+  const [acts, sections, categories] = await Promise.all([
+    BareAct.find({ $or: [{ shortName: queryRegex }, { actName: queryRegex }] }, 'actName shortName').limit(3).lean(),
+    SectionModel.find({ $or: [{ title: queryRegex }, { section_number: queryRegex }] }, 'actShortName section_number title').limit(4).lean(),
+    HelpCategory.find({ $or: [{ name: queryRegex }, { subcategories: queryRegex }] }, 'name subcategories').limit(2).lean()
+  ]);
+
+  const suggestions: Array<{ text: string; type: 'law' | 'section' | 'category' | 'topic'; subtitle?: string; route?: string; queryParams?: any }> = [];
+
+  for (const act of acts) {
+    suggestions.push({
+      text: `${act.shortName} — ${act.actName}`,
+      type: 'law',
+      subtitle: 'Bare Act',
+      route: '/laws',
+      queryParams: { act: act.shortName }
+    });
+  }
+
+  for (const sec of sections) {
+    suggestions.push({
+      text: `${sec.actShortName} Section ${sec.section_number}: ${sec.title}`,
+      type: 'section',
+      subtitle: 'Statutory Section',
+      route: '/search',
+      queryParams: { q: `${sec.actShortName} Section ${sec.section_number}` }
+    });
+  }
+
+  for (const cat of categories) {
+    suggestions.push({
+      text: cat.name,
+      type: 'category',
+      subtitle: 'Legal Domain',
+      route: '/find-help',
+      queryParams: { category: cat.name }
+    });
+  }
+
+  await setCache(cacheKey, suggestions, 3600);
+  res.json({ success: true, data: suggestions });
 }));
 
 // GET /mapping/suggestions - Typeahead suggestions for mapper search

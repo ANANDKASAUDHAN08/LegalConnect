@@ -7,7 +7,7 @@ namespace CoreApi.DTOs
     {
         [MinLength(2)]
         [MaxLength(100)]
-        [RegularExpression(@"^[\p{L}\p{M}'\-\.\s]+$", ErrorMessage = "Name contains invalid characters.")]
+        [RegularExpression(@"^[\p{L}\p{M}\p{N}\d'\-\.\s_#&,()/@+]+$", ErrorMessage = "Name contains invalid characters.")]
         public string? FullName { get; set; }
 
         [MaxLength(20)]
