@@ -111,27 +111,44 @@ export interface PlatformStats {
   legalClinics: number;
   distCourts: number;
   verifiedLawyers: number;
+  cityLawyers?: number;
+  cityClinics?: number;
 }
 
-export async function getPlatformStats(): Promise<PlatformStats> {
-  const cacheKey = 'legal:help:stats';
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+export async function getPlatformStats(city?: string): Promise<PlatformStats> {
+  const cleanCity = city ? city.trim().toLowerCase().slice(0, 60) : '';
+  const cacheKey = cleanCity ? `legal:help:stats:${encodeURIComponent(cleanCity)}` : 'legal:help:stats:global';
   const cached = await getCache(cacheKey);
   if (cached) {
     return cached;
   }
 
-  const [legalClinics, distCourts, verifiedLawyers] = await Promise.all([
+  const queries: Promise<any>[] = [
     LegalResource.countDocuments({ type: 'LegalAid' }),
     LegalResource.countDocuments({ type: 'Court' }),
     Lawyer.countDocuments({ isVerified: true })
-  ]);
+  ];
+
+  if (cleanCity) {
+    const escapedCity = escapeRegex(cleanCity);
+    const cityRegex = new RegExp(`^${escapedCity}$`, 'i');
+    queries.push(Lawyer.countDocuments({ city: cityRegex, isVerified: true }));
+    queries.push(LegalResource.countDocuments({ city: cityRegex }));
+  }
+
+  const results = await Promise.all(queries);
 
   const stats: PlatformStats = {
-    legalClinics,
-    distCourts,
-    verifiedLawyers
+    legalClinics: results[0] || 0,
+    distCourts: results[1] || 0,
+    verifiedLawyers: results[2] || 0,
+    ...(cleanCity ? { cityLawyers: results[3] || 0, cityClinics: results[4] || 0 } : {})
   };
 
-  await setCache(cacheKey, stats, 600);
+  await setCache(cacheKey, stats, 300);
   return stats;
 }

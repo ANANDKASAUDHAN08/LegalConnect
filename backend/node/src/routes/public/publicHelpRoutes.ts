@@ -33,10 +33,11 @@ function sanitizeString(str: unknown, maxLength: number): string {
   return str.replace(/<[^>]*>/g, '').trim().slice(0, maxLength);
 }
 
-// GET /help/stats — Fetch platform counts with Redis cache
+// GET /help/stats — Fetch platform counts with Redis cache (supports ?city=...)
 router.get('/help/stats', asyncHandler(async (req: Request, res: Response) => {
-  const stats = await getPlatformStats();
-  res.set('Cache-Control', 'public, max-age=600, must-revalidate');
+  const city = sanitizeString(req.query.city, 60);
+  const stats = await getPlatformStats(city || undefined);
+  res.set('Cache-Control', 'public, max-age=300, must-revalidate');
   res.json({ success: true, data: stats });
 }));
 

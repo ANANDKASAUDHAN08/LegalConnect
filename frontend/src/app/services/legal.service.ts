@@ -157,8 +157,9 @@ export class LegalService {
     return this.http.get<ApiResponse<Category[]>>(url);
   }
 
-  getHelpStats(): Observable<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number }>> {
-    return this.http.get<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number }>>(`${this.apiUrl}/help/stats`);
+  getHelpStats(city?: string): Observable<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number, cityLawyers?: number, cityClinics?: number }>> {
+    const url = city ? `${this.apiUrl}/help/stats?city=${encodeURIComponent(city)}` : `${this.apiUrl}/help/stats`;
+    return this.http.get<ApiResponse<{ legalClinics: number, distCourts: number, verifiedLawyers: number, cityLawyers?: number, cityClinics?: number }>>(url);
   }
 
   getHelpNearMe(category: string, location: string, state?: string, lat?: number, lng?: number): Observable<ApiResponse<any>> {
