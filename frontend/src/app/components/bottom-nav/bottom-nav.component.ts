@@ -14,6 +14,7 @@ import { filter, take } from 'rxjs/operators';
 
 import { AuthService } from '../../services/auth.service';
 import { LawyerService } from '../../services/lawyer.service';
+import { ScrollService } from '../../services/scroll.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { IconComponent } from '../icon/icon.component';
 import { SosModalComponent } from '../sos-modal/sos-modal.component';
@@ -39,6 +40,7 @@ export type BottomNavTab = 'home' | 'lawyers' | 'laws' | 'dashboard' | 'sos' | '
 export class BottomNavComponent implements OnInit, OnDestroy {
   public auth = inject(AuthService);
   private lawyerService = inject(LawyerService);
+  private scrollService = inject(ScrollService);
   private router = inject(Router);
   private cdr = inject(ChangeDetectorRef);
 
@@ -51,6 +53,7 @@ export class BottomNavComponent implements OnInit, OnDestroy {
   private initialHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
   private routerSub!: Subscription;
   private authSub!: Subscription;
+  private scrollSub!: Subscription;
 
   ngOnInit(): void {
     // 1. Initial route tab tracking
@@ -60,10 +63,12 @@ export class BottomNavComponent implements OnInit, OnDestroy {
     this.routerSub = this.router.events.pipe(
       filter((event): event is NavigationEnd => event instanceof NavigationEnd)
     ).subscribe((event) => {
+      this.showNav = true; // Always restore bottom nav visibility on page navigation
       this.updateActiveTab(event.urlAfterRedirects || event.url);
       if (this.showSosOverlay) {
         this.closeSos();
       }
+      this.cdr.markForCheck();
     });
 
     // 3. Upcoming appointment indicator (safe single-shot subscription per auth update)
@@ -89,11 +94,22 @@ export class BottomNavComponent implements OnInit, OnDestroy {
         this.cdr.markForCheck();
       }
     });
+
+    // 4. MNC-Grade Scroll Hide/Unhide: Auto-hides on downward scroll, reveals on upward scroll
+    this.scrollSub = this.scrollService.scrollDirection$.subscribe((direction) => {
+      // Keep visible if SOS overlay is active or user scrolls up
+      const shouldShow = direction === 'up' || this.showSosOverlay;
+      if (this.showNav !== shouldShow) {
+        this.showNav = shouldShow;
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   ngOnDestroy(): void {
     if (this.routerSub) this.routerSub.unsubscribe();
     if (this.authSub) this.authSub.unsubscribe();
+    if (this.scrollSub) this.scrollSub.unsubscribe();
   }
 
   @HostListener('window:resize')
