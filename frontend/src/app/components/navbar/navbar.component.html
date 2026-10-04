@@ -1,10 +1,122 @@
 <nav
-  class="fixed top-0 left-0 right-0 z-[1500] py-3.5 bg-white/75 dark:bg-slate-950 border-b border-slate-200/40 dark:border-slate-800/40 shadow-sm navbar-fixed transition-[padding,background-color,box-shadow,border-color,transform] duration-300 transform"
+  class="fixed top-0 left-0 right-0 z-[1500] bg-white/80 dark:bg-slate-950/85 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-sm navbar-fixed transition-[padding,background-color,box-shadow,border-color,transform] duration-300 transform"
   [class.scrolled]="isScrolled" [class.-translate-y-full]="!showNavbar">
-  <div class="max-w-[1440px] mx-auto px-6 flex justify-between items-center w-full relative">
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 flex justify-between items-center w-full relative">
 
+    <!-- ==================== MOBILE HEADER (md:hidden) ==================== -->
+    <div class="flex md:hidden items-center justify-between w-full gap-2">
+      <!-- LEFT: Profile Avatar + Brand Name + Subtitle (Grouped closely together) -->
+      <div class="flex items-center gap-2.5 min-w-0 flex-1">
+        <!-- Logged-in User Avatar -->
+        <button *ngIf="auth.isLoggedIn$ | async" type="button" (click)="toggleMenu()"
+          class="mobile-avatar-btn relative flex items-center justify-center w-10 h-10 rounded-full ring-2 ring-blue-500/25 hover:ring-blue-500/60 transition-all flex-shrink-0 cursor-pointer p-0 bg-slate-100 dark:bg-slate-800 border-0 shadow-sm"
+          aria-label="Open Account Drawer">
+          <!-- Inner circle to cleanly crop image/monogram without clipping the badge -->
+          <div class="w-full h-full rounded-full overflow-hidden flex items-center justify-center">
+            <ng-container
+              *ngIf="!avatarImageFailed && ((auth.currentUser$ | async)?.avatarUrl | mediaUrl) as avatarUrl; else monogramFallback">
+              <img [src]="avatarUrl" (error)="handleAvatarError()" alt="Profile" class="w-full h-full object-cover" />
+            </ng-container>
+            <ng-template #monogramFallback>
+              <div
+                class="w-full h-full bg-gradient-to-tr from-blue-600 to-indigo-650 flex items-center justify-center text-white font-extrabold text-sm">
+                {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Verified Advocate Blue Checkmark Badge (Lawyers only) -->
+          <span *ngIf="(auth.currentUser$ | async)?.role === 'Lawyer'"
+            class="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-blue-600 text-white flex items-center justify-center border-2 border-white dark:border-slate-950 shadow-sm z-10"
+            title="Verified Advocate">
+            <app-icon name="check" [size]="9"></app-icon>
+          </span>
+        </button>
+
+        <!-- Guest Full Circle User Icon (Top MNC Pattern: YouTube/Twitter/Google) -->
+        <button *ngIf="!(auth.isLoggedIn$ | async)" type="button" (click)="toggleMenu()"
+          class="mobile-guest-btn flex items-center justify-center w-10 h-10 rounded-full border border-slate-200/80 dark:border-slate-700/80 bg-slate-100/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 hover:border-blue-500/50 hover:bg-blue-50/50 dark:hover:bg-blue-950/30 transition-all cursor-pointer flex-shrink-0 shadow-sm"
+          aria-label="Open Account Drawer & Sign In">
+          <app-icon name="user" [size]="18" class="text-slate-600 dark:text-slate-300"></app-icon>
+        </button>
+
+        <!-- Website Name + Live Status Subtitle Carousel (Directly beside Avatar) -->
+        <a routerLink="/home" class="flex flex-col items-start no-underline min-w-0 text-left"
+          aria-label="LegalConnect">
+          <span class="font-black text-[1.02rem] tracking-tight text-slate-900 dark:text-white leading-tight">
+            LegalConnect
+          </span>
+          <!-- Dynamic Live Status 3D Rotating Carousel -->
+          <div class="subtitle-carousel-container w-[205px] max-w-full mt-0.5" aria-hidden="true">
+            <!-- Exiting Subtitle (Rolls Up & Out in 3D) -->
+            <div *ngIf="isSubtitleAnimating && prevSubtitle" class="subtitle-carousel-item subtitle-rotate-out">
+              <span
+                class="inline-flex items-center gap-1 text-[0.62rem] font-bold uppercase tracking-wider leading-none truncate max-w-[205px]"
+                [ngClass]="prevSubtitle.colorClass">
+                <span *ngIf="prevSubtitle.icon === 'dot'"
+                  class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                <app-icon *ngIf="prevSubtitle.icon === 'zap'" name="zap" [size]="9"
+                  class="text-amber-500 shrink-0"></app-icon>
+                <app-icon *ngIf="prevSubtitle.icon === 'scale'" name="scale" [size]="9"
+                  class="text-indigo-500 shrink-0"></app-icon>
+                <app-icon *ngIf="prevSubtitle.icon === 'map-pin'" name="map-pin" [size]="9"
+                  class="text-indigo-500 shrink-0"></app-icon>
+                <span class="truncate">{{ prevSubtitle.text }}</span>
+              </span>
+            </div>
+
+            <!-- Entering / Active Subtitle (Rolls In from Below in 3D) -->
+            <div class="subtitle-carousel-item" [class.subtitle-rotate-in]="isSubtitleAnimating">
+              <span
+                class="inline-flex items-center gap-1 text-[0.62rem] font-bold uppercase tracking-wider leading-none truncate max-w-[205px]"
+                [ngClass]="currentSubtitle.colorClass">
+                <span *ngIf="currentSubtitle.icon === 'dot'"
+                  class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                <app-icon *ngIf="currentSubtitle.icon === 'zap'" name="zap" [size]="9"
+                  class="text-amber-500 shrink-0"></app-icon>
+                <app-icon *ngIf="currentSubtitle.icon === 'scale'" name="scale" [size]="9"
+                  class="text-indigo-500 shrink-0"></app-icon>
+                <app-icon *ngIf="currentSubtitle.icon === 'map-pin'" name="map-pin" [size]="9"
+                  class="text-indigo-500 shrink-0"></app-icon>
+                <span class="truncate">{{ currentSubtitle.text }}</span>
+              </span>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <!-- RIGHT: Search Palette + Notification Bell / Emergency Help -->
+      <div class="flex items-center gap-1 flex-shrink-0 ml-auto">
+        <!-- Search Trigger -->
+        <button type="button" (click)="openSearchPalette($event)"
+          class="w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer bg-transparent border-0"
+          aria-label="Global Legal Search (Ctrl+K)">
+          <app-icon name="search" [size]="20"></app-icon>
+        </button>
+
+        <!-- Notification Bell (Logged-in) -->
+        <a *ngIf="auth.isLoggedIn$ | async" routerLink="/notifications"
+          class="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer no-underline"
+          aria-label="Notifications">
+          <app-icon name="bell" [size]="20"></app-icon>
+          <span *ngIf="(notificationService.followedCount() + systemAnnouncements.unreadCount()) as totalCount"
+            class="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 bg-gradient-to-tr from-rose-600 to-red-500 dark:from-rose-500 dark:to-red-500 border-2 border-white dark:border-slate-950 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(244,63,94,0.4)] dark:shadow-[0_2px_8px_rgba(244,63,94,0.6)] leading-none">
+            {{ totalCount }}
+          </span>
+        </a>
+
+        <!-- Guest Emergency Help Quick Link (when not logged in) -->
+        <a *ngIf="!(auth.isLoggedIn$ | async)" routerLink="/find-help"
+          class="w-10 h-10 rounded-full text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition-all cursor-pointer no-underline flex items-center justify-center"
+          aria-label="Emergency Legal Help" appTooltip="Emergency Help">
+          <app-icon name="lifebuoy" [size]="20"></app-icon>
+        </a>
+      </div>
+    </div>
+
+    <!-- ==================== DESKTOP NAVBAR (hidden md:flex) ==================== -->
     <!-- LEFT: Logo Block with Tagline + Location Pill -->
-    <div class="flex items-center gap-3 flex-shrink-0">
+    <div class="hidden md:flex items-center gap-3 flex-shrink-0">
       <app-logo mode="full" size="md" linkTo="/home"></app-logo>
 
       <!-- Vertical divider between logo and location pill -->
@@ -318,7 +430,7 @@
         appTooltip="Notifications & Release Updates">
         <app-icon name="bell" [size]="18"></app-icon>
         <span *ngIf="(notificationService.followedCount() + systemAnnouncements.unreadCount()) as totalCount"
-          class="absolute top-0.5 right-0.5 w-4 h-4 bg-amber-500 border border-white dark:border-slate-950 text-slate-950 text-[9px] font-extrabold rounded-full flex items-center justify-center shadow-sm">
+          class="absolute top-0.5 right-0.5 min-w-[17px] h-[17px] px-1 bg-gradient-to-tr from-rose-600 to-red-500 dark:from-rose-500 dark:to-red-500 border-2 border-white dark:border-slate-950 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(244,63,94,0.4)] dark:shadow-[0_2px_8px_rgba(244,63,94,0.6)] leading-none">
           {{ totalCount }}
         </span>
       </a>
@@ -395,22 +507,6 @@
       </ng-template>
     </div>
 
-    <!-- Mobile Hamburger Toggle button -->
-    <div class="flex items-center gap-3 md:hidden flex-shrink-0">
-      <!-- Search Command Center Trigger (Mobile) -->
-      <button type="button" (click)="openSearchPalette($event)"
-        class="p-2 rounded-full text-slate-500 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center w-9 h-9 transition-colors flex-shrink-0 bg-transparent border-0 cursor-pointer"
-        aria-label="Open Global Legal Search" appTooltip="Search">
-        <app-icon name="search" [size]="18"></app-icon>
-      </button>
-
-      <button class="hamburger-btn flex-shrink-0" (click)="toggleMenu()" aria-label="Toggle Menu"
-        [class.open]="menuOpen">
-        <span></span>
-        <span></span>
-        <span></span>
-      </button>
-    </div>
   </div>
 
   <!-- Reading Progress Bar -->

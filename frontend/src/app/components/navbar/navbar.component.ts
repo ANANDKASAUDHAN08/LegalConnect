@@ -23,6 +23,14 @@ import { PwaInstallService } from '../../services/pwa-install.service';
 import { SystemAnnouncementService } from '../../services/system-announcement.service';
 import { CommandPaletteService } from '../../services/command-palette.service';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
+import { MediaUrlPipe } from '../../pipes/media-url.pipe';
+import { LegalService } from '../../services/legal.service';
+
+export interface SubtitleItem {
+  text: string;
+  icon: 'dot' | 'zap' | 'scale' | 'map-pin' | null;
+  colorClass: string;
+}
 
 declare var google: any;
 
@@ -44,7 +52,8 @@ declare var google: any;
     NAV_DROPDOWN_DIRECTIVES,
     LocationMapModalComponent,
     IconComponent,
-    LogoComponent
+    LogoComponent,
+    MediaUrlPipe
   ],
   templateUrl: './navbar.component.html',
   styleUrls: ['./navbar.component.scss'],
@@ -53,6 +62,7 @@ declare var google: any;
 export class NavbarComponent implements OnInit, OnDestroy {
   menuOpen = false;
   isScrolled = false;
+  avatarImageFailed = false;
   showNavbar = true;
   scrollPercentage = 0;
   showProgressBar = false;
@@ -69,6 +79,21 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   // Map modal state
   showMapModal = false;
+
+  // Approach B: 3D Vertical Rotating Carousel for Mobile Subtitle Ticker (Dynamic Option C: Hybrid)
+  liveStatusSubtitles: SubtitleItem[] = [
+    { text: 'Legal help, simplified.', icon: null, colorClass: 'text-blue-600 dark:text-blue-400' },
+    { text: 'Verified Advocates Active', icon: 'dot', colorClass: 'text-emerald-600 dark:text-emerald-400' },
+    { text: 'Legal Aid & Courts Active', icon: 'scale', colorClass: 'text-indigo-600 dark:text-indigo-400' },
+    { text: '24/7 Emergency Aid Active', icon: 'zap', colorClass: 'text-amber-600 dark:text-amber-400' }
+  ];
+  currentSubtitleIndex = 0;
+  currentSubtitle: SubtitleItem = this.liveStatusSubtitles[0];
+  prevSubtitle: SubtitleItem | null = null;
+  isSubtitleAnimating = false;
+  private subtitleTimer: any = null;
+  private subtitleAnimTimer: any = null;
+  private statsSub?: Subscription;
 
   // Sync / Network state
   syncStatus: 'synced' | 'syncing' | 'offline' = navigator.onLine ? 'synced' : 'offline';
@@ -91,12 +116,14 @@ export class NavbarComponent implements OnInit, OnDestroy {
     private zone: NgZone,
     private scrollService: ScrollService,
     private commandPaletteService: CommandPaletteService,
-    private mapsLoader: GoogleMapsLoaderService
+    private mapsLoader: GoogleMapsLoaderService,
+    private legalService: LegalService
   ) { }
 
   ngOnInit() {
     this.locationSub = this.locationService.activeLocation$.subscribe(loc => {
       this.activeLocation = loc;
+      this.loadLivePlatformStats(loc);
       this.cdr.markForCheck();
     });
     this.locationSub.add(
@@ -130,6 +157,24 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
     window.addEventListener('online', this.onOnline);
     window.addEventListener('offline', this.onOffline);
+
+    // Approach B: 3D Vertical Rotating Carousel (cycles smoothly every 4 seconds)
+    if (typeof window !== 'undefined') {
+      this.subtitleTimer = setInterval(() => {
+        this.prevSubtitle = this.currentSubtitle;
+        this.currentSubtitleIndex = (this.currentSubtitleIndex + 1) % this.liveStatusSubtitles.length;
+        this.currentSubtitle = this.liveStatusSubtitles[this.currentSubtitleIndex];
+        this.isSubtitleAnimating = true;
+        this.cdr.markForCheck();
+
+        if (this.subtitleAnimTimer) clearTimeout(this.subtitleAnimTimer);
+        this.subtitleAnimTimer = setTimeout(() => {
+          this.isSubtitleAnimating = false;
+          this.prevSubtitle = null;
+          this.cdr.markForCheck();
+        }, 530);
+      }, 4000);
+    }
   }
 
   private onOnline = () => {
@@ -149,6 +194,17 @@ export class NavbarComponent implements OnInit, OnDestroy {
   };
 
   ngOnDestroy() {
+    if (this.subtitleTimer) {
+      clearInterval(this.subtitleTimer);
+      this.subtitleTimer = null;
+    }
+    if (this.subtitleAnimTimer) {
+      clearTimeout(this.subtitleAnimTimer);
+      this.subtitleAnimTimer = null;
+    }
+    if (this.statsSub) {
+      this.statsSub.unsubscribe();
+    }
     if (this.locationSub) {
       this.locationSub.unsubscribe();
     }
@@ -168,6 +224,53 @@ export class NavbarComponent implements OnInit, OnDestroy {
     this.cdr.markForCheck();
   }
 
+  private loadLivePlatformStats(location: string) {
+    const cleanCity = this.cleanLocation(location) || 'India';
+    if (this.statsSub) {
+      this.statsSub.unsubscribe();
+    }
+    this.statsSub = this.legalService.getHelpStats(cleanCity).subscribe({
+      next: (res) => {
+        if (res && res.success && res.data) {
+          this.buildDynamicSubtitles(res.data, cleanCity);
+        }
+      },
+      error: (err) => {
+        console.warn('Could not refresh live navbar stats, keeping pre-hydrated metrics:', err);
+      }
+    });
+  }
+
+  private buildDynamicSubtitles(
+    stats: { verifiedLawyers: number; legalClinics: number; distCourts: number; cityLawyers?: number; cityClinics?: number },
+    cleanCity: string
+  ) {
+    const verifiedText = stats.verifiedLawyers > 0
+      ? `${stats.verifiedLawyers} Verified Advocates Online`
+      : 'Verified Advocates Online';
+
+    const totalClinicsAndCourts = (stats.legalClinics || 0) + (stats.distCourts || 0);
+    const courtsText = (stats.cityClinics && stats.cityClinics > 0)
+      ? `${stats.cityClinics} Legal Aid & Courts Nearby`
+      : (totalClinicsAndCourts > 0 ? `${totalClinicsAndCourts} Legal Aid & Courts Active` : 'Legal Aid & Courts Active');
+
+    const newSubtitles: SubtitleItem[] = [
+      { text: 'Legal help, simplified.', icon: null, colorClass: 'text-blue-600 dark:text-blue-400' },
+      { text: verifiedText, icon: 'dot', colorClass: 'text-emerald-600 dark:text-emerald-400' },
+      { text: courtsText, icon: 'scale', colorClass: 'text-indigo-600 dark:text-indigo-400' },
+      { text: '24/7 Emergency Aid Active', icon: 'zap', colorClass: 'text-amber-600 dark:text-amber-400' }
+    ];
+
+    this.liveStatusSubtitles = newSubtitles;
+    if (!this.isSubtitleAnimating) {
+      this.currentSubtitle = this.liveStatusSubtitles[this.currentSubtitleIndex % this.liveStatusSubtitles.length];
+    }
+    this.cdr.markForCheck();
+  }
+
+  trackBySubtitleIndex(index: number): number {
+    return index;
+  }
 
   @HostListener('document:click', ['$event'])
   onClickOutside(event: Event) {
@@ -369,6 +472,11 @@ export class NavbarComponent implements OnInit, OnDestroy {
 
   cleanLocation(loc: string): string {
     return this.locationService.cleanAddress(loc);
+  }
+
+  handleAvatarError() {
+    this.avatarImageFailed = true;
+    this.cdr.markForCheck();
   }
 
   toggleMenu() {

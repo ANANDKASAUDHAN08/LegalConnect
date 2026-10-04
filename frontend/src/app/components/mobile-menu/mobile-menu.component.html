@@ -1,389 +1,562 @@
 <!-- Backdrop Overlay -->
-<div class="fixed inset-0 bg-slate-900/45 z-[1400] transition-opacity duration-300 md:hidden"
+<div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[1550] transition-opacity duration-300 md:hidden"
   [class.opacity-100]="isOpen" [class.pointer-events-auto]="isOpen" [class.opacity-0]="!isOpen"
   [class.pointer-events-none]="!isOpen" (click)="onClose()"></div>
 
-<!-- Slide-in Navigation Drawer (Curved left-edge & Glassmorphic) -->
+<!-- Slide-in Navigation Drawer (Left-Oriented Paytm/Twitter Style) -->
 <div
-  class="fixed top-0 right-0 bottom-0 w-[320px] max-w-[85vw] shadow-2xl z-[1600] flex flex-col transition-transform duration-300 ease-out md:hidden border-l border-slate-200/40 dark:border-slate-800/40 mobile-drawer-panel overflow-hidden"
-  [class.translate-x-0]="isOpen" [class.translate-x-full]="!isOpen">
+  class="fixed top-0 left-0 bottom-0 w-[325px] max-w-[88vw] shadow-2xl z-[1600] flex flex-col transition-transform duration-300 ease-out md:hidden border-r border-slate-200/60 dark:border-slate-800/60 mobile-drawer-panel overflow-hidden"
+  [class.translate-x-0]="isOpen" [class.-translate-x-full]="!isOpen">
 
-  <!-- Drawer Header Banner -->
+  <!-- Drawer Top Bar: Back Action + Brand + Theme Toggle -->
   <div
-    class="px-5 py-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-violet-700 text-white flex items-center justify-between rounded-b-lg shadow-md border-0 z-10 flex-shrink-0">
-    <app-logo mode="full" size="sm" theme="dark" linkTo="/" (click)="onClose()"></app-logo>
-
-    <!-- Header Actions Group -->
-    <div class="flex items-center gap-1.5 flex-shrink-0">
-      <!-- Theme Quick Toggle inside Drawer -->
-      <button
-        class="w-9 h-9 rounded-full hover:bg-white/20 text-white flex items-center justify-center transition-all border-0 cursor-pointer hover:rotate-45 duration-300"
-        (click)="themeService.toggleTheme()" aria-label="Toggle Theme">
-        <app-icon *ngIf="themeService.isDarkMode()" name="sun" [size]="18"></app-icon>
-        <app-icon *ngIf="!themeService.isDarkMode()" name="moon" [size]="18"></app-icon>
-      </button>
-
-      <!-- Close Button -->
+    class="px-4 py-3 bg-slate-50/80 dark:bg-slate-900/80 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between flex-shrink-0">
+    <div class="flex items-center gap-2.5">
+      <!-- Back Arrow to dismiss drawer -->
       <button (click)="onClose()"
-        class="w-9 h-9 rounded-full hover:bg-white/20 text-white transition-all border-0 cursor-pointer flex items-center justify-center"
-        aria-label="Close menu">
-        <app-icon name="x" [size]="20"></app-icon>
+        class="w-8 h-8 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition-all border-0 cursor-pointer flex items-center justify-center -ml-1"
+        aria-label="Back to page">
+        <app-icon name="arrow-left" [size]="18"></app-icon>
       </button>
+
+      <!-- Brand Mark -->
+      <app-logo mode="full" size="sm" linkTo="/" (click)="onClose()"></app-logo>
     </div>
+
+    <!-- Quick Theme Toggle -->
+    <button
+      class="w-8 h-8 rounded-full hover:bg-slate-200/60 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 flex items-center justify-center transition-all border-0 cursor-pointer"
+      (click)="themeService.toggleTheme()" aria-label="Toggle Theme"
+      [appTooltip]="themeService.isDarkMode() ? 'Switch to Light' : 'Switch to Dark'">
+      <app-icon *ngIf="themeService.isDarkMode()" name="sun" [size]="17" class="text-amber-400"></app-icon>
+      <app-icon *ngIf="!themeService.isDarkMode()" name="moon" [size]="17" class="text-slate-600"></app-icon>
+    </button>
   </div>
 
-  <!-- Drawer Body -->
+  <!-- Drawer Scrollable Body -->
   <div class="flex-grow overflow-y-auto flex flex-col justify-between scrollbar-none">
 
-    <!-- Navigation Sections -->
     <div class="flex flex-col">
 
-      <!-- Logged In User Quick Profile Row (HealthConnect Inspired) -->
-      <a *ngIf="(auth.isLoggedIn$ | async)" routerLink="/profile" (click)="onClose()"
-        class="flex items-center justify-between px-5 py-2 hover:bg-slate-50/60 dark:hover:bg-slate-900/40 transition-all duration-200 no-underline active:scale-[0.99] group">
-        <div class="flex items-center gap-3.5">
-          <!-- User Profile Avatar Image / Initials -->
-          <div class="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 shadow-sm relative">
-            <img *ngIf="(auth.currentUser$ | async)?.avatarUrl as avatarUrl" [src]="avatarUrl"
-              (error)="handleImageError()" [class.hidden]="avatarImageFailed" alt="Profile Picture"
-              class="w-full h-full object-cover" />
-            <div *ngIf="!(auth.currentUser$ | async)?.avatarUrl || avatarImageFailed"
-              class="w-full h-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-extrabold text-sm">
-              {{ ((auth.currentUser$ | async)?.fullName || 'U')[0] | uppercase }}
+      <!-- UNIFIED HERO SECTION (Edge-to-Edge, Borderless, Zero Top Gap) -->
+      <div class="w-full bg-slate-50/60 dark:bg-slate-900/60 backdrop-blur-md stagger-1">
+
+        <!-- LOGGED-IN STATE: 1-Tap Touch Target to Profile -->
+        <ng-container *ngIf="(auth.currentUser$ | async) as user; else guestHero">
+          <a routerLink="/profile" (click)="onClose()"
+            class="flex items-center gap-3 px-4 py-3 hover:bg-slate-100/60 dark:hover:bg-slate-800/40 transition-all no-underline group active:scale-[0.99] duration-150">
+            <!-- User Avatar with Glow Ring -->
+            <div
+              class="w-11 h-11 rounded-full overflow-hidden flex-shrink-0 shadow-sm ring-2 ring-blue-500/20 relative group-hover:ring-blue-500/40 transition-all">
+              <ng-container
+                *ngIf="!avatarImageFailed && (user.avatarUrl | mediaUrl) as avatarUrl; else monogramFallback">
+                <img [src]="avatarUrl" (error)="handleImageError()" alt="Profile" class="w-full h-full object-cover" />
+              </ng-container>
+              <ng-template #monogramFallback>
+                <div
+                  class="w-full h-full bg-gradient-to-tr from-blue-600 to-indigo-650 flex items-center justify-center text-white font-extrabold text-sm">
+                  {{ (user.fullName || 'U')[0] | uppercase }}
+                </div>
+              </ng-template>
+            </div>
+
+            <!-- Identity Info (Spreads across full width) -->
+            <div class="flex flex-col min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="text-sm font-extrabold text-slate-900 dark:text-white truncate group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {{ user.fullName }}
+                </span>
+                <!-- Verified Checkmark Badge -->
+                <span
+                  class="w-3.5 h-3.5 rounded-full bg-blue-600 text-white flex items-center justify-center flex-shrink-0"
+                  title="Verified User">
+                  <app-icon name="check" [size]="9"></app-icon>
+                </span>
+              </div>
+
+              <!-- Role & Secondary detail in one clean compact row -->
+              <div class="flex items-center gap-1.5 mt-0.5 min-w-0">
+                <span *ngIf="user.role === 'Lawyer'"
+                  class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 flex-shrink-0">
+                  Advocate
+                </span>
+                <span *ngIf="user.role !== 'Lawyer'"
+                  class="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex-shrink-0">
+                  Citizen
+                </span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  {{ user.email || user.phone || 'Account Active' }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Chevron indicator -->
+            <app-icon name="chevron-right" [size]="15"
+              class="text-slate-400 dark:text-slate-500 flex-shrink-0 group-hover:translate-x-0.5 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-all"></app-icon>
+          </a>
+        </ng-container>
+
+        <!-- GUEST ONBOARDING STATE -->
+        <ng-template #guestHero>
+          <div
+            class="px-4 py-3 bg-gradient-to-b from-blue-50/40 to-transparent dark:from-blue-950/20 dark:to-transparent">
+            <div class="flex items-center gap-2.5">
+              <div
+                class="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-650 text-white flex items-center justify-center flex-shrink-0 shadow-sm">
+                <app-icon name="shield" [size]="16"></app-icon>
+              </div>
+              <div class="flex flex-col min-w-0">
+                <span class="text-xs font-black tracking-tight text-slate-900 dark:text-white">Legal Services &
+                  Aid</span>
+                <span class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight">Access advocates, templates
+                  &amp; cases</span>
+              </div>
+            </div>
+
+            <div class="mt-2.5 grid grid-cols-2 gap-2">
+              <a routerLink="/login" (click)="onClose()"
+                class="flex items-center justify-center py-1.5 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 text-xs font-bold no-underline hover:bg-slate-200 dark:hover:bg-slate-700 text-center transition-all">
+                Sign In
+              </a>
+              <a routerLink="/register" [queryParams]="{role: 'lawyer'}" (click)="onClose()"
+                class="flex items-center justify-center py-1.5 px-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-650 text-white text-xs font-bold no-underline hover:brightness-110 text-center shadow-sm transition-all">
+                Join as Lawyer
+              </a>
             </div>
           </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-sm font-bold text-slate-800 dark:text-slate-200 truncate leading-tight">
-              {{ (auth.currentUser$ | async)?.fullName }}
-            </span>
+        </ng-template>
+
+        <!-- DOCKED JURISDICTION DOCK: Full-Width Borderless Bar -->
+        <div (click)="handleChangeLocation()"
+          class="px-4 py-2 bg-slate-100/40 dark:bg-slate-950/30 flex items-center justify-between cursor-pointer hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-all group"
+          role="button" tabindex="0" aria-label="Change Jurisdiction or City">
+          <div class="flex items-center gap-2 min-w-0 flex-1 mr-2">
+            <!-- Location Pin with Status Badge Indicator -->
+            <div
+              class="relative w-6 h-6 rounded-lg bg-blue-50 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <app-icon name="map-pin" [size]="12"></app-icon>
+
+              <!-- Verified Status Dot -->
+              <span *ngIf="!isLocationEstimated"
+                class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+                title="Verified Location"></span>
+
+              <!-- Estimated Status Dot (Pulsing) -->
+              <span *ngIf="isLocationEstimated" class="absolute -top-0.5 -right-0.5 flex h-2 w-2"
+                title="Estimated Location">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span
+                  class="relative inline-flex rounded-full h-2 w-2 bg-amber-500 ring-2 ring-white dark:ring-slate-900"></span>
+              </span>
+            </div>
+
             <span
-              class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider mt-1 leading-none">
-              {{ (auth.currentUser$ | async)?.role }}
+              class="text-[0.78rem] font-bold text-slate-700 dark:text-slate-200 truncate flex-1 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {{ cleanActiveLocation }}
             </span>
           </div>
-        </div>
-        <app-icon name="chevron-right" [size]="16"
-          class="text-slate-300 dark:text-slate-600 flex-shrink-0 transition-transform duration-200 group-hover:translate-x-1">
-        </app-icon>
-      </a>
-      <div *ngIf="(auth.isLoggedIn$ | async)" class="h-px bg-slate-100 dark:bg-slate-800/40 w-full"></div>
 
-      <!-- CATEGORY 1: NAVIGATION -->
-      <div class="mb-2">
-        <p
-          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
-          Navigation
-        </p>
-        <div class="flex flex-col">
-
-          <!-- Home -->
-          <a routerLink="/home" [class.active-mobile]="isHomeRouteActive()" class="mobile-main-link group stagger-1"
-            (click)="onClose()">
-            <span class="link-icon-container text-blue-600 dark:text-blue-400">
-              <app-icon name="home" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Home</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Find Help (SOS) -->
-          <a routerLink="/find-help" routerLinkActive="active-mobile" class="mobile-main-link group stagger-2"
-            (click)="onClose()">
-            <span class="link-icon-container text-red-600 dark:text-red-400">
-              <app-icon name="lifebuoy" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold text-red-600 dark:text-red-400">Find Emergency Help</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Find Lawyers (Only for guest or Client) -->
-          <a *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'"
-            routerLink="/lawyers" routerLinkActive="active-mobile" class="mobile-main-link group stagger-3"
-            (click)="onClose()">
-            <span class="link-icon-container text-indigo-600 dark:text-indigo-400">
-              <app-icon name="users" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Find Lawyers</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Browse Practice Areas -->
-          <a *ngIf="!(auth.currentUser$ | async) || (auth.currentUser$ | async)?.role !== 'Lawyer'"
-            routerLink="/specializations" routerLinkActive="active-mobile" class="mobile-main-link group stagger-4"
-            (click)="onClose()">
-            <span class="link-icon-container text-amber-500 dark:text-amber-400">
-              <app-icon name="shield" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Practice Areas</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-        </div>
-      </div>
-      <div class="h-px bg-slate-100 dark:bg-slate-800/40 w-full"></div>
-
-      <!-- CATEGORY 2: LEGAL RESOURCES -->
-      <div class="mb-2">
-        <p
-          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
-          Legal Resources
-        </p>
-        <div class="flex flex-col">
-          <!-- Legal Aid & Resources Directory -->
-          <a routerLink="/legal-resources" routerLinkActive="active-mobile" class="mobile-main-link group stagger-5"
-            (click)="onClose()">
-            <span class="link-icon-container text-sky-600 dark:text-sky-400">
-              <app-icon name="landmark" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Legal Aid &amp; Directory</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Browse Laws & Acts -->
-          <a routerLink="/laws" [class.active-mobile]="isLawsRouteActive()" class="mobile-main-link group stagger-6"
-            (click)="onClose()">
-            <span class="link-icon-container text-emerald-600 dark:text-emerald-400">
-              <app-icon name="book-open" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Browse Laws &amp; Acts</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- IPC ↔ BNS Mapper -->
-          <a routerLink="/laws/mapper" routerLinkActive="active-mobile" class="mobile-main-link group stagger-7"
-            (click)="onClose()">
-            <span class="link-icon-container text-blue-600 dark:text-blue-400">
-              <app-icon name="scale" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">IPC ↔ BNS Mapper</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Civil & Family Laws -->
-          <a routerLink="/laws/civil-family" routerLinkActive="active-mobile" class="mobile-main-link group stagger-8"
-            (click)="onClose()">
-            <span class="link-icon-container text-amber-500 dark:text-amber-400">
-              <app-icon name="users" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Civil &amp; Family Laws</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Document Templates -->
-          <a routerLink="/laws/templates" routerLinkActive="active-mobile" class="mobile-main-link group stagger-9"
-            (click)="onClose()">
-            <span class="link-icon-container text-violet-600 dark:text-violet-400">
-              <app-icon name="file-text" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Document Templates</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Rights & FAQs -->
-          <a routerLink="/laws" [queryParams]="{tab: 'faq'}" routerLinkActive="active-mobile"
-            class="mobile-main-link group stagger-10" (click)="onClose()">
-            <span class="link-icon-container text-pink-600 dark:text-pink-400">
-              <app-icon name="help-circle" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Rights &amp; FAQs</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-        </div>
-      </div>
-      <div class="h-px bg-slate-100 dark:bg-slate-800/40 w-full"></div>
-
-      <!-- CATEGORY 3: FOR LAWYERS (Guest only) -->
-      <div class="mb-2" *ngIf="!(auth.isLoggedIn$ | async)">
-        <p
-          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
-          For Lawyers
-        </p>
-        <div class="flex flex-col">
-          <!-- Join as a Lawyer -->
-          <a routerLink="/register" [queryParams]="{role: 'lawyer'}" routerLinkActive="active-mobile"
-            class="mobile-main-link group stagger-8" (click)="onClose()">
-            <span class="link-icon-container text-teal-600 dark:text-teal-400">
-              <app-icon name="user-check" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Join as a Lawyer</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
-
-          <!-- Membership Plans -->
-          <a routerLink="/" routerLinkActive="active-mobile" class="mobile-main-link group stagger-9"
-            (click)="onClose()">
-            <span class="link-icon-container text-purple-600 dark:text-purple-400">
-              <app-icon name="award" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
-            </span>
-            <span class="font-bold">Membership Plans</span>
-            <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
-          </a>
+          <span
+            class="text-[0.7rem] font-bold text-blue-600 dark:text-blue-400 group-hover:underline flex items-center gap-0.5 flex-shrink-0">
+            Change
+            <app-icon name="chevron-right" [size]="11"></app-icon>
+          </span>
         </div>
       </div>
 
-      <!-- CATEGORY 4: MY ACCOUNT (Logged in only) -->
-      <div class="mb-2" *ngIf="(auth.isLoggedIn$ | async)">
+      <!-- Elegant Gradient Hairline Divider Below Location -->
+      <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800/90 to-transparent">
+      </div>
+
+      <!-- ==================== 4-TILE QUICK LAUNCHER GRID ==================== -->
+      <div class="px-3 pt-2.5 pb-2 stagger-2">
         <p
-          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
-          My Account
+          class="text-[0.62rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-1 pb-1.5 flex items-center gap-1.5">
+          <app-icon name="zap" [size]="10" class="text-amber-500"></app-icon>
+          <span>Quick Access</span>
         </p>
-        <div class="flex flex-col">
-          <!-- Library / Workspace -->
-          <ng-container *ngIf="(auth.currentUser$ | async) as user">
-            <a [routerLink]="user.role === 'Lawyer' ? '/lawyer/workstation' : '/client/portal'"
-              routerLinkActive="active-mobile" class="mobile-main-link group" (click)="onClose()">
-              <span class="link-icon-container text-emerald-600 dark:text-emerald-400">
-                <app-icon name="layout" [size]="20"
-                  class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
+
+        <div class="grid grid-cols-2 gap-1.5">
+          <!-- Tile 1: Find Lawyers -->
+          <a routerLink="/lawyers" (click)="onClose()"
+            class="quick-launcher-card group px-2 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-900/90 dark:to-slate-900/40 hover:border-blue-500/50 dark:hover:border-blue-500/40 shadow-xs hover:shadow-md transition-all duration-200 flex items-center gap-2 no-underline active:scale-[0.97]">
+            <div
+              class="w-7 h-7 rounded-lg bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <app-icon name="users" [size]="14"></app-icon>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span
+                class="text-[0.74rem] font-black text-slate-800 dark:text-slate-100 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight truncate">Find
+                Lawyers</span>
+              <span class="text-[9.5px] text-slate-400 dark:text-slate-500 leading-tight truncate">Verified
+                Counsel</span>
+            </div>
+          </a>
+
+          <!-- Tile 2: 24/7 Helplines -->
+          <a routerLink="/find-help" (click)="onClose()"
+            class="quick-launcher-card group px-2 py-2 rounded-xl border border-rose-200/80 dark:border-rose-900/40 bg-gradient-to-br from-rose-50/30 to-white dark:from-rose-950/20 dark:to-slate-900/60 hover:border-rose-500/60 dark:hover:border-rose-500/50 shadow-xs hover:shadow-md transition-all duration-200 flex items-center gap-2 no-underline active:scale-[0.97]">
+            <div
+              class="relative w-7 h-7 rounded-lg bg-rose-500/10 dark:bg-rose-500/20 text-rose-600 dark:text-rose-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <app-icon name="lifebuoy" [size]="14"></app-icon>
+              <!-- Live Emergency Indicator -->
+              <span class="absolute -top-0.5 -right-0.5 flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                <span
+                  class="relative inline-flex rounded-full h-2 w-2 bg-rose-500 ring-1 ring-white dark:ring-slate-900"></span>
               </span>
-              <span class="font-bold">{{ user.role === 'Lawyer' ? 'My Workspace' : 'My Library' }}</span>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span
+                class="text-[0.74rem] font-black text-slate-800 dark:text-slate-100 group-hover:text-rose-600 dark:group-hover:text-rose-400 transition-colors leading-tight truncate">24/7
+                Help</span>
+              <span
+                class="text-[9.5px] text-rose-600/90 dark:text-rose-400/90 font-bold leading-tight truncate">Emergency
+                Aid</span>
+            </div>
+          </a>
+
+          <!-- Tile 3: Bare Acts -->
+          <a routerLink="/laws" (click)="onClose()"
+            class="quick-launcher-card group px-2 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-900/90 dark:to-slate-900/40 hover:border-emerald-500/50 dark:hover:border-emerald-500/40 shadow-xs hover:shadow-md transition-all duration-200 flex items-center gap-2 no-underline active:scale-[0.97]">
+            <div
+              class="w-7 h-7 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <app-icon name="book-open" [size]="14"></app-icon>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span
+                class="text-[0.74rem] font-black text-slate-800 dark:text-slate-100 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors leading-tight truncate">Bare
+                Acts</span>
+              <span class="text-[9.5px] text-slate-400 dark:text-slate-500 leading-tight truncate">Central Acts</span>
+            </div>
+          </a>
+
+          <!-- Tile 4: Document Templates -->
+          <a routerLink="/laws/templates" (click)="onClose()"
+            class="quick-launcher-card group px-2 py-2 rounded-xl border border-slate-200/80 dark:border-slate-800/80 bg-gradient-to-br from-white to-slate-50/80 dark:from-slate-900/90 dark:to-slate-900/40 hover:border-amber-500/50 dark:hover:border-amber-500/40 shadow-xs hover:shadow-md transition-all duration-200 flex items-center gap-2 no-underline active:scale-[0.97]">
+            <div
+              class="w-7 h-7 rounded-lg bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+              <app-icon name="file-text" [size]="14"></app-icon>
+            </div>
+            <div class="flex flex-col min-w-0 flex-1">
+              <span
+                class="text-[0.74rem] font-black text-slate-800 dark:text-slate-100 group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors leading-tight truncate">Templates</span>
+              <span class="text-[9.5px] text-slate-400 dark:text-slate-500 leading-tight truncate">Drafts &amp;
+                Forms</span>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="h-px bg-slate-100 dark:bg-slate-800/60 w-full my-1"></div>
+
+      <!-- ==================== SECTION 1: ACCOUNT & ACTIVITY (Logged-in Only) ==================== -->
+      <div *ngIf="(auth.isLoggedIn$ | async)" class="mt-2 mb-2">
+        <p class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pb-1.5">
+          Account &amp; Activity
+        </p>
+
+        <div class="flex flex-col">
+          <ng-container *ngIf="(auth.currentUser$ | async) as user">
+            <!-- User Workstation / Client Dashboard -->
+            <a [routerLink]="user.role === 'Lawyer' ? '/lawyer/workstation' : '/client/portal'"
+              routerLinkActive="active-mobile" class="mobile-main-link group stagger-2" (click)="onClose()">
+              <span
+                class="link-icon-container bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+                <app-icon [name]="user.role === 'Lawyer' ? 'briefcase' : 'layout'" [size]="16"></app-icon>
+              </span>
+              <div class="flex flex-col min-w-0">
+                <span class="font-bold leading-tight">
+                  {{ user.role === 'Lawyer' ? 'Advocate Workstation' : 'Client Dashboard' }}
+                </span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500">
+                  {{ user.role === 'Lawyer' ? 'Client briefs, inquiries & calendar' : 'Consultations, case packs & saved
+                  acts' }}
+                </span>
+              </div>
               <app-icon name="chevron-right" [size]="14"
-                class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-              </app-icon>
+                class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
             </a>
           </ng-container>
 
-          <!-- Profile -->
-          <a routerLink="/profile" routerLinkActive="active-mobile" class="mobile-main-link group" (click)="onClose()">
-            <span class="link-icon-container text-indigo-600 dark:text-indigo-400">
-              <app-icon name="user" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
+          <!-- Profile Settings -->
+          <a routerLink="/profile" routerLinkActive="active-mobile" class="mobile-main-link group stagger-3"
+            (click)="onClose()">
+            <span class="link-icon-container bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <app-icon name="user" [size]="16"></app-icon>
             </span>
-            <span class="font-bold">Profile Settings</span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Profile &amp; Credentials</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Identity, details &amp; credentials</span>
+            </div>
             <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
           </a>
 
-          <!-- Settings -->
-          <a routerLink="/settings" routerLinkActive="active-mobile" class="mobile-main-link group" (click)="onClose()">
-            <span class="link-icon-container text-slate-500 dark:text-slate-400">
-              <app-icon name="settings" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
+          <!-- Preferences & Security -->
+          <a routerLink="/settings" routerLinkActive="active-mobile" class="mobile-main-link group stagger-4"
+            (click)="onClose()">
+            <span class="link-icon-container bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">
+              <app-icon name="settings" [size]="16"></app-icon>
             </span>
-            <span class="font-bold">Preferences</span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Settings &amp; Security</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Preferences, password &amp; sessions</span>
+            </div>
             <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
           </a>
 
-          <!-- Alerts / Notifications -->
-          <a *ngIf="auth.isLoggedIn$ | async" routerLink="/notifications" routerLinkActive="active-mobile"
-            class="mobile-main-link group relative" (click)="onClose()">
-            <span class="link-icon-container text-rose-600 dark:text-rose-450">
-              <app-icon name="bell" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
+          <!-- Notifications with badge -->
+          <a routerLink="/notifications" routerLinkActive="active-mobile" class="mobile-main-link group stagger-5"
+            (click)="onClose()">
+            <span class="link-icon-container bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+              <app-icon name="bell" [size]="16"></app-icon>
             </span>
-            <span class="font-bold">Alerts & Notifications</span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Notifications</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Alerts, updates &amp; messages</span>
+            </div>
             <span *ngIf="notificationService.followedCount() as count"
-              class="ml-auto bg-rose-500 text-white text-[9px] font-extrabold px-1.5 py-0.5 rounded-full leading-none shadow-sm flex items-center justify-center animate-pulse mr-2">
+              class="ml-auto bg-gradient-to-tr from-rose-600 to-red-500 dark:from-rose-500 dark:to-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-[0_2px_6px_rgba(244,63,94,0.4)] flex items-center justify-center mr-1.5">
               {{ count }}
             </span>
             <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
           </a>
         </div>
       </div>
 
-      <div class="h-px bg-slate-100 dark:bg-slate-800/40 w-full" *ngIf="!pwaInstall.isStandalone()"></div>
+      <div class="h-px bg-slate-100 dark:bg-slate-800/60 w-full" *ngIf="(auth.isLoggedIn$ | async)"></div>
 
-      <!-- CATEGORY 5: APP UTILITIES (Visible to ALL users - Logged in & Guest) -->
-      <div class="mb-2" *ngIf="!pwaInstall.isStandalone()">
-        <p
-          class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pt-3 pb-2">
+      <!-- ==================== SECTION 2: LEGAL COUNSEL & ADVOCATES ==================== -->
+      <div class="mt-3 mb-2">
+        <p class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pb-1.5">
+          Legal Counsel &amp; Advocates
+        </p>
+
+        <div class="flex flex-col">
+          <!-- Browse All Lawyers -->
+          <a routerLink="/lawyers" routerLinkActive="active-mobile" class="mobile-main-link group stagger-3"
+            (click)="onClose()">
+            <span class="link-icon-container bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <app-icon name="users" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Find Verified Lawyers</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Search by city, court &amp; experience</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- Practice Areas / Specializations -->
+          <a routerLink="/specializations" routerLinkActive="active-mobile" class="mobile-main-link group stagger-4"
+            (click)="onClose()">
+            <span class="link-icon-container bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+              <app-icon name="compass" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Practice Areas &amp; Categories</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Criminal, Family, Property &amp;
+                Corporate</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- Verified Client Reviews -->
+          <a routerLink="/reviews" routerLinkActive="active-mobile" class="mobile-main-link group stagger-5"
+            (click)="onClose()">
+            <span class="link-icon-container bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
+              <app-icon name="star" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Verified Client Reviews</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Ratings &amp; advocate testimonials</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+        </div>
+      </div>
+
+      <div class="h-px bg-slate-100 dark:bg-slate-800/60 w-full"></div>
+
+      <!-- ==================== SECTION 3: STATUTES & LEGAL TOOLKIT ==================== -->
+      <div class="mt-3 mb-2">
+        <p class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pb-1.5">
+          Statutes &amp; Legal Toolkit
+        </p>
+
+        <div class="flex flex-col">
+          <!-- Browse Bare Acts & Statutes -->
+          <a routerLink="/laws" [class.active-mobile]="isLawsRouteActive()" class="mobile-main-link group stagger-2"
+            (click)="onClose()">
+            <span
+              class="link-icon-container bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400">
+              <app-icon name="book-open" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Browse Laws &amp; Bare Acts</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Central statutes &amp; digital penal
+                codes</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- IPC <-> BNS Mapper -->
+          <a routerLink="/laws/mapper" routerLinkActive="active-mobile" class="mobile-main-link group stagger-3"
+            (click)="onClose()">
+            <span class="link-icon-container bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <app-icon name="scale" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">IPC ↔ BNS Mapper</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Old to new law converter</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- Document Templates -->
+          <a routerLink="/laws/templates" routerLinkActive="active-mobile" class="mobile-main-link group stagger-4"
+            (click)="onClose()">
+            <span class="link-icon-container bg-violet-50 dark:bg-violet-950/40 text-violet-600 dark:text-violet-400">
+              <app-icon name="file-text" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Legal Document Templates</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">NDAs, Contracts &amp; Affidavits</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- Civil & Family Laws -->
+          <a routerLink="/laws/civil-family" routerLinkActive="active-mobile" class="mobile-main-link group stagger-5"
+            (click)="onClose()">
+            <span class="link-icon-container bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400">
+              <app-icon name="users" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Civil &amp; Family Laws</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Marriage, Property &amp; Succession</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- Legal Aid & DLSA Directory -->
+          <a routerLink="/legal-resources" routerLinkActive="active-mobile" class="mobile-main-link group stagger-6"
+            (click)="onClose()">
+            <span class="link-icon-container bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400">
+              <app-icon name="landmark" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Free Legal Aid &amp; Courts</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">DLSAs, Courts &amp; Police Stations</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+
+          <!-- Rights & Legal FAQs -->
+          <a routerLink="/laws" [queryParams]="{tab: 'faq'}" routerLinkActive="active-mobile"
+            class="mobile-main-link group stagger-7" (click)="onClose()">
+            <span class="link-icon-container bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400">
+              <app-icon name="help-circle" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Rights &amp; Citizen FAQs</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Plain-language legal guides</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
+        </div>
+      </div>
+
+      <div class="h-px bg-slate-100 dark:bg-slate-800/60 w-full"></div>
+
+      <!-- ==================== SECTION 4: APP EXPERIENCE & CONTROLS ==================== -->
+      <div class="mt-3 mb-2">
+        <p class="text-[0.68rem] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest px-5 pb-1.5">
           App Experience
         </p>
+
         <div class="flex flex-col">
-          <!-- Install LegalConnect App (PWA) -->
-          <button (click)="pwaInstall.promptInstall(); onClose()" class="mobile-main-link group"
-            appTooltip="Download & install LegalConnect to your device home screen" tooltipPlacement="top">
-            <span class="link-icon-container text-blue-600 dark:text-blue-400">
-              <app-icon name="smartphone" [size]="20"
-                class="group-hover:scale-110 group-hover:-rotate-3 transition-transform duration-200"></app-icon>
+          <!-- Install PWA (if not standalone) -->
+          <button *ngIf="!pwaInstall.isStandalone()" (click)="pwaInstall.promptInstall(); onClose()"
+            class="mobile-main-link group text-left w-full border-0 bg-transparent cursor-pointer stagger-7">
+            <span class="link-icon-container bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400">
+              <app-icon name="smartphone" [size]="16"></app-icon>
             </span>
-            <span class="font-bold text-slate-800 dark:text-slate-100">Install LegalConnect App</span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight text-slate-800 dark:text-slate-100">Install Mobile App</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Add LegalConnect to home screen</span>
+            </div>
             <span
-              class="ml-2 text-[9px] font-extrabold px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 uppercase tracking-wider">PWA</span>
+              class="ml-auto text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/20 mr-1.5">PWA</span>
             <app-icon name="chevron-right" [size]="14"
-              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200">
-            </app-icon>
+              class="text-slate-300 dark:text-slate-600 flex-shrink-0"></app-icon>
           </button>
+
+          <!-- Contact & Support -->
+          <a routerLink="/contact" routerLinkActive="active-mobile" class="mobile-main-link group stagger-8"
+            (click)="onClose()">
+            <span class="link-icon-container bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400">
+              <app-icon name="mail" [size]="16"></app-icon>
+            </span>
+            <div class="flex flex-col min-w-0">
+              <span class="font-bold leading-tight">Help &amp; Support</span>
+              <span class="text-[10px] text-slate-400 dark:text-slate-500">Contact legal desk</span>
+            </div>
+            <app-icon name="chevron-right" [size]="14"
+              class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+          </a>
         </div>
       </div>
 
     </div>
 
-    <!-- Bottom Action Buttons and Connection Info -->
-    <div class="mt-2 flex flex-col flex-shrink-0">
-      <div class="border-t border-slate-100 dark:border-slate-800/40 px-5 pt-2 pb-2">
-        <ng-container *ngIf="(auth.isLoggedIn$ | async); else guestActions">
-          <button
-            class="w-full flex items-center justify-center gap-2.5 py-3 border border-red-200 dark:border-red-950/40 text-red-600 dark:text-red-400 bg-red-50/50 dark:bg-red-950/15 hover:bg-red-100/50 dark:hover:bg-red-950/25 font-extrabold rounded-xl transition-all cursor-pointer text-sm uppercase tracking-wider active:scale-[0.98]"
-            (click)="logout()">
-            <app-icon name="log-out" [size]="16" class="text-red-600 dark:text-red-400"></app-icon>
-            <span>Sign Out</span>
-          </button>
-        </ng-container>
+    <!-- DRAWER FOOTER: Sign Out + Trust Badge -->
+    <div
+      class="mt-auto flex flex-col flex-shrink-0 pt-2 pb-4 px-4 bg-slate-50/50 dark:bg-slate-900/30 border-t border-slate-200/60 dark:border-slate-800/60">
+      <ng-container *ngIf="(auth.isLoggedIn$ | async)">
+        <button (click)="logout()"
+          class="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-red-200 dark:border-red-900/40 text-red-600 dark:text-red-400 bg-red-50/60 dark:bg-red-950/20 hover:bg-red-100/60 dark:hover:bg-red-950/40 font-extrabold text-xs transition-all cursor-pointer">
+          <app-icon name="log-out" [size]="15"></app-icon>
+          <span>Sign Out</span>
+        </button>
+      </ng-container>
 
-        <ng-template #guestActions>
-          <div class="flex flex-col gap-2.5">
-            <a routerLink="/login"
-              class="flex items-center justify-center py-3 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-900/60 font-bold rounded-2xl transition-all cursor-pointer text-sm no-underline text-center"
-              (click)="onClose()">
-              Login
-            </a>
-            <a routerLink="/register"
-              class="flex items-center justify-center py-3 border border-transparent bg-gradient-to-r from-blue-600 to-indigo-650 hover:from-blue-700 hover:to-indigo-700 text-white font-bold rounded-2xl transition-all cursor-pointer text-sm no-underline text-center shadow-[0_4px_14px_rgba(79,70,229,0.25)] active:scale-[0.98]"
-              (click)="onClose()">
-              Get Started
-            </a>
-          </div>
-        </ng-template>
-      </div>
+      <ng-container *ngIf="!(auth.isLoggedIn$ | async)">
+        <div class="flex items-center gap-2">
+          <a routerLink="/login" (click)="onClose()"
+            class="flex-1 py-2 text-center rounded-xl border border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-bold no-underline hover:bg-white dark:hover:bg-slate-800 transition-all">
+            Sign In
+          </a>
+          <a routerLink="/register" (click)="onClose()"
+            class="flex-1 py-2 text-center rounded-xl bg-gradient-to-r from-blue-600 to-indigo-650 text-white text-xs font-bold no-underline hover:brightness-110 shadow-sm transition-all">
+            Register
+          </a>
+        </div>
+      </ng-container>
 
-      <!-- Trust Footer -->
-      <div
-        class="px-5 py-3 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 bg-slate-50/30 dark:bg-slate-900/10 border-t border-slate-100 dark:border-slate-800/20">
-        <span class="font-medium">Secure Server Connection</span>
-        <span class="flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-450">
+      <!-- Trust Badge -->
+      <div class="mt-2.5 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 px-1">
+        <span class="flex items-center gap-1 font-semibold">
+          <app-icon name="shield" [size]="11" class="text-blue-600 dark:text-blue-400"></app-icon>
+          <span>Bar Council Compliant</span>
+        </span>
+        <span class="flex items-center gap-1 font-bold text-emerald-600 dark:text-emerald-400">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span>SSL Active</span>
+          <span>SSL 256-Bit</span>
         </span>
       </div>
     </div>

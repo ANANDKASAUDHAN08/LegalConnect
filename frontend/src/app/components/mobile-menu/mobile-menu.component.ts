@@ -9,13 +9,16 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 
 import { PwaInstallService } from '../../services/pwa-install.service';
 import { SystemAnnouncementService } from '../../services/system-announcement.service';
+import { LocationService } from '../../services/location.service';
 import { IconComponent } from '../icon/icon.component';
 import { LogoComponent } from '../logo/logo.component';
+
+import { MediaUrlPipe } from '../../pipes/media-url.pipe';
 
 @Component({
   selector: 'app-mobile-menu',
   standalone: true,
-  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent, LogoComponent],
+  imports: [RouterLink, RouterLinkActive, AsyncPipe, NgClass, NgIf, UpperCasePipe, TooltipDirective, IconComponent, LogoComponent, MediaUrlPipe],
   templateUrl: './mobile-menu.component.html',
   styleUrls: ['./mobile-menu.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -51,6 +54,7 @@ export class MobileMenuComponent implements OnDestroy {
   }
 
   @Output() closeMenu = new EventEmitter<void>();
+  @Output() openLocationSelector = new EventEmitter<void>();
 
   // Collapsible sub-menus for Mobile accordion view
   resourcesExpanded = false;
@@ -62,10 +66,24 @@ export class MobileMenuComponent implements OnDestroy {
     public notificationService: NotificationService,
     public pwaInstall: PwaInstallService,
     public systemAnnouncements: SystemAnnouncementService,
+    public locationService: LocationService,
     private snackbar: SnackbarService,
     public router: Router,
     private cdr: ChangeDetectorRef
   ) { }
+
+  get cleanActiveLocation(): string {
+    return this.locationService.cleanAddress(this.locationService.getCurrentLocation()) || 'India';
+  }
+
+  get isLocationEstimated(): boolean {
+    return this.locationService.isLocationEstimated();
+  }
+
+  handleChangeLocation() {
+    this.closeMenu.emit();
+    this.openLocationSelector.emit();
+  }
 
   isHomeRouteActive(): boolean {
     const url = this.router.url.split('?')[0].split('#')[0];
