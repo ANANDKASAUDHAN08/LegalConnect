@@ -5,11 +5,12 @@ import { PwaInstallService } from '../../services/pwa-install.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { NAV_DROPDOWN_DIRECTIVES } from '../../directives/nav-dropdown.directive';
 import { IconComponent } from '../icon/icon.component';
+import { MediaUrlPipe } from '../../pipes/media-url.pipe';
 
 @Component({
   selector: 'app-user-profile-menu',
   standalone: true,
-  imports: [CommonModule, RouterLink, TooltipDirective, NAV_DROPDOWN_DIRECTIVES, IconComponent],
+  imports: [CommonModule, RouterLink, TooltipDirective, NAV_DROPDOWN_DIRECTIVES, IconComponent, MediaUrlPipe],
   templateUrl: './user-profile-menu.component.html',
   styleUrls: ['./user-profile-menu.component.scss']
 })

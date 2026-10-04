@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+import { normalizeMediaUrl } from '../core/utils/url-utils';
 
 /**
  * Token Persistence Service
@@ -43,7 +44,16 @@ export class TokenStorageService {
       try {
         const cachedProfile = localStorage.getItem(TokenStorageService.USER_PROFILE_KEY);
         if (cachedProfile) {
-          this.inMemoryUser = JSON.parse(cachedProfile);
+          const parsed = JSON.parse(cachedProfile);
+          if (parsed && parsed.avatarUrl) {
+            const normalized = normalizeMediaUrl(parsed.avatarUrl);
+            if (normalized !== parsed.avatarUrl) {
+              parsed.avatarUrl = normalized;
+              // Permanently sanitize browser's persistent localStorage
+              localStorage.setItem(TokenStorageService.USER_PROFILE_KEY, JSON.stringify(parsed));
+            }
+          }
+          this.inMemoryUser = parsed;
         }
       } catch {
         // Corrupted cache — will be refreshed from server
@@ -62,7 +72,11 @@ export class TokenStorageService {
         }
         if (event.key === TokenStorageService.USER_PROFILE_KEY) {
           try {
-            this.inMemoryUser = event.newValue ? JSON.parse(event.newValue) : null;
+            const parsed = event.newValue ? JSON.parse(event.newValue) : null;
+            if (parsed && parsed.avatarUrl) {
+              parsed.avatarUrl = normalizeMediaUrl(parsed.avatarUrl);
+            }
+            this.inMemoryUser = parsed;
           } catch {
             this.inMemoryUser = null;
           }
@@ -220,7 +234,7 @@ export class TokenStorageService {
           fullName: user.fullName,
           email: user.email,
           role: user.role,
-          avatarUrl: user.avatarUrl || '',
+          avatarUrl: user.avatarUrl ? (normalizeMediaUrl(user.avatarUrl) || '') : '',
           isEmailVerified: user.isEmailVerified,
           isAuthenticated: true
         };

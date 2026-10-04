@@ -7,10 +7,21 @@
  */
 export function normalizeMediaUrl(url?: string): string | undefined {
   if (!url) return undefined;
-  if (url.startsWith('http://') || url.startsWith('https://') || url.startsWith('data:')) {
-    return url;
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+
+  let cleanUrl = url.trim();
+
+  // Strip hardcoded localhost / dev gateway ports (like http://localhost:8888, http://localhost:5001)
+  // so requests always route relatively via Angular proxy or production domain
+  if (cleanUrl.includes('/uploads/')) {
+    const uploadsIndex = cleanUrl.indexOf('/uploads/');
+    cleanUrl = cleanUrl.substring(uploadsIndex);
   }
-  return url.startsWith('/') ? url : `/${url}`;
+
+  if (cleanUrl.startsWith('http://') || cleanUrl.startsWith('https://')) {
+    return cleanUrl;
+  }
+  return cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
 }
 
 /**

@@ -654,9 +654,15 @@ namespace CoreApi.Services
 
         private async Task<string?> SaveBase64FileAsync(string? base64Data, string subfolder, string fileNamePrefix)
         {
-            if (string.IsNullOrEmpty(base64Data)) return null;
+            if (string.IsNullOrWhiteSpace(base64Data)) return null;
             if (base64Data.StartsWith("/") || base64Data.StartsWith("http") || !base64Data.Contains("base64,"))
             {
+                // Ensure internal uploads are always stored as clean relative paths, never with hardcoded hosts/ports
+                if (base64Data.Contains("/uploads/"))
+                {
+                    var uploadsIdx = base64Data.IndexOf("/uploads/", StringComparison.OrdinalIgnoreCase);
+                    return base64Data.Substring(uploadsIdx);
+                }
                 return base64Data;
             }
 
