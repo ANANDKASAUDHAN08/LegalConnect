@@ -111,11 +111,31 @@ export class CommandPaletteComponent implements OnInit, OnDestroy {
     { id: 'faqs', label: 'Platform FAQs', icon: 'help-circle' }
   ];
 
+  // Approach A: Dynamic rotating search prompts (Blinkit / Swiggy / Linear standard)
+  private readonly dynamicSearchPrompts = [
+    'Search laws, sections, advocates...',
+    "Try: 'BNS Section 103 (Murder)'",
+    "Try: 'Bail procedure under BNSS'",
+    "Try: 'Criminal Defense Lawyers in Mumbai'",
+    "Try: 'Rental Agreement Template'",
+    "Try: 'Cheque Bounce Notice Section 138'",
+    "Try: 'Free Legal Aid DLSA Delhi'",
+    "Try: 'Mutual Consent Divorce petition'"
+  ];
+  private currentPromptIndex = 0;
+  private placeholderTimer: any = null;
+
+  readonly quickPromptPills = [
+    { label: 'BNS 103 (Murder)', query: 'BNS Section 103', icon: 'scale' },
+    { label: 'Bail under BNSS', query: 'Bail procedure under BNSS', icon: 'shield' },
+    { label: 'Criminal Lawyers Mumbai', query: 'Criminal Defense Lawyers in Mumbai', icon: 'users' },
+    { label: 'Rental Agreement', query: 'Rental Agreement Template', icon: 'file-text' },
+    { label: 'Cheque Bounce 138', query: 'Cheque Bounce Notice Section 138', icon: 'alert-triangle' },
+    { label: 'DLSA Legal Aid', query: 'Free Legal Aid DLSA', icon: 'heart' }
+  ];
+
   get searchPlaceholder(): string {
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return 'Search laws, advocates, FAQs...';
-    }
-    return 'Search laws, sections, advocates, court resources, or ask a question...';
+    return this.dynamicSearchPrompts[this.currentPromptIndex];
   }
 
   get activeItemId(): string | null {
@@ -191,6 +211,10 @@ export class CommandPaletteComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    if (this.placeholderTimer) {
+      clearInterval(this.placeholderTimer);
+      this.placeholderTimer = null;
+    }
     document.body.style.overflow = '';
   }
 
@@ -200,6 +224,16 @@ export class CommandPaletteComponent implements OnInit, OnDestroy {
     this.activeScope = 'all';
     this.screenReaderAnnouncement = 'Legal search command center opened. Type to search or press Tab to cycle scopes.';
     this.cdr.markForCheck();
+
+    // Start rotating search prompts (Approach A)
+    this.currentPromptIndex = 0;
+    if (this.placeholderTimer) clearInterval(this.placeholderTimer);
+    this.placeholderTimer = setInterval(() => {
+      if (!this.query.trim()) {
+        this.currentPromptIndex = (this.currentPromptIndex + 1) % this.dynamicSearchPrompts.length;
+        this.cdr.markForCheck();
+      }
+    }, 3200);
 
     // Prevent background page scrolling
     document.body.style.overflow = 'hidden';
@@ -225,6 +259,10 @@ export class CommandPaletteComponent implements OnInit, OnDestroy {
   }
 
   private handleClose(): void {
+    if (this.placeholderTimer) {
+      clearInterval(this.placeholderTimer);
+      this.placeholderTimer = null;
+    }
     if (this.isVoiceListening) {
       this.speechService.stopVoiceSearch();
     }
