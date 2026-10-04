@@ -94,6 +94,7 @@ export interface LawyerProfileData {
   timeSlotsJson?: string;
   socialLinksJson?: string;
   bannerUrl?: string;
+  avatarUrl?: string;
   updatedAt?: string;
 }
 
@@ -251,12 +252,21 @@ export class LawyerService {
         if (profile?.bannerUrl) {
           profile.bannerUrl = normalizeMediaUrl(profile.bannerUrl);
         }
+        if (profile?.avatarUrl) {
+          profile.avatarUrl = normalizeMediaUrl(profile.avatarUrl);
+        }
         return profile;
       })
     );
   }
 
   updateProfile(data: any): Observable<any> {
+    if (data?.avatarUrl) {
+      data.avatarUrl = normalizeMediaUrl(data.avatarUrl);
+    }
+    if (data?.bannerUrl) {
+      data.bannerUrl = normalizeMediaUrl(data.bannerUrl);
+    }
     return this.http.put<any>(`${this.lawyerApiUrl}/profile`, data, { withCredentials: true });
   }
 

@@ -5,6 +5,7 @@ import { NotificationService, FollowedAct } from '../../services/notification.se
 import { SystemAnnouncementService, SystemAnnouncement } from '../../services/system-announcement.service';
 import { SnackbarService } from '../../services/snackbar.service';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { replaceEmojisWithSvg } from '../../utils/emoji-to-svg.util';
 
@@ -24,8 +25,10 @@ export class NotificationsComponent implements OnInit {
   activeTab: 'all' | 'system' | 'laws' = 'all';
   followedActs: FollowedAct[] = [];
 
-  replaceEmojis(text: string): string {
-    return replaceEmojisWithSvg(text);
+  private sanitizer = inject(DomSanitizer);
+
+  replaceEmojis(text: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(replaceEmojisWithSvg(text));
   }
 
   systemAnnouncementService = inject(SystemAnnouncementService);
