@@ -131,9 +131,20 @@ export class SettingsService {
 
     if (isDark) {
       document.documentElement.classList.add('dark');
+      document.documentElement.style.colorScheme = 'dark';
     } else {
       document.documentElement.classList.remove('dark');
+      document.documentElement.style.colorScheme = 'light';
     }
+
+    // Dynamic browser & mobile navigation chin theming
+    if (typeof document !== 'undefined') {
+      const metaThemeColors = document.querySelectorAll('meta[name="theme-color"]');
+      metaThemeColors.forEach(meta => {
+        meta.setAttribute('content', isDark ? '#080d17' : '#f8fafc');
+      });
+    }
+
     localStorage.setItem('lc_theme', activeTheme);
     // Sync with legacy theme key if needed
     localStorage.setItem('theme', isDark ? 'dark' : 'light');

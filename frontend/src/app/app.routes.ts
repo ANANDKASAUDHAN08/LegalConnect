@@ -134,6 +134,16 @@ export const routes: Routes = [
     title: 'Legal Practice Specializations | LegalConnect'
   },
   {
+    path: 'practice-areas',
+    redirectTo: 'specializations',
+    pathMatch: 'full'
+  },
+  {
+    path: 'rights',
+    loadComponent: () => import('./pages/rights/rights.component').then(m => m.RightsComponent),
+    title: 'Citizen Rights & Statutory Safeguards | LegalConnect'
+  },
+  {
     path: 'about',
     loadComponent: () => import('./pages/info/info-page.component').then(m => m.InfoPageComponent),
     title: 'About Us | LegalConnect'
