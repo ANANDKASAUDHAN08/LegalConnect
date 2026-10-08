@@ -133,6 +133,7 @@ export type IconName =
   | 'more-vertical'
   | 'code'
   | 'rocket'
+  | 'activity'
   | 'tools';
 
 export interface IconDefinition {

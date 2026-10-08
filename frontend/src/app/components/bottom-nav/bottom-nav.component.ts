@@ -101,23 +101,36 @@ export class BottomNavComponent implements OnInit, OnDestroy {
       const shouldShow = direction === 'up' || this.showSosOverlay;
       if (this.showNav !== shouldShow) {
         this.showNav = shouldShow;
+        this.updateBodyNavClass();
         this.cdr.markForCheck();
       }
     });
+
+    this.updateBodyNavClass();
   }
 
   ngOnDestroy(): void {
     if (this.routerSub) this.routerSub.unsubscribe();
     if (this.authSub) this.authSub.unsubscribe();
     if (this.scrollSub) this.scrollSub.unsubscribe();
+    if (typeof document !== 'undefined') {
+      document.body.classList.remove('has-bottom-nav-visible');
+    }
   }
 
   @HostListener('window:resize')
   onResize(): void {
     if (typeof window !== 'undefined') {
       this.isKeyboardVisible = window.innerHeight < this.initialHeight - 150;
+      this.updateBodyNavClass();
       this.cdr.markForCheck();
     }
+  }
+
+  private updateBodyNavClass(): void {
+    if (typeof document === 'undefined') return;
+    const isVisible = this.showNav && !this.isKeyboardVisible;
+    document.body.classList.toggle('has-bottom-nav-visible', isVisible);
   }
 
   // Keyboard shortcut: Escape to dismiss SOS Console
