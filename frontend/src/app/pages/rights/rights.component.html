@@ -1,0 +1,375 @@
+<div
+  class="page-wrapper min-h-screen pt-[90px] sm:pt-[105px] pb-24 bg-slate-50 dark:bg-[#090b14] text-slate-900 dark:text-white transition-colors duration-300">
+  <div class="container max-w-[1100px] mx-auto px-4 sm:px-6">
+
+    <!-- ==================== HEADER SECTION ==================== -->
+    <header class="mb-7 pb-5 border-b border-slate-200/70 dark:border-slate-800/70">
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <div class="flex items-center gap-2 mb-1.5">
+            <span
+              class="px-2 py-0.5 text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md border border-blue-500/20 uppercase tracking-widest">
+              Verified Legal Framework
+            </span>
+            <span
+              class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-500/20 uppercase tracking-wider">
+              Statutory 2026 Acts
+            </span>
+          </div>
+          <h1 class="font-serif text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
+            Citizen Rights &amp; Statutory Safeguards
+          </h1>
+          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl leading-normal">
+            Authoritative, plain-English legal rights guaranteed under the Constitution of India, criminal procedural codes (BNSS 2023), consumer protection laws, and data privacy statutes.
+          </p>
+        </div>
+
+        <!-- Top Right Actions -->
+        <div class="flex items-center gap-2 self-start md:self-end shrink-0">
+          <!-- Mobile Filter Button -->
+          <button (click)="openMobileFilter()"
+            class="md:hidden px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer">
+            <app-icon name="filter" [size]="14"></app-icon>
+            <span>Categories</span>
+          </button>
+
+          <!-- Bookmarked Quick Filter -->
+          <button (click)="toggleBookmarksOnly()"
+            [appTooltip]="showOnlyBookmarked() ? 'View all rights' : 'View only your saved rights'"
+            tooltipPlacement="top"
+            [class]="showOnlyBookmarked() ? 'bg-amber-500 text-slate-950 font-bold border-amber-500' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300'"
+            class="px-3 py-2 border rounded-xl text-xs font-semibold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <app-icon [name]="showOnlyBookmarked() ? 'bookmark-filled' : 'bookmark'" [size]="14"></app-icon>
+            <span>Saved ({{ rightsService.bookmarkedIds().length }})</span>
+          </button>
+
+          <!-- Print Guide Button -->
+          <button (click)="printGuide()"
+            appTooltip="Print or save as citizen legal rights dossier (PDF)" tooltipPlacement="top"
+            class="px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+            <app-icon name="printer" [size]="14"></app-icon>
+            <span class="hidden sm:inline">Print Guide</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== SEARCH & CATEGORY CHIPS ==================== -->
+    <div class="space-y-3.5 mb-7">
+      <!-- Search Input -->
+      <div class="relative w-full max-w-[560px]">
+        <input type="text" [value]="searchQuery()" (input)="onSearchChange($event)"
+          placeholder="Search citizen rights, arrest rules, tenant protection, DPDP privacy, refunds..."
+          class="w-full pl-10 pr-9 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm outline-none focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 shadow-xs placeholder-slate-400 transition-colors" />
+        <app-icon name="search" [size]="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></app-icon>
+        <button *ngIf="searchQuery()" (click)="clearSearch()" appTooltip="Clear search" tooltipPlacement="top"
+          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-1 flex items-center justify-center">
+          <app-icon name="x" [size]="14"></app-icon>
+        </button>
+      </div>
+
+      <!-- Categories Filter Chips Bar -->
+      <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
+        <button *ngFor="let cat of rightsService.categories()" (click)="setCategory(cat.name)"
+          [appTooltip]="cat.name === 'All' ? 'View all citizen rights' : 'Filter by ' + cat.name" tooltipPlacement="top"
+          [class]="selectedCategory() === cat.name && !showOnlyBookmarked() ? 'bg-blue-600 text-white font-bold shadow-xs' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+          class="px-3.5 py-1.5 border border-transparent rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5">
+          <span>{{ cat.name }}</span>
+          <span class="px-1.5 py-0.2 text-[10px] rounded-full font-bold"
+            [ngClass]="selectedCategory() === cat.name && !showOnlyBookmarked() ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+            {{ cat.count }}
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ==================== SKELETON LOADER ==================== -->
+    <div *ngIf="rightsService.isLoading()" class="space-y-4 animate-pulse">
+      <div *ngFor="let i of [1,2,3,4]"
+        class="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl space-y-3 shadow-xs">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-2xl bg-slate-200 dark:bg-slate-800"></div>
+            <div class="space-y-1.5">
+              <div class="h-3 w-28 bg-slate-200 dark:bg-slate-800 rounded"></div>
+              <div class="h-5 w-56 bg-slate-200 dark:bg-slate-800 rounded"></div>
+            </div>
+          </div>
+          <div class="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div>
+        </div>
+        <div class="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded"></div>
+        <div class="h-3.5 w-4/5 bg-slate-200 dark:bg-slate-800 rounded"></div>
+      </div>
+    </div>
+
+    <!-- ==================== MAIN RIGHTS LIST ==================== -->
+    <div *ngIf="!rightsService.isLoading()" class="space-y-5">
+
+      <!-- EMPTY STATE -->
+      <div *ngIf="filteredRights().length === 0"
+        class="p-12 sm:p-16 rounded-3xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+        <div class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-1">
+          <app-icon name="shield" [size]="32"></app-icon>
+        </div>
+        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+          {{ showOnlyBookmarked() ? 'No saved rights yet' : 'No citizen rights found' }}
+        </h2>
+        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          {{ showOnlyBookmarked() ? 'Click the bookmark icon on any legal right to save it for quick offline reference.' : 'No statutory protections match your search. Try resetting filters or browsing other categories.' }}
+        </p>
+        <button (click)="clearSearch(); setCategory('All'); showOnlyBookmarked.set(false)"
+          class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer border-0">
+          Reset All Filters
+        </button>
+      </div>
+
+      <!-- RIGHTS ACCORDION CARDS -->
+      <div *ngFor="let right of filteredRights()" [id]="right.id"
+        class="bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 rounded-3xl shadow-xs transition-all overflow-hidden animate-[fadeIn_0.25s_ease-out]">
+
+        <!-- CARD HEADER / SUMMARY ROW -->
+        <div class="p-5 sm:p-6 cursor-pointer select-none" (click)="toggleAccordion(right.id)">
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+
+            <!-- Left: Icon & Text -->
+            <div class="flex items-start gap-3.5 flex-1 min-w-0">
+              <div
+                class="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0 shadow-xs">
+                <app-icon [name]="right.icon" [size]="22"></app-icon>
+              </div>
+
+              <div class="space-y-1.5 min-w-0 flex-1">
+                <!-- Meta tags -->
+                <div class="flex items-center gap-2 flex-wrap text-[10px]">
+                  <span class="px-2 py-0.5 rounded-md font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
+                    {{ right.category }}
+                  </span>
+                  <span class="text-slate-400 font-semibold">• {{ right.statutoryBasis.shortAct }}</span>
+                  <span *ngIf="right.isPopular"
+                    class="px-1.5 py-0.2 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold uppercase rounded border border-amber-500/20">
+                    High Importance
+                  </span>
+                </div>
+
+                <!-- Title -->
+                <h3 class="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                  {{ right.title }}
+                </h3>
+
+                <!-- Summary -->
+                <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
+                  {{ right.summary }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Right: Actions & Expand Chevron -->
+            <div class="flex items-center gap-1 self-end sm:self-start shrink-0 pt-2 sm:pt-0"
+              (click)="$event.stopPropagation()">
+              <!-- Bookmark Button -->
+              <button (click)="toggleBookmark(right, $event)"
+                [appTooltip]="isBookmarked(right.id) ? 'Remove from saved rights' : 'Save right for offline reference'"
+                tooltipPlacement="top"
+                [class]="isBookmarked(right.id) ? 'text-amber-500 bg-amber-50 dark:bg-amber-950/30' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent'"
+                class="p-2 rounded-xl transition cursor-pointer border-0 flex items-center justify-center">
+                <app-icon [name]="isBookmarked(right.id) ? 'bookmark-filled' : 'bookmark'" [size]="16"></app-icon>
+              </button>
+
+              <!-- Share Button -->
+              <button (click)="shareRight(right, $event)"
+                appTooltip="Share or copy legal reference link" tooltipPlacement="top"
+                class="p-2 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition cursor-pointer bg-transparent border-0 flex items-center justify-center">
+                <app-icon name="share" [size]="16"></app-icon>
+              </button>
+
+              <!-- Expand/Collapse Chevron -->
+              <button (click)="toggleAccordion(right.id)"
+                [appTooltip]="expandedRightId() === right.id ? 'Collapse full details' : 'Expand full legal protections & remedies'"
+                tooltipPlacement="top"
+                class="px-2.5 py-1.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold transition flex items-center gap-1 cursor-pointer border border-slate-200 dark:border-slate-700">
+                <span>{{ expandedRightId() === right.id ? 'Less' : 'Details' }}</span>
+                <app-icon [name]="expandedRightId() === right.id ? 'chevron-up' : 'chevron-down'" [size]="14"></app-icon>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ==================== EXPANDED COMPREHENSIVE DETAILS ==================== -->
+        <div *ngIf="expandedRightId() === right.id"
+          class="border-t border-slate-200/70 dark:border-slate-800/70 bg-slate-50/60 dark:bg-slate-950/40 p-5 sm:p-7 space-y-6 animate-[fadeIn_0.2s_ease-out]">
+
+          <!-- 1. Statutory Legal Authority Citations -->
+          <div class="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div class="space-y-1">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                Statutory Authority &amp; Applicable Law
+              </span>
+              <h4 class="font-serif text-sm font-bold text-slate-900 dark:text-white">
+                {{ right.statutoryBasis.actName }}
+              </h4>
+              <div class="flex flex-wrap gap-1.5 pt-0.5">
+                <span *ngFor="let sec of right.statutoryBasis.sections"
+                  class="px-2 py-0.5 rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-[10px] border border-blue-500/20">
+                  {{ sec }}
+                </span>
+              </div>
+            </div>
+
+            <a [routerLink]="right.statutoryBasis.actUrl"
+              class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold transition no-underline self-start sm:self-center shrink-0">
+              <app-icon name="book-open" [size]="13"></app-icon>
+              <span>Read Full Bare Act</span>
+            </a>
+          </div>
+
+          <!-- 2. Key Protections & Action Steps (2-Column Grid) -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Key Protections -->
+            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 space-y-3 shadow-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                  <app-icon name="shield-check" [size]="14"></app-icon>
+                </div>
+                <h4 class="font-serif text-sm font-bold text-slate-900 dark:text-white">
+                  Key Statutory Protections
+                </h4>
+              </div>
+
+              <ul class="space-y-2 list-none p-0 m-0">
+                <li *ngFor="let item of right.keyProtections" class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex items-start gap-2">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0"></span>
+                  <span>{{ item }}</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Action Steps -->
+            <div class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 space-y-3 shadow-xs">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                  <app-icon name="zap" [size]="14"></app-icon>
+                </div>
+                <h4 class="font-serif text-sm font-bold text-slate-900 dark:text-white">
+                  Actionable Steps if Violated
+                </h4>
+              </div>
+
+              <ol class="space-y-2 list-none p-0 m-0">
+                <li *ngFor="let step of right.actionableSteps; let idx = index" class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed flex items-start gap-2">
+                  <span class="w-4 h-4 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                    {{ idx + 1 }}
+                  </span>
+                  <span>{{ step }}</span>
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <!-- 3. Legal Remedy & Emergency Helpline Row -->
+          <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+            <!-- Legal Remedy & Forum -->
+            <div class="md:col-span-7 p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 space-y-2 shadow-xs">
+              <span class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+                Statutory Redressal Forum &amp; Legal Remedy
+              </span>
+              <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                {{ right.legalRemedy }}
+              </p>
+              <div *ngIf="right.penaltiesForViolation" class="pt-2 text-xs text-rose-600 dark:text-rose-400 font-medium">
+                <strong>Statutory Penalties:</strong> {{ right.penaltiesForViolation }}
+              </div>
+            </div>
+
+            <!-- Emergency Helpline Call Box -->
+            <div *ngIf="right.emergencyHelpline"
+              class="md:col-span-5 p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/20 border border-indigo-200/60 dark:border-indigo-800/60 flex flex-col justify-between gap-3 shadow-xs">
+              <div>
+                <span class="text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400 block">
+                  Official Statutory Helpline
+                </span>
+                <h5 class="text-sm font-bold text-slate-900 dark:text-white mt-0.5">
+                  {{ right.emergencyHelpline.name }}
+                </h5>
+                <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-normal">
+                  {{ right.emergencyHelpline.description }}
+                </p>
+              </div>
+
+              <a [href]="'tel:' + right.emergencyHelpline.number"
+                class="inline-flex items-center justify-center gap-2 w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-xs transition no-underline">
+                <app-icon name="phone" [size]="13"></app-icon>
+                <span>Call {{ right.emergencyHelpline.number }}</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- 4. FAQs if present -->
+          <div *ngIf="right.frequentlyAskedQuestions?.length" class="space-y-3">
+            <h4 class="font-serif text-sm font-bold text-slate-900 dark:text-white">
+              Common Statutory Questions
+            </h4>
+            <div *ngFor="let faq of right.frequentlyAskedQuestions"
+              class="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/70 dark:border-slate-800/70 space-y-1 text-xs">
+              <span class="font-bold text-slate-900 dark:text-white block">Q: {{ faq.question }}</span>
+              <p class="text-slate-600 dark:text-slate-400 leading-relaxed font-normal m-0">A: {{ faq.answer }}</p>
+            </div>
+          </div>
+
+          <!-- 5. Bottom Call to Action: Consult Advocate -->
+          <div class="pt-3 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <span class="text-xs text-slate-500">
+              Verified legal reference as of {{ formatDate(right.verifiedDate) }}.
+            </span>
+
+            <button (click)="findAdvocatesForRight(right.category)"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer border-0 self-start sm:self-auto">
+              <span>Find {{ right.category }} Advocates</span>
+              <app-icon name="arrow-right" [size]="12"></app-icon>
+            </button>
+          </div>
+
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== MOBILE FILTER BOTTOM SHEET ==================== -->
+<div *ngIf="isMobileFilterOpen()"
+  class="fixed inset-0 z-[2100] flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out] drawer-backdrop"
+  role="dialog" aria-modal="true" aria-label="Filter Citizen Rights">
+  <div
+    class="drawer-sheet w-full max-w-[500px] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] space-y-5 max-h-[85vh] overflow-y-auto">
+
+    <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
+      <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">
+        Filter Citizen Rights
+      </h3>
+      <button (click)="closeMobileFilter()"
+        class="text-slate-400 hover:text-slate-600 p-1 bg-transparent border-0 cursor-pointer">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <div class="space-y-1.5">
+      <button *ngFor="let cat of rightsService.categories()"
+        (click)="setCategory(cat.name); closeMobileFilter()"
+        [class]="selectedCategory() === cat.name ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold border-blue-500/50' : 'bg-transparent text-slate-700 dark:text-slate-300 border-transparent'"
+        class="w-full px-3 py-2 text-xs rounded-xl transition cursor-pointer border flex items-center justify-between text-left">
+        <span>{{ cat.name }}</span>
+        <span class="text-[10px] text-slate-400">{{ cat.count }} items</span>
+      </button>
+    </div>
+
+    <div class="pt-2">
+      <button (click)="closeMobileFilter()"
+        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer border-0">
+        Close
+      </button>
+    </div>
+
+  </div>
+</div>

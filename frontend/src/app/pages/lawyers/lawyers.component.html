@@ -635,7 +635,7 @@
   </div>
 
   <!-- MOBILE FILTER BOTTOM FLOATING BUTTON -->
-  <div class="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40">
+  <div class="md:hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-40 mobile-filter-fab">
     <button (click)="toggleMobileFilters()"
       class="bg-slate-900 dark:bg-slate-800 hover:bg-slate-950 dark:hover:bg-slate-700 text-white font-bold text-xs px-6 py-3.5 rounded-full flex items-center gap-2 shadow-2xl border border-slate-800 dark:border-slate-700 active:scale-95 transition-all">
       <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -651,13 +651,15 @@
   </div>
 
   <!-- MOBILE FILTER DRAWERS BOTTOM SHEET — Premium Redesign -->
-  <div *ngIf="showMobileFilters" class="fixed inset-0 z-50 md:hidden flex flex-col justify-end">
+  <div *ngIf="showMobileFilters" class="fixed inset-0 z-[2100] md:hidden flex flex-col justify-end" role="dialog"
+    aria-modal="true" aria-label="Filter & Sort Lawyers">
     <!-- Backdrop -->
-    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" (click)="toggleMobileFilters()"></div>
+    <div class="absolute inset-0 bg-black/60 backdrop-blur-sm drawer-backdrop" (click)="toggleMobileFilters()"
+      role="presentation"></div>
 
     <!-- Drawer Sheet -->
     <div
-      class="relative w-full max-h-[85vh] bg-white dark:bg-slate-950 rounded-t-[32px] px-6 py-3 shadow-2xl z-10 flex flex-col overflow-hidden animate-[slideUp_0.25s_ease-out] border-t border-slate-100 dark:border-slate-800/60">
+      class="drawer-sheet relative w-full max-h-[85vh] bg-white dark:bg-slate-950 rounded-t-[32px] px-6 py-3 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] shadow-2xl z-10 flex flex-col overflow-hidden animate-[slideUp_0.25s_ease-out] border-t border-slate-100 dark:border-slate-800/60">
       <!-- Pull Bar -->
       <div class="w-12 h-1 bg-slate-200 dark:bg-slate-800 rounded-full mx-auto mb-3 shrink-0"></div>
 

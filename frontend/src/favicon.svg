@@ -1,25 +1,40 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
   <defs>
-    <linearGradient id="scalesGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#60a5fa" />
-      <stop offset="50%" stop-color="#3b82f6" />
-      <stop offset="100%" stop-color="#6366f1" />
+    <!-- Canonical LegalConnect Gradient -->
+    <linearGradient id="lcBrandGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#4f46e5" />
     </linearGradient>
-    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="1" stdDeviation="1" flood-color="#1d4ed8" flood-opacity="0.35"/>
+
+    <!-- Top Specular Highlight for MNC Glassmorphic Sheen -->
+    <linearGradient id="lcHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.32" />
+      <stop offset="40%" stop-color="#ffffff" stop-opacity="0.08" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Subtle Drop Shadow for Scales Motif -->
+    <filter id="lcEmblemGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="1.2" stdDeviation="1.2" flood-color="#0f172a" flood-opacity="0.35"/>
     </filter>
   </defs>
-  <!-- Floating Scales of Justice (Transparent Background - MNC Standard) -->
-  <g fill="none" stroke="url(#scalesGrad)" stroke-linecap="round" stroke-linejoin="round" filter="url(#glow)">
-    <!-- Central Upright Pillar and Base -->
-    <path d="M16 4v22M9.5 26h13" stroke-width="2.6" />
+
+  <!-- Premium MNC Squircle Badge (Continuous Curve Corner Radius) -->
+  <rect x="1" y="1" width="30" height="30" rx="7.5" ry="7.5" fill="url(#lcBrandGrad)" />
+  <!-- Inner Highlight Border -->
+  <rect x="1.5" y="1.5" width="29" height="29" rx="7" ry="7" fill="none" stroke="url(#lcHighlight)" stroke-width="1" />
+
+  <!-- Canonical Global LegalConnect Scales of Justice Mark (Centered with Safe Padding) -->
+  <g transform="translate(4.6, 4.6) scale(0.95)" filter="url(#lcEmblemGlow)">
+    <!-- Central Upright Pillar and Stand Base -->
+    <path d="M12 3.2v16.6M8 19.8h8" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
     <!-- Horizontal Crossbar -->
-    <path d="M4.5 10.5h23" stroke-width="2.6" />
+    <path d="M4 8.2h16" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
     <!-- Left Scale Pan -->
-    <path d="M6 10.5l-3.5 8c0 2.5 7 2.5 7 0L6 10.5z" stroke-width="2" fill="url(#scalesGrad)" fill-opacity="0.2" />
+    <path d="M5 8.2l-2.5 5.5c0 2 5 2 5 0L5 8.2z" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="#ffffff" fill-opacity="0.28" />
     <!-- Right Scale Pan -->
-    <path d="M26 10.5l-3.5 8c0 2.5 7 2.5 7 0L26 10.5z" stroke-width="2" fill="url(#scalesGrad)" fill-opacity="0.2" />
+    <path d="M19 8.2l-2.5 5.5c0 2 5 2 5 0L19 8.2z" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="#ffffff" fill-opacity="0.28" />
     <!-- Central Pivot Fulcrum Node -->
-    <circle cx="16" cy="13.5" r="3" fill="url(#scalesGrad)" stroke="none" />
+    <circle cx="12" cy="10.6" r="2.2" fill="#ffffff" />
   </g>
 </svg>

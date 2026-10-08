@@ -682,17 +682,18 @@
   </div>
 
   <!-- FLOATING BACK TO TOP BUTTON -->
-  <button *ngIf="showBackToTop" (click)="scrollToTop()" appTooltip="Scroll back to top of policy"
+  <!-- <button *ngIf="showBackToTop" (click)="scrollToTop()" appTooltip="Scroll back to top of policy"
     class="fixed bottom-[72px] sm:bottom-6 right-5 sm:right-6 z-40 p-3.5 sm:p-3 rounded-full bg-blue-600 dark:bg-amber-500 text-white dark:text-slate-950 shadow-lg border-0 cursor-pointer hover:scale-110 active:scale-95 transition-all duration-200 flex items-center justify-center print:hidden lg:bottom-6">
     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
       <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18" />
     </svg>
-  </button>
+  </button> -->
 
   <!-- ==================== MOBILE FLOATING ACTION PILL + BOTTOM DRAWER ==================== -->
   <!-- Floating Action Pill (Mobile only) -->
   <button *ngIf="currentWidget" (click)="toggleDrawer()"
     class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 lg:hidden flex items-center gap-2 px-5 py-2.5 rounded-full shadow-xl border cursor-pointer active:scale-95 transition-all duration-300 print:hidden drawer-fab whitespace-nowrap"
+    [class.hidden]="isDrawerOpen"
     [ngClass]="isDrawerOpen
       ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 border-slate-700 dark:border-slate-300 shadow-slate-900/30'
       : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/80 shadow-slate-900/10 dark:shadow-black/30'">
@@ -708,15 +709,17 @@
 
   <!-- Backdrop Overlay -->
   <div *ngIf="isDrawerOpen" (click)="closeDrawer()"
-    class="fixed inset-0 z-[55] bg-black/50 backdrop-blur-sm lg:hidden print:hidden drawer-backdrop">
+    class="fixed inset-0 z-[2100] bg-black/60 backdrop-blur-sm lg:hidden print:hidden drawer-backdrop"
+    role="presentation">
   </div>
 
   <!-- Bottom Drawer Sheet -->
   <div *ngIf="currentWidget"
-    class="fixed bottom-0 left-0 right-0 z-[60] lg:hidden print:hidden transition-transform duration-300 ease-out"
-    [ngClass]="isDrawerOpen ? 'translate-y-0' : 'translate-y-full'">
+    class="fixed bottom-0 left-0 right-0 z-[2110] lg:hidden print:hidden transition-transform duration-300 ease-out drawer-sheet"
+    [ngClass]="isDrawerOpen ? 'translate-y-0' : 'translate-y-full'" role="dialog" [attr.aria-modal]="isDrawerOpen"
+    [attr.aria-label]="currentWidget.title">
     <div
-      class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl shadow-2xl max-h-[70vh] overflow-y-auto">
+      class="bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 rounded-t-3xl shadow-2xl max-h-[75vh] overflow-y-auto pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))]">
 
       <!-- Drag Handle -->
       <div class="flex justify-center pt-3 pb-1">

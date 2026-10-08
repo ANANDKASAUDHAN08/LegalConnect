@@ -1,0 +1,86 @@
+<!-- Standard Notification Feed Skeleton -->
+<div *ngIf="activeTab !== 'statutes'" class="space-y-6 animate-pulse" aria-hidden="true" role="status">
+  <span class="sr-only">Loading notifications...</span>
+
+  <!-- Date group separator placeholder -->
+  <div class="flex items-center gap-3 px-1">
+    <div class="h-3 w-16 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+    <div class="flex-1 h-px bg-slate-200/80 dark:bg-slate-800/80"></div>
+  </div>
+
+  <!-- Cards list -->
+  <div class="space-y-3">
+    <div *ngFor="let _ of countArray"
+      class="p-4 sm:p-5 rounded-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-xs flex flex-col sm:flex-row sm:items-start justify-between gap-4 relative overflow-hidden">
+      <!-- Left Content Block -->
+      <div class="flex items-start gap-3.5 flex-1 min-w-0">
+        <!-- Checkbox placeholder -->
+        <div class="w-4 h-4 rounded mt-1 shimmer bg-slate-200/80 dark:bg-slate-800/80 shrink-0"></div>
+
+        <!-- 40px Icon badge placeholder -->
+        <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl shimmer bg-slate-200/80 dark:bg-slate-800/80 shrink-0"></div>
+
+        <!-- Text details -->
+        <div class="space-y-2.5 flex-1 min-w-0">
+          <!-- Meta row -->
+          <div class="flex items-center gap-2 flex-wrap">
+            <div class="h-4 w-24 rounded-md shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+            <div class="h-4 w-14 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+            <div class="h-3 w-16 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+          </div>
+
+          <!-- Title placeholder -->
+          <div class="h-5 w-3/4 sm:w-1/2 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+
+          <!-- Summary multi-line placeholder -->
+          <div class="space-y-1.5 pt-0.5">
+            <div class="h-3.5 w-full rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+            <div class="h-3.5 w-4/5 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+          </div>
+
+          <!-- Deep-link action button placeholder -->
+          <div class="pt-1.5 flex items-center gap-3">
+            <div class="h-4 w-28 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+            <div class="h-3.5 w-12 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right action buttons placeholder -->
+      <div class="flex items-center gap-1.5 self-end sm:self-start shrink-0 pt-2 sm:pt-0">
+        <div class="h-7 w-16 rounded-lg shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+        <div class="h-7 w-7 rounded-lg shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Monitored Statutes Grid Skeleton -->
+<div *ngIf="activeTab === 'statutes'" class="space-y-5 animate-pulse" aria-hidden="true" role="status">
+  <span class="sr-only">Loading monitored statutes...</span>
+
+  <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+    <div class="space-y-1.5">
+      <div class="h-4 w-56 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+      <div class="h-3 w-80 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+    </div>
+    <div class="h-4 w-20 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+  </div>
+
+  <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+    <div *ngFor="let _ of countArray"
+      class="p-4 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 rounded-2xl flex items-center justify-between shadow-xs relative overflow-hidden">
+      <div class="flex items-center gap-3 min-w-0 flex-1">
+        <div class="w-9 h-9 rounded-xl shimmer bg-slate-200/80 dark:bg-slate-800/80 shrink-0"></div>
+        <div class="space-y-1.5 flex-1 min-w-0">
+          <div class="h-4 w-3/4 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+          <div class="h-3 w-1/2 rounded shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5 shrink-0">
+        <div class="h-7 w-14 rounded-xl shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+        <div class="h-7 w-7 rounded-lg shimmer bg-slate-200/80 dark:bg-slate-800/80"></div>
+      </div>
+    </div>
+  </div>
+</div>

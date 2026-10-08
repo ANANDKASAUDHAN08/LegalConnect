@@ -1,245 +1,1947 @@
 <div
-  class="page-wrapper min-h-screen pt-[100px] pb-24 bg-slate-50 dark:bg-[#090b14] text-slate-900 dark:text-white transition-colors duration-300">
-  <div class="container max-w-[900px] mx-auto px-6">
+  class="page-wrapper min-h-screen pt-[80px] sm:pt-[96px] pb-12 bg-slate-50 dark:bg-[#070913] text-slate-900 dark:text-white transition-colors duration-300 relative overflow-x-clip">
 
-    <!-- Title Header -->
-    <header
-      class="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-slate-200/60 dark:border-slate-800/60 pb-4">
-      <div>
-        <div class="flex items-center gap-2 mb-1.5">
-          <span
-            class="px-2 py-0.5 text-[9px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md border border-blue-500/20 uppercase tracking-widest">
-            Inbox Hub
-          </span>
-        </div>
-        <h1 class="font-serif text-[2rem] sm:text-[2.5rem] font-bold text-slate-900 dark:text-white leading-tight">
-          Notifications & Updates
-        </h1>
-        <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 leading-normal">
-          Monitor legislative changes, Bare Act amendments, platform releases, and security updates.
-        </p>
-      </div>
+  <!-- ==================== AMBIENT AURORA LIGHTING CANVAS ==================== -->
+  <div class="ambient-glow-wrapper" aria-hidden="true">
+    <div class="aurora-orb aurora-orb-1"></div>
+    <div class="aurora-orb aurora-orb-2"></div>
+    <div class="aurora-orb aurora-orb-3"></div>
+  </div>
 
-      <!-- Tab Filters -->
-      <div
-        class="flex items-center p-1 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl self-start sm:self-auto shrink-0">
-        <button (click)="setTab('all')" appTooltip="View both system and followed laws alerts"
-          [class]="activeTab === 'all' ? 'bg-white dark:bg-slate-800 text-slate-950 dark:text-white shadow-xs font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold'"
-          class="px-3.5 py-1.5 text-xs rounded-lg transition-all cursor-pointer border-0">
-          All
-        </button>
+  <!-- Desktop 90% wide container & Mobile fluid layout -->
+  <div class="w-full lg:w-[92%] xl:w-[90%] 2xl:max-w-[1720px] mx-auto px-3 sm:px-6 relative z-10">
 
-        <button (click)="setTab('system')" appTooltip="View system updates & releases"
-          [class]="activeTab === 'system' ? 'bg-white dark:bg-slate-800 text-slate-950 dark:text-white shadow-xs font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold'"
-          class="px-3.5 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border-0">
-          Releases
-          <span *ngIf="systemAnnouncementService.unreadCount() as unread"
-            class="px-1.5 py-0.2 text-[9px] bg-blue-600 dark:bg-amber-500 text-white dark:text-slate-950 rounded-full font-black">
-            {{ unread }}
-          </span>
-        </button>
+    <!-- ==================== HEADER BAR ==================== -->
+    <header class="mb-3 relative">
 
-        <button (click)="setTab('laws')" appTooltip="View followed Bare Act amendments"
-          [class]="activeTab === 'laws' ? 'bg-white dark:bg-slate-800 text-slate-950 dark:text-white shadow-xs font-bold' : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 font-semibold'"
-          class="px-3.5 py-1.5 text-xs rounded-lg transition-all flex items-center gap-1.5 cursor-pointer border-0">
-          Statutes ({{ followedActs.length }})
-        </button>
-      </div>
-    </header>
+      <!-- DESKTOP / TABLET HEADER (sm:flex) -->
+      <div class="hidden sm:flex sm:items-center justify-between gap-4">
+        <div>
+          <!-- Tag & Status Badges -->
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <span
+              class="px-2.5 py-0.5 text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-lg border border-blue-500/20 uppercase tracking-widest shadow-2xs">
+              Legal Intelligence Hub
+            </span>
 
-    <!-- SKELETON LOADER — shown while isLoading() is true -->
-    <div *ngIf="isLoading()" class="space-y-6 animate-pulse">
-      <div *ngFor="let i of [1,2]" class="skeleton-card p-6 rounded-2xl space-y-4">
-        <div class="flex items-center gap-3">
-          <div class="skeleton-bar w-8 h-8 rounded-lg shrink-0"></div>
-          <div class="space-y-1.5 flex-1">
-            <div class="skeleton-bar h-4 w-1/3 rounded"></div>
-            <div class="skeleton-bar h-3.5 w-1/2 rounded"></div>
+            <span *ngIf="notificationService.unreadCount() as unread" (click)="filterByMetric('unread')"
+              class="px-2.5 py-0.5 text-[10px] font-extrabold bg-blue-600 text-white rounded-full shadow-xs cursor-pointer hover:bg-blue-700 transition flex items-center gap-1.5"
+              appTooltip="Click to view pending unread alerts" tooltipPlacement="top">
+              <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+              <span>{{ unread }} Unread</span>
+            </span>
+
+            <span *ngIf="urgentFilteredCount() as urgent" (click)="filterByMetric('urgent')"
+              class="px-2.5 py-0.5 text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-full cursor-pointer hover:bg-rose-500/20 transition flex items-center gap-1"
+              appTooltip="Click to view critical alerts requiring action" tooltipPlacement="top">
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              <span>{{ urgent }} Urgent</span>
+            </span>
+
+            <span *ngIf="notificationService.sseConnected()"
+              class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Live Stream</span>
+            </span>
           </div>
+
+          <h1
+            class="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+            Notifications &amp; Legal Alerts
+          </h1>
+          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 leading-normal max-w-3xl">
+            Real-time case docket milestones, advocate inquiries, statutory amendments, and institutional compliance
+            audits.
+          </p>
         </div>
-        <div class="skeleton-bar h-4 w-full rounded"></div>
-        <div class="skeleton-bar h-4 w-5/6 rounded"></div>
+
+        <!-- Top Right Actions Cluster -->
+        <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
+          <!-- Refresh Button (with Radar Beacon State) -->
+          <button (click)="refreshAll()" [disabled]="isRefreshing() || notificationService.isSyncing()"
+            [appTooltip]="(isRefreshing() || notificationService.isSyncing()) ? 'Synchronizing real-time alerts with server...' : 'Synchronize real-time alerts with server'"
+            tooltipPlacement="bottom"
+            class="relative px-3.5 py-2.5 rounded-xl text-xs font-semibold shadow-xs transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-85 hover:shadow-sm"
+            [ngClass]="(isRefreshing() || notificationService.isSyncing()) ? 'refresh-radar-active' : 'bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200'">
+            <app-icon name="refresh" [size]="14" [spin]="isRefreshing() || notificationService.isSyncing()"></app-icon>
+            <span>{{ (isRefreshing() || notificationService.isSyncing()) ? 'Syncing...' : 'Refresh' }}</span>
+
+            <!-- Pulsing Radar Ping Beacon Dot -->
+            <span *ngIf="isRefreshing() || notificationService.isSyncing()"
+              class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+            </span>
+          </button>
+
+          <!-- Preferences Button -->
+          <button (click)="openPreferences()" appTooltip="Configure channels (In-App, Email, Push) &amp; category rules"
+            tooltipPlacement="bottom"
+            class="px-3.5 py-2.5 bg-white/90 dark:bg-slate-900/90 border border-slate-200/90 dark:border-slate-800/90 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold rounded-xl shadow-xs transition-all flex items-center gap-1.5 cursor-pointer hover:shadow-sm">
+            <app-icon name="settings" [size]="14"></app-icon>
+            <span>Preferences</span>
+          </button>
+
+          <!-- Mark All Read Button -->
+          <button (click)="markAllRead()" [disabled]="notificationService.unreadCount() === 0"
+            appTooltip="Mark all currently filtered alerts as read" tooltipPlacement="bottom"
+            class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 text-white text-xs font-bold rounded-xl shadow-sm transition-all flex items-center gap-1.5 cursor-pointer border-0">
+            <app-icon name="check" [size]="14"></app-icon>
+            <span>Mark All Read</span>
+          </button>
+        </div>
       </div>
-    </div>
 
-    <!-- MAIN NOTIFICATION WINDOW -->
-    <div *ngIf="!isLoading()" class="space-y-8">
+      <!-- ==================== MOBILE REFINED HEADER ==================== -->
+      <div class="sm:hidden space-y-3">
+        <!-- Top Row: Single-Line Status Badges Strip (Guaranteed 1 Line) -->
+        <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none whitespace-nowrap py-0.5">
+          <!-- Hub Tag Badge -->
+          <span
+            class="px-2 py-0.5 text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md border border-blue-500/20 uppercase tracking-wider shrink-0 shadow-2xs">
+            Legal Intelligence Hub
+          </span>
 
-      <!-- 1. SYSTEM RELEASES TAB -->
-      <div *ngIf="activeTab === 'all' || activeTab === 'system'" class="space-y-6">
-        <div class="flex items-center justify-between">
-          <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-            System Updates & releases
-          </h2>
-          <button *ngIf="systemAnnouncementService.unreadCount() > 0" (click)="markAllRead()"
-            appTooltip="Mark all system updates as read"
-            class="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-amber-500 bg-transparent border-none cursor-pointer hover:underline">
-            Mark All Read
+          <!-- Unread Badge (Interactive Filter) -->
+          <span *ngIf="notificationService.unreadCount() as unread" (click)="filterByMetric('unread')"
+            class="px-2 py-0.5 text-[10px] font-extrabold bg-blue-600 text-white rounded-full shadow-xs cursor-pointer active:scale-95 transition flex items-center gap-1 shrink-0"
+            appTooltip="Click to view pending unread alerts" tooltipPlacement="top">
+            <span class="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+            <span>{{ unread }} Unread</span>
+          </span>
+
+          <!-- Urgent Priority Badge -->
+          <span *ngIf="urgentFilteredCount() as urgent" (click)="filterByMetric('urgent')"
+            class="px-2 py-0.5 text-[10px] font-extrabold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20 rounded-full cursor-pointer active:scale-95 transition flex items-center gap-1 shrink-0"
+            appTooltip="Click to view critical alerts requiring action" tooltipPlacement="top">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+            <span>{{ urgent }} Urgent</span>
+          </span>
+
+          <!-- Live SSE Status -->
+          <span *ngIf="notificationService.sseConnected()"
+            class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1 shrink-0">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>Live</span>
+          </span>
+
+        </div>
+
+        <!-- Title & Subtitle Block -->
+        <div>
+          <h1 class="font-serif text-3xl font-bold tracking-tight text-slate-900 dark:text-white leading-tight">
+            Notifications &amp; Legal Alerts
+          </h1>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-normal">
+            Real-time case docket milestones, advocate inquiries, statutory amendments, and institutional compliance
+            audits.
+          </p>
+        </div>
+
+        <!-- Action Buttons Row (Below Title & Subtitle) -->
+        <div class="flex items-center justify-between gap-2 pt-0.5">
+          <!-- Utilities: Search, Refresh, Preferences -->
+          <div class="flex items-center gap-1.5">
+            <!-- Search Toggle -->
+            <button (click)="toggleMobileSearch()" aria-label="Toggle search input"
+              class="h-9 px-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 flex items-center gap-1.5 cursor-pointer shadow-xs transition active:scale-95 text-xs font-semibold">
+              <app-icon [name]="isMobileSearchOpen() ? 'x' : 'search'" [size]="14"></app-icon>
+              <!-- <span>Search</span> -->
+            </button>
+
+            <!-- Refresh Button (with Radar Beacon State) -->
+            <button (click)="refreshAll()" [disabled]="isRefreshing() || notificationService.isSyncing()"
+              aria-label="Refresh alerts"
+              class="relative w-9 h-9 rounded-xl flex items-center justify-center cursor-pointer shadow-xs transition-all active:scale-95 disabled:opacity-85"
+              [ngClass]="(isRefreshing() || notificationService.isSyncing()) ? 'refresh-radar-active' : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200'">
+              <app-icon name="refresh" [size]="14"
+                [spin]="isRefreshing() || notificationService.isSyncing()"></app-icon>
+
+              <!-- Pulsing Radar Ping Beacon Dot -->
+              <span *ngIf="isRefreshing() || notificationService.isSyncing()"
+                class="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+              </span>
+            </button>
+
+            <!-- Preferences Button -->
+            <button (click)="openPreferences()" aria-label="Open alert preferences"
+              class="w-9 h-9 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center cursor-pointer shadow-xs transition active:scale-95">
+              <app-icon name="settings" [size]="14"></app-icon>
+            </button>
+
+            <!-- Insights Bottom-Sheet Trigger -->
+            <button (click)="toggleInsightsSheet()" aria-label="Open insights & metrics"
+              class="h-9 px-3 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 text-white flex items-center gap-1.5 cursor-pointer shadow-sm transition active:scale-95 border-0 text-xs font-bold">
+              <app-icon name="activity" [size]="14"></app-icon>
+              <span>Insights</span>
+            </button>
+          </div>
+
+          <!-- Mark All Read Primary Button -->
+          <button (click)="markAllRead()" [disabled]="notificationService.unreadCount() === 0"
+            aria-label="Mark all read"
+            class="h-9 px-3.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-1.5 cursor-pointer shadow-xs transition active:scale-95 disabled:opacity-40 border-0 text-xs font-bold">
+            <app-icon name="check" [size]="14"></app-icon>
+            <span>Mark All Read</span>
           </button>
         </div>
 
-        <div *ngIf="systemAnnouncementService.announcements().length === 0"
-          class="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center gap-3 justify-center">
-          <svg class="w-8 h-8 text-slate-400 dark:text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41a14.98 14.98 0 00-6.16 12.12A14.98 14.98 0 0015.59 14.37z" />
-          </svg>
-          <div>
-            <h3 class="text-sm font-bold text-slate-800 mt-2">All caught up</h3>
-            <p class="text-xs text-slate-500 mt-1">There are no system updates or release notes available at this time.
-            </p>
+        <!-- Mobile Expandable Search Bar -->
+        <div *ngIf="isMobileSearchOpen()" class="pt-1 animate-[fadeIn_0.2s_ease-out]">
+          <div class="relative w-full">
+            <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)"
+              placeholder="Search docket, lawyer, bare acts..."
+              class="w-full pl-9 pr-8 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 text-slate-800 dark:text-slate-100 shadow-xs placeholder-slate-400" />
+            <app-icon name="search" [size]="14"
+              class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></app-icon>
+            <button *ngIf="searchQuery()" (click)="clearSearch()"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 p-1 bg-transparent border-0 cursor-pointer">
+              <app-icon name="x" [size]="12"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Radiant Aurora Horizon Divider -->
+      <div class="radiant-aurora-divider" aria-hidden="true">
+        <div class="radiant-aurora-glow"></div>
+        <div class="radiant-aurora-line"></div>
+      </div>
+
+    </header>
+
+    <!-- ==================== TWO-COLUMN 90% DESKTOP COMMAND LAYOUT ==================== -->
+    <div class="lg:grid lg:grid-cols-12 lg:gap-8 items-start">
+
+      <!-- ==================== LEFT / MAIN FEED COLUMN (col-span-8 or 9) ==================== -->
+      <main class="lg:col-span-8 xl:col-span-9 space-y-6">
+
+        <!-- ==================== STICKY COMMAND & FILTER BAR ==================== -->
+        <div
+          class="sticky-filter-bar sticky top-[56px] z-30 py-2 sm:py-2.5 px-3 sm:px-0 -mx-3 sm:mx-0 w-[calc(100%+1.5rem)] sm:w-full transition-all">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-3 w-full">
+
+            <!-- Left Side: Desktop Search Input with Clear & Shortcut Badge -->
+            <div class="hidden sm:block relative flex-1 min-w-[240px]">
+              <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)"
+                placeholder="Search notifications, case docket hearings, advocate messages..."
+                class="w-full pl-9 pr-14 py-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/90 dark:border-slate-800/90 rounded-xl text-xs outline-none focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 shadow-2xs placeholder-slate-400 transition-all focus:shadow-xs" />
+              <app-icon name="search" [size]="14"
+                class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></app-icon>
+
+              <div class="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                <button *ngIf="searchQuery()" (click)="clearSearch()" appTooltip="Clear search query"
+                  tooltipPlacement="top"
+                  class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-0.5 flex items-center justify-center">
+                  <app-icon name="x" [size]="12"></app-icon>
+                </button>
+                <kbd
+                  class="hidden lg:inline-block px-1.5 py-0.2 text-[9px] font-mono font-bold bg-slate-100 dark:bg-slate-800 text-slate-500 rounded border border-slate-200 dark:border-slate-700">
+                  /
+                </kbd>
+              </div>
+            </div>
+
+            <!-- Right Side (Desktop) & Clean Compact Cluster (Mobile): 3 Core Pills + 1 Category Custom Select -->
+            <div class="flex items-center justify-start sm:justify-end gap-1 sm:gap-1.5 w-full sm:w-auto">
+              <!-- All -->
+              <button (click)="setTab('all')" appTooltip="Show all notifications &amp; statutory alerts"
+                tooltipPlacement="top" [ngClass]="activeTab() === 'all' ? 'active-triage-pill' : 'inactive-triage-pill'"
+                class="filter-pill shrink-0 sm:flex-initial justify-center px-2 sm:px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5">
+                <span>All</span>
+                <span class="px-1.5 py-0.2 text-[10px] rounded-full font-bold"
+                  [ngClass]="activeTab() === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200/60 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400'">
+                  {{ notificationService.notifications().length }}
+                </span>
+              </button>
+
+              <!-- Unread -->
+              <button (click)="setTab('unread')" appTooltip="Filter unread alerts" tooltipPlacement="top"
+                [ngClass]="activeTab() === 'unread' ? 'active-unread-pill' : 'inactive-triage-pill'"
+                class="filter-pill shrink-0 sm:flex-initial justify-center px-2 sm:px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="activeTab() === 'unread' ? 'bg-white' : 'bg-blue-600 dark:bg-blue-400'"></span>
+                <span>Unread</span>
+                <span *ngIf="notificationService.unreadCount() as unread"
+                  class="px-1.5 py-0.2 text-[10px] rounded-full font-black"
+                  [ngClass]="activeTab() === 'unread' ? 'bg-white/20 text-white' : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'">
+                  {{ unread }}
+                </span>
+              </button>
+
+              <!-- Urgent -->
+              <button (click)="setTab('urgent')" appTooltip="Filter urgent priority alerts" tooltipPlacement="top"
+                [ngClass]="activeTab() === 'urgent' ? 'active-urgent-pill' : 'inactive-triage-pill'"
+                class="filter-pill shrink-0 sm:flex-initial justify-center px-2 sm:px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all cursor-pointer flex items-center gap-1 sm:gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="activeTab() === 'urgent' ? 'bg-white' : 'bg-rose-500'"></span>
+                <span>Urgent</span>
+                <span *ngIf="urgentFilteredCount() as urgent" class="px-1.5 py-0.2 text-[10px] rounded-full font-black"
+                  [ngClass]="activeTab() === 'urgent' ? 'bg-white/20 text-white' : 'bg-rose-500/10 text-rose-600 dark:text-rose-400'">
+                  {{ urgent }}
+                </span>
+              </button>
+
+              <!-- Custom Select Category Dropdown -->
+              <div class="shrink-0 sm:flex-initial sm:min-w-[130px] sm:max-w-[190px]">
+                <app-custom-select [options]="categoryOptions()" [value]="selectedCategoryValue()"
+                  (valueChange)="onCategorySelect($event)" size="sm" variant="glass" rounded="xl" menuRounded="xl"
+                  width="100%" minWidth="82px" menuMinWidth="240px" menuMaxWidth="320px" maxMenuHeight="360px"
+                  placeholder="Category" icon="layers" iconColor="#94a3b8" [searchable]="false"
+                  [useBottomSheetOnMobile]="true" sheetTitle="Filter by Category / Domain"
+                  [triggerClass]="isCategoryTabActive() ? 'notification-category-trigger active-cat' : 'notification-category-trigger'">
+                </app-custom-select>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        <!-- Grouped List -->
-        <div *ngIf="systemAnnouncementService.announcements().length > 0" class="space-y-8">
-          <div *ngFor="let group of groupedSystemAnnouncements()" class="space-y-3">
-            <!-- Group date separator -->
-            <div class="flex items-center gap-3">
-              <span class="text-xs font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">{{
-                group.label }}</span>
-              <div class="flex-1 h-px bg-slate-200/60 dark:bg-slate-800/40"></div>
+        <!-- ==================== FLOATING DYNAMIC ISLAND BULK ACTION BAR ==================== -->
+        <div *ngIf="isSelectionMode()"
+          class="dynamic-island-bar fixed bottom-5 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 w-[92%] sm:w-auto max-w-xl p-3 sm:py-2.5 sm:px-5 bg-slate-950/90 dark:bg-slate-900/95 text-white rounded-2xl sm:rounded-full border border-white/20 shadow-2xl flex items-center justify-between sm:justify-center gap-3 sm:gap-6 backdrop-blur-2xl">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
+            <span class="text-xs font-bold text-slate-200 whitespace-nowrap">
+              {{ selectedIds().length }} Selected
+            </span>
+            <span class="text-slate-500 hidden sm:inline">|</span>
+            <button (click)="toggleSelectAll()" appTooltip="Toggle select all" tooltipPlacement="top"
+              class="text-xs text-blue-400 hover:text-blue-300 font-semibold bg-transparent border-0 cursor-pointer hidden sm:inline">
+              {{ selectedIds().length === filteredNotifications().length ? 'Deselect All' : 'Select All (' +
+              filteredNotifications().length + ')' }}
+            </button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Mark Read -->
+            <button (click)="bulkMarkRead()" appTooltip="Mark selected alerts as read" tooltipPlacement="top"
+              class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition cursor-pointer border-0 flex items-center gap-1.5 shadow-xs">
+              <app-icon name="check" [size]="13"></app-icon>
+              <span class="hidden sm:inline">Mark Read</span>
+            </button>
+
+            <!-- Delete -->
+            <button (click)="bulkDelete()" appTooltip="Permanently remove selected alerts" tooltipPlacement="top"
+              class="px-3 py-1.5 bg-red-600/90 hover:bg-red-600 text-white text-xs font-bold rounded-xl transition cursor-pointer border-0 flex items-center gap-1.5 shadow-xs">
+              <app-icon name="trash" [size]="13"></app-icon>
+              <span class="hidden sm:inline">Delete</span>
+            </button>
+
+            <!-- Cancel -->
+            <button (click)="cancelSelection()" appTooltip="Exit selection mode" tooltipPlacement="top"
+              class="p-1.5 text-slate-400 hover:text-white transition cursor-pointer bg-transparent border-0 flex items-center justify-center">
+              <app-icon name="x" [size]="16"></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- ==================== SKELETON LOADER ==================== -->
+        <app-notification-skeleton *ngIf="notificationService.isLoading()" [activeTab]="activeTab()" [count]="4">
+        </app-notification-skeleton>
+
+        <!-- ==================== NOTIFICATIONS FEED CONTENT ==================== -->
+        <div *ngIf="!notificationService.isLoading()">
+
+          <!-- ==================== TABS 1-7: NOTIFICATION GROUPS ==================== -->
+          <div *ngIf="activeTab() !== 'statutes'" class="space-y-8">
+
+            <!-- Virtual Scroll Toggle for Large Inboxes -->
+            <div *ngIf="filteredNotifications().length > 30" class="flex items-center justify-end gap-2">
+              <button (click)="toggleVirtualScrollMode()" appTooltip="Toggle high-performance virtual scroll"
+                tooltipPlacement="left"
+                class="px-3 py-1.5 text-[11px] font-bold rounded-xl transition cursor-pointer flex items-center gap-1.5 border"
+                [ngClass]="isVirtualScrollMode() ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-blue-400'">
+                <app-icon name="zap" [size]="12"></app-icon>
+                <span>{{ isVirtualScrollMode() ? 'Virtual Scroll Active' : 'Enable Virtual Scroll' }}</span>
+              </button>
             </div>
 
-            <!-- Items -->
-            <div class="space-y-4">
-              <div *ngFor="let item of group.items"
-                class="p-5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-800 transition-all shadow-xs relative overflow-hidden flex flex-col sm:flex-row justify-between gap-4"
-                [ngClass]="{'border-l-[5px] border-l-blue-600 dark:border-l-amber-500': !item.isRead}">
+            <!-- EMPTY STATE (NO NOTIFICATIONS MATCHING FILTER) -->
+            <div *ngIf="filteredNotifications().length === 0"
+              class="p-10 sm:p-16 rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+              <div
+                class="w-16 h-16 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-1">
+                <app-icon name="bell" [size]="32"></app-icon>
+              </div>
+              <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+                {{ searchQuery() ? 'No matching legal notifications found' : activeTab() === 'unread' ? 'All caught up!
+                Zero unread alerts' : activeTab() === 'urgent' ? 'No urgent notifications pending' : 'No notifications
+                in this category' }}
+              </h2>
+              <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                {{ searchQuery() ? 'Try adjusting your search terms or clearing filters to view all alerts.' :
+                activeTab() === 'unread' ? 'You have reviewed all legal dockets and case updates. Incoming alerts will
+                be delivered in real-time.' : 'When you receive legal docket updates, advocate inquiries, or statutory
+                notices, they will appear here.' }}
+              </p>
 
-                <div class="flex items-start gap-4">
-                  <div
-                    class="w-9 h-9 rounded-xl flex items-center justify-center text-md font-bold shrink-0 bg-blue-500/10 text-blue-500 dark:bg-amber-500/10 dark:text-amber-400 border border-blue-500/20 dark:border-amber-500/20">
-                    <!-- Icon -->
-                    <svg *ngIf="item.typeValue === 1" class="w-4 h-4 text-blue-500 dark:text-amber-400" fill="none"
-                      viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M15.59 14.37a6 6 0 01-5.84 7.38v-4.8m5.84-2.58a14.98 14.98 0 006.16-12.12A14.98 14.98 0 009.63 8.41a14.98 14.98 0 00-6.16 12.12A14.98 14.98 0 0015.59 14.37z" />
-                    </svg>
-                    <svg *ngIf="item.typeValue !== 1" class="w-4 h-4 text-blue-500 dark:text-amber-400" fill="none"
-                      viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                      <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                  </div>
+              <div class="flex items-center gap-2 mt-4 flex-wrap justify-center">
+                <button *ngIf="searchQuery() || activeTab() !== 'all'" (click)="clearSearch(); setTab('all')"
+                  appTooltip="Reset all filters and view full inbox" tooltipPlacement="top"
+                  class="px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer border-0">
+                  Show All Notifications
+                </button>
+                <a routerLink="/laws" appTooltip="Browse Indian Bare Acts &amp; follow for amendments"
+                  tooltipPlacement="top"
+                  class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl transition no-underline">
+                  Browse Indian Bare Acts
+                </a>
+              </div>
+            </div>
 
-                  <div class="space-y-1">
-                    <div class="flex items-center gap-2 flex-wrap text-[10px]">
-                      <span
-                        class="font-extrabold uppercase px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                        {{ item.typeName }}
-                      </span>
-                      <span class="font-mono font-bold text-slate-400">v{{ item.version }}</span>
-                      <span class="text-slate-400 font-semibold">• {{ formatDate(item.publishedAt) }}</span>
+            <!-- NOTIFICATION CARDS GROUPED BY DATE -->
+            <div *ngIf="filteredNotifications().length > 0 && !isVirtualScrollMode()" class="space-y-7">
+              <div *ngFor="let group of groupedNotifications(); trackBy: trackByGroup" class="space-y-3.5">
+                <!-- Date Separator Header -->
+                <div class="flex items-center gap-3 px-1">
+                  <span class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                    {{ group.label }}
+                  </span>
+                  <div class="flex-1 h-px bg-slate-200/80 dark:bg-slate-800/80"></div>
+                </div>
+
+                <!-- List of Cards -->
+                <div class="space-y-3">
+                  <div *ngFor="let item of group.items; trackBy: trackById" (click)="toggleSelect(item.id, $event)"
+                    class="notification-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-start justify-between gap-4 cursor-pointer group"
+                    [ngClass]="{
+                      'is-unread': !item.isRead,
+                      'is-urgent': item.priority === 'urgent' && !item.isRead,
+                      'ring-2 ring-blue-500/60 bg-blue-50/40 dark:bg-blue-950/30': selectedIds().includes(item.id)
+                    }">
+
+                    <!-- Left Content Block -->
+                    <div class="flex items-start gap-3.5 flex-1 min-w-0">
+
+                      <!-- Custom Selection Checkbox -->
+                      <div class="pt-0.5" (click)="toggleSelect(item.id, $event)" appTooltip="Select alert"
+                        tooltipPlacement="top">
+                        <input type="checkbox" [checked]="selectedIds().includes(item.id)"
+                          (change)="toggleSelect(item.id, $event)"
+                          class="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer"
+                          aria-label="Select notification" />
+                      </div>
+
+                      <!-- Type Semantic Custom SVG Icon Badge -->
+                      <div
+                        class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shrink-0 border shadow-2xs"
+                        [ngClass]="getTypeBadgeClass(item.type)" [appTooltip]="getTypeLabel(item.type)"
+                        tooltipPlacement="top">
+                        <app-icon [name]="getIconForType(item.type)" [size]="20"></app-icon>
+                      </div>
+
+                      <!-- Text Details -->
+                      <div class="space-y-1.5 min-w-0 flex-1">
+                        <!-- Meta Row -->
+                        <div class="flex items-center gap-2 flex-wrap text-[10px]">
+                          <span class="px-2 py-0.5 rounded-md font-extrabold uppercase border"
+                            [ngClass]="getTypeBadgeClass(item.type)">
+                            {{ getTypeLabel(item.type) }}
+                          </span>
+
+                          <!-- Priority Flags -->
+                          <span *ngIf="item.priority === 'urgent'"
+                            appTooltip="Critical urgency: Requires immediate attention" tooltipPlacement="top"
+                            class="px-2 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold uppercase rounded-md border border-rose-500/20 flex items-center gap-1">
+                            <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+                            <span>Urgent</span>
+                          </span>
+                          <span *ngIf="item.priority === 'high'" appTooltip="High importance notice"
+                            tooltipPlacement="top"
+                            class="px-2 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold uppercase rounded-md border border-amber-500/20">
+                            High Priority
+                          </span>
+
+                          <span class="text-slate-400 dark:text-slate-500 font-medium"
+                            [appTooltip]="formatDate(item.createdAt)" tooltipPlacement="top">
+                            • {{ getRelativeTime(item.createdAt) }}
+                          </span>
+
+                          <!-- Pulsing Luminous Unread Beacon -->
+                          <span *ngIf="!item.isRead" class="luminous-beacon shrink-0"
+                            [ngClass]="{ 'luminous-beacon-urgent': item.priority === 'urgent' }"
+                            appTooltip="Unread alert" tooltipPlacement="top">
+                          </span>
+                        </div>
+
+                        <!-- Title -->
+                        <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">
+                          {{ item.title }}
+                        </h3>
+
+                        <!-- Summary -->
+                        <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-normal">
+                          {{ item.summary }}
+                        </p>
+
+                        <!-- Expandable Context Callout -->
+                        <div *ngIf="item.details"
+                          class="mt-2 p-3 rounded-xl bg-slate-100/70 dark:bg-slate-950/70 border border-slate-200/60 dark:border-slate-800/60 text-xs text-slate-600 dark:text-slate-400 font-mono leading-relaxed">
+                          {{ item.details }}
+                        </div>
+
+                        <!-- Dynamic Metadata Chips Strip -->
+                        <div *ngIf="item.metadata && getObjectKeys(item.metadata).length > 0"
+                          class="pt-1.5 flex items-center gap-1.5 flex-wrap">
+                          <span *ngFor="let key of getObjectKeys(item.metadata)"
+                            class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-md text-[10px] font-mono text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60">
+                            <span class="text-slate-400">{{ key }}:</span>
+                            <span class="font-bold">{{ item.metadata[key] }}</span>
+                          </span>
+                        </div>
+
+                        <!-- Action Bar (CTA & Deep Links) -->
+                        <div *ngIf="item.actionUrl" class="pt-2 flex items-center gap-4 flex-wrap">
+                          <a [routerLink]="item.actionUrl" (click)="$event.stopPropagation()"
+                            appTooltip="Open directly in LegalConnect" tooltipPlacement="top"
+                            class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline">
+                            <span>{{ item.actionLabel || 'View Details' }}</span>
+                            <app-icon name="arrow-right" [size]="12"></app-icon>
+                          </a>
+
+                          <button (click)="copyActionLink(item.actionUrl, $event)"
+                            appTooltip="Copy direct workspace link to clipboard" tooltipPlacement="top"
+                            class="inline-flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer">
+                            <app-icon name="copy" [size]="11"></app-icon>
+                            <span>Share</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
-                    <h3 class="text-sm font-extrabold text-slate-900 dark:text-white leading-tight"
-                      [innerHTML]="replaceEmojis(item.title)">
-                    </h3>
+                    <!-- Right Action Buttons (Mark Read / Dismiss) -->
+                    <div class="flex items-center gap-2 self-end sm:self-start shrink-0 pt-2 sm:pt-0"
+                      (click)="$event.stopPropagation()">
+                      <!-- Mark Read Button -->
+                      <button *ngIf="!item.isRead" (click)="markRead(item.id)" appTooltip="Mark alert as read"
+                        tooltipPlacement="top"
+                        class="px-3 py-1.5 text-[11px] font-bold rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 transition cursor-pointer border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-1">
+                        <app-icon name="check" [size]="12"></app-icon>
+                        <span>Read</span>
+                      </button>
 
-                    <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed"
-                      [innerHTML]="replaceEmojis(item.summary)">
+                      <!-- Delete Single Button -->
+                      <button (click)="deleteNotification(item.id, $event)" appTooltip="Dismiss this notification"
+                        tooltipPlacement="top"
+                        class="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer bg-transparent border-0 flex items-center justify-center">
+                        <app-icon name="trash" [size]="15"></app-icon>
+                      </button>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ==================== VIRTUAL SCROLL MODE (60 FPS FLAT LIST) ==================== -->
+            <cdk-virtual-scroll-viewport *ngIf="filteredNotifications().length > 0 && isVirtualScrollMode()"
+              [itemSize]="120"
+              class="virtual-scroll-viewport rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl">
+              <div *cdkVirtualFor="let item of filteredNotifications(); trackBy: trackById"
+                (click)="toggleSelect(item.id, $event)"
+                class="p-4 sm:p-5 border-b border-slate-200/60 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-all flex flex-col sm:flex-row sm:items-start justify-between gap-4 cursor-pointer"
+                [ngClass]="{
+                  'border-l-4 border-l-blue-600 dark:border-l-blue-500 bg-blue-50/20 dark:bg-blue-950/10': !item.isRead,
+                  'ring-2 ring-blue-500/50 bg-blue-50/40 dark:bg-blue-950/20': selectedIds().includes(item.id)
+                }">
+
+                <!-- Left Content Block -->
+                <div class="flex items-start gap-3.5 flex-1 min-w-0">
+                  <div class="pt-0.5" (click)="toggleSelect(item.id, $event)">
+                    <input type="checkbox" [checked]="selectedIds().includes(item.id)"
+                      (change)="toggleSelect(item.id, $event)"
+                      class="w-4 h-4 rounded text-blue-600 border-slate-300 dark:border-slate-700 focus:ring-blue-500 cursor-pointer"
+                      aria-label="Select notification" />
+                  </div>
+
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 border"
+                    [ngClass]="getTypeBadgeClass(item.type)" [appTooltip]="getTypeLabel(item.type)"
+                    tooltipPlacement="top">
+                    <app-icon [name]="getIconForType(item.type)" [size]="18"></app-icon>
+                  </div>
+
+                  <div class="space-y-1 min-w-0 flex-1">
+                    <div class="flex items-center gap-2 flex-wrap text-[10px]">
+                      <span class="px-2 py-0.5 rounded-md font-extrabold uppercase border"
+                        [ngClass]="getTypeBadgeClass(item.type)">
+                        {{ getTypeLabel(item.type) }}
+                      </span>
+                      <span *ngIf="item.priority === 'urgent'"
+                        class="px-1.5 py-0.5 bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold uppercase rounded border border-rose-500/20">
+                        Urgent
+                      </span>
+                      <span class="text-slate-400 font-medium">• {{ getRelativeTime(item.createdAt) }}</span>
+                      <span *ngIf="!item.isRead"
+                        class="w-2 h-2 rounded-full bg-blue-600 dark:bg-blue-400 shrink-0"></span>
+                    </div>
+                    <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white leading-snug">{{ item.title
+                      }}</h3>
+                    <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed font-normal">{{
+                      item.summary }}</p>
+                  </div>
+                </div>
+
+                <!-- Right Action Buttons -->
+                <div class="flex items-center gap-1.5 self-end sm:self-start shrink-0 pt-2 sm:pt-0"
+                  (click)="$event.stopPropagation()">
+                  <button *ngIf="!item.isRead" (click)="markRead(item.id)"
+                    class="px-2.5 py-1 text-[11px] font-bold rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-blue-600 hover:text-white text-slate-600 dark:text-slate-300 transition cursor-pointer border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-1">
+                    <app-icon name="check" [size]="12"></app-icon>
+                    <span>Read</span>
+                  </button>
+                  <button (click)="deleteNotification(item.id, $event)"
+                    class="p-1.5 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition cursor-pointer bg-transparent border-0 flex items-center justify-center">
+                    <app-icon name="trash" [size]="14"></app-icon>
+                  </button>
+                </div>
+              </div>
+            </cdk-virtual-scroll-viewport>
+
+          </div>
+
+          <!-- ==================== TAB 8: MONITORED BARE ACTS ==================== -->
+          <div *ngIf="activeTab() === 'statutes'" class="space-y-6">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
+              <div>
+                <h2
+                  class="text-sm font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                  <app-icon name="book-open" [size]="16" class="text-indigo-500"></app-icon>
+                  <span>Monitored Bare Acts &amp; Statutory Codes</span>
+                </h2>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Receive instant notifications whenever Parliament or statutory authorities notify amendments.
+                </p>
+              </div>
+              <button *ngIf="followedActs().length > 0" (click)="clearAllFollowed()"
+                appTooltip="Unfollow all monitored acts" tooltipPlacement="top"
+                class="text-xs font-bold text-red-500 hover:text-red-600 bg-transparent border-0 cursor-pointer hover:underline">
+                Unfollow All
+              </button>
+            </div>
+
+            <!-- Empty Followed Acts -->
+            <div *ngIf="followedActs().length === 0"
+              class="p-10 sm:p-16 rounded-3xl bg-white/70 dark:bg-slate-900/60 backdrop-blur-xl border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+              <div
+                class="w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mb-1">
+                <app-icon name="book-open" [size]="32"></app-icon>
+              </div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                Not monitoring any Bare Acts yet
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+                Follow statutes like Bharatiya Nyaya Sanhita (BNS), BNSS, Consumer Protection Act, or DPDP Act 2023 from
+                our legal library to receive immediate amendment alerts.
+              </p>
+              <a routerLink="/laws" appTooltip="Browse entire statutory repository" tooltipPlacement="top"
+                class="mt-3 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition no-underline">
+                Browse Indian Bare Acts
+              </a>
+            </div>
+
+            <!-- Followed Acts Grid -->
+            <div *ngIf="followedActs().length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div *ngFor="let act of followedActs()"
+                class="p-4 sm:p-5 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 rounded-2xl flex items-center justify-between transition-all shadow-xs hover:shadow-md">
+                <div class="flex items-center gap-3.5 min-w-0">
+                  <div
+                    class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                    <app-icon name="scale" [size]="18"></app-icon>
+                  </div>
+                  <div class="min-w-0">
+                    <h4 class="font-serif text-sm font-bold text-slate-900 dark:text-white truncate">
+                      <a [routerLink]="['/laws', act.shortName]" appTooltip="Open statute reader" tooltipPlacement="top"
+                        class="no-underline text-inherit hover:text-blue-600 transition">
+                        {{ act.actName }}
+                      </a>
+                    </h4>
+                    <p class="text-[10px] text-slate-400 mt-0.5">
+                      Alerts active since: {{ formatDate(act.followedAt) }}
                     </p>
                   </div>
                 </div>
 
-                <!-- Action Button -->
-                <button *ngIf="!item.isRead" (click)="markRead(item.id)" appTooltip="Mark release as read"
-                  class="self-end sm:self-start shrink-0 px-2.5 py-1.5 text-[10px] font-bold rounded-lg bg-slate-50 dark:bg-slate-800/80 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-800 hover:bg-blue-600 dark:hover:bg-amber-500 hover:text-white dark:hover:text-slate-950 transition cursor-pointer flex items-center gap-1">
-                  <svg class="w-3 h-3 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                  Read
-                </button>
-
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- 2. FOLLOWED LAWS TAB -->
-      <div *ngIf="activeTab === 'all' || activeTab === 'laws'" class="space-y-4">
-        <div class="flex items-center justify-between border-t border-slate-100 dark:border-slate-800 pt-6">
-          <h2 class="text-[10px] font-black uppercase tracking-widest text-slate-400 dark:text-slate-500">
-            Followed Statutes & amendments
-          </h2>
-          <button *ngIf="followedActs.length > 0" (click)="clearAll()"
-            appTooltip="Unfollow all currently monitored Bare Acts"
-            class="text-[10px] font-black uppercase tracking-wider text-red-500 bg-transparent border-none cursor-pointer hover:underline">
-            Unfollow All
-          </button>
-        </div>
-
-        <div *ngIf="followedActs.length === 0"
-          class="p-12 rounded-3xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center gap-3 justify-center">
-          <svg class="w-8 h-8 text-slate-300 dark:text-slate-600 shrink-0" fill="none" viewBox="0 0 24 24"
-            stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-              d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-          </svg>
-          <div>
-            <h3 class="text-sm font-bold text-slate-905 mt-2">Not monitoring any laws</h3>
-            <p class="text-xs text-slate-500 max-w-sm">
-              Follow major Bare Acts from our legal portal. You will receive real-time alerts whenever modifications
-              occur.
-            </p>
-          </div>
-          <a routerLink="/laws"
-            class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow transition no-underline">
-            Browse Bare Acts
-          </a>
-        </div>
-
-        <div *ngIf="followedActs.length > 0" class="grid grid-cols-1 gap-3">
-          <div *ngFor="let act of followedActs"
-            class="p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-800 rounded-2xl flex items-center justify-between transition-all">
-
-            <div class="flex items-center gap-3">
-              <svg class="w-5 h-5 text-slate-400 dark:text-slate-500 shrink-0" fill="none" viewBox="0 0 24 24"
-                stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-              </svg>
-              <div>
-                <h3 class="font-serif text-sm font-bold text-slate-900 dark:text-white">
-                  <a [routerLink]="['/laws', act.shortName]"
-                    class="no-underline text-inherit hover:text-blue-600 dark:hover:text-amber-400 transition">
-                    {{ act.actName }}
+                <div class="flex items-center gap-2 shrink-0">
+                  <a [routerLink]="['/laws', act.shortName]" appTooltip="Open bare act reader" tooltipPlacement="top"
+                    class="px-3 py-1.5 bg-slate-100 dark:bg-slate-800 hover:bg-indigo-600 hover:text-white text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl transition no-underline">
+                    Read
                   </a>
-                </h3>
-                <p class="text-[10px] text-slate-400 dark:text-slate-500 mt-0.5">
-                  Following since: {{ formatDate(act.followedAt) }}
-                </p>
+                  <button (click)="unfollowAct(act.shortName, $event)" appTooltip="Stop monitoring this statute"
+                    tooltipPlacement="top"
+                    class="p-2 text-slate-400 hover:text-red-500 rounded-xl transition cursor-pointer bg-transparent border-0 flex items-center justify-center">
+                    <app-icon name="trash" [size]="15"></app-icon>
+                  </button>
+                </div>
               </div>
             </div>
 
-            <div class="flex items-center gap-2">
-              <a [routerLink]="['/laws', act.shortName]" appTooltip="View bare act details and full text"
-                class="px-3 py-1.5 bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-800 text-[10px] font-bold rounded-lg hover:text-blue-600 hover:border-blue-500 transition no-underline">
-                View
-              </a>
-              <button (click)="unfollow(act.shortName, $event)" appTooltip="Stop monitoring this statute for updates"
-                class="text-slate-400 hover:text-red-500 transition cursor-pointer p-1.5 bg-transparent border-0 flex items-center justify-center">
-                <svg class="w-4 h-4 text-slate-400 hover:text-red-550 shrink-0" fill="none" viewBox="0 0 24 24"
-                  stroke="currentColor" stroke-width="2">
-                  <path stroke-linecap="round" stroke-linejoin="round"
-                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                </svg>
-              </button>
+          </div>
+
+        </div>
+
+      </main>
+
+      <!-- ==================== RIGHT SIDEBAR COLUMN (DESKTOP COMMAND HUB) ==================== -->
+      <aside
+        class="hidden lg:block lg:col-span-4 xl:col-span-3 space-y-5 sticky top-[72px] max-h-[calc(100vh-84px)] overflow-y-auto scrollbar-none pr-1 pb-6">
+
+        <!-- Sidebar Widget 1: Interactive Alert Metrics -->
+        <div class="p-5 rounded-2xl glass-panel space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
+            <span
+              class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <app-icon name="activity" [size]="14" class="text-blue-500"></app-icon>
+              <span>Alert Metrics Hub</span>
+            </span>
+            <span
+              class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20 flex items-center gap-1"
+              appTooltip="Real-time event sync online" tooltipPlacement="left">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Live Feed</span>
+            </span>
+          </div>
+
+          <!-- Interactive 2x2 Filter Matrix -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Total Alerts -->
+            <div (click)="filterByMetric('all')"
+              class="metric-tile p-3 bg-slate-50 dark:bg-slate-950/60 rounded-xl border border-slate-200/60 dark:border-slate-800/60"
+              [ngClass]="{ 'is-active': activeTab() === 'all' }" appTooltip="Click to view all alerts"
+              tooltipPlacement="top">
+              <span class="text-[10px] font-bold uppercase text-slate-400 block">Total Alerts</span>
+              <span class="text-xl font-black text-slate-900 dark:text-white mt-0.5 block">
+                {{ notificationService.notifications().length }}
+              </span>
             </div>
 
+            <!-- Unread Alerts -->
+            <div (click)="filterByMetric('unread')"
+              class="metric-tile p-3 bg-blue-50/50 dark:bg-blue-950/20 rounded-xl border border-blue-500/20"
+              [ngClass]="{ 'is-active': activeTab() === 'unread' }" appTooltip="Click to view unread alerts"
+              tooltipPlacement="top">
+              <span class="text-[10px] font-bold uppercase text-blue-600 dark:text-blue-400 block">Unread</span>
+              <span class="text-xl font-black text-blue-700 dark:text-blue-300 mt-0.5 block">
+                {{ notificationService.unreadCount() }}
+              </span>
+            </div>
+
+            <!-- Urgent Critical Alerts -->
+            <div (click)="filterByMetric('urgent')"
+              class="metric-tile p-3 bg-rose-50/50 dark:bg-rose-950/20 rounded-xl border border-rose-500/20"
+              [ngClass]="{ 'is-active': activeTab() === 'urgent' }" appTooltip="Click to view urgent alerts"
+              tooltipPlacement="top">
+              <span class="text-[10px] font-bold uppercase text-rose-600 dark:text-rose-400 block">Urgent</span>
+              <span class="text-xl font-black text-rose-700 dark:text-rose-400 mt-0.5 block">
+                {{ urgentFilteredCount() }}
+              </span>
+            </div>
+
+            <!-- Monitored Acts -->
+            <div (click)="filterByMetric('statutes')"
+              class="metric-tile p-3 bg-indigo-50/50 dark:bg-indigo-950/20 rounded-xl border border-indigo-500/20"
+              [ngClass]="{ 'is-active': activeTab() === 'statutes' }" appTooltip="Click to manage monitored statutes"
+              tooltipPlacement="top">
+              <span class="text-[10px] font-bold uppercase text-indigo-600 dark:text-indigo-400 block">Monitored
+                Acts</span>
+              <span class="text-xl font-black text-indigo-700 dark:text-indigo-300 mt-0.5 block">
+                {{ followedActs().length }}
+              </span>
+            </div>
           </div>
         </div>
-      </div>
+
+        <!-- Sidebar Widget 2: Real-time Delivery Channels Status -->
+        <div class="p-5 rounded-2xl glass-panel space-y-4">
+          <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+            <span
+              class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <app-icon name="bell" [size]="14" class="text-purple-500"></app-icon>
+              <span>Delivery Channels</span>
+            </span>
+            <button (click)="openPreferences()" appTooltip="Configure alert routing" tooltipPlacement="left"
+              class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+              Configure
+            </button>
+          </div>
+
+          <div class="space-y-2 text-xs">
+            <!-- In-App Feed -->
+            <div
+              class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+              <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                In-App Notification Feed
+              </span>
+              <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+            </div>
+
+            <!-- Email Digest -->
+            <div
+              class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+              <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+                <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                Verified Email Digest
+              </span>
+              <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Enabled</span>
+            </div>
+
+            <!-- SSE Stream -->
+            <div
+              class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+              <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+                <span class="w-2 h-2 rounded-full"
+                  [ngClass]="notificationService.sseConnected() ? 'bg-emerald-500 animate-pulse' : 'bg-red-400'"></span>
+                Real-Time SSE Stream
+              </span>
+              <span class="text-[10px] font-bold"
+                [ngClass]="notificationService.sseConnected() ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
+                {{ notificationService.sseConnected() ? 'Connected' : 'Reconnecting…' }}
+              </span>
+            </div>
+
+            <!-- Browser Push Alerts -->
+            <div
+              class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+              <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+                <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+                Browser Web Push Alerts
+              </span>
+              <button *ngIf="notificationService.webPushPermission() === 'default'" (click)="enableWebPush()"
+                appTooltip="Enable browser desktop notifications for urgent legal alerts" tooltipPlacement="left"
+                class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition cursor-pointer border border-purple-500/20">
+                Enable
+              </button>
+              <span *ngIf="notificationService.webPushPermission() === 'granted'"
+                class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+              <span *ngIf="notificationService.webPushPermission() === 'denied'"
+                class="text-[10px] font-bold text-red-500">Blocked</span>
+              <span *ngIf="notificationService.webPushPermission() === 'unsupported'"
+                class="text-[10px] font-bold text-slate-500">N/A</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Widget 3: Quick Monitored Statutes Mini-Strip -->
+        <div *ngIf="followedActs().length > 0" class="p-5 rounded-2xl glass-panel space-y-3">
+          <div class="flex items-center justify-between">
+            <span
+              class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
+              <app-icon name="scale" [size]="14" class="text-indigo-500"></app-icon>
+              <span>Monitored Statutes</span>
+            </span>
+            <button (click)="setTab('statutes')" appTooltip="View complete followed statutes manager"
+              tooltipPlacement="left"
+              class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+              View All
+            </button>
+          </div>
+
+          <div class="space-y-2">
+            <div *ngFor="let act of followedActs().slice(0, 3)"
+              class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between">
+              <div class="min-w-0 pr-2">
+                <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block">
+                  {{ act.shortName }}
+                </span>
+                <span class="text-[10px] text-slate-400 truncate block">{{ act.actName }}</span>
+              </div>
+              <a [routerLink]="['/laws', act.shortName]" appTooltip="Open bare act" tooltipPlacement="top"
+                class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition no-underline shrink-0">
+                Read
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar Widget 4: Security & Compliance Guarantee -->
+        <div
+          class="p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 text-center space-y-2">
+          <div
+            class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-300">
+            <app-icon name="shield" [size]="14" class="text-teal-500"></app-icon>
+            <span>Legal Privacy &amp; Encryption</span>
+          </div>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+            All consultation dockets, advocate communications, and case milestones are end-to-end encrypted under the
+            Digital Personal Data Protection (DPDP) Act 2023.
+          </p>
+        </div>
+
+      </aside>
 
     </div>
 
   </div>
 </div>
 
+<!-- ==================== MOBILE INSIGHTS BOTTOM-SHEET DRAWER (lg:hidden) ==================== -->
+<div *ngIf="isInsightsSheetOpen()" class="lg:hidden fixed inset-0 z-50 insights-sheet-backdrop"
+  (click)="closeInsightsSheet()">
+  <div class="insights-sheet-panel" (click)="$event.stopPropagation()">
+
+    <!-- Grab Handle -->
+    <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto mb-4 mt-1 shrink-0"></div>
+
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-3 px-1">
+      <div class="flex items-center gap-2">
+        <app-icon name="activity" [size]="18" class="text-blue-500"></app-icon>
+        <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">Alert Insights</h3>
+      </div>
+      <button (click)="closeInsightsSheet()"
+        class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 bg-transparent border-0 cursor-pointer transition">
+        <app-icon name="x" [size]="18"></app-icon>
+      </button>
+    </div>
+
+    <!-- Frosted Gradient Hairline Divider Below Header -->
+    <div
+      class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/90 dark:via-slate-800/90 to-transparent mb-1"
+      aria-hidden="true">
+    </div>
+
+    <!-- Scrollable Content -->
+    <div class="insights-sheet-content space-y-3">
+
+      <!-- Section 1: Alert Metrics 2x2 Grid -->
+      <div class="space-y-3">
+        <span
+          class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5 px-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+          Live Alert Metrics
+        </span>
+        <div class="grid grid-cols-2 gap-2">
+          <!-- Total Alerts -->
+          <div (click)="filterByMetric('all'); closeInsightsSheet()"
+            class="insights-metric-tile px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between"
+            [ngClass]="activeTab() === 'all' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'bg-slate-50 dark:bg-slate-950/60 border border-slate-200/60 dark:border-slate-800/60'">
+            <span class="text-[11px] font-bold tracking-tight truncate pr-1"
+              [ngClass]="activeTab() === 'all' ? 'text-blue-100' : 'text-slate-600 dark:text-slate-300'">
+              Total Alerts
+            </span>
+            <span class="text-sm font-black px-2 py-0.5 rounded-lg shrink-0"
+              [ngClass]="activeTab() === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200/60 dark:bg-slate-800/80 text-slate-900 dark:text-white'">
+              {{ notificationService.notifications().length }}
+            </span>
+          </div>
+
+          <!-- Unread -->
+          <div (click)="filterByMetric('unread'); closeInsightsSheet()"
+            class="insights-metric-tile px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between"
+            [ngClass]="activeTab() === 'unread' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25' : 'bg-blue-50/50 dark:bg-blue-950/20 border border-blue-500/20'">
+            <div class="flex items-center gap-1.5 min-w-0 pr-1">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0"
+                [ngClass]="activeTab() === 'unread' ? 'bg-white' : 'bg-blue-500 animate-pulse'"></span>
+              <span class="text-[11px] font-bold tracking-tight truncate"
+                [ngClass]="activeTab() === 'unread' ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'">
+                Unread
+              </span>
+            </div>
+            <span class="text-sm font-black px-2 py-0.5 rounded-lg shrink-0"
+              [ngClass]="activeTab() === 'unread' ? 'bg-white/20 text-white' : 'bg-blue-500/15 text-blue-600 dark:text-blue-300'">
+              {{ notificationService.unreadCount() }}
+            </span>
+          </div>
+
+          <!-- Urgent -->
+          <div (click)="filterByMetric('urgent'); closeInsightsSheet()"
+            class="insights-metric-tile px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between"
+            [ngClass]="activeTab() === 'urgent' ? 'bg-rose-600 text-white shadow-md shadow-rose-500/25' : 'bg-rose-50/50 dark:bg-rose-950/20 border border-rose-500/20'">
+            <div class="flex items-center gap-1.5 min-w-0 pr-1">
+              <span class="w-1.5 h-1.5 rounded-full shrink-0"
+                [ngClass]="activeTab() === 'urgent' ? 'bg-white' : 'bg-rose-500 animate-pulse'"></span>
+              <span class="text-[11px] font-bold tracking-tight truncate"
+                [ngClass]="activeTab() === 'urgent' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400'">
+                Urgent
+              </span>
+            </div>
+            <span class="text-sm font-black px-2 py-0.5 rounded-lg shrink-0"
+              [ngClass]="activeTab() === 'urgent' ? 'bg-white/20 text-white' : 'bg-rose-500/15 text-rose-600 dark:text-rose-300'">
+              {{ urgentFilteredCount() }}
+            </span>
+          </div>
+
+          <!-- Monitored Acts -->
+          <div (click)="filterByMetric('statutes'); closeInsightsSheet()"
+            class="insights-metric-tile px-3 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between"
+            [ngClass]="activeTab() === 'statutes' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/25' : 'bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-500/20'">
+            <span class="text-[11px] font-bold tracking-tight truncate pr-1"
+              [ngClass]="activeTab() === 'statutes' ? 'text-indigo-100' : 'text-indigo-600 dark:text-indigo-400'">
+              Monitored
+            </span>
+            <span class="text-sm font-black px-2 py-0.5 rounded-lg shrink-0"
+              [ngClass]="activeTab() === 'statutes' ? 'bg-white/20 text-white' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-300'">
+              {{ followedActs().length }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Frosted Gradient Hairline Divider -->
+      <div
+        class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/90 dark:via-slate-800/90 to-transparent my-0.5"
+        aria-hidden="true">
+      </div>
+
+      <!-- Section 2: Delivery Channels Status -->
+      <div class="space-y-3">
+        <div class="flex items-center justify-between px-0.5">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <app-icon name="bell" [size]="12" class="text-purple-500"></app-icon>
+            Delivery Channels
+          </span>
+          <button (click)="closeInsightsSheet(); openPreferences()"
+            class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+            Configure
+          </button>
+        </div>
+
+        <div class="space-y-2">
+          <!-- In-App -->
+          <div
+            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+            <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              In-App Notification Feed
+            </span>
+            <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+          </div>
+          <!-- Email -->
+          <div
+            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+            <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+              <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+              Verified Email Digest
+            </span>
+            <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Enabled</span>
+          </div>
+          <!-- SSE -->
+          <div
+            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+            <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+              <span class="w-2 h-2 rounded-full"
+                [ngClass]="notificationService.sseConnected() ? 'bg-emerald-500 animate-pulse' : 'bg-red-400'"></span>
+              Real-Time SSE Stream
+            </span>
+            <span class="text-[10px] font-bold"
+              [ngClass]="notificationService.sseConnected() ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
+              {{ notificationService.sseConnected() ? 'Connected' : 'Reconnecting…' }}
+            </span>
+          </div>
+          <!-- Push -->
+          <div
+            class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+            <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              Browser Web Push Alerts
+            </span>
+            <button *ngIf="notificationService.webPushPermission() === 'default'" (click)="enableWebPush()"
+              class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition cursor-pointer border border-purple-500/20">
+              Enable
+            </button>
+            <span *ngIf="notificationService.webPushPermission() === 'granted'"
+              class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+            <span *ngIf="notificationService.webPushPermission() === 'denied'"
+              class="text-[10px] font-bold text-red-500">Blocked</span>
+            <span *ngIf="notificationService.webPushPermission() === 'unsupported'"
+              class="text-[10px] font-bold text-slate-500">N/A</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Monitored Statutes (if any) -->
+      <div *ngIf="followedActs().length > 0" class="space-y-3">
+        <!-- Frosted Gradient Hairline Divider -->
+        <div
+          class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/90 dark:via-slate-800/90 to-transparent my-0.5"
+          aria-hidden="true">
+        </div>
+
+        <div class="flex items-center justify-between px-0.5">
+          <span class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+            <app-icon name="scale" [size]="12" class="text-indigo-500"></app-icon>
+            Monitored Statutes
+          </span>
+          <button (click)="setTab('statutes'); closeInsightsSheet()"
+            class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+            View All
+          </button>
+        </div>
+        <div class="space-y-2">
+          <div *ngFor="let act of followedActs().slice(0, 3)"
+            class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between">
+            <div class="min-w-0 pr-2">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block">{{ act.shortName
+                }}</span>
+              <span class="text-[10px] text-slate-400 truncate block">{{ act.actName }}</span>
+            </div>
+            <a [routerLink]="['/laws', act.shortName]" (click)="closeInsightsSheet()"
+              class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition no-underline shrink-0">
+              Read
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Frosted Gradient Hairline Divider -->
+      <div
+        class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/90 dark:via-slate-800/90 to-transparent my-0.5"
+        aria-hidden="true">
+      </div>
+
+      <!-- Section 4: Security & Compliance -->
+      <div
+        class="p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 text-center space-y-2">
+        <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-300">
+          <app-icon name="shield" [size]="14" class="text-teal-500"></app-icon>
+          <span>Legal Privacy &amp; Encryption</span>
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+          All consultation dockets, advocate communications, and case milestones are end-to-end encrypted under the
+          Digital Personal Data Protection (DPDP) Act 2023.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<div *ngIf="isPreferencesOpen()"
+  class="preferences-modal-backdrop fixed inset-0 z-[2000] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-xl sm:backdrop-blur-2xl transition-all"
+  (click)="onBackdropClick($event)">
+
+  <div
+    class="preferences-dialog-panel w-full sm:max-w-3xl lg:max-w-4xl bg-white dark:bg-[#0c1222] border-t border-x-0 border-b-0 sm:border border-slate-200/90 dark:border-white/10 rounded-t-[28px] sm:rounded-[24px] shadow-2xl flex flex-col max-h-[82vh] sm:max-h-[86vh] overflow-hidden relative"
+    (click)="$event.stopPropagation()" (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)"
+    (touchend)="onTouchEnd()">
+
+    <!-- Ambient Radiant Header Glow Arc (Desktop only - prevents mobile edge bleeding) -->
+    <div
+      class="hidden sm:block pointer-events-none absolute -top-24 left-1/2 -translate-x-1/2 w-96 h-36 bg-blue-500/20 dark:bg-blue-600/20 rounded-full blur-3xl"
+      aria-hidden="true"></div>
+
+    <!-- Header Bar with Integrated Mobile Grab Handle (Seamless, Uniform Surface) -->
+    <div
+      class="preferences-sheet-header px-5 sm:px-6 pt-3 sm:pt-4 pb-3 border-b border-slate-200/80 dark:border-white/10 shrink-0 relative z-10 bg-white dark:bg-[#0c1222]">
+
+      <!-- Native Mobile Drag Handle Pill (iOS / Material Standard) -->
+      <div class="sm:hidden w-full flex justify-center items-center pb-2.5 cursor-grab active:cursor-grabbing"
+        (touchstart)="onTouchStart($event)" (touchmove)="onTouchMove($event)" (touchend)="onTouchEnd()"
+        aria-hidden="true">
+        <div class="pref-sheet-handle"></div>
+      </div>
+
+      <!-- Main Header Row -->
+      <div class="flex items-start justify-between gap-3">
+        <div class="flex items-start gap-3 min-w-0">
+          <div
+            class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center shadow-lg shadow-blue-500/25 shrink-0 mt-0.5">
+            <app-icon name="settings" [size]="20"></app-icon>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <h3 class="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-white leading-tight">
+                Notification Preferences
+              </h3>
+              <!-- Read-only Verified Account Role Badge (Derived strictly from user credentials) -->
+              <span *ngIf="effectiveRole() === 'Lawyer'"
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-2xs">
+                <app-icon name="scale" [size]="11"></app-icon>
+                <span>Advocate Workstation</span>
+              </span>
+              <span *ngIf="effectiveRole() === 'Client'"
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
+                <app-icon name="user" [size]="11"></app-icon>
+                <span>Client / Litigant Portal</span>
+              </span>
+            </div>
+
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-normal max-w-xl">
+              <span *ngIf="effectiveRole() === 'Lawyer'">
+                Configure delivery channels across court cause lists, client consultations, Bar Council compliance
+                audits,
+                and statutory gazette alerts.
+              </span>
+              <span *ngIf="effectiveRole() === 'Client'">
+                Manage real-time notifications for active court hearings, confidential advocate direct chats, and e-KYC
+                verification updates.
+              </span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Close Button -->
+        <button (click)="closePreferences()" appTooltip="Close preferences (Esc)" tooltipPlacement="left"
+          class="w-9 h-9 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-300 flex items-center justify-center transition active:scale-95 cursor-pointer border-0 shrink-0">
+          <app-icon name="x" [size]="18"></app-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Section Navigation Tab Bar (Mobile: 2-Column Grid, Desktop: 4-Column Grid) -->
+    <div
+      class="pref-tab-bar px-3 sm:px-6 py-2.5 border-b border-slate-200/80 dark:border-white/10 bg-slate-50/90 dark:bg-[#0c1222] grid grid-cols-2 sm:grid-cols-4 gap-2 shrink-0">
+      <!-- Tab 1: Channels & Categories -->
+      <button type="button" (click)="preferencesSection.set('categories')"
+        class="pref-tab-btn px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border w-full min-w-0"
+        [ngClass]="preferencesSection() === 'categories' ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-white dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'">
+        <app-icon name="layers" [size]="13" class="shrink-0"></app-icon>
+        <span class="truncate">Channels &amp; Rules</span>
+        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold shrink-0"
+          [ngClass]="preferencesSection() === 'categories' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+          {{ filteredPreferenceCategories().length }}
+        </span>
+      </button>
+
+      <!-- Tab 2: Quiet Hours (DND) -->
+      <button type="button" (click)="preferencesSection.set('quiet-hours')"
+        class="pref-tab-btn px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border w-full min-w-0"
+        [ngClass]="preferencesSection() === 'quiet-hours' ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' : 'bg-white dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'">
+        <app-icon name="moon" [size]="13" class="shrink-0"></app-icon>
+        <span class="truncate">Quiet Hours (DND)</span>
+        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold uppercase shrink-0"
+          [ngClass]="tempPreferences().quietHours?.enabled ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' : 'bg-slate-200 dark:bg-slate-800 text-slate-400'">
+          {{ tempPreferences().quietHours?.enabled ? 'On' : 'Off' }}
+        </span>
+      </button>
+
+      <!-- Tab 3: Judicial Sounds & Haptics -->
+      <button type="button" (click)="preferencesSection.set('sound')"
+        class="pref-tab-btn px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border w-full min-w-0"
+        [ngClass]="preferencesSection() === 'sound' ? 'bg-violet-600 text-white border-violet-600 shadow-xs' : 'bg-white dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'">
+        <app-icon name="volume-2" [size]="13" class="shrink-0"></app-icon>
+        <span class="truncate">Sound &amp; Haptics</span>
+        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-extrabold capitalize shrink-0"
+          [ngClass]="preferencesSection() === 'sound' ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
+          {{ tempPreferences().soundProfile || 'gavel' }}
+        </span>
+      </button>
+
+      <!-- Tab 4: WhatsApp Gateway -->
+      <button type="button" (click)="preferencesSection.set('whatsapp')"
+        class="pref-tab-btn px-2.5 sm:px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border w-full min-w-0"
+        [ngClass]="preferencesSection() === 'whatsapp' ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs' : 'bg-white dark:bg-slate-900/80 text-slate-600 dark:text-slate-300 border-slate-200/80 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800'">
+        <app-icon name="whatsapp" [size]="13" class="shrink-0"></app-icon>
+        <span class="truncate">WhatsApp Gateway</span>
+        <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+      </button>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 1: CHANNELS & CATEGORIES MATRIX -->
+    <!-- ========================================================================= -->
+    <div *ngIf="preferencesSection() === 'categories'" class="flex-1 flex flex-col min-h-0 overflow-hidden">
+      <!-- Presets & Master Channels Command Strip -->
+      <div
+        class="px-5 sm:px-6 py-3 border-b border-slate-200/60 dark:border-white/5 bg-slate-50/70 dark:bg-slate-900/40 shrink-0 space-y-3">
+        <!-- Row 1: Quick Presets + Search Filter -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+          <!-- Presets Pills -->
+          <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5 whitespace-nowrap">
+            <span
+              class="text-[10px] font-black uppercase tracking-wider text-slate-400 mr-1 hidden sm:inline">Presets:</span>
+
+            <!-- Role Intelligent Defaults -->
+            <button type="button" (click)="applyPreset('role-default')"
+              class="pref-preset-pill px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border bg-blue-50/60 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+              <app-icon name="sparkles" [size]="11" class="text-amber-500"></app-icon>
+              <span>{{ effectiveRole() === 'Lawyer' ? 'Advocate Defaults' : 'Client Defaults' }}</span>
+            </button>
+
+            <!-- All Active -->
+            <button type="button" (click)="applyPreset('all')" [class.is-active]="activePreset() === 'all'"
+              class="pref-preset-pill px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border">
+              <app-icon name="zap" [size]="11"></app-icon>
+              <span>All Active</span>
+            </button>
+
+            <!-- Essential Only -->
+            <button type="button" (click)="applyPreset('essential')" [class.is-active]="activePreset() === 'essential'"
+              class="pref-preset-pill px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border">
+              <app-icon name="shield" [size]="11"></app-icon>
+              <span>Essential Only</span>
+            </button>
+
+            <!-- Quiet Mode -->
+            <button type="button" (click)="applyPreset('quiet')" [class.is-active]="activePreset() === 'quiet'"
+              class="pref-preset-pill px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border">
+              <app-icon name="volume-x" [size]="11"></app-icon>
+              <span>Quiet Mode</span>
+            </button>
+
+            <!-- Default -->
+            <button type="button" (click)="applyPreset('default')" [class.is-active]="activePreset() === 'default'"
+              class="pref-preset-pill px-2.5 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1.5 cursor-pointer border">
+              <app-icon name="refresh" [size]="11"></app-icon>
+              <span>Reset</span>
+            </button>
+          </div>
+
+          <!-- Compact Search Filter -->
+          <div class="relative min-w-[170px] sm:max-w-[210px]">
+            <input type="text" [ngModel]="prefSearchQuery()" (ngModelChange)="prefSearchQuery.set($event)"
+              placeholder="Search category rules..."
+              class="w-full pl-7 pr-6 py-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-[11px] text-slate-800 dark:text-slate-100 placeholder-slate-400 outline-none focus:border-blue-500 shadow-2xs" />
+            <app-icon name="search" [size]="11"
+              class="absolute left-2 top-1/2 -translate-y-1/2 text-slate-400"></app-icon>
+            <button *ngIf="prefSearchQuery()" (click)="prefSearchQuery.set('')"
+              class="absolute right-1.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 bg-transparent border-0 cursor-pointer">
+              <app-icon name="x" [size]="10"></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Row 2: Master Channels Summary 4-Column Grid -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <!-- In-App Feed Master -->
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-1 shadow-2xs">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-bold text-xs truncate">
+                <app-icon name="monitor" [size]="13" class="text-blue-500 shrink-0"></app-icon>
+                <span class="truncate">In-App</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-0.5 block truncate">
+                {{ getChannelActiveCount('inApp') }}/{{ filteredPreferenceCategories().length }} active
+              </span>
+            </div>
+            <button type="button" (click)="toggleMasterChannel('inApp')"
+              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold cursor-pointer transition border shrink-0"
+              [ngClass]="isMasterChannelActive('inApp') ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+              {{ isMasterChannelActive('inApp') ? 'All On' : 'Toggle' }}
+            </button>
+          </div>
+
+          <!-- Email Digest Master -->
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-1 shadow-2xs">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-bold text-xs truncate">
+                <app-icon name="mail" [size]="13" class="text-purple-500 shrink-0"></app-icon>
+                <span class="truncate">Email</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-0.5 block truncate">
+                {{ getChannelActiveCount('email') }}/{{ filteredPreferenceCategories().length }} active
+              </span>
+            </div>
+            <button type="button" (click)="toggleMasterChannel('email')"
+              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold cursor-pointer transition border shrink-0"
+              [ngClass]="isMasterChannelActive('email') ? 'bg-purple-600 text-white border-purple-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+              {{ isMasterChannelActive('email') ? 'All On' : 'Toggle' }}
+            </button>
+          </div>
+
+          <!-- Web Push Master -->
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-1 shadow-2xs">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-bold text-xs truncate">
+                <app-icon name="smartphone" [size]="13" class="text-emerald-500 shrink-0"></app-icon>
+                <span class="truncate">Push</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-0.5 block truncate">
+                {{ getChannelActiveCount('push') }}/{{ filteredPreferenceCategories().length }} active
+              </span>
+            </div>
+            <button type="button" (click)="toggleMasterChannel('push')"
+              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold cursor-pointer transition border shrink-0"
+              [ngClass]="isMasterChannelActive('push') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+              {{ isMasterChannelActive('push') ? 'All On' : 'Toggle' }}
+            </button>
+          </div>
+
+          <!-- WhatsApp Legal Dispatch Master -->
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-white dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-1 shadow-2xs">
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-200 font-bold text-xs truncate">
+                <app-icon name="whatsapp" [size]="13" class="text-[#25D366] shrink-0"></app-icon>
+                <span class="truncate">WhatsApp</span>
+              </div>
+              <span class="text-[10px] text-slate-400 mt-0.5 block truncate">
+                {{ getChannelActiveCount('whatsapp') }}/{{ filteredPreferenceCategories().length }} active
+              </span>
+            </div>
+            <button type="button" (click)="toggleMasterChannel('whatsapp')"
+              class="px-2 py-0.5 rounded-md text-[10px] font-extrabold cursor-pointer transition border shrink-0"
+              [ngClass]="isMasterChannelActive('whatsapp') ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+              {{ isMasterChannelActive('whatsapp') ? 'All On' : 'Toggle' }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Category Toggles Matrix Body (SCROLLBAR 100% REMOVED) -->
+      <div class="preferences-scroll-area flex-1 overflow-y-auto space-y-2.5 px-4 sm:px-6 py-4 scrollbar-none">
+
+        <!-- Empty State if Search doesn't match -->
+        <div *ngIf="filteredPreferenceCategories().length === 0" class="py-8 text-center text-slate-400 text-xs">
+          <app-icon name="search" [size]="24" class="mx-auto mb-2 opacity-40"></app-icon>
+          <p>No alert categories match "<span class="text-slate-700 dark:text-slate-200 font-semibold">{{
+              prefSearchQuery() }}</span>"</p>
+          <button (click)="prefSearchQuery.set('')"
+            class="mt-2 text-blue-500 font-bold hover:underline bg-transparent border-0 cursor-pointer">
+            Clear search query
+          </button>
+        </div>
+
+        <!-- Category Cards -->
+        <div *ngFor="let cat of filteredPreferenceCategories(); trackBy: trackCategoryKey"
+          class="pref-category-card p-3 sm:p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/5 transition-all duration-200 hover:border-slate-300 dark:hover:border-slate-700/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 group shadow-2xs">
+
+          <!-- Left Details (Tailored Copy per Role) -->
+          <div class="flex items-start gap-3 min-w-0 flex-1">
+            <div
+              class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0 border mt-0.5 shadow-2xs"
+              [ngClass]="cat.badgeClass">
+              <app-icon [name]="cat.icon" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight">
+                  {{ (effectiveRole() === 'Client' && cat.clientLabel) ? cat.clientLabel : cat.label }}
+                </span>
+                <span class="px-2 py-0.2 text-[9px] font-extrabold uppercase rounded-md tracking-wider border shrink-0"
+                  [ngClass]="cat.badgeClass">
+                  {{ cat.tag }}
+                </span>
+                <span *ngIf="cat.applicableRoles.length === 1 && cat.applicableRoles[0] === 'Lawyer'"
+                  class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                  Advocate Only
+                </span>
+                <span *ngIf="cat.applicableRoles.includes('Client') && !cat.applicableRoles.includes('Lawyer')"
+                  class="px-1.5 py-0.2 text-[8px] font-black uppercase rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 border border-teal-500/20">
+                  Litigant Only
+                </span>
+              </div>
+              <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-snug">
+                {{ (effectiveRole() === 'Client' && cat.clientDesc) ? cat.clientDesc : cat.desc }}
+              </p>
+            </div>
+          </div>
+
+          <!-- Right Channel Toggle Chips (4 Channels: App, Email, Push, WhatsApp) -->
+          <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 pt-1 sm:pt-0 justify-end flex-wrap">
+            <!-- In-App Toggle Chip -->
+            <button type="button" (click)="togglePref(cat.key, 'inApp')" [class.is-active]="getPref(cat.key, 'inApp')"
+              class="pref-channel-chip pref-chip-app" [attr.aria-pressed]="getPref(cat.key, 'inApp')"
+              appTooltip="Toggle in-app notification feed" tooltipPlacement="top">
+              <app-icon name="monitor" [size]="12"></app-icon>
+              <span>App</span>
+              <span class="chip-dot"></span>
+            </button>
+
+            <!-- Email Toggle Chip -->
+            <button type="button" (click)="togglePref(cat.key, 'email')" [class.is-active]="getPref(cat.key, 'email')"
+              class="pref-channel-chip pref-chip-email" [attr.aria-pressed]="getPref(cat.key, 'email')"
+              appTooltip="Toggle verified email digest" tooltipPlacement="top">
+              <app-icon name="mail" [size]="12"></app-icon>
+              <span>Email</span>
+              <span class="chip-dot"></span>
+            </button>
+
+            <!-- Push Toggle Chip -->
+            <button type="button" (click)="togglePref(cat.key, 'push')" [class.is-active]="getPref(cat.key, 'push')"
+              class="pref-channel-chip pref-chip-push" [attr.aria-pressed]="getPref(cat.key, 'push')"
+              appTooltip="Toggle browser desktop & mobile push" tooltipPlacement="top">
+              <app-icon name="smartphone" [size]="12"></app-icon>
+              <span>Push</span>
+              <span class="chip-dot"></span>
+            </button>
+
+            <!-- WhatsApp Toggle Chip -->
+            <button type="button" (click)="togglePref(cat.key, 'whatsapp')"
+              [class.is-active]="getPref(cat.key, 'whatsapp')" class="pref-channel-chip pref-chip-whatsapp"
+              [attr.aria-pressed]="getPref(cat.key, 'whatsapp')" appTooltip="Toggle official WhatsApp dispatch alerts"
+              tooltipPlacement="top">
+              <app-icon name="whatsapp" [size]="12"></app-icon>
+              <span>WhatsApp</span>
+              <span class="chip-dot"></span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 2: QUIET HOURS / DO-NOT-DISTURB (DND) PANEL -->
+    <!-- ========================================================================= -->
+    <div *ngIf="preferencesSection() === 'quiet-hours'"
+      class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-4 preferences-scroll-area scrollbar-none">
+      <!-- Quiet Hours Master Banner Card -->
+      <div
+        class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-indigo-950/70 via-slate-900 to-slate-950 border border-indigo-500/20 text-white relative overflow-hidden shadow-lg">
+        <div class="pointer-events-none absolute -right-12 -top-12 w-48 h-48 bg-indigo-500/10 rounded-full blur-2xl">
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+          <div class="flex items-start gap-3.5">
+            <div
+              class="w-12 h-12 rounded-2xl bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 flex items-center justify-center shrink-0">
+              <app-icon name="moon" [size]="24"></app-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="text-base font-bold text-white">Quiet Hours / Do-Not-Disturb Window</h4>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider"
+                  [ngClass]="tempPreferences().quietHours?.enabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 text-slate-400 border border-slate-700'">
+                  {{ tempPreferences().quietHours?.enabled ? 'Protection Active' : 'Disabled' }}
+                </span>
+              </div>
+              <p class="text-xs text-slate-300 mt-1 max-w-lg leading-relaxed">
+                Mute audible push chimes, email pings, and WhatsApp messages during rest periods. Queued notifications
+                are silently retained and delivered in your morning briefing digest.
+              </p>
+            </div>
+          </div>
+
+          <!-- Master DND Switch -->
+          <div class="flex items-center gap-3 shrink-0 self-end sm:self-center">
+            <span class="text-xs font-semibold text-slate-300">
+              {{ tempPreferences().quietHours?.enabled ? 'Enabled' : 'Disabled' }}
+            </span>
+            <button type="button" (click)="toggleQuietHours()"
+              class="w-13 h-7 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer border-0 relative flex items-center"
+              [ngClass]="tempPreferences().quietHours?.enabled ? 'bg-indigo-600' : 'bg-slate-700'"
+              aria-label="Toggle quiet hours">
+              <span
+                class="w-6 h-6 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out flex items-center justify-center"
+                [ngClass]="tempPreferences().quietHours?.enabled ? 'translate-x-6' : 'translate-x-0'">
+                <app-icon *ngIf="tempPreferences().quietHours?.enabled" name="moon" [size]="12"
+                  class="text-indigo-600"></app-icon>
+              </span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Active Banner if Quiet Hours is in effect right now -->
+        <div *ngIf="isQuietHoursActiveNow()"
+          class="mt-4 pt-3 border-t border-indigo-500/20 flex items-center gap-2 text-xs text-amber-300">
+          <span class="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0"></span>
+          <span class="font-bold">Active Right Now:</span>
+          <span class="text-slate-300">Quiet hours are currently muting non-urgent notifications until {{
+            tempPreferences().quietHours?.endTime || '07:30' }}.</span>
+        </div>
+      </div>
+
+      <!-- Time Window Setting Inputs -->
+      <div
+        class="p-4 sm:p-5 rounded-2xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/5 space-y-4">
+        <h5
+          class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+          <app-icon name="clock" [size]="14" class="text-indigo-500"></app-icon>
+          <span>Scheduled Off-Hours Schedule</span>
+        </h5>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Start Time -->
+          <div
+            class="p-3.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+              Quiet Period Begins (Night Silence)
+            </label>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              When audible notifications stop ringing.
+            </p>
+            <input type="time" [ngModel]="tempPreferences().quietHours?.startTime || '22:00'"
+              (ngModelChange)="updateQuietHoursTime('startTime', $event)"
+              class="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-indigo-500" />
+          </div>
+
+          <!-- End Time -->
+          <div
+            class="p-3.5 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-1.5">
+            <label class="block text-xs font-bold text-slate-800 dark:text-slate-200">
+              Quiet Period Ends (Morning Briefing)
+            </label>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Time when the aggregated morning digest is sent.
+            </p>
+            <input type="time" [ngModel]="tempPreferences().quietHours?.endTime || '07:30'"
+              (ngModelChange)="updateQuietHoursTime('endTime', $event)"
+              class="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-semibold text-slate-900 dark:text-white outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Urgent Override Injunctions Card -->
+      <div
+        class="p-4 sm:p-5 rounded-2xl bg-rose-500/5 dark:bg-rose-950/20 border border-rose-500/20 flex items-start justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center shrink-0 border border-rose-500/20 mt-0.5">
+            <app-icon name="alert-triangle" [size]="18"></app-icon>
+          </div>
+          <div>
+            <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              Bypass for Emergency Court Hearings &amp; Injunctions
+            </h5>
+            <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              Urgent cause list mentions, emergency caveat warnings, and urgent court bail listings will bypass Quiet
+              Hours and notify you instantly.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" (click)="toggleQuietHoursUrgent(!tempPreferences().quietHours?.allowUrgent)"
+          class="w-11 h-6 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer border-0 relative flex items-center shrink-0"
+          [ngClass]="tempPreferences().quietHours?.allowUrgent ? 'bg-rose-600' : 'bg-slate-300 dark:bg-slate-700'"
+          aria-label="Toggle urgent bypass">
+          <span class="w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out"
+            [ngClass]="tempPreferences().quietHours?.allowUrgent ? 'translate-x-5' : 'translate-x-0'"></span>
+        </button>
+      </div>
+
+      <!-- Morning Briefing Digest Explainer -->
+      <div
+        class="p-3.5 sm:p-4 rounded-xl bg-slate-100/80 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 flex items-center gap-3">
+        <app-icon name="file-text" [size]="18" class="text-indigo-500 shrink-0"></app-icon>
+        <p class="text-[11px] text-slate-600 dark:text-slate-400 leading-normal">
+          <strong class="text-slate-800 dark:text-slate-200 font-bold">Morning Briefing Digest:</strong> All case notes
+          and statutory updates during quiet hours are bundled and delivered as a structured digest at {{
+          tempPreferences().quietHours?.endTime || '07:30' }} AM.
+        </p>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 3: JUDICIAL SOUND PROFILES & TACTILE HAPTICS -->
+    <!-- ========================================================================= -->
+    <div *ngIf="preferencesSection() === 'sound'"
+      class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-4 preferences-scroll-area scrollbar-none">
+      <!-- Section Header -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-white/5">
+        <div>
+          <h4
+            class="text-sm font-extrabold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+            <app-icon name="volume-2" [size]="16" class="text-violet-500"></app-icon>
+            <span>Court Docket Audio Profile</span>
+          </h4>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Select an acoustic chime for urgent cause lists and client consultations. Live-synthesized via Web Audio
+            API.
+          </p>
+        </div>
+      </div>
+
+      <!-- Sound Profile Cards Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <!-- 1. Gavel Tap -->
+        <div (click)="setSoundProfile('gavel')"
+          class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3"
+          [ngClass]="tempPreferences().soundProfile === 'gavel' ? 'bg-violet-500/10 dark:bg-violet-950/30 border-violet-500 shadow-xs' : 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-700'">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-10 h-10 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 border border-amber-500/20">
+              <app-icon name="gavel" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Courtroom Gavel</h5>
+                <span *ngIf="tempPreferences().soundProfile === 'gavel'"
+                  class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-violet-500 text-white">Active</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Authentic dual-strike wooden gavel thud
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="playSound('gavel'); $event.stopPropagation()" appTooltip="Test sound"
+            tooltipPlacement="top"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold text-violet-600 dark:text-violet-400 bg-white dark:bg-slate-800 border border-violet-200 dark:border-violet-800 hover:bg-violet-50 cursor-pointer flex items-center gap-1 shrink-0">
+            <app-icon name="volume-2" [size]="12"></app-icon>
+            <span>Play</span>
+          </button>
+        </div>
+
+        <!-- 2. Crystal Ping -->
+        <div (click)="setSoundProfile('crystal')"
+          class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3"
+          [ngClass]="tempPreferences().soundProfile === 'crystal' ? 'bg-violet-500/10 dark:bg-violet-950/30 border-violet-500 shadow-xs' : 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-700'">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-10 h-10 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+              <app-icon name="sparkles" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Crystal Chime</h5>
+                <span *ngIf="tempPreferences().soundProfile === 'crystal'"
+                  class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-violet-500 text-white">Active</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Clean high-frequency acoustic ping (988
+                Hz)</p>
+            </div>
+          </div>
+          <button type="button" (click)="playSound('crystal'); $event.stopPropagation()" appTooltip="Test sound"
+            tooltipPlacement="top"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold text-violet-600 dark:text-violet-400 bg-white dark:bg-slate-800 border border-violet-200 dark:border-violet-800 hover:bg-violet-50 cursor-pointer flex items-center gap-1 shrink-0">
+            <app-icon name="volume-2" [size]="12"></app-icon>
+            <span>Play</span>
+          </button>
+        </div>
+
+        <!-- 3. Court Bell -->
+        <div (click)="setSoundProfile('bell')"
+          class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3"
+          [ngClass]="tempPreferences().soundProfile === 'bell' ? 'bg-violet-500/10 dark:bg-violet-950/30 border-violet-500 shadow-xs' : 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-700'">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+              <app-icon name="bell" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Judicial Bench Bell</h5>
+                <span *ngIf="tempPreferences().soundProfile === 'bell'"
+                  class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-violet-500 text-white">Active</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Supreme Court registry 2-tone brass chime
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="playSound('bell'); $event.stopPropagation()" appTooltip="Test sound"
+            tooltipPlacement="top"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold text-violet-600 dark:text-violet-400 bg-white dark:bg-slate-800 border border-violet-200 dark:border-violet-800 hover:bg-violet-50 cursor-pointer flex items-center gap-1 shrink-0">
+            <app-icon name="volume-2" [size]="12"></app-icon>
+            <span>Play</span>
+          </button>
+        </div>
+
+        <!-- 4. Pulse -->
+        <div (click)="setSoundProfile('pulse')"
+          class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3"
+          [ngClass]="tempPreferences().soundProfile === 'pulse' ? 'bg-violet-500/10 dark:bg-violet-950/30 border-violet-500 shadow-xs' : 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-700'">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+              <app-icon name="activity" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Discrete Pulse</h5>
+                <span *ngIf="tempPreferences().soundProfile === 'pulse'"
+                  class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-violet-500 text-white">Active</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Subtle soft low-frequency courtroom pulse
+              </p>
+            </div>
+          </div>
+          <button type="button" (click)="playSound('pulse'); $event.stopPropagation()" appTooltip="Test sound"
+            tooltipPlacement="top"
+            class="px-2.5 py-1 rounded-lg text-xs font-bold text-violet-600 dark:text-violet-400 bg-white dark:bg-slate-800 border border-violet-200 dark:border-violet-800 hover:bg-violet-50 cursor-pointer flex items-center gap-1 shrink-0">
+            <app-icon name="volume-2" [size]="12"></app-icon>
+            <span>Play</span>
+          </button>
+        </div>
+
+        <!-- 5. Silent -->
+        <div (click)="setSoundProfile('silent')"
+          class="p-3.5 rounded-2xl border transition-all cursor-pointer flex items-center justify-between gap-3 sm:col-span-2"
+          [ngClass]="tempPreferences().soundProfile === 'silent' ? 'bg-violet-500/10 dark:bg-violet-950/30 border-violet-500 shadow-xs' : 'bg-slate-50/80 dark:bg-slate-900/60 border-slate-200/80 dark:border-white/5 hover:border-slate-300 dark:hover:border-slate-700'">
+          <div class="flex items-center gap-3 min-w-0">
+            <div
+              class="w-10 h-10 rounded-xl bg-slate-500/10 text-slate-500 dark:text-slate-400 flex items-center justify-center shrink-0 border border-slate-500/20">
+              <app-icon name="volume-x" [size]="18"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">Silent Mode (Visual Alerts Only)
+                </h5>
+                <span *ngIf="tempPreferences().soundProfile === 'silent'"
+                  class="px-1.5 py-0.2 rounded text-[9px] font-black uppercase bg-violet-500 text-white">Active</span>
+              </div>
+              <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">Suppresses all speaker audio; visual
+                badge and notification feed alerts remain intact</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tactile Haptic Feedback Card -->
+      <div
+        class="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/5 flex items-center justify-between gap-3">
+        <div class="flex items-start gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20 mt-0.5">
+            <app-icon name="smartphone" [size]="18"></app-icon>
+          </div>
+          <div>
+            <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+              Tactile Haptic Feedback (Mobile Vibration)
+            </h5>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
+              Provides physical vibration pulses on supported mobile devices and smartwatches when urgent notices
+              arrive.
+            </p>
+          </div>
+        </div>
+
+        <button type="button" (click)="toggleHaptic()"
+          class="w-11 h-6 rounded-full p-0.5 transition-colors duration-200 ease-in-out cursor-pointer border-0 relative flex items-center shrink-0"
+          [ngClass]="tempPreferences().hapticFeedback ? 'bg-emerald-600' : 'bg-slate-300 dark:bg-slate-700'"
+          aria-label="Toggle haptic vibration">
+          <span class="w-5 h-5 rounded-full bg-white shadow-md transform transition-transform duration-200 ease-in-out"
+            [ngClass]="tempPreferences().hapticFeedback ? 'translate-x-5' : 'translate-x-0'"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- SECTION 4: WHATSAPP LEGAL DISPATCH GATEWAY -->
+    <!-- ========================================================================= -->
+    <div *ngIf="preferencesSection() === 'whatsapp'"
+      class="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-4 preferences-scroll-area scrollbar-none">
+      <!-- WhatsApp Hero Banner -->
+      <div
+        class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-[#075E54] via-[#128C7E] to-[#25D366]/80 text-white relative overflow-hidden shadow-lg">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 relative z-10">
+          <div class="flex items-start gap-3.5">
+            <div
+              class="w-12 h-12 rounded-2xl bg-white/20 text-white flex items-center justify-center shrink-0 border border-white/30">
+              <app-icon name="whatsapp" [size]="26"></app-icon>
+            </div>
+            <div>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="text-base font-bold text-white">WhatsApp Legal Dispatch Gateway</h4>
+                <span
+                  class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-white/20 text-white border border-white/30">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+                  <span>Active Channel</span>
+                </span>
+              </div>
+              <p class="text-xs text-white/90 mt-1 max-w-lg leading-relaxed">
+                Connect LegalConnect with verified WhatsApp Business API dispatch to receive urgent cause list alerts,
+                courtroom call-overs, and client booking confirmations directly in WhatsApp.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div
+          class="mt-4 pt-3 border-t border-white/20 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-2">
+            <span class="text-white/80">Registered Mobile Number:</span>
+            <strong class="text-white font-mono font-bold">{{ getWhatsAppRecipientPhone() }}</strong>
+          </div>
+          <span class="text-white/80 text-[11px]">End-to-end encrypted dispatch</span>
+        </div>
+      </div>
+
+      <!-- Dispatched Message Previews -->
+      <div
+        class="p-4 rounded-2xl bg-slate-50/90 dark:bg-slate-900/60 border border-slate-200/80 dark:border-white/5 space-y-3">
+        <h5
+          class="text-xs font-extrabold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-2">
+          <app-icon name="check-circle" [size]="14" class="text-emerald-500"></app-icon>
+          <span>Real-Time Dispatches Handled by WhatsApp</span>
+        </h5>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+          <div
+            class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-1">
+            <strong class="text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+              <span>🏛️ High Court / Supreme Court Listings</span>
+            </strong>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Immediate WhatsApp alert 12 hours prior with Item No, Court Hall, and Bench Presiding Judge.
+            </p>
+          </div>
+
+          <div
+            class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-1">
+            <strong class="text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+              <span>📋 Case Diary &amp; Adjournment Notices</span>
+            </strong>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Immediate updates whenever an opposing counsel files an application or the docket updates.
+            </p>
+          </div>
+
+          <div
+            class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-1">
+            <strong class="text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+              <span>💬 Direct Client Consultation Confirmations</span>
+            </strong>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Instant appointment reminders, video meeting links, and case retainer payment receipts.
+            </p>
+          </div>
+
+          <div
+            class="p-3 rounded-xl bg-white dark:bg-slate-950/60 border border-slate-200/80 dark:border-slate-800 space-y-1">
+            <strong class="text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+              <span>🔐 Security &amp; 2-Factor Auth Alerts</span>
+            </strong>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400">
+              Instant verification OTPs and alerts whenever a login is attempted from an unrecognized device.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Test WhatsApp Simulation -->
+      <div
+        class="p-4 rounded-2xl bg-emerald-500/5 dark:bg-emerald-950/20 border border-emerald-500/20 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h5 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+            Dispatch Live WhatsApp Test Message
+          </h5>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            Sends an immediate simulation payload to verify your WhatsApp dispatch connectivity.
+          </p>
+        </div>
+
+        <button type="button" (click)="sendWhatsAppTestSimulation()"
+          class="px-4 py-2 rounded-xl text-xs font-bold text-white bg-[#25D366] hover:bg-[#128C7E] transition shadow-xs flex items-center gap-1.5 cursor-pointer border-0 shrink-0">
+          <app-icon name="whatsapp" [size]="14"></app-icon>
+          <span>Send Test WhatsApp</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Sticky Footer Actions Bar -->
+    <div
+      class="px-5 sm:px-6 py-3 sm:py-3.5 border-t border-slate-200/80 dark:border-white/10 bg-white/95 dark:bg-[#0c1222]/95 backdrop-blur-md flex items-center justify-between gap-3 shrink-0 relative z-10">
+      <!-- Left Side: Test Alert Trigger -->
+      <button type="button" (click)="sendTestNotification()"
+        appTooltip="Dispatch instant sample alert to test active preferences" tooltipPlacement="top"
+        class="px-3 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800/80 dark:hover:bg-slate-700/80 transition flex items-center gap-1.5 cursor-pointer border-0">
+        <app-icon name="sparkles" [size]="13" class="text-amber-500"></app-icon>
+        <span class="hidden sm:inline">Send Test Alert</span>
+        <span class="sm:hidden">Test</span>
+      </button>
+
+      <!-- Right Side: Role Defaults, Cancel & Save -->
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="applyPreset('role-default')"
+          appTooltip="Reset to intelligent defaults for current role" tooltipPlacement="top"
+          class="hidden sm:inline-flex px-3 py-2 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/50 transition cursor-pointer border border-blue-200 dark:border-blue-800">
+          <span>{{ effectiveRole() === 'Lawyer' ? 'Advocate Defaults' : 'Client Defaults' }}</span>
+        </button>
+
+        <button type="button" (click)="closePreferences()"
+          class="px-4 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition cursor-pointer border-0 bg-transparent">
+          Cancel
+        </button>
+
+        <button type="button" (click)="savePreferences()" [disabled]="isSavingPreferences()"
+          class="px-5 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/25 transition active:scale-95 cursor-pointer border-0 flex items-center gap-2 disabled:opacity-60">
+          <app-icon *ngIf="isSavingPreferences()" name="loader" [size]="14" [spin]="true"></app-icon>
+          <app-icon *ngIf="!isSavingPreferences()" name="check" [size]="14"></app-icon>
+          <span>{{ isSavingPreferences() ? 'Saving Changes...' : 'Save Preferences' }}</span>
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ==================== CONFIRM MODAL ==================== -->
 <app-confirm-dialog [isOpen]="isConfirmOpen" [title]="confirmTitle" [message]="confirmMessage" [type]="confirmType"
   (confirm)="onConfirmDialog()" (cancel)="onCancelDialog()">
 </app-confirm-dialog>

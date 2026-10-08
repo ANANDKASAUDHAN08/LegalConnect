@@ -231,7 +231,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngOnDestroy() {
-    document.body.classList.remove('overflow-hidden');
+    document.body.classList.remove('overflow-hidden', 'sheet-open');
     if (this.querySub) {
       this.querySub.unsubscribe();
     }
@@ -518,11 +518,12 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
 
   toggleMobileFilters() {
     this.showMobileFilters = !this.showMobileFilters;
+    if (typeof document !== 'undefined') {
+      document.body.classList.toggle('sheet-open', this.showMobileFilters);
+      document.body.classList.toggle('overflow-hidden', this.showMobileFilters);
+    }
     if (this.showMobileFilters) {
-      document.body.classList.add('overflow-hidden');
       setTimeout(() => this.initMobileLocationAutocomplete(), 100);
-    } else {
-      document.body.classList.remove('overflow-hidden');
     }
   }
 

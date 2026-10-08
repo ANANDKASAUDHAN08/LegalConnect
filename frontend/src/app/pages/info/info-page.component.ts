@@ -323,6 +323,10 @@ export class InfoPageComponent implements OnInit, OnDestroy {
     }
     if (this.routeSub) this.routeSub.unsubscribe();
     if (this.scrollSub) this.scrollSub.unsubscribe();
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = '';
+      document.body.classList.remove('sheet-open');
+    }
   }
 
   trackById(index: number, item: { id: string }) {
@@ -387,9 +391,10 @@ export class InfoPageComponent implements OnInit, OnDestroy {
 
   toggleDrawer() {
     this.isDrawerOpen = !this.isDrawerOpen;
-    // Lock body scroll when drawer is open
+    // Lock body scroll and notify system that a bottom sheet is open
     if (typeof document !== 'undefined') {
       document.body.style.overflow = this.isDrawerOpen ? 'hidden' : '';
+      document.body.classList.toggle('sheet-open', this.isDrawerOpen);
     }
   }
 
@@ -397,6 +402,7 @@ export class InfoPageComponent implements OnInit, OnDestroy {
     this.isDrawerOpen = false;
     if (typeof document !== 'undefined') {
       document.body.style.overflow = '';
+      document.body.classList.remove('sheet-open');
     }
   }
 

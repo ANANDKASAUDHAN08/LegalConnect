@@ -190,10 +190,35 @@ export class HelpContentComponent implements OnInit, OnDestroy {
       }
     });
 
-    // Fetch dynamic help data from backend API
+    // Fetch dynamic help data from backend API (removes hardcoded data)
     this.infoApi.getHelpData().subscribe(res => {
-      if (res && res.success && res.trendingQueries && res.trendingQueries.length > 0) {
-        this.trendingQueries = res.trendingQueries;
+      if (res && res.success) {
+        if (Array.isArray(res.faqs) && res.faqs.length > 0) {
+          this.faqs = res.faqs.map((f: any, idx: number) => ({
+            ...f,
+            sectionId: f.sectionId || 'faq-general',
+            expanded: idx === 0,
+            voted: null
+          }));
+        }
+        if (Array.isArray(res.categories) && res.categories.length > 0) {
+          this.categories = res.categories.map((c: any) => ({
+            ...c,
+            label: c.label || c.name || c.id
+          }));
+        }
+        if (res.trendingQueries && res.trendingQueries.length > 0) {
+          this.trendingQueries = res.trendingQueries;
+        }
+
+        // Check URL hash if deep-linked to specific FAQ after loading
+        if (typeof window !== 'undefined' && window.location.hash) {
+          const targetId = window.location.hash.replace('#', '');
+          const match = this.faqs.find(f => f.id === targetId);
+          if (match) {
+            this.faqs.forEach(f => f.expanded = (f.id === targetId));
+          }
+        }
       }
     });
 
@@ -210,16 +235,30 @@ export class HelpContentComponent implements OnInit, OnDestroy {
           this.recentSearches = [];
         }
       }
-
-      // Check URL hash if deep-linked to specific FAQ
-      if (window.location.hash) {
-        const targetId = window.location.hash.replace('#', '');
-        const match = this.faqs.find(f => f.id === targetId);
-        if (match) {
-          this.faqs.forEach(f => f.expanded = (f.id === targetId));
-        }
-      }
     }
+  }
+
+  get areAllExpanded(): boolean {
+    const list = this.filteredFaqs;
+    return list.length > 0 && list.every(f => f.expanded);
+  }
+
+  toggleExpandCollapseAll() {
+    const shouldExpand = !this.areAllExpanded;
+    const currentFilteredIds = new Set(this.filteredFaqs.map(f => f.id));
+    this.faqs.forEach(f => {
+      if (currentFilteredIds.has(f.id)) {
+        f.expanded = shouldExpand;
+      }
+    });
+  }
+
+  expandAll() {
+    this.faqs.forEach(f => f.expanded = true);
+  }
+
+  collapseAll() {
+    this.faqs.forEach(f => f.expanded = false);
   }
 
   get filteredFaqs(): FaqItem[] {
@@ -245,13 +284,10 @@ export class HelpContentComponent implements OnInit, OnDestroy {
   }
 
   toggleFaq(id: string) {
-    this.faqs.forEach(faq => {
-      if (faq.id === id) {
-        faq.expanded = !faq.expanded;
-      } else {
-        faq.expanded = false; // Smooth accordion single toggle
-      }
-    });
+    const target = this.faqs.find(f => f.id === id);
+    if (target) {
+      target.expanded = !target.expanded;
+    }
   }
 
   voteFaqHelpful(id: string, helpful: boolean) {
