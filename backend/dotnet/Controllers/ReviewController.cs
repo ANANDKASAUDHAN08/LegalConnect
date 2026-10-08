@@ -22,16 +22,22 @@ namespace CoreApi.Controllers
         private readonly AppDbContext _context;
         private readonly ILawyerSyncService _syncService;
         private readonly IPiiSanitizerService _piiSanitizer;
+        private readonly IUserNotificationBridgeService _userNotificationBridge;
 
         // In-memory rate limiter: key = "IP:reviewId", value = last action UTC
         private static readonly ConcurrentDictionary<string, DateTime> _likeRateLimit = new();
         private static readonly TimeSpan _likeCooldown = TimeSpan.FromSeconds(60);
 
-        public ReviewController(AppDbContext context, ILawyerSyncService syncService, IPiiSanitizerService piiSanitizer)
+        public ReviewController(
+            AppDbContext context,
+            ILawyerSyncService syncService,
+            IPiiSanitizerService piiSanitizer,
+            IUserNotificationBridgeService userNotificationBridge)
         {
             _context = context;
             _syncService = syncService;
             _piiSanitizer = piiSanitizer;
+            _userNotificationBridge = userNotificationBridge;
         }
 
         [HttpGet]
@@ -231,6 +237,33 @@ namespace CoreApi.Controllers
                 _context.Reviews.Add(review);
                 await _context.SaveChangesAsync();
                 await SyncLawyerRatingToMongo(review.TargetName);
+
+                // ── Real-Time Notification: Push to Advocate Inbox ──
+                if (!string.Equals(review.TargetName, "Platform", StringComparison.OrdinalIgnoreCase))
+                {
+                    var targetLawyer = await _context.Users
+                        .FirstOrDefaultAsync(u => u.Role == "Lawyer" && (u.FullName == review.TargetName || review.TargetName.Contains(u.FullName)));
+
+                    _ = _userNotificationBridge.PushNotificationAsync(new UserNotificationIngestDto
+                    {
+                        Type = "review",
+                        Title = $"New {review.Rating}-Star Client Review Published",
+                        Summary = $"{(review.IsVerifiedClient ? "Verified Client" : "Client")} {review.AuthorName} submitted feedback: \"{(review.Content.Length > 80 ? review.Content.Substring(0, 80) + "..." : review.Content)}\"",
+                        Details = review.Content,
+                        Icon = "star",
+                        ActionUrl = "/reviews",
+                        ActionLabel = "View Verified Reviews",
+                        Priority = review.Rating >= 4 ? "normal" : "high",
+                        Source = "Review Moderation",
+                        RecipientUserId = targetLawyer?.Id.ToString(),
+                        ExternalId = $"dotnet-review-{review.Id}",
+                        Metadata = new System.Collections.Generic.Dictionary<string, object>
+                        {
+                            { "Rating", $"{review.Rating} / 5 Stars" },
+                            { "VerifiedClient", review.IsVerifiedClient ? "Yes" : "No" }
+                        }
+                    });
+                }
 
                 return Ok(review);
             }

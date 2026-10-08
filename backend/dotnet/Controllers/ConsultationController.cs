@@ -20,15 +20,18 @@ namespace CoreApi.Controllers
     {
         private readonly AppDbContext _context;
         private readonly IServiceScopeFactory _serviceScopeFactory;
+        private readonly IUserNotificationBridgeService _userNotificationBridge;
         private readonly ILogger<ConsultationController> _logger;
 
         public ConsultationController(
             AppDbContext context,
             IServiceScopeFactory serviceScopeFactory,
+            IUserNotificationBridgeService userNotificationBridge,
             ILogger<ConsultationController> logger)
         {
             _context = context;
             _serviceScopeFactory = serviceScopeFactory;
+            _userNotificationBridge = userNotificationBridge;
             _logger = logger;
         }
 
@@ -87,6 +90,52 @@ namespace CoreApi.Controllers
 
             _context.Consultations.Add(consultation);
             await _context.SaveChangesAsync();
+
+            // ── Real-Time Notification: Push to Advocate Inbox ──
+            _ = _userNotificationBridge.PushNotificationAsync(new UserNotificationIngestDto
+            {
+                Type = "case",
+                Title = $"New Consultation Booking: {request.ClientName}",
+                Summary = $"Client {request.ClientName} submitted a legal consultation request: \"{(request.Message.Length > 80 ? request.Message.Substring(0, 80) + "..." : request.Message)}\"",
+                Details = request.Message,
+                Icon = "calendar",
+                ActionUrl = "/consultations",
+                ActionLabel = "View Consultation Docket",
+                Priority = "urgent",
+                Source = "Consultation Scheduler",
+                RecipientUserId = lawyerUser.Id.ToString(),
+                ExternalId = $"dotnet-consult-{consultation.Id}-lawyer",
+                Metadata = new System.Collections.Generic.Dictionary<string, object>
+                {
+                    { "Client", request.ClientName },
+                    { "DocketID", $"#LC-{consultation.Id}" },
+                    { "Status", "Pending Review" }
+                }
+            });
+
+            // ── Real-Time Notification: Push Confirmation to Client Inbox ──
+            if (clientId.HasValue)
+            {
+                _ = _userNotificationBridge.PushNotificationAsync(new UserNotificationIngestDto
+                {
+                    Type = "case",
+                    Title = "Consultation Request Dispatched",
+                    Summary = $"Your legal inquiry was delivered to Adv. {lawyerUser.FullName}. You will receive hearing & response alerts directly here.",
+                    Details = request.Message,
+                    Icon = "calendar",
+                    ActionUrl = "/client/portal",
+                    ActionLabel = "Track Booking",
+                    Priority = "normal",
+                    Source = "Consultation Scheduler",
+                    RecipientUserId = clientId.Value.ToString(),
+                    ExternalId = $"dotnet-consult-{consultation.Id}-client",
+                    Metadata = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        { "Advocate", lawyerUser.FullName ?? "Advocate" },
+                        { "Status", "Pending Confirmation" }
+                    }
+                });
+            }
 
             // ── Automated WhatsApp Alert for Advocate with Independent DI Scope ──
             if (lawyerUser.NotifyWhatsAppEnabled && !string.IsNullOrWhiteSpace(lawyerUser.WhatsAppPhone ?? lawyerUser.Phone))
@@ -233,6 +282,29 @@ namespace CoreApi.Controllers
 
             consultation.Status = request.Status;
             await _context.SaveChangesAsync();
+
+            // ── Real-Time Notification: Push Status Update to Client Inbox ──
+            if (consultation.ClientId.HasValue)
+            {
+                _ = _userNotificationBridge.PushNotificationAsync(new UserNotificationIngestDto
+                {
+                    Type = "case",
+                    Title = $"Consultation #{consultation.Id}: {request.Status}",
+                    Summary = $"Your advocate updated your consultation docket status to: '{request.Status}'.",
+                    Icon = "calendar",
+                    ActionUrl = "/client/portal",
+                    ActionLabel = "View Docket",
+                    Priority = request.Status == "Confirmed" ? "urgent" : "normal",
+                    Source = "Consultation Scheduler",
+                    RecipientUserId = consultation.ClientId.Value.ToString(),
+                    ExternalId = $"dotnet-consult-{consultation.Id}-status-{request.Status.ToLower()}",
+                    Metadata = new System.Collections.Generic.Dictionary<string, object>
+                    {
+                        { "DocketID", $"#LC-{consultation.Id}" },
+                        { "UpdatedStatus", request.Status }
+                    }
+                });
+            }
 
             // ── Automated WhatsApp Alert for Client on Status Update with Independent DI Scope ──
             if (consultation.ClientId.HasValue)

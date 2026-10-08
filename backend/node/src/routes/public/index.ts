@@ -5,6 +5,9 @@ import publicSearchRoutes from './publicSearchRoutes';
 import publicAiRoutes from './publicAiRoutes';
 import publicTemplateRoutes from './publicTemplateRoutes';
 import publicInfoRoutes from './publicInfoRoutes';
+import publicPracticeRoutes from './publicPracticeRoutes';
+import publicRightsRoutes from './publicRightsRoutes';
+import publicNotificationRoutes from './publicNotificationRoutes';
 import lawyerCasePackRoutes from '../lawyer/lawyerCasePackRoutes';
 
 const router = Router();
@@ -17,5 +20,9 @@ router.use('/legal', publicAiRoutes);
 router.use('/legal', publicTemplateRoutes);
 router.use('/legal', lawyerCasePackRoutes); // Maintains original /api/legal/case-packs contract
 router.use('/info', publicInfoRoutes);
+router.use('/info', publicPracticeRoutes);
+router.use('/info', publicRightsRoutes);
+router.use('/info', publicNotificationRoutes);
+router.use('/legal', publicNotificationRoutes);
 
 export default router;

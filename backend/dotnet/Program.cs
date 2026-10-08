@@ -50,9 +50,10 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<ILawyerSyncService, LawyerSyncService>();
 builder.Services.AddScoped<IWhatsAppNotificationService, WhatsAppNotificationService>();
+builder.Services.AddScoped<IUserNotificationBridgeService, UserNotificationBridgeService>();
 builder.Services.AddSingleton<IPiiSanitizerService, PiiSanitizerService>();
 builder.Services.AddHttpClient();
-builder.Services.AddHttpClient("NodeSync", c => c.Timeout = TimeSpan.FromMilliseconds(800));
+builder.Services.AddHttpClient("NodeSync", c => c.Timeout = TimeSpan.FromSeconds(4));
 builder.Services.AddHttpClient("TwilioSmsClient", c => c.Timeout = TimeSpan.FromSeconds(10));
 
 // ── 4. Hosted Background Workers ──

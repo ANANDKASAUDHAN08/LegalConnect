@@ -9,6 +9,7 @@ import lawyerRoutes from './routes/lawyer';
 import adminRoutes from './routes/admin';
 import { errorHandler, notFoundHandler } from './middlewares/errorMiddleware';
 import actRegistry from './services/actRegistry';
+import { seedNotificationsIfEmpty } from './utils/notificationSeeder';
 
 dotenv.config();
 
@@ -88,6 +89,7 @@ const startServer = () => {
     // Connect to database, seed, and initialize ActRegistry asynchronously
     connectDB()
       .then(() => seedFullDatabaseIfEmpty())
+      .then(() => seedNotificationsIfEmpty())
       .then(() => actRegistry.initialize())
       .then(() => {
         console.log('✅ Database initialization, seeding, and ActRegistry loading completed.');

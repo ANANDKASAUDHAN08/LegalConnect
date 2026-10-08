@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Claims;
+using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using CoreApi.Data;
+using CoreApi.DTOs;
 using CoreApi.DTOs.Admin;
 using CoreApi.Models;
 using CoreApi.Models.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using CoreApi.Services;
 
 namespace CoreApi.AdminControllers
 {
@@ -19,10 +24,17 @@ namespace CoreApi.AdminControllers
     public class AdminNotificationController : ControllerBase
     {
         private readonly AppDbContext _context;
+        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IUserNotificationBridgeService _userNotificationBridge;
 
-        public AdminNotificationController(AppDbContext context)
+        public AdminNotificationController(
+            AppDbContext context,
+            IHttpClientFactory httpClientFactory,
+            IUserNotificationBridgeService userNotificationBridge)
         {
             _context = context;
+            _httpClientFactory = httpClientFactory;
+            _userNotificationBridge = userNotificationBridge;
         }
 
         private int? GetCurrentUserId()
@@ -424,6 +436,33 @@ namespace CoreApi.AdminControllers
             _context.AdminNotifications.Add(notif);
             await _context.SaveChangesAsync();
 
+            // Bridge: Push broadcast into user-facing notification feed (Node.js MongoDB)
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    var client = _httpClientFactory.CreateClient("NodeSync");
+                    var nodeBaseUrl = Environment.GetEnvironmentVariable("NODE_API_URL") ?? "http://localhost:5000";
+                    var ingestPayload = new
+                    {
+                        type = "system",
+                        title = announcement.Title,
+                        summary = announcement.Summary,
+                        details = announcement.DetailsMarkdown,
+                        icon = "zap",
+                        actionUrl = "/announcements",
+                        actionLabel = "View Release Notes",
+                        priority = dto.Severity == "critical" ? "urgent" : dto.Severity == "warning" ? "high" : "normal",
+                        source = "Admin Broadcast",
+                        externalId = $"dotnet-ann-{announcement.Id}"
+                    };
+                    var json = JsonSerializer.Serialize(ingestPayload);
+                    var content = new StringContent(json, Encoding.UTF8, "application/json");
+                    await client.PostAsync($"{nodeBaseUrl}/api/info/notifications/ingest", content);
+                }
+                catch { /* Fire-and-forget: don't block the admin response */ }
+            });
+
             return Ok(new
             {
                 success = true,
@@ -620,7 +659,7 @@ namespace CoreApi.AdminControllers
                             lawyer.VerificationRemarks = dto.Remarks ?? "Approved via notification quick action.";
                             resultMessage = $"Lawyer (ID: {lawyer.Id}) verified successfully.";
 
-                            // Create success notification
+                            // Create success notification for Admin
                             _context.AdminNotifications.Add(new AdminNotification
                             {
                                 TargetRole = "All",
@@ -636,6 +675,27 @@ namespace CoreApi.AdminControllers
                                 Source = "Quick Action",
                                 RelatedEntityType = "LawyerProfile",
                                 RelatedEntityId = lawyer.Id
+                            });
+
+                            // ── Push Real-Time Notification to Advocate Inbox ──
+                            _ = _userNotificationBridge.PushNotificationAsync(new UserNotificationIngestDto
+                            {
+                                Type = "verification",
+                                Title = "State Bar Council Verification Complete",
+                                Summary = $"Your Bar Council credentials ({lawyer.BarCouncilNumber ?? "License Verified"}) have been audited and approved. The Verified Blue Badge is now active on your public profile.",
+                                Details = lawyer.VerificationRemarks,
+                                Icon = "badge-check",
+                                ActionUrl = "/profile/credentials",
+                                ActionLabel = "View Verified Profile",
+                                Priority = "high",
+                                Source = "BCI Verification Engine",
+                                RecipientUserId = lawyer.UserId.ToString(),
+                                ExternalId = $"dotnet-lawyer-verif-{lawyer.Id}-approved",
+                                Metadata = new Dictionary<string, object>
+                                {
+                                    { "BarCouncilNo", lawyer.BarCouncilNumber ?? "Verified" },
+                                    { "Status", "Verified & Active" }
+                                }
                             });
                         }
                     }

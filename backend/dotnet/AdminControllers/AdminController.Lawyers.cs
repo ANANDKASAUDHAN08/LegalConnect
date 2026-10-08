@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using CoreApi.DTOs;
 using CoreApi.DTOs.Admin;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -261,6 +262,34 @@ namespace CoreApi.Controllers
             catch (Exception ex)
             {
                 Console.WriteLine($"Mongo sync warning: {ex.Message}");
+            }
+
+            // ── Real-Time Notification: Push to Lawyer Inbox upon Verification ──
+            if (dto.IsVerified)
+            {
+                var userNotifBridge = HttpContext.RequestServices.GetService<IUserNotificationBridgeService>();
+                if (userNotifBridge != null)
+                {
+                    _ = userNotifBridge.PushNotificationAsync(new UserNotificationIngestDto
+                    {
+                        Type = "verification",
+                        Title = "State Bar Council Verification Complete",
+                        Summary = $"Your Bar Council credentials ({user.LawyerProfile.BarCouncilNumber ?? "License Verified"}) have been audited and approved. The Verified Blue Badge is now active on your public profile.",
+                        Details = user.LawyerProfile.VerificationRemarks,
+                        Icon = "badge-check",
+                        ActionUrl = "/profile/credentials",
+                        ActionLabel = "View Verified Profile",
+                        Priority = "high",
+                        Source = "BCI Verification Engine",
+                        RecipientUserId = user.Id.ToString(),
+                        ExternalId = $"dotnet-lawyer-verif-{user.Id}-approved",
+                        Metadata = new System.Collections.Generic.Dictionary<string, object>
+                        {
+                            { "BarCouncilNo", user.LawyerProfile.BarCouncilNumber ?? "Verified" },
+                            { "Status", "Verified & Active" }
+                        }
+                    });
+                }
             }
 
             return Ok(new { success = true, message = dto.IsVerified ? "Lawyer verified successfully." : "Lawyer verification revoked.", isVerified = dto.IsVerified });
