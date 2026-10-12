@@ -1,0 +1,519 @@
+<ng-container *ngIf="isMobileSheet(); else desktopView">
+  <!-- ========================================================================= -->
+  <!-- MOBILE INSIGHTS COMPACT & BEAUTIFIED STREAMLINED VIEW                     -->
+  <!-- ========================================================================= -->
+  <div class="space-y-4">
+
+    <!-- Section 1: Alert Metrics 2x2 Grid -->
+    <div class="space-y-2.5">
+      <div class="flex items-center justify-between px-0.5">
+        <span
+          class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse shadow-xs shadow-blue-500/50"></span>
+          <span>Live Alert Metrics</span>
+        </span>
+        <button type="button" (click)="onLiveFeedClick()"
+          appTooltip="SSE real-time stream status. Click for connection diagnostics." tooltipPlacement="left"
+          class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20 flex items-center gap-1 cursor-pointer transition hover:bg-emerald-500/20 active:scale-95">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"
+            [ngClass]="sseConnected() ? 'animate-pulse' : ''"></span>
+          <span>{{ sseConnected() ? 'Live Stream' : 'Reconnecting' }}</span>
+        </button>
+      </div>
+
+      <!-- 2x2 Shimmer Skeleton Loader on Loading -->
+      <div *ngIf="isLoading()" class="grid grid-cols-2 gap-2" aria-busy="true" aria-label="Loading alert telemetry">
+        <div *ngFor="let _ of [1, 2, 3, 4]"
+          class="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 animate-pulse">
+          <div class="h-2.5 w-14 bg-slate-200/80 dark:bg-slate-800/80 rounded-md"></div>
+          <div class="h-5 w-8 bg-slate-200/80 dark:bg-slate-800/80 rounded-md mt-2"></div>
+        </div>
+      </div>
+
+      <!-- 2x2 Interactive Metric Tiles Grid -->
+      <div *ngIf="!isLoading()" class="grid grid-cols-2 gap-2">
+        <!-- Total Alerts -->
+        <div (click)="onMetricClick('all')" appTooltip="View all notifications across all categories"
+          tooltipPlacement="top"
+          class="insights-metric-tile px-3.5 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between border"
+          [ngClass]="activeTab() === 'all' 
+            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400/50 shadow-md shadow-blue-500/25 ring-1 ring-white/20' 
+            : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200/70 dark:border-white/[0.07] hover:border-blue-400/50'">
+          <span class="text-[11px] font-bold tracking-tight truncate pr-1"
+            [ngClass]="activeTab() === 'all' ? 'text-blue-100' : 'text-slate-600 dark:text-slate-300'">
+            Total Alerts
+          </span>
+          <span class="text-xs font-black px-2 py-0.5 rounded-lg shrink-0"
+            [ngClass]="activeTab() === 'all' ? 'bg-white/20 text-white' : 'bg-slate-200/70 dark:bg-slate-800/90 text-slate-900 dark:text-white'">
+            {{ notifications().length }}
+          </span>
+        </div>
+
+        <!-- Unread -->
+        <div (click)="onMetricClick('unread')" appTooltip="Filter unread notifications requiring legal review"
+          tooltipPlacement="top"
+          class="insights-metric-tile px-3.5 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between border"
+          [ngClass]="activeTab() === 'unread' 
+            ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white border-blue-400/50 shadow-md shadow-blue-500/25 ring-1 ring-white/20' 
+            : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-500/20 hover:border-blue-500/40'">
+          <div class="flex items-center gap-1.5 min-w-0 pr-1">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0"
+              [ngClass]="activeTab() === 'unread' ? 'bg-white' : 'bg-blue-500 animate-pulse'"></span>
+            <span class="text-[11px] font-bold tracking-tight truncate"
+              [ngClass]="activeTab() === 'unread' ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'">
+              Unread
+            </span>
+          </div>
+          <span class="text-xs font-black px-2 py-0.5 rounded-lg shrink-0"
+            [ngClass]="activeTab() === 'unread' ? 'bg-white/20 text-white' : 'bg-blue-500/15 text-blue-600 dark:text-blue-300'">
+            {{ unreadCount() }}
+          </span>
+        </div>
+
+        <!-- Urgent -->
+        <div (click)="onMetricClick('urgent')" appTooltip="Filter high-priority statutory and docket alerts"
+          tooltipPlacement="top"
+          class="insights-metric-tile px-3.5 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between border"
+          [ngClass]="activeTab() === 'urgent' 
+            ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white border-rose-400/50 shadow-md shadow-rose-500/25 ring-1 ring-white/20' 
+            : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500/20 hover:border-rose-500/40'">
+          <div class="flex items-center gap-1.5 min-w-0 pr-1">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0"
+              [ngClass]="activeTab() === 'urgent' ? 'bg-white' : 'bg-rose-500 animate-pulse'"></span>
+            <span class="text-[11px] font-bold tracking-tight truncate"
+              [ngClass]="activeTab() === 'urgent' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400'">
+              Urgent
+            </span>
+          </div>
+          <span class="text-xs font-black px-2 py-0.5 rounded-lg shrink-0"
+            [ngClass]="activeTab() === 'urgent' ? 'bg-white/20 text-white' : 'bg-rose-500/15 text-rose-600 dark:text-rose-300'">
+            {{ urgentCount() }}
+          </span>
+        </div>
+
+        <!-- Monitored Acts -->
+        <div (click)="onMetricClick('statutes')" appTooltip="Manage actively monitored Indian Bare Acts"
+          tooltipPlacement="top"
+          class="insights-metric-tile px-3.5 py-2.5 rounded-xl cursor-pointer transition-all active:scale-[0.97] flex items-center justify-between border"
+          [ngClass]="activeTab() === 'statutes' 
+            ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white border-indigo-400/50 shadow-md shadow-indigo-500/25 ring-1 ring-white/20' 
+            : 'bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-500/20 hover:border-indigo-500/40'">
+          <span class="text-[11px] font-bold tracking-tight truncate pr-1"
+            [ngClass]="activeTab() === 'statutes' ? 'text-indigo-100' : 'text-indigo-600 dark:text-indigo-400'">
+            Monitored
+          </span>
+          <span class="text-xs font-black px-2 py-0.5 rounded-lg shrink-0"
+            [ngClass]="activeTab() === 'statutes' ? 'bg-white/20 text-white' : 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-300'">
+            {{ followedActs().length }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Frosted Gradient Hairline Divider -->
+    <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/80 dark:via-white/10 to-transparent my-1"
+      aria-hidden="true">
+    </div>
+
+    <!-- Section 2: Delivery Channels Status -->
+    <div class="space-y-2.5">
+      <div class="flex items-center justify-between px-0.5">
+        <span
+          class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5"
+          appTooltip="Delivery routing status across active channels" tooltipPlacement="top">
+          <app-icon name="bell" [size]="12" class="text-purple-500"></app-icon>
+          <span>Delivery Channels</span>
+        </span>
+        <button type="button" (click)="onConfigureClick()"
+          appTooltip="Configure notification routing, frequency, and channel preferences" tooltipPlacement="left"
+          class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline bg-transparent border-0 cursor-pointer transition">
+          Configure
+        </button>
+      </div>
+
+      <!-- Shimmer Channels on Loading -->
+      <div *ngIf="isLoading()" class="space-y-2 animate-pulse" aria-busy="true">
+        <div *ngFor="let _ of [1, 2, 3, 4]"
+          class="h-11 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50">
+        </div>
+      </div>
+
+      <div *ngIf="!isLoading()" class="space-y-2">
+        <!-- In-App Feed -->
+        <div appTooltip="Continuous in-app alert streaming active in LegalConnect" tooltipPlacement="top"
+          class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/60 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/10 transition">
+          <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 shadow-xs shadow-emerald-500/50"></span>
+            <span>In-App Notification Feed</span>
+          </span>
+          <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+        </div>
+
+        <!-- Email Digest -->
+        <div appTooltip="Daily summaries and urgent dockets sent to your registered email" tooltipPlacement="top"
+          class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/60 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/10 transition">
+          <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+            <span class="w-2 h-2 rounded-full bg-blue-500 shadow-xs shadow-blue-500/50"></span>
+            <span>Verified Email Digest</span>
+          </span>
+          <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400">Enabled</span>
+        </div>
+
+        <!-- Real-Time SSE Stream -->
+        <div (click)="onLiveFeedClick()"
+          [appTooltip]="sseConnected() ? 'Real-Time SSE Sync Active. Click for diagnostics.' : 'SSE Stream Disconnected. Click to verify.'"
+          tooltipPlacement="top"
+          class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/60 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/10 transition cursor-pointer">
+          <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+            <span class="w-2 h-2 rounded-full"
+              [ngClass]="sseConnected() ? 'bg-emerald-500 animate-pulse shadow-xs shadow-emerald-500/50' : 'bg-red-400 shadow-xs shadow-red-400/50'"></span>
+            <span>Real-Time SSE Stream</span>
+          </span>
+          <span class="text-[10px] font-bold"
+            [ngClass]="sseConnected() ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'">
+            {{ sseConnected() ? 'Connected' : 'Reconnecting' }}
+          </span>
+        </div>
+
+        <!-- Browser Web Push Alerts -->
+        <div appTooltip="Browser Web Push alert permission status" tooltipPlacement="top"
+          class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/60 dark:border-white/[0.06] hover:border-slate-300 dark:hover:border-white/10 transition">
+          <span class="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 font-medium">
+            <span class="w-2 h-2 rounded-full bg-purple-500 shadow-xs shadow-purple-500/50"></span>
+            <span>Browser Web Push Alerts</span>
+          </span>
+          <button *ngIf="webPushPermission() === 'default'" (click)="onEnableWebPushClick()"
+            appTooltip="Enable browser desktop notifications for urgent legal updates" tooltipPlacement="left"
+            class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-purple-600 hover:bg-purple-500 text-white shadow-xs shadow-purple-500/20 active:scale-95 transition cursor-pointer border-0">
+            Enable
+          </button>
+          <span *ngIf="webPushPermission() === 'granted'" appTooltip="Desktop push notifications are enabled and active"
+            tooltipPlacement="left" class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400">Active</span>
+          <button *ngIf="webPushPermission() === 'denied'" (click)="onBlockedPushClick()"
+            appTooltip="Push notifications blocked. Click to view how to unblock." tooltipPlacement="left"
+            class="text-[10px] font-bold text-red-500 bg-transparent border-0 cursor-pointer hover:underline">
+            Blocked
+          </button>
+          <button *ngIf="webPushPermission() === 'unsupported'" (click)="onUnsupportedPushClick()"
+            appTooltip="Web Push API is not supported on this browser" tooltipPlacement="left"
+            class="text-[10px] font-bold text-slate-500 bg-transparent border-0 cursor-pointer hover:underline">
+            N/A
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: Monitored Statutes (if any) -->
+    <div *ngIf="followedActs().length > 0" class="space-y-2.5">
+      <!-- Hairline divider -->
+      <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/80 dark:via-white/10 to-transparent my-1"
+        aria-hidden="true">
+      </div>
+
+      <div class="flex items-center justify-between px-0.5">
+        <span
+          class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500 flex items-center gap-1.5"
+          appTooltip="Central &amp; State Bare Acts under active notification tracking" tooltipPlacement="top">
+          <app-icon name="scale" [size]="12" class="text-indigo-500"></app-icon>
+          <span>Monitored Statutes</span>
+        </span>
+        <button type="button" (click)="onViewAllStatutesClick()"
+          appTooltip="Open the complete Monitored Statutes management tab" tooltipPlacement="left"
+          class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline bg-transparent border-0 cursor-pointer transition">
+          View All
+        </button>
+      </div>
+
+      <div class="space-y-2">
+        <div *ngFor="let act of followedActs().slice(0, 3); trackBy: trackByShortName"
+          class="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-white/[0.06] flex items-center justify-between hover:border-indigo-400/40 transition">
+          <div class="min-w-0 pr-2">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block" [appTooltip]="act.actName"
+              tooltipPlacement="top">{{ act.shortName }}</span>
+            <span class="text-[10px] text-slate-400 truncate block">{{ act.actName }}</span>
+          </div>
+          <a [routerLink]="['/laws', act.shortName]" (click)="onViewAllStatutesClick()"
+            [appTooltip]="'Open ' + act.shortName + ' statutory reader'" tooltipPlacement="left"
+            class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition no-underline shrink-0">
+            Read
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hairline divider -->
+    <div class="h-px w-full bg-gradient-to-r from-transparent via-slate-200/80 dark:via-white/10 to-transparent my-1"
+      aria-hidden="true">
+    </div>
+
+    <!-- Section 4: Security & Compliance (DPDP) -->
+    <div (click)="onDpdpClick()"
+      appTooltip="Compliant with Digital Personal Data Protection Act 2023. Click for security details."
+      tooltipPlacement="top"
+      class="p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-950/50 border border-slate-200/60 dark:border-white/[0.06] text-center space-y-1.5 cursor-pointer hover:border-teal-500/40 transition active:scale-[0.985]">
+      <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-300">
+        <app-icon name="shield" [size]="14" class="text-teal-500"></app-icon>
+        <span>Legal Privacy &amp; Encryption</span>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed m-0">
+        All consultation dockets, advocate communications, and case milestones are end-to-end encrypted under the
+        Digital Personal Data Protection (DPDP) Act 2023.
+      </p>
+    </div>
+
+  </div>
+</ng-container>
+
+<ng-template #desktopView>
+  <!-- ========================================================================= -->
+  <!-- DESKTOP SIDEBAR COLUMN PANELS                                             -->
+  <!-- ========================================================================= -->
+  <div class="space-y-3">
+    <!-- Alert Metrics Hub -->
+    <div class="p-4 sm:p-5 rounded-2xl glass-panel space-y-4">
+      <div
+        class="flex items-center justify-between pb-2.5 sm:pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
+        <span
+          class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
+          appTooltip="Aggregate notification triage metrics and status" tooltipPlacement="top">
+          <app-icon name="activity" [size]="14" class="text-blue-500"></app-icon>
+          <span>Alert Metrics Hub</span>
+        </span>
+        <button type="button" (click)="onLiveFeedClick()"
+          class="px-2 py-0.5 text-[10px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full border border-emerald-500/20 flex items-center gap-1 cursor-pointer transition hover:bg-emerald-500/20"
+          appTooltip="SSE real-time stream online. Click for connection telemetry." tooltipPlacement="left">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span>Live Feed</span>
+        </button>
+      </div>
+
+      <!-- 2x2 Skeleton Shimmer Loader -->
+      <div *ngIf="isLoading()" class="grid grid-cols-2 gap-2.5 sm:gap-3 pt-2" aria-busy="true"
+        aria-label="Loading alert telemetry">
+        <div *ngFor="let _ of [1, 2, 3, 4]"
+          class="p-3 rounded-xl bg-slate-100/80 dark:bg-slate-900/50 border border-slate-200/50 dark:border-slate-800/50 animate-pulse">
+          <div class="h-2.5 w-14 bg-slate-200/80 dark:bg-slate-800/80 rounded-md"></div>
+          <div class="h-6 w-10 bg-slate-200/80 dark:bg-slate-800/80 rounded-md mt-2"></div>
+        </div>
+      </div>
+
+      <!-- 2x2 Interactive Metric Tiles Grid -->
+      <div *ngIf="!isLoading()" class="grid grid-cols-2 gap-2.5 sm:gap-3 pt-2">
+        <!-- Total Alerts -->
+        <div (click)="onMetricClick('all')"
+          class="metric-tile p-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border"
+          [ngClass]="activeTab() === 'all' ? 'bg-blue-600 text-white border-blue-400/60 dark:border-blue-300/40 shadow-md shadow-blue-500/25 is-active' : 'bg-slate-50 dark:bg-slate-950/60 border-slate-200/60 dark:border-slate-800/60 hover:border-blue-400/50'"
+          appTooltip="View all notifications across all categories" tooltipPlacement="top">
+          <span class="text-[10px] font-bold uppercase block truncate"
+            [ngClass]="activeTab() === 'all' ? 'text-blue-100' : 'text-slate-400'">
+            Total Alerts
+          </span>
+          <span class="text-lg sm:text-xl font-black mt-0.5 block"
+            [ngClass]="activeTab() === 'all' ? 'text-white' : 'text-slate-900 dark:text-white'">
+            {{ notifications().length }}
+          </span>
+        </div>
+
+        <!-- Unread Alerts -->
+        <div (click)="onMetricClick('unread')"
+          class="metric-tile p-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border"
+          [ngClass]="activeTab() === 'unread' ? 'bg-blue-600 text-white border-blue-400/60 dark:border-blue-300/40 shadow-md shadow-blue-500/25 is-active' : 'bg-blue-50/50 dark:bg-blue-950/20 border-blue-500/20 hover:border-blue-500/50'"
+          appTooltip="Filter unread notifications requiring legal review" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0"
+              [ngClass]="activeTab() === 'unread' ? 'bg-white' : 'bg-blue-500 animate-pulse'"></span>
+            <span class="text-[10px] font-bold uppercase block truncate"
+              [ngClass]="activeTab() === 'unread' ? 'text-blue-100' : 'text-blue-600 dark:text-blue-400'">
+              Unread
+            </span>
+          </div>
+          <span class="text-lg sm:text-xl font-black mt-0.5 block"
+            [ngClass]="activeTab() === 'unread' ? 'text-white' : 'text-blue-700 dark:text-blue-300'">
+            {{ unreadCount() }}
+          </span>
+        </div>
+
+        <!-- Urgent Priority -->
+        <div (click)="onMetricClick('urgent')"
+          class="metric-tile p-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border"
+          [ngClass]="activeTab() === 'urgent' ? 'bg-rose-600 text-white border-rose-400/60 dark:border-rose-300/40 shadow-md shadow-rose-500/25 is-active' : 'bg-rose-50/50 dark:bg-rose-950/20 border-rose-500/20 hover:border-rose-500/50'"
+          appTooltip="Filter high-priority statutory and docket alerts" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full shrink-0"
+              [ngClass]="activeTab() === 'urgent' ? 'bg-white' : 'bg-rose-500 animate-pulse'"></span>
+            <span class="text-[10px] font-bold uppercase block truncate"
+              [ngClass]="activeTab() === 'urgent' ? 'text-rose-100' : 'text-rose-600 dark:text-rose-400'">
+              Urgent
+            </span>
+          </div>
+          <span class="text-lg sm:text-xl font-black mt-0.5 block"
+            [ngClass]="activeTab() === 'urgent' ? 'text-white' : 'text-rose-700 dark:text-rose-400'">
+            {{ urgentCount() }}
+          </span>
+        </div>
+
+        <!-- Monitored Acts -->
+        <div (click)="onMetricClick('statutes')"
+          class="metric-tile p-3 rounded-xl cursor-pointer transition-all active:scale-[0.98] border"
+          [ngClass]="activeTab() === 'statutes' ? 'bg-indigo-600 text-white border-indigo-400/60 dark:border-indigo-300/40 shadow-md shadow-indigo-500/25 is-active' : 'bg-indigo-50/50 dark:bg-indigo-950/20 border-indigo-500/20 hover:border-indigo-500/50'"
+          appTooltip="Manage actively monitored Indian Bare Acts" tooltipPlacement="top">
+          <span class="text-[10px] font-bold uppercase block truncate"
+            [ngClass]="activeTab() === 'statutes' ? 'text-indigo-100' : 'text-indigo-600 dark:text-indigo-400'">
+            Monitored Acts
+          </span>
+          <span class="text-lg sm:text-xl font-black mt-0.5 block"
+            [ngClass]="activeTab() === 'statutes' ? 'text-white' : 'text-indigo-700 dark:text-indigo-300'">
+            {{ followedActs().length }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delivery Channels Health -->
+    <div class="p-4 sm:p-5 rounded-2xl glass-panel space-y-4">
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+        <span
+          class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
+          appTooltip="Delivery routing status across active channels" tooltipPlacement="top">
+          <app-icon name="bell" [size]="14" class="text-purple-500"></app-icon>
+          <span>Delivery Channels</span>
+        </span>
+        <button type="button" (click)="onConfigureClick()"
+          appTooltip="Configure notification routing, frequency, and sound alert preferences" tooltipPlacement="left"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-transparent border-0 cursor-pointer transition">
+          <app-icon name="settings" [size]="12"></app-icon>
+          <span>Configure</span>
+        </button>
+      </div>
+
+      <div class="space-y-2 text-xs">
+        <!-- In-App Feed -->
+        <div appTooltip="Continuous in-app alert streaming active in LegalConnect" tooltipPlacement="top"
+          class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+          <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+            <app-icon name="bell" [size]="14" class="text-emerald-500"></app-icon>
+            <span>In-App Notification Feed</span>
+          </span>
+          <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Active
+          </span>
+        </div>
+
+        <!-- Email Digest -->
+        <div appTooltip="Daily summaries and urgent dockets sent to your registered email" tooltipPlacement="top"
+          class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+          <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+            <app-icon name="mail" [size]="14" class="text-blue-500"></app-icon>
+            <span>Verified Email Digest</span>
+          </span>
+          <span class="text-[10px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+            Enabled
+          </span>
+        </div>
+
+        <!-- SSE Stream -->
+        <div (click)="onLiveFeedClick()"
+          [appTooltip]="sseConnected() ? 'Real-time Server-Sent Events stream active. Click for diagnostic check.' : 'SSE stream disconnected; automatic reconnection in progress. Click to verify.'"
+          tooltipPlacement="top"
+          class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-900/60 transition">
+          <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+            <app-icon name="zap" [size]="14" class="text-amber-500"></app-icon>
+            <span>Real-Time SSE Stream</span>
+          </span>
+          <span class="text-[10px] font-bold flex items-center gap-1"
+            [ngClass]="sseConnected() ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-500'">
+            <span class="w-1.5 h-1.5 rounded-full"
+              [ngClass]="sseConnected() ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'"></span>
+            {{ sseConnected() ? 'Connected' : 'Reconnecting' }}
+          </span>
+        </div>
+
+        <!-- Browser Push Alerts -->
+        <div
+          class="flex items-center justify-between p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50">
+          <span class="flex items-center gap-2 text-slate-700 dark:text-slate-300 font-medium">
+            <app-icon name="smartphone" [size]="14" class="text-purple-500"></app-icon>
+            <span>Browser Web Push Alerts</span>
+          </span>
+          <button *ngIf="webPushPermission() === 'default'" (click)="onEnableWebPushClick()"
+            appTooltip="Enable browser desktop notifications for urgent legal updates" tooltipPlacement="left"
+            class="px-2.5 py-1 text-[10px] font-bold rounded-lg bg-purple-500/10 text-purple-600 dark:text-purple-400 hover:bg-purple-600 hover:text-white transition cursor-pointer border border-purple-500/20">
+            Enable
+          </button>
+          <span *ngIf="webPushPermission() === 'granted'" appTooltip="Desktop push notifications are enabled and active"
+            tooltipPlacement="left"
+            class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+            Active
+          </span>
+          <button *ngIf="webPushPermission() === 'denied'" (click)="onBlockedPushClick()"
+            appTooltip="Push notifications blocked. Click to view how to unblock." tooltipPlacement="left"
+            class="text-[10px] font-bold text-rose-500 flex items-center gap-1 cursor-pointer bg-transparent border-0 hover:underline">
+            <span class="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+            Blocked
+          </button>
+          <button *ngIf="webPushPermission() === 'unsupported'" (click)="onUnsupportedPushClick()"
+            appTooltip="Web Push API is not supported on this browser. Click for details." tooltipPlacement="left"
+            class="text-[10px] font-bold text-slate-500 flex items-center gap-1 cursor-pointer bg-transparent border-0 hover:underline">
+            <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+            N/A
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Monitored Statutes Mini-Strip -->
+    <div *ngIf="followedActs().length > 0" class="p-4 sm:p-5 rounded-2xl glass-panel space-y-3">
+      <div class="flex items-center justify-between pb-1 border-b border-slate-200/50 dark:border-slate-800/50">
+        <span
+          class="text-xs font-extrabold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1.5"
+          appTooltip="Central &amp; State Bare Acts under active notification tracking" tooltipPlacement="top">
+          <app-icon name="scale" [size]="14" class="text-indigo-500"></app-icon>
+          <span>Monitored Statutes</span>
+        </span>
+        <button type="button" (click)="onViewAllStatutesClick()"
+          appTooltip="Open the complete Monitored Statutes management tab" tooltipPlacement="left"
+          class="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-transparent border-0 cursor-pointer transition">
+          <span>View All</span>
+          <app-icon name="arrow-right" [size]="11"></app-icon>
+        </button>
+      </div>
+
+      <div class="space-y-2 pt-1">
+        <div *ngFor="let act of followedActs().slice(0, 3); trackBy: trackByShortName"
+          class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between hover:border-indigo-400/40 dark:hover:border-indigo-500/40 transition">
+          <div class="min-w-0 pr-2">
+            <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate block" [appTooltip]="act.actName"
+              tooltipPlacement="top">
+              {{ act.shortName }}
+            </span>
+            <span class="text-[10px] text-slate-400 truncate block">{{ act.actName }}</span>
+          </div>
+          <a [routerLink]="['/laws', act.shortName]" [appTooltip]="'Open ' + act.shortName + ' full statutory reader'"
+            tooltipPlacement="left"
+            class="inline-flex items-center gap-1 px-2.5 py-1 text-[10px] font-bold rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-600 hover:text-white transition no-underline shrink-0">
+            <span>Read</span>
+            <app-icon name="external-link" [size]="10"></app-icon>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- DPDP Legal Privacy & Encryption Notice -->
+    <div (click)="onDpdpClick()"
+      appTooltip="Compliant with Digital Personal Data Protection Act 2023. Click for security details."
+      tooltipPlacement="top"
+      class="p-4 rounded-2xl bg-slate-100/70 dark:bg-slate-950/50 border border-slate-200/60 dark:border-slate-800/60 text-center space-y-1.5 cursor-pointer hover:bg-slate-200/60 dark:hover:bg-slate-900/60 transition">
+      <div class="flex items-center justify-center gap-1.5 text-xs font-extrabold text-slate-700 dark:text-slate-300">
+        <app-icon name="shield-check" [size]="15" class="text-teal-500"></app-icon>
+        <span>Legal Privacy &amp; Encryption</span>
+      </div>
+      <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed m-0">
+        All consultation dockets, advocate communications, and case milestones are end-to-end encrypted under the
+        Digital Personal Data Protection (DPDP) Act 2023.
+      </p>
+    </div>
+  </div>
+</ng-template>

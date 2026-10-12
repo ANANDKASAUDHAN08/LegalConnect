@@ -80,508 +80,166 @@
   box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.4);
 }
 
-/* Notification Item Card Experience */
-.notification-card {
-  position: relative;
+/* Floating Glass Sticky Filter Bar */
+.sticky-filter-bar {
   background: rgba(255, 255, 255, 0.88);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(226, 232, 240, 0.85);
-  border-top: 1px solid rgba(255, 255, 255, 0.95);
-  border-radius: 1.25rem;
-  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-    border-color 0.22s ease,
-    background-color 0.22s ease;
-  will-change: transform, box-shadow;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
 
-  &:hover {
-    transform: translateY(-2px);
-    border-color: rgba(203, 213, 225, 1);
-    box-shadow: 0 12px 30px -6px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
-  }
-}
+  /* Eliminate any browser button focus outlines */
+  button {
+    outline: none !important;
 
-:host-context(.dark) .notification-card {
-  background: rgba(15, 23, 42, 0.65);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  border-top: 1px solid rgba(255, 255, 255, 0.13);
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
-
-  &:hover {
-    transform: translateY(-2px);
-    border-color: rgba(255, 255, 255, 0.16);
-    background: rgba(20, 29, 52, 0.78);
-    box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.55), 0 0 20px 0 rgba(59, 130, 246, 0.08);
-  }
-}
-
-/* Unread Notification Glowing Highlight State */
-.notification-card.is-unread {
-  background: rgba(248, 250, 252, 0.96);
-  border-left: 4px solid #2563eb;
-  box-shadow: 0 6px 24px -4px rgba(37, 99, 235, 0.08);
-}
-
-:host-context(.dark) .notification-card.is-unread {
-  background: rgba(17, 27, 49, 0.85);
-  border-left: 4px solid #3b82f6;
-  border-top: 1px solid rgba(96, 165, 250, 0.22);
-  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.45), 0 0 24px -4px rgba(59, 130, 246, 0.12);
-}
-
-/* Urgent Critical Accent Pulse */
-.notification-card.is-urgent {
-  border-left-color: #f43f5e !important;
-}
-
-:host-context(.dark) .notification-card.is-urgent {
-  border-top-color: rgba(244, 63, 94, 0.3) !important;
-  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.45), 0 0 26px -2px rgba(244, 63, 94, 0.15) !important;
-}
-
-/* Luminous Unread Beacon Dot */
-.luminous-beacon {
-  position: relative;
-  width: 8px;
-  height: 8px;
-  border-radius: 9999px;
-  background-color: #3b82f6;
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: -3px;
-    border-radius: 9999px;
-    background-color: #3b82f6;
-    opacity: 0.4;
-    animation: beaconPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-  }
-}
-
-.luminous-beacon-urgent {
-  background-color: #f43f5e;
-
-  &::after {
-    background-color: #f43f5e;
-  }
-}
-
-@keyframes beaconPulse {
-
-  0%,
-  100% {
-    transform: scale(1);
-    opacity: 0.4;
-  }
-
-  50% {
-    transform: scale(1.8);
-    opacity: 0;
-  }
-}
-
-/* Floating Dynamic Island Bulk Action Bar */
-.dynamic-island-bar {
-  animation: dynamicIslandEntrance 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.15);
-}
-
-@keyframes dynamicIslandEntrance {
-  0% {
-    opacity: 0;
-    transform: translate3d(0, 24px, 0) scale(0.96);
-  }
-
-  100% {
-    opacity: 1;
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-}
-
-/* Interactive Sidebar Metric Tiles */
-.metric-tile {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  cursor: pointer;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 20px -3px rgba(15, 23, 42, 0.08);
-  }
-
-  &.is-active {
-    outline: 2px solid #3b82f6;
-    outline-offset: 1px;
-    box-shadow: 0 0 16px -2px rgba(59, 130, 246, 0.25);
-  }
-}
-
-/* ==========================================================================
-   Ultra-Premium Notification Preferences Dialog & Bottom-Sheet Drawer
-   ========================================================================== */
-.preferences-modal-backdrop {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgba(10, 15, 29, 0.82);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  z-index: 2000 !important;
-  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-
-  @media (min-width: 640px) {
-    align-items: center;
-    padding: 2rem 1.25rem;
-  }
-}
-
-.preferences-dialog-panel {
-  position: relative;
-  z-index: 2001 !important;
-  width: 100%;
-  background: #ffffff;
-  border-top-left-radius: 1.75rem;
-  border-top-right-radius: 1.75rem;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
-  border-top: 1px solid rgba(226, 232, 240, 0.9);
-  border-left: none;
-  border-right: none;
-  border-bottom: none;
-  box-shadow: 0 -25px 60px -15px rgba(0, 0, 0, 0.45);
-  animation: sheetPanelSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  will-change: transform;
-
-  @media (min-width: 640px) {
-    max-width: 820px !important;
-    max-height: calc(100vh - 4.5rem) !important;
-    margin: auto;
-    border-radius: 1.5rem !important;
-    border: 1px solid rgba(226, 232, 240, 0.9) !important;
-    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
-    animation: dialogScaleEntrance 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-}
-
-:host-context(.dark) .preferences-dialog-panel {
-  background: #0c1222;
-  border-top-color: rgba(255, 255, 255, 0.12) !important;
-  border-left-color: transparent !important;
-  border-right-color: transparent !important;
-  border-bottom-color: transparent !important;
-  box-shadow: 0 -25px 60px -15px rgba(0, 0, 0, 0.8);
-
-  @media (min-width: 640px) {
-    border: 1px solid rgba(255, 255, 255, 0.1) !important;
-    box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(59, 130, 246, 0.15);
-  }
-}
-
-/* Fluid Scrollable Content - Scrollbar Completely Hidden */
-.preferences-scroll-area {
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none !important;
-  -ms-overflow-style: none !important;
-
-  &::-webkit-scrollbar {
-    display: none !important;
-    width: 0 !important;
-    height: 0 !important;
-  }
-}
-
-/* Preset Pills */
-.pref-preset-pill {
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  color: #475569;
-  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-
-  &:hover {
-    background: rgba(241, 245, 249, 1);
-    color: #0f172a;
-    border-color: rgba(203, 213, 225, 1);
-  }
-
-  &.is-active {
-    background: #2563eb !important;
-    border-color: #3b82f6 !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 14px -2px rgba(59, 130, 246, 0.45) !important;
-  }
-}
-
-:host-context(.dark) .pref-preset-pill {
-  background: rgba(15, 23, 42, 0.7);
-  border-color: rgba(255, 255, 255, 0.1);
-  color: #cbd5e1;
-
-  &:hover {
-    background: rgba(30, 41, 59, 0.8);
-    color: #ffffff;
-    border-color: rgba(255, 255, 255, 0.2);
-  }
-
-  &.is-active {
-    background: #2563eb !important;
-    border-color: #3b82f6 !important;
-    color: #ffffff !important;
-    box-shadow: 0 0 14px -2px rgba(59, 130, 246, 0.45) !important;
-  }
-}
-
-/* Category Card */
-.pref-category-card {
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-
-  &:hover {
-    transform: translateY(-1.5px);
-  }
-}
-
-/* Channel Toggle Chips with Glowing Micro-Interactions */
-.pref-channel-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.35rem 0.65rem;
-  border-radius: 9999px;
-  font-size: 0.72rem;
-  font-weight: 700;
-  cursor: pointer;
-  border: 1px solid rgba(226, 232, 240, 0.9);
-  background: rgba(241, 245, 249, 0.85);
-  color: #64748b;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  &:hover {
-    background: rgba(226, 232, 240, 1);
-    color: #1e293b;
-    border-color: rgba(203, 213, 225, 1);
-  }
-
-  &:active {
-    transform: scale(0.95);
-  }
-
-  .chip-dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 9999px;
-    background: #94a3b8;
-    transition: all 0.2s ease;
-  }
-
-  /* Active App State */
-  &.pref-chip-app.is-active {
-    background: rgba(59, 130, 246, 0.14);
-    border-color: rgba(59, 130, 246, 0.45);
-    color: #2563eb;
-    box-shadow: 0 0 12px -2px rgba(59, 130, 246, 0.25);
-
-    .chip-dot {
-      background: #2563eb;
-      box-shadow: 0 0 6px #3b82f6;
-    }
-  }
-
-  /* Active Email State */
-  &.pref-chip-email.is-active {
-    background: rgba(168, 85, 247, 0.14);
-    border-color: rgba(168, 85, 247, 0.45);
-    color: #9333ea;
-    box-shadow: 0 0 12px -2px rgba(168, 85, 247, 0.25);
-
-    .chip-dot {
-      background: #9333ea;
-      box-shadow: 0 0 6px #a855f7;
-    }
-  }
-
-  /* Active Push State */
-  &.pref-chip-push.is-active {
-    background: rgba(16, 185, 129, 0.14);
-    border-color: rgba(16, 185, 129, 0.45);
-    color: #059669;
-    box-shadow: 0 0 12px -2px rgba(16, 185, 129, 0.25);
-
-    .chip-dot {
-      background: #059669;
-      box-shadow: 0 0 6px #10b981;
-    }
-  }
-
-  /* Active WhatsApp State */
-  &.pref-chip-whatsapp.is-active {
-    background: rgba(37, 211, 102, 0.14);
-    border-color: rgba(37, 211, 102, 0.45);
-    color: #0d853e;
-    box-shadow: 0 0 12px -2px rgba(37, 211, 102, 0.3);
-
-    .chip-dot {
-      background: #25d366;
-      box-shadow: 0 0 6px #25d366;
+    &:focus,
+    &:focus-visible {
+      outline: none !important;
     }
   }
 }
 
-:host-context(.dark) .pref-channel-chip {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(255, 255, 255, 0.08);
-  color: #94a3b8;
-
-  &:hover {
-    background: rgba(51, 65, 85, 0.7);
-    color: #f1f5f9;
-    border-color: rgba(255, 255, 255, 0.16);
-  }
-
-  .chip-dot {
-    background: #64748b;
-  }
-
-  &.pref-chip-app.is-active {
-    background: rgba(59, 130, 246, 0.2);
-    border-color: rgba(96, 165, 250, 0.45);
-    color: #60a5fa;
-
-    .chip-dot {
-      background: #60a5fa;
-      box-shadow: 0 0 8px #60a5fa;
-    }
-  }
-
-  &.pref-chip-email.is-active {
-    background: rgba(168, 85, 247, 0.2);
-    border-color: rgba(192, 132, 252, 0.45);
-    color: #c084fc;
-
-    .chip-dot {
-      background: #c084fc;
-      box-shadow: 0 0 8px #c084fc;
-    }
-  }
-
-  &.pref-chip-push.is-active {
-    background: rgba(16, 185, 129, 0.2);
-    border-color: rgba(52, 211, 153, 0.45);
-    color: #34d399;
-
-    .chip-dot {
-      background: #34d399;
-      box-shadow: 0 0 8px #34d399;
-    }
-  }
-
-  &.pref-chip-whatsapp.is-active {
-    background: rgba(37, 211, 102, 0.2);
-    border-color: rgba(37, 211, 102, 0.5);
-    color: #25d366;
-
-    .chip-dot {
-      background: #25d366;
-      box-shadow: 0 0 8px #25d366;
-    }
-  }
+:host-context(.dark) .sticky-filter-bar {
+  background: rgba(11, 15, 29, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 30px -4px rgba(0, 0, 0, 0.5);
 }
 
-/* Header Bar & Native Drag Handle */
-.preferences-sheet-header {
-  background: #ffffff;
-  transition: background-color 0.2s ease;
-}
-
-:host-context(.dark) .preferences-sheet-header {
-  background: #0c1222;
-}
-
-/* Sleek, Centered Native Mobile Drag Handle Pill */
-.pref-sheet-handle {
-  width: 40px;
-  height: 4px;
-  border-radius: 9999px;
-  background: rgba(148, 163, 184, 0.45);
-  margin: 0 auto;
-  transition: background-color 0.2s ease, transform 0.15s ease;
-
-  &:active {
-    transform: scale(0.96);
-  }
-}
-
-:host-context(.dark) .pref-sheet-handle {
-  background: rgba(255, 255, 255, 0.22);
-}
-
-/* Section Navigation Tab Bar (Mobile: 2-Column Grid, Desktop: 4-Column Grid) */
-.pref-tab-bar {
-  display: grid !important;
-  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  gap: 0.5rem !important;
-  width: 100% !important;
-  overflow: hidden !important;
-
-  @media (min-width: 640px) {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 0.5rem !important;
-  }
-}
-
-/* Tab Navigation Pill Buttons */
-.pref-tab-btn {
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  &:hover {
-    transform: translateY(-1px);
-  }
-
-  &:active {
-    transform: scale(0.96);
-  }
-}
-
-@keyframes modalBackdropFadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
-@keyframes dialogScaleEntrance {
-  0% {
-    opacity: 0;
-    transform: scale(0.95) translate3d(0, 10px, 0);
-  }
-
-  100% {
-    opacity: 1;
-    transform: scale(1) translate3d(0, 0, 0);
-  }
-}
-
-/* Segmented Filter Pill Active State Transition */
+/* Segmented Filter Pill Active State Transition & Clean Non-Squishing Layout */
 .filter-pill {
   position: relative;
-  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 0.75rem !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+  flex: 0 0 auto !important;
+  white-space: nowrap !important;
+  padding-left: 0.75rem !important;
+  padding-right: 0.75rem !important;
+  gap: 0.375rem !important;
+
+  &:focus,
+  &:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
 
   &.is-active {
     font-weight: 700;
   }
+}
+
+/* Category Filter Dropdown Responsive Wrap (Generous width, no awkward truncation) */
+.filter-category-wrap {
+  flex: 0 0 auto !important;
+  min-width: 120px !important;
+  max-width: 240px !important;
+
+  &.has-selected-category {
+    max-width: 280px !important;
+  }
+}
+
+/* Mobile Non-Scrollable Content-Hugging Pills & Expanded Category Dropdown */
+.mobile-filter-pill {
+  position: relative;
+  height: 32px !important;
+  min-height: 32px !important;
+  border-radius: 0.75rem !important;
+  outline: none !important;
+  box-sizing: border-box !important;
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  -webkit-tap-highlight-color: transparent;
+  flex: 0 0 auto !important;
+  width: auto !important;
+  min-width: 0 !important;
+  padding-left: 0.5rem !important;
+  padding-right: 0.5rem !important;
+  font-size: 11.5px !important;
+  white-space: nowrap !important;
+
+  @media (min-width: 380px) {
+    padding-left: 0.625rem !important;
+    padding-right: 0.625rem !important;
+    font-size: 12px !important;
+  }
+
+  &:focus,
+  &:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+  }
+}
+
+/* Compact All Pill - specifically hugging "All (count)" content */
+.mobile-filter-pill-all {
+  padding-left: 0.4rem !important;
+  padding-right: 0.4rem !important;
+
+  @media (min-width: 380px) {
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
+
+.mobile-filter-category-wrap {
+  flex: 1 1 0% !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  display: flex !important;
+
+  app-custom-select,
+  .relative {
+    width: 100% !important;
+    min-width: 0 !important;
+    display: block !important;
+  }
+
+  .notification-category-trigger {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+    font-size: 11.5px !important;
+    gap: 0.35rem !important;
+
+    @media (min-width: 380px) {
+      padding-left: 0.65rem !important;
+      padding-right: 0.65rem !important;
+      font-size: 12px !important;
+    }
+
+    >div:first-child,
+    >div {
+      gap: 0.35rem !important;
+    }
+
+    span {
+      font-size: 11.5px !important;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+
+      @media (min-width: 380px) {
+        font-size: 12px !important;
+      }
+    }
+  }
+}
+
+/* Compact Count Badge Sizing & Alignment */
+.pill-count-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-size: 10px !important;
+  padding-left: 0.375rem !important;
+  padding-right: 0.375rem !important;
+  min-width: 18px;
 }
 
 /* Custom Virtual Scroll Viewport for 60fps High-Performance Rendering */
@@ -603,24 +261,6 @@
     background: rgba(148, 163, 184, 0.4);
     border-radius: 9999px;
   }
-}
-
-/* Sticky Search & Tabs Filter Command Bar - Frosted Neo-Glass Protective Surface */
-.sticky-filter-bar {
-  top: 56px;
-  border-bottom-left-radius: 1rem !important;
-  border-bottom-right-radius: 1rem !important;
-  background: rgba(248, 250, 252, 0.94) !important;
-  backdrop-filter: blur(16px) !important;
-  -webkit-backdrop-filter: blur(16px) !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
-  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
-}
-
-:host-context(.dark) .sticky-filter-bar {
-  background: rgba(7, 9, 19, 0.94) !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
 }
 
 /* Radar Beacon Refresh Active State */
@@ -653,22 +293,12 @@
   }
 }
 
-/* ==========================================================================
-   Radiant Aurora Horizon Divider
-   ========================================================================== */
+/* Radiant Aurora Horizon Divider */
 .radiant-aurora-divider {
   position: relative;
   width: 100%;
   height: 1px;
   margin-top: 0.75rem;
-  overflow: visible;
-  pointer-events: none;
-}
-
-.radiant-aurora-line {
-  position: absolute;
-  inset: 0;
-  height: 1px;
   background: linear-gradient(90deg,
       transparent 0%,
       rgba(203, 213, 225, 0.3) 15%,
@@ -677,6 +307,12 @@
       rgba(203, 213, 225, 0.3) 85%,
       transparent 100%);
   opacity: 0.85;
+}
+
+.radiant-aurora-line {
+  position: absolute;
+  inset: 0;
+  background: inherit;
 }
 
 .radiant-aurora-glow {
@@ -694,7 +330,7 @@
   opacity: 0.6;
 }
 
-:host-context(.dark) .radiant-aurora-line {
+:host-context(.dark) .radiant-aurora-divider {
   background: linear-gradient(90deg,
       transparent 0%,
       rgba(59, 130, 246, 0.15) 15%,
@@ -716,6 +352,45 @@
 }
 
 /* ==========================================================================
+   Sticky Search & Tabs Filter Command Bar - Frosted Surface
+   ========================================================================== */
+.sticky-filter-bar {
+  top: 56px;
+  border-radius: 1rem 1rem 1rem 1rem !important;
+  background: rgba(248, 250, 252, 0.94) !important;
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.05) !important;
+}
+
+:host-context(.dark) .sticky-filter-bar {
+  background: rgba(7, 9, 19, 0.94) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Mobile Full-Bleed: touches extreme left and right ends of the screen on all phone sizes */
+@media (max-width: 639px) {
+  .sticky-filter-bar {
+    margin-left: -0.75rem !important;
+    margin-right: -0.75rem !important;
+    width: calc(100% + 1.5rem) !important;
+    max-width: 100vw !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-top: none !important;
+    border-radius: 0 !important;
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    padding-left: 0.5rem !important;
+    padding-right: 0.5rem !important;
+  }
+}
+
+/* ==========================================================================
    Single-Row Power Bar & Triage Pills
    ========================================================================== */
 .active-triage-pill {
@@ -724,10 +399,16 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  border-radius: 0.75rem !important;
   background: #2563eb !important;
   color: #ffffff !important;
   border: 1px solid #3b82f6 !important;
-  box-shadow: 0 0 16px -2px rgba(59, 130, 246, 0.45);
+  outline: none !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45), 0 0 10px rgba(59, 130, 246, 0.3) !important;
+}
+
+:host-context(.dark) .active-triage-pill {
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.5), 0 0 12px rgba(59, 130, 246, 0.35) !important;
 }
 
 .active-unread-pill {
@@ -736,10 +417,16 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  border-radius: 0.75rem !important;
   background: #2563eb !important;
   color: #ffffff !important;
   border: 1px solid #3b82f6 !important;
-  box-shadow: 0 0 16px -2px rgba(59, 130, 246, 0.45);
+  outline: none !important;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45), 0 0 10px rgba(59, 130, 246, 0.3) !important;
+}
+
+:host-context(.dark) .active-unread-pill {
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.5), 0 0 12px rgba(59, 130, 246, 0.35) !important;
 }
 
 .active-urgent-pill {
@@ -748,10 +435,16 @@
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
+  border-radius: 0.75rem !important;
   background: #e11d48 !important;
   color: #ffffff !important;
   border: 1px solid #f43f5e !important;
-  box-shadow: 0 0 16px -2px rgba(244, 63, 94, 0.45);
+  outline: none !important;
+  box-shadow: 0 2px 8px rgba(225, 29, 72, 0.45), 0 0 10px rgba(244, 63, 94, 0.3) !important;
+}
+
+:host-context(.dark) .active-urgent-pill {
+  box-shadow: 0 2px 10px rgba(225, 29, 72, 0.5), 0 0 12px rgba(244, 63, 94, 0.35) !important;
 }
 
 .inactive-triage-pill {
@@ -796,6 +489,8 @@
   font-weight: 600 !important;
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
+  width: 100% !important;
+  min-width: 0 !important;
 
   @media (min-width: 640px) {
     padding-left: 0.65rem !important;
@@ -838,7 +533,8 @@
     background: #4f46e5 !important;
     border-color: #6366f1 !important;
     color: #ffffff !important;
-    box-shadow: 0 0 16px -2px rgba(99, 102, 241, 0.45) !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.45), 0 0 10px rgba(99, 102, 241, 0.3) !important;
 
     span,
     app-icon,
@@ -885,7 +581,8 @@
     background: #4f46e5 !important;
     border-color: #6366f1 !important;
     color: #ffffff !important;
-    box-shadow: 0 0 16px -2px rgba(99, 102, 241, 0.45) !important;
+    border-radius: 0.75rem !important;
+    box-shadow: 0 2px 10px rgba(79, 70, 229, 0.5), 0 0 12px rgba(99, 102, 241, 0.35) !important;
 
     span,
     app-icon,
@@ -896,19 +593,19 @@
   }
 }
 
-/* ==========================================================================
-   Mobile Insights Bottom-Sheet Drawer (Tier-1 MNC Pattern)
-   ========================================================================== */
+/* ========================================================================= */
+/* MOBILE INSIGHTS BOTTOM-SHEET DRAWER STYLES                                */
+/* ========================================================================= */
 .insights-sheet-backdrop {
   position: fixed;
   inset: 0;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(15, 23, 42, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  z-index: 1300 !important;
+  background: rgba(15, 23, 42, 0.75);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  z-index: 1900 !important;
   animation: sheetBackdropFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
@@ -931,9 +628,10 @@
 }
 
 :host-context(.dark) .insights-sheet-panel {
-  background: #0f172a;
+  background: #0b1120;
+  background: linear-gradient(180deg, #0e172a 0%, #0b1120 100%);
   border-color: rgba(255, 255, 255, 0.09);
-  box-shadow: 0 -20px 50px -10px rgba(0, 0, 0, 0.75), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 -24px 50px -10px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .insights-sheet-content {
@@ -941,7 +639,7 @@
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   max-height: calc(85vh - 75px);
-  padding: 0.75rem 0.25rem 1.25rem 0.25rem;
+  padding: 0.25rem 0.15rem 1rem 0.15rem;
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 
@@ -949,20 +647,6 @@
     display: none !important;
     width: 0 !important;
     height: 0 !important;
-  }
-}
-
-.insights-metric-tile {
-  transition: transform 0.16s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
-  user-select: none;
-  -webkit-tap-highlight-color: transparent;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  &:active {
-    transform: scale(0.96);
   }
 }
 
@@ -985,5 +669,355 @@
   to {
     transform: translate3d(0, 0, 0);
     opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   Ultra-Premium Grouped Notifications Date Dividers
+   Architecture: Glassmorphic Capsule, Aurora Luminous Tracks & Micro-Actions
+   ========================================================================== */
+
+.group-divider-container {
+  position: relative;
+  user-select: none;
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.group-pill {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-1px);
+    }
+  }
+}
+
+/* 1. Today Pill Theme (Electric Azure Aurora) */
+.group-pill-today {
+  background: linear-gradient(135deg, rgba(239, 246, 255, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%);
+  border-color: rgba(147, 197, 253, 0.85);
+  box-shadow: 0 2px 10px -2px rgba(59, 130, 246, 0.12), 0 1px 3px rgba(15, 23, 42, 0.04);
+
+  .group-pill-icon {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+  }
+
+  .group-pill-title {
+    color: #1e3a8a;
+  }
+
+  .group-count-badge {
+    background: rgba(219, 234, 254, 0.85);
+    color: #1d4ed8;
+    border-color: rgba(147, 197, 253, 0.6);
+  }
+}
+
+:host-context(.dark) .group-pill-today {
+  background: linear-gradient(135deg, rgba(30, 58, 138, 0.38) 0%, rgba(15, 23, 42, 0.78) 100%);
+  border-color: rgba(96, 165, 250, 0.32);
+  box-shadow: 0 4px 16px -2px rgba(59, 130, 246, 0.25), 0 0 12px rgba(59, 130, 246, 0.1);
+
+  .group-pill-icon {
+    background: rgba(59, 130, 246, 0.22);
+    color: #60a5fa;
+  }
+
+  .group-pill-title {
+    color: #e0f2fe;
+  }
+
+  .group-count-badge {
+    background: rgba(30, 58, 138, 0.55);
+    color: #93c5fd;
+    border-color: rgba(96, 165, 250, 0.3);
+  }
+}
+
+/* 2. Yesterday Pill Theme (Royal Violet / Indigo) */
+.group-pill-yesterday {
+  background: linear-gradient(135deg, rgba(245, 243, 255, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%);
+  border-color: rgba(196, 181, 253, 0.8);
+  box-shadow: 0 2px 10px -2px rgba(139, 92, 246, 0.12), 0 1px 3px rgba(15, 23, 42, 0.04);
+
+  .group-pill-icon {
+    background: rgba(139, 92, 246, 0.12);
+    color: #7c3aed;
+  }
+
+  .group-pill-title {
+    color: #4c1d95;
+  }
+
+  .group-count-badge {
+    background: rgba(237, 233, 254, 0.85);
+    color: #6d28d9;
+    border-color: rgba(196, 181, 253, 0.6);
+  }
+}
+
+:host-context(.dark) .group-pill-yesterday {
+  background: linear-gradient(135deg, rgba(76, 29, 149, 0.35) 0%, rgba(15, 23, 42, 0.78) 100%);
+  border-color: rgba(167, 139, 250, 0.3);
+  box-shadow: 0 4px 16px -2px rgba(139, 92, 246, 0.2), 0 0 12px rgba(139, 92, 246, 0.08);
+
+  .group-pill-icon {
+    background: rgba(139, 92, 246, 0.2);
+    color: #a78bfa;
+  }
+
+  .group-pill-title {
+    color: #ede9fe;
+  }
+
+  .group-count-badge {
+    background: rgba(76, 29, 149, 0.45);
+    color: #c4b5fd;
+    border-color: rgba(167, 139, 250, 0.28);
+  }
+}
+
+/* 3. Earlier Pill Theme (Obsidian Steel / Modern Pewter) */
+.group-pill-earlier {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(255, 255, 255, 0.92) 100%);
+  border-color: rgba(203, 213, 225, 0.85);
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.06);
+
+  .group-pill-icon {
+    background: rgba(100, 116, 139, 0.12);
+    color: #475569;
+  }
+
+  .group-pill-title {
+    color: #334155;
+  }
+
+  .group-count-badge {
+    background: rgba(241, 245, 249, 0.9);
+    color: #475569;
+    border-color: rgba(203, 213, 225, 0.7);
+  }
+}
+
+:host-context(.dark) .group-pill-earlier {
+  background: linear-gradient(135deg, rgba(30, 41, 59, 0.48) 0%, rgba(15, 23, 42, 0.78) 100%);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px -2px rgba(0, 0, 0, 0.35);
+
+  .group-pill-icon {
+    background: rgba(148, 163, 184, 0.15);
+    color: #94a3b8;
+  }
+
+  .group-pill-title {
+    color: #cbd5e1;
+  }
+
+  .group-count-badge {
+    background: rgba(30, 41, 59, 0.6);
+    color: #94a3b8;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* 4. Case Docket Thread Theme (Deep Sapphire / Judicial Indigo) */
+.group-pill-matter {
+  background: linear-gradient(135deg, rgba(238, 242, 255, 0.95) 0%, rgba(255, 255, 255, 0.94) 100%);
+  border-color: rgba(165, 180, 252, 0.85);
+  box-shadow: 0 2px 10px -2px rgba(99, 102, 241, 0.16), 0 1px 3px rgba(15, 23, 42, 0.04);
+
+  .group-pill-icon {
+    background: rgba(99, 102, 241, 0.14);
+    color: #4f46e5;
+  }
+
+  .group-pill-title {
+    color: #312e81;
+  }
+
+  .group-count-badge {
+    background: rgba(224, 231, 255, 0.85);
+    color: #4338ca;
+    border-color: rgba(165, 180, 252, 0.6);
+  }
+
+  /* Mobile (< 640px): Compact 1-Line Docket Pill Height */
+  @media (max-width: 639px) {
+    border-radius: 9999px !important;
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+    white-space: nowrap !important;
+
+    .group-pill-title {
+      display: block !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      line-height: 1.25 !important;
+    }
+  }
+
+  /* Desktop (>= 640px): Sleek 1-line truncation safeguard so UI never distorts */
+  @media (min-width: 640px) {
+    .group-pill-title {
+      display: block;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+      max-width: 22rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .group-pill-title {
+      max-width: 26rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .group-pill-title {
+      max-width: 32rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .group-pill-title {
+      max-width: 38rem;
+    }
+  }
+}
+
+:host-context(.dark) .group-pill-matter {
+  background: linear-gradient(135deg, rgba(49, 46, 129, 0.42) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border-color: rgba(129, 140, 248, 0.35);
+  box-shadow: 0 4px 16px -2px rgba(99, 102, 241, 0.25), 0 0 12px rgba(99, 102, 241, 0.1);
+
+  .group-pill-icon {
+    background: rgba(99, 102, 241, 0.22);
+    color: #a5b4fc;
+  }
+
+  .group-pill-title {
+    color: #e0e7ff;
+  }
+
+  .group-count-badge {
+    background: rgba(49, 46, 129, 0.55);
+    color: #c7d2fe;
+    border-color: rgba(129, 140, 248, 0.3);
+  }
+}
+
+/* Gradient Aurora Tracks */
+.track-line {
+  transition: opacity 0.3s ease;
+}
+
+.track-today {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.6) 0%, rgba(99, 102, 241, 0.35) 45%, rgba(59, 130, 246, 0.08) 95%, transparent 100%);
+}
+
+.dot-today {
+  background: #3b82f6;
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.65);
+}
+
+.track-yesterday {
+  background: linear-gradient(90deg, rgba(139, 92, 246, 0.55) 0%, rgba(168, 85, 247, 0.3) 45%, rgba(139, 92, 246, 0.06) 95%, transparent 100%);
+}
+
+.dot-yesterday {
+  background: #8b5cf6;
+  box-shadow: 0 0 8px rgba(139, 92, 246, 0.6);
+}
+
+.track-earlier {
+  background: linear-gradient(90deg, rgba(148, 163, 184, 0.45) 0%, rgba(100, 116, 139, 0.2) 50%, transparent 100%);
+}
+
+.dot-earlier {
+  background: #94a3b8;
+  box-shadow: 0 0 6px rgba(148, 163, 184, 0.45);
+}
+
+.track-matter {
+  background: linear-gradient(90deg, rgba(99, 102, 241, 0.6) 0%, rgba(129, 140, 248, 0.35) 45%, rgba(99, 102, 241, 0.08) 95%, transparent 100%);
+}
+
+.dot-matter {
+  background: #6366f1;
+  box-shadow: 0 0 8px rgba(99, 102, 241, 0.65);
+}
+
+:host-context(.dark) {
+  .track-today {
+    background: linear-gradient(90deg, rgba(96, 165, 250, 0.55) 0%, rgba(129, 140, 248, 0.3) 45%, rgba(59, 130, 246, 0.06) 95%, transparent 100%);
+  }
+
+  .track-yesterday {
+    background: linear-gradient(90deg, rgba(167, 139, 250, 0.5) 0%, rgba(192, 132, 252, 0.25) 45%, rgba(139, 92, 246, 0.06) 95%, transparent 100%);
+  }
+
+  .track-earlier {
+    background: linear-gradient(90deg, rgba(148, 163, 184, 0.35) 0%, rgba(100, 116, 139, 0.12) 50%, transparent 100%);
+  }
+
+  .track-matter {
+    background: linear-gradient(90deg, rgba(129, 140, 248, 0.55) 0%, rgba(165, 180, 252, 0.3) 45%, rgba(99, 102, 241, 0.06) 95%, transparent 100%);
+  }
+}
+
+/* Quick Group Micro-Action Buttons */
+.group-action-btn {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(226, 232, 240, 0.85);
+  color: #475569;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(239, 246, 255, 0.95);
+      border-color: rgba(147, 197, 253, 0.9);
+      color: #2563eb;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.is-active-selection {
+    background: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.35);
+  }
+}
+
+:host-context(.dark) .group-action-btn {
+  background: rgba(15, 23, 42, 0.65);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+
+  @media (hover: hover) {
+    &:hover {
+      background: rgba(30, 58, 138, 0.35);
+      border-color: rgba(96, 165, 250, 0.35);
+      color: #93c5fd;
+      transform: translateY(-1px);
+    }
+  }
+
+  &.is-active-selection {
+    background: #3b82f6 !important;
+    border-color: #3b82f6 !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 12px rgba(59, 130, 246, 0.4);
   }
 }

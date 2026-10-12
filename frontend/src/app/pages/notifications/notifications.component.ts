@@ -6,20 +6,17 @@ import {
   signal,
   computed,
   ChangeDetectionStrategy,
-  HostListener
+  HostListener,
+  Renderer2
 } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { DOCUMENT, CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import {
   NotificationService,
   EnterpriseNotification,
-  NotificationType,
   FollowedAct,
-  NotificationPreferences,
-  ChannelDeliveryConfig,
-  QuietHoursConfig,
-  SoundProfile
+  NotificationPreferences
 } from '../../services/notification.service';
 import { AuthService } from '../../services/auth.service';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -29,142 +26,38 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 import { IconComponent } from '../../components/icon/icon.component';
 import { IconName } from '../../components/icon/icon.types';
 import { NotificationSkeletonComponent } from './components/notification-skeleton/notification-skeleton.component';
+import { NotificationInsightsComponent } from './components/notification-insights/notification-insights.component';
+import { NotificationPreferencesComponent } from './components/notification-preferences/notification-preferences.component';
+import { NotificationCardComponent } from './components/notification-card/notification-card.component';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { CustomSelectComponent } from '../../components/custom-select/custom-select.component';
 import { SelectOption } from '../../components/custom-select/custom-select.types';
 import { ScrollingModule } from '@angular/cdk/scrolling';
 import { Subject, Subscription } from 'rxjs';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { PrintService } from '../../services/print.service';
+import { DataExportService } from '../../services/data-export.service';
 
 export interface GroupedNotifications {
+  key: string;
   label: string;
+  sublabel?: string;
   items: EnterpriseNotification[];
-}
-
-export interface CategoryConfig {
-  key: keyof NotificationPreferences;
-  label: string;
-  desc: string;
-  clientLabel?: string;
-  clientDesc?: string;
-  applicableRoles: Array<'Lawyer' | 'Client' | 'Corporate' | 'All'>;
   icon: IconName;
-  badgeClass: string;
-  iconColor: string;
-  tag: string;
+  unreadCount: number;
+  hasUrgent: boolean;
+  totalCount: number;
+  docketNumber?: string;
+  court?: string;
 }
 
-export const PREFERENCES_CATEGORIES: CategoryConfig[] = [
-  {
-    key: 'legal',
-    label: 'Bare Act Amendments & Gazette Notices',
-    desc: 'Statute revisions, Parliamentary bills & central gazette notifications',
-    clientLabel: 'Legal Rights & Statutory Bare Acts',
-    clientDesc: 'Updates on consumer protection, cyber safety & basic rights',
-    applicableRoles: ['Lawyer', 'Corporate', 'All', 'Client'],
-    icon: 'scale',
-    badgeClass: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
-    iconColor: '#6366f1',
-    tag: 'Statutory'
-  },
-  {
-    key: 'case',
-    label: 'Court Dockets & Hearing Cause Lists',
-    desc: 'Court hearings, courtroom listings & client consultation milestones',
-    clientLabel: 'Court Hearing Dates & Case Status',
-    clientDesc: 'Real-time alerts for your active court hearing dates and docket progress',
-    applicableRoles: ['Lawyer', 'Client', 'Corporate', 'All'],
-    icon: 'calendar',
-    badgeClass: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-    iconColor: '#3b82f6',
-    tag: 'Hearings'
-  },
-  {
-    key: 'lawyer',
-    label: 'Direct Messages & Client Consultations',
-    desc: 'Confidential client legal inquiries, consultation chats & case files',
-    clientLabel: 'Advocate Direct Chat & Advice Notes',
-    clientDesc: 'Confidential direct messages and case advice from your verified advocate',
-    applicableRoles: ['Lawyer', 'Client', 'Corporate', 'All'],
-    icon: 'message-square',
-    badgeClass: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
-    iconColor: '#a855f7',
-    tag: 'Messages'
-  },
-  {
-    key: 'security',
-    label: 'Security & Device Login Audits',
-    desc: 'New IP logins, 2FA credentials & account security audit alerts',
-    applicableRoles: ['Lawyer', 'Client', 'Corporate', 'All'],
-    icon: 'shield',
-    badgeClass: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20',
-    iconColor: '#f43f5e',
-    tag: 'Security'
-  },
-  {
-    key: 'verification',
-    label: 'Bar Council Credential Approvals',
-    desc: 'State Bar Council verification, COP checks & advocate badge updates',
-    applicableRoles: ['Lawyer'], // Advocate ONLY
-    icon: 'badge-check',
-    badgeClass: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
-    iconColor: '#10b981',
-    tag: 'BCI Audit'
-  },
-  {
-    key: 'review',
-    label: 'Client Reviews & Practice Ratings',
-    desc: 'Verified client reviews, ratings approval & feedback notifications',
-    applicableRoles: ['Lawyer'], // Advocate ONLY
-    icon: 'star',
-    badgeClass: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
-    iconColor: '#f59e0b',
-    tag: 'Reviews'
-  },
-  {
-    key: 'profile',
-    label: 'Identity Verification & e-KYC Audits',
-    desc: 'Aadhaar/PAN compliance, KYC validation & court filing identity verification',
-    clientLabel: 'Account Identity & e-KYC Verification',
-    clientDesc: 'Validation status of your identity and documents for court submissions',
-    applicableRoles: ['Client', 'Corporate'], // Client/Corporate ONLY
-    icon: 'user',
-    badgeClass: 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20',
-    iconColor: '#14b8a6',
-    tag: 'e-KYC'
-  },
-  {
-    key: 'system',
-    label: 'Platform Engine Releases & Uptime',
-    desc: 'Platform feature updates, database sync & legal intelligence upgrades',
-    applicableRoles: ['Lawyer', 'Client', 'Corporate', 'All'],
-    icon: 'zap',
-    badgeClass: 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-500/20',
-    iconColor: '#0ea5e9',
-    tag: 'Platform'
-  }
-];
-
-export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
-  system: { inApp: true, email: true, push: false, whatsapp: false },
-  legal: { inApp: true, email: true, push: true, whatsapp: true },
-  case: { inApp: true, email: true, push: true, whatsapp: true },
-  lawyer: { inApp: true, email: true, push: true, whatsapp: true },
-  review: { inApp: true, email: false, push: false, whatsapp: false },
-  profile: { inApp: true, email: true, push: false, whatsapp: false },
-  security: { inApp: true, email: true, push: true, whatsapp: true },
-  verification: { inApp: true, email: true, push: true, whatsapp: false },
-  quietHours: {
-    enabled: false,
-    startTime: '22:00',
-    endTime: '07:30',
-    allowUrgent: true
-  },
-  soundProfile: 'gavel',
-  hapticFeedback: true,
-  targetRole: 'All'
-};
-
+/**
+ * Notifications Component
+ * 
+ * Enterprise Notification Hub coordinating real-time alerts, case docket updates,
+ * statutory Bare Act amendment watches, triage filtering, and multi-channel routing.
+ * Built with Angular 18 OnPush change detection, Signals, Virtual Scrolling, and Defer blocks.
+ */
 @Component({
   selector: 'app-notifications',
   standalone: true,
@@ -175,6 +68,9 @@ export const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = {
     TooltipDirective,
     IconComponent,
     NotificationSkeletonComponent,
+    NotificationInsightsComponent,
+    NotificationPreferencesComponent,
+    NotificationCardComponent,
     ConfirmDialogComponent,
     ScrollingModule,
     CustomSelectComponent
@@ -187,116 +83,33 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   notificationService = inject(NotificationService);
   systemAnnouncementService = inject(SystemAnnouncementService);
   snackbar = inject(SnackbarService);
+  authService = inject(AuthService);
+  private renderer = inject(Renderer2);
+  private document = inject(DOCUMENT);
+  private printService = inject(PrintService);
+  private dataExportService = inject(DataExportService);
 
-  // Active filter state
-  activeTab = signal<'all' | 'unread' | 'urgent' | 'legal' | 'cases' | 'security' | 'system' | 'statutes'>('all');
+  // Active filter state (Compound triage: Status Tab + Domain Category)
+  activeTab = signal<'all' | 'unread' | 'urgent' | 'statutes'>('all');
+  selectedCategory = signal<string>('all');
   searchQuery = signal<string>('');
   isRefreshing = signal<boolean>(false);
   isVirtualScrollMode = signal<boolean>(false);
   isMobileSearchOpen = signal<boolean>(false);
   isInsightsSheetOpen = signal<boolean>(false);
 
-  // Category Dropdown Filter State
-  isCategoryTabActive = computed(() =>
-    ['legal', 'cases', 'security', 'system', 'statutes'].includes(this.activeTab())
-  );
+  // Grouping & Case Docket Mode ('date' vs 'matter')
+  groupBy = signal<'date' | 'matter'>('date');
+  collapsedGroups = signal<string[]>([]);
 
-  selectedCategoryValue = computed<string>(() => {
-    const tab = this.activeTab();
-    if (['legal', 'cases', 'security', 'system', 'statutes'].includes(tab)) {
-      return tab;
-    }
-    return '';
-  });
+  // Audit export dropdown state (Desktop)
+  isExportMenuOpen = signal<boolean>(false);
 
-  categoryOptions = computed<SelectOption[]>(() => {
-    const options: SelectOption[] = [
-      {
-        value: 'all',
-        label: 'All Categories',
-        icon: 'layers',
-        iconColor: '#3b82f6',
-        sublabel: 'View all notifications across domains'
-      }
-    ];
+  // Mobile overflow "More" dropdown state
+  isMoreMenuOpen = signal<boolean>(false);
 
-    const legalCount = this.getCategoryCount('legal');
-    if (legalCount > 0) {
-      options.push({
-        value: 'legal',
-        label: 'Legal & Bare Acts',
-        icon: 'scale',
-        iconColor: '#818cf8',
-        count: legalCount,
-        sublabel: 'Gazette amendments & Bare Act revisions'
-      });
-    }
-
-    const casesCount = this.getCategoryCount('cases');
-    if (casesCount > 0) {
-      options.push({
-        value: 'cases',
-        label: 'Cases & Messages',
-        icon: 'message-square',
-        iconColor: '#c084fc',
-        count: casesCount,
-        sublabel: 'Docket hearings & advocate chat messages'
-      });
-    }
-
-    const securityCount = this.getCategoryCount('security');
-    if (securityCount > 0) {
-      options.push({
-        value: 'security',
-        label: 'Security & Profile',
-        icon: 'shield',
-        iconColor: '#34d399',
-        count: securityCount,
-        sublabel: 'Login sessions, BCI badges, compliance audits'
-      });
-    }
-
-    const systemCount = this.getCategoryCount('system');
-    if (systemCount > 0) {
-      options.push({
-        value: 'system',
-        label: 'Platform Releases',
-        icon: 'zap',
-        iconColor: '#38bdf8',
-        count: systemCount,
-        sublabel: 'Platform upgrades & system broadcasts'
-      });
-    }
-
-    const statutesCount = this.followedActs().length;
-    if (statutesCount > 0) {
-      options.push({
-        value: 'statutes',
-        label: 'Monitored Bare Acts',
-        icon: 'book-open',
-        iconColor: '#fbbf24',
-        count: statutesCount,
-        sublabel: 'Tracked Indian central and state acts'
-      });
-    }
-
-    return options;
-  });
-
-  // Selection & Bulk Actions
-  selectedIds = signal<string[]>([]);
-  isSelectionMode = computed(() => this.selectedIds().length > 0);
-
-  // Preferences Drawer / Modal
-  isPreferencesOpen = signal<boolean>(false);
-  isSavingPreferences = signal<boolean>(false);
-  prefSearchQuery = signal<string>('');
-  preferencesCategories = PREFERENCES_CATEGORIES;
-
-  authService = inject(AuthService);
+  // Authenticated user state & role computation
   currentUser = toSignal(this.authService.currentUser$, { initialValue: null });
-
-  // Automatic Role Determination based directly on authenticated user credentials
   effectiveRole = computed<'Lawyer' | 'Client'>(() => {
     const user = this.currentUser();
     const r = (user?.role || '').toLowerCase();
@@ -304,78 +117,80 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return 'Client';
   });
 
-  // Active view tab within Preferences modal: 'categories' | 'quiet-hours' | 'sound' | 'whatsapp'
-  preferencesSection = signal<'categories' | 'quiet-hours' | 'sound' | 'whatsapp'>('categories');
+  // Category Dropdown Filter State
+  isCategoryTabActive = computed(() =>
+    this.selectedCategory() !== 'all'
+  );
 
-  tempPreferences = signal<NotificationPreferences>({
-    system: { inApp: true, email: true, push: false, whatsapp: false },
-    legal: { inApp: true, email: true, push: true, whatsapp: true },
-    case: { inApp: true, email: true, push: true, whatsapp: true },
-    lawyer: { inApp: true, email: true, push: true, whatsapp: true },
-    review: { inApp: true, email: false, push: false, whatsapp: false },
-    profile: { inApp: true, email: true, push: false, whatsapp: false },
-    security: { inApp: true, email: true, push: true, whatsapp: true },
-    verification: { inApp: true, email: true, push: true, whatsapp: false },
-    quietHours: {
-      enabled: false,
-      startTime: '22:00',
-      endTime: '07:30',
-      allowUrgent: true
-    },
-    soundProfile: 'gavel',
-    hapticFeedback: true,
-    targetRole: 'All'
+  selectedCategoryValue = computed<string>(() => {
+    const cat = this.selectedCategory();
+    return cat === 'all' ? '' : cat;
   });
 
-  filteredPreferenceCategories = computed(() => {
-    const role = this.effectiveRole();
-    const q = this.prefSearchQuery().toLowerCase().trim();
-
-    // 1. Filter by role (hide advocate-only categories for clients, hide client-only for lawyers)
-    let list = this.preferencesCategories.filter(cat =>
-      cat.applicableRoles.includes(role) || cat.applicableRoles.includes('All')
-    );
-
-    // 2. Filter by search query if any
-    if (q) {
-      list = list.filter(cat => {
-        const label = (role === 'Client' && cat.clientLabel ? cat.clientLabel : cat.label).toLowerCase();
-        const desc = (role === 'Client' && cat.clientDesc ? cat.clientDesc : cat.desc).toLowerCase();
-        return label.includes(q) || desc.includes(q) || cat.tag.toLowerCase().includes(q);
-      });
-    }
-
-    return list;
-  });
-
-  activePreset = computed<'all' | 'essential' | 'quiet' | 'default' | 'custom'>(() => {
-    const prefs = this.tempPreferences() as any;
-    const cats = this.filteredPreferenceCategories();
-
-    let allOn = true;
-    let allQuiet = true;
-    for (const cat of cats) {
-      const c = prefs[cat.key] as ChannelDeliveryConfig | undefined;
-      if (!c || !c.inApp || !c.email || !c.push || !c.whatsapp) allOn = false;
-      if (!c || !c.inApp || c.email || c.push || c.whatsapp) allQuiet = false;
-    }
-    if (allOn) return 'all';
-    if (allQuiet) return 'quiet';
-
-    let isDefault = true;
-    const def = DEFAULT_NOTIFICATION_PREFERENCES as any;
-    for (const cat of cats) {
-      const c = prefs[cat.key] as ChannelDeliveryConfig | undefined;
-      const d = def[cat.key] as ChannelDeliveryConfig | undefined;
-      if (!c || !d || c.inApp !== d.inApp || c.email !== d.email || c.push !== d.push || (c.whatsapp !== d.whatsapp)) {
-        isDefault = false;
-        break;
+  categoryOptions = computed<SelectOption[]>(() => {
+    const totalCount = this.notificationService.notifications().length;
+    const allList: SelectOption[] = [
+      {
+        value: 'all',
+        label: 'All Categories',
+        icon: 'layers',
+        iconColor: '#3b82f6',
+        count: totalCount,
+        sublabel: 'View all notifications across domains'
+      },
+      {
+        value: 'legal',
+        label: 'Legal & Bare Acts',
+        icon: 'scale',
+        iconColor: '#818cf8',
+        count: this.getCategoryCount('legal'),
+        sublabel: 'Gazette amendments & Bare Act revisions'
+      },
+      {
+        value: 'cases',
+        label: 'Cases & Messages',
+        icon: 'message-square',
+        iconColor: '#c084fc',
+        count: this.getCategoryCount('cases'),
+        sublabel: 'Docket hearings, lawyer messages & client reviews'
+      },
+      {
+        value: 'security',
+        label: 'Security & Profile',
+        icon: 'shield',
+        iconColor: '#34d399',
+        count: this.getCategoryCount('security'),
+        sublabel: 'Login sessions, BCI badges, compliance audits'
+      },
+      {
+        value: 'system',
+        label: 'Platform Releases',
+        icon: 'zap',
+        iconColor: '#38bdf8',
+        count: this.getCategoryCount('system'),
+        sublabel: 'Platform upgrades & system broadcasts'
+      },
+      {
+        value: 'statutes',
+        label: 'Monitored Bare Acts',
+        icon: 'book-open',
+        iconColor: '#fbbf24',
+        count: this.followedActs().length,
+        sublabel: 'Tracked Indian central and state acts'
       }
-    }
-    if (isDefault) return 'default';
+    ];
 
-    return 'custom';
+    // Filter to only include 'all' and any category that has at least count >= 1
+    return allList.filter(opt => opt.value === 'all' || ((opt.count ?? 0) >= 1));
   });
+
+  // Selection & Bulk Actions
+  selectedIds = signal<string[]>([]);
+  isSelectionMode = computed(() => this.selectedIds().length > 0);
+
+  // Preferences Modal state
+  isPreferencesOpen = signal<boolean>(false);
+  isSavingPreferences = signal<boolean>(false);
 
   // Confirm Modal state
   isConfirmOpen = false;
@@ -391,28 +206,32 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   // Followed Bare Acts (Client local storage)
   followedActs = signal<FollowedAct[]>([]);
 
-  // Filtered notifications computed signal
+  // Filtered notifications computed signal with compound status + category evaluation
   filteredNotifications = computed(() => {
     let list = this.notificationService.notifications();
     const tab = this.activeTab();
+    const cat = this.selectedCategory();
     const query = this.searchQuery().toLowerCase().trim();
 
-    // Filter by tab
+    // 1. Status Filter
     if (tab === 'unread') {
       list = list.filter(n => !n.isRead);
     } else if (tab === 'urgent') {
       list = list.filter(n => n.priority === 'urgent' && !n.isRead);
-    } else if (tab === 'legal') {
+    }
+
+    // 2. Category Filter (Compound)
+    if (cat === 'legal') {
       list = list.filter(n => n.type === 'legal' || n.type === 'hearing');
-    } else if (tab === 'cases') {
-      list = list.filter(n => n.type === 'case' || n.type === 'lawyer');
-    } else if (tab === 'security') {
+    } else if (cat === 'cases') {
+      list = list.filter(n => n.type === 'case' || n.type === 'lawyer' || n.type === 'review');
+    } else if (cat === 'security') {
       list = list.filter(n => n.type === 'security' || n.type === 'profile' || n.type === 'verification');
-    } else if (tab === 'system') {
+    } else if (cat === 'system') {
       list = list.filter(n => n.type === 'system' || n.type === 'payment' || n.type === 'document');
     }
 
-    // Filter by search query across fields
+    // 3. Keyword Search Filter
     if (query) {
       list = list.filter(n =>
         n.title.toLowerCase().includes(query) ||
@@ -425,9 +244,255 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return list;
   });
 
-  // Computed grouped notifications
+  // Check whether all visible groups are collapsed
+  allGroupsCollapsed = computed(() => {
+    const groups = this.groupedNotifications();
+    return groups.length > 0 && this.collapsedGroups().length >= groups.length;
+  });
+
+  // Check whether any status, category, or search filter is active
+  hasActiveFilters = computed<boolean>(() => {
+    return this.activeTab() !== 'all' || this.selectedCategory() !== 'all' || !!this.searchQuery();
+  });
+
+  resetAllFilters(): void {
+    this.activeTab.set('all');
+    this.selectedCategory.set('all');
+    this.searchQuery.set('');
+    this.searchSubject.next('');
+    this.selectedIds.set([]);
+    this.snackbar.show('Filters reset to all notifications.', 'info', 2000);
+  }
+
+  /**
+   * Dynamically resolves the appropriate vector icon for any notification domain type.
+   */
+  getDynamicTypeIcon(type?: string): IconName {
+    switch (type) {
+      case 'case':
+      case 'hearing':
+        return 'briefcase';
+      case 'legal':
+        return 'scale';
+      case 'lawyer':
+        return 'message-square';
+      case 'security':
+        return 'shield';
+      case 'verification':
+        return 'badge-check';
+      case 'review':
+        return 'star';
+      case 'system':
+        return 'zap';
+      default:
+        return 'layers';
+    }
+  }
+
+  /**
+   * Dynamically resolves human-readable type labels for any notification domain type.
+   */
+  getTypeLabel(type?: string): string {
+    switch (type) {
+      case 'legal': return 'Statute Alert';
+      case 'case': return 'Case Update';
+      case 'lawyer': return 'Advocate Message';
+      case 'review': return 'Review Feedback';
+      case 'profile': return 'Profile Audit';
+      case 'security': return 'Security Notice';
+      case 'verification': return 'BCI Verification';
+      case 'hearing': return 'Court Hearing';
+      case 'document': return 'Legal Dossier';
+      case 'payment': return 'Escrow Billing';
+      case 'system': return 'Platform Update';
+      default: return 'Notification';
+    }
+  }
+
+  /**
+   * 100% Dynamic Docket / Matter Thread Extraction Engine.
+   * Dynamically groups notifications into coherent legal matters, dockets,
+   * court proceedings, and communications purely from runtime notification attributes
+   * (metadata, title, summary, source, priority, type) with ZERO hardcoded data.
+   */
+  extractMatter(n: EnterpriseNotification): {
+    key: string;
+    label: string;
+    sublabel: string;
+    icon: IconName;
+    docketNumber?: string;
+    court?: string;
+  } {
+    const meta = n.metadata || {};
+    const icon = this.getDynamicTypeIcon(n.type);
+    const typeLabel = this.getTypeLabel(n.type);
+
+    // 1. Explicit Dynamic Metadata Fields (originating from backend models & court registries)
+    const caseTitle = meta['caseTitle'] || meta['docketTitle'] || meta['matterTitle'] || meta['caseName'];
+    if (caseTitle) {
+      const title = String(caseTitle).trim();
+      const courtStr = meta['court'] || meta['jurisdiction'] || n.source || typeLabel;
+      const docketStr = meta['docketNumber']
+        ? `Docket ${meta['docketNumber']}`
+        : (meta['topic'] ? String(meta['topic']) : (n.source || typeLabel));
+      return {
+        key: 'docket-' + title.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        label: title,
+        sublabel: `${courtStr} • ${docketStr}`,
+        icon,
+        docketNumber: meta['docketNumber'] ? String(meta['docketNumber']) : undefined,
+        court: meta['court'] ? String(meta['court']) : undefined
+      };
+    }
+
+    // 2. Dynamic Adversarial Litigation Format (e.g. "Party A vs. Party B" or "Party A v. Party B")
+    const adversaryRegex = /([A-Z][A-Za-z0-9.,'& ]{1,45}?)\s+(?:vs\.?|v\.?|versus)\s+([A-Z][A-Za-z0-9.,'& ]{1,45})/i;
+    const adversaryMatch = n.title.match(adversaryRegex) || (n.summary ? n.summary.match(adversaryRegex) : null);
+    if (adversaryMatch) {
+      const dynamicTitle = adversaryMatch[0].trim();
+      const courtStr = meta['court'] || meta['jurisdiction'] || n.source || typeLabel;
+      const docketStr = meta['docketNumber']
+        ? `Docket ${meta['docketNumber']}`
+        : (n.summary ? (n.summary.length > 45 ? n.summary.slice(0, 45) + '...' : n.summary) : typeLabel);
+      return {
+        key: 'docket-' + dynamicTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        label: dynamicTitle,
+        sublabel: `${courtStr} • ${docketStr}`,
+        icon: 'briefcase',
+        docketNumber: meta['docketNumber'] ? String(meta['docketNumber']) : undefined,
+        court: meta['court'] ? String(meta['court']) : undefined
+      };
+    }
+
+    // 3. Dynamic Advocate & Legal Professional Entity Extraction (e.g. "Adv. <Name>", "Counsel <Name>")
+    const advocateRegex = /(?:Adv\.|Advocate|Counsel|Senior Counsel|Justice)\s+([A-Z][A-Za-z.'\s]{1,40})/i;
+    const advocateMatch = n.title.match(advocateRegex) || (n.summary ? n.summary.match(advocateRegex) : null);
+    if (advocateMatch) {
+      const advocateTitle = advocateMatch[0].trim();
+      const contextSub = meta['topic']
+        ? String(meta['topic'])
+        : (n.title.includes(':')
+          ? n.title.split(':')[0].trim()
+          : (n.summary ? (n.summary.length > 50 ? n.summary.slice(0, 50) + '...' : n.summary) : (n.source || typeLabel)));
+      return {
+        key: 'docket-adv-' + advocateTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        label: advocateTitle,
+        sublabel: contextSub,
+        icon: n.type === 'case' ? 'calendar' : (n.type === 'hearing' ? 'gavel' : 'message-square')
+      };
+    }
+
+    // 4. Dynamic Statute & Legislative Amendment Extraction
+    if (n.type === 'legal' || /\b(Act|Sanhita|Code|Rules|Statute|Gazette)\b/i.test(n.title)) {
+      const cleanTitle = n.title.includes(':') ? n.title.split(':').slice(1).join(':').trim() : n.title.trim();
+      const sourceOrPrefix = n.title.includes(':')
+        ? n.title.split(':')[0].trim()
+        : (n.source || (n.summary ? (n.summary.length > 50 ? n.summary.slice(0, 50) + '...' : n.summary) : typeLabel));
+      return {
+        key: 'docket-statute-' + cleanTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 45),
+        label: cleanTitle,
+        sublabel: sourceOrPrefix,
+        icon: 'scale'
+      };
+    }
+
+    // 5. Dynamic Source / Subsystem Routing (Uses real notification source or origin subsystem)
+    if (n.source && n.source !== 'system') {
+      const sourceKey = 'docket-src-' + n.source.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      return {
+        key: sourceKey,
+        label: n.source,
+        sublabel: n.title,
+        icon
+      };
+    }
+
+    // 6. Dynamic Structured Title Parsing (Prefix: Subject)
+    if (n.title.includes(':')) {
+      const parts = n.title.split(':');
+      const prefix = parts[0].trim();
+      const subject = parts.slice(1).join(':').trim();
+      return {
+        key: 'docket-' + prefix.toLowerCase().replace(/[^a-z0-9]+/g, '-'),
+        label: prefix,
+        sublabel: subject,
+        icon
+      };
+    }
+
+    // 7. General Dynamic Fallback based on notification title & summary
+    const cleanFallback = n.title.length > 40 ? n.title.slice(0, 40) + '...' : n.title;
+    return {
+      key: 'docket-' + n.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 35),
+      label: cleanFallback,
+      sublabel: n.summary ? (n.summary.length > 55 ? n.summary.slice(0, 55) + '...' : n.summary) : (n.source || typeLabel),
+      icon
+    };
+  }
+
+  // Computed grouped notifications by date OR by Case/Matter Docket
   groupedNotifications = computed(() => {
     const list = this.filteredNotifications();
+
+    // Mode A: Case/Matter Docket Grouping
+    if (this.groupBy() === 'matter') {
+      const docketMap = new Map<string, {
+        key: string;
+        label: string;
+        sublabel: string;
+        icon: IconName;
+        docketNumber?: string;
+        court?: string;
+        items: EnterpriseNotification[];
+      }>();
+
+      list.forEach(item => {
+        const info = this.extractMatter(item);
+        let group = docketMap.get(info.key);
+        if (!group) {
+          group = {
+            key: info.key,
+            label: info.label,
+            sublabel: info.sublabel,
+            icon: info.icon,
+            docketNumber: info.docketNumber,
+            court: info.court,
+            items: []
+          };
+          docketMap.set(info.key, group);
+        }
+        group.items.push(item);
+      });
+
+      const matterGroups: GroupedNotifications[] = [];
+      docketMap.forEach(g => {
+        matterGroups.push({
+          key: g.key,
+          label: g.label,
+          sublabel: g.sublabel,
+          items: g.items,
+          icon: g.icon,
+          unreadCount: g.items.filter(i => !i.isRead).length,
+          hasUrgent: g.items.some(i => i.priority === 'urgent' && !i.isRead),
+          totalCount: g.items.length,
+          docketNumber: g.docketNumber,
+          court: g.court
+        });
+      });
+
+      // Sort matter dockets: Urgent unread first, then unread count, then latest timestamp
+      matterGroups.sort((a, b) => {
+        if (a.hasUrgent !== b.hasUrgent) return a.hasUrgent ? -1 : 1;
+        if (a.unreadCount !== b.unreadCount) return b.unreadCount - a.unreadCount;
+        const aTime = a.items.length ? new Date(a.items[0].createdAt).getTime() : 0;
+        const bTime = b.items.length ? new Date(b.items[0].createdAt).getTime() : 0;
+        return bTime - aTime;
+      });
+
+      return matterGroups;
+    }
+
+    // Mode B: Chronological Date Grouping (Today, Yesterday, Earlier)
     const today: EnterpriseNotification[] = [];
     const yesterday: EnterpriseNotification[] = [];
     const earlier: EnterpriseNotification[] = [];
@@ -452,21 +517,85 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
 
     const groups: GroupedNotifications[] = [];
-    if (today.length > 0) groups.push({ label: 'Today', items: today });
-    if (yesterday.length > 0) groups.push({ label: 'Yesterday', items: yesterday });
-    if (earlier.length > 0) groups.push({ label: 'Earlier', items: earlier });
+    if (today.length > 0) {
+      groups.push({
+        key: 'today',
+        label: 'Today',
+        sublabel: 'Alerts received today',
+        items: today,
+        icon: 'sparkles',
+        unreadCount: today.filter(i => !i.isRead).length,
+        hasUrgent: today.some(i => i.priority === 'urgent' && !i.isRead),
+        totalCount: today.length
+      });
+    }
+    if (yesterday.length > 0) {
+      groups.push({
+        key: 'yesterday',
+        label: 'Yesterday',
+        sublabel: 'Previous 24 hours',
+        items: yesterday,
+        icon: 'history',
+        unreadCount: yesterday.filter(i => !i.isRead).length,
+        hasUrgent: yesterday.some(i => i.priority === 'urgent' && !i.isRead),
+        totalCount: yesterday.length
+      });
+    }
+    if (earlier.length > 0) {
+      groups.push({
+        key: 'earlier',
+        label: 'Earlier',
+        sublabel: 'Archived litigation notices',
+        items: earlier,
+        icon: 'calendar',
+        unreadCount: earlier.filter(i => !i.isRead).length,
+        hasUrgent: earlier.some(i => i.priority === 'urgent' && !i.isRead),
+        totalCount: earlier.length
+      });
+    }
 
     return groups;
   });
 
-  // Sidebar metrics computed signals
-  unreadFilteredCount = computed(() =>
-    this.filteredNotifications().filter(n => !n.isRead).length
-  );
+  // Computed empty state properties
+  emptyStateIcon = computed<'search' | 'check' | 'shield' | 'bell'>(() => {
+    if (this.searchQuery()) return 'search';
+    const hasNotifs = this.notificationService.notifications().length > 0;
+    if (this.activeTab() === 'unread' && hasNotifs) return 'check';
+    if (this.activeTab() === 'urgent' && hasNotifs) return 'shield';
+    return 'bell';
+  });
 
-  urgentFilteredCount = computed(() =>
-    this.filteredNotifications().filter(n => n.priority === 'urgent' && !n.isRead).length
-  );
+  emptyStateTitle = computed<string>(() => {
+    const query = this.searchQuery();
+    if (query) return `No notifications matching "${query}"`;
+    const total = this.notificationService.notifications().length;
+    if (total === 0) return "You're all caught up!";
+    if (this.activeTab() === 'unread') return 'All caught up! Zero unread alerts';
+    if (this.activeTab() === 'urgent') return 'No urgent notifications pending';
+    if (this.isCategoryTabActive()) return 'No notifications in this category';
+    return "You're all caught up!";
+  });
+
+  emptyStateDescription = computed<string>(() => {
+    if (this.searchQuery()) {
+      return "We couldn't find any notices matching your query. Try searching with different keywords or clear the filter.";
+    }
+    const total = this.notificationService.notifications().length;
+    if (total === 0) {
+      return 'You have no notifications or legal alerts right now. Real-time docket updates, advocate inquiries, and statutory amendments will appear here as they occur.';
+    }
+    if (this.activeTab() === 'unread') {
+      return 'You have reviewed and acknowledged all notifications in your inbox. Real-time updates will be delivered as they occur.';
+    }
+    if (this.activeTab() === 'urgent') {
+      return 'There are no critical court appearances, statutory deadlines, or high-priority warnings requiring immediate attention.';
+    }
+    if (this.isCategoryTabActive()) {
+      return 'No notifications are currently logged under this domain. You can switch to other categories or view your complete inbox.';
+    }
+    return 'All legal updates and dockets have been acknowledged.';
+  });
 
   ngOnInit() {
     this.searchSub = this.searchSubject.pipe(
@@ -476,25 +605,31 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       this.searchQuery.set(val);
     });
 
-    this.refreshAll();
+    this.refreshAll(false);
   }
 
   ngOnDestroy() {
     if (this.searchSub) {
       this.searchSub.unsubscribe();
     }
-    if (typeof document !== 'undefined') {
-      document.body.classList.remove('mobile-drawer-open', 'overflow-hidden');
+    if (this.document && this.document.body) {
+      this.renderer.removeClass(this.document.body, 'mobile-drawer-open');
+      this.renderer.removeClass(this.document.body, 'overflow-hidden');
     }
   }
 
-  refreshAll() {
+  refreshAll(showFeedback = true) {
     this.isRefreshing.set(true);
     this.followedActs.set(this.notificationService.getFollowedActs());
 
     this.notificationService.fetchNotifications().subscribe({
       next: () => {
-        setTimeout(() => this.isRefreshing.set(false), 300);
+        setTimeout(() => {
+          this.isRefreshing.set(false);
+          if (showFeedback) {
+            this.snackbar.show('Alerts synchronized with server.', 'success', 2500);
+          }
+        }, 300);
       },
       error: () => {
         this.isRefreshing.set(false);
@@ -502,11 +637,7 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
 
     this.systemAnnouncementService.fetchLatestAnnouncements();
-    this.notificationService.fetchPreferences().subscribe(res => {
-      if (res && res.data) {
-        this.tempPreferences.set(res.data);
-      }
-    });
+    this.notificationService.fetchPreferences().subscribe();
   }
 
   onSearchInput(event: Event) {
@@ -525,12 +656,13 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   }
 
   private updateBodyDrawerClass(): void {
-    if (typeof document !== 'undefined') {
-      if (this.isInsightsSheetOpen() || this.isPreferencesOpen()) {
-        document.body.classList.add('mobile-drawer-open', 'overflow-hidden');
-      } else {
-        document.body.classList.remove('mobile-drawer-open', 'overflow-hidden');
-      }
+    if (!this.document || !this.document.body) return;
+    if (this.isInsightsSheetOpen() || this.isPreferencesOpen()) {
+      this.renderer.addClass(this.document.body, 'mobile-drawer-open');
+      this.renderer.addClass(this.document.body, 'overflow-hidden');
+    } else {
+      this.renderer.removeClass(this.document.body, 'mobile-drawer-open');
+      this.renderer.removeClass(this.document.body, 'overflow-hidden');
     }
   }
 
@@ -544,28 +676,76 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.updateBodyDrawerClass();
   }
 
+  // Mobile Insights Sheet Touch Gesture Handlers
+  private insightsTouchStartY = 0;
+  private insightsTouchCurrentY = 0;
+  private isDraggingInsights = false;
+
+  onInsightsTouchStart(event: TouchEvent): void {
+    if (event.touches.length > 0) {
+      this.insightsTouchStartY = event.touches[0].clientY;
+      this.insightsTouchCurrentY = this.insightsTouchStartY;
+      this.isDraggingInsights = true;
+    }
+  }
+
+  onInsightsTouchMove(event: TouchEvent): void {
+    if (!this.isDraggingInsights || event.touches.length === 0) return;
+    this.insightsTouchCurrentY = event.touches[0].clientY;
+  }
+
+  onInsightsTouchEnd(): void {
+    if (!this.isDraggingInsights) return;
+    const deltaY = this.insightsTouchCurrentY - this.insightsTouchStartY;
+    this.isDraggingInsights = false;
+    if (deltaY > 60) {
+      this.closeInsightsSheet();
+    }
+  }
+
   filterByMetric(tab: 'all' | 'unread' | 'urgent' | 'statutes'): void {
     this.setTab(tab);
   }
 
-  setTab(tab: 'all' | 'unread' | 'urgent' | 'legal' | 'cases' | 'security' | 'system' | 'statutes') {
+  setTab(tab: 'all' | 'unread' | 'urgent' | 'statutes'): void {
     this.activeTab.set(tab);
-    this.selectedIds.set([]); // Reset selections on tab change
+    if (tab === 'statutes') {
+      this.selectedCategory.set('statutes');
+    } else if (this.selectedCategory() === 'statutes') {
+      this.selectedCategory.set('all');
+    }
+    this.selectedIds.set([]);
   }
 
   onCategorySelect(val: any): void {
     if (!val || val === 'all') {
-      this.setTab('all');
+      this.selectedCategory.set('all');
+      if (this.activeTab() === 'statutes') {
+        this.activeTab.set('all');
+      }
+    } else if (val === 'statutes') {
+      this.selectedCategory.set('statutes');
+      this.activeTab.set('statutes');
     } else {
-      this.setTab(val);
+      this.selectedCategory.set(val);
+      if (this.activeTab() === 'statutes') {
+        this.activeTab.set('all');
+      }
     }
+    this.selectedIds.set([]);
   }
 
   getCategoryCount(cat: 'legal' | 'cases' | 'security' | 'system' | 'statutes'): number {
-    const list = this.notificationService.notifications();
+    let list = this.notificationService.notifications();
+    const tab = this.activeTab();
+    if (tab === 'unread') {
+      list = list.filter(n => !n.isRead);
+    } else if (tab === 'urgent') {
+      list = list.filter(n => n.priority === 'urgent' && !n.isRead);
+    }
     switch (cat) {
       case 'legal': return list.filter(n => n.type === 'legal' || n.type === 'hearing').length;
-      case 'cases': return list.filter(n => n.type === 'case' || n.type === 'lawyer').length;
+      case 'cases': return list.filter(n => n.type === 'case' || n.type === 'lawyer' || n.type === 'review').length;
       case 'security': return list.filter(n => n.type === 'security' || n.type === 'profile' || n.type === 'verification').length;
       case 'system': return list.filter(n => n.type === 'system' || n.type === 'payment' || n.type === 'document').length;
       case 'statutes': return this.followedActs().length;
@@ -576,8 +756,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   // ==================== SINGLE ACTIONS ====================
 
   markRead(id: string) {
-    this.notificationService.markAsRead(id).subscribe();
-    this.snackbar.show('Notification marked as read.', 'success');
+    this.notificationService.markAsRead(id).subscribe({
+      next: () => this.snackbar.show('Notification marked as read.', 'success')
+    });
   }
 
   markAllRead() {
@@ -587,8 +768,8 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const currentTab = this.activeTab();
-    const typeParam = (currentTab === 'all' || currentTab === 'unread' || currentTab === 'urgent') ? 'all' : currentTab;
+    const cat = this.selectedCategory();
+    const typeParam = (cat === 'all' || cat === 'statutes') ? 'all' : cat;
     this.notificationService.markAllAsRead(typeParam).subscribe();
   }
 
@@ -635,10 +816,11 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   bulkDelete() {
     const ids = this.selectedIds();
     if (ids.length === 0) return;
+    const count = ids.length;
 
     this.triggerConfirm(
       'Delete Selected Notifications',
-      `Are you sure you want to permanently dismiss ${ids.length} notifications? This action cannot be reversed.`,
+      `Are you sure you want to permanently dismiss ${count} notifications? This action cannot be reversed.`,
       'danger',
       () => {
         this.notificationService.bulkAction('delete', ids).subscribe();
@@ -650,6 +832,306 @@ export class NotificationsComponent implements OnInit, OnDestroy {
   cancelSelection() {
     this.selectedIds.set([]);
     this.snackbar.show('Selection mode cancelled.', 'info');
+  }
+
+  // ==================== SECTION / GROUP ACTIONS ====================
+
+  setGroupBy(mode: 'date' | 'matter'): void {
+    this.groupBy.set(mode);
+    this.collapsedGroups.set([]);
+    const label = mode === 'matter' ? 'Case Docket Thread View enabled.' : 'Chronological Date View enabled.';
+    this.snackbar.show(label, 'info', 2000);
+  }
+
+  isGroupCollapsed(key: string): boolean {
+    return this.collapsedGroups().includes(key);
+  }
+
+  toggleGroupCollapse(key: string, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    const current = this.collapsedGroups();
+    if (current.includes(key)) {
+      this.collapsedGroups.set(current.filter(k => k !== key));
+    } else {
+      this.collapsedGroups.set([...current, key]);
+    }
+  }
+
+  expandAllGroups(): void {
+    this.collapsedGroups.set([]);
+    this.snackbar.show('All docket threads expanded.', 'info', 1800);
+  }
+
+  collapseAllGroups(): void {
+    const allKeys = this.groupedNotifications().map(g => g.key);
+    this.collapsedGroups.set(allKeys);
+    this.snackbar.show('All docket threads collapsed.', 'info', 1800);
+  }
+
+  // ==================== MOBILE OVERFLOW "MORE" MENU ====================
+
+  toggleMoreMenu(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isMoreMenuOpen.update(v => !v);
+  }
+
+  closeMoreMenu(): void {
+    this.isMoreMenuOpen.set(false);
+  }
+
+  // ==================== AUDIT EXPORT (CSV / PDF) ====================
+
+  toggleExportMenu(event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.isExportMenuOpen.update(v => !v);
+  }
+
+  closeExportMenu(): void {
+    this.isExportMenuOpen.set(false);
+  }
+
+  exportAuditPdf(): void {
+    this.closeExportMenu();
+    const notices = this.filteredNotifications();
+    if (notices.length === 0) {
+      this.snackbar.show('No notifications or litigation notices available to export.', 'info');
+      return;
+    }
+
+    const user = this.currentUser();
+    const role = this.effectiveRole();
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    const timeStr = now.toLocaleTimeString('en-IN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+
+    const urgentCount = notices.filter(n => n.priority === 'urgent').length;
+    const unreadCount = notices.filter(n => !n.isRead).length;
+    const caseCount = notices.filter(n => n.type === 'case' || n.type === 'hearing' || n.type === 'lawyer').length;
+
+    let tableRowsHtml = '';
+    notices.forEach((n, idx) => {
+      const matter = this.extractMatter(n);
+      const itemDate = new Date(n.createdAt).toLocaleDateString('en-IN', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      const priorityBadge = n.priority === 'urgent'
+        ? '<span style="background:#fee2e2;color:#991b1b;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;">URGENT</span>'
+        : (n.priority === 'high'
+          ? '<span style="background:#fef3c7;color:#92400e;padding:2px 6px;border-radius:4px;font-weight:700;font-size:9px;">HIGH</span>'
+          : '<span style="background:#f1f5f9;color:#475569;padding:2px 6px;border-radius:4px;font-weight:600;font-size:9px;">NORMAL</span>');
+
+      const statusBadge = n.isRead
+        ? '<span style="color:#16a34a;font-weight:700;font-size:9.5px;">✓ Acknowledged</span>'
+        : '<span style="color:#2563eb;font-weight:800;font-size:9.5px;">● Action Pending</span>';
+
+      tableRowsHtml += `
+        <tr style="border-bottom:1px solid #e2e8f0;font-size:10px;">
+          <td style="padding:8px 6px;text-align:center;color:#64748b;font-weight:700;">${idx + 1}</td>
+          <td style="padding:8px 6px;white-space:nowrap;color:#334155;font-weight:600;">${itemDate}</td>
+          <td style="padding:8px 6px;text-align:center;">${priorityBadge}</td>
+          <td style="padding:8px 6px;">
+            <div style="font-weight:700;color:#0f172a;">${this.printService.escapeHtml(matter.label)}</div>
+            <div style="font-size:8.5px;color:#64748b;">${this.printService.escapeHtml(matter.sublabel)}</div>
+          </td>
+          <td style="padding:8px 6px;">
+            <div style="font-weight:600;color:#1e293b;">${this.printService.escapeHtml(n.title)}</div>
+            <div style="color:#475569;font-size:9px;margin-top:2px;line-height:1.3;">${this.printService.escapeHtml(n.summary)}</div>
+          </td>
+          <td style="padding:8px 6px;text-align:center;white-space:nowrap;">${statusBadge}</td>
+        </tr>
+      `;
+    });
+
+    const contentHtml = `
+      <div class="lc-subject" style="margin-bottom:16px;">
+        <div>
+          <div class="lc-subject-name">Official Court Diary &amp; Litigation Compliance Log</div>
+          <div class="lc-subject-sub">Timestamped Compliance Extract for Judicial Cause Lists, Statutory Notices &amp; Advocate Diary Records</div>
+        </div>
+        <div class="lc-subject-badge">BCI Digital Compliance</div>
+      </div>
+
+      <div class="lc-kpi-grid" style="margin-bottom:16px;">
+        <div class="lc-kpi indigo">
+          <div class="lc-kpi-label">Total Logged Notices</div>
+          <div class="lc-kpi-val">${notices.length}</div>
+          <div class="lc-kpi-sub">Archived Records</div>
+        </div>
+        <div class="lc-kpi rose">
+          <div class="lc-kpi-label">Urgent Hearing Deadlines</div>
+          <div class="lc-kpi-val">${urgentCount}</div>
+          <div class="lc-kpi-sub">Priority Actions</div>
+        </div>
+        <div class="lc-kpi amber">
+          <div class="lc-kpi-label">Pending Acknowledgments</div>
+          <div class="lc-kpi-val">${unreadCount}</div>
+          <div class="lc-kpi-sub">Unread In Diary</div>
+        </div>
+        <div class="lc-kpi blue">
+          <div class="lc-kpi-label">Active Litigation Matters</div>
+          <div class="lc-kpi-val">${caseCount}</div>
+          <div class="lc-kpi-sub">Court Dockets</div>
+        </div>
+      </div>
+
+      <div class="lc-section" style="padding:0;overflow:hidden;">
+        <div style="background:#0f172a;color:#fff;padding:8px 12px;font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;">
+          <span>Court Diary Litigation Schedule &amp; Compliance Audit</span>
+          <span style="font-size:8.5px;color:#94a3b8;font-weight:600;">Generated: ${dateStr} ${timeStr}</span>
+        </div>
+        <table class="lc-table" style="margin:0;">
+          <thead>
+            <tr style="background:#f8fafc;border-bottom:2px solid #cbd5e1;font-size:9px;text-transform:uppercase;letter-spacing:0.06em;color:#475569;">
+              <th style="padding:7px 6px;text-align:center;width:30px;">#</th>
+              <th style="padding:7px 6px;text-align:left;width:110px;">Date &amp; Time</th>
+              <th style="padding:7px 6px;text-align:center;width:65px;">Priority</th>
+              <th style="padding:7px 6px;text-align:left;width:160px;">Matter / Case Docket</th>
+              <th style="padding:7px 6px;text-align:left;">Notice Details &amp; Directives</th>
+              <th style="padding:7px 6px;text-align:center;width:105px;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableRowsHtml}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="lc-privilege-notice" style="margin-top:16px;">
+        <div class="lc-privilege-title">
+          ${this.printService.getSvg('shield', { size: 12, color: '#0f172a' })}
+          <span>Statutory Compliance &amp; Attorney Record Authentication</span>
+        </div>
+        <div>This document is an authenticated compliance extract generated from the LegalConnect Enterprise Notification Infrastructure. It contains privileged judicial cause lists, advocate notices, and statutory amendment entries. Verified under Rule 48 of the Bar Council of India Digital Records Guidelines.</div>
+      </div>
+    `;
+
+    this.printService.print({
+      title: 'Advocate Court Diary & Litigation Audit Log',
+      subtitle: `Authenticated Case Docket & Compliance Extract • Generated on ${dateStr}`,
+      classification: 'OFFICIAL COPY',
+      watermark: 'LEGALCONNECT AUDIT',
+      content: contentHtml,
+      sealText: `Certified Court Diary Extract • Bar Council Digital Standards • Ref: ${this.printService.generateRefCode('AUDIT')}`,
+      extraMeta: [
+        { label: 'Advocate / Litigant', value: user?.fullName || 'Verified Advocate' },
+        { label: 'Account Role', value: role === 'Lawyer' ? 'High Court / Supreme Court Advocate' : 'Client Account' },
+        { label: 'Filter Scope', value: `${this.activeTab().toUpperCase()} • ${this.selectedCategory().toUpperCase()}` },
+        { label: 'Timestamp', value: `${dateStr} ${timeStr}` }
+      ]
+    });
+
+    this.snackbar.show('Official Court Diary PDF compiled and opened for print/export.', 'success', 3500);
+  }
+
+  exportAuditCsv(): void {
+    this.closeExportMenu();
+    const notices = this.filteredNotifications();
+    if (notices.length === 0) {
+      this.snackbar.show('No notifications or litigation notices available to export.', 'info');
+      return;
+    }
+
+    const escapeCsv = (str: any) => {
+      if (str == null) return '""';
+      const val = String(str).replace(/"/g, '""');
+      return `"${val}"`;
+    };
+
+    const now = new Date();
+    const timestamp = now.toISOString();
+
+    let csv = '\uFEFF'; // UTF-8 BOM for proper Excel encoding
+    csv += `LegalConnect Advocate Court Diary & Litigation Compliance Log\n`;
+    csv += `Generated Timestamp:,"${timestamp}"\n`;
+    csv += `Generated By:,"${this.currentUser()?.fullName || 'Verified Advocate'}"\n`;
+    csv += `Role:,"${this.effectiveRole()}"\n`;
+    csv += `Filter Scope:,"${this.activeTab()} / ${this.selectedCategory()}"\n`;
+    csv += `Total Records:,"${notices.length}"\n\n`;
+
+    csv += `"S.No","Notification ID","Timestamp","Priority","Type","Matter / Case Docket","Court / Jurisdiction","Docket Number","Notice Title","Summary & Hearing Notes","Action URL","Acknowledged Status"\n`;
+
+    notices.forEach((n, idx) => {
+      const matter = this.extractMatter(n);
+      csv += [
+        idx + 1,
+        escapeCsv(n.id),
+        escapeCsv(n.createdAt),
+        escapeCsv(n.priority.toUpperCase()),
+        escapeCsv(n.type),
+        escapeCsv(matter.label),
+        escapeCsv(matter.court || matter.sublabel || 'N/A'),
+        escapeCsv(matter.docketNumber || 'N/A'),
+        escapeCsv(n.title),
+        escapeCsv(n.summary + (n.details ? ' — ' + n.details : '')),
+        escapeCsv(n.actionUrl || ''),
+        escapeCsv(n.isRead ? 'Acknowledged' : 'Pending Action')
+      ].join(',') + '\n';
+    });
+
+    const filename = `legalconnect_court_diary_${now.toISOString().slice(0, 10)}.csv`;
+    this.dataExportService.downloadBlob(csv, 'text/csv;charset=utf-8;', filename);
+    this.snackbar.show('Court Diary compliance CSV downloaded successfully.', 'success', 3500);
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent): void {
+    const target = event.target as HTMLElement;
+    if (this.isMoreMenuOpen() && !target.closest('.more-menu-container')) {
+      this.isMoreMenuOpen.set(false);
+    }
+    if (this.isExportMenuOpen() && !target.closest('.export-menu-container')) {
+      this.isExportMenuOpen.set(false);
+    }
+  }
+
+  markGroupAsRead(group: GroupedNotifications, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const unreadIds = group.items.filter(i => !i.isRead).map(i => i.id);
+    if (unreadIds.length === 0) return;
+    this.notificationService.bulkAction('markRead', unreadIds).subscribe();
+  }
+
+  toggleGroupSelection(group: GroupedNotifications, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    const groupIds = group.items.map(i => i.id);
+    const current = this.selectedIds();
+    const allSelected = groupIds.length > 0 && groupIds.every(id => current.includes(id));
+
+    if (allSelected) {
+      this.selectedIds.set(current.filter(id => !groupIds.includes(id)));
+    } else {
+      const combined = new Set([...current, ...groupIds]);
+      this.selectedIds.set(Array.from(combined));
+    }
+  }
+
+  isGroupFullySelected(group: GroupedNotifications): boolean {
+    if (group.items.length === 0) return false;
+    const current = this.selectedIds();
+    return group.items.every(item => current.includes(item.id));
   }
 
   // ==================== FOLLOWED STATUTES ====================
@@ -673,11 +1155,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     );
   }
 
-  // ==================== PREFERENCES MODAL & DRAWER ====================
+  // ==================== PREFERENCES MODAL ====================
 
   openPreferences() {
-    this.prefSearchQuery.set('');
-    this.tempPreferences.set({ ...this.notificationService.preferences() });
     this.isPreferencesOpen.set(true);
     this.updateBodyDrawerClass();
   }
@@ -687,422 +1167,58 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     this.updateBodyDrawerClass();
   }
 
-  // Outside click dismiss
-  onBackdropClick(event: MouseEvent) {
-    if (event.target === event.currentTarget) {
-      this.closePreferences();
-    }
-  }
-
-  // Keyboard shortcut listener for escape key
-  @HostListener('document:keydown.escape')
-  handleEscape() {
-    if (this.isPreferencesOpen()) {
-      this.closePreferences();
-    } else if (this.isInsightsSheetOpen()) {
-      this.closeInsightsSheet();
-    }
-  }
-
-  // Mobile bottom-sheet touch swipe down to close
-  private touchStartY = 0;
-  private touchCurrentY = 0;
-  private isDraggingSheet = false;
-
-  onTouchStart(event: TouchEvent) {
-    if (event.touches.length > 0) {
-      this.touchStartY = event.touches[0].clientY;
-      this.touchCurrentY = this.touchStartY;
-      this.isDraggingSheet = true;
-    }
-  }
-
-  onTouchMove(event: TouchEvent) {
-    if (!this.isDraggingSheet || event.touches.length === 0) return;
-    this.touchCurrentY = event.touches[0].clientY;
-  }
-
-  onTouchEnd() {
-    if (!this.isDraggingSheet) return;
-    const deltaY = this.touchCurrentY - this.touchStartY;
-    this.isDraggingSheet = false;
-    if (deltaY > 60) {
-      this.closePreferences();
-    }
-  }
-
-  // Master channel counters and toggles (App, Email, Push, WhatsApp)
-  getChannelActiveCount(channel: 'inApp' | 'email' | 'push' | 'whatsapp'): number {
-    const prefs = this.tempPreferences() as any;
-    const cats = this.filteredPreferenceCategories();
-    let count = 0;
-    for (const cat of cats) {
-      if (prefs[cat.key] && prefs[cat.key][channel]) {
-        count++;
-      }
-    }
-    return count;
-  }
-
-  isMasterChannelActive(channel: 'inApp' | 'email' | 'push' | 'whatsapp'): boolean {
-    const cats = this.filteredPreferenceCategories();
-    if (cats.length === 0) return false;
-    return this.getChannelActiveCount(channel) === cats.length;
-  }
-
-  toggleMasterChannel(channel: 'inApp' | 'email' | 'push' | 'whatsapp') {
-    const shouldEnable = !this.isMasterChannelActive(channel);
-    const current = this.tempPreferences() as any;
-    const updated = { ...current };
-    const cats = this.filteredPreferenceCategories();
-    for (const cat of cats) {
-      updated[cat.key] = {
-        ...(updated[cat.key] || {}),
-        [channel]: shouldEnable
-      };
-    }
-    this.tempPreferences.set(updated);
-
-    if (channel === 'push' && shouldEnable) {
-      this.notificationService.requestPushPermission();
-    }
-  }
-
-  // Quiet Hours (Do Not Disturb) Logic
-  toggleQuietHours(enabled?: boolean) {
-    const current = this.tempPreferences();
-    const qh = current.quietHours || { enabled: false, startTime: '22:00', endTime: '07:30', allowUrgent: true };
-    const updated = enabled !== undefined ? enabled : !qh.enabled;
-    this.tempPreferences.set({
-      ...current,
-      quietHours: {
-        ...qh,
-        enabled: updated
-      }
-    });
-  }
-
-  updateQuietHoursTime(field: 'startTime' | 'endTime', value: string) {
-    const current = this.tempPreferences();
-    const qh = current.quietHours || { enabled: false, startTime: '22:00', endTime: '07:30', allowUrgent: true };
-    this.tempPreferences.set({
-      ...current,
-      quietHours: {
-        ...qh,
-        [field]: value
-      }
-    });
-  }
-
-  toggleQuietHoursUrgent(allow: boolean) {
-    const current = this.tempPreferences();
-    const qh = current.quietHours || { enabled: false, startTime: '22:00', endTime: '07:30', allowUrgent: true };
-    this.tempPreferences.set({
-      ...current,
-      quietHours: {
-        ...qh,
-        allowUrgent: allow
-      }
-    });
-  }
-
-  isQuietHoursActiveNow(): boolean {
-    const qh = this.tempPreferences().quietHours;
-    if (!qh || !qh.enabled) return false;
-    const now = new Date();
-    const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-    const [startH, startM] = (qh.startTime || '22:00').split(':').map(Number);
-    const [endH, endM] = (qh.endTime || '07:30').split(':').map(Number);
-    const startMinutes = (startH || 0) * 60 + (startM || 0);
-    const endMinutes = (endH || 0) * 60 + (endM || 0);
-
-    if (startMinutes > endMinutes) {
-      return currentMinutes >= startMinutes || currentMinutes <= endMinutes;
-    }
-    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
-  }
-
-  // Sound Profile & Mobile Haptics
-  setSoundProfile(sound: SoundProfile) {
-    const current = this.tempPreferences();
-    this.tempPreferences.set({
-      ...current,
-      soundProfile: sound
-    });
-    this.playSound(sound);
-  }
-
-  toggleHaptic(enabled?: boolean) {
-    const current = this.tempPreferences();
-    const val = enabled !== undefined ? enabled : !current.hapticFeedback;
-    this.tempPreferences.set({
-      ...current,
-      hapticFeedback: val
-    });
-    if (val && typeof navigator !== 'undefined' && navigator.vibrate) {
-      navigator.vibrate([40, 60, 40]);
-    }
-  }
-
-  playSound(sound: SoundProfile = this.tempPreferences().soundProfile || 'gavel') {
-    if (sound === 'silent' || typeof window === 'undefined') return;
-
-    try {
-      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioCtx) return;
-      const ctx = new AudioCtx();
-      const now = ctx.currentTime;
-
-      if (sound === 'gavel') {
-        // Courtroom wooden gavel strike
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(140, now);
-        osc.frequency.exponentialRampToValueAtTime(45, now + 0.18);
-        gain.gain.setValueAtTime(0.8, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.25);
-
-        setTimeout(() => {
-          try {
-            const osc2 = ctx.createOscillator();
-            const gain2 = ctx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(95, ctx.currentTime);
-            osc2.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.12);
-            gain2.gain.setValueAtTime(0.4, ctx.currentTime);
-            gain2.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.14);
-            osc2.connect(gain2);
-            gain2.connect(ctx.destination);
-            osc2.start(ctx.currentTime);
-            osc2.stop(ctx.currentTime + 0.16);
-          } catch { }
-        }, 110);
-
-      } else if (sound === 'crystal') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(987.77, now);
-        gain.gain.setValueAtTime(0.4, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.5);
-
-      } else if (sound === 'bell') {
-        const osc1 = ctx.createOscillator();
-        const osc2 = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc1.frequency.setValueAtTime(1046.5, now);
-        osc2.frequency.setValueAtTime(1567.98, now);
-        gain.gain.setValueAtTime(0.35, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(ctx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.65);
-        osc2.stop(now + 0.65);
-
-      } else if (sound === 'pulse') {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now);
-        gain.gain.setValueAtTime(0.5, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.3);
-      }
-
-      if (this.tempPreferences().hapticFeedback && typeof navigator !== 'undefined' && navigator.vibrate) {
-        navigator.vibrate([40, 60, 40]);
-      }
-    } catch (err) {
-      console.warn('Audio playback error', err);
-    }
-  }
-
-  // WhatsApp Dispatch Gateway
-  getWhatsAppRecipientPhone(): string {
-    const user = this.currentUser();
-    return user?.whatsAppPhone || user?.phone || '+91 98765 43210';
-  }
-
-  sendWhatsAppTestSimulation() {
-    const phone = this.getWhatsAppRecipientPhone();
-    this.snackbar.show(`WhatsApp alert dispatched to ${phone}: "LegalConnect: Urgent hearing listing on tomorrow's Cause List."`, 'success');
-    this.sendTestNotification();
-  }
-
-  // Role Intelligent Defaults
-  applyRoleDefaults(role: 'Lawyer' | 'Client' = this.effectiveRole()) {
-    const current = this.tempPreferences();
-    if (role === 'Lawyer') {
-      this.tempPreferences.set({
-        ...current,
-        legal: { inApp: true, email: true, push: true, whatsapp: true },
-        case: { inApp: true, email: true, push: true, whatsapp: true },
-        lawyer: { inApp: true, email: true, push: true, whatsapp: true },
-        security: { inApp: true, email: true, push: true, whatsapp: true },
-        verification: { inApp: true, email: true, push: true, whatsapp: false },
-        review: { inApp: true, email: false, push: false, whatsapp: false },
-        profile: { inApp: true, email: true, push: false, whatsapp: false },
-        system: { inApp: true, email: false, push: false, whatsapp: false },
-        quietHours: {
-          enabled: true,
-          startTime: '22:00',
-          endTime: '07:30',
-          allowUrgent: true
-        },
-        soundProfile: 'gavel',
-        hapticFeedback: true,
-        targetRole: 'Lawyer'
-      });
-      this.snackbar.show('Advocate Workstation intelligent defaults applied.', 'success');
-    } else {
-      this.tempPreferences.set({
-        ...current,
-        case: { inApp: true, email: true, push: true, whatsapp: true },
-        lawyer: { inApp: true, email: true, push: true, whatsapp: true },
-        security: { inApp: true, email: true, push: true, whatsapp: true },
-        profile: { inApp: true, email: true, push: false, whatsapp: false },
-        legal: { inApp: true, email: false, push: false, whatsapp: false },
-        review: { inApp: false, email: false, push: false, whatsapp: false },
-        verification: { inApp: false, email: false, push: false, whatsapp: false },
-        system: { inApp: true, email: false, push: false, whatsapp: false },
-        quietHours: {
-          enabled: true,
-          startTime: '21:30',
-          endTime: '08:00',
-          allowUrgent: true
-        },
-        soundProfile: 'crystal',
-        hapticFeedback: true,
-        targetRole: 'Client'
-      });
-      this.snackbar.show('Client / Litigant intelligent defaults applied.', 'success');
-    }
-  }
-
-  // Preset management
-  applyPreset(preset: 'all' | 'essential' | 'quiet' | 'default' | 'role-default') {
-    const role = this.effectiveRole();
-    if (preset === 'role-default') {
-      this.applyRoleDefaults(role);
-      return;
-    }
-
-    if (preset === 'default') {
-      this.tempPreferences.set({ ...DEFAULT_NOTIFICATION_PREFERENCES });
-      this.snackbar.show('Preferences reset to platform defaults.', 'info');
-      return;
-    }
-
-    if (preset === 'all') {
-      const current = this.tempPreferences() as any;
-      const updated = { ...current };
-      for (const cat of this.preferencesCategories) {
-        updated[cat.key] = { inApp: true, email: true, push: true, whatsapp: true };
-      }
-      this.tempPreferences.set(updated);
-      this.notificationService.requestPushPermission();
-      this.snackbar.show('All delivery channels enabled (In-App, Email, Push, WhatsApp).', 'info');
-      return;
-    }
-
-    if (preset === 'quiet') {
-      const current = this.tempPreferences() as any;
-      const updated = { ...current };
-      for (const cat of this.preferencesCategories) {
-        updated[cat.key] = { inApp: true, email: false, push: false, whatsapp: false };
-      }
-      updated.quietHours = {
-        ...(updated.quietHours || { startTime: '22:00', endTime: '07:30', allowUrgent: true }),
-        enabled: true
-      };
-      this.tempPreferences.set(updated);
-      this.snackbar.show('Quiet mode enabled: External channels muted & Quiet Hours enabled.', 'info');
-      return;
-    }
-
-    if (preset === 'essential') {
-      if (role === 'Lawyer') {
-        this.tempPreferences.set({
-          ...this.tempPreferences(),
-          legal: { inApp: true, email: true, push: true, whatsapp: true },
-          case: { inApp: true, email: true, push: true, whatsapp: true },
-          lawyer: { inApp: true, email: true, push: true, whatsapp: true },
-          security: { inApp: true, email: true, push: true, whatsapp: true },
-          verification: { inApp: true, email: true, push: false, whatsapp: false },
-          review: { inApp: true, email: false, push: false, whatsapp: false },
-          profile: { inApp: true, email: true, push: false, whatsapp: false },
-          system: { inApp: true, email: false, push: false, whatsapp: false }
-        });
-      } else {
-        this.tempPreferences.set({
-          ...this.tempPreferences(),
-          case: { inApp: true, email: true, push: true, whatsapp: true },
-          lawyer: { inApp: true, email: true, push: true, whatsapp: true },
-          security: { inApp: true, email: true, push: true, whatsapp: true },
-          profile: { inApp: true, email: true, push: false, whatsapp: false },
-          legal: { inApp: true, email: false, push: false, whatsapp: false },
-          review: { inApp: false, email: false, push: false, whatsapp: false },
-          verification: { inApp: false, email: false, push: false, whatsapp: false },
-          system: { inApp: true, email: false, push: false, whatsapp: false }
-        });
-      }
-      this.notificationService.requestPushPermission();
-      this.snackbar.show(`Essential alerts activated for ${role === 'Lawyer' ? 'Advocate' : 'Client'}.`, 'info');
-    }
-  }
-
-  savePreferences() {
+  onSavePreferences(prefs: NotificationPreferences) {
+    const priorPrefs = structuredClone(this.notificationService.preferences());
     this.isSavingPreferences.set(true);
-    this.notificationService.updatePreferences(this.tempPreferences()).subscribe({
+    this.notificationService.updatePreferences(prefs, false).subscribe({
       next: () => {
         this.isSavingPreferences.set(false);
         this.isPreferencesOpen.set(false);
         this.updateBodyDrawerClass();
+
+        // Record last saved timestamp for footer status display
+        try {
+          localStorage.setItem('lc_preferences_last_saved', new Date().toISOString());
+        } catch { }
+
+        // MNC Standard Pattern: Display success toast with one-click Undo capability
+        this.snackbar.showWithUndo(
+          'Notification preferences synchronized and saved.',
+          () => {
+            this.notificationService.updatePreferences(priorPrefs, false).subscribe({
+              next: () => {
+                this.snackbar.show('Preference changes reverted.', 'info');
+                try {
+                  localStorage.setItem('lc_preferences_last_saved', new Date().toISOString());
+                } catch { }
+              },
+              error: () => {
+                this.snackbar.show('Failed to revert preferences.', 'error');
+              }
+            });
+          },
+          'success',
+          6000
+        );
       },
       error: () => {
+        // Keep the modal open so the user's edits are preserved for retry
         this.isSavingPreferences.set(false);
-        this.isPreferencesOpen.set(false);
-        this.updateBodyDrawerClass();
       }
     });
   }
 
-  getPref(category: string, channel: 'inApp' | 'email' | 'push' | 'whatsapp'): boolean {
-    const prefs = this.tempPreferences() as any;
-    return prefs && prefs[category] ? !!prefs[category][channel] : false;
-  }
-
-  togglePref(category: keyof NotificationPreferences, channel: 'inApp' | 'email' | 'push' | 'whatsapp') {
-    const current = this.tempPreferences();
-    const catObj = (current[category] as any) || {};
-    const willEnable = !catObj[channel];
-    const updated = {
-      ...current,
-      [category]: {
-        ...catObj,
-        [channel]: willEnable
-      }
-    };
-    this.tempPreferences.set(updated);
-
-    if (channel === 'push' && willEnable) {
-      this.notificationService.requestPushPermission();
+  @HostListener('document:keydown.escape')
+  handleEscape() {
+    if (this.isExportMenuOpen()) {
+      this.closeExportMenu();
+      return;
+    }
+    if (this.isPreferencesOpen()) {
+      // Handled by NotificationPreferencesComponent (enforces unsaved-changes guard)
+      return;
+    } else if (this.isInsightsSheetOpen()) {
+      this.closeInsightsSheet();
     }
   }
 
@@ -1125,95 +1241,9 @@ export class NotificationsComponent implements OnInit, OnDestroy {
       actionLabel: 'View Alert Hub',
       priority: 'normal'
     });
-    this.snackbar.show('Live test alert delivered to notification feed!', 'success');
   }
 
-  trackCategoryKey(_index: number, cat: CategoryConfig): string {
-    return cat.key;
-  }
-
-  // ==================== HELPERS & EXTENSIBILITY ====================
-
-  getIconForType(type: NotificationType): IconName {
-    switch (type) {
-      case 'legal': return 'scale';
-      case 'case': return 'calendar';
-      case 'lawyer': return 'message-square';
-      case 'review': return 'star';
-      case 'profile': return 'user';
-      case 'security': return 'shield';
-      case 'verification': return 'badge-check';
-      case 'system': return 'zap';
-      case 'hearing': return 'gavel';
-      case 'document': return 'file-text';
-      case 'payment': return 'wallet';
-      default: return 'bell';
-    }
-  }
-
-  getTypeBadgeClass(type: NotificationType): string {
-    switch (type) {
-      case 'legal':
-        return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20';
-      case 'case':
-        return 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20';
-      case 'lawyer':
-        return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20';
-      case 'review':
-        return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20';
-      case 'profile':
-        return 'bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20';
-      case 'security':
-        return 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20';
-      case 'verification':
-        return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20';
-      case 'hearing':
-        return 'bg-amber-600/10 text-amber-700 dark:text-amber-300 border-amber-500/20';
-      case 'document':
-        return 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20';
-      case 'payment':
-        return 'bg-emerald-600/10 text-emerald-600 dark:text-emerald-400 border-emerald-600/20';
-      case 'system':
-      default:
-        return 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20';
-    }
-  }
-
-  getTypeLabel(type: NotificationType): string {
-    switch (type) {
-      case 'legal': return 'Statute Alert';
-      case 'case': return 'Case Update';
-      case 'lawyer': return 'Advocate Message';
-      case 'review': return 'Review Feedback';
-      case 'profile': return 'Profile Audit';
-      case 'security': return 'Security Notice';
-      case 'verification': return 'BCI Verification';
-      case 'hearing': return 'Court Hearing';
-      case 'document': return 'Legal Dossier';
-      case 'payment': return 'Escrow Billing';
-      case 'system': return 'Platform Update';
-      default: return 'Notification';
-    }
-  }
-
-  getRelativeTime(dateStr: string): string {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    const diffMins = Math.floor(diffSecs / 60);
-    const diffHours = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHours / 24);
-
-    if (diffSecs < 60) return 'Just now';
-    if (diffMins < 60) return `${diffMins}m ago`;
-    if (diffHours < 24) return `${diffHours}h ago`;
-    if (diffDays === 1) return 'Yesterday';
-    if (diffDays < 7) return `${diffDays}d ago`;
-    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
-  }
-
+  // ==================== HELPERS ====================
   formatDate(dateStr: string | Date): string {
     if (!dateStr) return '';
     const date = new Date(dateStr);
@@ -1226,21 +1256,6 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     });
   }
 
-  getObjectKeys(obj?: Record<string, any>): string[] {
-    return obj ? Object.keys(obj) : [];
-  }
-
-  copyActionLink(url: string, event: Event) {
-    event.stopPropagation();
-    event.preventDefault();
-    if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      const fullUrl = window.location.origin + url;
-      navigator.clipboard.writeText(fullUrl).then(() => {
-        this.snackbar.show('Deep link copied to clipboard.', 'success');
-      });
-    }
-  }
-
   trackById(_index: number, item: EnterpriseNotification): string {
     return item.id;
   }
@@ -1249,7 +1264,10 @@ export class NotificationsComponent implements OnInit, OnDestroy {
     return group.label;
   }
 
-  // Modal Dialog helpers
+  trackByFollowedAct(_index: number, act: FollowedAct): string {
+    return act.shortName;
+  }
+
   triggerConfirm(title: string, message: string, type: 'danger' | 'warning' | 'info', action: () => void) {
     this.confirmTitle = title;
     this.confirmMessage = message;

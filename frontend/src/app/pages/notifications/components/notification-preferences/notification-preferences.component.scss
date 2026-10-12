@@ -1,0 +1,436 @@
+/* ==========================================================================
+   Ultra-Premium Notification Preferences Dialog & Bottom-Sheet Drawer
+   ========================================================================== */
+.preferences-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(10, 15, 29, 0.82);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 2000 !important;
+  animation: modalBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+  @media (min-width: 640px) {
+    align-items: center;
+    padding: 2rem 1.25rem;
+  }
+}
+
+.preferences-dialog-panel {
+  position: relative;
+  z-index: 2001 !important;
+  width: 100%;
+  background: #ffffff;
+  border-top-left-radius: 1.75rem;
+  border-top-right-radius: 1.75rem;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  border-top: 1px solid rgba(226, 232, 240, 0.9);
+  border-left: none;
+  border-right: none;
+  border-bottom: none;
+  box-shadow: 0 -25px 60px -15px rgba(0, 0, 0, 0.45);
+  animation: sheetPanelSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+
+  @media (min-width: 640px) {
+    max-width: 820px !important;
+    max-height: calc(100vh - 4.5rem) !important;
+    margin: auto;
+    border-radius: 1.5rem !important;
+    border: 1px solid rgba(226, 232, 240, 0.9) !important;
+    box-shadow: 0 25px 60px -15px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    animation: dialogScaleEntrance 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+:host-context(.dark) .preferences-dialog-panel {
+  background: #0c1222;
+  border-top-color: rgba(255, 255, 255, 0.12) !important;
+  border-left-color: transparent !important;
+  border-right-color: transparent !important;
+  border-bottom-color: transparent !important;
+  box-shadow: 0 -25px 60px -15px rgba(0, 0, 0, 0.8);
+
+  @media (min-width: 640px) {
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    box-shadow: 0 35px 80px -15px rgba(0, 0, 0, 0.9), 0 0 40px -10px rgba(59, 130, 246, 0.15);
+  }
+}
+
+/* Fluid Scrollable Content - Scrollbar Completely Hidden */
+.preferences-scroll-area {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none !important;
+  -ms-overflow-style: none !important;
+
+  &::-webkit-scrollbar {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+/* Preset Pills */
+.pref-preset-pill {
+  background: rgba(255, 255, 255, 0.95);
+  border: none !important;
+  color: #475569;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
+  }
+
+  &.is-active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px -1px rgba(37, 99, 235, 0.45) !important;
+
+    app-icon,
+    svg {
+      color: #ffffff !important;
+      stroke: #ffffff !important;
+    }
+  }
+}
+
+:host-context(.dark) .pref-preset-pill {
+  background: rgba(30, 41, 59, 0.75);
+  border: none !important;
+  color: #cbd5e1;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.25);
+
+  &:hover {
+    background: rgba(51, 65, 85, 0.9);
+    color: #ffffff;
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.35);
+  }
+
+  &.is-active {
+    background: #2563eb !important;
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px -1px rgba(37, 99, 235, 0.45) !important;
+
+    app-icon,
+    svg {
+      color: #ffffff !important;
+      stroke: #ffffff !important;
+    }
+  }
+}
+
+/* Category Card */
+.pref-category-card {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1.5px);
+  }
+}
+
+/* Channel Toggle Chips */
+.pref-channel-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.28rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.69rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  background: rgba(241, 245, 249, 0.85);
+  color: #64748b;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+
+  @media (min-width: 640px) {
+    gap: 0.35rem;
+    padding: 0.35rem 0.65rem;
+    font-size: 0.72rem;
+  }
+
+  &:hover {
+    background: rgba(226, 232, 240, 1);
+    color: #1e293b;
+    border-color: rgba(203, 213, 225, 1);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .chip-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: #94a3b8;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+
+    @media (min-width: 640px) {
+      width: 6px;
+      height: 6px;
+    }
+  }
+
+  &.pref-chip-app.is-active {
+    background: rgba(59, 130, 246, 0.14);
+    border-color: rgba(59, 130, 246, 0.45);
+    color: #2563eb;
+    box-shadow: 0 0 12px -2px rgba(59, 130, 246, 0.25);
+
+    .chip-dot {
+      background: #2563eb;
+      box-shadow: 0 0 6px #3b82f6;
+    }
+  }
+
+  &.pref-chip-email.is-active {
+    background: rgba(168, 85, 247, 0.14);
+    border-color: rgba(168, 85, 247, 0.45);
+    color: #9333ea;
+    box-shadow: 0 0 12px -2px rgba(168, 85, 247, 0.25);
+
+    .chip-dot {
+      background: #9333ea;
+      box-shadow: 0 0 6px #a855f7;
+    }
+  }
+
+  &.pref-chip-push.is-active {
+    background: rgba(13, 148, 136, 0.14);
+    border-color: rgba(13, 148, 136, 0.45);
+    color: #0d9488;
+    box-shadow: 0 0 12px -2px rgba(13, 148, 136, 0.25);
+
+    .chip-dot {
+      background: #0d9488;
+      box-shadow: 0 0 6px #14b8a6;
+    }
+  }
+
+  &.pref-chip-whatsapp.is-active {
+    background: rgba(37, 211, 102, 0.14);
+    border-color: rgba(37, 211, 102, 0.45);
+    color: #0d853e;
+    box-shadow: 0 0 12px -2px rgba(37, 211, 102, 0.3);
+
+    .chip-dot {
+      background: #25d366;
+      box-shadow: 0 0 6px #25d366;
+    }
+  }
+}
+
+:host-context(.dark) .pref-channel-chip {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(255, 255, 255, 0.08);
+  color: #94a3b8;
+
+  &:hover {
+    background: rgba(51, 65, 85, 0.7);
+    color: #f1f5f9;
+    border-color: rgba(255, 255, 255, 0.16);
+  }
+
+  .chip-dot {
+    background: #64748b;
+  }
+
+  &.pref-chip-app.is-active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(96, 165, 250, 0.45);
+    color: #60a5fa;
+
+    .chip-dot {
+      background: #60a5fa;
+      box-shadow: 0 0 8px #60a5fa;
+    }
+  }
+
+  &.pref-chip-email.is-active {
+    background: rgba(168, 85, 247, 0.2);
+    border-color: rgba(192, 132, 252, 0.45);
+    color: #c084fc;
+
+    .chip-dot {
+      background: #c084fc;
+      box-shadow: 0 0 8px #c084fc;
+    }
+  }
+
+  &.pref-chip-push.is-active {
+    background: rgba(20, 184, 166, 0.2);
+    border-color: rgba(45, 212, 191, 0.45);
+    color: #2dd4bf;
+
+    .chip-dot {
+      background: #2dd4bf;
+      box-shadow: 0 0 8px #2dd4bf;
+    }
+  }
+
+  &.pref-chip-whatsapp.is-active {
+    background: rgba(37, 211, 102, 0.2);
+    border-color: rgba(37, 211, 102, 0.5);
+    color: #25d366;
+
+    .chip-dot {
+      background: #25d366;
+      box-shadow: 0 0 8px #25d366;
+    }
+  }
+}
+
+/* Header Bar & Native Drag Handle */
+.preferences-sheet-header {
+  background: #ffffff;
+  transition: background-color 0.2s ease;
+}
+
+:host-context(.dark) .preferences-sheet-header {
+  background: #0c1222;
+}
+
+.pref-sheet-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 9999px;
+  background: rgba(148, 163, 184, 0.45);
+  margin: 0 auto;
+  transition: background-color 0.2s ease, transform 0.15s ease;
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+:host-context(.dark) .pref-sheet-handle {
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.pref-tab-bar {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 0.5rem !important;
+  width: 100% !important;
+  overflow: hidden !important;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 0.5rem !important;
+  }
+}
+
+.pref-tab-btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes modalBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dialogScaleEntrance {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translate3d(0, 10px, 0);
+  }
+
+  100% {
+    opacity: 1;
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+}
+
+@keyframes sheetPanelSlideUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Native Time Input Enhancements */
+input[type="time"] {
+  color-scheme: light;
+  font-variant-numeric: tabular-nums;
+  appearance: none;
+  min-height: 40px;
+
+  &::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px;
+    opacity: 0.7;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+
+    &:hover {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+  }
+}
+
+:host-context(.dark) input[type="time"] {
+  color-scheme: dark;
+
+  &::-webkit-calendar-picker-indicator {
+    filter: invert(0.8) sepia(1) saturate(5) hue-rotate(200deg);
+  }
+}
+
+/* Save Confirmation Animation (Slack / Notion Style) */
+.save-success-anim {
+  animation: savePop 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes savePop {
+  0% {
+    transform: scale(0.95);
+  }
+
+  50% {
+    transform: scale(1.06);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}

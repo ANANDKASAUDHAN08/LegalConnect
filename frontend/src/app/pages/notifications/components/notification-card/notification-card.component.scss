@@ -1,0 +1,316 @@
+:host {
+  display: block;
+}
+
+/* ==========================================================================
+   LegalConnect - Ultra-Premium Notification Item Card Styles
+   Architecture: Neo-Glassmorphism, Ambient Aurora Lighting & High-Performance Micro-Interactions
+   ========================================================================== */
+
+.notification-card {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  border-top: 1px solid rgba(255, 255, 255, 0.98);
+  border-radius: 1.25rem;
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02);
+  transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.22s ease,
+    border-left-width 0.22s ease,
+    background-color 0.22s ease;
+  will-change: transform, box-shadow;
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      border-color: rgba(203, 213, 225, 1);
+      box-shadow: 0 12px 32px -6px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+    }
+  }
+
+  &.is-virtual {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.7);
+    background: transparent;
+
+    @media (hover: hover) {
+      &:hover {
+        transform: none;
+        box-shadow: none;
+        background: rgba(248, 250, 252, 0.7);
+      }
+    }
+  }
+}
+
+/* Dark Mode Surface (Obsidian Midnight Glass) */
+:host-context(.dark) .notification-card {
+  background: rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.35);
+
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.18);
+      background: rgba(20, 29, 52, 0.84);
+      box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.55), 0 0 20px 0 rgba(59, 130, 246, 0.08);
+    }
+  }
+
+  &.is-virtual {
+    border-radius: 0;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    background: transparent;
+
+    @media (hover: hover) {
+      &:hover {
+        transform: none;
+        box-shadow: none;
+        background: rgba(30, 41, 59, 0.4);
+      }
+    }
+  }
+}
+
+/* Unread Notification Curved Accent Border (matches legal callout curvature) */
+.notification-card.is-unread {
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(191, 219, 254, 0.85);
+  border-top-color: rgba(255, 255, 255, 1);
+  border-left-width: 3.5px !important;
+  border-left-style: solid !important;
+  border-left-color: #3b82f6 !important;
+  box-shadow: 0 6px 24px -4px rgba(37, 99, 235, 0.08), -2px 0 10px -2px rgba(59, 130, 246, 0.35);
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: 0 12px 32px -6px rgba(15, 23, 42, 0.08), -2px 0 14px -1px rgba(59, 130, 246, 0.45);
+    }
+  }
+}
+
+:host-context(.dark) .notification-card.is-unread {
+  background: linear-gradient(135deg, rgba(23, 37, 84, 0.32) 0%, rgba(15, 23, 42, 0.84) 50%);
+  border-color: rgba(96, 165, 250, 0.25);
+  border-top-color: rgba(147, 197, 253, 0.35);
+  border-left-width: 3.5px !important;
+  border-left-style: solid !important;
+  border-left-color: #3b82f6 !important;
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.45), 0 0 24px -4px rgba(59, 130, 246, 0.12), -2px 0 12px -2px rgba(59, 130, 246, 0.45);
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.55), 0 0 24px 0 rgba(59, 130, 246, 0.18), -2px 0 16px -1px rgba(59, 130, 246, 0.55);
+    }
+  }
+}
+
+/* Urgent Critical Accent Glow */
+.notification-card.is-urgent {
+  background: linear-gradient(135deg, rgba(255, 241, 242, 0.95) 0%, rgba(255, 255, 255, 0.95) 100%);
+  border-color: rgba(254, 205, 211, 0.85);
+  border-left-width: 3.5px !important;
+  border-left-style: solid !important;
+  border-left-color: #f43f5e !important;
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.1), -2px 0 10px -2px rgba(244, 63, 94, 0.45);
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: 0 12px 32px -6px rgba(0, 0, 0, 0.15), -2px 0 14px -1px rgba(244, 63, 94, 0.55);
+    }
+  }
+}
+
+:host-context(.dark) .notification-card.is-urgent {
+  background: linear-gradient(135deg, rgba(76, 5, 25, 0.35) 0%, rgba(15, 23, 42, 0.84) 50%);
+  border-color: rgba(244, 63, 94, 0.3);
+  border-top-color: rgba(251, 113, 133, 0.4);
+  border-left-width: 3.5px !important;
+  border-left-style: solid !important;
+  border-left-color: #f43f5e !important;
+  box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.45), 0 0 26px -2px rgba(244, 63, 94, 0.16), -2px 0 14px -2px rgba(244, 63, 94, 0.5);
+
+  @media (hover: hover) {
+    &:hover {
+      box-shadow: 0 14px 34px -4px rgba(0, 0, 0, 0.55), 0 0 28px -2px rgba(244, 63, 94, 0.25), -2px 0 16px -1px rgba(244, 63, 94, 0.6);
+    }
+  }
+}
+
+/* Selected State */
+.notification-card.is-selected {
+  outline: 2px solid rgba(59, 130, 246, 0.7);
+  outline-offset: -1px;
+  background: rgba(239, 246, 255, 0.8);
+}
+
+:host-context(.dark) .notification-card.is-selected {
+  outline: 2px solid rgba(59, 130, 246, 0.75);
+  outline-offset: -1px;
+  background: rgba(30, 58, 138, 0.28);
+}
+
+/* ==========================================================================
+   Responsive Adaptive CSS Grid Layout
+   ========================================================================== */
+
+.card-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "lead meta actions"
+    "title title title"
+    "body body body";
+  column-gap: 0.625rem;
+  row-gap: 0.45rem;
+  align-items: center;
+
+  @media (min-width: 640px) {
+    grid-template-columns: auto 1fr auto;
+    grid-template-areas:
+      "lead meta actions"
+      "lead title actions"
+      ". body body";
+    column-gap: 1rem;
+    row-gap: 0.3rem;
+    align-items: center;
+  }
+}
+
+.card-lead {
+  grid-area: lead;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (min-width: 640px) {
+    align-self: center;
+    gap: 0.75rem;
+  }
+}
+
+.card-meta {
+  grid-area: meta;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+
+  @media (min-width: 640px) {
+    align-self: center;
+  }
+}
+
+.card-title {
+  grid-area: title;
+  min-width: 0;
+  margin: 0;
+
+  @media (min-width: 640px) {
+    align-self: center;
+  }
+}
+
+.card-actions {
+  grid-area: actions;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  justify-content: flex-end;
+
+  @media (min-width: 640px) {
+    align-self: center;
+  }
+}
+
+.card-body {
+  grid-area: body;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  min-width: 0;
+  width: 100%;
+  align-self: start;
+
+  @media (min-width: 640px) {
+    gap: 0.5rem;
+    margin-top: 0.25rem;
+  }
+}
+
+/* Legal Extract Callout Block */
+.legal-callout {
+  border-left-width: 3.5px !important;
+  transition: all 0.2s ease;
+}
+
+/* Luminous Unread Beacon Dot */
+.luminous-beacon {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background-color: #3b82f6;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 9999px;
+    background-color: #3b82f6;
+    opacity: 0.4;
+    animation: beaconPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+}
+
+.luminous-beacon-urgent {
+  background-color: #f43f5e;
+
+  &::after {
+    background-color: #f43f5e;
+  }
+}
+
+@keyframes beaconPulse {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+
+  50% {
+    transform: scale(1.8);
+    opacity: 0;
+  }
+}
+
+/* Global Share Menu Pill Alignment & Emerald Theme */
+app-share-menu {
+  display: inline-flex;
+  vertical-align: middle;
+
+  .share-container {
+    display: inline-flex !important;
+    width: auto !important;
+  }
+
+  button.active {
+    background-color: #059669 !important;
+    color: #ffffff !important;
+    border-color: #059669 !important;
+    box-shadow: 0 0 14px rgba(16, 185, 129, 0.4) !important;
+  }
+}
