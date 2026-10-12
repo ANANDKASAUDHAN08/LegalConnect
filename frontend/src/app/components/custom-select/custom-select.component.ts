@@ -81,7 +81,9 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   @Input() loadingText: string = 'Loading...';
   @Input() showCheckmark: boolean = true;
   @Input() searchable: boolean | 'auto' = 'auto';
-  @Input() searchThreshold: number = 6;
+  @Input() searchThreshold: number = 10;
+  @Input() hideZeroCount: boolean = false;
+  @Input() minCount: number = 1;
   @Input() searchPlaceholder: string = 'Search...';
   @Input() emptyText: string = 'No options found';
   @Input() clearable: boolean = false;
@@ -96,6 +98,8 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   @Input() hideScrollbar: boolean = false;
   @Input() useBottomSheetOnMobile: boolean = true;
   @Input() sheetTitle?: string;
+
+  @Input() showSublabelInTrigger: boolean = false;
 
   // Multi-select inputs
   @Input() multiple: boolean = false;
@@ -448,27 +452,41 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
 
   // All combined options (from options array or groups)
   get allOptions(): SelectOption[] {
+    let opts: SelectOption[] = [];
     if (this.groups && this.groups.length > 0) {
-      return this.groups.flatMap(g => g.options);
+      opts = this.groups.flatMap(g => g.options);
+    } else {
+      opts = this.options || [];
     }
-    return this.options || [];
+    if (this.hideZeroCount) {
+      const min = this.minCount !== undefined ? Number(this.minCount) : 1;
+      return opts.filter(o => o.count === undefined || o.count === null || Number(o.count) >= min);
+    }
+    return opts;
   }
 
   // Grouped options processed for template rendering
   get groupedOptions(): ProcessedGroup[] {
+    const min = this.minCount !== undefined ? Number(this.minCount) : 1;
     if (this.groups && this.groups.length > 0) {
-      return this.groups.map(g => ({
-        name: g.name,
-        icon: g.icon,
-        options: this.filterOptionList(g.options)
-      })).filter(g => g.options.length > 0);
+      return this.groups.map(g => {
+        const rawOpts = this.hideZeroCount
+          ? g.options.filter(o => o.count === undefined || o.count === null || Number(o.count) >= min)
+          : g.options;
+        return {
+          name: g.name,
+          icon: g.icon,
+          options: this.filterOptionList(rawOpts)
+        };
+      }).filter(g => g.options.length > 0);
     }
 
     // Auto-detect group property on flat options if present
-    const hasInlineGroups = this.options.some(o => !!o.group);
+    const flatOpts = this.allOptions;
+    const hasInlineGroups = flatOpts.some(o => !!o.group);
     if (hasInlineGroups) {
       const groupMap = new Map<string, SelectOption[]>();
-      for (const opt of this.options) {
+      for (const opt of flatOpts) {
         const gName = opt.group || 'Other';
         if (!groupMap.has(gName)) {
           groupMap.set(gName, []);
@@ -495,7 +513,8 @@ export class CustomSelectComponent implements OnInit, OnDestroy, AfterViewChecke
   get isSearchable(): boolean {
     if (this.searchable === true) return true;
     if (this.searchable === 'auto') {
-      return this.allOptions.length >= this.searchThreshold;
+      const threshold = Number(this.searchThreshold) || 10;
+      return this.allOptions.length >= threshold;
     }
     return false;
   }

@@ -127,6 +127,7 @@ export type IconName =
   | 'flag'
   | 'paperclip'
   | 'whatsapp'
+  | 'email-whatsapp'
   | 'telegram'
   | 'thumbs-up-filled'
   | 'more-horizontal'

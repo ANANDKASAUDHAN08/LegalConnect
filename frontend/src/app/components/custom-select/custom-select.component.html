@@ -12,8 +12,8 @@
       variant === 'filled' ? 'bg-slate-100 dark:bg-slate-800/90 border-transparent text-slate-900 dark:text-white' :
       variant === 'outlined' ? 'bg-transparent border-slate-200 dark:border-slate-700' :
       'bg-white dark:bg-slate-900/90 backdrop-blur-md text-slate-800 dark:text-slate-100',
-      hasValue ? 'bg-amber-500/10 dark:bg-amber-500/15 !border-amber-500/40 text-amber-900 dark:text-amber-300 shadow-amber-500/5' : 'hover:border-amber-400/60 dark:hover:border-amber-400/50 hover:bg-slate-50 dark:hover:bg-slate-800/80',
-      isInvalid ? '!border-rose-500 ring-2 ring-rose-500/20 text-rose-900 dark:text-rose-300 dark:!border-rose-500/80 bg-rose-50/50 dark:bg-rose-950/20' : (isOpen ? '!border-amber-500 ring-2 ring-amber-500/20 dark:ring-amber-500/30' : 'focus:!border-amber-500/60 focus:ring-2 focus:ring-amber-500/20'),
+      (hasValue && !triggerClass) ? 'bg-amber-500/10 dark:bg-amber-500/15 !border-amber-500/40 text-amber-900 dark:text-amber-300 shadow-amber-500/5' : (!triggerClass ? 'hover:border-amber-400/60 dark:hover:border-amber-400/50 hover:bg-slate-50 dark:hover:bg-slate-800/80' : ''),
+      isInvalid ? '!border-rose-500 ring-2 ring-rose-500/20 text-rose-900 dark:text-rose-300 dark:!border-rose-500/80 bg-rose-50/50 dark:bg-rose-950/20' : (isOpen && !triggerClass ? '!border-amber-500 ring-2 ring-amber-500/20 dark:ring-amber-500/30' : (!triggerClass ? 'focus:!border-amber-500/60 focus:ring-2 focus:ring-amber-500/20' : '')),
       disabled ? 'opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-900/40 !border-slate-200 dark:!border-slate-800 pointer-events-none' : '',
       triggerClass || ''
     ]" [style.height]="height" [style.min-height]="height" [style.border-radius]="customRoundedStyle"
@@ -58,13 +58,14 @@
       </div>
       } @else {
       <!-- Single Label Wrapper -->
-      <div class="flex flex-col min-w-0 overflow-hidden text-left">
+      <div class="flex min-w-0 overflow-hidden text-left"
+        [ngClass]="showSublabelInTrigger ? 'flex-col' : 'items-center'">
         <span class="truncate leading-tight font-semibold"
           [ngClass]="selectedOption ? 'text-slate-900 dark:text-slate-100' : 'text-slate-400 dark:text-slate-500 font-medium'">
           {{ (loading || isLoading) && !selectedOption ? loadingText : (selectedOption ? selectedOption.label :
           placeholder) }}
         </span>
-        @if (selectedOption?.sublabel && !loading && !isLoading) {
+        @if (showSublabelInTrigger && selectedOption?.sublabel && !loading && !isLoading) {
         <span class="text-[10px] text-slate-400 dark:text-slate-500 truncate leading-tight font-normal">
           {{ selectedOption?.sublabel }}
         </span>

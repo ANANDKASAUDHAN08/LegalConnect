@@ -3,7 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { SnackbarService } from './snackbar.service';
 import { AuthService } from './auth.service';
 import { catchError, tap } from 'rxjs/operators';
-import { of, Subscription } from 'rxjs';
+import { of, Subscription, throwError } from 'rxjs';
+import { isCurrentTimeInWindow } from '../utils/time.util';
 
 export interface FollowedAct {
   shortName: string;
@@ -24,6 +25,22 @@ export type NotificationType =
   | 'document'
   | 'payment';
 
+export function getCategoryTypes(type?: string): string[] | null {
+  if (!type || type === 'all') return null;
+  switch (type.toLowerCase()) {
+    case 'legal':
+      return ['legal', 'hearing'];
+    case 'cases':
+      return ['case', 'lawyer', 'review'];
+    case 'security':
+      return ['security', 'profile', 'verification'];
+    case 'system':
+      return ['system', 'payment', 'document'];
+    default:
+      return null;
+  }
+}
+
 export interface EnterpriseNotification {
   id: string;
   type: NotificationType;
@@ -36,6 +53,7 @@ export interface EnterpriseNotification {
   isRead: boolean;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   createdAt: string;
+  source?: string;
   recipientUserId?: string;
   metadata?: Record<string, any>;
 }
@@ -67,6 +85,7 @@ export interface NotificationPreferences {
   verification: ChannelDeliveryConfig;
   quietHours?: QuietHoursConfig;
   soundProfile?: SoundProfile;
+  soundVolume?: number;
   hapticFeedback?: boolean;
   targetRole?: 'Lawyer' | 'Client' | 'All';
 }
@@ -85,6 +104,7 @@ export class NotificationService implements OnDestroy {
   private followedActs: FollowedAct[] = [];
   private syncTimer: ReturnType<typeof setInterval> | null = null;
   private sseReconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private visibilityListener: (() => void) | null = null;
   private sseReconnectDelay = 1000; // Exponential backoff starting at 1s
   private readonly SSE_MAX_BACKOFF = 30000; // Cap at 30s
 
@@ -125,6 +145,7 @@ export class NotificationService implements OnDestroy {
       allowUrgent: true
     },
     soundProfile: 'gavel',
+    soundVolume: 80,
     hapticFeedback: true,
     targetRole: 'All'
   });
@@ -134,13 +155,16 @@ export class NotificationService implements OnDestroy {
     this.loadPreferencesFromStorage();
     this.initPushSupport();
     this.initAutoSync();
-    this.initSSEStream();
 
     // Re-sync preferences and notifications whenever the user logs in, logs out, or switches roles
+    let isFirstAuthEmission = true;
     this.authSub = this.authService.currentUser$.subscribe(() => {
       this.loadPreferencesFromStorage();
-      this.fetchPreferences().subscribe();
-      this.fetchNotifications('all', 'all', '', true).subscribe();
+      if (!isFirstAuthEmission) {
+        this.fetchPreferences().subscribe();
+        this.fetchNotifications('all', 'all', '', true).subscribe();
+      }
+      isFirstAuthEmission = false;
       this.initSSEStream();
     });
   }
@@ -162,14 +186,15 @@ export class NotificationService implements OnDestroy {
       }, 60000);
 
       // Tab visibility listener (MNC pattern: sync whenever user resumes active tab)
-      document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
+      this.visibilityListener = () => {
+        if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
           this.ngZone.run(() => {
             this.fetchNotifications('all', 'all', '', true).subscribe();
             this.fetchPreferences().subscribe();
           });
         }
-      });
+      };
+      document.addEventListener('visibilitychange', this.visibilityListener);
     });
   }
 
@@ -224,12 +249,18 @@ export class NotificationService implements OnDestroy {
                 this.unreadCount.update(c => c + 1);
               }
 
-              // Respect user preferences for in-app alert snackbars
+              // Respect user preferences for in-app alert snackbars & judicial chime
               const prefs = this.preferences() as any;
               const cat = newItem.type;
               const isInAppAllowed = prefs && prefs[cat] ? prefs[cat].inApp !== false : true;
-              if (isInAppAllowed) {
+
+              // Enforce Quiet Hours: suppress chimes & snackbar toasts during DND window
+              if (isInAppAllowed && !this.isSuppressedByQuietHours(newItem)) {
                 this.snackbar.show(`New Alert: ${newItem.title}`, 'info');
+                this.playProceduralChime(prefs?.soundProfile || 'gavel');
+                if (prefs?.hapticFeedback && typeof navigator !== 'undefined' && navigator.vibrate) {
+                  navigator.vibrate([40, 60, 40]);
+                }
               }
 
               // Respect user preferences for desktop push notifications
@@ -262,8 +293,9 @@ export class NotificationService implements OnDestroy {
           try {
             const payload = JSON.parse(event.data);
             const type = payload?.type;
+            const categoryTypes = getCategoryTypes(type);
             this.notifications.update(list =>
-              list.map(n => (!type || type === 'all' || n.type === type) ? { ...n, isRead: true } : n)
+              list.map(n => (!type || type === 'all' || (categoryTypes ? categoryTypes.includes(n.type) : n.type === type)) ? { ...n, isRead: true } : n)
             );
             if (typeof payload?.unreadCount === 'number') {
               this.unreadCount.set(payload.unreadCount);
@@ -384,6 +416,9 @@ export class NotificationService implements OnDestroy {
     const isPushAllowed = prefs && prefs[cat] ? prefs[cat].push : true;
     if (!isPushAllowed) return;
 
+    // Quiet Hours (DND) also silence OS-level push, except urgent alerts when bypass is enabled
+    if (this.isSuppressedByQuietHours(notification)) return;
+
     try {
       const n = new Notification(notification.title, {
         body: notification.summary,
@@ -403,7 +438,106 @@ export class NotificationService implements OnDestroy {
     }
   }
 
+  /**
+   * True when the user's Quiet Hours window is active right now and this alert
+   * does not qualify for the urgent-hearing bypass.
+   */
+  isSuppressedByQuietHours(notification: Pick<EnterpriseNotification, 'priority'>): boolean {
+    const qh = this.preferences()?.quietHours;
+    if (!qh?.enabled) return false;
+    const isQuietNow = isCurrentTimeInWindow(qh.startTime || '22:00', qh.endTime || '07:30');
+    if (!isQuietNow) return false;
+    const bypass = qh.allowUrgent !== false && notification.priority === 'urgent';
+    return !bypass;
+  }
+
+  private audioCtx: AudioContext | null = null;
+
+  private getAudioContext(): AudioContext | null {
+    if (typeof window === 'undefined') return null;
+    if (!this.audioCtx) {
+      const AudioCtxClass = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtxClass) {
+        this.audioCtx = new AudioCtxClass();
+      }
+    }
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+    return this.audioCtx;
+  }
+
+  playProceduralChime(sound: SoundProfile = 'gavel'): void {
+    if (sound === 'silent') return;
+    const vol = this.preferences()?.soundVolume !== undefined ? this.preferences().soundVolume! : 80;
+    if (vol <= 0) return;
+    const volScale = Math.max(0.01, Math.min(1, vol / 100));
+
+    const ctx = this.getAudioContext();
+    if (!ctx) return;
+
+    try {
+      const now = ctx.currentTime;
+      if (sound === 'gavel') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(140, now);
+        osc.frequency.exponentialRampToValueAtTime(45, now + 0.18);
+        gain.gain.setValueAtTime(0.8 * volScale, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.25);
+      } else if (sound === 'crystal') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(987.77, now);
+        gain.gain.setValueAtTime(0.4 * volScale, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.45);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.5);
+      } else if (sound === 'bell') {
+        const osc1 = ctx.createOscillator();
+        const osc2 = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc1.frequency.setValueAtTime(1046.5, now);
+        osc2.frequency.setValueAtTime(1567.98, now);
+        gain.gain.setValueAtTime(0.35 * volScale, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(ctx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.65);
+        osc2.stop(now + 0.65);
+      } else if (sound === 'pulse') {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(523.25, now);
+        gain.gain.setValueAtTime(0.5 * volScale, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.3);
+      }
+    } catch (e) {
+      console.warn('Procedural chime synthesis skipped:', e);
+    }
+  }
+
   ngOnDestroy(): void {
+    if (this.audioCtx) {
+      this.audioCtx.close().catch(() => {});
+      this.audioCtx = null;
+    }
     if (this.authSub) {
       this.authSub.unsubscribe();
       this.authSub = null;
@@ -419,6 +553,10 @@ export class NotificationService implements OnDestroy {
     if (this.eventSource) {
       this.eventSource.close();
       this.eventSource = null;
+    }
+    if (this.visibilityListener && typeof document !== 'undefined') {
+      document.removeEventListener('visibilitychange', this.visibilityListener);
+      this.visibilityListener = null;
     }
   }
 
@@ -503,14 +641,18 @@ export class NotificationService implements OnDestroy {
 
   // ==================== ENTERPRISE NOTIFICATIONS API ====================
 
-  fetchNotifications(type: string = 'all', status: string = 'all', query: string = '', isSilent: boolean = false) {
+  fetchNotifications(type: string = 'all', status: string = 'all', query: string = '', isSilent: boolean = false, limit: number = 100) {
     if (!isSilent) {
       this.isLoading.set(true);
     } else {
       this.isSyncing.set(true);
     }
 
-    let url = `${this.apiUrl}?type=${encodeURIComponent(type)}&status=${encodeURIComponent(status)}`;
+    const currentUserId = this.authService.currentUser?.id;
+    let url = `${this.apiUrl}?type=${encodeURIComponent(type)}&status=${encodeURIComponent(status)}&limit=${limit}`;
+    if (currentUserId) {
+      url += `&userId=${encodeURIComponent(currentUserId)}`;
+    }
     if (query) {
       url += `&q=${encodeURIComponent(query)}`;
     }
@@ -561,11 +703,14 @@ export class NotificationService implements OnDestroy {
   }
 
   markAllAsRead(type: string = 'all') {
+    const categoryTypes = getCategoryTypes(type);
     // Optimistic UI update
     this.notifications.update(list =>
-      list.map(n => (!type || type === 'all' || n.type === type) ? { ...n, isRead: true } : n)
+      list.map(n => (!type || type === 'all' || (categoryTypes ? categoryTypes.includes(n.type) : n.type === type)) ? { ...n, isRead: true } : n)
     );
-    this.unreadCount.set(0);
+    // Dynamically calculate remaining unread notifications across in-memory state
+    const remainingUnread = this.notifications().filter(n => !n.isRead).length;
+    this.unreadCount.set(remainingUnread);
 
     return this.http.post<{ success: boolean; unreadCount: number }>(`${this.apiUrl}/mark-all-read`, { type })
       .pipe(
@@ -649,19 +794,29 @@ export class NotificationService implements OnDestroy {
       );
   }
 
-  updatePreferences(prefs: NotificationPreferences) {
+  updatePreferences(prefs: NotificationPreferences, showToast: boolean = true) {
+    // Optimistic update with snapshot for rollback on failure
+    const previous = this.preferences();
     this.preferences.set(prefs);
     this.savePreferencesToStorage(prefs);
     return this.http.put<{ success: boolean; message: string; data: NotificationPreferences }>(
       `${this.apiUrl}/preferences`,
       prefs
     ).pipe(
-      tap(() => {
-        this.snackbar.show('Notification preferences synchronized and saved.', 'success');
+      tap(res => {
+        if (res && res.success && res.data) {
+          this.preferences.set(res.data);
+          this.savePreferencesToStorage(res.data);
+        }
+        if (showToast) {
+          this.snackbar.show('Notification preferences synchronized and saved.', 'success');
+        }
       }),
-      catchError(() => {
-        this.snackbar.show('Preferences preserved locally.', 'success');
-        return of(null);
+      catchError(err => {
+        this.preferences.set(previous);
+        this.savePreferencesToStorage(previous);
+        this.snackbar.show('Could not save preferences. Your changes were not applied \u2014 please try again.', 'error', 4500);
+        return throwError(() => err);
       })
     );
   }
@@ -681,6 +836,7 @@ export class NotificationService implements OnDestroy {
 
     this.notifications.update(list => [fullItem, ...list]);
     this.unreadCount.update(c => c + 1);
+    this.playProceduralChime(this.preferences().soundProfile || 'gavel');
     this.snackbar.show(`Alert: ${fullItem.title}`, 'info');
   }
 }

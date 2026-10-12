@@ -84,19 +84,15 @@ export class SystemAnnouncementService {
           this.announcements.set(data);
           const unread = data.filter(a => !a.isRead).length;
           this.unreadCount.set(unread);
-
-          // Check if there is an un-dismissed modal trigger announcement
-          const dismissedInStorage = this.getDismissedFromStorage();
-          const modalCandidate = data.find(
-            a => a.isModalTrigger && !a.isDismissedModal && !dismissedInStorage.includes(a.id)
-          );
-          if (modalCandidate) {
-            this.activeModalAnnouncement.set(modalCandidate);
-          }
+          // Automatic release popup modal disabled: MNC standard (changelogs accessed on-demand)
         }
       },
       error: () => { }
     });
+  }
+
+  openAnnouncementModal(announcement: SystemAnnouncement) {
+    this.activeModalAnnouncement.set(announcement);
   }
 
   markAsRead(announcementId: number) {

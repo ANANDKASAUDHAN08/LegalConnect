@@ -320,9 +320,9 @@
               <span class="font-bold leading-tight">Notifications</span>
               <span class="text-[10px] text-slate-400 dark:text-slate-500">Alerts, updates &amp; messages</span>
             </div>
-            <span *ngIf="notificationService.followedCount() as count"
+            <span *ngIf="notificationService.unreadCount() > 0"
               class="ml-auto bg-gradient-to-tr from-rose-600 to-red-500 dark:from-rose-500 dark:to-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-[0_2px_6px_rgba(244,63,94,0.4)] flex items-center justify-center mr-1.5">
-              {{ count }}
+              {{ notificationService.unreadCount() }}
             </span>
             <app-icon name="chevron-right" [size]="14"
               class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
@@ -405,6 +405,11 @@
               <span class="text-[10px] text-slate-400 dark:text-slate-500">Central statutes &amp; digital penal
                 codes</span>
             </div>
+            <span *ngIf="notificationService.followedCount() > 0"
+              class="ml-auto bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 text-[9px] font-black px-1.5 py-0.5 rounded-full leading-none flex items-center justify-center mr-1.5"
+              title="Tracked Bare Acts">
+              {{ notificationService.followedCount() }}
+            </span>
             <app-icon name="chevron-right" [size]="14"
               class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
           </a>

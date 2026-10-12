@@ -99,9 +99,9 @@
           class="relative w-10 h-10 rounded-full flex items-center justify-center text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 transition-all cursor-pointer no-underline"
           aria-label="Notifications">
           <app-icon name="bell" [size]="20"></app-icon>
-          <span *ngIf="(notificationService.unreadCount() + systemAnnouncements.unreadCount()) as totalCount"
+          <span *ngIf="notificationService.unreadCount() > 0"
             class="absolute top-1.5 right-1.5 min-w-[17px] h-[17px] px-1 bg-gradient-to-tr from-rose-600 to-red-500 dark:from-rose-500 dark:to-red-500 border-2 border-white dark:border-slate-950 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(244,63,94,0.4)] dark:shadow-[0_2px_8px_rgba(244,63,94,0.6)] leading-none">
-            {{ totalCount }}
+            {{ notificationService.unreadCount() }}
           </span>
         </a>
 
@@ -441,11 +441,11 @@
       <!-- Notifications -->
       <a *ngIf="auth.isLoggedIn$ | async" routerLink="/notifications" routerLinkActive="active"
         class="relative p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-300 transition-colors flex items-center justify-center w-9 h-9 notification-bell mr-1"
-        appTooltip="Notifications & Release Updates">
+        appTooltip="Notifications">
         <app-icon name="bell" [size]="18"></app-icon>
-        <span *ngIf="(notificationService.unreadCount() + systemAnnouncements.unreadCount()) as totalCount"
+        <span *ngIf="notificationService.unreadCount() > 0"
           class="absolute top-0.5 right-0.5 min-w-[17px] h-[17px] px-1 bg-gradient-to-tr from-rose-600 to-red-500 dark:from-rose-500 dark:to-red-500 border-2 border-white dark:border-slate-950 text-white text-[9px] font-black rounded-full flex items-center justify-center shadow-[0_2px_6px_rgba(244,63,94,0.4)] dark:shadow-[0_2px_8px_rgba(244,63,94,0.6)] leading-none">
-          {{ totalCount }}
+          {{ notificationService.unreadCount() }}
         </span>
       </a>
 
