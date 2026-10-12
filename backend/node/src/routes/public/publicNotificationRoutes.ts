@@ -34,6 +34,7 @@ export interface EnterpriseNotification {
   isRead: boolean;
   priority: 'low' | 'normal' | 'high' | 'urgent';
   createdAt: string;
+  source?: string;
   recipientUserId?: string;
   metadata?: Record<string, any>;
 }
@@ -55,6 +56,7 @@ const DEFAULT_PREFERENCES = {
     allowUrgent: true
   },
   soundProfile: 'gavel',
+  soundVolume: 80,
   hapticFeedback: true,
   targetRole: 'All'
 };
@@ -82,6 +84,7 @@ function toEnterpriseNotification(doc: any): EnterpriseNotification {
     isRead: doc.isRead,
     priority: doc.priority,
     createdAt: doc.createdAt instanceof Date ? doc.createdAt.toISOString() : doc.createdAt,
+    source: doc.source || undefined,
     recipientUserId: doc.recipientUserId || undefined,
     metadata: doc.metadata || undefined
   };
@@ -97,8 +100,26 @@ interface SseClient {
 
 const sseClients = new Set<SseClient>();
 
+// Helper: Build MongoDB query filter for recipient scoping
+export function getRecipientCondition(userId: string): Record<string, any> {
+  return (userId && userId !== 'anonymous')
+    ? {
+        $or: [
+          { recipientUserId: null },
+          { recipientUserId: { $exists: false } },
+          { recipientUserId: userId }
+        ]
+      }
+    : {
+        $or: [
+          { recipientUserId: null },
+          { recipientUserId: { $exists: false } }
+        ]
+      };
+}
+
 export function broadcastNotificationEvent(event: string, data: any): void {
-  const targetUserId = data?.notification?.recipientUserId;
+  const targetUserId = data?.recipientUserId || data?.notification?.recipientUserId;
   const payload = `event: ${event}\ndata: ${JSON.stringify(data)}\n\n`;
   for (const client of sseClients) {
     try {
@@ -146,6 +167,23 @@ router.get('/notifications/stream', (req: Request, res: Response) => {
   });
 });
 
+// Category Group to Type Mapping Helper
+export function getCategoryTypes(type?: string): string[] | null {
+  if (!type || type === 'all') return null;
+  switch (type.toLowerCase()) {
+    case 'legal':
+      return ['legal', 'hearing'];
+    case 'cases':
+      return ['case', 'lawyer', 'review'];
+    case 'security':
+      return ['security', 'profile', 'verification'];
+    case 'system':
+      return ['system', 'payment', 'document'];
+    default:
+      return null;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────
 // 1. GET /api/info/notifications
 //    List notifications with type/status/search filters, pagination, and counts
@@ -156,29 +194,21 @@ router.get('/notifications', asyncHandler(async (req: Request, res: Response) =>
   const status = (req.query['status'] as string) || 'all';
   const query = (req.query['q'] as string) || '';
   const page = Math.max(1, parseInt((req.query['page'] as string) || '1', 10));
-  const limit = Math.min(100, Math.max(1, parseInt((req.query['limit'] as string) || '20', 10)));
+  const limit = Math.min(100, Math.max(1, parseInt((req.query['limit'] as string) || '100', 10)));
 
   // Recipient scoping: public broadcasts + directed notifications for this user
-  const recipientCondition = (userId && userId !== 'anonymous')
-    ? {
-        $or: [
-          { recipientUserId: null },
-          { recipientUserId: { $exists: false } },
-          { recipientUserId: userId }
-        ]
-      }
-    : {
-        $or: [
-          { recipientUserId: null },
-          { recipientUserId: { $exists: false } }
-        ]
-      };
+  const recipientCondition = getRecipientCondition(userId);
 
   // Build MongoDB query conditions
   const conditions: any[] = [recipientCondition];
 
   if (type !== 'all') {
-    conditions.push({ type });
+    const categoryTypes = getCategoryTypes(type);
+    if (categoryTypes) {
+      conditions.push({ type: { $in: categoryTypes } });
+    } else {
+      conditions.push({ type });
+    }
   }
 
   if (status === 'unread') {
@@ -255,6 +285,12 @@ router.get('/notifications', asyncHandler(async (req: Request, res: Response) =>
     countsByType[row._id] = row.count;
   });
 
+  // Calculate high-level category totals for frontend triage pills
+  countsByType['legal'] = (countsByType['legal'] || 0) + (countsByType['hearing'] || 0);
+  countsByType['cases'] = (countsByType['case'] || 0) + (countsByType['lawyer'] || 0) + (countsByType['review'] || 0);
+  countsByType['security'] = (countsByType['security'] || 0) + (countsByType['profile'] || 0) + (countsByType['verification'] || 0);
+  countsByType['system'] = (countsByType['system'] || 0) + (countsByType['payment'] || 0) + (countsByType['document'] || 0);
+
   res.json({
     success: true,
     total,
@@ -274,6 +310,8 @@ router.get('/notifications', asyncHandler(async (req: Request, res: Response) =>
 // ─────────────────────────────────────────────────────────────────
 router.post('/notifications/:id/read', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params['id'] as string;
+  const userId = getUserId(req);
+  const recipientCondition = getRecipientCondition(userId);
 
   const result = await Notification.findOneAndUpdate(
     { notifId: id },
@@ -285,12 +323,13 @@ router.post('/notifications/:id/read', asyncHandler(async (req: Request, res: Re
     throw AppError.notFound('Notification not found.');
   }
 
-  const unreadCount = await Notification.countDocuments({ isRead: false });
+  const unreadCount = await Notification.countDocuments({ ...recipientCondition, isRead: false });
 
   broadcastNotificationEvent('notification_read', {
     id,
     isRead: true,
     unreadCount,
+    recipientUserId: userId !== 'anonymous' ? userId : result.recipientUserId,
     notification: toEnterpriseNotification(result)
   });
 
@@ -307,19 +346,27 @@ router.post('/notifications/:id/read', asyncHandler(async (req: Request, res: Re
 //    Mark all (or specific type) notifications as read
 // ─────────────────────────────────────────────────────────────────
 router.post('/notifications/mark-all-read', asyncHandler(async (req: Request, res: Response) => {
+  const userId = getUserId(req);
+  const recipientCondition = getRecipientCondition(userId);
   const { type } = req.body;
 
-  const filter: Record<string, any> = { isRead: false };
+  const filter: Record<string, any> = { ...recipientCondition, isRead: false };
   if (type && type !== 'all') {
-    filter.type = type;
+    const categoryTypes = getCategoryTypes(type);
+    if (categoryTypes) {
+      filter.type = { $in: categoryTypes };
+    } else {
+      filter.type = type;
+    }
   }
 
   const result = await Notification.updateMany(filter, { $set: { isRead: true } });
-  const unreadCount = await Notification.countDocuments({ isRead: false });
+  const unreadCount = await Notification.countDocuments({ ...recipientCondition, isRead: false });
 
   broadcastNotificationEvent('notification_all_read', {
     type: type || 'all',
-    unreadCount
+    unreadCount,
+    recipientUserId: userId !== 'anonymous' ? userId : undefined
   });
 
   res.json({
@@ -335,6 +382,8 @@ router.post('/notifications/mark-all-read', asyncHandler(async (req: Request, re
 // ─────────────────────────────────────────────────────────────────
 router.delete('/notifications/:id', asyncHandler(async (req: Request, res: Response) => {
   const id = req.params['id'] as string;
+  const userId = getUserId(req);
+  const recipientCondition = getRecipientCondition(userId);
 
   const result = await Notification.findOneAndDelete({ notifId: id });
 
@@ -342,11 +391,12 @@ router.delete('/notifications/:id', asyncHandler(async (req: Request, res: Respo
     throw AppError.notFound('Notification not found.');
   }
 
-  const unreadCount = await Notification.countDocuments({ isRead: false });
+  const unreadCount = await Notification.countDocuments({ ...recipientCondition, isRead: false });
 
   broadcastNotificationEvent('notification_deleted', {
     id,
-    unreadCount
+    unreadCount,
+    recipientUserId: userId !== 'anonymous' ? userId : result.recipientUserId
   });
 
   res.json({
@@ -361,6 +411,8 @@ router.delete('/notifications/:id', asyncHandler(async (req: Request, res: Respo
 //    Bulk action (markRead or delete) by IDs
 // ─────────────────────────────────────────────────────────────────
 router.post('/notifications/bulk', asyncHandler(async (req: Request, res: Response) => {
+  const userId = getUserId(req);
+  const recipientCondition = getRecipientCondition(userId);
   const { action, ids } = req.body;
 
   if (!action || !Array.isArray(ids) || ids.length === 0) {
@@ -372,12 +424,13 @@ router.post('/notifications/bulk', asyncHandler(async (req: Request, res: Respon
       { notifId: { $in: ids } },
       { $set: { isRead: true } }
     );
-    const unreadCount = await Notification.countDocuments({ isRead: false });
+    const unreadCount = await Notification.countDocuments({ ...recipientCondition, isRead: false });
 
     broadcastNotificationEvent('notification_bulk', {
       action: 'markRead',
       ids,
-      unreadCount
+      unreadCount,
+      recipientUserId: userId !== 'anonymous' ? userId : undefined
     });
 
     res.json({
@@ -387,12 +440,13 @@ router.post('/notifications/bulk', asyncHandler(async (req: Request, res: Respon
     });
   } else if (action === 'delete') {
     await Notification.deleteMany({ notifId: { $in: ids } });
-    const unreadCount = await Notification.countDocuments({ isRead: false });
+    const unreadCount = await Notification.countDocuments({ ...recipientCondition, isRead: false });
 
     broadcastNotificationEvent('notification_bulk', {
       action: 'delete',
       ids,
-      unreadCount
+      unreadCount,
+      recipientUserId: userId !== 'anonymous' ? userId : undefined
     });
 
     res.json({
@@ -427,6 +481,7 @@ router.get('/notifications/preferences', asyncHandler(async (req: Request, res: 
       verification: prefs.verification,
       quietHours: prefs.quietHours || DEFAULT_PREFERENCES.quietHours,
       soundProfile: prefs.soundProfile || DEFAULT_PREFERENCES.soundProfile,
+      soundVolume: prefs.soundVolume !== undefined ? prefs.soundVolume : DEFAULT_PREFERENCES.soundVolume,
       hapticFeedback: prefs.hapticFeedback ?? DEFAULT_PREFERENCES.hapticFeedback,
       targetRole: prefs.targetRole || DEFAULT_PREFERENCES.targetRole
     } : DEFAULT_PREFERENCES
@@ -465,6 +520,7 @@ router.put('/notifications/preferences', asyncHandler(async (req: Request, res: 
       verification: updated.verification,
       quietHours: updated.quietHours,
       soundProfile: updated.soundProfile,
+      soundVolume: updated.soundVolume !== undefined ? updated.soundVolume : DEFAULT_PREFERENCES.soundVolume,
       hapticFeedback: updated.hapticFeedback,
       targetRole: updated.targetRole
     } : incoming
@@ -537,11 +593,65 @@ router.post('/notifications/ingest', asyncHandler(async (req: Request, res: Resp
     unreadCount
   });
 
+  // Outbound Real Delivery (Email & WhatsApp via .NET domain services)
+  if (formatted.recipientUserId) {
+    dispatchExternalDelivery(formatted).catch(err => {
+      console.warn('[NotificationDelivery] Background delivery dispatch error:', err);
+    });
+  }
+
   res.status(201).json({
     success: true,
     message: 'Notification ingested successfully.',
     notification: formatted
   });
 }));
+
+/**
+ * Dispatches real email and WhatsApp notifications by evaluating the recipient's
+ * persisted NotificationPreferences (channel flags + Quiet Hours window)
+ * and invoking the backend notification delivery service.
+ */
+async function dispatchExternalDelivery(notification: EnterpriseNotification): Promise<void> {
+  if (!notification.recipientUserId) return;
+  try {
+    const prefs = await NotificationPreference.findOne({ userId: notification.recipientUserId }).lean();
+    if (!prefs) return;
+
+    const cat = notification.type;
+    const catConfig = (prefs as any)[cat];
+    const emailEnabled = Boolean(catConfig?.email);
+    const whatsappEnabled = Boolean(catConfig?.whatsapp);
+
+    if (!emailEnabled && !whatsappEnabled) return;
+
+    const DOTNET_API_URL = process.env.DOTNET_API_URL || 'http://localhost:5001';
+    await fetch(`${DOTNET_API_URL}/api/notification-delivery/dispatch`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        recipientUserId: notification.recipientUserId,
+        notificationId: notification.id,
+        type: notification.type,
+        title: notification.title,
+        summary: notification.summary,
+        details: notification.details,
+        actionUrl: notification.actionUrl,
+        actionLabel: notification.actionLabel,
+        priority: notification.priority,
+        email: emailEnabled,
+        whatsapp: whatsappEnabled,
+        quietHours: prefs.quietHours || {
+          enabled: false,
+          startTime: '22:00',
+          endTime: '07:30',
+          allowUrgent: true
+        }
+      })
+    });
+  } catch (err) {
+    console.warn('[NotificationDelivery] Failed to dispatch external channels:', err);
+  }
+}
 
 export default router;

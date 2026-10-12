@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using CoreApi.DTOs;
 
 namespace CoreApi.Services
 {
@@ -15,6 +16,15 @@ namespace CoreApi.Services
         Task SendPasswordResetEmailAsync(string email, string token);
         Task SendContactNotificationAsync(string name, string email, string subject, string message);
         Task SendOtpEmailAsync(string email, string code, string userName);
+        Task<EmailSendResultDto> SendNotificationEmailAsync(
+            string toEmail,
+            string userName,
+            string title,
+            string summary,
+            string? details = null,
+            string? actionUrl = null,
+            string? actionLabel = null,
+            string priority = "normal");
     }
 
     public class EmailService : IEmailService
@@ -279,6 +289,128 @@ namespace CoreApi.Services
                 </div>";
 
             await SendEmailAsync(email, subject, body, html);
+        }
+
+        public async Task<EmailSendResultDto> SendNotificationEmailAsync(
+            string toEmail,
+            string userName,
+            string title,
+            string summary,
+            string? details = null,
+            string? actionUrl = null,
+            string? actionLabel = null,
+            string priority = "normal")
+        {
+            var appUrl = _configuration["AppUrl"] ?? "http://localhost:4200";
+            var targetUrl = !string.IsNullOrWhiteSpace(actionUrl)
+                ? (actionUrl.StartsWith("http") ? actionUrl : $"{appUrl}{actionUrl}")
+                : $"{appUrl}/notifications";
+            var btnText = !string.IsNullOrWhiteSpace(actionLabel) ? actionLabel : "View Alert in LegalConnect";
+
+            var subject = priority.Equals("urgent", StringComparison.OrdinalIgnoreCase)
+                ? $"[URGENT] LegalConnect Alert: {title}"
+                : $"LegalConnect Notification: {title}";
+
+            var priorityBadgeColor = priority.ToLowerInvariant() switch
+            {
+                "urgent" => "#ef4444",
+                "high" => "#f59e0b",
+                "low" => "#64748b",
+                _ => "#3b82f6"
+            };
+
+            var priorityBadgeBg = priority.ToLowerInvariant() switch
+            {
+                "urgent" => "#fef2f2",
+                "high" => "#fffbeb",
+                "low" => "#f8fafc",
+                _ => "#eff6ff"
+            };
+
+            var detailsBlockHtml = !string.IsNullOrWhiteSpace(details)
+                ? $@"
+                <div style='background: #f8fafc; border-left: 3px solid {priorityBadgeColor}; padding: 14px 16px; border-radius: 0 10px 10px 0; margin: 18px 0; font-size: 13px; color: #334155; line-height: 1.6;'>
+                    {details}
+                </div>"
+                : "";
+
+            var plainText =
+                $"LegalConnect Notification: {title}\n" +
+                $"Priority: {priority.ToUpperInvariant()}\n\n" +
+                $"Hello {userName},\n\n" +
+                $"{summary}\n\n" +
+                (!string.IsNullOrWhiteSpace(details) ? $"{details}\n\n" : "") +
+                $"Take action: {targetUrl}\n\n" +
+                $"Manage your delivery channels: {appUrl}/notifications\n" +
+                $"LegalConnect Secure Communications";
+
+            var html = $@"
+                <div style='font-family: -apple-system, BlinkMacSystemFont, ""Segoe UI"", Roboto, Helvetica, Arial, sans-serif; max-width: 540px; margin: 0 auto; padding: 32px 28px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #ffffff; box-shadow: 0 4px 20px rgba(0,0,0,0.04);'>
+                    <div style='display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px;'>
+                        <div style='display: flex; align-items: center;'>
+                            <div style='width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; color: #ffffff; font-size: 18px; font-weight: bold;'>
+                                &#x2696;
+                            </div>
+                            <div>
+                                <h3 style='color: #0f172a; margin: 0; font-size: 17px; font-weight: 800;'>LegalConnect</h3>
+                                <p style='color: #64748b; margin: 2px 0 0 0; font-size: 11px;'>Enterprise Legal Operations &amp; Alerts</p>
+                            </div>
+                        </div>
+                        <span style='background: {priorityBadgeBg}; color: {priorityBadgeColor}; border: 1px solid {priorityBadgeColor}33; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em;'>
+                            {priority}
+                        </span>
+                    </div>
+
+                    <h2 style='color: #0f172a; font-size: 18px; font-weight: 700; margin: 0 0 12px 0; line-height: 1.4;'>
+                        {title}
+                    </h2>
+
+                    <p style='color: #475569; font-size: 14px; line-height: 1.6; margin: 0 0 12px 0;'>
+                        Hello <strong>{userName}</strong>,
+                    </p>
+
+                    <p style='color: #334155; font-size: 14px; line-height: 1.6; margin: 0 0 16px 0;'>
+                        {summary}
+                    </p>
+
+                    {detailsBlockHtml}
+
+                    <div style='text-align: center; margin: 26px 0 20px 0;'>
+                        <a href='{targetUrl}' style='display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 10px; font-weight: 700; font-size: 13px; box-shadow: 0 4px 14px rgba(37,99,235,0.25);'>
+                            {btnText} &rarr;
+                        </a>
+                    </div>
+
+                    <div style='background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; margin: 20px 0 16px 0;'>
+                        <p style='color: #64748b; font-size: 11px; margin: 0; line-height: 1.5;'>
+                            This alert was dispatched in real-time according to your notification preferences.
+                            <br/>
+                            <a href='{appUrl}/notifications' style='color: #2563eb; text-decoration: underline; font-weight: 600;'>Manage alert preferences &amp; quiet hours</a>
+                        </p>
+                    </div>
+
+                    <hr style='border: none; border-top: 1px solid #f1f5f9; margin: 20px 0 14px;' />
+                    <div style='display: flex; align-items: center; justify-content: space-between; color: #94a3b8; font-size: 11px;'>
+                        <span>&copy; {DateTime.UtcNow.Year} LegalConnect</span>
+                        <span>Confidential Attorney-Client Communication</span>
+                    </div>
+                </div>";
+
+            await SendEmailAsync(toEmail, subject, plainText, html);
+
+            var brevoKey = _configuration["Brevo:ApiKey"];
+            var sendGridKey = _configuration["SendGrid:ApiKey"];
+            string activeProvider = !string.IsNullOrWhiteSpace(brevoKey) && !brevoKey.Contains("PASTE_YOUR")
+                ? "Brevo Email API"
+                : (!string.IsNullOrWhiteSpace(sendGridKey) ? "SendGrid Email API" : "LegalConnect Console Gateway");
+
+            return new EmailSendResultDto
+            {
+                IsSuccess = true,
+                IsSimulated = activeProvider == "LegalConnect Console Gateway",
+                Provider = activeProvider,
+                TargetEmail = toEmail
+            };
         }
     }
 }

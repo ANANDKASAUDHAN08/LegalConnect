@@ -24,8 +24,9 @@ export async function seedNotificationsIfEmpty(): Promise<void> {
     return;
   }
 
+  const sharmaExists = await Notification.findOne({ notifId: 'notif-seed-sharma-1' });
   const count = await Notification.countDocuments();
-  if (count > 0) {
+  if (count > 0 && sharmaExists) {
     console.log(`  ↳ Notifications: ${count} records found, skipping seed.`);
     return;
   }
@@ -33,6 +34,45 @@ export async function seedNotificationsIfEmpty(): Promise<void> {
   const now = Date.now();
 
   const seedData = [
+    {
+      notifId: 'notif-seed-sharma-1',
+      type: 'case' as const,
+      title: 'Supreme Court Hearing Listed: Sharma vs. Union of India',
+      summary: 'Item No. 14 listed before Court 3 (Bench: Justice B.R. Gavai & Justice Augustine George Masih). Urgent hearing scheduled.',
+      details: 'Senior counsel requested to remain present in Courtroom 3 at 10:30 AM. Video conferencing link enabled for instructing advocate.',
+      icon: 'calendar',
+      actionUrl: '/client/portal',
+      actionLabel: 'View Cause List',
+      isRead: false,
+      priority: 'urgent' as const,
+      source: 'Supreme Court Cause List',
+      metadata: {
+        caseTitle: 'Sharma vs. Union of India',
+        docketNumber: 'WP(C) 1042/2026',
+        court: 'Supreme Court of India',
+        hearingDate: 'Tomorrow, 10:30 AM'
+      },
+      createdAt: new Date(now - 1000 * 60 * 18) // 18 min ago
+    },
+    {
+      notifId: 'notif-seed-sharma-2',
+      type: 'case' as const,
+      title: 'Counter Affidavit Filed: Sharma vs. Union of India',
+      summary: 'Respondent No. 2 (Ministry of Law & Justice) has submitted their verified counter affidavit and annexures on record.',
+      details: 'Rejoinder to be filed within 7 working days. Document indexed under Registry Receipt #SC-2026-88194.',
+      icon: 'file-text',
+      actionUrl: '/client/portal',
+      actionLabel: 'Download Affidavit',
+      isRead: false,
+      priority: 'high' as const,
+      source: 'E-Filing Portal',
+      metadata: {
+        caseTitle: 'Sharma vs. Union of India',
+        docketNumber: 'WP(C) 1042/2026',
+        court: 'Supreme Court of India'
+      },
+      createdAt: new Date(now - 1000 * 60 * 75) // 75 min ago
+    },
     {
       notifId: 'notif-seed-1',
       type: 'legal' as const,
@@ -45,6 +85,11 @@ export async function seedNotificationsIfEmpty(): Promise<void> {
       isRead: false,
       priority: 'high' as const,
       source: 'Legislative Gazette Monitor',
+      metadata: {
+        caseTitle: 'BNSS Section 479 Enforcement',
+        statute: 'Bharatiya Nagarik Suraksha Sanhita',
+        provision: 'Section 479'
+      },
       createdAt: new Date(now - 1000 * 60 * 25) // 25 min ago
     },
     {
@@ -59,6 +104,10 @@ export async function seedNotificationsIfEmpty(): Promise<void> {
       isRead: false,
       priority: 'urgent' as const,
       source: 'Consultation Scheduler',
+      metadata: {
+        caseTitle: 'Adv. Priya Sharma - Consultation Docket',
+        topic: 'Cyber Fraud & Financial Recovery'
+      },
       createdAt: new Date(now - 1000 * 60 * 110) // ~2 hours ago
     },
     {
@@ -147,6 +196,12 @@ export async function seedNotificationsIfEmpty(): Promise<void> {
     }
   ];
 
-  await Notification.insertMany(seedData);
-  console.log(`  ✅ Notifications: Seeded ${seedData.length} initial records.`);
+  await Notification.bulkWrite(seedData.map(doc => ({
+    updateOne: {
+      filter: { notifId: doc.notifId },
+      update: { $setOnInsert: doc },
+      upsert: true
+    }
+  })));
+  console.log(`  ✅ Notifications: Verified / seeded ${seedData.length} records.`);
 }

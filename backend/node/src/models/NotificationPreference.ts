@@ -33,6 +33,7 @@ export interface INotificationPreference extends Document {
   verification: IChannelPreference;
   quietHours?: IQuietHours;
   soundProfile?: string;
+  soundVolume?: number;
   hapticFeedback?: boolean;
   targetRole?: string;
   createdAt: Date;
@@ -63,6 +64,7 @@ const NotificationPreferenceSchema = new Schema<INotificationPreference>({
     allowUrgent: { type: Boolean, default: true }
   },
   soundProfile: { type: String, default: 'gavel' },
+  soundVolume: { type: Number, default: 80, min: 0, max: 100 },
   hapticFeedback: { type: Boolean, default: true },
   targetRole: { type: String, default: 'All' }
 }, {
