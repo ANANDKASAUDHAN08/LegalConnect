@@ -165,4 +165,20 @@ export class AdminApiService {
   getSavedViews(pageKey: string): Observable<any> { return this.user.getSavedViews(pageKey); }
   saveSavedView(dto: { pageKey: string; name: string; paramsJson: string }): Observable<any> { return this.user.saveSavedView(dto); }
   deleteSavedView(id: string): Observable<any> { return this.user.deleteSavedView(id); }
+
+  // -- Statutory Citizen Rights Delegates --
+  getRights(params: any = {}): Observable<any> { return this.content.getRights(params); }
+  getRight(id: string): Observable<any> { return this.content.getRight(id); }
+  createRight(data: any): Observable<any> { return this.content.createRight(data); }
+  updateRight(id: string, data: any): Observable<any> { return this.content.updateRight(id, data); }
+  deleteRight(id: string): Observable<any> { return this.content.deleteRight(id); }
+  togglePopularRight(id: string): Observable<any> { return this.content.togglePopularRight(id); }
+  togglePublishRight(id: string): Observable<any> { return this.content.togglePublishRight(id); }
+  syncRightsCatalog(): Observable<any> { return this.content.syncRightsCatalog(); }
+  getRightsScenarios(): Observable<any> { return this.content.getRightsScenarios(); }
+  createScenario(data: any): Observable<any> { return this.content.createScenario(data); }
+  updateScenario(id: string, data: any): Observable<any> { return this.content.updateScenario(id, data); }
+  deleteScenario(id: string): Observable<any> { return this.content.deleteScenario(id); }
+  aiCodifyRight(legalText: string): Observable<any> { return this.content.aiCodifyRight(legalText); }
+  getRightsAnalytics(): Observable<any> { return this.content.getRightsAnalytics(); }
 }

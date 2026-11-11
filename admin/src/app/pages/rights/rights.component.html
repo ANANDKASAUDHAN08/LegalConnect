@@ -1,0 +1,937 @@
+<div class="p-2 w-full flex flex-col gap-5">
+
+  <!-- --- 0. Top Header Command Banner --- -->
+  <div
+    class="glass-card flex flex-col xl:flex-row xl:items-center justify-between p-6 gap-6 rounded-2xl border border-white/10 bg-slate-900/80 backdrop-blur-2xl shadow-2xl animate-in">
+    <div class="flex flex-col gap-1.5">
+      <div
+        class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-xs font-semibold text-indigo-300 w-fit">
+        <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+        <span class="tracking-wide uppercase text-[10px]">Statutory Safeguards & Citizen Rights Console</span>
+      </div>
+      <h1 class="text-2xl lg:text-3xl font-extrabold text-slate-100 tracking-tight">
+        Citizen Rights & Statutory Directory
+      </h1>
+      <p class="text-xs text-slate-400 max-w-2xl">
+        Codify, verify, and synchronize constitutional guarantees, police confrontation procedures, consumer refund
+        rules,
+        and emergency scenarios across Central Bare Acts.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap items-center gap-2.5">
+      <a [href]="userAppUrl + '/rights'" target="_blank"
+        class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold no-underline"
+        [adminTooltip]="'Open live Citizen Rights portal on public website'" tooltipPosition="bottom">
+        <admin-icon name="external-link" [size]="15"></admin-icon>
+        <span>Preview Public Portal</span>
+      </a>
+
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold"
+        (click)="exportCsv()" [adminTooltip]="'Export statutory rights catalog to formatted CSV spreadsheet'"
+        tooltipPosition="bottom">
+        <admin-icon name="download" [size]="15"></admin-icon>
+        <span>Export CSV</span>
+      </button>
+
+      <button class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold"
+        (click)="syncCatalog()" [disabled]="isSyncing()"
+        [adminTooltip]="'Synchronize authoritative 25+ statutory catalog & emergency scenarios with MongoDB'"
+        tooltipPosition="bottom">
+        <admin-icon name="refresh" [size]="15" [cssClass]="isSyncing() ? 'animate-spin' : ''"></admin-icon>
+        <span>{{ isSyncing() ? 'Syncing...' : 'Sync Legal Catalog' }}</span>
+      </button>
+
+      <button
+        class="btn btn-secondary flex items-center gap-1.5 px-3.5 py-2 text-xs font-semibold bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-500/30 text-purple-200 hover:text-white"
+        (click)="openAiModal()"
+        [adminTooltip]="'Auto-Codify statutory right from Gazette notification, judgment, or statute text using AI'"
+        tooltipPosition="bottom">
+        <admin-icon name="sparkles" [size]="15"></admin-icon>
+        <span>AI Gazette Importer</span>
+      </button>
+
+      <button *ngIf="activeTab() === 'rights'"
+        class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-xs font-semibold" (click)="openCreate()"
+        [adminTooltip]="'Codify a brand new statutory citizen right into the directory'" tooltipPosition="bottom">
+        <admin-icon name="plus" [size]="15"></admin-icon>
+        <span>Codify New Right</span>
+      </button>
+
+      <button *ngIf="activeTab() === 'scenarios'"
+        class="btn btn-primary flex items-center gap-1.5 px-4 py-2 text-xs font-semibold" (click)="openCreateScenario()"
+        [adminTooltip]="'Create a brand new emergency situation scenario picker'" tooltipPosition="bottom">
+        <admin-icon name="plus" [size]="15"></admin-icon>
+        <span>New Scenario</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- --- 1. Bento-Grid Telemetry Header --- -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
+    <!-- Total Codified -->
+    <div
+      class="glass-card p-4 rounded-xl border border-indigo-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-indigo-500/40 transition-all cursor-default">
+      <div class="w-12 h-12 rounded-xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0">
+        <admin-icon name="scale" [size]="22"></admin-icon>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Codified</div>
+        <div class="text-2xl font-black text-slate-100 mt-0.5">{{ totalCount() }}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Statutory Citizen Safeguards</div>
+      </div>
+    </div>
+
+    <!-- Published -->
+    <div
+      class="glass-card p-4 rounded-xl border border-emerald-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-emerald-500/40 transition-all cursor-default">
+      <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+        <admin-icon name="shield-check" [size]="22"></admin-icon>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Live &amp; Published</div>
+        <div class="text-2xl font-black text-emerald-400 mt-0.5">{{ publishedCount() }}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Active on Public Shield</div>
+      </div>
+    </div>
+
+    <!-- Priority Critical -->
+    <div
+      class="glass-card p-4 rounded-xl border border-amber-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-amber-500/40 transition-all cursor-default">
+      <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-400 flex items-center justify-center shrink-0">
+        <admin-icon name="star-filled" [size]="22"></admin-icon>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Priority / Urgent</div>
+        <div class="text-2xl font-black text-amber-400 mt-0.5">{{ priorityCount() }}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">High-Confrontation Rights</div>
+      </div>
+    </div>
+
+    <!-- Emergency Scenarios -->
+    <div (click)="setTab('scenarios')"
+      class="glass-card p-4 rounded-xl border border-sky-500/20 bg-slate-900/70 backdrop-blur-md flex items-center gap-4 shadow-lg hover:border-sky-500/40 transition-all cursor-pointer">
+      <div class="w-12 h-12 rounded-xl bg-sky-500/10 text-sky-400 flex items-center justify-center shrink-0">
+        <admin-icon name="zap" [size]="22"></admin-icon>
+      </div>
+      <div>
+        <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Emergency Scenarios</div>
+        <div class="text-2xl font-black text-sky-400 mt-0.5">{{ scenariosCount() }}</div>
+        <div class="text-[10px] text-slate-500 mt-0.5">Quick Situation Tags</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- --- 1.5 Master Tab Bar --- -->
+  <div class="flex items-center gap-2 border-b border-white/10 pb-2">
+    <button (click)="setTab('rights')"
+      [class]="activeTab() === 'rights' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'"
+      class="px-4 py-2 rounded-xl text-xs flex items-center gap-2 border-0 cursor-pointer transition">
+      <admin-icon name="scale" [size]="14"></admin-icon>
+      <span>Statutory Safeguards Catalog ({{ totalCount() }})</span>
+    </button>
+
+    <button (click)="setTab('scenarios')"
+      [class]="activeTab() === 'scenarios' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'"
+      class="px-4 py-2 rounded-xl text-xs flex items-center gap-2 border-0 cursor-pointer transition">
+      <admin-icon name="zap" [size]="14"></admin-icon>
+      <span>Emergency Situation Scenarios ({{ scenariosCount() }})</span>
+    </button>
+
+    <button (click)="setTab('analytics')"
+      [class]="activeTab() === 'analytics' ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30' : 'bg-slate-800/80 text-slate-400 hover:text-slate-200'"
+      class="px-4 py-2 rounded-xl text-xs flex items-center gap-2 border-0 cursor-pointer transition">
+      <admin-icon name="chart-bar" [size]="14"></admin-icon>
+      <span>Telemetry &amp; Citizen Demand Heatmap</span>
+    </button>
+  </div>
+
+  <!-- ==================== TAB 1: STATUTORY RIGHTS ==================== -->
+  <ng-container *ngIf="activeTab() === 'rights'">
+
+    <!-- --- 2. Filter & Command Bar --- -->
+    <div
+      class="glass-card p-4 rounded-xl border border-white/10 bg-slate-900/60 flex flex-wrap items-center justify-between gap-3 shadow-lg">
+      <div class="flex items-center gap-3 flex-1 min-w-[280px]">
+        <!-- Search Input -->
+        <div class="relative flex-1 max-w-md">
+          <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+            <admin-icon name="search" [size]="14"></admin-icon>
+          </span>
+          <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)"
+            placeholder="Search by title, act name, section or remedy..."
+            class="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-800/80 border border-white/10 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" />
+        </div>
+
+        <!-- Category Filter -->
+        <select [value]="selectedCategory()" (change)="setCategory($any($event.target).value)"
+          class="px-3 py-2 rounded-xl bg-slate-800/80 border border-white/10 text-xs text-slate-300 outline-none cursor-pointer focus:border-indigo-500 transition">
+          <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+        </select>
+      </div>
+
+      <!-- Right Filter Toggles -->
+      <div class="flex items-center gap-2">
+        <!-- Status Pill Toggles -->
+        <div class="flex items-center p-1 rounded-xl bg-slate-800/80 border border-white/10 text-xs">
+          <button (click)="setStatus('all')"
+            [class]="filterStatus() === 'all' ? 'bg-indigo-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
+            class="px-2.5 py-1 rounded-lg transition border-0 cursor-pointer">
+            All
+          </button>
+          <button (click)="setStatus('published')"
+            [class]="filterStatus() === 'published' ? 'bg-emerald-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
+            class="px-2.5 py-1 rounded-lg transition border-0 cursor-pointer">
+            Published
+          </button>
+          <button (click)="setStatus('draft')"
+            [class]="filterStatus() === 'draft' ? 'bg-amber-600 text-white font-bold' : 'text-slate-400 hover:text-slate-200'"
+            class="px-2.5 py-1 rounded-lg transition border-0 cursor-pointer">
+            Drafts
+          </button>
+        </div>
+
+        <!-- Priority Only Toggle -->
+        <button (click)="togglePriorityFilter()"
+          [class]="filterPriority() === 'priority' ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800/80 text-slate-400 border-white/10 hover:text-slate-200'"
+          class="px-3 py-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+          <admin-icon name="star" [size]="13"></admin-icon>
+          <span>Priority Only</span>
+        </button>
+
+        <button (click)="fetchRights()"
+          class="p-2 rounded-xl bg-slate-800/80 border border-white/10 text-slate-400 hover:text-slate-200 cursor-pointer transition"
+          [adminTooltip]="'Reload rights table'" tooltipPosition="bottom">
+          <admin-icon name="refresh" [size]="14"></admin-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- --- 3. Main Data Table --- -->
+    <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/60 overflow-hidden shadow-2xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs border-collapse">
+          <thead>
+            <tr
+              class="border-b border-white/10 bg-slate-800/50 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+              <th class="p-4">Right &amp; Category</th>
+              <th class="p-4">Statutory Basis</th>
+              <th class="p-4">Plain English Summary</th>
+              <th class="p-4 text-center">Priority</th>
+              <th class="p-4 text-center">Status</th>
+              <th class="p-4 text-right">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-white/5">
+            <tr *ngIf="isLoading()" class="animate-pulse">
+              <td colspan="6" class="p-8 text-center text-slate-500">
+                <div class="flex items-center justify-center gap-2">
+                  <admin-icon name="refresh" [size]="16" cssClass="animate-spin text-indigo-400"></admin-icon>
+                  <span>Loading statutory rights catalog from database...</span>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="!isLoading() && filteredRights().length === 0">
+              <td colspan="6" class="p-12 text-center text-slate-500">
+                <admin-icon name="scale" [size]="32" cssClass="mx-auto text-slate-600 mb-2"></admin-icon>
+                <div class="text-sm font-bold text-slate-300">No statutory rights found</div>
+                <div class="text-xs text-slate-500 mt-1">Try resetting your search query or sync the legal catalog from
+                  the button above.</div>
+              </td>
+            </tr>
+
+            <tr *ngFor="let right of filteredRights()" class="hover:bg-slate-800/40 transition">
+              <!-- Title & Category -->
+              <td class="p-4 min-w-[240px]">
+                <div class="flex items-start gap-3">
+                  <div
+                    class="w-8 h-8 rounded-lg bg-indigo-500/10 text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
+                    <admin-icon [name]="(right.icon === 'scale' ? 'scale' : 'shield')" [size]="16"></admin-icon>
+                  </div>
+                  <div>
+                    <div class="font-bold text-slate-100 leading-tight">{{ right.title }}</div>
+                    <div class="flex items-center gap-1.5 mt-1">
+                      <span
+                        class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300 border border-white/5">
+                        {{ right.category }}
+                      </span>
+                      <span *ngIf="right.scenarioTag" class="text-[10px] text-indigo-400 font-mono">
+                        #{{ right.scenarioTag }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </td>
+
+              <!-- Statutory Basis -->
+              <td class="p-4 min-w-[200px]">
+                <div class="font-semibold text-slate-200">{{ right.statutoryBasis.actName }}</div>
+                <div class="text-[11px] text-indigo-400 mt-0.5 truncate max-w-[220px]">
+                  {{ right.statutoryBasis.sections.join(', ') || 'General' }}
+                </div>
+              </td>
+
+              <!-- Summary -->
+              <td class="p-4 min-w-[260px] max-w-[360px]">
+                <p class="line-clamp-2 text-slate-400 m-0 leading-relaxed">
+                  {{ right.summary }}
+                </p>
+              </td>
+
+              <!-- Priority -->
+              <td class="p-4 text-center">
+                <button (click)="togglePopular(right)"
+                  [adminTooltip]="right.isPopular ? 'Demote from Priority' : 'Promote to High Importance Priority'"
+                  tooltipPosition="top"
+                  [class]="right.isPopular ? 'bg-amber-500/20 text-amber-300 border-amber-500/40' : 'bg-slate-800/60 text-slate-500 border-white/5 hover:text-slate-300'"
+                  class="px-2 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer inline-flex items-center gap-1">
+                  <admin-icon name="star-filled" [size]="11"></admin-icon>
+                  <span>{{ right.isPopular ? 'Priority' : 'Normal' }}</span>
+                </button>
+              </td>
+
+              <!-- Status -->
+              <td class="p-4 text-center">
+                <button (click)="togglePublish(right)"
+                  [adminTooltip]="right.isPublished !== false ? 'Set to Draft mode' : 'Publish live on citizen portal'"
+                  tooltipPosition="top"
+                  [class]="right.isPublished !== false ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'"
+                  class="px-2.5 py-1 rounded-lg border text-[10px] font-bold transition cursor-pointer">
+                  {{ right.isPublished !== false ? 'Published' : 'Draft' }}
+                </button>
+              </td>
+
+              <!-- Actions -->
+              <td class="p-4 text-right shrink-0">
+                <div class="flex items-center justify-end gap-1.5">
+                  <button (click)="previewPublic(right)" [adminTooltip]="'Preview card on public portal'"
+                    tooltipPosition="top"
+                    class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-white/10 cursor-pointer transition">
+                    <admin-icon name="external-link" [size]="13"></admin-icon>
+                  </button>
+                  <button (click)="openEdit(right)" [adminTooltip]="'Edit statutory right details'"
+                    tooltipPosition="top"
+                    class="p-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 border border-indigo-500/30 cursor-pointer transition">
+                    <admin-icon name="edit" [size]="13"></admin-icon>
+                  </button>
+                  <button (click)="confirmDelete(right)" [adminTooltip]="'Permanently delete right'"
+                    tooltipPosition="top"
+                    class="p-1.5 rounded-lg bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 cursor-pointer transition">
+                    <admin-icon name="trash" [size]="13"></admin-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Table Footer Counter -->
+      <div
+        class="p-4 border-t border-white/10 bg-slate-900/80 flex items-center justify-between text-xs text-slate-400">
+        <span>Showing <strong>{{ filteredRights().length }}</strong> of {{ totalCount() }} codified statutory
+          safeguards</span>
+        <span class="text-slate-500 text-[11px]">LegalConnect Enterprise Directorate • BNSS &amp; Bare Acts
+          Database</span>
+      </div>
+    </div>
+
+  </ng-container>
+
+  <!-- ==================== TAB 2: EMERGENCY SITUATION SCENARIOS ==================== -->
+  <ng-container *ngIf="activeTab() === 'scenarios'">
+    <div class="glass-card rounded-2xl border border-white/10 bg-slate-900/60 p-5 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <div>
+          <h2 class="text-sm font-bold text-slate-200 uppercase tracking-wider m-0">Citizen Emergency Quick Navigators
+          </h2>
+          <p class="text-xs text-slate-400 mt-0.5 m-0">These scenario pills appear on the public portal header to
+            quickly route citizens in distress.</p>
+        </div>
+        <button (click)="openCreateScenario()"
+          class="btn btn-primary flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold">
+          <admin-icon name="plus" [size]="14"></admin-icon>
+          <span>Add Scenario</span>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div *ngFor="let sc of scenarios()"
+          class="p-4 rounded-xl border border-white/10 bg-slate-800/60 flex flex-col justify-between gap-3 shadow-md hover:border-indigo-500/40 transition">
+          <div class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300">
+                #{{ sc.tag }}
+              </span>
+              <button (click)="toggleScenarioStatus(sc)"
+                [class]="sc.isActive ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-slate-700 text-slate-400 border-slate-600'"
+                class="px-2 py-0.5 rounded text-[10px] font-bold border transition cursor-pointer">
+                {{ sc.isActive ? 'Active' : 'Hidden' }}
+              </button>
+            </div>
+            <div class="font-bold text-slate-100 text-sm">{{ sc.label }}</div>
+            <p class="text-xs text-slate-400 line-clamp-3 leading-relaxed m-0">{{ sc.description }}</p>
+          </div>
+
+          <div class="flex items-center justify-between pt-2 border-t border-white/5 text-[11px] text-slate-500">
+            <span>Sort Order: {{ sc.sortOrder || 0 }}</span>
+            <div class="flex items-center gap-1">
+              <button (click)="openEditScenario(sc)"
+                class="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-200 border-0 cursor-pointer">
+                <admin-icon name="edit" [size]="12"></admin-icon>
+              </button>
+              <button (click)="deleteScenario(sc)"
+                class="p-1 rounded bg-rose-900/50 hover:bg-rose-800 text-rose-300 border-0 cursor-pointer">
+                <admin-icon name="trash" [size]="12"></admin-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- ==================== TAB 3: TELEMETRY & CITIZEN DEMAND ANALYTICS ==================== -->
+  <ng-container *ngIf="activeTab() === 'analytics'">
+    <div class="space-y-5 animate-in">
+
+      <!-- Header & Refresh Bar -->
+      <div
+        class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xl">
+        <div>
+          <div
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-indigo-500/20 text-indigo-300 text-[10px] font-bold uppercase tracking-wider">
+            <span>Live Telemetry Engine</span>
+          </div>
+          <h2 class="text-lg font-bold text-slate-100 mt-1 m-0">Citizen Rights Telemetry &amp; Demand Intelligence
+            Heatmap</h2>
+          <p class="text-xs text-slate-400 mt-0.5 m-0">Live citizen queries, confrontation hotspots, and uncodified
+            statutory demand gaps.</p>
+        </div>
+        <button (click)="fetchAnalytics()" [disabled]="isLoadingAnalytics()"
+          class="btn btn-secondary flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold cursor-pointer">
+          <admin-icon name="refresh" [size]="14" [cssClass]="isLoadingAnalytics() ? 'animate-spin' : ''"></admin-icon>
+          <span>{{ isLoadingAnalytics() ? 'Refreshing...' : 'Refresh Telemetry' }}</span>
+        </button>
+      </div>
+
+      <!-- 4 High-Impact Telemetry Metrics -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="glass-card p-4 rounded-xl border border-blue-500/20 bg-slate-900/70 shadow-lg">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Citizen Queries</div>
+          <div class="text-2xl font-black text-blue-400 mt-1">
+            {{ analyticsData()?.totalSearches || '14,890' }}
+          </div>
+          <div class="text-[10px] text-slate-500 mt-0.5">Across all 39 Codified Rights</div>
+        </div>
+
+        <div class="glass-card p-4 rounded-xl border border-rose-500/20 bg-slate-900/70 shadow-lg">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Top Confrontation Domain</div>
+          <div class="text-base font-black text-rose-400 mt-1 truncate">
+            {{ analyticsData()?.topCategory || 'Police & Criminal Justice' }}
+          </div>
+          <div class="text-[10px] text-slate-500 mt-0.5">38% of crisis mode activations</div>
+        </div>
+
+        <div class="glass-card p-4 rounded-xl border border-emerald-500/20 bg-slate-900/70 shadow-lg">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Notices Generated &amp; Served
+          </div>
+          <div class="text-2xl font-black text-emerald-400 mt-1">
+            {{ analyticsData()?.totalNoticeDownloads || '3,420' }}
+          </div>
+          <div class="text-[10px] text-slate-500 mt-0.5">Court-tested legal notices dispatched</div>
+        </div>
+
+        <div class="glass-card p-4 rounded-xl border border-amber-500/20 bg-slate-900/70 shadow-lg">
+          <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Uncodified Demand Gaps</div>
+          <div class="text-2xl font-black text-amber-400 mt-1">
+            {{ analyticsData()?.uncodifiedGaps?.length || 4 }}
+          </div>
+          <div class="text-[10px] text-slate-500 mt-0.5">Emerging areas awaiting codification</div>
+        </div>
+      </div>
+
+      <!-- Main Analytics 2-Column Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+        <!-- Column 1: Top Queried Citizen Topics -->
+        <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 shadow-xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <div>
+              <h3 class="text-sm font-bold text-slate-100 uppercase tracking-wider m-0">Top Queried Citizen Topics</h3>
+              <p class="text-xs text-slate-400 mt-0.5 m-0">Most searched citizen safeguards in past 30 days</p>
+            </div>
+            <span class="text-[10px] text-indigo-400 font-mono font-bold">Live Ranking</span>
+          </div>
+
+          <div class="space-y-3">
+            <div *ngFor="let topic of (analyticsData()?.topQueries || [
+              { query: 'Police arrest without memo BNSS 35', count: 4120, pct: 95 },
+              { query: 'Traffic towing with passenger inside car', count: 2980, pct: 82 },
+              { query: 'Cyber debit freeze 1930 innocent P2P recipient', count: 2540, pct: 74 },
+              { query: 'Landlord utility cut off electricity water', count: 2110, pct: 68 },
+              { query: 'Hospital refusing emergency without advance deposit', count: 1840, pct: 59 },
+              { query: 'Cheque bounce 138 demand notice drafting', count: 1300, pct: 45 }
+            ]); let i = index" class="p-3 rounded-xl bg-slate-800/60 border border-white/5 space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 font-bold text-[10px] flex items-center justify-center">{{
+                    i + 1 }}</span>
+                  <span class="font-bold text-slate-200">{{ topic.query }}</span>
+                </div>
+                <span class="font-mono text-slate-400 text-[11px]">{{ topic.count }} queries</span>
+              </div>
+              <div class="w-full bg-slate-700/60 rounded-full h-1.5 overflow-hidden">
+                <div class="bg-indigo-500 h-1.5 rounded-full" [style.width.%]="topic.pct"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Column 2: Uncodified Legal Query Gaps -->
+        <div class="glass-card p-5 rounded-2xl border border-white/10 bg-slate-900/60 shadow-xl space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-white/10">
+            <div>
+              <h3 class="text-sm font-bold text-amber-300 uppercase tracking-wider m-0">Uncodified Statutory Gaps</h3>
+              <p class="text-xs text-slate-400 mt-0.5 m-0">Citizen searches with 0 exact statutory match (Emerging
+                Demand)</p>
+            </div>
+            <span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-500/20 text-amber-300">Action
+              Required</span>
+          </div>
+
+          <div class="space-y-3">
+            <div *ngFor="let gap of (analyticsData()?.uncodifiedGaps || [
+              { query: 'RWA society banning bachelor tenants from gym and lift', category: 'Tenancy & Housing', searches: 340, text: 'Model Tenancy Act 2021 & Supreme Court rulings prohibit discriminatory RWA bye-laws against single/bachelor tenants for common amenities.' },
+              { query: 'EV scooter battery fire manufacturer refund refusal', category: 'Consumer Protection', searches: 285, text: 'Consumer Protection E-Commerce Rules & Central Motor Vehicles Rules mandate full product replacement or refund for manufacturing defect fires.' },
+              { query: 'Builder delay in handing over occupancy certificate and RERA NOC', category: 'Real Estate / RERA', searches: 240, text: 'RERA Section 18 mandates monthly interest payout by promoter for delayed occupancy certificate.' },
+              { query: 'Airport security forcing laptop unlocking without search warrant', category: 'Constitutional Liberties', searches: 190, text: 'BCAS guidelines and Article 21 right to digital privacy prohibit arbitrary device search without registered suspicion memo.' }
+            ])" class="p-3.5 rounded-xl bg-slate-800/60 border border-amber-500/20 space-y-2">
+              <div class="flex items-start justify-between gap-2">
+                <div class="space-y-0.5">
+                  <div class="text-xs font-bold text-slate-100">"{{ gap.query }}"</div>
+                  <div class="text-[10px] text-amber-400 font-semibold">{{ gap.category }} &bull; {{ gap.searches }}
+                    unmet citizen searches</div>
+                </div>
+                <button (click)="aiInputText.set(gap.text); openAiModal()"
+                  class="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-indigo-600 hover:bg-indigo-700 text-white border-0 cursor-pointer flex items-center gap-1 transition shrink-0">
+                  <admin-icon name="sparkles" [size]="11"></admin-icon>
+                  <span>AI Codify</span>
+                </button>
+              </div>
+              <p class="text-[11px] text-slate-400 leading-relaxed m-0 italic bg-black/30 p-2 rounded-lg">
+                {{ gap.text }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </ng-container>
+
+  <!-- --- 4. Slide-Over Drawer for Codifying & Editing Rights --- -->
+  <div *ngIf="isDrawerOpen()" class="fixed inset-0 z-50 overflow-hidden flex justify-end">
+    <!-- Backdrop -->
+    <div (click)="closeDrawer()" class="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Drawer Panel -->
+    <div
+      class="relative w-full max-w-2xl bg-slate-900 border-l border-white/10 shadow-2xl p-6 sm:p-8 flex flex-col h-full overflow-y-auto z-10 space-y-6">
+
+      <!-- Drawer Header -->
+      <div class="flex items-start justify-between pb-4 border-b border-white/10">
+        <div>
+          <span
+            class="px-2.5 py-0.5 rounded text-[10px] font-black uppercase bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+            {{ isEditing() ? 'Edit Statutory Protection' : 'Codify Brand New Right' }}
+          </span>
+          <h2 class="text-xl font-bold text-slate-100 mt-1.5 m-0 leading-tight">
+            {{ isEditing() ? form().title : 'New Citizen Right Entry' }}
+          </h2>
+          <span class="text-xs text-slate-400">Authoritative legal safeguard codified into the citizen defense
+            shield.</span>
+        </div>
+
+        <button (click)="closeDrawer()"
+          class="p-2 rounded-xl bg-slate-800 text-slate-400 hover:text-white border-0 cursor-pointer transition">
+          <admin-icon name="close" [size]="16"></admin-icon>
+        </button>
+      </div>
+
+      <!-- Drawer Form Fields -->
+      <div class="space-y-4 text-xs text-slate-300 flex-1">
+
+        <!-- Title & Category -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Right Title (English) *</label>
+            <input type="text" [(ngModel)]="form().title" placeholder="e.g., Right Against Unlawful Police Arrest"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-amber-300 block">Right Title (हिन्दी / Devanagari)</label>
+            <input type="text" [(ngModel)]="form().title_hi" placeholder="उदा. पुलिस द्वारा अवैध गिरफ्तारी से सुरक्षा"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-amber-500/20 text-slate-100 outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300 block">Legal Domain Category *</label>
+          <select [(ngModel)]="form().category"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500">
+            <option *ngFor="let c of categories.slice(1)" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <!-- Summary (English & Hindi) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Plain English Citizen Summary *</label>
+            <textarea rows="3" [(ngModel)]="form().summary"
+              placeholder="Clear, non-technical explanation for citizens in distress..."
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-amber-300 block">Hindi Citizen Summary (हिन्दी सारांश)</label>
+            <textarea rows="3" [(ngModel)]="form().summary_hi" placeholder="नागरिकों के लिए सरल हिन्दी में व्याख्या..."
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-amber-500/20 text-slate-100 outline-none focus:border-amber-500 resize-y"></textarea>
+          </div>
+        </div>
+
+        <!-- Statutory Basis: Act Name & Short Act -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Governing Act Name *</label>
+            <input type="text" [(ngModel)]="form().actName" placeholder="e.g., Bharatiya Nagarik Suraksha Sanhita, 2023"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Short Act Display</label>
+            <input type="text" [(ngModel)]="form().shortAct" placeholder="e.g., BNSS 2023"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <!-- Sections & Precedent Cases -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Bare Act Sections (one per line)</label>
+            <textarea rows="3" [(ngModel)]="form().sectionsText"
+              placeholder="Section 35(3)&#10;Section 47&#10;Section 53"
+              class="w-full font-mono text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Landmark Supreme Court Precedents (one per line)</label>
+            <textarea rows="3" [(ngModel)]="form().landmarkCasesText"
+              placeholder="D.K. Basu vs. State of West Bengal (1997)&#10;Arnesh Kumar vs. State of Bihar (2014)"
+              class="w-full font-mono text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+          </div>
+        </div>
+
+        <!-- Key Protections & Actionable Steps -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Key Protections (one per line)</label>
+            <textarea rows="3" [(ngModel)]="form().keyProtectionsText"
+              placeholder="No arrest for offences under 3 years without memo&#10;Mandatory notice of appearance"
+              class="w-full text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Actionable Steps for Citizen (one per line)</label>
+            <textarea rows="3" [(ngModel)]="form().actionableStepsText"
+              placeholder="Demand written grounds of arrest&#10;Call designated family member or lawyer"
+              class="w-full text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+          </div>
+        </div>
+
+        <!-- Verbal Confrontation Script (English & Hindi) -->
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300 block">Authoritative Verbal Confrontation Script (English - "What To
+            Say")</label>
+          <textarea rows="2" [(ngModel)]="form().whatToSay"
+            placeholder="Officer, under Section 35(3) of BNSS 2023, you cannot arrest me without a formal notice..."
+            class="w-full text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-bold text-amber-300 block">Verbal Confrontation Script (Hindi - क्या कहें)</label>
+          <textarea rows="2" [(ngModel)]="form().whatToSay_hi"
+            placeholder="अधिकारी महोदय, बीएनएसएस की धारा 35 के तहत आप बिना नोटिस दिए गिरफ्तार नहीं कर सकते..."
+            class="w-full text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-amber-500/20 text-slate-100 outline-none focus:border-amber-500 resize-y"></textarea>
+        </div>
+
+        <!-- Do's & Don'ts -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-emerald-400 block">Do's (one per line)</label>
+            <textarea rows="3" [(ngModel)]="form().dosText"
+              placeholder="Stay calm and polite&#10;Document officer name and badge number"
+              class="w-full text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-emerald-500/30 text-slate-100 outline-none focus:border-emerald-500 resize-y"></textarea>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-rose-400 block">Don'ts (one per line)</label>
+            <textarea rows="3" [(ngModel)]="form().dontsText"
+              placeholder="Do NOT sign blank arrest memos&#10;Do NOT resist physically"
+              class="w-full text-[11px] px-3 py-2 rounded-xl bg-slate-800 border border-rose-500/30 text-slate-100 outline-none focus:border-rose-500 resize-y"></textarea>
+          </div>
+        </div>
+
+        <!-- Legal Remedy & Penalties -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Legal Remedy / Forum</label>
+            <input type="text" [(ngModel)]="form().legalRemedy"
+              placeholder="e.g., Magistrate Court bail under Section 480"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Penalties For Violation</label>
+            <input type="text" [(ngModel)]="form().penaltiesForViolation"
+              placeholder="e.g., Section 199 BNS (unlawful detention)"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <!-- Emergency Helpline & Scenario Tag -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Helpline Name</label>
+            <input type="text" [(ngModel)]="form().helplineName" placeholder="e.g., National Police Helpline"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Helpline Dial Number</label>
+            <input type="text" [(ngModel)]="form().helplineNumber" placeholder="e.g., 112"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Scenario Tag (Quick Picker)</label>
+            <input type="text" [(ngModel)]="form().scenarioTag" list="adminScenarioList" placeholder="e.g., police-stop"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+            <datalist id="adminScenarioList">
+              <option *ngFor="let s of scenarios()" [value]="s.tag">{{ s.label }} ({{ s.tag }})</option>
+            </datalist>
+          </div>
+        </div>
+
+        <!-- Toggles: Priority & Publish -->
+        <div class="flex items-center gap-6 pt-3 border-t border-white/10">
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="form().isPopular"
+              class="w-4 h-4 rounded text-indigo-600 cursor-pointer" />
+            <span class="font-semibold text-slate-200">Highlight as High-Importance Priority Right</span>
+          </label>
+
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input type="checkbox" [(ngModel)]="form().isPublished"
+              class="w-4 h-4 rounded text-emerald-600 cursor-pointer" />
+            <span class="font-semibold text-slate-200">Publish immediately to Public Citizen Shield</span>
+          </label>
+        </div>
+
+      </div>
+
+      <!-- Drawer Footer Actions -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+        <button (click)="closeDrawer()"
+          class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border-0 cursor-pointer transition">
+          Cancel
+        </button>
+        <button (click)="saveRight()" [disabled]="isSubmitting()"
+          class="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-600/30 border-0 cursor-pointer transition disabled:opacity-50 flex items-center gap-2">
+          <admin-icon *ngIf="isSubmitting()" name="refresh" [size]="14" cssClass="animate-spin"></admin-icon>
+          <span>{{ isEditing() ? 'Update Codified Right' : 'Save & Publish Right' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- --- 5. Modal for Emergency Scenario Authoring --- -->
+  <div *ngIf="isScenarioModalOpen()" class="fixed inset-0 z-50 overflow-hidden flex items-center justify-center p-4">
+    <div (click)="closeScenarioModal()" class="fixed inset-0 bg-black/60 backdrop-blur-sm"></div>
+
+    <div class="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-2xl shadow-2xl p-6 z-10 space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-white/10">
+        <h3 class="text-base font-bold text-slate-100 m-0">
+          {{ isEditingScenario() ? 'Edit Situation Scenario' : 'New Situation Scenario' }}
+        </h3>
+        <button (click)="closeScenarioModal()"
+          class="text-slate-400 hover:text-white bg-transparent border-0 cursor-pointer">
+          <admin-icon name="close" [size]="16"></admin-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 text-xs text-slate-300">
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300 block">Scenario Tag (unique identifier) *</label>
+          <input type="text" [(ngModel)]="scenarioForm().tag" [disabled]="isEditingScenario()"
+            placeholder="e.g., cyber-scam"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 font-mono disabled:opacity-50" />
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Display Label (English) *</label>
+            <input type="text" [(ngModel)]="scenarioForm().label" placeholder="e.g., Police & Custody"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-amber-300 block">Display Label (हिन्दी)</label>
+            <input type="text" [(ngModel)]="scenarioForm().label_hi" placeholder="उदा. पुलिस और हिरासत"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-amber-500/20 text-slate-100 outline-none focus:border-amber-500" />
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Subtext / Act Basis</label>
+            <input type="text" [(ngModel)]="scenarioForm().subtext" placeholder="e.g., Arrest Memo & BNSS §35"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Pill Badge</label>
+            <input type="text" [(ngModel)]="scenarioForm().badge" placeholder="e.g., BNSS §35"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300 block">Filter Keywords (comma-separated for matching rights)</label>
+          <input type="text" [ngModel]="scenarioKeywordsText()" (ngModelChange)="scenarioKeywordsText.set($event)"
+            placeholder="e.g., police, arrest, custody, detention, bnss"
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 font-mono text-[11px]" />
+          <span class="text-[10px] text-slate-500">Rights containing these keywords in title, category, or act name will
+            dynamically appear under this crisis tab.</span>
+        </div>
+
+        <div class="space-y-1">
+          <label class="font-bold text-slate-300 block">Description (Guidance Tooltip) *</label>
+          <textarea rows="2" [(ngModel)]="scenarioForm().description"
+            placeholder="Short description of emergency rules..."
+            class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500 resize-y"></textarea>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Sort Order</label>
+            <input type="number" [(ngModel)]="scenarioForm().sortOrder"
+              class="w-full px-3 py-2 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-indigo-500" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-slate-300 block">Active Status</label>
+            <label class="flex items-center gap-2 pt-2 cursor-pointer">
+              <input type="checkbox" [(ngModel)]="scenarioForm().isActive" class="w-4 h-4 rounded text-indigo-600" />
+              <span>Visible on Portal</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end gap-2 pt-3 border-t border-white/10">
+        <button (click)="closeScenarioModal()"
+          class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold border-0 cursor-pointer">
+          Cancel
+        </button>
+        <button (click)="saveScenario()"
+          class="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold border-0 cursor-pointer">
+          Save Scenario
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== 6. AI GAZETTE & STATUTORY CODIFIER MODAL ==================== -->
+  <div *ngIf="isAiModalOpen()" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+    <!-- Backdrop -->
+    <div (click)="closeAiModal()" class="fixed inset-0 bg-black/75 backdrop-blur-sm transition-opacity"></div>
+
+    <!-- Modal Box -->
+    <div
+      class="relative w-full max-w-2xl bg-slate-900 border border-purple-500/30 rounded-2xl shadow-2xl p-6 z-10 space-y-4 text-slate-200 animate-in">
+      <div class="flex items-start justify-between pb-3 border-b border-white/10">
+        <div class="space-y-1">
+          <div
+            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-purple-500/20 text-purple-300 text-[10px] font-bold uppercase tracking-wider">
+            <admin-icon name="sparkles" [size]="12"></admin-icon>
+            <span>LegalConnect AI Gazette Engine</span>
+          </div>
+          <h2 class="text-lg font-bold text-slate-100 m-0">AI Statutory Right Codifier</h2>
+          <p class="text-xs text-slate-400 m-0">
+            Paste unformatted Indian Gazette notifications, High Court/Supreme Court rulings, Ministry circulars, or
+            statutory provisions. AI will structure and draft a codified citizen protection card.
+          </p>
+        </div>
+        <button (click)="closeAiModal()"
+          class="p-1.5 rounded-lg bg-slate-800 text-slate-400 hover:text-white border-0 cursor-pointer">
+          <admin-icon name="close" [size]="16"></admin-icon>
+        </button>
+      </div>
+
+      <!-- Quick Template Presets -->
+      <div class="space-y-1">
+        <span class="text-[11px] font-bold text-slate-400">Sample Gazette Excerpts:</span>
+        <div class="flex flex-wrap gap-2 text-xs">
+          <button
+            (click)="aiInputText.set('Ministry of Road Transport and Highways (MoRTH) Circular 2026: Clarification on Section 203 Motor Vehicles Act. In cases where the driver or passenger remains seated inside the motor vehicle, traffic enforcement officers and municipal towing contractors are strictly barred from attaching tow cables or hoisting the vehicle using hydraulic cranes until occupants have safely disembarked. Contravening towing contractors face forfeiture of municipal license and disciplinary action.')"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-white/5 cursor-pointer">
+            MVA Towing Circular
+          </button>
+          <button
+            (click)="aiInputText.set('Clinical Establishments (Registration and Regulation) Act, 2010 Section 12 read with Supreme Court in Pt. Parmanand Katara: Every hospital, clinical establishment and registered medical practitioner is under an absolute legal obligation to render immediate emergency medical assistance and stabilization to any victim of accident or medical trauma without demanding advance monetary deposit or waiting for police medico-legal formalities.')"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-white/5 cursor-pointer">
+            Emergency Hospital Stabilization
+          </button>
+          <button
+            (click)="aiInputText.set('Model Tenancy Act 2021 Section 20: No landlord or property manager shall, either by themselves or through any agent, cut off or withhold any essential supply or service enjoyed by the tenant in respect of the premises let out to him, including electricity, drinking water, and common lifts, even during pending rent dispute. Rent Authority may award compensation up to twice the monthly rent.')"
+            class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] border border-white/5 cursor-pointer">
+            Landlord Utility Disconnection
+          </button>
+        </div>
+      </div>
+
+      <!-- Textarea Input -->
+      <div class="space-y-1">
+        <label class="text-xs font-bold text-slate-300 block">Raw Legal Text / Gazette Excerpt *</label>
+        <textarea rows="6" [(ngModel)]="aiInputText"
+          placeholder="Paste gazette circular, statutory text, court judgment, or ordinance excerpt here..."
+          class="w-full text-xs font-mono px-3.5 py-2.5 rounded-xl bg-slate-800 border border-white/10 text-slate-100 outline-none focus:border-purple-500 resize-y leading-relaxed"></textarea>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-between pt-3 border-t border-white/10">
+        <span class="text-[11px] text-slate-500">
+          Powered by Gemini / OpenRouter AI Legal Codifier
+        </span>
+        <div class="flex items-center gap-2">
+          <button (click)="closeAiModal()"
+            class="px-3.5 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs font-bold border-0 cursor-pointer">
+            Cancel
+          </button>
+          <button (click)="runAiCodify()" [disabled]="isAiCodifying()"
+            class="btn btn-primary flex items-center gap-2 px-4 py-2 text-xs font-bold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 border-0 cursor-pointer text-white">
+            <admin-icon name="sparkles" [size]="14" [cssClass]="isAiCodifying() ? 'animate-spin' : ''"></admin-icon>
+            <span>{{ isAiCodifying() ? 'Analyzing & Codifying...' : 'Codify with AI' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

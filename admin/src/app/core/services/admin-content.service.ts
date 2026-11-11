@@ -281,4 +281,67 @@ export class AdminContentService {
       tap(() => this.clearTemplatesCache())
     );
   }
+
+  // -- Statutory Citizen Rights & Safeguards Catalog --
+  getRights(params: Record<string, any> = {}): Observable<any> {
+    let httpParams = new HttpParams();
+    Object.keys(params).forEach(key => {
+      if (params[key] !== null && params[key] !== undefined && params[key] !== '') {
+        httpParams = httpParams.set(key, params[key]);
+      }
+    });
+    return this.http.get<any>(`${this.NODE_API}/admin/rights`, { params: httpParams });
+  }
+
+  getRight(id: string): Observable<any> {
+    return this.http.get<any>(`${this.NODE_API}/admin/rights/${encodeURIComponent(id)}`);
+  }
+
+  createRight(data: any): Observable<any> {
+    return this.http.post<any>(`${this.NODE_API}/admin/rights`, data);
+  }
+
+  updateRight(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.NODE_API}/admin/rights/${encodeURIComponent(id)}`, data);
+  }
+
+  deleteRight(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.NODE_API}/admin/rights/${encodeURIComponent(id)}`);
+  }
+
+  togglePopularRight(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.NODE_API}/admin/rights/${encodeURIComponent(id)}/toggle-popular`, {});
+  }
+
+  togglePublishRight(id: string): Observable<any> {
+    return this.http.patch<any>(`${this.NODE_API}/admin/rights/${encodeURIComponent(id)}/toggle-publish`, {});
+  }
+
+  syncRightsCatalog(): Observable<any> {
+    return this.http.post<any>(`${this.NODE_API}/admin/rights/sync-catalog`, {});
+  }
+
+  getRightsScenarios(): Observable<any> {
+    return this.http.get<any>(`${this.NODE_API}/admin/rights/scenarios`);
+  }
+
+  createScenario(data: any): Observable<any> {
+    return this.http.post<any>(`${this.NODE_API}/admin/rights/scenarios`, data);
+  }
+
+  updateScenario(id: string, data: any): Observable<any> {
+    return this.http.put<any>(`${this.NODE_API}/admin/rights/scenarios/${encodeURIComponent(id)}`, data);
+  }
+
+  deleteScenario(id: string): Observable<any> {
+    return this.http.delete<any>(`${this.NODE_API}/admin/rights/scenarios/${encodeURIComponent(id)}`);
+  }
+
+  aiCodifyRight(legalText: string): Observable<any> {
+    return this.http.post<any>(`${this.NODE_API}/admin/rights/ai-codify`, { legalText });
+  }
+
+  getRightsAnalytics(): Observable<any> {
+    return this.http.get<any>(`${this.NODE_API}/admin/rights/analytics`);
+  }
 }

@@ -85,6 +85,11 @@ export const routes: Routes = [
         title: 'Helplines & Help Content | LegalConnect Admin'
       },
       {
+        path: 'rights',
+        loadComponent: () => import('./pages/rights/rights.component').then(m => m.RightsComponent),
+        title: 'Citizen Rights & Safeguards | LegalConnect Admin'
+      },
+      {
         path: 'consent',
         loadComponent: () => import('./pages/consent/consent.component').then(m => m.ConsentComponent),
         title: 'Consent & Compliance Dashboard | LegalConnect Admin'

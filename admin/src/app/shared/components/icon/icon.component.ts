@@ -31,7 +31,7 @@ export type IconName =
   | 'shield-check' | 'image' | 'maximize' | 'monitor' | 'history' | 'save'
   | 'volume-2' | 'dollar-sign' | 'inbox' | 'volume-x' | 'code' | 'repeat'
   | 'globe' | 'clipboard' | 'link' | 'type' | 'languages' | 'align-right' | 'lightbulb'
-  | 'chevrons-down' | 'chevrons-up' | 'keyboard' | 'x';
+  | 'chevrons-down' | 'chevrons-up' | 'keyboard' | 'x' | 'sparkles' | 'chart-bar';
 
 @Component({
   selector: 'admin-icon',

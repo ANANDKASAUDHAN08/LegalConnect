@@ -98,6 +98,14 @@ export class CommandPaletteComponent {
       description: 'Browse BNS, BNSS, BSA legal statutory content catalog',
       icon: 'book',
       action: () => this.router.navigate(['/legal-content'])
+    },
+    {
+      id: 'cmd-rights',
+      category: 'Directory',
+      title: 'Citizen Rights & Safeguards Directory',
+      description: 'Codify, verify & sync statutory protections and emergency playbooks',
+      icon: 'shield',
+      action: () => this.router.navigate(['/rights'])
     }
   ];
 
