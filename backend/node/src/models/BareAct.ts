@@ -1,4 +1,5 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import { IProvenance, ProvenanceSchema } from './Provenance';
 
 // --- Plain Types / Interfaces for Type Safety across Seeding and API layers ---
 export interface ISectionOutline {
@@ -34,6 +35,9 @@ export interface ISection {
   introduction_text_hi?: string;
   content_blocks?: { type: string; text: string }[];
   content_blocks_hi?: { type: string; text: string }[];
+  isRepealed?: boolean;
+  effectiveDate?: string;
+  provenance?: IProvenance;
 }
 
 export interface IChapter {
@@ -52,6 +56,12 @@ export interface IBareAct extends Document {
   act_code?: string;
   category?: string;
   legacy_short_names?: string[];
+  enactmentDate?: string;
+  commencementDate?: string;
+  isRepealed?: boolean;
+  repealedBy?: string;
+  jurisdiction?: string;
+  provenance?: IProvenance;
 }
 
 export interface ISectionDocument extends ISection, Document {
@@ -84,7 +94,13 @@ const BareActSchema = new Schema<IBareAct>({
   hierarchical_id: { type: String, sparse: true, index: true },
   act_code: { type: String, sparse: true, index: true },
   category: { type: String, sparse: true, index: true },
-  legacy_short_names: [{ type: String }]
+  legacy_short_names: [{ type: String }],
+  enactmentDate: { type: String },
+  commencementDate: { type: String },
+  isRepealed: { type: Boolean, default: false, index: true },
+  repealedBy: { type: String },
+  jurisdiction: { type: String, default: 'Union of India', index: true },
+  provenance: { type: ProvenanceSchema }
 }, {
   timestamps: true
 });

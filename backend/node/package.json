@@ -5,18 +5,23 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsc && node -e \"fs.cpSync('src/data', 'dist/data', { recursive: true })\"",
+    "build": "tsc",
     "seed": "ts-node src/scripts/seed.ts",
     "seed:full": "ts-node src/scripts/seed_full_database.ts",
     "seed:all": "ts-node src/scripts/seed_all.ts",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "migrate": "ts-node src/scripts/run_migration.ts",
+    "harvest:laws": "ts-node src/scripts/harvest_nyaaya_corpus.ts",
+    "crawl:indiacode": "ts-node src/scripts/crawl_indiacode.ts",
+    "harvest:judgments": "ts-node src/scripts/harvest_escr_precedents.ts",
+    "batch:rights": "ts-node src/scripts/batch_ai_rights_worker.ts",
+    "catalog:build": "ts-node src/scripts/build_master_catalog.ts",
+    "test": "ts-node src/scripts/verify_platform.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
-    "@google/genai": "^2.0.1",
     "@google/generative-ai": "^0.24.1",
     "@types/compression": "^1.8.1",
     "@types/cors": "^2.8.19",

@@ -4,6 +4,15 @@ import '../models/Lawyer';
 import '../models/LegalResource';
 import '../models/Notification';
 import '../models/NotificationPreference';
+import '../models/StatutoryRight';
+import '../models/EmergencyScenario';
+import '../models/JudicialDecision';
+import '../models/DiagnosticCrisis';
+import '../models/DiagnosticRule';
+import '../models/PracticeArea';
+import '../models/Faq';
+import '../models/LegalTemplate';
+import '../models/IngestionLog';
 
 export const connectDB = async () => {
   const uri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/legalconnect_db';
@@ -26,7 +35,16 @@ export const connectDB = async () => {
     await conn.connection.model('LegalResource').createIndexes().catch(() => { });
     await conn.connection.model('Notification').createIndexes().catch(() => { });
     await conn.connection.model('NotificationPreference').createIndexes().catch(() => { });
-    console.log('✅ MongoDB Indexes verified and synchronized.');
+    await conn.connection.model('StatutoryRight').createIndexes().catch(() => { });
+    await conn.connection.model('EmergencyScenario').createIndexes().catch(() => { });
+    await conn.connection.model('JudicialDecision').createIndexes().catch(() => { });
+    await conn.connection.model('DiagnosticCrisis').createIndexes().catch(() => { });
+    await conn.connection.model('DiagnosticRule').createIndexes().catch(() => { });
+    await conn.connection.model('PracticeArea').createIndexes().catch(() => { });
+    await conn.connection.model('Faq').createIndexes().catch(() => { });
+    await conn.connection.model('LegalTemplate').createIndexes().catch(() => { });
+    await conn.connection.model('IngestionLog').createIndexes().catch(() => { });
+    console.log('✅ MongoDB Indexes verified and synchronized across all Legal Knowledge models.');
   } catch (error: any) {
     console.error(`❌ MongoDB Connection Error: ${error.message}`);
     throw error;

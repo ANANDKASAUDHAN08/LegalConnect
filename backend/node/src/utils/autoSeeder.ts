@@ -10,6 +10,10 @@ import LegalResource from '../models/LegalResource';
 import Lawyer from '../models/Lawyer';
 import { splitTitle, getParsedContent } from './textParser';
 
+import StatutoryRightModel from '../models/StatutoryRight';
+import EmergencyScenarioModel from '../models/EmergencyScenario';
+import { statutoryRightsCatalog } from '../data/statutoryRightsCatalog';
+import { DEFAULT_SCENARIOS } from '../data/defaultScenarios';
 const RAW_DIR = path.resolve(__dirname, '../data/raw');
 
 function cleanText(text: string): string {
@@ -127,19 +131,29 @@ export const seedFullDatabaseIfEmpty = async () => {
       ]).catch(() => { });
     }
 
-function findSeedFile(fileName: string): string | null {
-  const possiblePaths = [
-    path.resolve(__dirname, '../data', fileName),
-    path.resolve(__dirname, '../../src/data', fileName),
-    path.resolve(process.cwd(), 'src/data', fileName),
-    path.resolve(process.cwd(), 'dist/data', fileName),
-    path.resolve(process.cwd(), 'data', fileName),
-  ];
-  for (const p of possiblePaths) {
-    if (fs.existsSync(p)) return p;
-  }
-  return null;
-}
+    // --- 2b. Statutory Citizen Rights Seeding ---
+    const rightsCount = await StatutoryRightModel.countDocuments({});
+    if (rightsCount === 0) {
+      console.log('🌱 Seeding StatutoryRight collection in MongoDB with authoritative catalog (25 rights)...');
+      await StatutoryRightModel.insertMany(statutoryRightsCatalog).catch(err => {
+        console.error('Statutory rights seed error:', err.message);
+      });
+      console.log(`✅ Seeded ${statutoryRightsCatalog.length} statutory rights into MongoDB.`);
+    }
+
+    function findSeedFile(fileName: string): string | null {
+      const possiblePaths = [
+        path.resolve(__dirname, '../data', fileName),
+        path.resolve(__dirname, '../../src/data', fileName),
+        path.resolve(process.cwd(), 'src/data', fileName),
+        path.resolve(process.cwd(), 'dist/data', fileName),
+        path.resolve(process.cwd(), 'data', fileName),
+      ];
+      for (const p of possiblePaths) {
+        if (fs.existsSync(p)) return p;
+      }
+      return null;
+    }
 
     // --- 3. Legal Resources Seeding (from src/data/resources.seed.json) ---
     const resCount = await LegalResource.countDocuments({});
@@ -536,6 +550,49 @@ function findSeedFile(fileName: string): string | null {
         }
       }));
       await SectionModel.bulkWrite(ops).catch(() => { });
+    }
+
+    // Synchronize statutory citizen rights catalog in MongoDB
+    try {
+      const rightsOps = statutoryRightsCatalog.map(right => ({
+        updateOne: {
+          filter: { id: right.id },
+          update: { $set: right },
+          upsert: true
+        }
+      }));
+      if (rightsOps.length > 0) {
+        await StatutoryRightModel.bulkWrite(rightsOps as any);
+        console.log(`✅ Synchronized ${rightsOps.length} statutory citizen rights in database.`);
+      }
+    } catch (rErr: any) {
+      console.warn('⚠️ Could not sync statutory rights to DB:', rErr?.message);
+    }
+
+    // Synchronize default emergency scenarios in MongoDB
+    try {
+      const scenarioOps = DEFAULT_SCENARIOS.map(sc => ({
+        updateOne: {
+          filter: { tag: sc.tag },
+          update: {
+            $set: {
+              ...sc,
+              filterKeywords: sc.filterKeywords || [],
+              isActive: true
+            }
+          },
+          upsert: true
+        }
+      }));
+      await EmergencyScenarioModel.bulkWrite(scenarioOps as any);
+      // Clean up legacy/obsolete tags
+      await EmergencyScenarioModel.updateOne(
+        { tag: 'ecommerce-refund' },
+        { $set: { isActive: false } }
+      ).catch(() => {});
+      console.log(`✅ Synchronized ${DEFAULT_SCENARIOS.length} emergency scenarios in database.`);
+    } catch (sErr: any) {
+      console.warn('⚠️ Could not sync emergency scenarios to DB:', sErr?.message);
     }
 
     const duration = ((Date.now() - startTime) / 1000).toFixed(2);

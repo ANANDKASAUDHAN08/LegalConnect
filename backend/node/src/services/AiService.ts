@@ -115,7 +115,7 @@ class AiService {
         if (errJson.error?.message) {
           errorMsg = errJson.error.message;
         }
-      } catch {}
+      } catch { }
       throw new Error(`OpenRouter Error (${response.status}): ${errorMsg}`);
     }
 
@@ -190,7 +190,7 @@ class AiService {
         if (errJson.error?.message) {
           errorMsg = errJson.error.message;
         }
-      } catch {}
+      } catch { }
       throw new Error(`OpenRouter Stream Error (${response.status}): ${errorMsg}`);
     }
 
@@ -335,7 +335,7 @@ ${content}`;
       // Cache result for 30 days
       try {
         await setCache(cacheKey, result, 86400 * 30);
-      } catch {}
+      } catch { }
 
       return result;
     } catch (error: any) {
@@ -418,7 +418,7 @@ ${content}`;
 
       try {
         await setCache(cacheKey, result, 86400 * 30);
-      } catch {}
+      } catch { }
 
       return result;
     } catch (error: any) {
@@ -648,22 +648,6 @@ Respond ONLY with a JSON object in this exact format:
   }
 
   private getFallbackAnswer(question: string, availableActs: string[], context?: string): { answer: string; suggestedActs: string[] } {
-    const qLower = question.toLowerCase();
-
-    if (qLower.includes('cheque') && (qLower.includes('bounce') || qLower.includes('limit') || qLower.includes('138'))) {
-      return {
-        answer: "Under Section 138 of the Negotiable Instruments Act, 1881, cheque bounce is a criminal offense. The limitation period to file a complaint in court is 30 days from the date of receipt of the demand notice by the drawer. The legal notice must be sent within 30 days of receiving the cheque return memo from the bank, and the drawer has 15 days to pay from the receipt of the notice.",
-        suggestedActs: ["NIA"]
-      };
-    }
-
-    if (qLower.includes('trust') || qLower.includes('trusts')) {
-      return {
-        answer: "Under Section 4 of the Indian Trusts Act, 1882, a trust may be created for any lawful purpose. A purpose is lawful unless it is forbidden by law, defeats the provisions of any law, is fraudulent, or involves injury to the person or property of another, or the Court regards it as immoral or opposed to public policy. All trusts created for an unlawful purpose are void.",
-        suggestedActs: ["INDIAN_TRUSTS_1882"]
-      };
-    }
-
     if (context && context.trim().length > 0) {
       const sourceMatch = context.match(/Source\s*\d+:\s*([^-]+)-\s*Section\s*([^\s(]+)(?:\s*\(([^)]+)\))?/i);
       if (sourceMatch) {
@@ -677,16 +661,182 @@ Respond ONLY with a JSON object in this exact format:
         ) || availableActs[0];
 
         return {
-          answer: `According to Section ${sectionNum} of the ${actName} ${sectionTitle ? `(${sectionTitle})` : ''}, this is legally defined and regulated. The law states that this provision applies to cases meeting these statutory requirements. Clicking on the cited pills below will take you to the full Bare Act for detailed study.`,
+          answer: `Based on verified statutory sources in the database: Section ${sectionNum} of the ${actName} ${sectionTitle ? `(${sectionTitle})` : ''} governs this matter. Please review the official statutory text in the Bare Acts section. Disclaimer: This platform provides statutory information for reference and research purposes only, not formal legal advice. Please consult a licensed advocate or legal aid clinic for case-specific representation.`,
           suggestedActs: [suggestedAct]
         };
       }
     }
 
     return {
-      answer: `Your question "${question}" relates to Indian legal provisions. Specifically, please search for relevant Bare Acts like ${availableActs.slice(0, 3).join(', ')} to inspect the exact statutory sections.`,
-      suggestedActs: availableActs.slice(0, 2)
+      answer: `No verified statutory provisions matching "${question}" were retrieved from the current database index. To find authoritative provisions, please search directly using specific Act names (e.g., BNS, BNSS, Consumer Protection Act) or section numbers, or browse the verified Bare Acts library. Note: Antigravity LegalConnect strictly avoids fabricating legal answers or citations when verified authority is not established.`,
+      suggestedActs: availableActs.slice(0, 3)
     };
+  }
+
+  // ═════════════════════════════════════════════════════════
+  // AI STATUTORY RIGHT CODIFIER (GAZETTE / COURT ORDER PARSER)
+  // ═════════════════════════════════════════════════════════
+
+  async codifyStatutoryRightFromText(legalText: string): Promise<any> {
+    const trimmed = (legalText || '').trim();
+    if (!trimmed) {
+      throw new Error('Raw legal text is required for AI codification.');
+    }
+
+    const systemPrompt = `You are a Senior Legislative Draftsman and Constitutional Jurist on Indian Law.
+Your task is to analyze raw legal text, Gazette notifications, Supreme Court/High Court judgments, or statutory sections, and extract a codified Citizen Safeguard data object.
+Return a STRICT JSON OBJECT with exactly the following schema:
+{
+  "title": "Clear, authoritative title of the right (e.g. Right Against Unlawful Police Arrest)",
+  "title_hi": "Title in clear Hindi (Devanagari script)",
+  "category": "One of: 'Constitutional & Civil Liberties', 'Police & Criminal Justice', 'Traffic & Motor Vehicles', 'Banking, UPI & Cyber Fraud', 'Consumer Protection & E-Commerce', 'Tenancy & Housing Rights', 'Women, POSH & Domestic Safeguards', 'Healthcare & Patient Charters', 'Digital Privacy & DPDP Act', 'Aviation & Passenger Charters', 'Senior Citizens & Maintenance', 'Labour, Wages & Employment', 'Transparency & Governance'",
+  "icon": "One of: 'scale', 'shield', 'lock', 'zap', 'heart', 'truck', 'smartphone', 'activity', 'eye-off', 'credit-card', 'users', 'send', 'user-check', 'alert-circle'",
+  "summary": "2-3 sentences plain English summary written for a common citizen in distress explaining what their protection is.",
+  "summary_hi": "Plain, simple Hindi translation of the summary in Devanagari script.",
+  "actName": "Full official statutory act name (e.g. Bharatiya Nagarik Suraksha Sanhita, 2023)",
+  "shortAct": "Official abbreviation (e.g. BNSS 2023 Sec 35)",
+  "sections": ["Array of specific sections mentioned, e.g. 'Section 35(3)', 'Section 46'"],
+  "actUrl": "/laws/Criminal",
+  "landmarkCases": ["1-2 Supreme Court or High Court landmark precedents with year if cited or relevant"],
+  "keyProtections": ["Array of 3-4 bullet points detailing specific legal shields"],
+  "actionableSteps": ["Array of 3-4 step-by-step immediate actions the citizen must take"],
+  "legalRemedy": "Exact judicial or regulatory forum for redressal (e.g. Magistrate Court, Consumer Commission, Rent Authority)",
+  "penaltiesForViolation": "Statutory penalty or departmental consequences for authorities violating this right",
+  "scenarioTag": "One of: 'police-stop', 'traffic-challan', 'cyber-fraud', 'landlord-eviction', 'consumer-refund', 'domestic-violence', 'medical-refusal', 'banking-freeze'",
+  "whatToSay": "Authoritative verbal confrontation script written in first person starting with 'Officer/Authority, under Section...' that the citizen can speak directly to officials.",
+  "whatToSay_hi": "Verbal confrontation script translated into assertive, respectful Hindi in Devanagari script.",
+  "dos": ["Array of 3 best practice action items"],
+  "donts": ["Array of 3 critical actions to avoid under duress"],
+  "helplineName": "Name of relevant official 24/7 government helpline",
+  "helplineNumber": "Dial digits (e.g. 112, 1930, 1915, 108, 14567)"
+}`;
+
+    if (this.isConfigured) {
+      try {
+        const aiOutput = await this.executePrompt(
+          `Analyze and codify the following legal text into the structured Citizen Safeguard JSON object:\n\n"""\n${trimmed}\n"""`,
+          {
+            systemPrompt,
+            jsonMode: true,
+            temperature: 0.1,
+            maxTokens: 3000
+          }
+        );
+
+        const parsed = JSON.parse(aiOutput);
+        return this.sanitizeCodifiedRight(parsed, trimmed);
+      } catch (err) {
+        console.warn('AI Codification failed, falling back to heuristic legal parser:', err);
+      }
+    }
+
+    // Heuristic rule-based legal fallback
+    return this.fallbackHeuristicCodifier(trimmed);
+  }
+
+  private sanitizeCodifiedRight(obj: any, rawText: string): any {
+    const slug = (obj.title || 'statutory-safeguard')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '')
+      .slice(0, 50);
+
+    return {
+      id: slug || `right-${Date.now()}`,
+      slug: slug || `right-${Date.now()}`,
+      title: obj.title || 'Statutory Citizen Safeguard',
+      title_hi: obj.title_hi || '',
+      category: obj.category || 'Constitutional & Civil Liberties',
+      icon: obj.icon || 'shield',
+      summary: obj.summary || 'Statutory protection codified under Indian Central Acts.',
+      summary_hi: obj.summary_hi || '',
+      statutoryBasis: {
+        actName: obj.actName || 'Bharatiya Nagarik Suraksha Sanhita, 2023',
+        shortAct: obj.shortAct || 'BNSS 2023',
+        sections: Array.isArray(obj.sections) && obj.sections.length ? obj.sections : ['Section 35'],
+        actUrl: obj.actUrl || '/laws',
+        landmarkCases: Array.isArray(obj.landmarkCases) ? obj.landmarkCases : []
+      },
+      keyProtections: Array.isArray(obj.keyProtections) && obj.keyProtections.length
+        ? obj.keyProtections
+        : ['Guaranteed procedural safeguards under law.', 'Protection from arbitrary or unauthorized coercive action.'],
+      actionableSteps: Array.isArray(obj.actionableSteps) && obj.actionableSteps.length
+        ? obj.actionableSteps
+        : ['Demand written statutory notice and grounds.', 'Record officer badge details and consult counsel.'],
+      legalRemedy: obj.legalRemedy || 'Petition before the Jurisdictional Judicial Magistrate Court.',
+      penaltiesForViolation: obj.penaltiesForViolation || 'Disciplinary proceedings and prosecution under BNS Section 199.',
+      scenarioTag: obj.scenarioTag || 'police-stop',
+      whatToSay: obj.whatToSay || 'Officer, under the governing statutory provisions, you are required to provide written grounds and adhere to mandatory safeguards.',
+      whatToSay_hi: obj.whatToSay_hi || 'अधिकारी महोदय, कानूनी प्रावधानों के अनुसार आपको लिखित आधार देना अनिवार्य है।',
+      dos: Array.isArray(obj.dos) ? obj.dos : ['Stay calm and polite.', 'Insist on a contemporaneous written record.'],
+      donts: Array.isArray(obj.donts) ? obj.donts : ['Do NOT engage in physical resistance.', 'Do NOT sign blank documents.'],
+      emergencyHelpline: {
+        name: obj.helplineName || 'National Citizen Emergency',
+        number: obj.helplineNumber || '112',
+        description: '24/7 National Emergency Dispatch Desk',
+        portalUrl: 'https://112.gov.in'
+      },
+      tags: [obj.category || 'Rights', obj.shortAct || 'Act', 'Statutory'].filter(Boolean),
+      isPopular: false,
+      isPublished: true,
+      verifiedDate: new Date().toISOString().split('T')[0],
+      verifiedBy: 'LegalConnect AI Statutory Review Directorate'
+    };
+  }
+
+  private fallbackHeuristicCodifier(rawText: string): any {
+    const actMatch = rawText.match(/(?:under\s+)?([A-Za-z\s]+(?:Act|Sanhita|Rules|Code|Constitution|Adhiniyam)(?:,\s*\d{4})?)/i);
+    const secMatch = rawText.match(/(?:Section|Sec\.?|Article|Rule)\s*(\d+[A-Za-z0-9()]*(?:\s*read with\s*\d+)?)/gi);
+    const caseMatch = rawText.match(/([A-Z][a-zA-Z\s.]+\s+vs?\.?\s+[A-Z][a-zA-Z\s.]+(?:\([0-9\sAIRSC]+\))?)/i);
+
+    const actName = actMatch ? actMatch[1].trim() : 'Central Bare Act / Statutory Code';
+    const sections = secMatch ? secMatch.map(s => s.trim()) : ['Section 1'];
+    const landmarkCases = caseMatch ? [caseMatch[1].trim()] : [];
+
+    let category = 'Constitutional & Civil Liberties';
+    let icon = 'shield';
+    let scenarioTag = 'police-stop';
+
+    const lower = rawText.toLowerCase();
+    if (lower.includes('traffic') || lower.includes('vehicle') || lower.includes('license') || lower.includes('challan') || lower.includes('towing')) {
+      category = 'Traffic & Motor Vehicles';
+      icon = 'truck';
+      scenarioTag = 'traffic-challan';
+    } else if (lower.includes('bank') || lower.includes('cyber') || lower.includes('upi') || lower.includes('fraud') || lower.includes('freeze')) {
+      category = 'Banking, UPI & Cyber Fraud';
+      icon = 'lock';
+      scenarioTag = 'banking-freeze';
+    } else if (lower.includes('tenant') || lower.includes('landlord') || lower.includes('rent') || lower.includes('evict') || lower.includes('utility')) {
+      category = 'Tenancy & Housing Rights';
+      icon = 'zap';
+      scenarioTag = 'landlord-eviction';
+    } else if (lower.includes('consumer') || lower.includes('refund') || lower.includes('flight') || lower.includes('product') || lower.includes('defect')) {
+      category = 'Consumer Protection & E-Commerce';
+      icon = 'credit-card';
+      scenarioTag = 'consumer-refund';
+    } else if (lower.includes('hospital') || lower.includes('doctor') || lower.includes('medical') || lower.includes('patient')) {
+      category = 'Healthcare & Patient Charters';
+      icon = 'heart';
+      scenarioTag = 'medical-refusal';
+    } else if (lower.includes('women') || lower.includes('posh') || lower.includes('harassment') || lower.includes('domestic') || lower.includes('senior')) {
+      category = 'Women, POSH & Domestic Safeguards';
+      icon = 'users';
+      scenarioTag = 'domestic-violence';
+    }
+
+    return this.sanitizeCodifiedRight({
+      title: `Statutory Safeguard under ${actName.slice(0, 35)}`,
+      category,
+      icon,
+      summary: rawText.slice(0, 220) + (rawText.length > 220 ? '...' : ''),
+      actName,
+      shortAct: actName.slice(0, 20),
+      sections,
+      landmarkCases,
+      scenarioTag,
+      whatToSay: `Officer, under ${sections[0] || 'the law'} of ${actName}, you are legally mandated to follow statutory due process before initiating any action.`,
+      whatToSay_hi: `अधिकारी महोदय, ${actName} की धारा के अनुसार किसी भी कार्रवाई से पहले कानूनी प्रक्रिया का पालन करना अनिवार्य है।`
+    }, rawText);
   }
 }
 

@@ -23,6 +23,7 @@ export interface ActRegistryEntry {
   _id: string;
   actName: string;
   shortName: string;
+  dbShortName: string;
   year: number;
   description?: string;
   hierarchical_id: string;
@@ -194,7 +195,8 @@ class ActRegistryService {
         const entry: ActRegistryEntry = {
           _id: String(act._id),
           actName: norm.actName,
-          shortName: cleanShort,
+          shortName: rawShortName === 'Constitution' ? 'Constitution' : cleanShort,
+          dbShortName: rawShortName || cleanShort,
           year,
           description: act.description,
           hierarchical_id: hId,
@@ -216,6 +218,9 @@ class ActRegistryService {
 
         // Index by normalized shortName (primary lookup path)
         this.byShortName.set(cleanShort, entry);
+        if (entry.shortName !== cleanShort) {
+          this.byShortName.set(entry.shortName.toUpperCase(), entry);
+        }
 
         // Index by hierarchical ID
         this.byHierarchicalId.set(hId, entry);
@@ -297,9 +302,9 @@ class ActRegistryService {
    */
   resolveDbShortName(codeOrAlias: string): string {
     const entry = this.resolveAct(codeOrAlias);
-    if (entry) return entry.shortName;
-    // Fallback: return uppercased input
-    return codeOrAlias.toUpperCase().trim();
+    if (entry) return entry.dbShortName || entry.shortName;
+    // Fallback: return trimmed input
+    return codeOrAlias.trim();
   }
 
   /**

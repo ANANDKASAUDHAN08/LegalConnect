@@ -85,3 +85,22 @@ export const optionalAuth = (req: AuthenticatedRequest, _res: Response, next: Ne
 
   next();
 };
+
+/**
+ * Middleware that enforces strict administrative role authorization.
+ * Must be applied after requireAuth to ensure userId and userRole are populated.
+ * Strictly restricts access to administrative roles ('admin', 'superadmin'); rejects all others with 403.
+ */
+export const requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const role = (req.userRole || '').trim().toLowerCase();
+  const allowedRoles = ['admin', 'superadmin'];
+
+  if (!allowedRoles.includes(role)) {
+    return res.status(403).json({
+      success: false,
+      message: 'Access denied. Administrator privileges are required for this operation.'
+    });
+  }
+
+  next();
+};
