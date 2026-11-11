@@ -86,6 +86,7 @@ export const routes: Routes = [
     loadComponent: () => import('./pages/document-templates/document-templates.component').then(m => m.DocumentTemplatesComponent),
     title: 'Legal Document Templates & Drafts | LegalConnect'
   },
+  { path: 'templates', redirectTo: 'laws/templates', pathMatch: 'full' },
   {
     path: 'laws/:shortName',
     loadComponent: () => import('./pages/law-viewer/law-viewer.component').then(m => m.LawViewerComponent),

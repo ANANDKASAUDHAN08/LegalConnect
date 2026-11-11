@@ -39,11 +39,14 @@
           <!-- Sidebar Toggle Button (Desktop Only) -->
           <button (click)="toggleSidebar()"
             class="hidden lg:flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-borderSubtle bg-bgSurface/40 hover:bg-bgElevated text-textSecondary hover:text-textPrimary cursor-pointer transition-all text-xs font-bold shadow-sm"
-            [appTooltip]="showSidebar ? 'Hide templates & drafts sidebar' : 'Show templates & drafts sidebar'" tooltipPlacement="top">
+            [appTooltip]="showSidebar ? 'Hide templates & drafts sidebar' : 'Show templates & drafts sidebar'"
+            tooltipPlacement="top">
             <svg class="w-4 h-4 text-textMuted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <!-- Grid view / sidebar layout switcher icon -->
-              <path *ngIf="showSidebar" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-              <path *ngIf="!showSidebar" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 5l7 7-7 7M5 5l7 7-7 7" />
+              <path *ngIf="showSidebar" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+              <path *ngIf="!showSidebar" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                d="M13 5l7 7-7 7M5 5l7 7-7 7" />
             </svg>
             <span>{{ showSidebar ? 'Hide Sidebar' : 'Show Sidebar' }}</span>
           </button>
@@ -113,8 +116,7 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
 
       <!-- LEFT COLUMN: Sidebar Template Selector (no-print) -->
-      <div id="step-select" class="gap-4 no-print lg:sticky lg:top-[88px] scroll-mt-24"
-        [ngClass]="{
+      <div id="step-select" class="gap-4 no-print lg:sticky lg:top-[88px] scroll-mt-24" [ngClass]="{
           'lg:col-span-3': showSidebar,
           'lg:hidden': !showSidebar,
           'flex flex-col': mobileLayoutMode === 'stacked' || activeMobileTab === 'select',
@@ -213,6 +215,12 @@
                   [ngClass]="selectedCategory === 'civil' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-bgElevated text-textSecondary hover:bg-borderSubtle'"
                   [appTooltip]="'Filter by civil law templates'" tooltipPlacement="top">
                   Civil
+                </button>
+                <button (click)="selectedCategory = 'rights'; updateFiltersAndPagination()"
+                  class="px-2.5 py-1.5 rounded-lg text-[9px] font-bold border-none cursor-pointer transition-colors"
+                  [ngClass]="selectedCategory === 'rights' ? 'bg-indigo-650 text-white shadow-sm' : 'bg-bgElevated text-textSecondary hover:bg-borderSubtle'"
+                  [appTooltip]="'Filter by statutory notices & citizen safeguards'" tooltipPlacement="top">
+                  Notices &amp; Rights
                 </button>
               </div>
             </div>
@@ -383,8 +391,7 @@
       </div>
 
       <!-- WORKSPACE PANELS: Dynamic Form Builder & Live Preview -->
-      <div class="gap-4 transition-all duration-300"
-        [ngClass]="{
+      <div class="gap-4 transition-all duration-300" [ngClass]="{
           'lg:col-span-9': showSidebar,
           'lg:col-span-12': !showSidebar,
           'flex flex-col': mobileLayoutMode === 'stacked' || activeMobileTab !== 'select',

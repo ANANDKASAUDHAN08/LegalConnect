@@ -212,9 +212,9 @@ export class LawResultCardComponent implements OnDestroy {
     this._result = val;
     if (val) {
       // Pre-compute lists exactly once to prevent change detection CPU bottlenecks
-      this.cachedPrecedents = this.legalService.getMockPrecedents(val);
-      this.cachedTimeline = this.legalService.getMockTimeline(val);
-      this.cachedProSe = this.legalService.getMockProSeGuide(val);
+      this.cachedPrecedents = this.legalService.getSectionPrecedents(val);
+      this.cachedTimeline = this.legalService.getSectionTimeline(val);
+      this.cachedProSe = this.legalService.getProSeGuide(val);
 
       // Pre-calculate custom reading metrics
       this.readingTimeMins = Math.max(1, Math.ceil((val.snippet || '').replace(/<[^>]*>/g, '').split(/\s+/).length / 130));
@@ -224,7 +224,7 @@ export class LawResultCardComponent implements OnDestroy {
       this.citedWithSections = this.getCitedWith(val);
       this.isCompoundable = val.criminalDetails?.compoundable?.toLowerCase() === 'compoundable';
 
-      const rawCompare = this.legalService.getMockCompareDiff(val);
+      const rawCompare = this.legalService.getTransitionCompareDiff(val);
       this.compareDiff = rawCompare ? {
         oldText: rawCompare.oldText,
         newText: this.sanitizer.bypassSecurityTrustHtml(rawCompare.newText)

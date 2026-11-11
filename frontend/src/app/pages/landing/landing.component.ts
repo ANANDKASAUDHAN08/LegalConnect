@@ -49,9 +49,10 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
   pendingInquiriesCount = 0;
   totalInquiriesCount = 0;
 
-  // Count-up animation state (Enhancement #8d)
+  // Count-up animation state (Dynamic from live database)
   statsAnimated = false;
   displayStats = { acts: 0, sections: 0, centers: 0 };
+  private realPlatformStats = { acts: 500, sections: 10000, centers: 128 };
   private statsObserver?: IntersectionObserver;
 
   // Preview Modal State
@@ -105,6 +106,41 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.loadKeyActs();
+    this.loadLiveStats();
+  }
+
+  loadLiveStats() {
+    this.legalService.getActs().subscribe({
+      next: (res) => {
+        if (res && res.success && res.data) {
+          this.realPlatformStats.acts = res.data.length;
+          const totalSec = res.data.reduce((sum: number, act: any) => sum + (act.sectionCount || (act.sections ? act.sections.length : 0) || 0), 0);
+          if (totalSec > 0) {
+            this.realPlatformStats.sections = totalSec;
+          }
+          if (this.statsAnimated) {
+            this.displayStats.acts = this.realPlatformStats.acts;
+            this.displayStats.sections = this.realPlatformStats.sections;
+          }
+        }
+      },
+      error: () => {}
+    });
+
+    this.legalService.getHelpStats().subscribe({
+      next: (res) => {
+        if (res && res.success && res.data) {
+          const totalCenters = (res.data.legalClinics || 0) + (res.data.distCourts || 0);
+          if (totalCenters > 0) {
+            this.realPlatformStats.centers = totalCenters;
+          }
+          if (this.statsAnimated) {
+            this.displayStats.centers = this.realPlatformStats.centers;
+          }
+        }
+      },
+      error: () => {}
+    });
   }
 
   ngAfterViewInit() {
@@ -206,9 +242,9 @@ export class LandingComponent implements OnInit, AfterViewInit, OnDestroy {
       entries.forEach(entry => {
         if (entry.isIntersecting && !this.statsAnimated) {
           this.statsAnimated = true;
-          this.animateCount('acts', 500, 800);
-          this.animateCount('sections', 10000, 1000);
-          this.animateCount('centers', 160, 700);
+          this.animateCount('acts', this.realPlatformStats.acts, 800);
+          this.animateCount('sections', this.realPlatformStats.sections, 1000);
+          this.animateCount('centers', this.realPlatformStats.centers, 700);
           this.statsObserver?.unobserve(entry.target);
         }
       });

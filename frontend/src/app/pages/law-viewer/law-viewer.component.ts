@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, HostListener, NgZone, ChangeDetectionStrategy, ChangeDetectorRef, isDevMode } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink, Router } from '@angular/router';
-import { NgFor, NgIf, NgClass } from '@angular/common';
+import { NgFor, NgIf, NgClass, DatePipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subject, Subscription, takeUntil, debounceTime } from 'rxjs';
 import { LegalService, BareAct, Chapter, Section, ContentBlock } from '../../services/legal.service';
@@ -43,6 +43,7 @@ const LOCAL_CITATION_REGEX = /\b(Section\s+(\d+[A-Z\-\d]*))\b(?!(\s+of\s+the))/g
     NgFor,
     NgIf,
     NgClass,
+    DatePipe,
     BookmarkModalComponent,
     ShareMenuComponent,
     InteractiveLikeComponent,
@@ -64,7 +65,23 @@ export class LawViewerComponent implements OnInit, OnDestroy {
   act: BareAct | null = null;
   activeChapter: Chapter | null = null;
   activeSection: Section | null = null;
-  activeSectionTab: 'text' | 'ai' | 'actions' = 'text';
+  activeSectionTab: 'text' | 'ai' | 'wiki' | 'actions' = 'text';
+
+  // LegalPedia Wiki Knowledge Graph & Crowdsourcing State
+  wikiContext: any = null;
+  loadingWikiContext = false;
+  showContributeModal = false;
+  contributePayload = {
+    contributorName: '',
+    contributorRole: 'citizen' as 'citizen' | 'advocate' | 'scholar',
+    barCouncilNumber: '',
+    contributionType: 'explanation' as 'explanation' | 'case_citation' | 'state_amendment' | 'practical_tip',
+    summaryText: '',
+    citations: '',
+    notes: ''
+  };
+  submittingContribution = false;
+  verifiedContributions: any[] = [];
 
   private _isMobileDrawerOpen = false;
 
@@ -596,14 +613,26 @@ export class LawViewerComponent implements OnInit, OnDestroy {
       this.loadSectionDetails(result.sec);
       // Scroll to top so the user sees the section from the beginning
       window.scrollTo({ top: 0, behavior: 'smooth' });
+    } else {
+      // Graceful fallback: Section does not exist in this act
+      this.snackbar.show(
+        `Section/Article "${secNum}" not found in ${this.act?.actName || this.shortName}. Showing first available section.`,
+        'warning'
+      );
+      this.resetToFirstSection();
     }
   }
 
   /** Finds a section and its parent chapter by section number. Deduplicates 3 call sites. */
   private findSectionAndChapter(secNum: string): { sec: Section, ch: Chapter } | null {
-    if (!this.act) return null;
+    if (!this.act || !secNum) return null;
+    const cleanTarget = secNum.trim().toLowerCase();
+    const strippedTarget = cleanTarget.replace(/^(?:section|sec|article|art|rule)\.?\s*/i, '');
     for (const ch of this.act.chapters) {
-      const sec = ch.sections.find(s => s.section_number === secNum);
+      const sec = ch.sections.find(s => {
+        const sNum = (s.section_number || '').trim().toLowerCase();
+        return sNum === cleanTarget || sNum === strippedTarget;
+      });
       if (sec) return { sec, ch };
     }
     return null;
@@ -726,6 +755,67 @@ export class LawViewerComponent implements OnInit, OnDestroy {
       }
     }
     this.cdr.markForCheck();
+  }
+
+  loadWikiContext(): void {
+    if (!this.act || !this.activeSection) return;
+    this.loadingWikiContext = true;
+    this.wikiContext = null;
+    this.verifiedContributions = [];
+
+    this.legalService.getSectionWikiContext(this.act.shortName, this.activeSection.section_number).subscribe({
+      next: (res) => {
+        this.wikiContext = res?.data?.wikiContext || null;
+        this.loadingWikiContext = false;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.loadingWikiContext = false;
+        this.cdr.markForCheck();
+      }
+    });
+
+    this.legalService.getSectionContributions(this.act.shortName, this.activeSection.section_number).subscribe({
+      next: (res) => {
+        this.verifiedContributions = res?.data?.contributions || [];
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.verifiedContributions = [];
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  submitContribution(): void {
+    if (!this.act || !this.activeSection) return;
+    if (!this.contributePayload.summaryText.trim() && !this.contributePayload.citations.trim()) {
+      this.snackbar.show('Please provide a proposed explanation or case citation.', 'error');
+      return;
+    }
+    this.submittingContribution = true;
+    this.legalService.submitSectionContribution(this.act.shortName, this.activeSection.section_number, this.contributePayload).subscribe({
+      next: (res) => {
+        this.submittingContribution = false;
+        this.showContributeModal = false;
+        this.snackbar.show(res?.message || 'Contribution submitted for peer verification!', 'success');
+        this.contributePayload = {
+          contributorName: '',
+          contributorRole: 'citizen',
+          barCouncilNumber: '',
+          contributionType: 'explanation',
+          summaryText: '',
+          citations: '',
+          notes: ''
+        };
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        this.submittingContribution = false;
+        this.snackbar.show(err?.error?.message || 'Failed to submit contribution.', 'error');
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   @HostListener('mouseover', ['$event'])
@@ -963,9 +1053,17 @@ export class LawViewerComponent implements OnInit, OnDestroy {
           this.prefetchAdjacentSections(sec);
           this.cdr.markForCheck();
         },
-        error: () => {
+        error: (err) => {
           this.loadingSection = false;
-          this.snackbar.show('Failed to fetch section content. Check your network.', 'error');
+          if (sec.content || sec.introduction_text) {
+            this.activeSection = sec;
+            this.prepareSectionSentences(sec);
+            this.updateNavigationState();
+          } else if (err?.status === 404) {
+            this.snackbar.show(`Section "${sec.section_number}" is not yet codified in ${this.act?.actName || this.shortName}.`, 'info');
+          } else {
+            this.snackbar.show('Failed to fetch section content. Check your network connection.', 'error');
+          }
           this.cdr.markForCheck();
         }
       });
@@ -1022,6 +1120,9 @@ export class LawViewerComponent implements OnInit, OnDestroy {
                     introduction_text: adjSec.introduction_text,
                     introduction_text_hi: adjSec.introduction_text_hi
                   }).catch(() => { });
+                },
+                error: () => {
+                  // Ignore prefetch failures gracefully
                 }
               });
             } else {

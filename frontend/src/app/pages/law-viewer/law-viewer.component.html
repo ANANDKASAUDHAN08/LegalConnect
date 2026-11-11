@@ -538,6 +538,26 @@
                     <span class="hidden sm:inline">Actions & Citations</span>
                     <span class="inline sm:hidden">Actions</span>
                   </button>
+
+                  <!-- Tab 4: LegalPedia Wiki Knowledge Graph -->
+                  <button (click)="activeSectionTab = 'wiki'; loadWikiContext()"
+                    class="flex flex-row items-center justify-center gap-1.5 md:gap-2 px-2.5 md:px-5 py-2 md:py-2.5 text-[10px] md:text-xs font-bold transition-all border-none rounded-xl cursor-pointer whitespace-nowrap flex-1 md:flex-none"
+                    [ngClass]="activeSectionTab === 'wiki' 
+                      ? 'bg-white dark:bg-slate-800 text-accent shadow-sm' 
+                      : 'bg-transparent text-text-secondary dark:text-slate-400 hover:text-text-primary dark:hover:text-white'"
+                    [appTooltip]="'Explore LegalPedia Knowledge Graph, citizen safeguards, landmark case laws, drafting templates, and crowdsourced insights'"
+                    tooltipPlacement="bottom">
+                    <svg class="w-3.5 h-3.5 md:w-4 md:h-4 shrink-0" fill="none" stroke="currentColor"
+                      viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
+                      </path>
+                    </svg>
+                    <span class="hidden sm:inline">LegalPedia Wiki</span>
+                    <span class="inline sm:hidden">Wiki</span>
+                    <span
+                      class="hidden md:inline-block px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider rounded-md bg-accent/15 text-accent dark:bg-accent/25 dark:text-accent-light">Graph</span>
+                  </button>
                 </div>
 
                 <!-- Compare Action (Pill item, outside the main tab pill - Desktop only) -->
@@ -1486,6 +1506,305 @@
                 </div>
               </div>
 
+              <!-- Tab Content 4: LegalPedia Wiki Knowledge Graph & Community Citations -->
+              <div *ngIf="activeSectionTab === 'wiki'" class="tab-content flex flex-col gap-6 pt-2">
+                <!-- Wiki Header Banner -->
+                <div
+                  class="relative overflow-hidden rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/5 via-primary-50/40 to-white dark:from-accent/15 dark:via-slate-900/60 dark:to-slate-900/90 p-5 md:p-6 shadow-sm">
+                  <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex flex-col gap-1.5">
+                      <div class="flex items-center gap-2">
+                        <span
+                          class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-accent/20 text-accent dark:text-accent-light">
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                              d="M13 10V3L4 14h7v7l9-11h-7z" />
+                          </svg>
+                          LegalPedia Cross-Linked Knowledge Graph
+                        </span>
+                        <span class="text-xs text-text-muted">• Open Legal Repository</span>
+                      </div>
+                      <h3 class="text-lg md:text-xl font-black text-text-primary dark:text-white tracking-tight">
+                        Section {{ activeSection.section_number }}: {{ activeSection.title }}
+                      </h3>
+                      <p class="text-xs text-text-secondary dark:text-slate-300 max-w-2xl leading-relaxed">
+                        Aggregated statutory safeguards, Supreme Court precedents, connected legal drafting templates,
+                        and real-time legal definitions cross-referenced across India's legal canon.
+                      </p>
+                    </div>
+
+                    <div class="flex items-center gap-2.5 shrink-0">
+                      <button (click)="loadWikiContext()" [disabled]="loadingWikiContext"
+                        class="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border border-border-subtle/50 bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-text-secondary dark:text-slate-300 transition-all cursor-pointer shadow-xs disabled:opacity-50">
+                        <svg class="w-3.5 h-3.5" [ngClass]="{'animate-spin': loadingWikiContext}" fill="none"
+                          stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        <span>Refresh</span>
+                      </button>
+
+                      <button (click)="showContributeModal = true"
+                        class="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-accent hover:bg-accent-dark text-white transition-all cursor-pointer shadow-sm shadow-accent/25">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Contribute Knowledge</span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Loading State -->
+                <div *ngIf="loadingWikiContext" class="flex flex-col items-center justify-center py-16 gap-3">
+                  <div class="w-10 h-10 border-3 border-accent/20 border-t-accent rounded-full animate-spin"></div>
+                  <p class="text-xs font-semibold text-text-secondary dark:text-slate-400">Traversing Knowledge Graph &
+                    Statutory Citations...</p>
+                </div>
+
+                <div *ngIf="!loadingWikiContext && wikiContext" class="flex flex-col gap-6">
+
+                  <!-- 1. Detected Legal Jargon (Interactive Dictionary Pills) -->
+                  <div *ngIf="wikiContext.detectedJargon?.length > 0"
+                    class="flex flex-col gap-3 rounded-2xl border border-border-subtle bg-white/70 dark:bg-slate-900/60 p-5 shadow-xs">
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 rounded-full bg-amber-500"></div>
+                      <h4 class="text-xs font-black uppercase tracking-wider text-text-primary dark:text-white">
+                        Statutory Jargon & Plain Terms Detected ({{ wikiContext.detectedJargon.length }})
+                      </h4>
+                    </div>
+                    <p class="text-xs text-text-muted">Plain-English explanations of high-impact legal terminology found
+                      in this section text:</p>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-1">
+                      <div *ngFor="let term of wikiContext.detectedJargon"
+                        class="p-3.5 rounded-xl border border-amber-500/20 bg-amber-500/5 dark:bg-amber-500/10 flex flex-col gap-1">
+                        <div class="flex items-center justify-between">
+                          <span class="text-xs font-black text-amber-700 dark:text-amber-400 tracking-wide font-mono">{{
+                            term.term }}</span>
+                          <span
+                            class="text-[9px] font-bold uppercase tracking-wider text-amber-600/70 bg-amber-500/15 px-1.5 py-0.5 rounded">Term
+                            Definition</span>
+                        </div>
+                        <p class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed">{{ term.definition }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- 2. Statutory Citizen Safeguards (Rights) -->
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                        <h4 class="text-xs font-black uppercase tracking-wider text-text-primary dark:text-white">
+                          Citizen Statutory Rights & Procedural Safeguards ({{ wikiContext.citizenRights?.length || 0
+                          }})
+                        </h4>
+                      </div>
+                      <a routerLink="/rights"
+                        class="text-xs font-bold text-accent hover:underline flex items-center gap-1">
+                        <span>Open Full Rights Catalog</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    </div>
+
+                    <div *ngIf="wikiContext.citizenRights?.length > 0; else noRightsDirect"
+                      class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div *ngFor="let right of wikiContext.citizenRights"
+                        class="group rounded-2xl border border-border-subtle hover:border-emerald-500/40 bg-white dark:bg-slate-900 p-5 transition-all shadow-xs hover:shadow-md flex flex-col justify-between gap-4">
+                        <div class="flex flex-col gap-2">
+                          <div class="flex items-center justify-between">
+                            <span
+                              class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              Statutory Shield
+                            </span>
+                            <span *ngIf="right.legalRemedy" class="text-[10px] text-text-muted">Remedy: {{
+                              right.legalRemedy }}</span>
+                          </div>
+                          <h5
+                            class="text-sm font-bold text-text-primary dark:text-white group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors">
+                            {{ right.title }}
+                          </h5>
+                          <p class="text-xs text-text-secondary dark:text-slate-300 line-clamp-3 leading-relaxed">
+                            {{ right.summary }}
+                          </p>
+                        </div>
+
+                        <div *ngIf="right.whatToSay"
+                          class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/50 dark:border-slate-700/50">
+                          <span class="text-[9px] font-black uppercase tracking-wider text-text-muted block mb-0.5">What
+                            To Say:</span>
+                          <p class="text-xs italic text-text-secondary dark:text-slate-300 font-serif">"{{
+                            right.whatToSay }}"</p>
+                        </div>
+
+                        <div class="pt-2 border-t border-border-subtle/50 flex items-center justify-between">
+                          <span class="text-[10px] text-text-muted">{{ right.keyProtections?.length || 0 }} protections
+                            catalogued</span>
+                          <a routerLink="/rights" class="text-xs font-bold text-accent hover:underline">View Citizen
+                            Guide &rarr;</a>
+                        </div>
+                      </div>
+                    </div>
+                    <ng-template #noRightsDirect>
+                      <div
+                        class="rounded-2xl border border-dashed border-border-subtle bg-slate-50/50 dark:bg-slate-900/30 p-5 text-center flex flex-col items-center gap-1.5">
+                        <p class="text-xs text-text-secondary dark:text-slate-400 font-medium">No specialized individual
+                          citizen emergency right directly mapped to Section {{ activeSection.section_number }}.</p>
+                        <p class="text-[11px] text-text-muted">Constitutional fundamental protections under Article 21
+                          (Right to Life & Liberty) and procedural fairness principles still apply universally.</p>
+                      </div>
+                    </ng-template>
+                  </div>
+
+                  <!-- 3. Landmark Case Laws & Judicial Precedents -->
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-indigo-500"></div>
+                        <h4 class="text-xs font-black uppercase tracking-wider text-text-primary dark:text-white">
+                          Landmark Judicial Precedents & Ratio Decidendi ({{ wikiContext.landmarkPrecedents?.length || 0
+                          }})
+                        </h4>
+                      </div>
+                      <a routerLink="/judgments"
+                        class="text-xs font-bold text-accent hover:underline flex items-center gap-1">
+                        <span>Search All Case Laws</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    </div>
+
+                    <div *ngIf="wikiContext.landmarkPrecedents?.length > 0; else noPrecedents"
+                      class="flex flex-col gap-3">
+                      <div *ngFor="let dec of wikiContext.landmarkPrecedents"
+                        class="rounded-2xl border border-border-subtle bg-white dark:bg-slate-900 p-5 shadow-xs hover:border-indigo-500/40 transition-all flex flex-col gap-3">
+                        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                          <div class="flex items-center gap-2 flex-wrap">
+                            <span
+                              class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                              {{ dec.court || 'Supreme Court of India' }}
+                            </span>
+                            <span *ngIf="dec.citation"
+                              class="text-xs font-mono font-bold text-text-primary dark:text-white">
+                              {{ dec.citation }}
+                            </span>
+                          </div>
+                          <span *ngIf="dec.decisionDate" class="text-[11px] text-text-muted">Decided: {{
+                            dec.decisionDate }}</span>
+                        </div>
+
+                        <h5 class="text-sm font-bold text-text-primary dark:text-white">{{ dec.title }}</h5>
+
+                        <div *ngIf="dec.holding"
+                          class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed">
+                          <strong class="font-semibold text-text-primary dark:text-white">Court Holding: </strong>{{
+                          dec.holding }}
+                        </div>
+
+                        <div *ngIf="dec.ratioDecidendi"
+                          class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-border-subtle/50 text-xs">
+                          <strong class="font-bold text-indigo-600 dark:text-indigo-400 block mb-1">Ratio Decidendi
+                            (Legal Principle):</strong>
+                          <p class="text-text-secondary dark:text-slate-300 leading-relaxed italic">{{
+                            dec.ratioDecidendi }}</p>
+                        </div>
+                      </div>
+                    </div>
+                    <ng-template #noPrecedents>
+                      <div
+                        class="rounded-2xl border border-dashed border-border-subtle bg-slate-50/50 dark:bg-slate-900/30 p-5 text-center flex flex-col items-center gap-1.5">
+                        <p class="text-xs text-text-secondary dark:text-slate-400">No Supreme Court landmark cases
+                          currently indexed for this specific section.</p>
+                        <button (click)="showContributeModal = true"
+                          class="text-xs font-bold text-accent hover:underline">
+                          Are you an advocate or researcher? Submit a case citation &rarr;
+                        </button>
+                      </div>
+                    </ng-template>
+                  </div>
+
+                  <!-- 4. Connected Legal Notice & Drafting Templates -->
+                  <div class="flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                      <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 rounded-full bg-cyan-500"></div>
+                        <h4 class="text-xs font-black uppercase tracking-wider text-text-primary dark:text-white">
+                          Connected Legal Notice & Drafting Templates ({{ wikiContext.noticeTemplates?.length || 0 }})
+                        </h4>
+                      </div>
+                      <a routerLink="/laws/templates"
+                        class="text-xs font-bold text-accent hover:underline flex items-center gap-1">
+                        <span>All Templates</span>
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                        </svg>
+                      </a>
+                    </div>
+
+                    <div *ngIf="wikiContext.noticeTemplates?.length > 0; else noTemplates"
+                      class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div *ngFor="let tmpl of wikiContext.noticeTemplates"
+                        class="rounded-2xl border border-border-subtle hover:border-cyan-500/40 bg-white dark:bg-slate-900 p-5 transition-all shadow-xs flex flex-col justify-between gap-3">
+                        <div class="flex flex-col gap-1.5">
+                          <span
+                            class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 w-fit">
+                            {{ tmpl.category }}
+                          </span>
+                          <h5 class="text-sm font-bold text-text-primary dark:text-white">{{ tmpl.title }}</h5>
+                          <p class="text-xs text-text-secondary dark:text-slate-300 line-clamp-2 leading-relaxed">{{
+                            tmpl.description }}</p>
+                        </div>
+                        <a [routerLink]="['/laws/templates']" [queryParams]="{ open: tmpl.id }"
+                          class="inline-flex items-center gap-1.5 text-xs font-bold text-cyan-600 dark:text-cyan-400 hover:underline">
+                          <span>Draft with this Template</span>
+                          <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                          </svg>
+                        </a>
+                      </div>
+                    </div>
+                    <ng-template #noTemplates>
+                      <div
+                        class="rounded-2xl border border-dashed border-border-subtle bg-slate-50/50 dark:bg-slate-900/30 p-5 text-center">
+                        <p class="text-xs text-text-secondary dark:text-slate-400">No specialized notice template tagged
+                          directly for this section.</p>
+                      </div>
+                    </ng-template>
+                  </div>
+
+                  <!-- 5. Verified Advocate & Community Annotations -->
+                  <div *ngIf="verifiedContributions && verifiedContributions.length > 0" class="flex flex-col gap-3">
+                    <div class="flex items-center gap-2">
+                      <div class="w-2 h-2 rounded-full bg-violet-500"></div>
+                      <h4 class="text-xs font-black uppercase tracking-wider text-text-primary dark:text-white">
+                        Verified Advocate & Researcher Annotations ({{ verifiedContributions.length }})
+                      </h4>
+                      <span
+                        class="px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider bg-violet-500/15 text-violet-600 dark:text-violet-400">CC
+                        BY-SA 4.0</span>
+                    </div>
+
+                    <div class="flex flex-col gap-3">
+                      <div *ngFor="let cont of verifiedContributions"
+                        class="rounded-2xl border border-violet-500/20 bg-violet-500/5 dark:bg-violet-950/20 p-4.5 flex flex-col gap-2">
+                        <div class="flex items-center justify-between text-xs">
+                          <span class="font-bold text-violet-700 dark:text-violet-300">{{ cont.author }}</span>
+                          <span class="text-[10px] text-text-muted">{{ cont.date | date:'mediumDate' }}</span>
+                        </div>
+                        <p class="text-xs text-text-secondary dark:text-slate-300 leading-relaxed">{{ cont.content }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
               <!-- Modern Brand-Gradient Line -->
               <div
                 class="h-px w-full bg-gradient-to-r from-transparent via-slate-300/60 dark:via-white/15 to-transparent my-2">
@@ -1558,6 +1877,108 @@
   [chapterNumber]="modalChapterNumber" [section]="modalSection" (close)="isBookmarkModalOpen = false">
 </app-bookmark-modal>
 }
+
+<!-- Wikipedia Crowdsourced Contribution Modal -->
+<div *ngIf="showContributeModal"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+  <div
+    class="relative w-full max-w-xl rounded-3xl border border-border-subtle bg-white dark:bg-slate-900 shadow-2xl p-6 md:p-8 flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+    <!-- Header -->
+    <div class="flex items-center justify-between pb-3 border-b border-border-subtle">
+      <div class="flex items-center gap-2.5">
+        <div class="w-9 h-9 rounded-xl bg-accent/15 flex items-center justify-center text-accent shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+        </div>
+        <div>
+          <h3 class="text-base font-black text-text-primary dark:text-white">LegalPedia Contributor Pipeline</h3>
+          <p class="text-xs text-text-muted">Section {{ activeSection?.section_number }} • {{ act?.shortName }}</p>
+        </div>
+      </div>
+      <button (click)="showContributeModal = false"
+        class="text-text-muted hover:text-text-primary dark:hover:text-white p-1 rounded-lg cursor-pointer">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Form -->
+    <div class="flex flex-col gap-4">
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-bold text-text-secondary dark:text-slate-300">Your Name / Alias</label>
+          <input [(ngModel)]="contributePayload.contributorName" placeholder="e.g. Adv. R. Sharma"
+            class="px-3 py-2 rounded-xl text-xs border border-border-subtle bg-slate-50 dark:bg-slate-800 text-text-primary focus:outline-none focus:border-accent">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-[11px] font-bold text-text-secondary dark:text-slate-300">Contributor Role</label>
+          <select [(ngModel)]="contributePayload.contributorRole"
+            class="px-3 py-2 rounded-xl text-xs border border-border-subtle bg-slate-50 dark:bg-slate-800 text-text-primary focus:outline-none focus:border-accent">
+            <option value="citizen">Informed Citizen</option>
+            <option value="advocate">Practicing Advocate</option>
+            <option value="scholar">Legal Researcher / Academic</option>
+          </select>
+        </div>
+      </div>
+
+      <div *ngIf="contributePayload.contributorRole === 'advocate'" class="flex flex-col gap-1">
+        <label class="text-[11px] font-bold text-text-secondary dark:text-slate-300">State Bar Council Enrollment
+          Number</label>
+        <input [(ngModel)]="contributePayload.barCouncilNumber" placeholder="e.g. D/1234/2018"
+          class="px-3 py-2 rounded-xl text-xs border border-border-subtle bg-slate-50 dark:bg-slate-800 text-text-primary focus:outline-none focus:border-accent">
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-[11px] font-bold text-text-secondary dark:text-slate-300">Contribution Category</label>
+        <select [(ngModel)]="contributePayload.contributionType"
+          class="px-3 py-2 rounded-xl text-xs border border-border-subtle bg-slate-50 dark:bg-slate-800 text-text-primary focus:outline-none focus:border-accent">
+          <option value="explanation">Plain Language Explanation / Practical Meaning</option>
+          <option value="case_citation">Landmark Case Precedent / Supreme Court Citation</option>
+          <option value="state_amendment">State-Specific Amendment / Rule Notification</option>
+          <option value="practical_tip">Procedural Step / Practical Tip for Court / Police Station</option>
+        </select>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-[11px] font-bold text-text-secondary dark:text-slate-300">Proposed Explanation / Practical
+          Insight</label>
+        <textarea [(ngModel)]="contributePayload.summaryText" rows="3"
+          placeholder="Enter clear, factual legal explanation..."
+          class="p-3 rounded-xl text-xs border border-border-subtle bg-slate-50 dark:bg-slate-800 text-text-primary focus:outline-none focus:border-accent leading-relaxed"></textarea>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <label class="text-[11px] font-bold text-text-secondary dark:text-slate-300">Case Law Citations / Official
+          Gazette Reference</label>
+        <input [(ngModel)]="contributePayload.citations" placeholder="e.g. AIR 2023 SC 4512 / (2021) 5 SCC 23"
+          class="px-3 py-2 rounded-xl text-xs border border-border-subtle bg-slate-50 dark:bg-slate-800 text-text-primary focus:outline-none focus:border-accent">
+      </div>
+
+      <div
+        class="p-3 rounded-xl bg-accent/5 border border-accent/20 text-[11px] text-text-secondary dark:text-slate-300 leading-relaxed">
+        <strong>Open Legal Commons:</strong> By submitting, you contribute under Creative Commons Attribution-ShareAlike
+        (CC BY-SA 4.0). Submissions are recorded in the audit ledger and peer-verified before becoming permanent
+        citations.
+      </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="flex items-center justify-end gap-3 pt-3 border-t border-border-subtle">
+      <button (click)="showContributeModal = false"
+        class="px-4 py-2 rounded-xl text-xs font-semibold text-text-secondary hover:text-text-primary border border-border-subtle cursor-pointer">
+        Cancel
+      </button>
+      <button (click)="submitContribution()" [disabled]="submittingContribution"
+        class="flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-accent hover:bg-accent-dark text-white shadow-sm shadow-accent/25 disabled:opacity-50 cursor-pointer">
+        <span *ngIf="!submittingContribution">Submit for Editorial Review</span>
+        <span *ngIf="submittingContribution">Submitting...</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- PRINT TEMPLATE (VISIBLE ONLY DURING PRINTING/PDF EXPORT) -->
 <div *ngIf="activeSection && act" class="print-area"
