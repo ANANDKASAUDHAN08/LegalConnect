@@ -1,0 +1,777 @@
+<div class="mt-2 space-y-2 sm:space-y-4 animate-[fadeIn_0.2s_ease-out]">
+
+  <!-- ==================== 1. CRISIS MODE STATUS HUD & OFFLINE SHIELD BAR ==================== -->
+  <div
+    class="px-3.5 py-2 sm:px-4 sm:py-2.5 rounded-xl md:rounded-2xl bg-gradient-to-r from-rose-500/15 via-rose-500/10 to-amber-500/10 border border-rose-500/30 text-rose-900 dark:text-rose-200 shadow-2xs flex items-center justify-between gap-2.5 sm:gap-4">
+    <!-- Active Emergency Beacon & Status -->
+    <div class="flex items-start sm:items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+      <span class="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0 mt-0.5 sm:mt-0">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-rose-600"></span>
+      </span>
+      <div class="flex flex-col sm:flex-row sm:items-center sm:gap-2 min-w-0">
+        <span
+          class="text-rose-600 dark:text-rose-400 text-xs sm:text-sm font-black uppercase tracking-wider shrink-0 leading-tight">
+          Emergency Confrontation Mode Active
+        </span>
+        <span class="hidden sm:inline text-rose-300 dark:text-rose-900 select-none">•</span>
+        <span class="text-[10px] sm:text-[11px] text-slate-600 dark:text-slate-400 font-medium leading-tight">
+          Assertive verbal teleprompter scripts, verified statutory citations &amp; 24x7 crisis helplines.
+        </span>
+      </div>
+    </div>
+
+    <!-- HUD Actions: Stealth Silence & Offline Shield -->
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0">
+      <!-- Stealth Audio Silence Button (Active when speech synthesis is speaking) -->
+      <button *ngIf="isSpeaking()" (click)="onStealthSilence($event)"
+        appTooltip="Instant emergency mute to silence speech immediately" tooltipPlacement="bottom"
+        class="px-2.5 py-1 rounded-full bg-rose-600 hover:bg-rose-700 text-white text-[10.5px] sm:text-[11px] font-black border border-rose-400 flex items-center gap-1 sm:gap-1.5 shrink-0 shadow-md animate-pulse cursor-pointer">
+        <app-icon name="volume-x" [size]="13"></app-icon>
+        <span>Stealth Silence</span>
+      </button>
+
+      <!-- 100% Offline Readiness Chip -->
+      <span
+        class="hidden sm:flex px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 text-[11px] font-bold border border-emerald-500/30 items-center gap-1.5 shrink-0 shadow-2xs">
+        <app-icon name="check-circle" [size]="12" class="text-emerald-500"></app-icon>
+        <span>100% Offline Shield</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- ==================== 3. MOBILE ONLY: SCENARIO SELECTOR CAROUSEL ==================== -->
+  <div class="lg:hidden space-y-1.5">
+    <div class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1 font-semibold">
+      <span class="uppercase tracking-wider text-[10px] font-bold">Select Active Confrontation Scenario:</span>
+      <span class="text-[11px] text-rose-500 font-bold">{{ filteredCrisisRights().length }} Available</span>
+    </div>
+
+    <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+      <button *ngFor="let tab of scenarioTabs(); trackBy: trackByScenarioTab" (click)="setScenarioFilter(tab.tag)"
+        [appTooltip]="'Filter by ' + getScenarioLabel(tab) + ' (' + (scenarioCounts()[tab.tag] || 0) + ')'"
+        [class]="activeScenarioFilter() === tab.tag
+          ? 'bg-rose-600 text-white font-extrabold shadow-md border-rose-600 scale-[1.02]'
+          : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 border-slate-200 dark:border-slate-800 font-medium'"
+        class="px-3 py-2 rounded-xl border text-xs whitespace-nowrap transition-all duration-150 cursor-pointer flex items-center gap-1.5 shrink-0 select-none">
+        <app-icon [name]="tab.icon" [size]="14"></app-icon>
+        <span>{{ getScenarioLabel(tab) }}</span>
+        <span class="text-[10px] px-1.5 py-0.5 rounded-full font-bold font-mono"
+          [ngClass]="activeScenarioFilter() === tab.tag ? 'bg-white/25 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'">
+          {{ scenarioCounts()[tab.tag] || 0 }}
+        </span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== MOBILE DIVIDER: SCENARIO CHIPS TO DEFENSE FEED ==================== -->
+  <div class="lg:hidden relative py-3 flex items-center justify-center select-none" aria-hidden="true">
+    <!-- Ambient Rose Glow Flare matching Emergency Confrontation theme -->
+    <div
+      class="absolute inset-x-8 h-px bg-gradient-to-r from-transparent via-rose-500/25 dark:via-rose-500/30 to-transparent blur-xs pointer-events-none">
+    </div>
+
+    <!-- Main Gradient Divider Line -->
+    <div class="w-full h-px bg-gradient-to-r from-transparent via-slate-300/80 dark:via-slate-800 to-transparent"></div>
+
+    <!-- Centerpiece Micro-Insignia Badge -->
+    <div
+      class="absolute px-2.5 py-0.5 rounded-full bg-slate-50/95 dark:bg-[#07090e]/95 border border-slate-200/90 dark:border-slate-800/90 shadow-2xs flex items-center gap-1.5 backdrop-blur-md">
+      <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse shadow-[0_0_6px_rgba(244,63,94,0.7)]"></span>
+      <span class="text-[9px] font-mono font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        {{ filteredCrisisRights().length }} Confrontation Defenses
+      </span>
+    </div>
+  </div>
+
+  <!-- ==================== 4. DESKTOP SPLIT COMMAND CENTER (12-COL GRID: 3 vs 9) ==================== -->
+  <div class="lg:grid lg:grid-cols-12 lg:gap-5 xl:gap-6 items-start">
+
+    <!-- ==================== LEFT COLUMN: EMERGENCY COMMAND CONSOLE (lg:col-span-3) ==================== -->
+    <div
+      class="hidden lg:block lg:col-span-3 xl:col-span-3 space-y-3 sticky top-[72px] max-h-[calc(100vh-85px)] overflow-y-auto pr-0.5 scrollbar-none no-scrollbar"
+      style="scrollbar-width: none; -ms-overflow-style: none;">
+
+      <!-- Scenario Selector Command Console -->
+      <div
+        class="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 shadow-sm space-y-2">
+        <div class="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800">
+          <span
+            class="text-[11px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 flex items-center gap-1.5">
+            <app-icon name="alert-triangle" [size]="13"></app-icon>
+            <span>Emergency Scenarios</span>
+          </span>
+          <div class="flex items-center gap-2">
+            <span
+              class="text-[10px] font-mono text-slate-400 font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800/60">
+              {{ filteredCrisisRights().length }} Active
+            </span>
+            <!-- Micro Stepper Chevron Buttons -->
+            <div
+              class="flex items-center gap-0.5 border border-slate-200/80 dark:border-slate-800 rounded-lg p-0.5 bg-slate-50 dark:bg-slate-800/80 shadow-xs">
+              <button type="button" (click)="scrollScenarioList(scenarioListEl, 'up')"
+                [disabled]="!scenarioCanScrollUp()"
+                [class]="scenarioCanScrollUp() ? 'text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-700 cursor-pointer active:scale-90' : 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-40'"
+                class="w-5 h-5 rounded flex items-center justify-center transition border-0 bg-transparent"
+                aria-label="Scroll scenarios up" title="Scroll up (Wheel up)">
+                <app-icon name="chevron-up" [size]="12"></app-icon>
+              </button>
+              <button type="button" (click)="scrollScenarioList(scenarioListEl, 'down')"
+                [disabled]="!scenarioCanScrollDown()"
+                [class]="scenarioCanScrollDown() ? 'text-slate-600 dark:text-slate-300 hover:text-rose-600 dark:hover:text-rose-400 hover:bg-white dark:hover:bg-slate-700 cursor-pointer active:scale-90' : 'text-slate-300 dark:text-slate-600 cursor-not-allowed opacity-40'"
+                class="w-5 h-5 rounded flex items-center justify-center transition border-0 bg-transparent"
+                aria-label="Scroll scenarios down" title="Scroll down (Wheel down)">
+                <app-icon name="chevron-down" [size]="12"></app-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scrollable Scenario Buttons Container with Dynamic Vignettes & Micro-Rail (Zero Scrollbar) -->
+        <div class="relative group">
+          <!-- Top Dynamic Soft Vignette (Appears only when user has scrolled down) -->
+          <div
+            class="pointer-events-none absolute top-0 inset-x-0 h-7 bg-gradient-to-b from-white dark:from-slate-900 to-transparent z-10 transition-opacity duration-200 rounded-t-xl"
+            [ngClass]="scenarioCanScrollUp() ? 'opacity-100' : 'opacity-0'">
+          </div>
+
+          <!-- The Core Scrollable Element (Zero browser scrollbar, partial-item peek cliff) -->
+          <div #scenarioListEl (scroll)="onScenarioListScroll($event)"
+            style="scrollbar-width: none; -ms-overflow-style: none;"
+            class="scenario-scroll-container space-y-1 max-h-[305px] xl:max-h-[345px] overflow-y-auto scrollbar-none no-scrollbar scroll-smooth">
+            <button *ngFor="let tab of scenarioTabs(); trackBy: trackByScenarioTab" (click)="setScenarioFilter(tab.tag)"
+              [appTooltip]="'Filter by ' + getScenarioLabel(tab) + ' (' + (scenarioCounts()[tab.tag] || 0) + ' protections)'"
+              [class]="activeScenarioFilter() === tab.tag
+                ? 'bg-rose-50 dark:bg-rose-950/40 border-rose-500 text-rose-700 dark:text-rose-300 font-bold shadow-xs'
+                : 'bg-slate-50/60 dark:bg-slate-800/40 border-transparent text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium'"
+              class="w-full p-2 rounded-xl border text-left transition cursor-pointer flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <div
+                  [class]="activeScenarioFilter() === tab.tag ? 'bg-rose-500 text-white shadow-xs' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'"
+                  class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                  <app-icon [name]="tab.icon" [size]="13"></app-icon>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-[11.5px] font-bold truncate leading-snug">{{ getScenarioLabel(tab) }}</div>
+                  <div class="text-[9.5px] text-slate-500 dark:text-slate-400 font-normal truncate leading-none">{{
+                    getScenarioSubtext(tab) }}</div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-1 shrink-0">
+                <span class="text-[9.5px] px-1.5 py-0.5 rounded-full font-mono font-bold"
+                  [ngClass]="activeScenarioFilter() === tab.tag ? 'bg-rose-500 text-white' : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300'">
+                  {{ scenarioCounts()[tab.tag] || 0 }}
+                </span>
+                <span *ngIf="activeScenarioFilter() === tab.tag"
+                  class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Bottom Dynamic Soft Vignette (Fades out when at the end) -->
+          <div
+            class="pointer-events-none absolute bottom-0 inset-x-0 h-9 bg-gradient-to-t from-white dark:from-slate-900 to-transparent z-10 transition-opacity duration-200 rounded-b-xl"
+            [ngClass]="scenarioCanScrollDown() ? 'opacity-100' : 'opacity-0'">
+          </div>
+
+          <!-- Floating Interactive "More Scenarios" Affordance Pill (Dissolves when fully scrolled) -->
+          <div *ngIf="scenarioCanScrollDown()"
+            class="absolute bottom-1 inset-x-0 flex justify-center z-20 pointer-events-none animate-soft-bounce">
+            <button type="button" (click)="scrollScenarioList(scenarioListEl, 'down')"
+              class="pointer-events-auto px-2.5 py-0.5 rounded-full bg-slate-900/90 dark:bg-slate-800/95 text-white dark:text-rose-200 border border-slate-700/80 dark:border-rose-500/30 text-[9.5px] font-semibold shadow-md backdrop-blur-sm flex items-center gap-1 cursor-pointer hover:bg-rose-600 dark:hover:bg-rose-600 transition-all hover:scale-105 active:scale-95">
+              <span>More scenarios</span>
+              <app-icon name="chevron-down" [size]="10"></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Bottom Micro-Status Bar with Interactive Quick Toggle -->
+        <div
+          class="flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800/80 text-[10px] text-slate-400 dark:text-slate-500 select-none">
+          <div class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full"
+              [ngClass]="scenarioCanScrollDown() ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500'"></span>
+            <span class="font-medium text-slate-600 dark:text-slate-400">
+              {{ scenarioCanScrollDown() ? 'Scroll for all ' + scenarioTabs().length + ' categories' : 'All ' +
+              scenarioTabs().length + ' categories shown' }}
+            </span>
+          </div>
+          <button type="button" (click)="toggleScenarioListScroll(scenarioListEl)"
+            [appTooltip]="scenarioCanScrollDown() ? 'Scroll down scenario list' : 'Scroll back to top'"
+            tooltipPlacement="top"
+            class="font-mono text-[9px] uppercase tracking-wider text-rose-600 dark:text-rose-400 font-bold hover:underline bg-transparent border-0 cursor-pointer p-0 flex items-center gap-1">
+            <span>{{ scenarioCanScrollDown() ? 'Scroll' : 'Top' }}</span>
+            <app-icon [name]="scenarioCanScrollDown() ? 'chevron-down' : 'chevron-up'" [size]="10"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Rapid Diagnostic Triage Card ("Am I Protected?") -->
+      <div
+        class="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-900/40 via-blue-900/30 to-purple-900/20 border border-indigo-500/30 text-white space-y-2 shadow-sm">
+        <div class="flex items-center gap-1.5 text-indigo-300 font-bold text-[11px]">
+          <app-icon name="shield-check" [size]="14" class="text-indigo-400"></app-icon>
+          <span>Unsure if your rights are violated?</span>
+        </div>
+        <p class="text-[10.5px] text-slate-300 leading-snug m-0">
+          Run our 3-step diagnostic assessment to determine procedural illegality and obtain an immediate defense
+          memorandum.
+        </p>
+        <button (click)="onOpenDiagnostic()"
+          class="w-full py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] font-bold rounded-xl border-0 cursor-pointer transition flex items-center justify-center gap-1.5 active:scale-95 shadow-xs">
+          <app-icon name="zap" [size]="12"></app-icon>
+          <span>Launch 30-Sec Diagnostic Triage</span>
+        </button>
+      </div>
+
+      <!-- Statutory Defense Precedent Box -->
+      <div
+        class="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-gradient-to-br from-indigo-500/10 via-blue-500/5 to-transparent border border-indigo-500/20 text-xs space-y-1.5">
+        <div class="flex items-center gap-1.5 font-bold text-indigo-700 dark:text-indigo-300 text-[11px]">
+          <app-icon name="shield-check" [size]="13"></app-icon>
+          <span>Binding Precedents</span>
+        </div>
+        <p class="text-[10.5px] text-slate-600 dark:text-slate-400 leading-snug m-0">
+          All scripts cite statutory enactments (BNSS §35, CMVR R.139, IT Act §4) and binding Supreme Court
+          rulings (<em>Arnesh Kumar</em>, <em>D.K. Basu</em>, <em>Parmanand Katara</em>).
+        </p>
+      </div>
+
+      <!-- Community Propose Card (MNC Open Legal Knowledge Model) -->
+      <div
+        class="p-3 sm:p-3.5 rounded-2xl sm:rounded-3xl bg-slate-50 dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 space-y-2 shadow-2xs">
+        <div class="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold text-[11px]">
+          <app-icon name="plus-circle" [size]="13" class="text-indigo-600 dark:text-indigo-400"></app-icon>
+          <span>Know a defense we missed?</span>
+        </div>
+        <p class="text-[10.5px] text-slate-500 dark:text-slate-400 leading-snug m-0">
+          Contribute an emerging threat scenario or state guideline to protect citizens.
+        </p>
+        <button (click)="onProposeNewRight()"
+          class="w-full py-1.5 px-3 bg-white dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-slate-700 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800 text-[11px] font-bold rounded-xl cursor-pointer transition flex items-center justify-center gap-1.5 shadow-2xs">
+          <app-icon name="plus" [size]="12"></app-icon>
+          <span>Propose Legal Protection</span>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- ==================== RIGHT COLUMN: ACTIVE TELEPROMPTER FEED (lg:col-span-9) ==================== -->
+    <div class="lg:col-span-9 xl:col-span-9 space-y-4 min-w-0">
+
+      <!-- Active Filter Context Ribbon -->
+      <div
+        class="hidden md:flex items-center justify-between px-3.5 py-2 rounded-2xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-xs text-slate-600 dark:text-slate-300">
+        <div class="flex items-center gap-2">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+          <span>Showing <strong class="text-slate-900 dark:text-white font-bold">{{ displayedCrisisRights().length
+              }}</strong> of <strong class="text-slate-900 dark:text-white font-bold">{{ filteredCrisisRights().length
+              }}</strong> emergency protections</span>
+          <span *ngIf="activeScenarioFilter() !== 'all'" class="text-[11px] text-rose-600 dark:text-rose-400 font-bold">
+            ({{ activeScenarioFilter() }})
+          </span>
+        </div>
+
+        <button *ngIf="activeScenarioFilter() !== 'all'" (click)="setScenarioFilter('all')"
+          class="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline bg-transparent border-0 cursor-pointer flex items-center gap-1 p-0">
+          <span>Show All Emergencies</span>
+          <app-icon name="x" [size]="10"></app-icon>
+        </button>
+      </div>
+
+      <!-- ==================== CYBER & UPI FRAUD "GOLDEN HOUR" RAPID RESPONSE STRIP ==================== -->
+      <div *ngIf="isCyberScenarioActive()"
+        class="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-r from-amber-500/15 via-rose-500/10 to-amber-500/10 border-2 border-amber-500/40 text-slate-900 dark:text-slate-100 shadow-md space-y-2.5 animate-[fadeIn_0.2s_ease-out]">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-amber-500/25 pb-2">
+          <div class="flex items-center gap-2">
+            <span class="relative flex h-3 w-3 shrink-0">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+            </span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                1930 "Golden Hour" Fraud Freeze Protocol
+              </span>
+              <span
+                class="text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300 font-extrabold uppercase font-mono">
+                Critical: 1–2 Hr Window
+              </span>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0">
+            <!-- 1-Tap Dial 1930 -->
+            <a href="tel:1930"
+              class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-600 active:scale-95 text-slate-950 font-black text-xs shadow-sm transition flex items-center gap-1.5 no-underline cursor-pointer">
+              <app-icon name="phone" [size]="13"></app-icon>
+              <span>Dial 1930 (MHA I4C)</span>
+            </a>
+            <!-- Portal Link -->
+            <a href="https://cybercrime.gov.in" target="_blank" rel="noopener noreferrer"
+              class="hidden xs:flex px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold border border-slate-200 dark:border-slate-700 transition items-center gap-1 no-underline">
+              <span>NCRP Portal</span>
+              <app-icon name="external-link" [size]="11"></app-icon>
+            </a>
+          </div>
+        </div>
+
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+          <p class="m-0 text-slate-700 dark:text-slate-300 text-[11px] sm:text-xs leading-relaxed flex-1">
+            Indian Cyber Coordination Centre (I4C) mandates reporting within 1–2 hours to trigger inter-bank nodal
+            liens
+            before fraudsters route stolen money through mule accounts.
+          </p>
+
+          <!-- 1-Tap Copy Complaint Draft -->
+          <button (click)="copyCyberComplaintDraft($event)"
+            [appTooltip]="copiedCyberComplaint() ? 'Copied Golden Hour complaint!' : 'Copy Golden Hour complaint draft for Bank/Cyber Helpline'"
+            [class]="copiedCyberComplaint() ? 'bg-emerald-600 text-white' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-100'"
+            class="px-3 py-2 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer border-0 active:scale-95 shrink-0 shadow-xs">
+            <app-icon [name]="copiedCyberComplaint() ? 'check' : 'copy'" [size]="13"></app-icon>
+            <span>{{ copiedCyberComplaint() ? 'Complaint Draft Copied!' : 'Copy Bank Fraud SMS Draft' }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State if filter yields zero -->
+      <div *ngIf="filteredCrisisRights().length === 0"
+        class="p-8 sm:p-12 rounded-3xl bg-white dark:bg-slate-900 border border-dashed border-rose-300 dark:border-rose-900/60 text-center space-y-3 shadow-xs">
+        <div class="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center mx-auto">
+          <app-icon name="alert-triangle" [size]="24"></app-icon>
+        </div>
+        <h4 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white m-0">
+          No specific crisis protections matched this filter
+        </h4>
+        <p class="text-slate-600 dark:text-slate-400 text-xs max-w-sm mx-auto m-0">
+          Select "All Emergencies" or try clearing your search query to reveal all codified protections.
+        </p>
+        <div class="flex items-center justify-center gap-2 mt-2 flex-wrap">
+          <button (click)="setScenarioFilter('all')"
+            class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl border-0 cursor-pointer shadow-xs transition">
+            Show All Emergency Protections
+          </button>
+          <button (click)="onProposeNewRight()"
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl border-0 cursor-pointer shadow-md transition flex items-center gap-1.5">
+            <app-icon name="plus-circle" [size]="14"></app-icon>
+            <span>Propose New Scenario</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Emergency Teleprompter Cards Feed -->
+      <div class="space-y-2 sm:space-y-3">
+        <article *ngFor="let right of displayedCrisisRights(); trackBy: trackByRightId"
+          class="p-3.5 sm:p-6 rounded-xl sm:rounded-3xl bg-white dark:bg-slate-900 border border-rose-500/30 sm:border-2 sm:border-rose-500/35 hover:border-rose-500/70 shadow-md sm:shadow-lg space-y-3 transition-all">
+
+          <!-- Top Row: Badge, Title & Direct Action Toolbar -->
+          <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
+            <div class="space-y-1 sm:space-y-1.5 flex-1 min-w-0">
+              <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap text-[10px]">
+                <span
+                  class="px-2 py-0.5 rounded-md font-extrabold uppercase bg-rose-500 text-white tracking-wider shadow-2xs">
+                  Emergency Defense
+                </span>
+                <span
+                  class="px-2 py-0.5 rounded-md font-bold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+                  {{ right.category }}
+                </span>
+                <span class="text-rose-600 dark:text-rose-400 font-extrabold">
+                  {{ right.statutoryBasis.shortAct }}
+                </span>
+              </div>
+
+              <h3
+                class="font-serif text-base sm:text-xl font-bold text-slate-900 dark:text-white leading-snug sm:leading-tight m-0">
+                {{ getTitle(right) }}
+              </h3>
+
+              <span class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 block font-mono">
+                {{ right.statutoryBasis.actName }} ({{ (right.statutoryBasis.sections || []).join(', ') }})
+              </span>
+            </div>
+
+            <!-- Quick 1-Tap Emergency Actions (Guaranteed 1 line on mobile, untouched on desktop) -->
+            <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 flex-nowrap sm:flex-wrap w-full sm:w-auto">
+              <!-- Flash Legal Pass Button -->
+              <button (click)="onFlashPass(right, $event)"
+                appTooltip="Flash full-screen Digital Defense Pass to official" tooltipPlacement="top"
+                class="flex-1 sm:flex-initial px-2.5 py-2 sm:px-3.5 sm:py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[11px] sm:text-xs font-black rounded-xl shadow-md transition flex items-center justify-center gap-1 sm:gap-1.5 cursor-pointer border-0 active:scale-95 whitespace-nowrap min-w-0">
+                <app-icon name="badge-check" [size]="15" class="shrink-0"></app-icon>
+                <span class="truncate">Flash Legal Pass</span>
+              </button>
+
+              <!-- Helpline Dial Button (if helpline exists) -->
+              <a *ngIf="right.emergencyHelpline" [href]="'tel:' + right.emergencyHelpline.number"
+                [appTooltip]="'Direct Call: ' + right.emergencyHelpline.name" tooltipPlacement="top"
+                class="flex-1 sm:flex-initial px-2.5 py-2 sm:px-3 sm:py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-[11px] sm:text-xs font-extrabold rounded-xl shadow-md transition flex items-center justify-center gap-1 sm:gap-1.5 no-underline active:scale-95 whitespace-nowrap min-w-0">
+                <app-icon name="phone" [size]="13" class="shrink-0"></app-icon>
+                <span class="truncate">Dial {{ right.emergencyHelpline.number }}</span>
+              </a>
+
+              <!-- Universal Custom Share Menu -->
+              <app-share-menu [title]="getShareSubject(right)" [text]="getShareText(right)"
+                [shareUrl]="getShareUrl(right)" [subject]="getShareSubject(right)" [copyText]="getCitationText(right)"
+                [copySuccessMessage]="getCitationSuccessMessage(right)" copyLinkLabel="Copy Citation"
+                tooltipText="Share emergency protection" tooltipPlacement="top"
+                buttonClass="p-2 sm:p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 cursor-pointer transition hover:bg-emerald-100 dark:hover:bg-emerald-900/40 flex items-center justify-center"
+                activeClass="!bg-emerald-600 !text-white !border-emerald-600 shadow-md" [iconSize]="15"
+                iconClass="!w-[15px] !h-[15px]" class="shrink-0 flex items-center">
+              </app-share-menu>
+            </div>
+          </div>
+
+          <!-- ==================== VERBATIM DIRECTIVE TELEPROMPTER ==================== -->
+          <div
+            class="p-3 sm:px-5 sm:py-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-rose-50/80 via-rose-50/40 to-amber-50/30 dark:from-rose-950/35 dark:via-rose-950/20 dark:to-slate-900/40 border border-rose-200/80 sm:border-2 sm:border-rose-300/90 dark:border-rose-900/60 space-y-2 sm:space-y-3 shadow-2xs sm:shadow-inner">
+            <div class="flex items-center justify-between gap-1.5 sm:gap-2 flex-wrap">
+              <span
+                class="text-[11px] sm:text-xs font-black uppercase tracking-wider text-rose-700 dark:text-rose-300 flex items-center gap-1 sm:gap-1.5">
+                <app-icon name="message-square" [size]="13"></app-icon>
+                <span>Say this word-for-word:</span>
+              </span>
+
+              <!-- Teleprompter Speech Controls Toolbar -->
+              <div class="flex items-center gap-1 sm:gap-1.5">
+                <!-- Per-Card Language Switcher (EN / HI on desktop, EN / हि on mobile) -->
+                <button (click)="toggleCardLanguage(right.id, $event)"
+                  [appTooltip]="'Switch this script to ' + (getEffectiveLanguage(right.id) === 'hi' ? 'English' : 'हिन्दी')"
+                  tooltipPlacement="top"
+                  class="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-rose-300 dark:border-rose-800 bg-white dark:bg-slate-800 text-[10.5px] sm:text-[11px] font-black text-rose-700 dark:text-rose-300 hover:bg-rose-100 dark:hover:bg-slate-700 transition cursor-pointer shadow-2xs">
+                  <span class="sm:hidden">{{ getEffectiveLanguage(right.id) === 'hi' ? 'EN' : 'हि' }}</span>
+                  <span class="hidden sm:inline">{{ getEffectiveLanguage(right.id) === 'hi' ? 'EN' : 'हिन्दी'
+                    }}</span>
+                </button>
+
+                <!-- Audio Read Aloud Megaphone Button -->
+                <button (click)="onSpeak(right, $event)"
+                  [appTooltip]="isSpeaking() && speakingRightId() === right.id ? 'Pause audio playback' : 'Play verbal confrontation script aloud'"
+                  tooltipPlacement="top"
+                  [class]="isSpeaking() && speakingRightId() === right.id ? 'bg-indigo-600 text-white animate-pulse' : 'bg-white dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 shadow-2xs'"
+                  class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-indigo-200 dark:border-indigo-800 text-[10.5px] sm:text-xs font-bold transition flex items-center gap-1 sm:gap-1.5 cursor-pointer">
+                  <app-icon [name]="isSpeaking() && speakingRightId() === right.id ? 'volume-2' : 'volume-1'"
+                    [size]="13"></app-icon>
+                  <span class="hidden md:inline">{{ isSpeaking() && speakingRightId() === right.id ? 'Pause' : 'Play'
+                    }}</span>
+                </button>
+
+                <!-- Stealth Mute Button (Instant 1-Tap Silence) -->
+                <button *ngIf="isSpeaking() && speakingRightId() === right.id" (click)="onStealthSilence($event)"
+                  appTooltip="Stealth Stop: Instantly mute audio if officer approaches" tooltipPlacement="top"
+                  class="px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-[10.5px] sm:text-xs font-black transition flex items-center gap-1 cursor-pointer shadow-xs border-0 active:scale-95 animate-pulse">
+                  <app-icon name="volume-x" [size]="13"></app-icon>
+                  <span>Mute</span>
+                </button>
+
+                <!-- Copy Script Button -->
+                <button (click)="onCopyScript(right, $event)"
+                  [appTooltip]="copiedScriptId() === right.id ? 'Copied script to clipboard!' : 'Copy verbatim script'"
+                  tooltipPlacement="top"
+                  [class]="copiedScriptId() === right.id ? 'bg-emerald-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300'"
+                  class="px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-700 text-[10.5px] sm:text-xs font-bold transition flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-2xs">
+                  <app-icon [name]="copiedScriptId() === right.id ? 'check' : 'copy'" [size]="12"></app-icon>
+                  <span class="hidden md:inline">{{ copiedScriptId() === right.id ? 'Copied!' : 'Copy' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Blockquote Quotation Box -->
+            <blockquote
+              class="font-sans text-[12.5px] sm:text-base font-medium sm:font-semibold text-slate-900 dark:text-slate-100 italic border-l-3 sm:border-l-4 border-rose-600 pl-2.5 sm:pl-3.5 py-1 m-0 leading-relaxed bg-white/70 sm:bg-white/80 dark:bg-slate-950/50 sm:dark:bg-black/40 p-2.5 sm:p-3.5 rounded-r-lg sm:rounded-r-xl select-all">
+              "{{ getWhatToSay(right) }}"
+            </blockquote>
+          </div>
+
+          <!-- ==================== IMMEDIATE ACTION CHECKLIST: DO'S & DON'TS ==================== -->
+          <div class="space-y-1.5 sm:space-y-2">
+            <div class="flex items-center justify-between text-[11px] sm:text-xs">
+              <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <app-icon name="shield" [size]="13" class="text-rose-500"></app-icon>
+                <span>Immediate Action Matrix (Do's &amp; Don'ts)</span>
+              </span>
+              <button (click)="toggleDosDonts(right.id)" appTooltip="Toggle Do's and Don'ts Checklist"
+                tooltipPlacement="top"
+                class="px-2 py-0.5 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-[10px] sm:text-[11px] transition cursor-pointer flex items-center gap-1 border-0">
+                <span>{{ isDosDontsExpanded(right.id) ? 'Collapse' : 'Expand Matrix' }}</span>
+                <app-icon [name]="isDosDontsExpanded(right.id) ? 'chevron-up' : 'chevron-down'" [size]="12"></app-icon>
+              </button>
+            </div>
+
+            <div *ngIf="isDosDontsExpanded(right.id)"
+              class="grid grid-cols-1 md:grid-cols-2 gap-2.5 sm:gap-3 text-xs animate-[fadeIn_0.15s_ease-out]">
+              <!-- DO'S COLUMN -->
+              <div
+                class="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/25 border border-emerald-300/70 dark:border-emerald-800/60 space-y-1.5 sm:space-y-2">
+                <span
+                  class="font-extrabold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 text-[11.5px] sm:text-xs">
+                  <app-icon name="check-circle" [size]="13" class="text-emerald-600 dark:text-emerald-400"></app-icon>
+                  <span>DO (Assertive Actions)</span>
+                </span>
+                <ul class="space-y-1 sm:space-y-1.5 pl-0 m-0 list-none text-[11px] sm:text-xs">
+                  <li *ngFor="let item of getDosAndDonts(right).dos; trackBy: trackByIndex"
+                    class="flex items-start gap-1.5 text-slate-700 dark:text-slate-300 leading-snug">
+                    <app-icon name="check" [size]="12"
+                      class="text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5"></app-icon>
+                    <span>{{ item }}</span>
+                  </li>
+                </ul>
+              </div>
+
+              <!-- DON'TS COLUMN -->
+              <div
+                class="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-rose-50/70 dark:bg-rose-950/25 border border-rose-300/70 dark:border-rose-800/60 space-y-1.5 sm:space-y-2">
+                <span
+                  class="font-extrabold text-rose-800 dark:text-rose-300 flex items-center gap-1.5 text-[11.5px] sm:text-xs">
+                  <app-icon name="alert-triangle" [size]="13" class="text-rose-600 dark:text-rose-400"></app-icon>
+                  <span>DON'T (Critical Traps)</span>
+                </span>
+                <ul class="space-y-1 sm:space-y-1.5 pl-0 m-0 list-none text-[11px] sm:text-xs">
+                  <li *ngFor="let item of getDosAndDonts(right).donts; trackBy: trackByIndex"
+                    class="flex items-start gap-1.5 text-slate-700 dark:text-slate-300 leading-snug">
+                    <app-icon name="x" [size]="12" class="text-rose-600 dark:text-rose-400 shrink-0 mt-0.5"></app-icon>
+                    <span>{{ item }}</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <!-- ==================== SAFEGUARD CHECKLIST & PENALTIES SUMMARY ==================== -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3 text-xs">
+            <div
+              class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800 space-y-0.5 sm:space-y-1">
+              <span class="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1 text-[11px] sm:text-xs">
+                <app-icon name="check-circle" [size]="12" class="text-emerald-500"></app-icon>
+                <span>Citizen Guarantee</span>
+              </span>
+              <p class="text-slate-600 dark:text-slate-400 text-[11px] sm:text-xs line-clamp-2 m-0 leading-snug">{{
+                getSummary(right) }}</p>
+            </div>
+
+            <div
+              class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200/50 dark:border-rose-900/40 space-y-0.5 sm:space-y-1">
+              <span class="font-bold text-rose-700 dark:text-rose-400 flex items-center gap-1 text-[11px] sm:text-xs">
+                <app-icon name="alert-triangle" [size]="12" class="text-rose-500"></app-icon>
+                <span>Legal Penalties for Non-Compliance</span>
+              </span>
+              <p
+                class="text-rose-800 dark:text-rose-300 font-medium text-[11px] sm:text-xs line-clamp-2 m-0 leading-snug">
+                {{ right.penaltiesForViolation || 'Disciplinary suspension and criminal prosecution under BNS Section
+                198.' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- ==================== CARD FOOTER: CITATION & TRIAGE LINKS ==================== -->
+          <div
+            class="flex items-center justify-between gap-1.5 sm:gap-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex-wrap text-xs">
+            <button (click)="onOpenDiagnostic(getDiagnosticCrisisId(right))"
+              appTooltip="Launch 3-step rapid legal diagnostic wizard" tooltipPlacement="top"
+              class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline bg-transparent border-0 cursor-pointer flex items-center gap-1 p-0 text-[11px] sm:text-xs">
+              <app-icon name="shield-check" [size]="13"></app-icon>
+              <span class="hidden xs:inline">Launch Diagnostic Triage</span>
+              <span class="xs:hidden">Diagnostic Triage</span>
+            </button>
+
+            <div class="flex items-center gap-1.5 sm:gap-2">
+              <!-- Suggest Correction / Report Inaccuracy Button (Path A) -->
+              <button *ngIf="!hasReported(right.id)" (click)="onSuggestCorrection(right, $event)"
+                appTooltip="Report an outdated statute, wrong section, or dead helpline" tooltipPlacement="top"
+                class="px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 hover:bg-amber-50 hover:text-amber-700 dark:bg-slate-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-400 text-slate-500 text-[10.5px] sm:text-[11px] font-bold flex items-center gap-1 transition cursor-pointer border-0">
+                <app-icon name="flag" [size]="11"></app-icon>
+                <span class="hidden md:inline">Suggest Correction</span>
+              </button>
+
+              <!-- Active Dispute Status Pill -->
+              <span *ngIf="hasReported(right.id)"
+                [appTooltip]="'Discrepancy reported (' + getReport(right.id)?.referenceId + ') • Under Legal Council Review'"
+                tooltipPlacement="top"
+                class="px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[10px] sm:text-[10.5px] font-black flex items-center gap-1 cursor-default select-none shadow-2xs">
+                <app-icon name="alert-triangle" [size]="11" class="text-amber-600 dark:text-amber-400"></app-icon>
+                <span>Flagged (Under Review)</span>
+              </span>
+
+              <!-- Copy Citation Button -->
+              <button (click)="onCopyCitation(right, $event)"
+                [appTooltip]="copiedCitationId() === right.id ? 'Copied statutory citation!' : 'Copy citation'"
+                tooltipPlacement="top"
+                class="px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10.5px] sm:text-[11px] font-bold flex items-center gap-1 transition cursor-pointer border-0">
+                <app-icon [name]="copiedCitationId() === right.id ? 'check' : 'copy'" [size]="11"></app-icon>
+                <span>{{ copiedCitationId() === right.id ? 'Copied' : 'Citation' }}</span>
+              </button>
+
+              <!-- View Details Drawer Link -->
+              <button (click)="onOpenDetail(right, $event)"
+                appTooltip="View comprehensive legal playbook & statutory dossier" tooltipPlacement="top"
+                class="px-2 py-1 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 text-[10.5px] sm:text-[11px] font-bold flex items-center gap-1 transition cursor-pointer border-0">
+                <app-icon name="external-link" [size]="11"></app-icon>
+                <span>Details</span>
+              </button>
+            </div>
+          </div>
+
+        </article>
+      </div>
+
+      <!-- ==================== 5. PROGRESSIVE DISCLOSURE ACTIONS (FULL-PROOF SIDE-BY-SIDE ON ALL SCREENS) ==================== -->
+      <div *ngIf="remainingCount() > 0"
+        class="flex flex-row items-center justify-center gap-2 sm:gap-3 w-full max-w-xl mx-auto px-1 sm:px-0">
+        <!-- Blue Pill: Show Next Batch More Protections -->
+        <button (click)="showMore()" appTooltip="Load next batch of emergency confrontation playbooks"
+          tooltipPlacement="top"
+          class="flex-1 sm:flex-initial sm:w-auto px-3.5 sm:px-6 py-2.5 rounded-full bg-blue-600 hover:bg-blue-500 active:scale-95 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 shadow-md shadow-blue-500/25 transition-all cursor-pointer border-0 whitespace-nowrap min-w-0">
+          <app-icon name="chevron-down" [size]="14" class="shrink-0"></app-icon>
+          <!-- Mobile Concise Label (Never Wraps or Breaks) -->
+          <span class="sm:hidden truncate">
+            Show {{ nextBatchCount() }} More ({{ remainingCount() }} remaining)
+          </span>
+          <!-- Desktop Full Label -->
+          <span class="hidden sm:inline">
+            Show {{ nextBatchCount() }} More Protections ({{ remainingCount() }} remaining)
+          </span>
+        </button>
+
+        <!-- Dark Pill: Show All -->
+        <button (click)="showAll()" appTooltip="Display all emergency confrontation playbooks" tooltipPlacement="top"
+          class="shrink-0 sm:w-auto px-4 sm:px-6 py-2.5 rounded-full bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 dark:text-slate-200 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all cursor-pointer border border-slate-700/80 shadow-xs whitespace-nowrap">
+          <span>Show All ({{ filteredCrisisRights().length }})</span>
+        </button>
+      </div>
+
+      <!-- All Protections Loaded Indicator -->
+      <div *ngIf="remainingCount() === 0 && filteredCrisisRights().length > pageSize"
+        class="text-center py-4 text-xs font-semibold text-slate-400 dark:text-slate-500 flex items-center justify-center gap-2">
+        <app-icon name="shield-check" [size]="14" class="text-emerald-500"></app-icon>
+        <span>All {{ filteredCrisisRights().length }} emergency confrontation defenses loaded</span>
+      </div>
+
+      <!-- ==================== 6. STATUTORY DISCLAIMER & COMPLIANCE FOOTER ==================== -->
+      <footer class="!mt-0 mb-2 select-none" role="contentinfo">
+
+        <!-- Premium Ornamental Divider with Ambient Flare (Full Mobile Responsive) -->
+        <div class="relative py-5 sm:py-8 flex items-center justify-center" aria-hidden="true">
+          <!-- Subtle Ambient Glow Flare -->
+          <div
+            class="absolute inset-x-4 sm:inset-x-24 h-px bg-gradient-to-r from-transparent via-blue-500/35 dark:via-blue-400/25 to-transparent blur-xs pointer-events-none">
+          </div>
+
+          <!-- Main Gradient Divider Line -->
+          <div
+            class="w-full h-px bg-gradient-to-r from-transparent via-slate-300/90 dark:via-slate-700/80 to-transparent">
+          </div>
+
+          <!-- Centerpiece Luxury Insignia -->
+          <div
+            class="absolute px-3 sm:px-3.5 py-0.5 sm:py-1 rounded-full bg-slate-50/95 dark:bg-[#07090e]/95 border border-slate-200/90 dark:border-slate-800/90 shadow-xs flex items-center gap-1.5 sm:gap-2 backdrop-blur-md whitespace-nowrap max-w-[90%]">
+            <span
+              class="w-1.5 h-1.5 rounded-full bg-amber-500/90 shadow-[0_0_8px_rgba(245,158,11,0.6)] shrink-0"></span>
+            <app-icon name="scale" [size]="12" class="text-slate-500 dark:text-slate-400 shrink-0"></app-icon>
+            <span
+              class="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider sm:tracking-widest text-slate-600 dark:text-slate-400 font-mono truncate">
+              Statutory Safeguards
+            </span>
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-500/90 shadow-[0_0_8px_rgba(59,130,246,0.6)] shrink-0"></span>
+          </div>
+        </div>
+
+        <!-- Official Statutory & Regulatory Disclaimer Box -->
+        <div
+          class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-white via-slate-50/90 to-amber-500/[0.02] dark:from-[#0b0f19] dark:via-[#090d16] dark:to-amber-500/[0.03] border border-slate-200/90 dark:border-slate-800/90 border-l-4 border-l-amber-500 dark:border-l-amber-400/90 p-3.5 sm:p-5 shadow-xs backdrop-blur-md">
+
+          <!-- Watermark Legal Scales Background Motif -->
+          <app-icon name="scale" [size]="76"
+            class="absolute -right-3 -top-3 text-slate-400/5 dark:text-slate-100/[0.02] pointer-events-none select-none">
+          </app-icon>
+
+          <!-- Disclaimer Header Bar -->
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-2.5 pb-2.5 sm:pb-3 border-b border-slate-200/70 dark:border-slate-800/80 relative z-10">
+            <div class="flex items-center gap-2 flex-wrap">
+              <!-- Warning Pill Badge -->
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-amber-500/10 dark:bg-amber-400/10 border border-amber-500/30 dark:border-amber-400/25 text-amber-700 dark:text-amber-300 font-extrabold text-[10px] sm:text-[10.5px] uppercase tracking-wider shadow-2xs shrink-0">
+                <app-icon name="alert-triangle" [size]="12"
+                  class="text-amber-600 dark:text-amber-400 shrink-0"></app-icon>
+                <span>{{ currentLanguage() === 'hi' ? 'कानूनी अस्वीकरण' : 'Legal Disclaimer' }}</span>
+              </span>
+
+              <!-- Notice Title -->
+              <h4
+                class="m-0 font-bold text-slate-800 dark:text-slate-200 text-xs sm:text-[13px] tracking-tight leading-tight">
+                {{ currentLanguage() === 'hi' ? 'वैधानिक एवं बार काउंसिल ऑफ इंडिया अनुपालन सूचना' : 'Statutory & Bar
+                Council of India Compliance Notice' }}
+              </h4>
+            </div>
+
+            <!-- Regulatory Citation Chip -->
+            <div
+              class="self-start sm:self-auto inline-flex items-center gap-1.5 text-[9.5px] sm:text-[10px] font-mono font-medium text-slate-500 dark:text-slate-400 bg-slate-100/90 dark:bg-slate-800/60 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md border border-slate-200/80 dark:border-slate-700/60 shadow-2xs shrink-0">
+              <app-icon name="shield-check" [size]="11" class="text-emerald-500"></app-icon>
+              <span>Advocates Act 1961 &bull; BCI Rule 36</span>
+            </div>
+          </div>
+
+          <!-- Structured Disclaimer Clauses -->
+          <div
+            class="pt-3 space-y-2.5 text-[11px] sm:text-[11.5px] leading-relaxed text-slate-600 dark:text-slate-300 relative z-10">
+            <p *ngIf="currentLanguage() === 'hi'" class="m-0 text-slate-600 dark:text-slate-300 text-left">
+              <strong class="text-slate-900 dark:text-slate-100 font-bold">प्रक्रियात्मक संदर्भ (गैर-वकालत
+                सेवा):</strong>
+              लीगलकनेक्ट इमरजेंसी डिफेंस स्क्रिप्ट्स भारतीय संहिताओं (भारतीय नागरिक सुरक्षा संहिता 2023, BNS, CrPC) और
+              सर्वोच्च न्यायालय के बाध्यकारी न्यायिक मिसालों से उद्धृत सत्यापित प्रक्रियात्मक मार्गदर्शन हैं। यह बार
+              काउंसिल ऑफ इंडिया के नियमों के तहत कोई औपचारिक कानूनी सलाह, मुवक्किल-अधिवक्ता संबंध या वकालत का विज्ञापन
+              नहीं है। विशिष्ट केस और व्यक्तिगत कानूनी रणनीति के लिए बार काउंसिल में पंजीकृत योग्य अधिवक्ता से परामर्श
+              लें।
+            </p>
+
+            <p *ngIf="currentLanguage() !== 'hi'" class="m-0 text-slate-600 dark:text-slate-300 text-left">
+              <strong class="text-slate-900 dark:text-slate-100 font-bold">Informational Scope &amp;
+                Non-Solicitation:</strong>
+              LegalConnect Emergency Defense Scripts are automated procedural references citing codified Indian
+              statutes
+              (Bharatiya Nagarik Suraksha Sanhita 2023, BNS, CrPC) and binding Supreme Court precedents. This platform
+              does not solicit legal work, advertise advocacy services, or establish an advocate-client relationship
+              under the Bar Council of India Rules. For personalized legal advice and representation, consult an
+              enrolled advocate.
+            </p>
+
+            <!-- Emergency Distress SOS Strip (Full Mobile Tap-Target Optimized) -->
+            <div
+              class="mt-3 pt-2.5 border-t border-slate-200/70 dark:border-slate-800/80 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 bg-rose-500/[0.04] dark:bg-rose-500/[0.06] px-3 py-2.5 rounded-xl border border-rose-500/20">
+              <div
+                class="flex items-start sm:items-center gap-2 text-[11px] sm:text-xs text-slate-700 dark:text-slate-300 min-w-0">
+                <span class="relative flex h-2 w-2 shrink-0 mt-0.5 sm:mt-0">
+                  <span
+                    class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
+                </span>
+                <span class="leading-snug">
+                  <strong class="text-rose-600 dark:text-rose-400 font-bold">
+                    {{ currentLanguage() === 'hi' ? 'तात्कालिक संकट:' : 'Immediate Emergency:' }}
+                  </strong>
+                  {{ currentLanguage() === 'hi' ? 'शारीरिक खतरे, अवैध हिरासत या हिंसक दबाव की स्थिति में तुरंत कॉल
+                  करें:'
+                  : 'In cases of imminent bodily harm, unlawful detention, or coercion, contact emergency response
+                  immediately:' }}
+                </span>
+              </div>
+
+              <!-- Action Button: Full-width finger-friendly on mobile, compact on desktop -->
+              <a href="tel:112"
+                class="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2 sm:py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 active:scale-[0.98] sm:active:scale-95 text-white font-bold text-xs shadow-xs hover:shadow transition shrink-0 no-underline cursor-pointer">
+                <app-icon name="phone" [size]="12"></app-icon>
+                <span>Dial 112 (SOS)</span>
+              </a>
+            </div>
+
+          </div>
+
+        </div>
+
+      </footer>
+
+    </div>
+
+  </div>
+
+</div>

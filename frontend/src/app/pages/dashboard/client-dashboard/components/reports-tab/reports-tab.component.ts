@@ -333,6 +333,8 @@ export class ReportsTabComponent implements OnInit {
   formatTargetType(type: string): string {
     if (!type) return 'Listing';
     const t = type.toLowerCase();
+    if (t.includes('statutoryright')) return 'Statutory Right Correction';
+    if (t.includes('newrightproposal') || t.includes('proposal')) return 'Legal Protection Proposal';
     if (t.includes('resource')) return 'Resource';
     if (t.includes('lawyer')) return 'Lawyer';
     if (t.includes('act') || t.includes('section') || t.includes('statute')) return 'Statute';
@@ -371,7 +373,11 @@ export class ReportsTabComponent implements OnInit {
 
     // 2. Direct router navigation support
     const targetType = (rep.targetType || '').toLowerCase();
-    if (targetType.includes('resource')) {
+    if (targetType.includes('statutoryright')) {
+      this.router.navigate(['/rights'], { queryParams: { detail: rep.targetId } });
+    } else if (targetType.includes('newrightproposal') || targetType.includes('proposal')) {
+      this.router.navigate(['/rights']);
+    } else if (targetType.includes('resource')) {
       this.router.navigate(['/legal-resources', rep.targetId]);
     } else if (targetType.includes('lawyer')) {
       this.router.navigate(['/lawyers', rep.targetId]);
@@ -482,6 +488,8 @@ export class ReportsTabComponent implements OnInit {
 
   getTargetBadgeClass(type: string): string {
     const t = (type || '').toLowerCase();
+    if (t.includes('statutoryright')) return 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800/40';
+    if (t.includes('newrightproposal') || t.includes('proposal')) return 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-800/40';
     if (t.includes('lawyer')) return 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-200 dark:border-purple-800/40';
     if (t.includes('resource')) return 'bg-sky-500/10 text-sky-600 dark:text-sky-400 border-sky-200 dark:border-sky-800/40';
     if (t.includes('review')) return 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-200 dark:border-amber-800/40';

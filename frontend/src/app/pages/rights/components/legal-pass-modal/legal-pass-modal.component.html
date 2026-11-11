@@ -1,0 +1,231 @@
+<!-- ==========================================================================
+     DIGITAL CITIZEN STATUTORY DEFENSE PASS
+     Mobile: Native-grade bottom-docked takeover with touch pull-to-dismiss
+     Desktop: Authoritative Gold-Accented Institutional Credential Dialog
+     ========================================================================== -->
+
+<!-- Backdrop -->
+<div (click)="onClose()"
+  class="fixed inset-0 z-[2300] flex items-end sm:items-center justify-center bg-slate-950/85 backdrop-blur-md p-0 sm:p-4 overflow-hidden pass-backdrop cursor-pointer"
+  [class.pass-backdrop-closing]="isClosing()" role="dialog" aria-modal="true"
+  aria-label="Digital Statutory Legal Defense Pass">
+
+  <!-- ==================== PASS CARD CONTAINER ==================== -->
+  <div (click)="$event.stopPropagation()"
+    class="w-full sm:max-w-[580px] h-[92dvh] sm:h-auto sm:max-h-[90vh] bg-[#080c14] border-t-2 sm:border-2 border-amber-500/50 rounded-t-3xl sm:rounded-3xl flex flex-col shadow-2xl text-white relative overflow-hidden pass-card cursor-default"
+    [class.pass-card-closing]="isClosing()" [class.is-dragging]="isDragging()"
+    [style.transform]="dragTranslateY() > 0 ? 'translate3d(0, ' + dragTranslateY() + 'px, 0)' : null">
+
+    <!-- ==================== 1. FIXED HEADER ==================== -->
+    <header class="px-4 sm:px-6 pt-1 sm:pt-4 pb-3.5 pass-header shrink-0 space-y-2.5">
+      <!-- Mobile Native Pull Handle Bar (Touch Swipe-to-Dismiss) -->
+      <div
+        class="sm:hidden pt-2 pb-1.5 flex justify-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none"
+        (touchstart)="onTouchStart($any($event))" (touchmove)="onTouchMove($any($event))" (touchend)="onTouchEnd()"
+        (touchcancel)="onTouchEnd()">
+        <div class="w-11 h-1 rounded-full bg-slate-600/60 hover:bg-slate-500 transition-colors"></div>
+      </div>
+      <!-- Top Row: Credential Insignia Crest + Unified Frosted Action Pill -->
+      <div class="flex items-center justify-between gap-2.5 min-w-0">
+        <!-- Official Issuing Authority Crest & Seal -->
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div
+            class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl insignia-badge flex items-center justify-center text-amber-400 shrink-0">
+            <app-icon name="scale" [size]="18"></app-icon>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center gap-1.5 leading-none mb-1">
+              <span
+                class="text-[8.5px] sm:text-[9.5px] font-mono font-black uppercase tracking-[0.14em] text-amber-400 truncate">
+                Republic of India
+              </span>
+              <span class="w-1 h-1 rounded-full bg-amber-400/50 shrink-0"></span>
+              <span
+                class="text-[8px] font-mono text-emerald-400 font-bold uppercase tracking-wider flex items-center gap-0.5 shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>Verified</span>
+              </span>
+            </div>
+            <span class="text-[11px] sm:text-xs font-black uppercase tracking-wider text-slate-100 block truncate">
+              Statutory Defense Pass
+            </span>
+          </div>
+        </div>
+
+        <!-- Unified Frosted Glass Action Pill -->
+        <div class="pass-action-pill rounded-xl p-0.5 flex items-center gap-0.5 shrink-0 shadow-sm">
+          <!-- In-situ Bilingual Switcher (EN / HI) -->
+          <button (click)="toggleLanguage()"
+            [appTooltip]="modalLanguage() === 'en' ? 'Switch to Hindi (हिंदी)' : 'Switch to English'"
+            tooltipPlacement="bottom" aria-label="Toggle language"
+            class="px-2 py-1 rounded-lg text-[10px] font-mono font-black text-amber-300 hover:text-white hover:bg-white/10 transition cursor-pointer border-0 flex items-center gap-1">
+            <app-icon name="globe" [size]="11"></app-icon>
+            <span>{{ modalLanguage() === 'en' ? 'HI' : 'EN' }}</span>
+          </button>
+
+          <!-- Universal Custom Share Menu (Native OS Sheet on Mobile, Custom Dropdown Menu on Desktop) -->
+          <app-share-menu [title]="getShareSubject()" [text]="getShareText()" [shareUrl]="getShareUrl()"
+            [subject]="getShareSubject()" tooltipText="Share defense pass" tooltipPlacement="bottom"
+            buttonClass="p-1 sm:p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer border-0 flex items-center justify-center min-w-[26px] min-h-[26px]"
+            [iconSize]="12" iconClass="!w-[11px] !h-[11px] sm:!w-[13px] sm:!h-[13px]" class="flex items-center">
+          </app-share-menu>
+
+          <!-- Vertical Divider -->
+          <div class="h-3.5 w-px bg-white/15 mx-0.5"></div>
+
+          <!-- Close Button -->
+          <button (click)="onClose()" appTooltip="Close defense pass (Esc)" tooltipPlacement="bottom"
+            aria-label="Close defense pass"
+            class="p-1 sm:p-1.5 rounded-lg text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer border-0 flex items-center justify-center min-w-[26px] min-h-[26px]">
+            <app-icon name="x" [size]="14"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Pass Title & Category Strip -->
+      <div class="pt-0.5 space-y-1.5">
+        <h2
+          class="font-serif text-base sm:text-xl font-black text-white leading-snug sm:leading-tight m-0 break-words tracking-tight">
+          {{ getTitle() }}
+        </h2>
+
+        <!-- Category Chip & Legal Charter Subtitle (Guaranteed single-line on mobile & desktop, handles long text with truncation & tooltips) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 text-[10px] min-w-0 flex-nowrap overflow-hidden">
+          <span [title]="pass.category || 'Statutory Safeguard'"
+            class="shrink-0 max-w-[55%] truncate px-2 py-0.5 rounded-md bg-amber-500/15 text-amber-300 font-mono font-extrabold border border-amber-500/30 text-[8.5px] sm:text-[9px] uppercase tracking-wider">
+            {{ pass.category || 'Statutory Safeguard' }}
+          </span>
+          <span class="text-slate-600 shrink-0 select-none text-[9px] sm:text-[10px]">•</span>
+          <span title="Constitutional Enforcement Charter"
+            class="text-slate-400 font-mono text-[8.5px] sm:text-[9.5px] uppercase tracking-wider truncate min-w-0">
+            Constitutional Enforcement Charter
+          </span>
+        </div>
+      </div>
+    </header>
+
+    <!-- ==================== 2. MAIN SCROLLABLE BODY ==================== -->
+    <div class="flex-1 overflow-y-auto px-4 sm:px-6 py-4 space-y-4 pass-scroll-body">
+
+      <!-- Codified Statutory Authority Box -->
+      <div class="p-3.5 sm:p-4 rounded-xl bg-white/5 border border-amber-500/20 space-y-2">
+        <div class="flex items-center justify-between gap-2">
+          <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+            <app-icon name="book-open" [size]="12"></app-icon>
+            <span>Codified Statutory Authority</span>
+          </span>
+          <a [href]="getActUrl()" target="_blank" rel="noopener noreferrer" (click)="onActClick($event)"
+            [appTooltip]="'Open ' + pass.statutoryBasis.actName + ' in Bare Act viewer'" tooltipPlacement="top"
+            class="text-blue-400 hover:text-blue-300 text-[11px] font-semibold inline-flex items-center gap-1 hover:underline no-underline">
+            <span>Bare Act Text</span>
+            <app-icon name="external-link" [size]="10"></app-icon>
+          </a>
+        </div>
+
+        <a [href]="getActUrl()" target="_blank" rel="noopener noreferrer" (click)="onActClick($event)"
+          class="text-xs sm:text-sm font-bold text-white hover:text-blue-300 block no-underline transition-colors leading-snug break-words">
+          {{ pass.statutoryBasis.actName }}
+        </a>
+
+        <!-- Section Pills with Direct Links -->
+        <div class="flex flex-wrap gap-1.5 pt-0.5">
+          <a *ngFor="let s of pass.statutoryBasis.sections; trackBy: trackByString" [href]="getSectionUrl(s)"
+            target="_blank" rel="noopener noreferrer" (click)="onSectionClick(s, $event)"
+            [appTooltip]="'Open ' + s + ' in Bare Act viewer'"
+            class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-500/15 hover:bg-blue-500/30 text-blue-300 hover:text-blue-100 text-xs font-mono font-bold border border-blue-500/30 hover:border-blue-400 transition cursor-pointer no-underline active:scale-95">
+            <span>{{ s }}</span>
+            <app-icon name="external-link" [size]="9" class="opacity-60"></app-icon>
+          </a>
+        </div>
+      </div>
+
+      <!-- Official Confrontation Directive (The Core Action Script) -->
+      <div class="space-y-1.5 sm:space-y-2">
+        <div class="flex items-center justify-between gap-1.5 sm:gap-2 min-w-0">
+          <div class="flex items-center gap-1.5 min-w-0 flex-1">
+            <app-icon name="message-square" [size]="12" class="text-amber-400 shrink-0"></app-icon>
+            <span
+              class="text-[8.5px] xs:text-[9px] sm:text-[10px] font-black uppercase text-slate-300 tracking-wider whitespace-nowrap truncate min-w-0"
+              title="Official Directive to Law Enforcement &amp; Authorities:">
+              Official Directive to Law Enforcement &amp; Authorities:
+            </span>
+          </div>
+
+          <!-- Copy Directive Script Button -->
+          <button (click)="onCopyScript($event)"
+            [appTooltip]="copiedScript() ? 'Copied script!' : 'Copy directive text'" tooltipPlacement="bottom"
+            class="shrink-0 px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-500/15 hover:bg-amber-500/25 active:bg-amber-500/35 text-amber-300 border border-amber-500/30 transition cursor-pointer flex items-center gap-1 active:scale-95 shadow-sm">
+            <app-icon [name]="copiedScript() ? 'check' : 'copy'" [size]="11"
+              [class.text-emerald-400]="copiedScript()"></app-icon>
+            <span class="hidden sm:inline">{{ copiedScript() ? 'Copied' : 'Copy' }}</span>
+          </button>
+        </div>
+
+        <blockquote
+          class="text-xs sm:text-sm text-amber-100/95 italic border-l-4 border-amber-500 pl-3.5 py-2 m-0 leading-relaxed bg-black/60 p-3 rounded-r-xl select-all border border-l-amber-500 border-white/5">
+          "{{ getWhatToSay() }}"
+        </blockquote>
+      </div>
+
+      <!-- Key Binding Safeguards Checklist -->
+      <div class="space-y-2 text-xs text-slate-300">
+        <span class="text-[10px] font-black uppercase text-emerald-400 tracking-wider flex items-center gap-1.5">
+          <app-icon name="shield-check" [size]="12"></app-icon>
+          <span>Binding Citizen Safeguards:</span>
+        </span>
+        <ul class="space-y-2 list-none p-0 m-0">
+          <li *ngFor="let p of pass.keyProtections; trackBy: trackByIndex" class="flex items-start gap-2.5">
+            <app-icon name="check-circle" [size]="14" class="text-emerald-400 shrink-0 mt-0.5"></app-icon>
+            <span class="leading-relaxed text-slate-200">{{ p }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Statutory Contempt & Judicial Notice -->
+      <div
+        class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-[11px] text-amber-200/90 leading-relaxed flex items-start gap-2">
+        <app-icon name="alert-triangle" [size]="14" class="text-amber-400 shrink-0 mt-0.5"></app-icon>
+        <div>
+          <strong class="text-amber-300">Statutory Notice:</strong> This protection is codified by Indian Law. Willful
+          violation or illegal obstruction by public officials invites contempt of court under Supreme Court directives
+          and penal proceedings under Bharatiya Nyaya Sanhita (BNS). Issued for citizen statutory reference; does not
+          constitute formal legal advice under Bar Council of India Rules.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== 3. FIXED STICKY ACTION DOCK ==================== -->
+    <footer
+      class="px-4 sm:px-6 py-3 border-t border-amber-500/25 bg-slate-950/95 backdrop-blur-md shrink-0 safe-bottom-padding flex flex-col sm:flex-row items-center justify-between gap-2.5">
+      <!-- Legal Verification Stamp -->
+      <div
+        class="text-[10px] text-slate-400 flex items-center gap-1.5 w-full sm:w-auto justify-center sm:justify-start">
+        <app-icon name="shield-check" [size]="13" class="text-emerald-400 shrink-0"></app-icon>
+        <span>Verified by LegalConnect Research Council</span>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 w-full sm:w-auto">
+        <!-- Emergency Dial Button (if available) -->
+        <a *ngIf="pass.emergencyHelpline" [href]="'tel:' + pass.emergencyHelpline.number"
+          [appTooltip]="'Instant call to ' + pass.emergencyHelpline.name + ' (' + pass.emergencyHelpline.number + ')'"
+          tooltipPlacement="top"
+          class="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 active:scale-95 text-slate-950 text-xs font-black rounded-xl shadow-md shadow-amber-500/20 transition no-underline flex items-center justify-center gap-1.5 text-center cursor-pointer whitespace-nowrap">
+          <app-icon name="phone" [size]="13"></app-icon>
+          <span>Dial {{ pass.emergencyHelpline.number }}</span>
+        </a>
+
+        <!-- Save Institutional PDF -->
+        <button (click)="onPrint()" [disabled]="isPrinting" appTooltip="Save defense pass as official PDF"
+          tooltipPlacement="top"
+          class="flex-1 sm:flex-initial px-3.5 py-2 bg-slate-800 hover:bg-slate-700 active:scale-95 text-white text-xs font-bold rounded-xl border border-slate-700 hover:border-amber-500/40 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50 whitespace-nowrap">
+          <app-icon [name]="isPrinting ? 'refresh' : 'printer'" [size]="13"
+            [class.animate-spin]="isPrinting"></app-icon>
+          <span>{{ isPrinting ? 'Saving...' : 'Save PDF' }}</span>
+        </button>
+      </div>
+    </footer>
+
+  </div>
+</div>

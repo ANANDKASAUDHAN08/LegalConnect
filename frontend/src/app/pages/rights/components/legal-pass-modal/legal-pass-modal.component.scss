@@ -1,0 +1,188 @@
+/* ==========================================================================
+   DIGITAL CITIZEN STATUTORY DEFENSE PASS STYLES
+   Mobile: Native full-screen / bottom-sheet takeover with touch swipe-to-dismiss
+   Desktop: Authoritative Gold-Accented Institutional Credential Dialog
+   ========================================================================== */
+
+:host {
+  display: contents;
+}
+
+@keyframes passBackdropFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes passBackdropFadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes passScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes passScaleOut {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.94) translateY(12px);
+  }
+}
+
+@keyframes passSlideUpMobile {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes passSlideDownMobileExit {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+/* Backdrop */
+.pass-backdrop {
+  animation: passBackdropFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity;
+
+  &.pass-backdrop-closing {
+    animation: passBackdropFadeOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* Desktop Modal Animation */
+@media (min-width: 640px) {
+  .pass-card {
+    animation: passScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform, opacity;
+
+    &.pass-card-closing {
+      animation: passScaleOut 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  }
+}
+
+/* Mobile Slide-Up Takeover Animation */
+@media (max-width: 639px) {
+  .pass-card {
+    animation: passSlideUpMobile 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform;
+
+    &.pass-card-closing {
+      animation: passSlideDownMobileExit 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  }
+}
+
+/* Dragging state for instant finger response without transition lag */
+.pass-card.is-dragging {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Custom Sleek Dark Scrollbar */
+.pass-scroll-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(245, 158, 11, 0.35) transparent;
+  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(245, 158, 11, 0.3);
+    border-radius: 9999px;
+
+    &:hover {
+      background: rgba(245, 158, 11, 0.6);
+    }
+  }
+}
+
+/* Safe Area Insets for Mobile Devices */
+.safe-bottom-padding {
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom, 0.875rem));
+}
+
+.safe-top-padding {
+  padding-top: max(0.5rem, env(safe-area-inset-top, 0.5rem));
+}
+
+/* Gold Metallic Sheen Gradient Border */
+.gold-metallic-border {
+  border-image: linear-gradient(to bottom, rgba(245, 158, 11, 0.7), rgba(217, 119, 6, 0.3), rgba(245, 158, 11, 0.6)) 1;
+}
+
+/* Guilloche Emblem Glow */
+.emblem-glow {
+  box-shadow: 0 0 20px -2px rgba(245, 158, 11, 0.4);
+}
+
+/* Luxury Dark Header - Deep Obsidian with Razor-Thin Gold Accent */
+.pass-header {
+  background: linear-gradient(180deg, #0e1422 0%, #080c14 100%);
+  position: relative;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent 0%, rgba(245, 158, 11, 0.35) 50%, transparent 100%);
+  }
+}
+
+/* Unified Frosted Action Pill - Clean Translucent Glass */
+.pass-action-pill {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 2px 8px -1px rgba(0, 0, 0, 0.4);
+}
+
+/* Official Insignia Seal Badge - Crisp 24K Gold Frame */
+.insignia-badge {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.04) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 16px -3px rgba(245, 158, 11, 0.25), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}

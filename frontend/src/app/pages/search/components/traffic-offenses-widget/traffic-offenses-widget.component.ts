@@ -1,5 +1,6 @@
-import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, ChangeDetectionStrategy, inject, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RightsService } from '../../../../services/rights.service';
 
 export interface TrafficOffense {
   readonly offense: string;
@@ -15,14 +16,16 @@ export interface TrafficOffense {
   templateUrl: './traffic-offenses-widget.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class TrafficOffensesWidgetComponent {
-  @Input() loading = false;
+export class TrafficOffensesWidgetComponent implements OnInit {
+  private rightsService = inject(RightsService);
+  private cdr = inject(ChangeDetectorRef);
 
+  @Input() loading = false;
   @Output() dismiss = new EventEmitter<void>();
 
   collapsedTraffic = true;
 
-  readonly trafficOffenses: TrafficOffense[] = [
+  trafficOffenses: TrafficOffense[] = [
     {
       offense: 'Drunk Driving',
       section: '(MV Act Sec 185)',
@@ -48,6 +51,23 @@ export class TrafficOffensesWidgetComponent {
       isSmallText: true
     }
   ];
+
+  ngOnInit(): void {
+    this.rightsService.fetchRights('Traffic, Vehicles & Transport', '', 'popular', 'traffic-police').subscribe(res => {
+      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+        const dynamicItems = res.data.slice(0, 4).map(r => ({
+          offense: r.title,
+          section: `(${r.statutoryBasis.shortAct || 'MVA'} ${r.statutoryBasis.sections?.join(', ') || ''})`,
+          fine: r.penaltiesForViolation || r.summary,
+          isSmallText: (r.penaltiesForViolation || '').length > 25
+        }));
+        if (dynamicItems.length > 0) {
+          this.trafficOffenses = dynamicItems;
+          this.cdr.markForCheck();
+        }
+      }
+    });
+  }
 
   toggleTrafficCollapse() {
     this.collapsedTraffic = !this.collapsedTraffic;

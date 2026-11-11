@@ -1,0 +1,584 @@
+<div *ngIf="proposalService.isOpen()" (click)="onBackdropClick($event)" role="dialog" aria-modal="true"
+  aria-labelledby="proposalModalTitle"
+  class="fixed inset-0 z-[2350] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4 overflow-y-auto scrollbar-none animate-[fadeIn_0.2s_ease-out] cursor-pointer touch-manipulation">
+
+  <div (click)="$event.stopPropagation()"
+    class="w-full max-w-[760px] max-h-[94dvh] sm:max-h-[88vh] flex flex-col bg-slate-900 border-t border-x border-slate-700/60 sm:border rounded-t-[28px] sm:rounded-3xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.85),0_0_35px_rgba(99,102,241,0.15)] overflow-hidden my-0 sm:my-6 cursor-default transition-all pb-[env(safe-area-inset-bottom,0px)] max-sm:animate-[bottomSheetSlideUp_0.32s_cubic-bezier(0.16,1,0.3,1)_forwards]">
+
+    <!-- Top Gradient Accent Highlight Line (Desktop dialog only) -->
+    <div class="hidden sm:block h-[2px] w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shrink-0">
+    </div>
+
+    <!-- Mobile Sheet Drag Handle Bar (Tappable to close bottom sheet) -->
+    <div (click)="onClose()" aria-label="Close bottom sheet"
+      class="sm:hidden flex items-center justify-center pt-2.5 pb-1.5 cursor-pointer active:opacity-70 shrink-0 select-none">
+      <div class="w-10 h-1.25 rounded-full bg-slate-500/70 hover:bg-slate-400 transition-colors"></div>
+    </div>
+
+    <!-- ── Header Bar ── -->
+    <div
+      class="flex items-start justify-between gap-3 sm:gap-4 px-4 pb-3.5 pt-1 sm:p-6 border-b border-slate-800 bg-slate-900/90 backdrop-blur-md shrink-0">
+      <div class="flex items-start gap-3 sm:gap-3.5 min-w-0">
+        <!-- Icon Badge -->
+        <div
+          class="w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl bg-indigo-500/15 border border-indigo-500/30 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(99,102,241,0.25)]">
+          <!-- Mobile Icon (< md: size 18) -->
+          <span class="inline-flex items-center justify-center md:hidden">
+            <app-icon name="plus-circle" [size]="18" class="text-indigo-400"></app-icon>
+          </span>
+          <!-- Desktop Icon (>= md: size 20) -->
+          <span class="hidden md:inline-flex items-center justify-center">
+            <app-icon name="plus-circle" [size]="20" class="text-indigo-400"></app-icon>
+          </span>
+        </div>
+
+        <div class="space-y-1 min-w-0">
+          <div class="flex items-center gap-2">
+            <span
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-indigo-500/15 text-indigo-300 border border-indigo-400/25">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400 animate-pulse"></span>
+              <span>Citizen Defense Initiative</span>
+            </span>
+            <span class="text-[10px] text-slate-500 font-mono hidden sm:inline">Open Statutory Codex</span>
+          </div>
+
+          <h2 id="proposalModalTitle"
+            class="text-[15px] sm:text-xl font-bold tracking-tight m-0 leading-snug bg-gradient-to-r from-white via-slate-100 to-indigo-200 bg-clip-text text-transparent">
+            Propose New Legal Protection
+          </h2>
+          <p class="text-[11px] sm:text-xs text-slate-400 m-0 line-clamp-2 sm:line-clamp-none leading-relaxed">
+            Contribute uncodified citizen rights, emerging threats, or missing statutory safeguards
+          </p>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <button type="button" (click)="onClose()" appTooltip="Close proposal modal (Esc)" tooltipPlacement="left"
+        aria-label="Close modal"
+        class="w-8 h-8 rounded-full flex items-center justify-center bg-white/5 hover:bg-white/15 text-slate-400 hover:text-white transition active:scale-95 border border-white/10 shrink-0 cursor-pointer">
+        <app-icon name="x" [size]="15"></app-icon>
+      </button>
+    </div>
+
+    <!-- ── Wizard Progress Bar (Desktop & Mobile Adaptive) ── -->
+    <div *ngIf="step() < 4" class="shrink-0 border-b border-slate-800 bg-slate-950/60">
+      <!-- Desktop Stepper -->
+      <div class="hidden sm:flex items-center justify-between gap-3 px-6 py-3 text-xs">
+        <!-- Step 1 Button -->
+        <button type="button" (click)="goToStep(1)" appTooltip="Step 1: Threat Scenario & Practice Domain"
+          tooltipPlacement="bottom"
+          [class]="step() === 1 ? 'opacity-100 font-bold text-white' : (step() > 1 ? 'opacity-90 text-slate-200' : 'opacity-40 text-slate-400')"
+          class="flex items-center gap-2 bg-transparent border-0 p-0 cursor-pointer transition">
+          <span class="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold transition"
+            [ngClass]="step() === 1 ? 'bg-indigo-600 border-indigo-400 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]' : (step() > 1 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'border-slate-700 text-slate-400')">
+            <app-icon *ngIf="step() > 1" name="check" [size]="13"></app-icon>
+            <span *ngIf="step() <= 1">1</span>
+          </span>
+          <span>Scenario & Threat</span>
+        </button>
+
+        <div class="flex-1 h-0.5 rounded-full transition-all duration-300"
+          [ngClass]="step() > 1 ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-slate-800'"></div>
+
+        <!-- Step 2 Button -->
+        <button type="button" (click)="goToStep(2)" [disabled]="!isStep1Valid()"
+          appTooltip="Step 2: Statutory Precedent & Teleprompter Script" tooltipPlacement="bottom"
+          [class]="step() === 2 ? 'opacity-100 font-bold text-white' : (step() > 2 ? 'opacity-90 text-slate-200' : 'opacity-40 text-slate-400')"
+          class="flex items-center gap-2 bg-transparent border-0 p-0 cursor-pointer transition disabled:cursor-not-allowed">
+          <span class="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold transition"
+            [ngClass]="step() === 2 ? 'bg-indigo-600 border-indigo-400 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]' : (step() > 2 ? 'bg-emerald-500/20 border-emerald-500 text-emerald-400' : 'border-slate-700 text-slate-400')">
+            <app-icon *ngIf="step() > 2" name="check" [size]="13"></app-icon>
+            <span *ngIf="step() <= 2">2</span>
+          </span>
+          <span>Statute & Script</span>
+        </button>
+
+        <div class="flex-1 h-0.5 rounded-full transition-all duration-300"
+          [ngClass]="step() > 2 ? 'bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]' : 'bg-slate-800'"></div>
+
+        <!-- Step 3 Button -->
+        <button type="button" (click)="goToStep(3)" [disabled]="!isStep1Valid()"
+          appTooltip="Step 3: Contributor Attribution & Evidence" tooltipPlacement="bottom"
+          [class]="step() === 3 ? 'opacity-100 font-bold text-white' : 'opacity-40 text-slate-400'"
+          class="flex items-center gap-2 bg-transparent border-0 p-0 cursor-pointer transition disabled:cursor-not-allowed">
+          <span class="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold transition"
+            [ngClass]="step() === 3 ? 'bg-indigo-600 border-indigo-400 text-white shadow-[0_0_12px_rgba(99,102,241,0.5)]' : 'border-slate-700 text-slate-400'">
+            3
+          </span>
+          <span>Attribution & Audit</span>
+        </button>
+      </div>
+
+      <!-- Mobile Stepper Ribbon -->
+      <div class="sm:hidden flex flex-col gap-1.5 px-4 py-2.5 bg-slate-950/40">
+        <div class="flex items-center justify-between text-xs">
+          <span class="font-mono font-bold text-indigo-400 text-[10.5px] uppercase tracking-wider">Step {{ step() }} of
+            3</span>
+          <span class="font-semibold text-slate-200 text-xs">{{ getStepTitle(step()) }}</span>
+        </div>
+        <div class="h-1 w-full bg-slate-800/80 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 rounded-full transition-all duration-300"
+            [style.width.%]="(step() / 3) * 100"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Main Form Body ── -->
+    <form [formGroup]="proposalForm" (ngSubmit)="submitProposal()" class="flex flex-col overflow-hidden flex-1">
+
+      <!-- ════════ STEP 1: SCENARIO & CATEGORY ════════ -->
+      <div *ngIf="step() === 1"
+        class="p-4 sm:p-6 overflow-y-auto max-h-[calc(94dvh-200px)] sm:max-h-[calc(88vh-200px)] flex flex-col gap-4 sm:gap-5 scrollbar-none animate-[fadeIn_0.2s_ease-out]">
+
+        <!-- Threat Scenario Title -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide" for="scenarioTitle">
+              Threat Scenario or Legal Right Title <span class="text-rose-500 font-black">*</span>
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">Searchable Citizen Threat</span>
+          </div>
+
+          <input id="scenarioTitle" type="text" formControlName="scenarioTitle" maxlength="150"
+            placeholder="e.g. Unauthorized Phone Confiscation at Police Checkpoint"
+            class="w-full bg-slate-950/80 border border-slate-700/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition shadow-inner" />
+
+          <!-- Inspiration Suggestions Row -->
+          <div class="flex items-center gap-1.5 pt-1 overflow-hidden">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">Inspiration:</span>
+            <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              <button type="button" *ngFor="let sugg of threatSuggestions; trackBy: trackByString"
+                (click)="applyTitleSuggestion(sugg)" [appTooltip]="'Use template: ' + sugg" tooltipPlacement="top"
+                class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-slate-800/80 hover:bg-indigo-950/70 hover:text-indigo-300 border border-slate-700/70 hover:border-indigo-500/50 text-slate-300 transition shrink-0 cursor-pointer active:scale-95 whitespace-nowrap">
+                + {{ sugg }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Legal Domain / Category Selection -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide">
+              Select Legal Practice Domain <span class="text-rose-500 font-black">*</span>
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">Statutory Jurisdiction</span>
+          </div>
+
+          <div
+            class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 max-h-[220px] sm:max-h-[250px] overflow-y-auto scrollbar-none pr-0.5"
+            *ngIf="!isLoadingCategories(); else loadingCats">
+            <button type="button" *ngFor="let cat of categories(); trackBy: trackByCategoryId"
+              (click)="selectCategory(cat)" [appTooltip]="'Select ' + cat.name + ' domain'" tooltipPlacement="top"
+              class="flex items-start gap-2.5 p-2.5 sm:p-3 rounded-xl border text-left cursor-pointer transition active:scale-[0.99] relative"
+              [ngClass]="categoryControl.value === cat.id
+                ? 'bg-indigo-600/15 border-indigo-500 shadow-[0_0_16px_rgba(99,102,241,0.25)]'
+                : 'bg-slate-800/40 border-slate-700/60 hover:bg-slate-800/80 hover:border-slate-600'">
+
+              <!-- Domain Icon Badge -->
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border mt-0.5"
+                [ngClass]="getCategoryColorClass(cat.id)">
+                <app-icon [name]="cat.icon" [size]="15"></app-icon>
+              </div>
+
+              <!-- Domain Info -->
+              <div class="flex-1 min-w-0 space-y-0.5">
+                <div class="flex items-center justify-between gap-1">
+                  <span class="text-xs font-bold truncate"
+                    [ngClass]="categoryControl.value === cat.id ? 'text-white' : 'text-slate-200'">
+                    {{ cat.name }}
+                  </span>
+                  <span *ngIf="categoryControl.value === cat.id"
+                    class="w-4 h-4 rounded-full bg-indigo-600 flex items-center justify-center shrink-0">
+                    <app-icon name="check" [size]="10" class="text-white"></app-icon>
+                  </span>
+                </div>
+                <p class="text-[10.5px] text-slate-400 line-clamp-2 leading-tight m-0">
+                  {{ cat.description }}
+                </p>
+              </div>
+            </button>
+          </div>
+
+          <!-- Skeleton Loader for Domains (Adaptive Mobile & Desktop 2-Col Grid) -->
+          <ng-template #loadingCats>
+            <div
+              class="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-2.5 max-h-[220px] sm:max-h-[250px] overflow-y-auto scrollbar-none pr-0.5 animate-[fadeIn_0.15s_ease-out]"
+              aria-busy="true" aria-label="Loading statutory practice domains">
+              <div *ngFor="let _ of [1,2,3,4]; trackBy: trackByIndex"
+                class="flex items-start gap-2.5 p-2.5 sm:p-3 rounded-xl border border-slate-800 bg-slate-900/60">
+                <div class="w-8 h-8 rounded-lg skeleton-shimmer shrink-0 mt-0.5"></div>
+                <div class="flex-1 space-y-1.5 py-0.5">
+                  <div class="w-24 h-3.5 rounded skeleton-shimmer"></div>
+                  <div class="w-full h-3 rounded skeleton-shimmer"></div>
+                </div>
+              </div>
+            </div>
+          </ng-template>
+        </div>
+
+        <!-- Details & Citizen Context -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide" for="description">
+              Threat Scenario Details & Citizen Context <span class="text-rose-500 font-black">*</span>
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">Factual Encounter</span>
+          </div>
+
+          <textarea id="description" formControlName="description" rows="4" maxlength="3000"
+            placeholder="Explain how citizens face this issue, how officials or fraudsters violate rights, and any recent news or court precedents..."
+            class="w-full bg-slate-950/80 border border-slate-700/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 rounded-xl p-3 text-sm text-slate-100 placeholder-slate-500 outline-none transition shadow-inner resize-y min-h-[90px] leading-relaxed"></textarea>
+
+          <div class="flex items-center justify-between text-xs pt-0.5">
+            <span class="text-[11px] flex items-center gap-1"
+              [ngClass]="descriptionLength >= 15 ? 'text-emerald-400 font-medium' : 'text-slate-400'">
+              <app-icon [name]="descriptionLength >= 15 ? 'check-circle' : 'info'" [size]="13"></app-icon>
+              <span *ngIf="descriptionLength < 15">Minimum 15 characters required ({{ 15 - descriptionLength }}
+                more)</span>
+              <span *ngIf="descriptionLength >= 15">Valid scenario description</span>
+            </span>
+
+            <span class="text-[11px] font-mono font-bold"
+              [ngClass]="descriptionLength < 15 ? 'text-rose-400' : 'text-emerald-400'">
+              {{ descriptionLength }}/3000
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ STEP 2: STATUTORY BASIS & VERBAL SCRIPT ════════ -->
+      <div *ngIf="step() === 2"
+        class="p-4 sm:p-6 overflow-y-auto max-h-[calc(94dvh-200px)] sm:max-h-[calc(88vh-200px)] flex flex-col gap-4 sm:gap-5 scrollbar-none animate-[fadeIn_0.2s_ease-out]">
+
+        <!-- Governing Statute / Precedent -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide" for="statutoryBasis">
+              Governing Statute, Sections or Supreme Court Precedent
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">Optional Citation</span>
+          </div>
+
+          <input id="statutoryBasis" type="text" formControlName="statutoryBasis" maxlength="250"
+            placeholder="e.g. BNS 2023 Sec 351, BNSS 2023 Sec 105, or Supreme Court DK Basu guidelines"
+            class="w-full bg-slate-950/80 border border-slate-700/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition shadow-inner" />
+
+          <!-- Statute Quick Insert Pills -->
+          <div class="flex items-center gap-1.5 pt-1 overflow-hidden">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500 shrink-0">Common Codes:</span>
+            <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-0.5">
+              <button type="button" *ngFor="let stat of statuteSuggestions; trackBy: trackByString"
+                (click)="applyStatuteSuggestion(stat)" [appTooltip]="'Insert ' + stat" tooltipPlacement="top"
+                class="px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-slate-800/80 hover:bg-indigo-950/70 hover:text-indigo-300 border border-slate-700/70 hover:border-indigo-500/50 text-slate-300 transition shrink-0 cursor-pointer active:scale-95 whitespace-nowrap">
+                + {{ stat }}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Citizen Verbal Teleprompter Script -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-rose-950/20 border border-rose-500/30 space-y-2">
+          <div class="flex items-center justify-between gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 text-xs font-extrabold text-rose-300">
+              <app-icon name="volume-2" [size]="14" class="text-rose-400"></app-icon>
+              <span>Assertive Citizen Teleprompter Script</span>
+            </div>
+            <span class="text-[10px] text-slate-400 italic">Spoken aloud during active confrontation</span>
+          </div>
+
+          <textarea id="verbalScript" formControlName="verbalScript" rows="3" maxlength="600"
+            placeholder='e.g. "Officer, under statutory search rules and Ministry directives, you cannot confiscate or inspect personal devices without an official seizure memo..."'
+            class="w-full bg-slate-950/90 border border-rose-500/30 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/25 rounded-xl p-3 text-sm text-rose-100 placeholder-rose-200/40 outline-none transition font-serif min-h-[85px] leading-relaxed shadow-inner"></textarea>
+
+          <p class="text-[11px] text-slate-400 m-0 leading-normal">
+            Calm, non-provocative script for citizens to recite verbatim during an active encounter.
+          </p>
+        </div>
+
+        <!-- Direct Helpline or Portal -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide" for="emergencyHelpline">
+              24x7 Direct Helpline or Redressal Portal
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">Official Contact</span>
+          </div>
+
+          <div class="relative flex items-center">
+            <app-icon name="phone" [size]="14" class="absolute left-3.5 text-indigo-400 pointer-events-none"></app-icon>
+            <input id="emergencyHelpline" type="text" formControlName="emergencyHelpline" maxlength="120"
+              placeholder="e.g. 1930 (National Cyber Crime Helpline), 112 (National Emergency)"
+              class="w-full bg-slate-950/80 border border-slate-700/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 rounded-xl pl-9 pr-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition shadow-inner" />
+          </div>
+        </div>
+
+        <!-- Evidence / Gazette Upload -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide">
+              Gazette Notification, Circular or Evidence (Optional)
+            </label>
+            <span class="text-[10px] font-mono text-slate-500">PDF, PNG, JPG &bull; Up to 5 MB</span>
+          </div>
+
+          <div class="border-2 border-dashed rounded-2xl transition-all"
+            [ngClass]="evidencePreview() ? 'border-indigo-500/40 bg-slate-900/90' : (isDragging() ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-700/80 bg-slate-950/40 hover:border-slate-600')"
+            (dragover)="onDragOver($event)" (dragleave)="onDragLeave($event)" (drop)="onFileDropped($event)">
+
+            <div *ngIf="!evidencePreview(); else fileAttached" class="p-4 sm:p-5 text-center">
+              <input type="file" id="propEvidenceFile" class="sr-only"
+                accept="image/jpeg,image/png,image/webp,image/gif,application/pdf" (change)="onFileSelected($event)" />
+
+              <label for="propEvidenceFile" class="flex flex-col items-center gap-2 cursor-pointer">
+                <div
+                  class="w-10 h-10 rounded-full bg-indigo-500/10 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                  <app-icon name="upload-cloud" [size]="20"></app-icon>
+                </div>
+                <div class="text-xs text-slate-300">
+                  <strong class="text-indigo-400 font-bold">Click to browse</strong> or drag & drop evidence file
+                </div>
+                <p class="text-[10.5px] text-slate-500 m-0">
+                  PDF, PNG, JPG up to 5 MB &bull; Paste screenshot directly with Ctrl+V
+                </p>
+              </label>
+            </div>
+
+            <ng-template #fileAttached>
+              <div class="flex items-center gap-3 p-3 sm:p-4">
+                <div
+                  class="w-11 h-11 rounded-lg overflow-hidden bg-slate-800 flex items-center justify-center shrink-0">
+                  <img *ngIf="evidenceFileType() === 'image'" [src]="evidencePreview()" alt="Evidence thumbnail"
+                    class="w-full h-full object-cover" />
+                  <app-icon *ngIf="evidenceFileType() === 'pdf'" name="file-text" [size]="22"
+                    class="text-indigo-400"></app-icon>
+                </div>
+
+                <div class="flex-1 min-w-0 space-y-0.5">
+                  <div class="text-xs font-bold text-white truncate">{{ evidenceFileName() }}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">{{ evidenceFileSize() }}</div>
+                </div>
+
+                <button type="button" (click)="removeEvidence()" aria-label="Remove attachment"
+                  appTooltip="Remove attached evidence file" tooltipPlacement="left"
+                  class="p-2 rounded-lg text-rose-400 hover:text-rose-300 hover:bg-rose-500/15 transition cursor-pointer border-0 bg-transparent">
+                  <app-icon name="trash-2" [size]="16"></app-icon>
+                </button>
+              </div>
+            </ng-template>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ STEP 3: ATTRIBUTION & CONTACT ════════ -->
+      <div *ngIf="step() === 3"
+        class="p-4 sm:p-6 overflow-y-auto max-h-[calc(94dvh-200px)] sm:max-h-[calc(88vh-200px)] flex flex-col gap-4 sm:gap-5 scrollbar-none animate-[fadeIn_0.2s_ease-out]">
+
+        <!-- Contributor Attribution Selection -->
+        <div class="space-y-2">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold text-slate-200 tracking-wide">Contributor Attribution</label>
+            <span class="text-[10px] font-mono text-slate-500">Community Credential</span>
+          </div>
+
+          <div class="flex flex-wrap gap-2">
+            <button type="button" (click)="setContributorType('citizen')" appTooltip="Submit as Citizen Researcher"
+              tooltipPlacement="top"
+              [ngClass]="proposalForm.value.contributorType === 'citizen' ? 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_14px_rgba(99,102,241,0.4)] font-bold' : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:border-slate-600 font-semibold'"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs border transition cursor-pointer active:scale-95">
+              <app-icon name="user" [size]="14"></app-icon>
+              <span>Citizen Researcher</span>
+            </button>
+
+            <button type="button" (click)="setContributorType('advocate')"
+              appTooltip="Submit as Practicing Advocate (with Bar Council credentials)" tooltipPlacement="top"
+              [ngClass]="proposalForm.value.contributorType === 'advocate' ? 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_14px_rgba(99,102,241,0.4)] font-bold' : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:border-slate-600 font-semibold'"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs border transition cursor-pointer active:scale-95">
+              <app-icon name="award" [size]="14"></app-icon>
+              <span>Practicing Advocate</span>
+            </button>
+
+            <button type="button" (click)="setContributorType('law_student')"
+              appTooltip="Submit as Law Student or Legal Scholar" tooltipPlacement="top"
+              [ngClass]="proposalForm.value.contributorType === 'law_student' ? 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_14px_rgba(99,102,241,0.4)] font-bold' : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:border-slate-600 font-semibold'"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs border transition cursor-pointer active:scale-95">
+              <app-icon name="book-open" [size]="14"></app-icon>
+              <span>Law Student / Scholar</span>
+            </button>
+
+            <button type="button" (click)="setContributorType('anonymous')"
+              appTooltip="Submit anonymously without public attribution" tooltipPlacement="top"
+              [ngClass]="proposalForm.value.contributorType === 'anonymous' ? 'bg-indigo-600 text-white border-indigo-500 shadow-[0_0_14px_rgba(99,102,241,0.4)] font-bold' : 'bg-slate-800/60 text-slate-300 border-slate-700/80 hover:border-slate-600 font-semibold'"
+              class="flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs border transition cursor-pointer active:scale-95">
+              <app-icon name="eye-off" [size]="14"></app-icon>
+              <span>Anonymous</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Identity Fields Grid -->
+        <div *ngIf="proposalForm.value.contributorType !== 'anonymous'" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-200" for="contributorName">Your Full Name</label>
+            <input id="contributorName" type="text" formControlName="contributorName" maxlength="100"
+              placeholder="e.g. Adv. Priya Sharma"
+              class="w-full bg-slate-950/80 border border-slate-700/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition shadow-inner" />
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-200" for="contributorEmail">Email Address (For Research Council
+              updates)</label>
+            <input id="contributorEmail" type="email" formControlName="contributorEmail" maxlength="150"
+              placeholder="e.g. priya@barcouncil.org"
+              class="w-full bg-slate-950/80 border border-slate-700/70 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/25 rounded-xl px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition shadow-inner" />
+          </div>
+        </div>
+
+        <!-- Research Council SLA Banner -->
+        <div class="p-3.5 sm:p-4 rounded-2xl bg-indigo-950/30 border border-indigo-500/30 flex items-start gap-3">
+          <div
+            class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/30 flex items-center justify-center shrink-0 text-indigo-400 mt-0.5">
+            <app-icon name="shield-check" [size]="18"></app-icon>
+          </div>
+          <div class="space-y-1 min-w-0">
+            <h4 class="text-xs font-extrabold text-indigo-300 m-0">Legal Research Council Verification Process</h4>
+            <p class="text-[11px] text-slate-300 m-0 leading-relaxed">
+              Every crowdsourced right is cross-referenced with the official Gazette of India and Supreme Court
+              judgments
+              before publication. Accepted entries are codified into the live teleprompter library and credited to the
+              contributor.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════════ STEP 4: SUCCESS CONFIRMATION ════════ -->
+      <div *ngIf="step() === 4"
+        class="p-6 sm:p-8 flex flex-col items-center text-center overflow-y-auto max-h-[calc(94dvh-200px)] sm:max-h-[calc(88vh-200px)] scrollbar-none animate-[fadeIn_0.2s_ease-out]">
+
+        <!-- Success Badge -->
+        <div
+          class="w-16 h-16 rounded-full bg-emerald-500/15 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-400 shadow-[0_0_30px_rgba(16,185,129,0.35)] mb-3 max-sm:scale-95 animate-[pulseSuccess_2s_infinite_ease-in-out]">
+          <app-icon name="check-circle" [size]="34"></app-icon>
+        </div>
+
+        <h3 class="text-lg sm:text-xl font-extrabold text-white m-0">Proposal Submitted Successfully</h3>
+        <p class="text-xs text-slate-400 max-w-sm mt-1 mb-5 leading-relaxed">
+          Your legal defense suggestion has been recorded and submitted to the LegalConnect Research Council.
+        </p>
+
+        <!-- Receipt Card -->
+        <div class="w-full max-w-md p-4 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-3 text-left">
+          <div class="flex items-center justify-between">
+            <span class="text-xs text-slate-400 font-semibold">Ticket Reference</span>
+            <div class="flex items-center gap-2">
+              <code
+                class="px-2 py-0.5 rounded-md font-mono text-xs font-bold text-indigo-300 bg-indigo-950/80 border border-indigo-500/40">
+                {{ referenceId() }}
+              </code>
+              <button type="button" (click)="copyReferenceId()"
+                [appTooltip]="isCopiedRef() ? 'Ticket ID copied!' : 'Copy proposal ticket ID'" tooltipPlacement="top"
+                [class]="isCopiedRef() ? 'bg-emerald-600 text-white border-emerald-500' : 'bg-slate-800 text-slate-300 border-slate-700 hover:text-white'"
+                class="px-2 py-1 rounded text-[10px] font-bold border transition cursor-pointer flex items-center gap-1">
+                <app-icon [name]="isCopiedRef() ? 'check' : 'copy'" [size]="11"></app-icon>
+                <span>{{ isCopiedRef() ? 'Copied' : 'Copy' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400 font-semibold">Review SLA</span>
+            <span class="text-slate-200 font-bold">{{ estimatedTime() }}</span>
+          </div>
+
+          <div class="flex items-center justify-between text-xs">
+            <span class="text-slate-400 font-semibold">Status</span>
+            <span
+              class="px-2 py-0.5 rounded-full text-[10px] font-extrabold tracking-wider bg-amber-500/15 text-amber-400 border border-amber-500/30">
+              PENDING AUDIT
+            </span>
+          </div>
+        </div>
+
+        <!-- Council Steps Track -->
+        <div class="w-full max-w-md mt-6 relative flex items-center justify-between text-xs">
+          <div class="absolute top-2 left-6 right-6 h-0.5 bg-slate-800 -z-0"></div>
+
+          <div class="flex flex-col items-center gap-1 relative z-10">
+            <div
+              class="w-4 h-4 rounded-full bg-emerald-500 border-2 border-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.5)]">
+            </div>
+            <span class="text-[10px] text-slate-300 font-semibold">Submission Logged</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1 relative z-10">
+            <div
+              class="w-4 h-4 rounded-full bg-indigo-600 border-2 border-indigo-400 shadow-[0_0_8px_rgba(99,102,241,0.6)]">
+            </div>
+            <span class="text-[10px] text-indigo-400 font-bold">Council Audit</span>
+          </div>
+
+          <div class="flex flex-col items-center gap-1 relative z-10">
+            <div class="w-4 h-4 rounded-full bg-slate-800 border-2 border-slate-600"></div>
+            <span class="text-[10px] text-slate-500">Live Teleprompter</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Modal Footer Controls ── -->
+      <div
+        class="flex items-center gap-2 sm:gap-3 p-3.5 sm:p-5 border-t border-slate-800 bg-slate-900/90 backdrop-blur-md mt-auto shrink-0 pb-[max(0.875rem,env(safe-area-inset-bottom,0.875rem))]">
+        <ng-container *ngIf="step() < 4; else successFooter">
+          <button *ngIf="step() > 1" type="button" (click)="prevStep()" [disabled]="isSubmitting()"
+            appTooltip="Return to previous step" tooltipPlacement="top"
+            class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 cursor-pointer transition active:scale-95 flex items-center gap-1.5 disabled:opacity-40">
+            <app-icon name="arrow-left" [size]="14"></app-icon>
+            <span>Back</span>
+          </button>
+
+          <div class="flex-1"></div>
+
+          <button *ngIf="step() === 1" type="button" (click)="nextStep()" [disabled]="!isStep1Valid()"
+            appTooltip="Proceed to statutory basis & teleprompter verbal script" tooltipPlacement="top"
+            class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md hover:shadow-indigo-500/25 cursor-pointer border-0 transition active:scale-95 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none">
+            <span>Continue to Statute & Script</span>
+            <app-icon name="arrow-right" [size]="14"></app-icon>
+          </button>
+
+          <button *ngIf="step() === 2" type="button" (click)="nextStep()"
+            appTooltip="Proceed to contributor attribution & evidence" tooltipPlacement="top"
+            class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md hover:shadow-indigo-500/25 cursor-pointer border-0 transition active:scale-95 flex items-center gap-1.5">
+            <span>Continue to Attribution</span>
+            <app-icon name="arrow-right" [size]="14"></app-icon>
+          </button>
+
+          <button *ngIf="step() === 3" type="submit" [disabled]="proposalForm.invalid || isSubmitting()"
+            appTooltip="Submit proposed legal protection to Research Council" tooltipPlacement="top"
+            class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md hover:shadow-indigo-500/25 cursor-pointer border-0 transition active:scale-95 flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none">
+            <app-icon *ngIf="isSubmitting()" name="loader" [size]="14" class="animate-spin"></app-icon>
+            <span>{{ isSubmitting() ? 'Submitting to Council...' : 'Submit Legal Safeguard' }}</span>
+          </button>
+        </ng-container>
+
+        <ng-template #successFooter>
+          <button type="button" (click)="proposeAnother()" appTooltip="Draft another statutory right proposal"
+            tooltipPlacement="top"
+            class="px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-700 cursor-pointer transition active:scale-95 flex items-center gap-1.5">
+            <app-icon name="plus" [size]="14"></app-icon>
+            <span>Propose Another Defense</span>
+          </button>
+
+          <div class="flex-1"></div>
+
+          <button type="button" (click)="onClose()" appTooltip="Close dialog and return to Rights library"
+            tooltipPlacement="top"
+            class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md cursor-pointer border-0 transition active:scale-95">
+            <span>Done & Return to Library</span>
+          </button>
+        </ng-template>
+      </div>
+
+    </form>
+  </div>
+</div>

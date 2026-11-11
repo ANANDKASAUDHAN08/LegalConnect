@@ -1,0 +1,194 @@
+/* ==========================================================================
+   RIGHT DETAIL DRAWER & FULL-PAGE VIEW STYLES
+   Desktop: Right Slide-in Drawer with Backdrop Blur & Smooth Exit
+   Mobile: Native-Grade Full-Page Slide-up Takeover & Swipe-to-Dismiss
+   ========================================================================== */
+
+:host {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 2200;
+  pointer-events: none;
+}
+
+:host>* {
+  pointer-events: auto;
+}
+
+@keyframes drawerFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawerFadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes drawerSlideRight {
+  from {
+    transform: translate3d(100%, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes drawerSlideRightExit {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(100%, 0, 0);
+  }
+}
+
+@keyframes drawerSlideUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes drawerSlideDownExit {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+
+  to {
+    transform: translate3d(0, 100%, 0);
+  }
+}
+
+/* Backdrop */
+.drawer-backdrop {
+  animation: drawerFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity;
+
+  &.drawer-backdrop-closing {
+    animation: drawerFadeOut 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+/* Desktop & Tablet Slide-In & Slide-Out */
+@media (min-width: 768px) {
+  .drawer-panel {
+    animation: drawerSlideRight 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform;
+
+    &.drawer-panel-closing {
+      animation: drawerSlideRightExit 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  }
+}
+
+/* Mobile Slide-Up & Slide-Down */
+@media (max-width: 767px) {
+  .drawer-panel {
+    animation: drawerSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform;
+
+    &.drawer-panel-closing {
+      animation: drawerSlideDownExit 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+  }
+}
+
+/* Interactive Dragging State */
+.drawer-panel.is-dragging {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* Text Scaling for Legibility Zoom (A- / A / A+) */
+.text-scale-large {
+  font-size: 1.125em;
+
+  p,
+  blockquote,
+  li,
+  span.leading-relaxed {
+    font-size: 1.075rem !important;
+    line-height: 1.7 !important;
+  }
+
+  h2 {
+    font-size: 1.75rem !important;
+  }
+}
+
+.text-scale-xlarge {
+  font-size: 1.25em;
+
+  p,
+  blockquote,
+  li,
+  span.leading-relaxed {
+    font-size: 1.2rem !important;
+    line-height: 1.8 !important;
+  }
+
+  h2 {
+    font-size: 2rem !important;
+  }
+}
+
+/* Custom Scrollbar for Drawer Content */
+.drawer-scroll-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.35) transparent;
+  overscroll-behavior: contain;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 9999px;
+
+    &:hover {
+      background: rgba(100, 116, 139, 0.6);
+    }
+  }
+}
+
+/* Safe area padding for mobile notches and gesture bars */
+.safe-bottom-padding {
+  padding-bottom: max(0.875rem, env(safe-area-inset-bottom));
+}
+
+.safe-top-padding {
+  padding-top: max(0.5rem, env(safe-area-inset-top));
+}
+
+/* Suppress browser-default orange focus rings on mouse/programmatic focus while preserving keyboard accessibility */
+button:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+button:focus-visible {
+  outline: 2px solid rgba(59, 130, 246, 0.7) !important;
+  outline-offset: 1px !important;
+}

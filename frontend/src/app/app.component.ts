@@ -12,6 +12,7 @@ import { CommandPaletteComponent } from './components/command-palette/command-pa
 import { KeyboardShortcutsModalComponent } from './components/keyboard-shortcuts-modal/keyboard-shortcuts-modal.component';
 import { PrintExportModalComponent } from './components/print-export-modal/print-export-modal.component';
 import { ReportModalComponent } from './components/report-modal/report-modal/report-modal.component';
+import { SuggestRightModalComponent } from './pages/rights/components/suggest-right-modal/suggest-right-modal.component';
 import { ThemeService } from './services/theme.service';
 import { SettingsService } from './services/settings.service';
 import { AuthService } from './services/auth.service';
@@ -36,7 +37,8 @@ import { routeTransitionAnimation } from './core/animations/route.animations';
     CommandPaletteComponent,
     KeyboardShortcutsModalComponent,
     PrintExportModalComponent,
-    ReportModalComponent
+    ReportModalComponent,
+    SuggestRightModalComponent
   ],
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss'],

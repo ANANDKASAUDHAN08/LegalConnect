@@ -1,28 +1,251 @@
-/* Citizen Rights Library Styles */
+/* ==========================================================================
+   Citizen Rights & Statutory Safeguards — Luxury Neo-Legal Stylesheet
+   ========================================================================== */
+
 .page-wrapper {
   min-height: 100vh;
+  position: relative;
+  /* Ambient top subtle radial glow */
+  background-image: radial-gradient(ellipse 60% 30% at 50% 0%, rgba(59, 130, 246, 0.05), transparent 70%);
 }
 
+:host-context(.dark) .page-wrapper {
+  background-image: radial-gradient(ellipse 60% 30% at 50% 0%, rgba(59, 130, 246, 0.08), transparent 70%);
+}
+
+/* Scrollbar utilities */
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
 
 .scrollbar-none {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
 }
 
-/* Dedicated Print Stylesheet */
+/* ==========================================================================
+   Zero Scrollbar for all Modals, Drawers & Dialogs
+   ========================================================================== */
+[role="dialog"],
+[role="dialog"] *,
+.scrollbar-none,
+.scrollbar-none * {
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
+  scrollbar-width: none !important;
+
+  /* Firefox */
+  &::-webkit-scrollbar {
+    display: none !important;
+    /* Chrome, Safari, Opera */
+    width: 0 !important;
+    height: 0 !important;
+  }
+}
+
+/* Background scroll lock when modal/drawer is active (Preserve scrollY offset without snapping to top) */
+body.overflow-hidden {
+  overflow: hidden !important;
+}
+
+/* ==========================================================================
+   Luxury Neo-Legal Left Navigation Rail Scrollbar (Linear / Apple style)
+   ========================================================================== */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent;
+
+  &::-webkit-scrollbar {
+    width: 5px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent !important;
+    /* Insets the scrollbar so it starts comfortably after rounded edges */
+    margin: 16px 0 !important;
+    margin-block: 16px !important;
+    border-radius: 9999px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.28);
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background: rgba(100, 116, 139, 0.6);
+    }
+
+    &:active {
+      background: #2563eb;
+    }
+  }
+
+  /* When hovering over the rail container, subtly highlight the scrollbar thumb */
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
+  }
+
+  &:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7);
+  }
+}
+
+:host-context(.dark) .scrollbar-thin,
+.dark .scrollbar-thin {
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+
+  &::-webkit-scrollbar-track {
+    background: transparent !important;
+    margin: 16px 0 !important;
+    margin-block: 16px !important;
+    border-radius: 9999px;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.22);
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
+
+    &:hover {
+      background: rgba(203, 213, 225, 0.55);
+    }
+
+    &:active {
+      background: #3b82f6;
+    }
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+  }
+
+  &:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(203, 213, 225, 0.65);
+  }
+}
+
+/* Smooth fade in animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+/* Text line clamps */
+.line-clamp-2 {
+  display: -webkit-box;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Border left widths */
+.border-l-3 {
+  border-left-width: 3px;
+}
+
+/* Shadow 2xs micro elevation */
+.shadow-2xs {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+}
+
+/* Table scroll containment */
+table {
+  border-spacing: 0;
+}
+
+/* Cross-browser details & accordion summary reset */
+details>summary {
+  list-style: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   Skeleton Shimmer Loading Animations (Dark & Light Theme Adaptive)
+   Scoped strictly to Rights Component to avoid impacting other pages
+   ========================================================================== */
+@keyframes skeletonShimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+  background-color: rgb(226 232 240 / 0.8); // slate-200/80
+
+  :host-context(.dark) & {
+    background-color: rgb(30 41 59 / 0.65); // slate-800/65
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.55) 50%,
+        transparent 100%);
+    animation: skeletonShimmer 1.8s infinite ease-in-out;
+  }
+
+  :host-context(.dark) &::after {
+    background: linear-gradient(90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.08) 50%,
+        transparent 100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-shimmer::after {
+    animation: none !important;
+  }
+}
+
+/* Dedicated Print Dossier & Notice Stylesheet */
 @media print {
 
-  /* Hide interactive elements and navigation */
+  /* Hide navigation, toolbars, buttons and search controls */
   nav,
   footer,
+  aside,
+  header .flex>div:last-child,
   .navbar-fixed,
   button,
   input,
-  .search-bar,
-  .mobile-filter-trigger {
+  select,
+  .mobile-filter-trigger,
+  [role="dialog"] button {
     display: none !important;
   }
 
@@ -31,15 +254,107 @@
     background: #ffffff !important;
     color: #000000 !important;
     padding-top: 0 !important;
+    padding-bottom: 0 !important;
   }
 
-  .container {
+  .page-wrapper>div {
     max-width: 100% !important;
+    width: 100% !important;
     padding: 0 !important;
   }
 
-  /* Force expanded state in print */
+  /* Force expanded content to print cleanly */
   .border-t {
     display: block !important;
+  }
+
+  /* Page break avoidance for cards */
+  [id^="right-"],
+  [role="dialog"] {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 2rem !important;
+    border: 1px solid #cbd5e1 !important;
+    box-shadow: none !important;
+  }
+}
+
+/* ==========================================================================
+   High-Performance Rendering & Responsive Utilities
+   ========================================================================== */
+
+/* Modern CSS Containment: Skips layout calculations for off-screen cards */
+article[id] {
+  content-visibility: auto;
+  contain-intrinsic-size: 1px 260px;
+}
+
+/* ==========================================================================
+   Rights Floating Action Dock - Neo-Luxury Entrance & Mobile Fluid Physics
+   ========================================================================== */
+.rights-floating-dock {
+  position: fixed;
+  left: 50%;
+  transform: translate3d(-50%, 0, 0);
+  z-index: 40;
+  bottom: 24px;
+  will-change: bottom, transform, opacity;
+
+  /* Smooth hardware-accelerated transitions for dynamic bottom sliding */
+  transition: bottom 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.36s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.28s ease,
+    box-shadow 0.3s ease;
+
+  /* Ultra-smooth, spring-damped mobile entrance */
+  animation: rightsDockSpringIn 0.38s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes rightsDockSpringIn {
+  0% {
+    opacity: 0;
+    transform: translate3d(-50%, 32px, 0) scale(0.88);
+    filter: blur(8px);
+  }
+
+  60% {
+    opacity: 1;
+    transform: translate3d(-50%, -2px, 0) scale(1.02);
+    filter: blur(0px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate3d(-50%, 0, 0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* Smooth expansion of view mode text pill */
+.dock-mode-label {
+  animation: dockLabelIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) both;
+  white-space: nowrap;
+}
+
+@keyframes dockLabelIn {
+  0% {
+    opacity: 0;
+    transform: translateX(-6px) scale(0.92);
+  }
+
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Guard: strictly ensure navigation aside never displays or occupies space on mobile/tablet (< 1024px) */
+@media (max-width: 1023px) {
+  aside {
+    display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    visibility: hidden !important;
   }
 }

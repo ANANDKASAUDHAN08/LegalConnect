@@ -1,0 +1,223 @@
+<div class="space-y-2.5 sm:space-y-4 animate-[fadeIn_0.2s_ease-out]">
+
+  <article *ngFor="let right of visibleRights(); let idx = index; trackBy: trackByRightId" [id]="right.id"
+    [class.ring-2]="focusedCardIndex() === idx" [class.ring-blue-500]="focusedCardIndex() === idx"
+    (click)="onOpenDetail(right, $event)"
+    class="group bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 hover:border-blue-400 dark:hover:border-blue-600 rounded-xl sm:rounded-3xl shadow-xs hover:shadow-md transition-all duration-200 overflow-hidden cursor-pointer">
+
+    <!-- ==================== CARD TOP HEADER & ACTION BAR ==================== -->
+    <div class="p-3 sm:p-5 select-none">
+      <div class="flex items-start gap-2.5 sm:gap-4">
+
+        <!-- Left: Domain Icon (32px on mobile, 48px on desktop) -->
+        <div
+          class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0 shadow-2xs group-hover:bg-blue-600 group-hover:text-white transition-colors duration-200 mt-0.5">
+          <app-icon [name]="right.icon"
+            class="!w-4 !h-4 sm:!w-6 sm:!h-6 !min-w-[16px] !min-h-[16px] sm:!min-w-[24px] sm:!min-h-[24px]"></app-icon>
+        </div>
+
+        <!-- Right: Content & Actions Container -->
+        <div class="flex-1 min-w-0 space-y-1">
+
+          <!-- Top Row: Meta Badges (Left) + Actions Toolbar (Right on Desktop) -->
+          <div class="flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
+
+            <!-- Meta Badges: Category & Priority Flag (Clean & spacious, never wraps or truncates prematurely) -->
+            <div class="flex items-center gap-1.5 sm:gap-2 min-w-0 flex-1">
+              <!-- Category: spacious limit on mobile so full name displays, full width on desktop -->
+              <span
+                class="px-1.5 sm:px-2 py-0.5 rounded-md font-extrabold uppercase bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-[9px] sm:text-[10px] tracking-wider truncate max-w-[210px] xs:max-w-[260px] sm:max-w-[340px] lg:max-w-none shrink min-w-0"
+                [title]="right.category">
+                {{ right.category }}
+              </span>
+
+              <!-- Priority Badge (Visible on mobile & desktop, never wraps) -->
+              <span *ngIf="right.isPopular"
+                class="shrink-0 px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold uppercase rounded border border-amber-500/20 flex items-center gap-1 text-[9px] sm:text-[10px] whitespace-nowrap">
+                <app-icon name="star" [size]="9" class="shrink-0"></app-icon>
+                <span>Priority</span>
+              </span>
+            </div>
+
+            <!-- Desktop Actions Toolbar & "View Playbook" Trigger (Hidden on mobile/tablet) -->
+            <div class="hidden lg:flex items-center gap-1.5 shrink-0 ml-auto" (click)="$event.stopPropagation()">
+
+              <!-- Action Buttons Toolbar -->
+              <div class="flex items-center gap-1">
+                <!-- Digital Legal Pass Button -->
+                <button (click)="onFlashPass(right, $event)"
+                  appTooltip="Show Digital Legal Pass on screen to police or officials" tooltipPlacement="top"
+                  aria-label="Open Digital Legal Defense Pass to show to officials"
+                  class="p-1.5 rounded-xl text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-900/40 transition cursor-pointer border-0 flex items-center justify-center">
+                  <app-icon name="shield-check" [size]="15"></app-icon>
+                </button>
+
+                <!-- Pre-Drafted Legal Notice Generator -->
+                <button (click)="onOpenNotice(right, $event)" appTooltip="Draft Statutory Notice in Template Studio"
+                  tooltipPlacement="top"
+                  class="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 transition cursor-pointer bg-transparent border-0 flex items-center justify-center">
+                  <app-icon name="file-text" [size]="15"></app-icon>
+                </button>
+
+                <!-- Bookmark / Save Button -->
+                <button (click)="onToggleBookmark(right, $event)"
+                  [appTooltip]="isBookmarked(right.id) ? 'Remove from saved rights' : 'Save for offline access'"
+                  tooltipPlacement="top"
+                  [class]="isBookmarked(right.id) ? 'text-amber-500 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80' : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80'"
+                  class="p-1.5 rounded-xl transition-all duration-150 active:scale-90 cursor-pointer flex items-center justify-center">
+                  <app-icon [name]="isBookmarked(right.id) ? 'bookmark-filled' : 'bookmark'" [size]="15"
+                    [class.text-amber-500]="isBookmarked(right.id)"
+                    [class.dark:text-amber-400]="isBookmarked(right.id)"></app-icon>
+                </button>
+
+                <!-- Universal Custom Share Menu -->
+                <app-share-menu [title]="getShareSubject(right)" [text]="getShareText(right)"
+                  [shareUrl]="getShareUrl(right)" [subject]="getShareSubject(right)" [copyText]="getCitationText(right)"
+                  [copySuccessMessage]="getCitationSuccessMessage(right)" copyLinkLabel="Copy Citation"
+                  tooltipText="Share statutory protection" tooltipPlacement="top"
+                  buttonClass="p-1.5 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer bg-transparent border-0 flex items-center justify-center"
+                  [iconSize]="15" iconClass="!w-[15px] !h-[15px]" class="flex items-center">
+                </app-share-menu>
+
+                <!-- Admin Edit Button -->
+                <button *ngIf="isAdminUser" (click)="onAdminEdit(right.id, $event)"
+                  appTooltip="Edit right in Admin Portal" tooltipPlacement="top"
+                  class="p-1.5 rounded-xl text-amber-600 hover:text-amber-700 bg-amber-50 dark:bg-amber-950/30 transition cursor-pointer border-0 flex items-center justify-center">
+                  <app-icon name="edit" [size]="15"></app-icon>
+                </button>
+              </div>
+
+              <!-- View Playbook & Dossier Pill Button -->
+              <button (click)="onOpenDetail(right, $event)"
+                appTooltip="View comprehensive legal playbook & statutory dossier" tooltipPlacement="top"
+                class="px-3 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white font-bold text-xs flex items-center gap-1.5 transition cursor-pointer border border-blue-200/80 dark:border-blue-900/60 shadow-2xs">
+                <span>Playbook</span>
+                <app-icon name="arrow-right" [size]="12"></app-icon>
+              </button>
+
+            </div>
+
+          </div>
+
+          <!-- Right Title (Full width on desktop, strictly max 2 lines with overflow defense) -->
+          <h3
+            class="font-serif text-[13.5px] xs:text-sm sm:text-base lg:text-lg font-bold text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-snug m-0 line-clamp-2 break-words [overflow-wrap:anywhere]"
+            [title]="getTitle(right)">
+            {{ getTitle(right) }}
+          </h3>
+
+          <!-- Statutory Citation & Scenario Subtitle (Full width on desktop & mobile, never truncated prematurely) -->
+          <div
+            class="flex items-center gap-1.5 sm:gap-2 text-[10.5px] sm:text-xs text-blue-600 dark:text-blue-400 font-semibold min-w-0 flex-wrap">
+            <span class="flex items-center gap-1 min-w-0 shrink max-w-full truncate"
+              [title]="right.statutoryBasis.shortAct">
+              <app-icon name="book-open" [size]="11" class="shrink-0"></app-icon>
+              <span class="truncate">{{ right.statutoryBasis.shortAct }}</span>
+            </span>
+            <span *ngIf="right.scenarioTag"
+              class="shrink-0 px-1.5 py-0.5 bg-purple-500/10 text-purple-600 dark:text-purple-400 font-medium rounded text-[9.5px] sm:text-[10px] truncate max-w-[130px] sm:max-w-[220px]"
+              [title]="right.scenarioTag">
+              {{ right.scenarioTag }}
+            </span>
+          </div>
+
+          <!-- Plain English Summary (Strictly 2 lines, tight leading on mobile and desktop) -->
+          <p
+            class="text-[11.5px] sm:text-xs md:text-sm text-slate-600 dark:text-slate-400 leading-snug sm:leading-normal font-normal m-0 line-clamp-2 break-words [overflow-wrap:anywhere]">
+            {{ getSummary(right) }}
+          </p>
+
+          <!-- Mobile Actions Toolbar & "View Playbook" Trigger (Compact & touch-friendly for < lg) -->
+          <div
+            class="lg:hidden flex flex-row items-center justify-between gap-1.5 pt-1.5 mt-0.5 border-t border-slate-100 dark:border-slate-800/80"
+            (click)="$event.stopPropagation()">
+
+            <!-- Action Buttons Toolbar -->
+            <div class="flex items-center gap-1 min-w-0 shrink">
+              <!-- Digital Legal Pass Button -->
+              <button (click)="onFlashPass(right, $event)"
+                appTooltip="Show Digital Legal Pass on screen to police or officials" tooltipPlacement="top"
+                aria-label="Open Digital Legal Defense Pass to show to officials"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 active:scale-95 transition cursor-pointer border-0 flex items-center justify-center shrink-0">
+                <app-icon name="shield-check" [size]="14"></app-icon>
+              </button>
+
+              <!-- Pre-Drafted Legal Notice Generator -->
+              <button (click)="onOpenNotice(right, $event)" appTooltip="Draft Statutory Notice in Template Studio"
+                tooltipPlacement="top" aria-label="Draft Statutory Legal Notice"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition cursor-pointer bg-transparent border-0 flex items-center justify-center shrink-0">
+                <app-icon name="file-text" [size]="14"></app-icon>
+              </button>
+
+              <!-- Bookmark / Save Button -->
+              <button (click)="onToggleBookmark(right, $event)"
+                [appTooltip]="isBookmarked(right.id) ? 'Remove from saved rights' : 'Save for offline access'"
+                tooltipPlacement="top"
+                [attr.aria-label]="isBookmarked(right.id) ? 'Remove from saved rights' : 'Save statutory right'"
+                [class]="isBookmarked(right.id) ? 'text-amber-500 dark:text-amber-400 bg-amber-500/10' : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl transition-all duration-150 active:scale-90 cursor-pointer flex items-center justify-center border-0 bg-transparent shrink-0">
+                <app-icon [name]="isBookmarked(right.id) ? 'bookmark-filled' : 'bookmark'" [size]="14"
+                  [class.text-amber-500]="isBookmarked(right.id)"
+                  [class.dark:text-amber-400]="isBookmarked(right.id)"></app-icon>
+              </button>
+
+              <!-- Universal Custom Share Menu -->
+              <app-share-menu [title]="getShareSubject(right)" [text]="getShareText(right)"
+                [shareUrl]="getShareUrl(right)" [subject]="getShareSubject(right)" [copyText]="getCitationText(right)"
+                [copySuccessMessage]="getCitationSuccessMessage(right)" copyLinkLabel="Copy Citation"
+                tooltipText="Share statutory protection" tooltipPlacement="top"
+                buttonClass="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 active:scale-95 transition cursor-pointer bg-transparent border-0 flex items-center justify-center shrink-0"
+                [iconSize]="14" iconClass="!w-[14px] !h-[14px]" class="flex items-center shrink-0">
+              </app-share-menu>
+
+              <!-- Admin Edit Button -->
+              <button *ngIf="isAdminUser" (click)="onAdminEdit(right.id, $event)"
+                appTooltip="Edit right in Admin Portal" tooltipPlacement="top" aria-label="Edit right in admin portal"
+                class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl text-amber-600 hover:text-amber-700 bg-amber-50 dark:bg-amber-950/30 transition cursor-pointer border-0 flex items-center justify-center shrink-0">
+                <app-icon name="edit" [size]="14"></app-icon>
+              </button>
+            </div>
+
+            <!-- View Playbook & Dossier Pill Button -->
+            <button (click)="onOpenDetail(right, $event)" appTooltip="View legal playbook & statutory dossier"
+              tooltipPlacement="top"
+              class="px-2.5 sm:px-3.5 py-1 sm:py-1.5 rounded-lg sm:rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 hover:bg-blue-600 hover:text-white dark:hover:bg-blue-600 dark:hover:text-white font-bold text-[11px] sm:text-xs flex items-center gap-1 transition cursor-pointer border border-blue-200/80 dark:border-blue-900/60 shadow-2xs active:scale-95 shrink-0">
+              <span>Playbook</span>
+              <app-icon name="arrow-right" [size]="11"></app-icon>
+            </button>
+
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </article>
+
+  <!-- ==================== PROGRESSIVE LOAD MORE / VIRTUAL STREAM FOOTER ==================== -->
+  <div *ngIf="hasMoreRights()" class="pt-3 pb-2">
+
+    <!-- Side-by-Side Progressive Disclosure Buttons (Full-Proof Mobile & Desktop) -->
+    <div class="flex flex-row items-center justify-center gap-2 sm:gap-3 w-full max-w-xl mx-auto px-1 sm:px-0">
+      <button (click)="loadMore()" appTooltip="Show next 10 statutory protections" tooltipPlacement="top"
+        class="flex-1 sm:flex-initial sm:w-auto px-3.5 sm:px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white font-bold text-xs shadow-md shadow-blue-500/20 transition-all cursor-pointer border-0 flex items-center justify-center gap-1.5 whitespace-nowrap min-w-0">
+        <app-icon name="chevron-down" [size]="14" class="shrink-0"></app-icon>
+        <!-- Mobile Concise Label -->
+        <span class="sm:hidden truncate">
+          Show 10 More ({{ remainingCount() }} remaining)
+        </span>
+        <!-- Desktop Full Label -->
+        <span class="hidden sm:inline">
+          Show 10 More Protections ({{ remainingCount() }} remaining)
+        </span>
+      </button>
+
+      <button (click)="showAll()" appTooltip="Display all statutory protections" tooltipPlacement="top"
+        class="shrink-0 sm:w-auto px-4 sm:px-5 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 font-semibold text-xs transition-all cursor-pointer border border-slate-200/80 dark:border-slate-700/80 shadow-xs whitespace-nowrap">
+        <span>Show All ({{ rights.length }})</span>
+      </button>
+    </div>
+
+  </div>
+
+</div>

@@ -1,0 +1,464 @@
+<div (click)="close()"
+  class="fixed inset-0 z-[2350] flex items-end sm:items-center justify-center bg-slate-950/80 backdrop-blur-md p-0 sm:p-4 overflow-y-auto scrollbar-none animate-[fadeIn_0.2s_ease-out] cursor-pointer touch-manipulation"
+  role="dialog" aria-modal="true" aria-label="Am I Protected Statutory Crisis Diagnostic Wizard">
+
+  <div (click)="$event.stopPropagation()"
+    class="w-full max-w-[840px] max-h-[92dvh] sm:max-h-[88vh] flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-t-3xl sm:rounded-3xl shadow-2xl overflow-hidden my-0 sm:my-6 cursor-default transition-all pb-[env(safe-area-inset-bottom,0px)]">
+
+    <!-- Modal Top Header Bar (Unified rich dark gradient on mobile & desktop) -->
+    <div
+      class="bg-gradient-to-r from-slate-950 via-blue-950 to-indigo-950 text-white shrink-0 border-b border-blue-500/20 shadow-[0_4px_20px_-4px_rgba(15,23,42,0.5)]">
+
+      <!-- Mobile Sheet Drag Handle Bar (Integrated seamlessly into header gradient) -->
+      <div (click)="close()"
+        class="sm:hidden flex items-center justify-center pt-2.5 pb-1 cursor-pointer active:opacity-75">
+        <div class="w-12 h-1 rounded-full bg-white/30"></div>
+      </div>
+
+      <!-- Header Content -->
+      <div class="px-4 pb-4 pt-1 sm:p-6 flex items-start justify-between gap-3 sm:gap-4">
+        <div class="space-y-1.5 min-w-0">
+          <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+            <span
+              class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-blue-500/20 text-blue-300 border border-blue-400/30 backdrop-blur-sm shadow-xs">
+              <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span>
+              <span>3-Step Diagnostic Engine</span>
+            </span>
+            <span class="text-[10px] text-blue-200/60 font-mono hidden md:inline">
+              BNSS 2023 &bull; MVA &bull; Tenancy &bull; CPA &bull; POSH &bull; NI Act
+            </span>
+          </div>
+
+          <h2
+            class="font-serif text-base sm:text-2xl font-black m-0 leading-tight tracking-tight bg-gradient-to-r from-white via-slate-50 to-blue-200 bg-clip-text text-transparent drop-shadow-sm">
+            @if (currentLanguage === 'hi') {
+            क्या कानून आपकी रक्षा करता है?<br class="sm:hidden" /> त्वरित कानूनी जांच
+            } @else {
+            Am I Protected?<br class="sm:hidden" /> Instant Statutory Crisis Diagnostic
+            }
+          </h2>
+
+          <p class="text-[11px] sm:text-xs text-blue-100/75 m-0 line-clamp-2 leading-relaxed">
+            {{ currentLanguage === 'hi' ? 'वास्तविक स्थिति का 3 चरणों में आकलन करें और प्रमाणित कानूनी समाधान व डायल
+            हेल्पलाइन प्राप्त करें।' : 'Evaluate police encounters, traffic stops, cyber freezes, landlord disputes,
+            POSH & cheque bounces in 3 fast steps.' }}
+          </p>
+        </div>
+
+        <!-- Frosted Glass Close Button -->
+        <button (click)="close()" appTooltip="Close diagnostic (Esc)" tooltipPlacement="bottom"
+          class="w-8 h-8 rounded-full flex items-center justify-center bg-white/10 hover:bg-white/20 active:bg-white/30 text-white/80 hover:text-white backdrop-blur-md border border-white/15 cursor-pointer transition shrink-0 active:scale-95">
+          <app-icon name="x" [size]="16"></app-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Step Progress Bar (Clickable breadcrumb stepper) -->
+    <div
+      class="px-4 sm:px-6 py-2.5 sm:py-3 bg-slate-100 dark:bg-slate-800/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs font-bold shrink-0">
+
+      <!-- Step 1 Tab -->
+      <button (click)="jumpToStep(1)" [disabled]="diagnosticStep() === 1"
+        class="flex items-center gap-1.5 sm:gap-2 bg-transparent border-0 p-0 text-left cursor-pointer disabled:cursor-default"
+        [class.text-blue-600]="diagnosticStep() === 1" [class.dark:text-blue-400]="diagnosticStep() === 1">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] transition-colors"
+          [ngClass]="diagnosticStep() >= 1 ? 'bg-blue-600 text-white font-black' : 'bg-slate-300 text-slate-600'">1</span>
+        <span class="hidden sm:inline">{{ currentLanguage === 'hi' ? '1. संकट चुनें' : '1. Choose Crisis' }}</span>
+        <span class="sm:hidden">{{ currentLanguage === 'hi' ? 'संकट' : '1. Crisis' }}</span>
+      </button>
+
+      <div class="h-0.5 flex-1 mx-2 sm:mx-3 transition-colors"
+        [ngClass]="diagnosticStep() >= 2 ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'"></div>
+
+      <!-- Step 2 Tab -->
+      <button (click)="jumpToStep(2)" [disabled]="diagnosticStep() < 2"
+        class="flex items-center gap-1.5 sm:gap-2 bg-transparent border-0 p-0 text-left cursor-pointer disabled:cursor-default"
+        [class.text-blue-600]="diagnosticStep() === 2" [class.dark:text-blue-400]="diagnosticStep() === 2">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] transition-colors"
+          [ngClass]="diagnosticStep() >= 2 ? 'bg-blue-600 text-white font-black' : 'bg-slate-300 text-slate-600'">2</span>
+        <span class="hidden sm:inline">{{ currentLanguage === 'hi' ? '2. तथ्य जांच' : '2. Facts Checklist' }}</span>
+        <span class="sm:hidden">{{ currentLanguage === 'hi' ? 'तथ्य' : '2. Facts' }}</span>
+      </button>
+
+      <div class="h-0.5 flex-1 mx-2 sm:mx-3 transition-colors"
+        [ngClass]="diagnosticStep() >= 3 ? 'bg-blue-600' : 'bg-slate-300 dark:bg-slate-700'"></div>
+
+      <!-- Step 3 Tab -->
+      <div class="flex items-center gap-1.5 sm:gap-2" [class.text-blue-600]="diagnosticStep() === 3"
+        [class.dark:text-blue-400]="diagnosticStep() === 3">
+        <span class="w-5 h-5 rounded-full flex items-center justify-center text-[11px] transition-colors"
+          [ngClass]="diagnosticStep() >= 3 ? 'bg-emerald-600 text-white font-black' : 'bg-slate-300 text-slate-600'">3</span>
+        <span class="hidden sm:inline">{{ currentLanguage === 'hi' ? '3. कानूनी फैसला' : '3. Statutory Verdict'
+          }}</span>
+        <span class="sm:hidden">{{ currentLanguage === 'hi' ? 'फैसला' : '3. Verdict' }}</span>
+      </div>
+    </div>
+
+    <!-- Scrollable Modal Content Body -->
+    <div class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 sm:space-y-5 scrollbar-none">
+
+      <!-- ==================== STEP 1: CRISIS DOMAIN SELECTION ==================== -->
+      <div *ngIf="diagnosticStep() === 1" class="space-y-4">
+
+        <!-- Section Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2">
+          <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">
+            {{ currentLanguage === 'hi' ? 'अपनी वर्तमान स्थिति या कानूनी समस्या चुनें:' : 'Select your confrontation or
+            legal emergency scenario:' }}
+          </span>
+          <span class="text-[11px] font-bold text-blue-600 dark:text-blue-400 shrink-0">
+            {{ filteredCrises().length }} Available Scenarios
+          </span>
+        </div>
+
+        <!-- Search and Filter Controls (Adaptive Threshold: Mobile >10, Desktop >15) -->
+        <div *ngIf="shouldRenderSearch()" [class.sm:hidden]="!shouldShowSearchDesktop()" class="space-y-2.5">
+
+          <!-- Instant Debounced Search Box -->
+          <div class="relative">
+            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+              <app-icon name="search" [size]="15"></app-icon>
+            </div>
+            <input type="text" [value]="searchQuery()" (input)="onSearchInput($event)"
+              [placeholder]="currentLanguage === 'hi' ? 'संकट खोजें (उदा. पुलिस, किराया, बैंक फ्रीज, चेक)...' : 'Filter crises (e.g. Police, Landlord, Cyber, Cheque, POSH)...'"
+              class="w-full pl-9 pr-8 py-2.5 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-blue-500 transition shadow-inner">
+            <button *ngIf="searchQuery()" (click)="clearSearch()" appTooltip="Clear search input"
+              tooltipPlacement="left"
+              class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer">
+              <app-icon name="x" [size]="14"></app-icon>
+            </button>
+          </div>
+
+          <!-- Category Quick Chips (Mobile Horizontal Scroll) -->
+          <div class="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+            <button *ngFor="let cat of domainFilters; trackBy: trackByDomainFilter"
+              (click)="selectedDomainFilter.set(cat.id)"
+              [appTooltip]="'Filter by ' + (currentLanguage === 'hi' ? cat.label_hi : cat.label)"
+              tooltipPlacement="bottom"
+              [class]="selectedDomainFilter() === cat.id ? 'bg-blue-600 text-white font-bold shadow-xs' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+              class="px-2.5 py-1 rounded-lg text-[11px] transition cursor-pointer border-0 whitespace-nowrap shrink-0 active:scale-95">
+              {{ currentLanguage === 'hi' ? cat.label_hi : cat.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Skeleton Fallback if loading -->
+        <div *ngIf="diagnosticCrises.length === 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3"
+          aria-busy="true" aria-label="Loading diagnostic confrontation crises">
+          <div *ngFor="let _ of [1,2,3,4,5,6]; trackBy: trackByIndex"
+            class="p-3.5 sm:p-4 rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/40 flex items-start gap-3 sm:gap-3.5">
+            <div class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl skeleton-shimmer shrink-0"></div>
+            <div class="space-y-2 flex-1 py-0.5">
+              <div class="h-4 rounded w-3/4 skeleton-shimmer"></div>
+              <div class="h-3 rounded w-full skeleton-shimmer"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty Search State -->
+        <div *ngIf="diagnosticCrises.length > 0 && filteredCrises().length === 0"
+          class="p-8 text-center bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 space-y-2">
+          <app-icon name="alert-circle" [size]="24" class="text-slate-400 mx-auto"></app-icon>
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 m-0">No scenario matched your search.</p>
+          <button (click)="searchQuery.set(''); selectedDomainFilter.set('all')"
+            class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+            Reset Filters
+          </button>
+        </div>
+
+        <!-- Interactive Scenario Grid -->
+        <div *ngIf="filteredCrises().length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+          <button *ngFor="let crisis of filteredCrises(); trackBy: trackByDiagnosticCrisis"
+            (click)="selectCrisis(crisis)"
+            class="p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-200 cursor-pointer flex items-start gap-3 sm:gap-3.5 bg-slate-50 dark:bg-slate-800/50 hover:bg-blue-50/70 dark:hover:bg-blue-950/40 border-slate-200 dark:border-slate-800 hover:border-blue-500 hover:shadow-md group active:scale-[0.98]">
+            <div
+              class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 group-hover:bg-blue-600 group-hover:text-white transition-colors flex items-center justify-center shrink-0 shadow-xs">
+              <app-icon [name]="crisis.icon" [size]="18"></app-icon>
+            </div>
+            <div class="space-y-1 min-w-0 flex-1">
+              <div
+                class="font-bold text-xs sm:text-sm text-slate-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors leading-tight flex items-center justify-between">
+                <span class="truncate">{{ currentLanguage === 'hi' ? crisis.title_hi : crisis.title }}</span>
+                <app-icon name="arrow-right" [size]="14"
+                  class="opacity-0 group-hover:opacity-100 transition-opacity text-blue-600 dark:text-blue-400 shrink-0 ml-1"></app-icon>
+              </div>
+              <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 m-0 line-clamp-2 leading-relaxed">
+                {{ currentLanguage === 'hi' ? crisis.summary_hi : crisis.summary }}
+              </p>
+            </div>
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 2: FACTS CHECKLIST ==================== -->
+      <div *ngIf="diagnosticStep() === 2" class="space-y-4">
+        <div *ngIf="selectedCrisis() as crisis" class="space-y-4">
+
+          <!-- Scenario Banner & Progress Header -->
+          <div
+            class="p-3 sm:p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200/60 dark:border-blue-800/60 flex items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <div
+                class="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <app-icon [name]="crisis.icon" [size]="18"></app-icon>
+              </div>
+              <div class="min-w-0">
+                <div class="text-[10px] text-blue-600 dark:text-blue-400 font-bold uppercase tracking-wider">Analyzing
+                  Confrontation</div>
+                <div class="text-xs sm:text-sm font-black text-slate-900 dark:text-white truncate">
+                  {{ currentLanguage === 'hi' ? crisis.title_hi : crisis.title }}
+                </div>
+              </div>
+            </div>
+
+            <button (click)="jumpToStep(1)" appTooltip="Select a different confrontation crisis" tooltipPlacement="left"
+              class="px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-100 dark:hover:bg-blue-900/50 rounded-lg bg-transparent border-0 cursor-pointer shrink-0 transition">
+              {{ currentLanguage === 'hi' ? 'बदलें' : 'Change' }}
+            </button>
+          </div>
+
+          <!-- Progress Mini-Bar -->
+          <div class="space-y-1">
+            <div class="flex items-center justify-between text-[11px] font-bold text-slate-500">
+              <span>{{ currentLanguage === 'hi' ? 'प्रश्नों के उत्तर दें:' : 'Factual Criteria Checklist:' }}</span>
+              <span class="text-blue-600 dark:text-blue-400">
+                {{ answeredCount() }} of {{ totalQuestionsCount() }} Answered
+              </span>
+            </div>
+            <div class="h-1.5 w-full bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+              <div class="h-full bg-blue-600 rounded-full transition-all duration-300"
+                [style.width.%]="(answeredCount() / (totalQuestionsCount() || 1)) * 100"></div>
+            </div>
+          </div>
+
+          <!-- Questions List -->
+          <div class="space-y-3">
+            <div *ngFor="let q of crisis.questions; let i = index; trackBy: trackByIndex"
+              class="p-3.5 sm:p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border transition-all"
+              [ngClass]="diagnosticAnswers()[q.id] !== undefined ? 'border-blue-400/50 dark:border-blue-700/50 bg-blue-50/20' : 'border-slate-200 dark:border-slate-800'">
+
+              <div class="space-y-1.5">
+                <div class="flex items-start gap-2">
+                  <span
+                    class="w-5 h-5 rounded-md bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">
+                    Q{{ i + 1 }}
+                  </span>
+                  <p class="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white m-0 leading-snug">
+                    {{ currentLanguage === 'hi' ? q.question_hi : q.question }}
+                  </p>
+                </div>
+
+                <p class="text-[11px] text-blue-600 dark:text-blue-400 m-0 flex items-start gap-1 font-medium pl-7">
+                  <app-icon name="shield" [size]="12" class="shrink-0 mt-0.5"></app-icon>
+                  <span>{{ currentLanguage === 'hi' ? q.hint_hi : q.hint }}</span>
+                </p>
+              </div>
+
+              <!-- 2-Choice Touch-Optimized Response (Yes / No) -->
+              <div class="flex items-center gap-2 pt-2.5 pl-7">
+                <button (click)="answerQuestion(q.id, true)" appTooltip="Confirm this factual condition occurred"
+                  tooltipPlacement="top"
+                  [class]="diagnosticAnswers()[q.id] === true ? 'bg-rose-600 text-white font-black shadow-xs ring-2 ring-rose-400' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  class="flex-1 sm:flex-initial min-w-[90px] py-2 px-3 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs active:scale-95">
+                  <app-icon *ngIf="diagnosticAnswers()[q.id] === true" name="check" [size]="12"></app-icon>
+                  <span>{{ currentLanguage === 'hi' ? 'हाँ (Yes)' : 'Yes' }}</span>
+                </button>
+
+                <button (click)="answerQuestion(q.id, false)" appTooltip="This factual condition did not occur"
+                  tooltipPlacement="top"
+                  [class]="diagnosticAnswers()[q.id] === false ? 'bg-slate-800 text-white font-black shadow-xs ring-2 ring-slate-400 dark:bg-slate-200 dark:text-slate-900' : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800'"
+                  class="flex-1 sm:flex-initial min-w-[90px] py-2 px-3 rounded-xl text-xs transition cursor-pointer flex items-center justify-center gap-1.5 shadow-xs active:scale-95">
+                  <app-icon *ngIf="diagnosticAnswers()[q.id] === false" name="check" [size]="12"></app-icon>
+                  <span>{{ currentLanguage === 'hi' ? 'नहीं (No)' : 'No' }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Actions -->
+          <div class="pt-2 flex items-center justify-between gap-3">
+            <button (click)="jumpToStep(1)" appTooltip="Return to crisis scenario selection" tooltipPlacement="top"
+              class="px-4 py-2.5 text-xs font-bold text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-xl border-0 cursor-pointer transition active:scale-95">
+              &larr; Back
+            </button>
+
+            <button (click)="evaluateDiagnostic()" [disabled]="isEvaluating() || answeredCount() === 0"
+              appTooltip="Evaluate answers against statutory rule engine" tooltipPlacement="top"
+              class="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer border-0 active:scale-95">
+              <span *ngIf="!isEvaluating()">Evaluate Statutory Protection ({{ answeredCount() }}/{{
+                totalQuestionsCount() }})</span>
+              <span *ngIf="isEvaluating()">Evaluating Protection...</span>
+              <app-icon *ngIf="!isEvaluating()" name="arrow-right" [size]="14"></app-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== STEP 3: STATUTORY VERDICT & ACTIONABLE PLAYBOOK ==================== -->
+      <div *ngIf="diagnosticStep() === 3" class="space-y-4 sm:space-y-5">
+        <div *ngIf="diagnosticResult() as res" class="space-y-4">
+
+          <!-- Top Verdict Card -->
+          <div class="p-4 sm:p-5 rounded-2xl border space-y-2.5 shadow-xs transition-all"
+            [ngClass]="res.status === 'VIOLATION_CONFIRMED' ? 'bg-rose-50/80 dark:bg-rose-950/20 border-rose-500/40' : (res.status === 'REVIEW_REQUIRED' ? 'bg-amber-50/80 dark:bg-amber-950/20 border-amber-500/40' : 'bg-emerald-50/80 dark:bg-emerald-950/20 border-emerald-500/40')">
+
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <span class="px-2.5 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider shadow-xs"
+                [ngClass]="res.status === 'VIOLATION_CONFIRMED' ? 'bg-rose-600 text-white' : (res.status === 'REVIEW_REQUIRED' ? 'bg-amber-600 text-white' : 'bg-emerald-600 text-white')">
+                {{ res.status === 'VIOLATION_CONFIRMED' ? 'Statutory Violation Confirmed' : (res.status ===
+                'REVIEW_REQUIRED' ? 'Procedural Review Required' : 'Procedural Standards Verified') }}
+              </span>
+
+              <span class="text-xs font-extrabold flex items-center gap-1"
+                [ngClass]="res.status === 'VIOLATION_CONFIRMED' ? 'text-rose-600 dark:text-rose-400' : (res.status === 'REVIEW_REQUIRED' ? 'text-amber-600 dark:text-amber-400' : 'text-emerald-600 dark:text-emerald-400')">
+                <app-icon name="shield-check" [size]="14"></app-icon>
+                <span>{{ res.confidenceScore }}% Legal Match</span>
+              </span>
+            </div>
+
+            <h3 class="font-serif text-base sm:text-xl font-black m-0 leading-tight"
+              [ngClass]="res.status === 'VIOLATION_CONFIRMED' ? 'text-rose-950 dark:text-rose-200' : (res.status === 'REVIEW_REQUIRED' ? 'text-amber-950 dark:text-amber-200' : 'text-emerald-950 dark:text-emerald-200')">
+              {{ currentLanguage === 'hi' ? res.verdictTitle_hi : res.verdictTitle }}
+            </h3>
+
+            <p class="text-xs leading-relaxed m-0"
+              [ngClass]="res.status === 'VIOLATION_CONFIRMED' ? 'text-rose-800 dark:text-rose-300' : (res.status === 'REVIEW_REQUIRED' ? 'text-amber-800 dark:text-amber-300' : 'text-emerald-800 dark:text-emerald-300')">
+              {{ currentLanguage === 'hi' ? res.verdictSubtitle_hi : res.verdictSubtitle }}
+            </p>
+
+            <div class="pt-1 text-[11px] font-mono font-bold text-slate-700 dark:text-slate-300 flex items-start gap-1">
+              <span class="text-slate-400 uppercase tracking-wider text-[10px] shrink-0 mt-0.5">Statute:</span>
+              <span>{{ res.statutoryBasis }}</span>
+            </div>
+
+            <div *ngIf="res.provenance"
+              class="pt-2 border-t border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between text-[10px] text-slate-500 dark:text-slate-400 flex-wrap gap-1">
+              <span class="flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                <span>Rule Engine v{{ res.ruleVersion || 2 }} &bull; Authority: {{ res.provenance.sourceAuthority
+                  }}</span>
+              </span>
+              <span
+                class="font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Verified</span>
+            </div>
+          </div>
+
+          <!-- Authoritative Verbal Confrontation Script Box -->
+          <div class="p-4 rounded-2xl bg-slate-900 text-white border border-slate-800 space-y-3 shadow-md">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <span class="text-[10px] font-black uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+                <app-icon name="volume-2" [size]="12"></app-icon>
+                <span>{{ currentLanguage === 'hi' ? 'मौखिक कानूनी संवाद (अधिकारी / मकान मालिक से कहें):' :
+                  'Authoritative Verbal Confrontation Script:' }}</span>
+              </span>
+
+              <div class="flex items-center gap-1.5">
+                <!-- Web Speech Audio Button -->
+                <button (click)="speakDiagnosticScript()"
+                  [appTooltip]="isSpeaking() ? 'Stop voice playback' : 'Play confrontation script aloud'"
+                  tooltipPlacement="top"
+                  [class]="isSpeaking() ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-800 text-slate-300 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold border-0 cursor-pointer flex items-center gap-1 transition active:scale-95">
+                  <app-icon [name]="isSpeaking() ? 'volume-2' : 'volume-1'" [size]="12"></app-icon>
+                  <span>{{ isSpeaking() ? 'Speaking...' : 'Play Audio' }}</span>
+                </button>
+
+                <!-- Copy Script Button -->
+                <button (click)="copyVerbalScript()"
+                  [appTooltip]="isScriptCopied() ? 'Copied script to clipboard!' : 'Copy verbatim confrontation script'"
+                  tooltipPlacement="top"
+                  [class]="isScriptCopied() ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:text-white'"
+                  class="px-2.5 py-1 rounded-lg text-xs font-bold border-0 cursor-pointer flex items-center gap-1 transition active:scale-95">
+                  <app-icon [name]="isScriptCopied() ? 'check' : 'copy'" [size]="12"></app-icon>
+                  <span>{{ isScriptCopied() ? 'Copied!' : 'Copy Script' }}</span>
+                </button>
+
+                <!-- Custom Universal Share Menu -->
+                <app-share-menu [title]="getShareSubject()" [text]="getShareText()" [shareUrl]="getShareUrl()"
+                  [subject]="getShareSubject()" [copyText]="getVerbatimScript()" copyLinkLabel="Copy Script"
+                  copySuccessMessage="Confrontation script copied to clipboard!"
+                  tooltipText="Share diagnostic alert with advocate or family" tooltipPlacement="top"
+                  buttonClass="px-2.5 py-1 rounded-lg text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white border-0 cursor-pointer flex items-center gap-1 transition active:scale-95"
+                  activeClass="!bg-emerald-700 !text-white shadow-md" label="Share" [iconSize]="12"
+                  iconClass="!w-3 !h-3 text-white" class="shrink-0 flex items-center">
+                </app-share-menu>
+              </div>
+            </div>
+
+            <blockquote
+              class="text-xs sm:text-sm text-slate-200 italic border-l-4 border-amber-500 pl-3 py-1 m-0 leading-relaxed font-sans">
+              "{{ currentLanguage === 'hi' ? res.whatToSay_hi : res.whatToSay }}"
+            </blockquote>
+          </div>
+
+          <!-- Immediate Action Steps Checklist -->
+          <div
+            class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 space-y-2">
+            <span class="text-[10px] font-black uppercase text-slate-500 tracking-wider block">
+              {{ currentLanguage === 'hi' ? 'तत्काल कानूनी कदम (Immediate Action Items):' : 'Immediate Statutory Action
+              Steps:' }}
+            </span>
+            <ul class="space-y-1.5 text-xs text-slate-700 dark:text-slate-300 p-0 m-0 list-none">
+              <li
+                *ngFor="let step of (currentLanguage === 'hi' ? res.actionItems_hi : res.actionItems); trackBy: trackByIndex"
+                class="flex items-start gap-2">
+                <app-icon name="check-circle" [size]="14" class="text-emerald-500 shrink-0 mt-0.5"></app-icon>
+                <span>{{ step }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Footer Actions (Fully Mobile Responsive Stack) -->
+          <div class="pt-2 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3">
+
+            <div class="flex items-center gap-2">
+              <!-- Direct 1-Tap Helpline Dial -->
+              <a [href]="'tel:' + res.helpline" appTooltip="Instant call to verified statutory emergency helpline"
+                tooltipPlacement="top"
+                class="flex-1 sm:flex-initial px-4 py-2.5 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs transition no-underline flex items-center justify-center gap-1.5 active:scale-95">
+                <app-icon name="phone" [size]="13"></app-icon>
+                <span>Dial {{ res.helplineName }}</span>
+              </a>
+
+              <!-- Printable PDF Brief Export -->
+              <button (click)="printPocketSummary()" appTooltip="Export official Statutory Diagnostic Brief as PDF"
+                tooltipPlacement="top"
+                class="px-3.5 py-2.5 bg-blue-600/10 hover:bg-blue-600/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95">
+                <app-icon name="printer" [size]="13"></app-icon>
+                <span class="hidden sm:inline">PDF Brief</span>
+                <span class="sm:hidden">PDF</span>
+              </button>
+
+              <!-- New Diagnostic Button -->
+              <button (click)="resetDiagnostic()" appTooltip="Start a fresh statutory diagnostic triage"
+                tooltipPlacement="top"
+                class="px-3.5 py-2.5 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl border-0 cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 transition active:scale-95">
+                New
+              </button>
+            </div>
+
+            <!-- Deep-Link to Document Notice Studio -->
+            <button (click)="triggerTemplate(res.crisisId || selectedCrisisId())"
+              appTooltip="Draft formal court-admissible notice using verified template" tooltipPlacement="top"
+              class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer border-0 active:scale-95">
+              <app-icon name="file-text" [size]="13"></app-icon>
+              <span>Draft Legal Notice in Template Studio</span>
+            </button>
+          </div>
+
+          <!-- Statutory & Bar Council Disclaimer Banner -->
+          <div
+            class="mt-3 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 text-center leading-relaxed select-none">
+            <strong>Bar Council of India Disclaimer:</strong> Diagnostic evaluations are automated procedural references
+            citing codified Indian statutes and binding judicial precedents. They do not constitute formal legal advice.
+            For personalized representation, consult a qualified advocate. Dial <a href="tel:112"
+              class="font-bold text-rose-600 dark:text-rose-400 underline">112</a> for emergency police assistance.
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,488 @@
+<div class="animate-[fadeIn_0.2s_ease-out]">
+
+  <!-- ==================== POWER TABLE PRESENTATION (RESPONSIVE DESKTOP & MOBILE HORIZONTAL SCROLL) ==================== -->
+  <div class="block">
+
+    <!-- 1. TOP SINGLE-LINE STATS & CONTROLS (Zero Extra Vertical Space) -->
+    <div
+      class="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 mb-2.5 mt-2 px-0.5 gap-2 flex-wrap">
+
+      <!-- Left: Counter & Sort Reset -->
+      <div class="flex items-center gap-2">
+        <span class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-400 font-medium">
+          Showing <strong class="text-slate-900 dark:text-white font-bold">{{ totalItems() }}</strong> verified
+          statutory
+          protections
+        </span>
+
+        <!-- Active Sort Reset Indicator (shown only when sorted) -->
+        <button *ngIf="isSorted()" (click)="resetSort()" appTooltip="Reset column sorting to statutory default"
+          tooltipPlacement="top"
+          class="px-2 py-0.5 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800/80 text-[10px] font-bold flex items-center gap-1 transition hover:bg-blue-100 dark:hover:bg-blue-900/60 cursor-pointer">
+          <app-icon name="rotate-ccw" [size]="10"></app-icon>
+          <span>Sort: {{ getSortLabel() }} ({{ sortDirection().toUpperCase() }})</span>
+          <app-icon name="x" [size]="9"></app-icon>
+        </button>
+      </div>
+
+      <!-- Right: Action Buttons in the Exact Same Line (Zero Extra Vertical Space!) -->
+      <div class="flex items-center gap-2 shrink-0">
+
+        <!-- Batch Action: Copy Page Citations -->
+        <button (click)="copyAllVisibleCitations()"
+          [appTooltip]="isBatchCopying() ? 'Copied statutory citations!' : 'Copy bare act citations for visible ' + paginatedRights().length + ' rights'"
+          tooltipPlacement="top"
+          class="px-2.5 py-1 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+          <app-icon [name]="isBatchCopying() ? 'check' : 'copy'" [size]="13"
+            [class.text-emerald-500]="isBatchCopying()"></app-icon>
+          <span>{{ isBatchCopying() ? 'Citations Copied!' : 'Copy Page Citations' }}</span>
+        </button>
+
+        <!-- Density Switcher: Compact | Comfortable | Spacious -->
+        <div
+          class="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+          <button (click)="setDensity('compact')" appTooltip="Compact Density (High information density)"
+            tooltipPlacement="top"
+            [class]="density() === 'compact' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'"
+            class="p-1 rounded-lg text-xs transition border-0 cursor-pointer flex items-center justify-center">
+            <app-icon name="minimize" [size]="13"></app-icon>
+          </button>
+          <button (click)="setDensity('comfortable')" appTooltip="Comfortable Density (Standard)" tooltipPlacement="top"
+            [class]="density() === 'comfortable' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'"
+            class="p-1 rounded-lg text-xs transition border-0 cursor-pointer flex items-center justify-center">
+            <app-icon name="layout" [size]="13"></app-icon>
+          </button>
+          <button (click)="setDensity('spacious')" appTooltip="Spacious Density (High legibility)"
+            tooltipPlacement="top"
+            [class]="density() === 'spacious' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'"
+            class="p-1 rounded-lg text-xs transition border-0 cursor-pointer flex items-center justify-center">
+            <app-icon name="maximize" [size]="13"></app-icon>
+          </button>
+        </div>
+
+        <!-- NEW: Full Focus Mode Button -->
+        <button (click)="openFullMode()" appTooltip="View in Full Focus Mode (Expanded 97vw Widescreen Layout)"
+          tooltipPlacement="top"
+          class="p-1 px-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-blue-950/40 dark:hover:bg-blue-900/50 text-blue-600 dark:text-blue-400 border border-blue-200/80 dark:border-blue-800/80 text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 shadow-2xs">
+          <app-icon name="maximize" [size]="13"></app-icon>
+          <span>Full Mode</span>
+        </button>
+
+      </div>
+
+    </div>
+
+    <!-- 2. INLINE STANDARD TABLE CONTAINER -->
+    <div
+      class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800/90 rounded-3xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto min-h-[440px] table-scrollbar" (scroll)="closeKebab()">
+        <ng-container *ngTemplateOutlet="tableCoreTemplate"></ng-container>
+      </div>
+
+      <!-- Pagination Footer -->
+      <ng-container *ngTemplateOutlet="paginationFooterTemplate"></ng-container>
+    </div>
+
+  </div>
+
+  <!-- ==================== 3. FULL FOCUS WIDESCREEN MODAL (BOTTOM-OPEN ANIMATION) ==================== -->
+  <div *ngIf="isFullMode()" role="dialog" aria-modal="true" aria-label="Statutory Directory Codex Full Focus Mode"
+    class="fixed inset-0 z-[2100] bg-slate-950/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 md:p-6 transition-all duration-300"
+    (click)="closeFullMode()">
+
+    <div
+      class="modal-bottom-slide w-full max-w-[98vw] h-[94vh] flex flex-col bg-white dark:bg-[#07090e] border border-slate-200/90 dark:border-slate-800/90 rounded-2xl sm:rounded-3xl shadow-2xl overflow-hidden"
+      (click)="$event.stopPropagation()">
+
+      <!-- Modal Top Navigation Header Bar -->
+      <div
+        class="px-5 py-3 bg-slate-50/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0">
+
+        <!-- Left: Modal Title & Badge -->
+        <div class="flex items-center gap-3">
+          <div
+            class="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
+            <app-icon name="scale" [size]="18"></app-icon>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h2 class="text-sm sm:text-base font-extrabold text-slate-900 dark:text-white m-0">
+                Statutory Directory &amp; Codex
+              </h2>
+              <span
+                class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] font-black border border-blue-500/20 uppercase tracking-wider">
+                Full Focus Mode
+              </span>
+            </div>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 m-0">
+              Showing {{ totalItems() }} protections across expanded 98vw widescreen layout
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: Actions & Exit Modal Button -->
+        <div class="flex items-center gap-2.5 shrink-0">
+
+          <!-- Copy visible citations -->
+          <button (click)="copyAllVisibleCitations()"
+            [appTooltip]="isBatchCopying() ? 'Copied statutory citations!' : 'Copy bare act citations'"
+            tooltipPlacement="top"
+            class="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition border border-slate-200/80 dark:border-slate-700/80 cursor-pointer">
+            <app-icon [name]="isBatchCopying() ? 'check' : 'copy'" [size]="13"
+              [class.text-emerald-500]="isBatchCopying()"></app-icon>
+            <span class="hidden sm:inline">{{ isBatchCopying() ? 'Copied!' : 'Copy Citations' }}</span>
+          </button>
+
+          <!-- Density Switcher -->
+          <div
+            class="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+            <button (click)="setDensity('compact')" appTooltip="Compact Density" tooltipPlacement="top"
+              [class]="density() === 'compact' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'"
+              class="p-1 rounded-lg text-xs transition border-0 cursor-pointer flex items-center justify-center">
+              <app-icon name="minimize" [size]="13"></app-icon>
+            </button>
+            <button (click)="setDensity('comfortable')" appTooltip="Comfortable Density" tooltipPlacement="top"
+              [class]="density() === 'comfortable' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'"
+              class="p-1 rounded-lg text-xs transition border-0 cursor-pointer flex items-center justify-center">
+              <app-icon name="layout" [size]="13"></app-icon>
+            </button>
+            <button (click)="setDensity('spacious')" appTooltip="Spacious Density" tooltipPlacement="top"
+              [class]="density() === 'spacious' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs font-bold' : 'text-slate-500 hover:text-slate-800 dark:text-slate-400 font-medium'"
+              class="p-1 rounded-lg text-xs transition border-0 cursor-pointer flex items-center justify-center">
+              <app-icon name="maximize" [size]="13"></app-icon>
+            </button>
+          </div>
+
+          <!-- Exit Full Mode Button -->
+          <button (click)="closeFullMode()" appTooltip="Exit Full Mode (Esc)" tooltipPlacement="top"
+            class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-rose-50 hover:text-rose-600 dark:bg-slate-800 dark:hover:bg-rose-950/40 dark:hover:text-rose-400 text-slate-600 dark:text-slate-300 transition cursor-pointer border border-slate-200/80 dark:border-slate-700/80 flex items-center gap-1.5 active:scale-95 text-xs font-bold">
+            <app-icon name="x" [size]="14"></app-icon>
+            <span class="hidden sm:inline">Close</span>
+            <kbd
+              class="hidden md:inline-block px-1.5 py-0.5 text-[10px] bg-white/60 dark:bg-slate-900/60 rounded border border-slate-300 dark:border-slate-700 text-slate-400 font-mono">Esc</kbd>
+          </button>
+
+        </div>
+
+      </div>
+
+      <!-- Modal Table Body (Scrollable, Widescreen 98vw) -->
+      <div class="flex-1 overflow-auto min-h-0 table-scrollbar" (scroll)="closeKebab()">
+        <ng-container *ngTemplateOutlet="tableCoreTemplate"></ng-container>
+      </div>
+
+      <!-- Modal Pagination Footer -->
+      <div class="shrink-0">
+        <ng-container *ngTemplateOutlet="paginationFooterTemplate"></ng-container>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ==================== REUSABLE TEMPLATE 1: TABLE CORE ==================== -->
+<ng-template #tableCoreTemplate>
+  <table class="w-full text-left border-collapse min-w-[1180px]">
+
+    <!-- Sticky Frosted Header -->
+    <thead class="sticky top-0 z-20 bg-slate-50/95 dark:bg-slate-800/95 backdrop-blur-md">
+      <tr
+        class="border-b border-slate-200 dark:border-slate-800 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+
+        <!-- # Column -->
+        <th class="py-3 pl-4 pr-1.5 w-12 text-center select-none font-mono text-[9px] text-slate-400">
+          #
+        </th>
+
+        <!-- Statutory Right & Domain -->
+        <th
+          class="py-3 px-3.5 min-w-[240px] max-w-[320px] cursor-pointer select-none hover:text-blue-600 dark:hover:text-blue-400 transition"
+          (click)="toggleSort('title')" appTooltip="Click to sort by Statutory Right" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span>Statutory Right &amp; Domain</span>
+            <app-icon
+              [name]="sortColumn() === 'title' ? (sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down') : 'sort'"
+              [size]="11" [class.text-blue-600]="sortColumn() === 'title'"></app-icon>
+          </div>
+        </th>
+
+        <!-- Governing Act & Sections -->
+        <th
+          class="py-3 px-3.5 min-w-[190px] max-w-[250px] cursor-pointer select-none hover:text-blue-600 dark:hover:text-blue-400 transition"
+          (click)="toggleSort('act')" appTooltip="Click to sort by Governing Act" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span>Governing Act &amp; Sections</span>
+            <app-icon
+              [name]="sortColumn() === 'act' ? (sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down') : 'sort'"
+              [size]="11" [class.text-blue-600]="sortColumn() === 'act'"></app-icon>
+          </div>
+        </th>
+
+        <!-- Citizen Guarantee -->
+        <th
+          class="py-3 px-3.5 min-w-[260px] max-w-[360px] cursor-pointer select-none hover:text-blue-600 dark:hover:text-blue-400 transition"
+          (click)="toggleSort('summary')" appTooltip="Click to sort by Citizen Guarantee" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span>Citizen Guarantee</span>
+            <app-icon
+              [name]="sortColumn() === 'summary' ? (sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down') : 'sort'"
+              [size]="11" [class.text-blue-600]="sortColumn() === 'summary'"></app-icon>
+          </div>
+        </th>
+
+        <!-- Penalties -->
+        <th
+          class="py-3 px-3.5 min-w-[180px] max-w-[240px] cursor-pointer select-none hover:text-blue-600 dark:hover:text-blue-400 transition"
+          (click)="toggleSort('penalties')" appTooltip="Click to sort by Statutory Penalties" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span>Statutory Penalties</span>
+            <app-icon
+              [name]="sortColumn() === 'penalties' ? (sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down') : 'sort'"
+              [size]="11" [class.text-blue-600]="sortColumn() === 'penalties'"></app-icon>
+          </div>
+        </th>
+
+        <!-- Redressal Forum -->
+        <th
+          class="py-3 px-3.5 min-w-[170px] max-w-[230px] cursor-pointer select-none hover:text-blue-600 dark:hover:text-blue-400 transition"
+          (click)="toggleSort('forum')" appTooltip="Click to sort by Redressal Forum" tooltipPlacement="top">
+          <div class="flex items-center gap-1.5">
+            <span>Redressal Forum</span>
+            <app-icon
+              [name]="sortColumn() === 'forum' ? (sortDirection() === 'asc' ? 'chevron-up' : 'chevron-down') : 'sort'"
+              [size]="11" [class.text-blue-600]="sortColumn() === 'forum'"></app-icon>
+          </div>
+        </th>
+
+        <!-- Actions Header (Visible in All Modes) -->
+        <th class="py-3 pr-5 pl-2 text-right select-none min-w-[100px]">
+          <span>{{ isFullMode() ? 'Instant Actions' : 'Actions' }}</span>
+        </th>
+
+      </tr>
+    </thead>
+
+    <!-- Table Body with Dynamic Density & Hover Glow -->
+    <tbody class="divide-y divide-slate-100 dark:divide-slate-800/80">
+
+      <tr *ngFor="let right of paginatedRights(); let idx = index; trackBy: trackByRightId"
+        class="group hover:bg-blue-50/40 dark:hover:bg-blue-950/20 transition-colors duration-150 relative">
+
+        <!-- # Index Column -->
+        <td
+          class="py-2.5 pl-4 pr-1.5 w-12 text-center text-slate-400 font-mono text-[11px] font-bold select-none group-hover:text-blue-600 transition-colors">
+          {{ (currentPage() - 1) * pageSize() + idx + 1 }}
+        </td>
+
+        <!-- Statutory Right & Domain -->
+        <td [class]="cellPaddingClass" class="min-w-[240px] max-w-[320px]">
+          <div class="flex items-center gap-3">
+            <div
+              class="w-8 h-8 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-2xs group-hover:scale-105 group-hover:bg-blue-600 group-hover:text-white transition-all">
+              <app-icon [name]="right.icon" [size]="15"></app-icon>
+            </div>
+            <div class="min-w-0">
+              <div (click)="onViewDetails(right.id, $event)"
+                class="font-bold text-slate-900 dark:text-white leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors cursor-pointer line-clamp-2"
+                [appTooltip]="getTitle(right)" tooltipPlacement="top">
+                {{ getTitle(right) }}
+              </div>
+              <span
+                class="text-[10px] text-slate-500 dark:text-slate-400 font-semibold bg-slate-100 dark:bg-slate-800/80 px-1.5 py-0.5 rounded-md inline-block mt-0.5">
+                {{ right.category }}
+              </span>
+            </div>
+          </div>
+        </td>
+
+        <!-- Governing Act & Sections -->
+        <td [class]="cellPaddingClass" class="min-w-[190px] max-w-[250px]">
+          <div *ngIf="right.statutoryBasis">
+            <a [href]="getActUrl(right)" target="_blank" rel="noopener noreferrer" (click)="onActClick(right, $event)"
+              [appTooltip]="'Explore Bare Act: ' + (right.statutoryBasis.actName || right.statutoryBasis.shortAct)"
+              tooltipPlacement="top"
+              class="group/act inline-flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors no-underline line-clamp-1 truncate cursor-pointer max-w-full">
+              <span class="truncate">{{ right.statutoryBasis.shortAct || right.statutoryBasis.actName }}</span>
+              <app-icon name="external-link" [size]="10"
+                class="opacity-0 group-hover/act:opacity-100 text-blue-500 shrink-0 transition-opacity"></app-icon>
+            </a>
+          </div>
+          <div *ngIf="right.statutoryBasis" class="flex items-center gap-1 mt-1 flex-wrap">
+            <a *ngFor="let sec of getSectionsPreview(right); trackBy: trackByIndex" [href]="getSectionUrl(sec, right)"
+              target="_blank" rel="noopener noreferrer" (click)="onSectionClick(sec, right, $event)"
+              [appTooltip]="'Read ' + sec + ' in Bare Act reader (New tab)'" tooltipPlacement="top"
+              class="group/sec inline-flex items-center gap-1 font-mono text-[10px] font-bold text-blue-600 dark:text-blue-400 bg-blue-50 hover:bg-blue-100/80 dark:bg-blue-950/60 dark:hover:bg-blue-900/60 border border-blue-200/60 dark:border-blue-800/60 hover:border-blue-400 dark:hover:border-blue-500 px-1.5 py-0.5 rounded-md truncate max-w-[160px] cursor-pointer no-underline transition-all duration-150 active:scale-95 shadow-2xs">
+              <span class="truncate">{{ sec }}</span>
+              <app-icon name="external-link" [size]="8"
+                class="opacity-0 group-hover/sec:opacity-100 text-blue-500 shrink-0 transition-opacity"></app-icon>
+            </a>
+            <button *ngIf="getSectionsRemaining(right) > 0" type="button" (click)="onViewDetails(right.id, $event)"
+              class="text-[9px] font-bold text-slate-500 hover:text-blue-600 dark:text-slate-400 dark:hover:text-blue-300 font-mono bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60 px-1.5 py-0.5 rounded-md cursor-pointer transition-colors"
+              [appTooltip]="'View full dossier for all sections: ' + getSectionsTooltip(right)" tooltipPlacement="top">
+              +{{ getSectionsRemaining(right) }} more
+            </button>
+          </div>
+        </td>
+
+        <!-- Citizen Guarantee -->
+        <td [class]="cellPaddingClass" class="min-w-[260px] max-w-[360px]">
+          <p class="line-clamp-2 text-slate-600 dark:text-slate-300 m-0 leading-relaxed font-normal text-xs"
+            [appTooltip]="getSummary(right)" tooltipPlacement="top">
+            {{ getSummary(right) }}
+          </p>
+        </td>
+
+        <!-- Statutory Penalties -->
+        <td [class]="cellPaddingClass" class="min-w-[180px] max-w-[240px]">
+          <div
+            class="flex items-start gap-1.5 text-xs text-rose-600 dark:text-rose-400 font-medium leading-snug cursor-help"
+            [appTooltip]="right.penaltiesForViolation || 'Statutory legal sanctions apply'" tooltipPlacement="top">
+            <app-icon name="alert-triangle" [size]="13" class="text-rose-500 shrink-0 mt-0.5"></app-icon>
+            <span class="line-clamp-2 text-[11px] sm:text-xs">
+              {{ right.penaltiesForViolation || 'Statutory legal sanctions' }}
+            </span>
+          </div>
+        </td>
+
+        <!-- Redressal Forum -->
+        <td [class]="cellPaddingClass" class="min-w-[170px] max-w-[230px]">
+          <div
+            class="flex items-start gap-1.5 text-xs text-slate-700 dark:text-slate-300 font-medium leading-snug cursor-help"
+            [appTooltip]="right.legalRemedy" tooltipPlacement="top">
+            <app-icon name="landmark" [size]="13" class="text-slate-400 shrink-0 mt-0.5"></app-icon>
+            <span class="line-clamp-2 text-[11px] sm:text-xs font-semibold">
+              {{ right.legalRemedy }}
+            </span>
+          </div>
+        </td>
+
+        <!-- Instant Actions with Kebab Menu -->
+        <td [class]="cellPaddingClass" class="pr-5 pl-2 text-right shrink-0 min-w-[100px]">
+          <div class="inline-flex items-center justify-end gap-1 select-none">
+
+            <!-- Universal Custom Share Menu Button (Direct in Row, 1-Click Access) -->
+            <app-share-menu [title]="getShareSubject(right)" [text]="getShareText(right)"
+              [shareUrl]="getShareUrl(right)" [subject]="getShareSubject(right)" [copyText]="getCitationText(right)"
+              copyLinkLabel="Copy Citation" tooltipText="Share Statutory Protection" tooltipPlacement="top"
+              buttonClass="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center transition-all cursor-pointer active:scale-95 select-none hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400 text-slate-600 dark:text-slate-300"
+              activeClass="!bg-emerald-600 !text-white !border-emerald-600 shadow-md"
+              (openChange)="$event ? closeKebab() : null" [iconSize]="13" class="flex items-center">
+            </app-share-menu>
+
+            <!-- Global Reusable Kebab Menu -->
+            <app-kebab-menu menuWidth="w-64" [groups]="getKebabGroups(right)"
+              (itemClick)="triggerKebabAction($event.item.id, right, $event.event)">
+            </app-kebab-menu>
+
+          </div>
+        </td>
+
+      </tr>
+
+    </tbody>
+  </table>
+</ng-template>
+
+<!-- ==================== REUSABLE TEMPLATE 2: PAGINATION FOOTER ==================== -->
+<ng-template #paginationFooterTemplate>
+  <div
+    class="border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/80 dark:bg-slate-900/80 backdrop-blur-md px-5 py-3.5 flex flex-wrap items-center justify-between gap-3">
+
+    <!-- Left: Status Range Indicator -->
+    <div class="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium select-none">
+      <span>
+        Showing <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().start }}</strong>
+        to <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().end }}</strong>
+        of <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().total }}</strong>
+        Codified Protections
+      </span>
+      <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+      <span
+        class="px-2 py-0.5 rounded-full bg-slate-200/80 dark:bg-slate-800 text-[10px] font-bold text-slate-700 dark:text-slate-300">
+        Page {{ currentPage() }} of {{ totalPages() }}
+      </span>
+    </div>
+
+    <!-- Center: Dynamic Page Number Navigation Controls -->
+    <div class="flex items-center gap-1 select-none">
+
+      <!-- First Page Button -->
+      <button (click)="firstPage()" [disabled]="currentPage() === 1" appTooltip="First Page" tooltipPlacement="top"
+        class="p-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer">
+        <app-icon name="arrow-left" [size]="12"></app-icon>
+      </button>
+
+      <!-- Prev Page Button -->
+      <button (click)="prevPage()" [disabled]="currentPage() === 1" appTooltip="Previous Page" tooltipPlacement="top"
+        class="px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1">
+        <app-icon name="chevron-left" [size]="12"></app-icon>
+        <span>Prev</span>
+      </button>
+
+      <!-- Dynamic Numbered Page Pills -->
+      <ng-container *ngFor="let page of pagesList(); trackBy: trackByPage">
+        <span *ngIf="page === '...'" class="px-1.5 text-slate-400 text-xs font-bold">...</span>
+        <button *ngIf="page !== '...'" (click)="setPage(page)"
+          [class]="isCurrentPage(page) ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black shadow-md shadow-blue-500/25 border-transparent' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-slate-800/80 hover:bg-slate-100 dark:hover:bg-slate-700 font-bold'"
+          class="w-7 h-7 rounded-lg border text-xs transition cursor-pointer flex items-center justify-center">
+          {{ page }}
+        </button>
+      </ng-container>
+
+      <!-- Next Page Button -->
+      <button (click)="nextPage()" [disabled]="currentPage() === totalPages()" appTooltip="Next Page"
+        tooltipPlacement="top"
+        class="px-2.5 py-1 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold text-xs hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer flex items-center gap-1">
+        <span>Next</span>
+        <app-icon name="chevron-right" [size]="12"></app-icon>
+      </button>
+
+      <!-- Last Page Button -->
+      <button (click)="lastPage()" [disabled]="currentPage() === totalPages()" appTooltip="Last Page"
+        tooltipPlacement="top"
+        class="p-1.5 rounded-lg border border-slate-200/80 dark:border-slate-800/80 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 disabled:opacity-30 disabled:cursor-not-allowed transition cursor-pointer">
+        <app-icon name="arrow-right" [size]="12"></app-icon>
+      </button>
+
+    </div>
+
+    <!-- Right: "Show Per Page" Dropdown Selector & Quick Page Jumper -->
+    <div class="flex items-center gap-3">
+
+      <!-- Rows Per Page Dropdown -->
+      <div class="pagesize-container relative" (click)="$event.stopPropagation()">
+        <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <span class="font-medium">Show:</span>
+          <button (click)="togglePageSizeDropdown($event)"
+            class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold border border-slate-200 dark:border-slate-700 transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
+            <span>{{ pageSize() }} per page</span>
+            <app-icon name="chevron-down" [size]="11"></app-icon>
+          </button>
+        </div>
+
+        <!-- Page Size Dropdown Floating Menu -->
+        <div *ngIf="isPageSizeDropdownOpen()"
+          class="absolute right-0 bottom-full mb-2 w-36 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl p-1 z-50 animate-[fadeIn_0.15s_ease-out]">
+          <button *ngFor="let size of pageSizeOptions; trackBy: trackByNumber" (click)="setPageSize(size)"
+            [ngClass]="pageSize() === size ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 font-bold' : 'text-slate-700 dark:text-slate-200'"
+            class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 border-0 cursor-pointer transition">
+            <span>{{ size }} rows</span>
+            <app-icon *ngIf="pageSize() === size" name="check" [size]="12" class="text-blue-600"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Jump To Page Input -->
+      <div class="hidden lg:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+        <span>Go to:</span>
+        <input type="number" min="1" [max]="totalPages()" [value]="currentPage()" (keydown.enter)="onJumpInput($event)"
+          (blur)="onJumpInput($event)"
+          class="w-12 px-1.5 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white text-center font-bold text-xs focus:ring-1 focus:ring-blue-500 outline-none" />
+      </div>
+
+    </div>
+
+  </div>
+</ng-template>

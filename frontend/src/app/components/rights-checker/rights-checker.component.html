@@ -8,15 +8,46 @@
         Instant Rights Checker
       </h2>
       <p class="section-subtitle text-slate-500 dark:text-slate-400 max-w-[560px] text-sm sm:text-base leading-relaxed">
-        Quickly understand your fundamental legal protections and rights under Indian Law.
+        Quickly understand your fundamental legal protections and rights under Indian Law, sourced directly from
+        verified legislation.
       </p>
+      <a routerLink="/rights"
+        class="text-xs text-accent hover:underline font-semibold inline-flex items-center gap-1.5 transition">
+        <span>Explore All Codified Citizen Protections &amp; Emergency Audio Scripts</span>
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
+        </svg>
+      </a>
     </div>
 
-    <!-- Responsive Grid: 2 columns on mobile/tablet, 4 on desktop -->
-    <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
+    <!-- Loading Skeleton State -->
+    <div *ngIf="isLoading" class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
+      <div *ngFor="let i of [1, 2, 3, 4]"
+        class="p-4 sm:p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 bg-white/40 dark:bg-slate-900/40 animate-pulse flex flex-col items-center justify-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+        <div class="h-3 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
+        <div class="h-2 w-16 bg-slate-100 dark:bg-slate-800/60 rounded"></div>
+      </div>
+    </div>
+
+    <!-- Error / Empty State with Retry -->
+    <div *ngIf="!isLoading && hasError"
+      class="p-6 rounded-2xl border border-amber-500/20 bg-amber-500/5 text-center max-w-md mx-auto space-y-3">
+      <div class="text-amber-500 font-bold text-sm">Unable to load statutory knowledge catalog</div>
+      <p class="text-xs text-slate-500 dark:text-slate-400">
+        Live database connection is temporarily unavailable. Please retry to load verified legal protections.
+      </p>
+      <button (click)="loadCards()" class="btn btn-secondary btn-sm text-xs font-semibold px-4 py-1.5">
+        Retry Knowledge Sync
+      </button>
+    </div>
+
+    <!-- Dynamic Cards Grid -->
+    <div *ngIf="!isLoading && rightsCards.length > 0"
+      class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-6">
       <button *ngFor="let card of rightsCards; let idx = index" (click)="toggleRightsCard(idx)"
         [ngClass]="selectedRightsCard === idx ? 'border-accent bg-accent/5 dark:bg-accent/10 shadow-md text-accent font-bold scale-[1.02]' : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-white/70 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300'"
-        class="p-3.5 sm:p-6 rounded-2xl border flex flex-col items-center justify-center gap-2.5 sm:gap-3.5 text-center transition-all duration-300 hover:-translate-y-0.5 group shadow-sm w-full">
+        class="p-3.5 sm:p-6 rounded-2xl border flex flex-col items-center justify-center gap-2.5 sm:gap-3.5 text-center transition-all duration-300 hover:-translate-y-0.5 group shadow-sm w-full cursor-pointer">
 
         <!-- SVG Icons -->
         <div
@@ -47,9 +78,16 @@
           </svg>
         </div>
 
-        <span
-          class="text-[11px] sm:text-sm font-bold tracking-tight text-slate-800 dark:text-slate-200 leading-tight">{{
-          card.title }}</span>
+        <span class="text-[11px] sm:text-sm font-bold tracking-tight text-slate-800 dark:text-slate-200 leading-tight">
+          {{ card.title }}
+        </span>
+
+        <!-- Provenance Badge -->
+        <span *ngIf="card.reviewStatus"
+          class="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+          <span class="w-1 h-1 rounded-full bg-emerald-500"></span>
+          <span>{{ card.reviewStatus }}</span>
+        </span>
       </button>
     </div>
 
@@ -58,12 +96,18 @@
       class="fade-in-up mt-6 p-4 sm:p-6 rounded-2xl bg-white/85 dark:bg-slate-900/70 border border-accent/20 dark:border-accent/30 shadow-lg backdrop-blur-md transition-all duration-300">
       <div
         class="flex items-start justify-between gap-3 mb-3 border-b border-slate-200/50 dark:border-slate-800/55 pb-3">
-        <span
-          class="text-[10px] sm:text-xs font-bold text-accent uppercase tracking-widest bg-accent/10 px-2.5 py-1 rounded-full whitespace-normal leading-relaxed">
-          Governing Law: {{ activeRightsCard.lawRef }}
-        </span>
+        <div class="flex items-center gap-2 flex-wrap">
+          <span
+            class="text-[10px] sm:text-xs font-bold text-accent uppercase tracking-widest bg-accent/10 px-2.5 py-1 rounded-full whitespace-normal leading-relaxed">
+            Governing Law: {{ activeRightsCard.lawRef }}
+          </span>
+          <span *ngIf="activeRightsCard.sourceAuthority"
+            class="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md">
+            Source: {{ activeRightsCard.sourceAuthority }}
+          </span>
+        </div>
         <button (click)="selectedRightsCard = null"
-          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 flex-shrink-0">
+          class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 p-1 flex-shrink-0 cursor-pointer bg-transparent border-0">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -72,10 +116,18 @@
       <p class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
         {{ activeRightsCard.summary }}
       </p>
-      <div class="mt-4 flex justify-end">
-        <a [routerLink]="[activeRightsCard.link]"
+      <div class="mt-4 flex flex-col sm:flex-row gap-2 justify-end">
+        <a routerLink="/rights"
+          class="btn btn-secondary btn-sm text-xs font-bold flex items-center gap-1.5 shadow-sm w-full sm:w-auto justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+          </svg>
+          <span>All Statutory Rights Directory</span>
+        </a>
+        <a [routerLink]="activeRightsCard.link" [queryParams]="activeRightsCard.queryParams"
+          [fragment]="activeRightsCard.fragment"
           class="btn btn-primary btn-sm text-xs font-bold flex items-center gap-1.5 shadow-sm w-full sm:w-auto justify-center">
-          <span>Read Governing Law Act</span>
+          <span>View Statutory Safeguard &amp; Verbal Script</span>
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
           </svg>

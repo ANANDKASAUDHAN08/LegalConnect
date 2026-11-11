@@ -1,0 +1,610 @@
+<!-- ==========================================================================
+     REUSABLE RIGHT DETAIL DRAWER & MOBILE FULL-PAGE VIEW
+     Desktop: Ultra-smooth slide-in side drawer (680px) with graceful exit
+     Mobile: Native-grade full-page takeover with touch pull-to-dismiss
+     ========================================================================== -->
+
+<!-- Backdrop -->
+<div *ngIf="right" (click)="onClose()"
+  class="fixed inset-0 z-[2200] bg-slate-950/70 backdrop-blur-sm drawer-backdrop cursor-pointer flex justify-end"
+  [class.drawer-backdrop-closing]="isClosing()" aria-hidden="true">
+
+  <!-- ==================== DRAWER CONTAINER PANEL ==================== -->
+  <div (click)="$event.stopPropagation()" appFocusTrap
+    class="w-full h-[100dvh] md:w-[680px] md:max-w-[92vw] bg-white dark:bg-slate-900 md:border-l md:border-slate-200 dark:md:border-slate-800 md:rounded-l-3xl flex flex-col shadow-2xl drawer-panel overflow-hidden cursor-default transition-transform"
+    [class.drawer-panel-closing]="isClosing()" [class.is-dragging]="isDragging()"
+    [style.transform]="dragTranslateY() > 0 ? 'translate3d(0, ' + dragTranslateY() + 'px, 0)' : null" role="dialog"
+    aria-modal="true" aria-labelledby="drawer-title" [ngClass]="{
+      'text-scale-large': textScale() === 'large',
+      'text-scale-xlarge': textScale() === 'xlarge'
+    }">
+
+    <!-- Mobile Native Pull Handle Bar (Touch Swipe-to-Dismiss) -->
+    <div
+      class="md:hidden pt-2 pb-1 flex justify-center shrink-0 cursor-grab active:cursor-grabbing touch-none select-none bg-white/95 dark:bg-slate-900/95"
+      (touchstart)="onTouchStart($any($event))" (touchmove)="onTouchMove($any($event))" (touchend)="onTouchEnd()"
+      (touchcancel)="onTouchEnd()">
+      <div
+        class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors">
+      </div>
+    </div>
+
+    <!-- ==================== 1. TOP HEADER NAVIGATION BAR ==================== -->
+    <header
+      class="sticky top-0 z-20 bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[0_4px_20px_-4px_rgba(0,0,0,0.35)] px-3 sm:px-6 pt-2 pb-2 safe-top-padding">
+      <div class="flex items-center justify-between gap-1.5 sm:gap-2.5 min-w-0">
+
+        <!-- Left: Back (Mobile) & Stepper Navigation -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <!-- Back button (Shown on mobile only for logged-in users; guest users use the top-right close cross) -->
+          <button *ngIf="isLoggedIn" (click)="onClose()" appTooltip="Back to list (Esc)" tooltipPlacement="bottom"
+            class="md:hidden py-1 px-1.5 -ml-1 rounded-lg text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer border-0 flex items-center gap-1 font-semibold text-xs shrink-0">
+            <app-icon name="arrow-left" [size]="14"></app-icon>
+            <span class="text-[11px] hidden xs:inline">Back</span>
+          </button>
+
+          <!-- Prev / Next Stepper in Filtered List (Always visible when multiple items) -->
+          <div *ngIf="totalCount() > 1"
+            class="flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800/80 rounded-xl p-0.5 border border-slate-200/60 dark:border-slate-700/60 shadow-2xs shrink-0">
+            <button type="button" (click)="previousRight($event)" [disabled]="!hasPrevious()"
+              appTooltip="Previous protection (Left Arrow)" tooltipPlacement="bottom" aria-label="Previous protection"
+              class="p-1 sm:p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer border-0 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center min-w-[24px] min-h-[24px]">
+              <app-icon name="chevron-left" [size]="12"></app-icon>
+            </button>
+
+            <span
+              class="text-[10px] sm:text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300 px-1.5 select-none whitespace-nowrap">
+              {{ displayPosition() }}
+            </span>
+
+            <button type="button" (click)="nextRight($event)" [disabled]="!hasNext()"
+              appTooltip="Next protection (Right Arrow)" tooltipPlacement="bottom" aria-label="Next protection"
+              class="p-1 sm:p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 transition cursor-pointer border-0 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center min-w-[24px] min-h-[24px]">
+              <app-icon name="chevron-right" [size]="12"></app-icon>
+            </button>
+          </div>
+
+          <!-- Single Item Dossier Indicator (when totalCount <= 1) to prevent layout shift -->
+          <div *ngIf="totalCount() <= 1"
+            class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl px-2 py-1 border border-slate-200/60 dark:border-slate-700/60 text-[10px] sm:text-[11px] font-mono font-bold text-slate-500 dark:text-slate-400 select-none shrink-0">
+            <app-icon name="file-text" [size]="11" class="text-blue-500"></app-icon>
+            <span>Dossier</span>
+          </div>
+        </div>
+
+        <!-- Middle: Citizen vs Lawyer Mode Toggle (Universal for all users) -->
+        <div *ngIf="!isLoggedIn"
+          class="flex items-center p-0.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs shrink-0">
+          <button (click)="setReadingMode('citizen')"
+            [class]="readingMode() === 'citizen' ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+            class="px-2 sm:px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] transition cursor-pointer border-0 flex items-center gap-1">
+            <app-icon name="user" [size]="12"></app-icon>
+            <span class="hidden sm:inline">Citizen</span>
+          </button>
+          <button (click)="setReadingMode('lawyer')"
+            [class]="readingMode() === 'lawyer' ? 'bg-white dark:bg-slate-900 text-amber-600 dark:text-amber-400 font-bold shadow-2xs' : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'"
+            class="px-2 sm:px-2.5 py-1 rounded-xl text-[10px] sm:text-[11px] transition cursor-pointer border-0 flex items-center gap-1">
+            <app-icon name="scale" [size]="12"></app-icon>
+            <span class="hidden sm:inline">Lawyer</span>
+          </button>
+        </div>
+
+        <!-- Right: Header Actions (Locale, Font Zoom, Copy Citation, Bookmark, Admin, Close) -->
+        <div class="flex items-center gap-0.5 sm:gap-1 shrink-0">
+          <!-- In-situ Bilingual Switcher (EN / HI) -->
+          <button (click)="toggleLanguage()"
+            [appTooltip]="drawerLanguage() === 'en' ? 'Switch to Hindi (हिंदी)' : 'Switch to English'"
+            tooltipPlacement="bottom"
+            class="px-1.5 sm:px-2 py-1 rounded-xl text-[10px] sm:text-xs font-mono font-black bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition cursor-pointer border border-slate-200/70 dark:border-slate-700/60 flex items-center gap-1 shrink-0">
+            <app-icon name="globe" [size]="12" class="text-blue-500"></app-icon>
+            <span>{{ drawerLanguage() === 'en' ? 'HI' : 'EN' }}</span>
+          </button>
+
+          <!-- Text Legibility Scaler (A / A+ / A++) -->
+          <button (click)="cycleTextScale()"
+            [appTooltip]="'Font Size: ' + (textScale() === 'normal' ? 'Normal' : textScale() === 'large' ? 'Large (+15%)' : 'Extra Large (+30%)')"
+            tooltipPlacement="bottom"
+            class="p-1 sm:p-1.5 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer border-0 flex items-center justify-center font-bold text-xs min-w-[26px] min-h-[26px] shrink-0">
+            <span [ngClass]="textScale() !== 'normal' ? 'text-blue-600 dark:text-blue-400 font-black' : ''">
+              A{{ textScale() === 'large' ? '+' : textScale() === 'xlarge' ? '++' : '' }}
+            </span>
+          </button>
+
+          <!-- Copy Citation -->
+          <button (click)="onCopyCitation($event)"
+            [appTooltip]="copiedCitation() ? 'Citation copied!' : 'Copy statutory citation'" tooltipPlacement="bottom"
+            aria-label="Copy statutory citation"
+            class="p-1.5 sm:p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer border-0 flex items-center justify-center min-w-[28px] min-h-[28px] shrink-0">
+            <app-icon [name]="copiedCitation() ? 'check' : 'copy'" [size]="14"
+              [class.text-emerald-500]="copiedCitation()"></app-icon>
+          </button>
+
+          <!-- Bookmark -->
+          <button (click)="onToggleBookmark($event)"
+            [appTooltip]="isBookmarked ? 'Remove from saved bookmarks' : 'Bookmark this right (B)'"
+            tooltipPlacement="bottom"
+            [attr.aria-label]="isBookmarked ? 'Remove from saved bookmarks' : 'Bookmark this protection'"
+            [class]="isBookmarked ? 'text-amber-500 dark:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80' : 'text-slate-400 hover:text-amber-500 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 border border-transparent hover:border-slate-200/80 dark:hover:border-slate-700/80'"
+            class="p-1.5 sm:p-2 rounded-xl transition-all duration-150 active:scale-90 cursor-pointer flex items-center justify-center min-w-[28px] min-h-[28px] shrink-0">
+            <app-icon [name]="isBookmarked ? 'bookmark-filled' : 'bookmark'" [size]="15"
+              [class.text-amber-500]="isBookmarked" [class.dark:text-amber-400]="isBookmarked"></app-icon>
+          </button>
+
+          <!-- Admin Edit (if Admin) -->
+          <button *ngIf="isAdminUser" (click)="onAdminEdit($event)" appTooltip="Edit in Admin Portal"
+            tooltipPlacement="bottom" aria-label="Edit in Admin Portal"
+            class="p-1.5 sm:p-2 rounded-xl text-amber-600 bg-amber-50 dark:bg-amber-950/30 hover:bg-amber-100 dark:hover:bg-amber-900/40 transition cursor-pointer border-0 flex items-center justify-center min-w-[28px] min-h-[28px] shrink-0">
+            <app-icon name="edit" [size]="15"></app-icon>
+          </button>
+
+          <!-- Close Cross -->
+          <button (click)="onClose()" appTooltip="Close (Esc)" tooltipPlacement="bottom" aria-label="Close dossier"
+            class="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer border-0 flex items-center justify-center min-w-[28px] min-h-[28px] shrink-0">
+            <app-icon name="x" [size]="16"></app-icon>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Playbook Scrubber Tabs with native edge-to-edge scroll and frosted divider -->
+      <div
+        class="mt-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center gap-1.5 overflow-x-auto pb-0.5 scrollbar-none -mx-3 px-3 sm:-mx-6 sm:px-6">
+        <button (click)="setTab('all')"
+          [class]="activeTab() === 'all'
+            ? 'bg-blue-600 text-white font-extrabold shadow-2xs'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-2.5 py-1 rounded-xl text-xs whitespace-nowrap transition cursor-pointer border-0 flex items-center gap-1 shrink-0">
+          <app-icon name="layers" [size]="12"></app-icon>
+          <span>All Playbook</span>
+        </button>
+
+        <button (click)="setTab('script')"
+          [class]="activeTab() === 'script'
+            ? 'bg-blue-600 text-white font-extrabold shadow-2xs'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-2.5 py-1 rounded-xl text-xs whitespace-nowrap transition cursor-pointer border-0 flex items-center gap-1 shrink-0">
+          <app-icon name="message-square" [size]="12"></app-icon>
+          <span>Verbal Script</span>
+        </button>
+
+        <button (click)="setTab('protections')"
+          [class]="activeTab() === 'protections'
+            ? 'bg-blue-600 text-white font-extrabold shadow-2xs'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-2.5 py-1 rounded-xl text-xs whitespace-nowrap transition cursor-pointer border-0 flex items-center gap-1 shrink-0">
+          <app-icon name="shield-check" [size]="12"></app-icon>
+          <span>Protections</span>
+        </button>
+
+        <button (click)="setTab('steps')"
+          [class]="activeTab() === 'steps'
+            ? 'bg-blue-600 text-white font-extrabold shadow-2xs'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-2.5 py-1 rounded-xl text-xs whitespace-nowrap transition cursor-pointer border-0 flex items-center gap-1 shrink-0">
+          <app-icon name="check-square" [size]="12"></app-icon>
+          <span>Action Steps</span>
+        </button>
+
+        <button (click)="setTab('penalties')"
+          [class]="activeTab() === 'penalties'
+            ? 'bg-blue-600 text-white font-extrabold shadow-2xs'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-2.5 py-1 rounded-xl text-xs whitespace-nowrap transition cursor-pointer border-0 flex items-center gap-1 shrink-0">
+          <app-icon name="scale" [size]="12"></app-icon>
+          <span>Sections &amp; Forum</span>
+        </button>
+
+        <button *ngIf="right.frequentlyAskedQuestions && right.frequentlyAskedQuestions.length > 0"
+          (click)="setTab('faqs')"
+          [class]="activeTab() === 'faqs'
+            ? 'bg-blue-600 text-white font-extrabold shadow-2xs'
+            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 font-medium'"
+          class="px-2.5 py-1 rounded-xl text-xs whitespace-nowrap transition cursor-pointer border-0 flex items-center gap-1 shrink-0">
+          <app-icon name="help-circle" [size]="12"></app-icon>
+          <span>FAQs</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ==================== 2. MAIN SCROLLABLE BODY ==================== -->
+    <div #drawerScrollBody
+      class="flex-1 overflow-y-auto drawer-scroll-body px-4 sm:px-6 pt-3 pb-6 space-y-2 sm:space-y-3">
+
+      <!-- ==================== UNIFIED HERO HEADER BLOCK ==================== -->
+      <div class="space-y-1.5">
+        <!-- Meta Badges Bar: Single row horizontal scroll on mobile, wrap on desktop, with defensive truncation and shrink-0 -->
+        <div
+          class="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap sm:flex-wrap py-0.5 -mx-4 px-4 sm:mx-0 sm:px-0 text-[8px] sm:text-[10px]">
+          <!-- Category Badge -->
+          <span
+            class="px-2 py-0.5 rounded-md font-extrabold uppercase tracking-wider bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shrink-0 max-w-[200px] sm:max-w-none truncate"
+            [appTooltip]="right.category" tooltipPlacement="top">
+            {{ right.category }}
+          </span>
+
+          <!-- Priority Flag (if popular) -->
+          <span *ngIf="right.isPopular"
+            class="px-2 py-0.5 rounded-md font-extrabold uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 flex items-center gap-1 shrink-0">
+            <app-icon name="star" [size]="10"></app-icon>
+            <span>Priority</span>
+          </span>
+
+          <!-- Scenario Tag (clean chip) -->
+          <span *ngIf="right.scenarioTag"
+            class="px-2 py-0.5 rounded-md font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0 max-w-[180px] sm:max-w-none truncate"
+            [appTooltip]="right.scenarioTag" tooltipPlacement="top">
+            #{{ right.scenarioTag }}
+          </span>
+        </div>
+
+        <!-- Right Title -->
+        <h2 id="drawer-title"
+          class="font-serif text-base sm:text-lg lg:text-xl font-bold text-slate-900 dark:text-white leading-snug sm:leading-tight m-0 break-words [overflow-wrap:anywhere]">
+          {{ getTitle() }}
+        </h2>
+
+        <!-- Structured Statutory Citation Header (handles any act length and any section count gracefully) -->
+        <div class="space-y-1.5 pt-0.5">
+          <!-- Act Name Citation -->
+          <div class="flex items-start sm:items-center gap-1.5 text-xs text-slate-600 dark:text-slate-300 min-w-0">
+            <app-icon name="book-open" [size]="13" class="text-blue-500 shrink-0 mt-0.5 sm:mt-0"></app-icon>
+            <div class="min-w-0 flex-1 leading-snug break-words">
+              <span class="text-slate-400 dark:text-slate-500 font-medium">Statute: </span>
+              <a [href]="getActUrl()" target="_blank" rel="noopener noreferrer" (click)="onActClick($event)"
+                [appTooltip]="'Explore full Bare Act: ' + right.statutoryBasis.actName"
+                class="font-semibold text-slate-800 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 hover:underline inline-flex items-center gap-1 transition-colors no-underline">
+                <span>{{ right.statutoryBasis.actName }}</span>
+                <app-icon name="external-link" [size]="10"
+                  class="opacity-50 hover:opacity-100 text-blue-500 shrink-0"></app-icon>
+              </a>
+            </div>
+          </div>
+
+          <!-- Section Pills: Single-row swipeable on mobile, flex-wrapping on desktop -->
+          <div *ngIf="right.statutoryBasis.sections && right.statutoryBasis.sections.length > 0"
+            class="flex items-center gap-1.5 overflow-x-auto scrollbar-none flex-nowrap sm:flex-wrap py-0.5 -mx-4 px-4 sm:mx-0 sm:px-0 text-[10px]">
+            <span
+              class="text-slate-400 dark:text-slate-500 font-mono font-bold uppercase tracking-wider text-[9px] shrink-0">Sections:</span>
+            <a *ngFor="let sec of right.statutoryBasis.sections; trackBy: trackByIndex" [href]="getSectionUrl(sec)"
+              target="_blank" rel="noopener noreferrer" (click)="onSectionClick(sec, $event)"
+              [appTooltip]="'Read ' + sec + ' in Bare Act viewer (New tab)'"
+              class="group/sec inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-mono font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shrink-0 whitespace-nowrap shadow-2xs hover:border-blue-400 dark:hover:border-blue-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50/60 dark:hover:bg-blue-950/40 transition-all duration-150 active:scale-95 cursor-pointer no-underline focus:outline-none focus:ring-2 focus:ring-blue-500/40">
+              <span>{{ sec }}</span>
+              <app-icon name="external-link" [size]="9"
+                class="opacity-40 group-hover/sec:opacity-100 text-blue-500 transition-opacity"></app-icon>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Premium Edge-to-Edge Hairline Divider (Flush: zero upper and below wasted space) -->
+      <div
+        class="!my-0.5 -mx-4 sm:-mx-6 h-px bg-gradient-to-r from-transparent via-slate-300/80 dark:via-slate-700/80 to-transparent">
+      </div>
+
+      <!-- Plain Language Statutory Guarantee / Summary -->
+      <div
+        class="p-3 sm:p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+        <h4
+          class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider m-0 mb-1 flex items-center gap-1.5">
+          <app-icon name="shield" [size]="12" class="text-blue-500 shrink-0"></app-icon>
+          <span>Statutory Guarantee &amp; Scope</span>
+        </h4>
+        <p
+          class="text-xs sm:text-[13px] text-slate-700 dark:text-slate-300 leading-relaxed font-normal m-0 break-words">
+          {{ getSummary() }}
+        </p>
+      </div>
+
+      <!-- ==================== CITIZEN VIEW SECTIONS ==================== -->
+      <div *ngIf="readingMode() === 'citizen'" class="space-y-3 md:space-y-4">
+
+        <!-- Verbal Directive Confrontation Box ("Say this right now") -->
+        <div *ngIf="activeTab() === 'all' || activeTab() === 'script'"
+          class="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/90 to-indigo-50/80 dark:from-blue-950/30 dark:to-indigo-950/20 border border-blue-200/90 dark:border-blue-900/50 space-y-3 shadow-xs">
+          <div class="flex items-center justify-between gap-1.5 sm:gap-2 min-w-0">
+            <span
+              class="text-[11px] sm:text-xs font-black uppercase text-blue-800 dark:text-blue-300 flex items-center gap-1.5 truncate sm:whitespace-normal">
+              <app-icon name="message-square" [size]="14" class="shrink-0"></app-icon>
+              <span class="truncate sm:whitespace-normal">Say this to authority right now:</span>
+            </span>
+
+            <div class="flex items-center gap-1 sm:gap-2 shrink-0">
+              <!-- Listen Aloud (Icon only on mobile, Icon + Text on tablet/desktop) -->
+              <button (click)="onSpeak($event)"
+                [appTooltip]="isSpeaking && speakingRightId === right.id ? 'Stop audio' : 'Listen aloud'"
+                tooltipPlacement="bottom"
+                [class]="isSpeaking && speakingRightId === right.id ? 'bg-indigo-600 text-white animate-pulse' : 'bg-white/90 dark:bg-slate-800 text-indigo-600 dark:text-indigo-400 hover:bg-white dark:hover:bg-slate-700'"
+                class="p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold border border-indigo-200 dark:border-indigo-900/50 cursor-pointer flex items-center justify-center gap-1 transition shrink-0 min-w-[28px] min-h-[28px]">
+                <app-icon [name]="isSpeaking && speakingRightId === right.id ? 'volume-2' : 'volume-1'"
+                  [size]="13"></app-icon>
+                <span class="hidden sm:inline">{{ isSpeaking && speakingRightId === right.id ? 'Stop audio' : 'Listen
+                  aloud' }}</span>
+              </button>
+
+              <!-- Copy Script (Icon only on mobile, Icon + Text on tablet/desktop) -->
+              <button (click)="onCopyScript($event)" [appTooltip]="copiedScript() ? 'Copied script!' : 'Copy script'"
+                tooltipPlacement="bottom"
+                class="p-1.5 sm:px-2.5 sm:py-1 rounded-lg text-xs font-bold bg-white/90 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 cursor-pointer flex items-center justify-center gap-1 transition shrink-0 min-w-[28px] min-h-[28px]">
+                <app-icon [name]="copiedScript() ? 'check' : 'copy'" [size]="13"
+                  [class.text-emerald-500]="copiedScript()"></app-icon>
+                <span class="hidden sm:inline">{{ copiedScript() ? 'Copied' : 'Copy script' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <blockquote
+            class="text-xs sm:text-sm text-slate-800 dark:text-slate-100 italic border-l-4 border-blue-600 pl-3.5 py-1 m-0 leading-relaxed bg-white/80 dark:bg-slate-900/60 p-3 rounded-r-xl select-all">
+            "{{ getWhatToSay() }}"
+          </blockquote>
+        </div>
+
+        <!-- Binding Statutory Protections -->
+        <div *ngIf="activeTab() === 'all' || activeTab() === 'protections'"
+          class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-3">
+          <div class="flex items-center gap-2">
+            <app-icon name="shield-check" [size]="17" class="text-emerald-500"></app-icon>
+            <h4 class="font-serif text-sm sm:text-base font-bold text-slate-900 dark:text-white m-0">Your Legal
+              Protections</h4>
+          </div>
+          <ul class="space-y-2 list-none p-0 m-0 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            <li *ngFor="let p of right.keyProtections; trackBy: trackByIndex" class="flex items-start gap-2.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-2 shrink-0"></span>
+              <span class="leading-relaxed">{{ p }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Citizen Action Steps Playbook -->
+        <div *ngIf="activeTab() === 'all' || activeTab() === 'steps'"
+          class="p-4 sm:p-5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-3">
+          <div class="flex items-center gap-2">
+            <app-icon name="check-square" [size]="17" class="text-blue-500"></app-icon>
+            <h4 class="font-serif text-sm sm:text-base font-bold text-slate-900 dark:text-white m-0">Action Steps to
+              Enforce</h4>
+          </div>
+          <ol class="space-y-2 list-none p-0 m-0 text-xs sm:text-sm text-slate-600 dark:text-slate-300">
+            <li *ngFor="let step of right.actionableSteps; let idx = index; trackBy: trackByIndex"
+              class="flex items-start gap-2.5">
+              <span
+                class="w-5 h-5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold text-[11px] flex items-center justify-center shrink-0 mt-0.5">
+                {{ idx + 1 }}
+              </span>
+              <span class="leading-relaxed">{{ step }}</span>
+            </li>
+          </ol>
+        </div>
+
+        <!-- Do's and Don'ts Checklist Matrix -->
+        <div *ngIf="activeTab() === 'all' || activeTab() === 'steps'"
+          class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+          <!-- Do's -->
+          <div
+            class="p-4 rounded-2xl bg-emerald-50/70 dark:bg-emerald-950/20 border border-emerald-200/70 dark:border-emerald-900/40 space-y-2">
+            <span
+              class="font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <app-icon name="check-circle" [size]="14"></app-icon>
+              <span>What to Do</span>
+            </span>
+            <ul class="space-y-1.5 list-none p-0 m-0 text-slate-700 dark:text-slate-300">
+              <li *ngFor="let doItem of getDos(); trackBy: trackByIndex" class="flex items-start gap-2">
+                <app-icon name="check" [size]="12" class="text-emerald-500 shrink-0 mt-1"></app-icon>
+                <span class="leading-relaxed">{{ doItem }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Don'ts -->
+          <div
+            class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-900/40 space-y-2">
+            <span
+              class="font-bold text-rose-800 dark:text-rose-300 flex items-center gap-1.5 text-xs uppercase tracking-wide">
+              <app-icon name="alert-triangle" [size]="14"></app-icon>
+              <span>What NOT to Do</span>
+            </span>
+            <ul class="space-y-1.5 list-none p-0 m-0 text-slate-700 dark:text-slate-300">
+              <li *ngFor="let dontItem of getDonts(); trackBy: trackByIndex" class="flex items-start gap-2">
+                <app-icon name="x" [size]="12" class="text-rose-500 shrink-0 mt-1"></app-icon>
+                <span class="leading-relaxed">{{ dontItem }}</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Redressal Forum & Emergency Helpline -->
+        <div *ngIf="activeTab() === 'all' || activeTab() === 'penalties'"
+          class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-3">
+          <div class="text-xs sm:text-sm text-slate-700 dark:text-slate-300">
+            <strong class="text-slate-900 dark:text-white">Redressal Forum:</strong>
+            <span class="ml-1.5 text-slate-600 dark:text-slate-300 break-words">{{ right.legalRemedy }}</span>
+          </div>
+
+          <div *ngIf="right.emergencyHelpline"
+            class="flex items-center justify-between gap-2 p-3 rounded-xl bg-indigo-50/80 dark:bg-indigo-950/30 border border-indigo-200/60 dark:border-indigo-900/40 flex-wrap">
+            <div class="text-xs text-indigo-900 dark:text-indigo-200 min-w-0 flex-1 break-words">
+              <strong>Official Helpline:</strong> {{ right.emergencyHelpline.name }}
+            </div>
+            <a [href]="'tel:' + right.emergencyHelpline.number"
+              class="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs no-underline flex items-center gap-1.5 transition shadow-xs shrink-0">
+              <app-icon name="phone" [size]="12"></app-icon>
+              <span>Call {{ right.emergencyHelpline.number }}</span>
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== LAWYER READING MODE SECTIONS ==================== -->
+      <div *ngIf="readingMode() === 'lawyer'" class="space-y-3 md:space-y-4">
+        <!-- Governing Enactment -->
+        <div
+          class="p-4 sm:p-5 rounded-2xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 space-y-2.5 text-xs">
+          <div class="flex items-center justify-between gap-2">
+            <span
+              class="font-bold text-amber-800 dark:text-amber-300 uppercase tracking-wide text-[10px] sm:text-xs">Governing
+              Legislative
+              Enactment</span>
+            <a [href]="getActUrl()" target="_blank" rel="noopener noreferrer" (click)="onActClick($event)"
+              [appTooltip]="'Open full Bare Act for ' + right.statutoryBasis.actName"
+              class="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:underline flex items-center gap-1 font-semibold shrink-0 text-xs transition-colors">
+              <span>Bare Act Text</span>
+              <app-icon name="external-link" [size]="11"></app-icon>
+            </a>
+          </div>
+          <a [href]="getActUrl()" target="_blank" rel="noopener noreferrer" (click)="onActClick($event)"
+            [appTooltip]="'Open ' + right.statutoryBasis.actName"
+            class="block text-sm font-bold text-slate-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 leading-snug break-words no-underline transition-colors">
+            {{ right.statutoryBasis.actName }}
+          </a>
+          <div class="flex flex-wrap gap-1.5 pt-1">
+            <a *ngFor="let sec of right.statutoryBasis.sections; trackBy: trackByIndex" [href]="getSectionUrl(sec)"
+              target="_blank" rel="noopener noreferrer" (click)="onSectionClick(sec, $event)"
+              [appTooltip]="'Direct Bare Act citation: ' + sec + ' (Opens in new tab)'"
+              class="group/lawsec inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md font-mono font-bold bg-amber-500/15 hover:bg-amber-500/25 text-amber-900 dark:text-amber-200 border border-amber-500/30 hover:border-amber-500/70 shadow-2xs hover:shadow-xs transition-all duration-150 active:scale-95 cursor-pointer no-underline focus:outline-none focus:ring-2 focus:ring-amber-500/40">
+              <span>{{ sec }}</span>
+              <app-icon name="external-link" [size]="10"
+                class="opacity-50 group-hover/lawsec:opacity-100 text-amber-700 dark:text-amber-300 transition-opacity"></app-icon>
+            </a>
+          </div>
+        </div>
+
+        <!-- Binding Landmark Judicial Precedents -->
+        <div *ngIf="right.statutoryBasis.landmarkCases as cases"
+          class="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 space-y-2.5 text-xs">
+          <ng-container *ngIf="cases.length > 0">
+            <h4 class="font-serif font-bold text-slate-900 dark:text-white m-0">Binding Judicial Precedents</h4>
+            <ul class="space-y-2 list-none p-0 m-0">
+              <li *ngFor="let c of cases; trackBy: trackByIndex"
+                class="flex items-start gap-2 text-slate-700 dark:text-slate-300">
+                <app-icon name="scale" [size]="14" class="text-amber-500 shrink-0 mt-0.5"></app-icon>
+                <span class="font-serif italic leading-relaxed break-words">{{ c }}</span>
+              </li>
+            </ul>
+          </ng-container>
+        </div>
+
+        <!-- Statutory Violation Penalties -->
+        <div *ngIf="right.penaltiesForViolation"
+          class="p-4 rounded-2xl bg-rose-50/70 dark:bg-rose-950/20 border border-rose-200/70 dark:border-rose-900/40 text-xs space-y-1.5">
+          <span class="font-bold text-rose-700 dark:text-rose-400 uppercase tracking-wide text-[10px]">Statutory
+            Violation Penalties</span>
+          <p class="text-rose-900 dark:text-rose-200 m-0 font-medium leading-relaxed break-words">{{
+            right.penaltiesForViolation }}
+          </p>
+        </div>
+      </div>
+
+      <!-- ==================== FREQUENTLY ASKED STATUTORY QUESTIONS ==================== -->
+      <div
+        *ngIf="(activeTab() === 'all' || activeTab() === 'faqs') && right.frequentlyAskedQuestions && right.frequentlyAskedQuestions.length > 0"
+        class="space-y-3 pt-2">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
+            <app-icon name="help-circle" [size]="14"></app-icon>
+          </div>
+          <h4 class="font-serif text-sm font-bold text-slate-900 dark:text-white m-0">
+            Statutory FAQs &amp; Legal Clarifications
+          </h4>
+        </div>
+
+        <div class="space-y-2.5">
+          <div *ngFor="let faq of right.frequentlyAskedQuestions; trackBy: trackByFaq"
+            class="p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 space-y-1.5 text-xs">
+            <span class="font-bold text-slate-900 dark:text-white block leading-snug break-words">Q: {{ faq.question
+              }}</span>
+            <p class="text-slate-600 dark:text-slate-300 leading-relaxed font-normal m-0 break-words">A: {{ faq.answer
+              }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== PROVENANCE & VERIFICATION FOOTER ==================== -->
+      <div
+        class="pt-4 border-t border-slate-200/70 dark:border-slate-800/80 space-y-2 text-[11px] text-slate-500 dark:text-slate-400">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <app-icon name="shield-check" [size]="13" class="text-emerald-500"></app-icon>
+          <span>Verified statutory legal authority as of {{ formatDate(right.verifiedDate) }}.</span>
+          <span *ngIf="right.provenance?.sourceAuthority" class="text-slate-600 dark:text-slate-300 font-medium">
+            • Authority: {{ right.provenance?.sourceAuthority }}
+          </span>
+          <span *ngIf="right.provenance?.license"
+            class="px-1.5 py-0.5 text-[9px] bg-slate-100 dark:bg-slate-800 rounded font-mono text-slate-500">
+            {{ right.provenance?.license }}
+          </span>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-slate-400">
+          <a *ngIf="right.provenance?.sourceUrl" [href]="right.provenance?.sourceUrl" target="_blank"
+            rel="noopener noreferrer"
+            class="text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-0.5">
+            <span>Official Portal Reference</span>
+            <app-icon name="external-link" [size]="10"></app-icon>
+          </a>
+          <span>• Code: <span class="font-mono font-bold">{{ right.id }}</span></span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ==================== 3. STICKY BOTTOM EMERGENCY ACTION DOCK ==================== -->
+    <footer
+      class="sticky bottom-0 z-20 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-800/80 p-3 sm:p-4 safe-bottom-padding flex items-center justify-between gap-1.5 sm:gap-2">
+      <!-- Flash Pass: High-Visibility Primary Emergency Pass -->
+      <button (click)="onFlashPass($event)"
+        class="flex-1 py-2.5 px-3 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 shadow-md shadow-blue-500/20 transition cursor-pointer border-0">
+        <app-icon name="badge-check" [size]="15"></app-icon>
+        <span class="whitespace-nowrap">Flash Legal Pass</span>
+        <span
+          class="hidden md:inline-block px-1.5 py-0.5 bg-blue-500/50 rounded text-[9px] font-mono font-bold">F</span>
+      </button>
+
+      <!-- Speak Audio -->
+      <button (click)="onSpeak($event)"
+        [class]="isSpeaking && speakingRightId === right.id ? 'bg-indigo-600 text-white animate-pulse' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+        appTooltip="Listen to confrontation script aloud (Key: S)" tooltipPlacement="top"
+        class="py-2.5 px-2.5 sm:px-3 rounded-xl font-semibold text-xs flex items-center justify-center gap-1 border-0 cursor-pointer transition shrink-0 min-w-[38px] sm:min-w-0">
+        <app-icon [name]="isSpeaking && speakingRightId === right.id ? 'volume-2' : 'volume-1'" [size]="15"></app-icon>
+        <span class="hidden sm:inline">{{ isSpeaking && speakingRightId === right.id ? 'Playing' : 'Listen' }}</span>
+        <span
+          class="hidden md:inline-block px-1 py-0.5 bg-slate-200 dark:bg-slate-700 rounded text-[9px] font-mono font-bold">S</span>
+      </button>
+
+      <!-- Draft Notice -->
+      <button (click)="onOpenNotice($event)" appTooltip="Draft formal legal notice in Studio" tooltipPlacement="top"
+        class="py-2.5 px-2.5 sm:px-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 font-semibold text-xs flex items-center justify-center gap-1 cursor-pointer transition shrink-0">
+        <app-icon name="file-text" [size]="15"></app-icon>
+        <span class="hidden sm:inline">Notice</span>
+      </button>
+
+      <!-- Suggest Correction / Report Inaccuracy -->
+      <button *ngIf="!hasReported()" (click)="onSuggestCorrection($event)"
+        appTooltip="Report an outdated statute, wrong section, or dead helpline" tooltipPlacement="top"
+        class="p-2.5 rounded-xl bg-slate-100 hover:bg-amber-50 hover:text-amber-700 dark:bg-slate-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-400 text-slate-500 border-0 cursor-pointer transition flex items-center justify-center shrink-0 min-w-[38px]">
+        <app-icon name="flag" [size]="15"></app-icon>
+      </button>
+
+      <!-- Active Dispute Status Pill -->
+      <span *ngIf="hasReported()"
+        [appTooltip]="'Discrepancy reported (' + getReport()?.referenceId + ') • Under Legal Council Review'"
+        tooltipPlacement="top"
+        class="px-2.5 py-1.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 text-amber-700 dark:text-amber-300 text-[11px] font-bold flex items-center gap-1 cursor-default select-none shrink-0 shadow-2xs">
+        <app-icon name="alert-triangle" [size]="13" class="text-amber-600 dark:text-amber-400"></app-icon>
+        <span class="hidden sm:inline">Under Review</span>
+      </span>
+
+      <!-- Print / PDF -->
+      <button (click)="onPrint($event)" [disabled]="isPrinting" appTooltip="Print or save as institutional PDF dossier"
+        tooltipPlacement="top"
+        class="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border-0 cursor-pointer transition flex items-center justify-center disabled:opacity-50 shrink-0">
+        <app-icon [name]="isPrinting ? 'refresh' : 'printer'" [size]="15" [class.animate-spin]="isPrinting"></app-icon>
+      </button>
+
+      <!-- Universal Share Menu (Inbuilt Native Browser Share on Mobile, Custom Dropdown on Desktop) -->
+      <app-share-menu [title]="getShareSubject()" [text]="getShareText()" [shareUrl]="getShareUrl()"
+        [subject]="getShareSubject()" tooltipText="Share protection" tooltipPlacement="top"
+        buttonClass="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 border-0 cursor-pointer transition flex items-center justify-center shrink-0 min-w-[38px] sm:min-w-0"
+        iconClass="w-3.5 h-3.5" class="shrink-0 flex items-center">
+      </app-share-menu>
+    </footer>
+
+  </div>
+</div>
