@@ -274,6 +274,18 @@ export class ModerationReportService {
     'Template': [
       { key: 'INCORRECT_TEXT', label: 'Contains Legal Errors', icon: 'file-text', severity: 'High' },
       { key: 'OUTDATED_AMENDMENT', label: 'Uses Outdated Law References', icon: 'calendar', severity: 'Medium' },
+    ],
+    'StatutoryRight': [
+      { key: 'OUTDATED_STATUTE', label: 'Outdated or Repealed Law (New Amendment Exists)', icon: 'calendar', severity: 'Critical' },
+      { key: 'WRONG_SECTION', label: 'Incorrect Section Number or Statutory Citation', icon: 'file-text', severity: 'High' },
+      { key: 'DEAD_HELPLINE', label: 'Helpline Number Inactive, Disconnected, or Wrong', icon: 'phone', severity: 'High' },
+      { key: 'RISKY_SCRIPT', label: 'Confrontation Verbal Script Contains Flawed Advice', icon: 'alert-triangle', severity: 'Critical' },
+      { key: 'TRANSLATION_ERROR', label: 'Translation Inaccuracy (English / Hindi)', icon: 'languages', severity: 'Low' },
+    ],
+    'NewRightProposal': [
+      { key: 'NEW_CRISIS_SCENARIO', label: 'Emerging Threat Scenario (e.g. Digital Arrest, AI Scam)', icon: 'shield-alert', severity: 'High' },
+      { key: 'MISSING_STATUTE', label: 'Missing Indian Statute or State Act Protection', icon: 'book-open', severity: 'Medium' },
+      { key: 'MISSING_HELPLINE', label: 'Unlisted 24x7 Emergency / Legal Aid Helpline', icon: 'phone', severity: 'High' },
     ]
   };
 

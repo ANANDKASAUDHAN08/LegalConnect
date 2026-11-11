@@ -12,18 +12,61 @@ export interface LocalAct {
   lastSynced: Date;
 }
 
+export interface CachedRight {
+  id?: number;
+  rightId: string;
+  data: any;
+  lastSynced: Date;
+}
+
+export interface CachedScenario {
+  id?: number;
+  tag: string;
+  data: any;
+  lastSynced: Date;
+}
+
+export interface CachedDiagnostic {
+  id?: number;
+  crisisId: string;
+  data: any;
+  lastSynced: Date;
+}
+
+export interface CachedMeta {
+  key: string;
+  value: any;
+  updatedAt: Date;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class DatabaseService extends Dexie {
   acts!: Table<LocalAct, number>;
   sections!: Table<any, number>;
+  rightsCache!: Table<CachedRight, number>;
+  scenariosCache!: Table<CachedScenario, number>;
+  diagnosticsCache!: Table<CachedDiagnostic, number>;
+  meta!: Table<CachedMeta, string>;
 
   constructor() {
     super('LegalConnectDB');
+
+    // v2: Original acts + sections tables
     this.version(2).stores({
       acts: '++id, shortName, actName, fullText',
       sections: '++id, actShortName, section_number, [actShortName+section_number]'
+    });
+
+    // v3: Add offline crisis mode cache tables
+    this.version(3).stores({
+      acts: '++id, shortName, actName, fullText',
+      sections: '++id, actShortName, section_number, [actShortName+section_number]',
+      rightsCache: '++id, rightId',
+      scenariosCache: '++id, tag',
+      diagnosticsCache: '++id, crisisId',
+      meta: 'key'
     });
   }
 
@@ -140,7 +183,7 @@ export class DatabaseService extends Dexie {
       .filter(w => w.length > 2 && !['section', 'under', 'acts', 'laws', 'clause'].includes(w));
 
     if (keywords.length === 0) {
-      return this.sections.filter(sec => 
+      return this.sections.filter(sec =>
         (sec.title && sec.title.toLowerCase().includes(q)) ||
         (sec.content && sec.content.toLowerCase().includes(q))
       ).toArray();
@@ -170,5 +213,112 @@ export class DatabaseService extends Dexie {
       return matchCount >= threshold;
     }).toArray();
   }
-}
 
+  // ==================== OFFLINE CRISIS CACHE (IndexedDB) ====================
+
+  /** Save the full rights catalog for offline crisis mode */
+  async saveRightsCache(rights: any[], categories?: any[]): Promise<void> {
+    const now = new Date();
+    await this.transaction('rw', this.rightsCache, this.meta, async () => {
+      await this.rightsCache.clear();
+      const records = rights.map(r => ({
+        rightId: r.id || r.slug,
+        data: r,
+        lastSynced: now
+      }));
+      await this.rightsCache.bulkPut(records);
+
+      // Store categories in meta
+      if (categories) {
+        await this.meta.put({ key: 'rights_categories', value: categories, updatedAt: now });
+      }
+      await this.meta.put({ key: 'rights_cache_ts', value: now.toISOString(), updatedAt: now });
+    });
+  }
+
+  /** Load cached rights for offline mode */
+  async loadRightsCache(): Promise<{ rights: any[]; categories: any[] } | null> {
+    try {
+      const records = await this.rightsCache.toArray();
+      if (records.length === 0) return null;
+
+      const rights = records.map(r => r.data);
+      const catMeta = await this.meta.get('rights_categories');
+      const categories = catMeta?.value || [];
+      return { rights, categories };
+    } catch {
+      return null;
+    }
+  }
+
+  /** Save emergency scenarios for offline mode */
+  async saveScenariosCache(scenarios: any[]): Promise<void> {
+    const now = new Date();
+    await this.transaction('rw', this.scenariosCache, async () => {
+      await this.scenariosCache.clear();
+      const records = scenarios.map(s => ({
+        tag: s.tag,
+        data: s,
+        lastSynced: now
+      }));
+      await this.scenariosCache.bulkPut(records);
+    });
+  }
+
+  /** Load cached scenarios for offline mode */
+  async loadScenariosCache(): Promise<any[] | null> {
+    try {
+      const records = await this.scenariosCache.toArray();
+      if (records.length === 0) return null;
+      return records.map(r => r.data);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Save diagnostic crises for offline mode */
+  async saveDiagnosticsCache(diagnostics: any[]): Promise<void> {
+    const now = new Date();
+    await this.transaction('rw', this.diagnosticsCache, async () => {
+      await this.diagnosticsCache.clear();
+      const records = diagnostics.map(d => ({
+        crisisId: d.id || d.crisisId,
+        data: d,
+        lastSynced: now
+      }));
+      await this.diagnosticsCache.bulkPut(records);
+    });
+  }
+
+  /** Load cached diagnostics for offline mode */
+  async loadDiagnosticsCache(): Promise<any[] | null> {
+    try {
+      const records = await this.diagnosticsCache.toArray();
+      if (records.length === 0) return null;
+      return records.map(r => r.data);
+    } catch {
+      return null;
+    }
+  }
+
+  /** Store a metadata key-value pair */
+  async setMeta(key: string, value: any): Promise<void> {
+    await this.meta.put({ key, value, updatedAt: new Date() });
+  }
+
+  /** Retrieve a metadata value by key */
+  async getMeta(key: string): Promise<any | null> {
+    const record = await this.meta.get(key);
+    return record?.value ?? null;
+  }
+
+  /** Clear all offline crisis caches */
+  async clearAllCaches(): Promise<void> {
+    await this.transaction('rw', this.rightsCache, this.scenariosCache, this.diagnosticsCache, this.meta, async () => {
+      await this.rightsCache.clear();
+      await this.scenariosCache.clear();
+      await this.diagnosticsCache.clear();
+      await this.meta.where('key').anyOf(['rights_categories', 'rights_cache_ts']).delete();
+    });
+  }
+}

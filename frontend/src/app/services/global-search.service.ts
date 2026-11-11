@@ -315,6 +315,7 @@ export class GlobalSearchService {
       },
       quickAccess: [
         { id: 'find-lawyer', label: 'Find Verified Lawyers', route: '/lawyers', icon: 'briefcase', description: 'Consult licensed advocates across high courts & district benches' },
+        { id: 'citizen-rights', label: 'Citizen Rights & Safeguards', route: '/rights', icon: 'shield', description: 'Emergency scripts, arrest protocols, police limits & statutory rights' },
         { id: 'legal-resources', label: 'Legal Aid & DLSA Clinics', route: '/legal-resources', icon: 'landmark', description: 'Free legal aid, Lok Adalats & government legal aid clinics' },
         { id: 'browse-laws', label: 'Browse Bare Acts & Codes', route: '/laws', icon: 'book-open', description: 'Search 1,200+ Indian Acts, sections, penalties & BNS cross-references' },
         { id: 'faqs', label: 'Frequently Asked Questions', route: '/help', icon: 'help-circle', description: 'LegalConnect zero-commission rules, DPDP rights & user guides' },

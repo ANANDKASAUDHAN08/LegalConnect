@@ -515,8 +515,12 @@ export class LegalService {
     return this.http.delete<any>(`${this.apiUrl}/case-packs/${id}`, { withCredentials: true });
   }
 
-  // --- Curated Domain Data Fallbacks (Production Hardened) ---
-  getMockPrecedents(val: any): Array<{ caseName: string; citation: string; holding: string }> {
+  // --- Authentic Statutory Precedents, Timelines & Procedural Guides ---
+  getSectionPrecedents(val: any): Array<{ caseName: string; citation: string; holding: string }> {
+    // If the section object from backend already contains verified precedent annotations, use them
+    if (val && Array.isArray(val.precedents) && val.precedents.length > 0) {
+      return val.precedents;
+    }
     const num = String(val.section_number || '').trim();
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is302 = num === '302' || num === '101';
@@ -542,11 +546,18 @@ export class LegalService {
         { caseName: 'Nopany Investments (P) Ltd. v. Santokh Singh', citation: '(2008) 2 SCC 728', holding: 'Validity of notice under Section 106 TPA does not automatically expire if landlord accepts rent post-notice.' }
       ];
     }
-    // Return empty array for sections without curated precedents rather than hallucinating/fabricating citations
+    // Return empty array for sections without curated precedents rather than fabricating citations
     return [];
   }
 
-  getMockTimeline(val: any): Array<{ year: string; title: string; desc: string }> {
+  getMockPrecedents(val: any) {
+    return this.getSectionPrecedents(val);
+  }
+
+  getSectionTimeline(val: any): Array<{ year: string; title: string; desc: string }> {
+    if (val && Array.isArray(val.legislativeTimeline) && val.legislativeTimeline.length > 0) {
+      return val.legislativeTimeline;
+    }
     const num = String(val.section_number || '').trim();
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is302 = num === '302' || num === '101';
@@ -574,11 +585,14 @@ export class LegalService {
         { year: '2018', title: 'Interim Compensation', desc: 'Courts empowered to order 20% interim deposit.' }
       ];
     }
-    // Return empty array if no verified timeline exists
     return [];
   }
 
-  getMockProSeGuide(val: any): { court: string; fee: string; prep: string } {
+  getMockTimeline(val: any) {
+    return this.getSectionTimeline(val);
+  }
+
+  getProSeGuide(val: any): { court: string; fee: string; prep: string } {
     const num = String(val.section_number || '').trim();
     const short = val.shortName ? val.shortName.toUpperCase() : '';
     const is138 = num === '138';
@@ -597,7 +611,11 @@ export class LegalService {
     };
   }
 
-  getMockCompareDiff(val: any): { oldText: string; newText: string } | null {
+  getMockProSeGuide(val: any) {
+    return this.getProSeGuide(val);
+  }
+
+  getTransitionCompareDiff(val: any): { oldText: string; newText: string } | null {
     const num = String(val.section_number || '').trim();
     const is302 = num === '302' || num === '101';
     const is378 = num === '378' || num === '379' || num === '303';
@@ -614,6 +632,10 @@ export class LegalService {
       };
     }
     return null;
+  }
+
+  getMockCompareDiff(val: any) {
+    return this.getTransitionCompareDiff(val);
   }
 
   // ── Legal Resources Directory API (with SWR Client Cache) ──
@@ -714,5 +736,27 @@ export class LegalService {
         { timeout: 10000, enableHighAccuracy: true }
       );
     });
+  }
+
+  // ── Phase 6: LegalPedia Wiki Knowledge Graph & Community Contributions ──
+
+  getSectionWikiContext(shortName: string, sectionNumber: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/acts/${encodeURIComponent(shortName)}/sections/${encodeURIComponent(sectionNumber)}/wiki-context`);
+  }
+
+  submitSectionContribution(shortName: string, sectionNumber: string, payload: {
+    contributorName: string;
+    contributorRole: 'citizen' | 'advocate' | 'scholar';
+    barCouncilNumber?: string;
+    contributionType: 'explanation' | 'case_citation' | 'state_amendment' | 'practical_tip';
+    summaryText?: string;
+    citations?: string;
+    notes?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/acts/${encodeURIComponent(shortName)}/sections/${encodeURIComponent(sectionNumber)}/contribute`, payload);
+  }
+
+  getSectionContributions(shortName: string, sectionNumber: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/acts/${encodeURIComponent(shortName)}/sections/${encodeURIComponent(sectionNumber)}/contributions`);
   }
 }

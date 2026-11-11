@@ -44,6 +44,7 @@ export interface Draft {
 export class DocumentTemplateService {
   private draftsKey = 'lc_vault_drafts_v2';
   private customTemplatesKey = 'lc_custom_templates';
+  private allTemplatesKey = 'lc_unified_templates_v2';
 
   private draftsUrl = '/api/legal/drafts';
   private templatesUrl = '/api/legal/templates';
@@ -54,6 +55,10 @@ export class DocumentTemplateService {
   private customTemplatesSubject = new BehaviorSubject<Template[]>([]);
   customTemplates$ = this.customTemplatesSubject.asObservable();
 
+  // Unified reactive observable for both system templates and custom user templates
+  private templatesSubject = new BehaviorSubject<Template[]>([]);
+  templates$ = this.templatesSubject.asObservable();
+
   private isLoggedIn = false;
 
   // Throttled autosave queue
@@ -63,6 +68,12 @@ export class DocumentTemplateService {
     private http: HttpClient,
     private auth: AuthService
   ) {
+    // 1. Immediately hydrate unified templates from local cache for 0ms initial load
+    this.hydrateFromLocalCache();
+
+    // 2. Fetch fresh templates from backend
+    this.loadAllTemplates();
+
     // Reactive Auth State Sync
     this.auth.isLoggedIn$.subscribe(loggedIn => {
       this.isLoggedIn = loggedIn;
@@ -81,12 +92,55 @@ export class DocumentTemplateService {
     // Offline auto-sync listener
     window.addEventListener('online', () => {
       if (isDevMode()) console.log('Browser back online, syncing pending drafts and custom templates...');
+      this.loadAllTemplates();
       this.syncPendingDrafts();
       this.syncPendingTemplates();
     });
   }
 
+  private hydrateFromLocalCache() {
+    const cached = localStorage.getItem(this.allTemplatesKey);
+    if (cached) {
+      try {
+        const parsed = JSON.parse(cached) as Template[];
+        if (parsed && parsed.length > 0) {
+          this.templatesSubject.next(parsed);
+        }
+      } catch (e) {
+        // Fallback to empty
+      }
+    }
+  }
+
+  // SWR: Fetch fresh published system & user templates from backend
+  loadAllTemplates() {
+    this.http.get<{ success: boolean; count: number; data: Template[] }>(this.templatesUrl).subscribe({
+      next: (res) => {
+        if (res && res.success && res.data && res.data.length > 0) {
+          this.templatesSubject.next(res.data);
+          try {
+            localStorage.setItem(this.allTemplatesKey, JSON.stringify(res.data));
+          } catch (e) {
+            // Quota safe
+          }
+        }
+      },
+      error: (err) => {
+        console.warn('Backend templates fetch failed; serving from local cache:', err);
+      }
+    });
+  }
+
+  // Record template download usage metrics
+  recordTemplateUsage(templateId: string) {
+    this.http.post(`${this.templatesUrl}/${templateId}/download`, {}).subscribe({
+      next: () => {},
+      error: () => {}
+    });
+  }
+
   private loadAllData() {
+    this.loadAllTemplates();
     this.loadCustomTemplates();
     this.loadDrafts();
   }
@@ -285,6 +339,20 @@ export class DocumentTemplateService {
     this.customTemplatesSubject.next(updatedList);
     localStorage.setItem(this.customTemplatesKey, JSON.stringify(updatedList));
 
+    // Update unified templatesSubject
+    const currentUnified = this.templatesSubject.value;
+    const uIdx = currentUnified.findIndex(t => t.id === template.id);
+    const updatedUnified = [...currentUnified];
+    if (uIdx !== -1) {
+      updatedUnified[uIdx] = template;
+    } else {
+      updatedUnified.push(template);
+    }
+    this.templatesSubject.next(updatedUnified);
+    try {
+      localStorage.setItem(this.allTemplatesKey, JSON.stringify(updatedUnified));
+    } catch (e) { }
+
     if (this.isLoggedIn) {
       this.http.post(this.templatesUrl, template).subscribe({
         next: () => {
@@ -332,6 +400,12 @@ export class DocumentTemplateService {
     const updated = this.customTemplatesSubject.value.filter(t => t.id !== templateId);
     this.customTemplatesSubject.next(updated);
     localStorage.setItem(this.customTemplatesKey, JSON.stringify(updated));
+
+    const updatedUnified = this.templatesSubject.value.filter(t => t.id !== templateId);
+    this.templatesSubject.next(updatedUnified);
+    try {
+      localStorage.setItem(this.allTemplatesKey, JSON.stringify(updatedUnified));
+    } catch (e) { }
 
     if (this.isLoggedIn) {
       this.http.delete(`${this.templatesUrl}/${templateId}`).subscribe({

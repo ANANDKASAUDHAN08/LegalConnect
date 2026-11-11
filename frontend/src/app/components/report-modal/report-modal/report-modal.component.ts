@@ -93,6 +93,23 @@ export class ReportModalComponent implements OnInit, OnDestroy {
     adaptiveStatus: new FormControl<string>('', {
       nonNullable: true
     }),
+    // ── Statutory & Proposal Adaptive Form Controls ──
+    adaptiveSection: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(150)]
+    }),
+    adaptiveHelpline: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(100)]
+    }),
+    adaptiveScript: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(500)]
+    }),
+    adaptiveNewAct: new FormControl<string>('', {
+      nonNullable: true,
+      validators: [Validators.maxLength(150)]
+    }),
     contactType: new FormControl<'anonymous' | 'contact'>('anonymous', {
       nonNullable: true
     }),
@@ -119,6 +136,12 @@ export class ReportModalComponent implements OnInit, OnDestroy {
     const key = this.selectedReason();
     if (!key) return null;
     return this.reasons().find(r => r.key === key) || null;
+  });
+
+  modalTitle = computed(() => {
+    const type = this.reportService.currentTarget()?.targetType;
+    if (type === 'StatutoryRight') return 'Suggest Legal Correction';
+    return 'Report an Issue';
   });
 
   // ── Computed Existing Active Report ──
@@ -224,6 +247,10 @@ export class ReportModalComponent implements OnInit, OnDestroy {
   }
 
   // ── Adaptive Context Evaluators ──
+  get isStatutoryRight(): boolean {
+    return this.reportService.currentTarget()?.targetType === 'StatutoryRight';
+  }
+
   get isPhoneReason(): boolean {
     return this.selectedReason() === 'WRONG_PHONE';
   }
@@ -242,7 +269,35 @@ export class ReportModalComponent implements OnInit, OnDestroy {
     return r === 'BRIBERY_ALLEGATION' || r === 'PII_LEAK' || r === 'FAKE_REGISTRATION' || r === 'FRAUD';
   }
 
+  get isWrongSectionReason(): boolean {
+    return this.selectedReason() === 'WRONG_SECTION';
+  }
+
+  get isDeadHelplineReason(): boolean {
+    return this.selectedReason() === 'DEAD_HELPLINE' || this.selectedReason() === 'MISSING_HELPLINE';
+  }
+
+  get isRiskyScriptReason(): boolean {
+    return this.selectedReason() === 'RISKY_SCRIPT';
+  }
+
+  get isOutdatedStatuteReason(): boolean {
+    return this.selectedReason() === 'OUTDATED_STATUTE';
+  }
+
   contextPlaceholder = computed(() => {
+    if (this.isRiskyScriptReason) {
+      return 'Explain why the current verbal teleprompter script could put a citizen in legal jeopardy during an encounter...';
+    }
+    if (this.isOutdatedStatuteReason) {
+      return 'Detail which statutory provision has been amended, repealed, or superseded, and provide the updated citation or gazette reference...';
+    }
+    if (this.isWrongSectionReason) {
+      return 'Detail the correct citation, gazette notification, or High Court judgment...';
+    }
+    if (this.isDeadHelplineReason) {
+      return 'Detail what happens when calling this number (busy, IVR dead, disconnected, or wrong department)...';
+    }
     if (this.isVigilanceReason) {
       return 'Please detail the incident (date, demanded amount, room/desk or officer details). Attach any receipts, slips or recordings if available...';
     }
@@ -259,6 +314,9 @@ export class ReportModalComponent implements OnInit, OnDestroy {
   });
 
   reasonAdvisoryTitle = computed(() => {
+    if (this.isOutdatedStatuteReason || this.isRiskyScriptReason) return 'Urgent Statutory Accuracy Review (2h SLA)';
+    if (this.isWrongSectionReason) return 'Statutory Citation & Bare Act Verification Desk';
+    if (this.isDeadHelplineReason) return '24x7 Emergency Telecommunications Verification';
     if (this.isVigilanceReason) return 'Confidential Vigilance & Whistleblower Fast-Track (2h SLA)';
     if (this.isPhoneReason) return 'Public Registry Telephone Verification Desk';
     if (this.isAddressReason) return 'Campus Navigation & Room Locator Desk';
@@ -267,6 +325,15 @@ export class ReportModalComponent implements OnInit, OnDestroy {
   });
 
   reasonAdvisoryText = computed(() => {
+    if (this.isOutdatedStatuteReason || this.isRiskyScriptReason) {
+      return 'Statutory errors and risky confrontation scripts are prioritized for immediate review. Critical corrections are applied to the live teleprompter within 2 hours.';
+    }
+    if (this.isWrongSectionReason) {
+      return 'Citations are checked against the official India Code, Gazette of India, and High Court registries to maintain 100% statutory precision.';
+    }
+    if (this.isDeadHelplineReason) {
+      return 'Our team verifies helpline connectivity and updates the direct dial registry to ensure citizens are never stranded during a crisis.';
+    }
     if (this.isVigilanceReason) {
       return 'Reports regarding bribery demands, corruption, or PII leaks are encrypted and routed directly to senior vigilance officers with priority triage. Anonymous submission is enabled on the next step.';
     }
@@ -524,6 +591,28 @@ export class ReportModalComponent implements OnInit, OnDestroy {
 
     // Build rich structured description if adaptive inputs were filled
     let finalDescription = formVal.description.trim();
+
+    // 1. Statutory Right Corrections
+    if (this.isStatutoryRight) {
+      const parts: string[] = [];
+      if (formVal.adaptiveSection?.trim()) {
+        parts.push(`[Suggested Correct Citation / Section: ${formVal.adaptiveSection.trim()}]`);
+      }
+      if (formVal.adaptiveNewAct?.trim()) {
+        parts.push(`[Superseding Law / Enactment: ${formVal.adaptiveNewAct.trim()}]`);
+      }
+      if (formVal.adaptiveHelpline?.trim()) {
+        parts.push(`[Active Helpline Number: ${formVal.adaptiveHelpline.trim()}]`);
+      }
+      if (formVal.adaptiveScript?.trim()) {
+        parts.push(`[Safer Verbal Script Suggestion: "${formVal.adaptiveScript.trim()}"]`);
+      }
+      if (parts.length > 0) {
+        finalDescription = `${parts.join('\n')}\n\n${finalDescription}`;
+      }
+    }
+
+    // 2. General Directory / Listing Adaptive Fields
     if (formVal.adaptiveCorrection.trim()) {
       if (this.isPhoneReason) {
         finalDescription = `[Suggested Active Phone: ${formVal.adaptiveCorrection.trim()}]\n\n${finalDescription}`;
@@ -537,11 +626,13 @@ export class ReportModalComponent implements OnInit, OnDestroy {
       finalDescription = `[Operational Status Note: ${formVal.adaptiveStatus}]\n\n${finalDescription}`;
     }
 
+    const effectiveTitle = target.targetTitle;
+
     try {
       const result = await this.reportService.submitReport({
         targetType: target.targetType,
         targetId: target.targetId,
-        targetTitle: target.targetTitle,
+        targetTitle: effectiveTitle,
         reasonCategory: formVal.reasonCategory,
         description: finalDescription,
         evidenceUrl: this.evidencePreview() || undefined,
@@ -592,6 +683,10 @@ export class ReportModalComponent implements OnInit, OnDestroy {
       description: '',
       adaptiveCorrection: '',
       adaptiveStatus: '',
+      adaptiveSection: '',
+      adaptiveHelpline: '',
+      adaptiveScript: '',
+      adaptiveNewAct: '',
       contactType: 'anonymous',
       reporterName: this.currentUser?.fullName || '',
       reporterEmail: this.currentUser?.email || ''
