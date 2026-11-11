@@ -6,6 +6,9 @@ import { getCache, setCache } from '../../services/statsService';
 import { normalizeActShortName } from '../../utils/geoUtils';
 import { normalizeActInfo } from '../../utils/actNormalizer';
 import actRegistry from '../../services/actRegistry';
+import StatutoryRightModel from '../../models/StatutoryRight';
+import JudicialDecisionModel from '../../models/JudicialDecision';
+import IngestionLogModel from '../../models/IngestionLog';
 
 const router = Router();
 
@@ -250,17 +253,34 @@ router.get('/acts/:shortName/sections/:sectionNumber', asyncHandler(async (req: 
   const sectionNumber = req.params.sectionNumber as string;
   const registryEntry = actRegistry.resolveAct(shortName);
   const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
+  const dbShortName = registryEntry?.dbShortName || resolvedShortName;
+
+  const candidateShortNames = Array.from(new Set([
+    dbShortName,
+    resolvedShortName,
+    shortName,
+    shortName.toUpperCase(),
+    shortName.charAt(0).toUpperCase() + shortName.slice(1).toLowerCase(),
+    'Constitution'
+  ].filter(Boolean)));
+
+  const cleanSec = sectionNumber.replace(/^(?:section|sec|article|art|rule|order|clause)\.?\s*/i, '').trim();
+  const candidateSecNumbers = Array.from(new Set([
+    sectionNumber,
+    cleanSec,
+    sectionNumber.includes('_') ? sectionNumber.split('_')[0] : null,
+    cleanSec.includes('_') ? cleanSec.split('_')[0] : null
+  ].filter(Boolean) as string[]));
 
   let section = await SectionModel.findOne({
-    actShortName: resolvedShortName,
-    section_number: sectionNumber
+    actShortName: { $in: candidateShortNames },
+    section_number: { $in: candidateSecNumbers }
   });
 
-  if (!section && sectionNumber.includes('_')) {
-    const baseSecNum = sectionNumber.split('_')[0];
+  if (!section) {
     section = await SectionModel.findOne({
-      actShortName: resolvedShortName,
-      section_number: baseSecNum
+      actShortName: { $regex: new RegExp(`^${resolvedShortName}$`, 'i') },
+      section_number: { $in: candidateSecNumbers }
     });
   }
 
@@ -268,7 +288,7 @@ router.get('/acts/:shortName/sections/:sectionNumber', asyncHandler(async (req: 
     throw AppError.notFound('Section not found.');
   }
 
-  const act = await BareAct.findOne({ shortName: resolvedShortName }, 'actName year');
+  const act = await BareAct.findOne({ shortName: { $in: candidateShortNames } }, 'actName year');
 
   const secNum = parseInt(section.section_number) || 0;
   let isBailable = true;
@@ -330,6 +350,199 @@ router.get('/acts/:shortName/sections/:sectionNumber', asyncHandler(async (req: 
 
   res.set('Cache-Control', 'public, max-age=86400, must-revalidate');
   res.json({ success: true, data: foundSection });
+}));
+
+// GET /acts/:shortName/sections/:sectionNumber/wiki-context - Interlinked Legal Knowledge Graph for LegalPedia
+router.get('/acts/:shortName/sections/:sectionNumber/wiki-context', asyncHandler(async (req: Request, res: Response) => {
+  const shortName = req.params.shortName as string;
+  const sectionNumber = req.params.sectionNumber as string;
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
+  const dbShortName = registryEntry?.dbShortName || resolvedShortName;
+
+  const candidateShortNames = Array.from(new Set([
+    dbShortName,
+    resolvedShortName,
+    shortName,
+    shortName.toUpperCase(),
+    shortName.charAt(0).toUpperCase() + shortName.slice(1).toLowerCase(),
+    'Constitution'
+  ].filter(Boolean)));
+
+  const cleanSec = sectionNumber.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const secRegex = new RegExp(`^(?:Section\\s+)?${cleanSec}$`, 'i');
+  const secWordRegex = new RegExp(`\\b${cleanSec}\\b`, 'i');
+  const actRegex = new RegExp(`^${resolvedShortName.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&')}$`, 'i');
+
+  const [section, act] = await Promise.all([
+    SectionModel.findOne({
+      actShortName: { $in: candidateShortNames },
+      section_number: sectionNumber
+    }).lean(),
+    BareAct.findOne({ shortName: { $in: candidateShortNames } }, 'actName year category').lean()
+  ]);
+
+  if (!section) {
+    throw AppError.notFound(`Section ${sectionNumber} of Act ${resolvedShortName} not found.`);
+  }
+
+  const actNameEsc = (act?.actName || '').replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+  const actSearchRegex = new RegExp(`(?:${resolvedShortName}${actNameEsc ? '|' + actNameEsc : ''})`, 'i');
+
+  const [relatedRights, landmarkDecisions] = await Promise.all([
+    StatutoryRightModel.find({
+      isPublished: true,
+      $or: [
+        { 'statutoryBasis.shortAct': actRegex, 'statutoryBasis.sections': secWordRegex },
+        { 'statutoryBasis.sections': sectionNumber },
+        { tags: resolvedShortName.toLowerCase() }
+      ]
+    }).lean(),
+    JudicialDecisionModel.find({
+      $or: [
+        { connectedSections: secWordRegex, connectedActs: actSearchRegex },
+        { connectedSections: secWordRegex }
+      ]
+    }).limit(6).lean()
+  ]);
+
+  // Extract legal jargon keywords from section text
+  const JARGON_TERMS: Record<string, string> = {
+    'cognizable': 'An offence for which a police officer may arrest without a court warrant under BNSS / CrPC.',
+    'non-cognizable': 'An offence where police cannot arrest without a court warrant and cannot investigate without magistrate order.',
+    'bailable': 'Offence where bail is a statutory right as a matter of law, not at court discretion.',
+    'non-bailable': 'Offence where grant of bail is at judicial discretion of the Court or Magistrate.',
+    'compoundable': 'Offences that can be amicably compromised or settled between the victim and accused.',
+    'injunction': 'A judicial order restraining a party from beginning or continuing an action threatening legal rights.',
+    'adjudicating officer': 'A designated judicial or statutory authority empowered to assess damages or penalties.',
+    'plaint': 'A formal written document presented by a plaintiff initiating a civil court proceeding.',
+    'affidavit': 'A written sworn statement confirmed by oath or affirmation for use as court evidence.',
+    'ultra vires': 'An act performed beyond legal authority or exceeding the scope of constitutional/statutory power.',
+    'locus standi': 'The right or capacity of a party to bring an action or to appear in a court.',
+    'habeas corpus': 'Prerogative writ under Article 32 or 226 commanding the production of a detained individual to test legality of arrest.'
+  };
+
+  const detectedJargon: Array<{ term: string; definition: string }> = [];
+  const contentLower = ((section.content || '') + ' ' + (section.title || '')).toLowerCase();
+  for (const [term, definition] of Object.entries(JARGON_TERMS)) {
+    if (new RegExp(`\\b${term}\\b`, 'i').test(contentLower)) {
+      detectedJargon.push({ term: term.toUpperCase(), definition });
+    }
+  }
+
+  res.json({
+    success: true,
+    data: {
+      act: {
+        shortName: resolvedShortName,
+        actName: act ? act.actName : resolvedShortName,
+        year: act ? act.year : null,
+        category: act ? act.category : 'General'
+      },
+      section: {
+        section_number: section.section_number,
+        title: section.title,
+        title_hi: section.title_hi,
+        content: section.content,
+        content_hi: section.content_hi,
+        aiSummary: section.aiSummary,
+        clean_title: section.clean_title,
+        chapter: section.chapterNumber
+      },
+      wikiContext: {
+        citizenRights: relatedRights.map(r => ({
+          id: r.id,
+          title: r.title,
+          title_hi: r.title_hi,
+          summary: r.summary,
+          keyProtections: r.keyProtections,
+          whatToSay: r.whatToSay,
+          dos: r.dos,
+          donts: r.donts,
+          legalRemedy: r.legalRemedy
+        })),
+        landmarkPrecedents: landmarkDecisions.map(d => ({
+          title: d.title,
+          citation: d.citation,
+          court: d.court,
+          decisionDate: d.decisionDate,
+          holding: d.holding,
+          ratioDecidendi: d.ratioDecidendi
+        })),
+        noticeTemplates: [],
+        detectedJargon
+      }
+    }
+  });
+}));
+
+// POST /acts/:shortName/sections/:sectionNumber/contribute - Crowdsourced / Lawyer Contribution Pipeline (Wikipedia Model)
+router.post('/acts/:shortName/sections/:sectionNumber/contribute', asyncHandler(async (req: Request, res: Response) => {
+  const shortName = req.params.shortName as string;
+  const sectionNumber = req.params.sectionNumber as string;
+  const { contributorName, contributorRole, barCouncilNumber, contributionType, summaryText, citations, notes } = req.body;
+
+  if (!summaryText && !citations) {
+    throw AppError.badRequest('Either summaryText or citations must be provided.');
+  }
+
+  // Create audit ingestion log tracking this community/advocate revision
+  const auditLog = await IngestionLogModel.create({
+    sourceAuthority: contributorRole === 'advocate' && barCouncilNumber ? `Advocate (${barCouncilNumber})` : 'LegalPedia Community Contributor',
+    sourceUrl: `/laws/${shortName}/sections/${sectionNumber}`,
+    actCode: `${shortName}:${sectionNumber}`,
+    status: 'PARTIAL', // Pending editorial moderation
+    recordsProcessed: 1,
+    recordsImported: 0,
+    recordsSkipped: 0,
+    license: 'Creative Commons Attribution-ShareAlike (CC BY-SA)',
+    notes: `Community revision submitted by ${contributorName || 'Anonymous'} (${contributionType || 'explanation'}). Notes: ${notes || 'None'}. Citations: ${citations || 'None'}. Text: ${summaryText || ''}`.substring(0, 500),
+    retrievedAt: new Date()
+  });
+
+  res.status(201).json({
+    success: true,
+    message: 'Contribution successfully recorded! It will be reviewed by verified legal editors before being merged into the official LegalPedia entry.',
+    contributionId: auditLog._id
+  });
+}));
+
+// GET /acts/:shortName/sections/:sectionNumber/contributions - Retrieve verified community & lawyer annotations
+router.get('/acts/:shortName/sections/:sectionNumber/contributions', asyncHandler(async (req: Request, res: Response) => {
+  const shortName = req.params.shortName as string;
+  const sectionNumber = req.params.sectionNumber as string;
+  const registryEntry = actRegistry.resolveAct(shortName);
+  const resolvedShortName = registryEntry ? registryEntry.shortName : normalizeActShortName(shortName);
+  const dbShortName = registryEntry?.dbShortName || resolvedShortName;
+
+  const actCode = `${resolvedShortName}:${sectionNumber}`;
+  const actCodes = Array.from(new Set([
+    actCode,
+    `${dbShortName}:${sectionNumber}`,
+    `${shortName}:${sectionNumber}`
+  ]));
+  const verifiedContributions = await IngestionLogModel.find({
+    actCode: { $in: actCodes },
+    status: 'SUCCESS'
+  })
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .lean();
+
+  res.json({
+    success: true,
+    data: {
+      actCode,
+      total: verifiedContributions.length,
+      contributions: verifiedContributions.map(c => ({
+        id: c._id,
+        author: c.sourceAuthority,
+        license: c.license,
+        date: c.createdAt,
+        content: c.notes
+      }))
+    }
+  });
 }));
 
 export default router;

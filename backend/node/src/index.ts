@@ -4,6 +4,7 @@ import compression from 'compression';
 import dotenv from 'dotenv';
 import { connectDB } from './config/db';
 import { seedFullDatabaseIfEmpty } from './utils/autoSeeder';
+import { runLegalPlatformMigration } from './utils/legalPlatformMigrator';
 import publicRoutes from './routes/public';
 import lawyerRoutes from './routes/lawyer';
 import adminRoutes from './routes/admin';
@@ -89,10 +90,11 @@ const startServer = () => {
     // Connect to database, seed, and initialize ActRegistry asynchronously
     connectDB()
       .then(() => seedFullDatabaseIfEmpty())
+      .then(() => runLegalPlatformMigration())
       .then(() => seedNotificationsIfEmpty())
       .then(() => actRegistry.initialize())
       .then(() => {
-        console.log('✅ Database initialization, seeding, and ActRegistry loading completed.');
+        console.log('✅ Database initialization, legal platform migration, and ActRegistry loading completed.');
       })
       .catch((err) => {
         console.error('❌ Background initialization error:', err);

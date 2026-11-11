@@ -1,5 +1,6 @@
 import { Router, Request, Response } from 'express';
 import CustomTemplate from '../../models/CustomTemplate';
+import LegalTemplateModel from '../../models/LegalTemplate';
 import Draft from '../../models/Draft';
 
 const router = Router();
@@ -7,17 +8,21 @@ const router = Router();
 // GET /api/legal/admin/templates/stats - Aggregate Template & Draft metrics
 router.get('/templates/stats', async (req: Request, res: Response): Promise<void> => {
   try {
-    const totalTemplates = await CustomTemplate.countDocuments();
+    const totalSystemTemplates = await LegalTemplateModel.countDocuments();
+    const totalCustomTemplates = await CustomTemplate.countDocuments();
+    const totalTemplates = totalSystemTemplates + totalCustomTemplates;
     const totalDrafts = await Draft.countDocuments();
 
-    // Group templates by category
-    const categoryStats = await CustomTemplate.aggregate([
-      { $group: { _id: '$category', count: { $sum: 1 } } },
-      { $sort: { count: -1 } }
+    // Group templates by category across system and custom
+    const systemCategoryStats = await LegalTemplateModel.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } }
+    ]);
+    const customCategoryStats = await CustomTemplate.aggregate([
+      { $group: { _id: '$category', count: { $sum: 1 } } }
     ]);
 
     // Group templates by actRef
-    const actStats = await CustomTemplate.aggregate([
+    const actStats = await LegalTemplateModel.aggregate([
       { $group: { _id: '$actRef', count: { $sum: 1 } } },
       { $sort: { count: -1 } },
       { $limit: 8 }
@@ -34,8 +39,10 @@ router.get('/templates/stats', async (req: Request, res: Response): Promise<void
       success: true,
       data: {
         totalTemplates,
+        totalSystemTemplates,
+        totalCustomTemplates,
         totalDrafts,
-        categoryStats,
+        categoryStats: [...systemCategoryStats, ...customCategoryStats],
         actStats,
         popularTemplates
       }

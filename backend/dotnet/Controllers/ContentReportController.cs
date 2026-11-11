@@ -71,6 +71,20 @@ namespace CoreApi.Controllers
             {
                 new() { Key = "INCORRECT_TEXT", Label = "Contains Legal Errors", Icon = "file-text", Severity = "High" },
                 new() { Key = "OUTDATED_AMENDMENT", Label = "Uses Outdated Law References", Icon = "calendar", Severity = "Medium" },
+            },
+            ["StatutoryRight"] = new()
+            {
+                new() { Key = "OUTDATED_STATUTE", Label = "Outdated or Repealed Law (New Amendment Exists)", Icon = "calendar", Severity = "Critical" },
+                new() { Key = "WRONG_SECTION", Label = "Incorrect Section Number or Statutory Citation", Icon = "file-text", Severity = "High" },
+                new() { Key = "DEAD_HELPLINE", Label = "Helpline Number Inactive, Disconnected, or Wrong", Icon = "phone", Severity = "High" },
+                new() { Key = "RISKY_SCRIPT", Label = "Confrontation Verbal Script Contains Flawed Advice", Icon = "alert-triangle", Severity = "Critical" },
+                new() { Key = "TRANSLATION_ERROR", Label = "Translation Inaccuracy (English / Hindi)", Icon = "languages", Severity = "Low" },
+            },
+            ["NewRightProposal"] = new()
+            {
+                new() { Key = "NEW_CRISIS_SCENARIO", Label = "Emerging Threat Scenario (e.g. Digital Arrest, AI Scam)", Icon = "shield-alert", Severity = "High" },
+                new() { Key = "MISSING_STATUTE", Label = "Missing Indian Statute or State Act Protection", Icon = "book-open", Severity = "Medium" },
+                new() { Key = "MISSING_HELPLINE", Label = "Unlisted 24x7 Emergency / Legal Aid Helpline", Icon = "phone", Severity = "High" },
             }
         };
 
@@ -82,6 +96,8 @@ namespace CoreApi.Controllers
             ["BRIBERY_ALLEGATION"] = ReportSeverity.Critical,
             ["FAKE_REGISTRATION"] = ReportSeverity.Critical,
             ["FRAUD"] = ReportSeverity.Critical,
+            ["OUTDATED_STATUTE"] = ReportSeverity.Critical,
+            ["RISKY_SCRIPT"] = ReportSeverity.Critical,
             // High
             ["SPAM"] = ReportSeverity.High,
             ["ABUSIVE_LANGUAGE"] = ReportSeverity.High,
@@ -89,6 +105,10 @@ namespace CoreApi.Controllers
             ["CLOSED_PERMANENTLY"] = ReportSeverity.High,
             ["MISCONDUCT"] = ReportSeverity.High,
             ["INCORRECT_TEXT"] = ReportSeverity.High,
+            ["WRONG_SECTION"] = ReportSeverity.High,
+            ["DEAD_HELPLINE"] = ReportSeverity.High,
+            ["NEW_CRISIS_SCENARIO"] = ReportSeverity.High,
+            ["MISSING_HELPLINE"] = ReportSeverity.High,
             // Medium
             ["WRONG_ADDRESS"] = ReportSeverity.Medium,
             ["WRONG_PHONE"] = ReportSeverity.Medium,
@@ -96,11 +116,13 @@ namespace CoreApi.Controllers
             ["OUTDATED_AMENDMENT"] = ReportSeverity.Medium,
             ["WRONG_SPECIALIZATION"] = ReportSeverity.Medium,
             ["WRONG_SECTION_NUMBER"] = ReportSeverity.Medium,
+            ["MISSING_STATUTE"] = ReportSeverity.Medium,
             // Low
             ["IRRELEVANT"] = ReportSeverity.Low,
             ["FACILITIES_CHANGED"] = ReportSeverity.Low,
             ["TYPO"] = ReportSeverity.Low,
             ["WRONG_CATEGORY"] = ReportSeverity.Low,
+            ["TRANSLATION_ERROR"] = ReportSeverity.Low,
         };
 
         /// <summary>

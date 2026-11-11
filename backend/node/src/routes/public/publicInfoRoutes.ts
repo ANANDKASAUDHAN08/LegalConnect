@@ -3,6 +3,10 @@ import { asyncHandler } from '../../utils/asyncHandler';
 import { AppError } from '../../utils/AppError';
 import ContactTicket from '../../models/ContactTicket';
 import HelpHelpline from '../../models/HelpHelpline';
+import FaqModel from '../../models/Faq';
+import BareAct from '../../models/BareAct';
+import Lawyer from '../../models/Lawyer';
+import StatutoryRight from '../../models/StatutoryRight';
 
 const router = Router();
 
@@ -17,72 +21,8 @@ const categories = [
   { id: 'security', label: 'DPDP Privacy & Rights', icon: 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', color: 'amber' },
   { id: 'library', label: 'Bare Acts & Research', icon: 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253', color: 'purple' }
 ];
-
-export const faqs = [
-  {
-    id: 'faq-free',
-    category: 'general',
-    badge: 'Free Access',
-    question: 'Is LegalConnect 100% free for clients?',
-    answer: 'Yes, absolutely. Citizens and businesses can search advocate directories, explore Bare Acts, download court templates, and submit consultation inquiries completely free of charge. We never charge commission or platform markup fees.'
-  },
-  {
-    id: 'faq-grievance',
-    category: 'general',
-    badge: 'Platform Governance',
-    question: 'How do I report incorrect info or file a platform grievance?',
-    answer: 'You can reach our statutory Grievance Officer under the IT Rules 2021 via our Support DPO Desk at <strong>grievance@legalconnect.com</strong>. All complaints are formally acknowledged within 24 hours and resolved within 15 business days.'
-  },
-  {
-    id: 'faq-bar',
-    category: 'advocate',
-    badge: 'Verified Advocates',
-    question: 'How do lawyers get verified on LegalConnect?',
-    answer: 'Every advocate profile undergoes mandatory manual verification against State Bar Council enrollment registers and Bar Council of India (BCI) License credentials before receiving the green verified badge.'
-  },
-  {
-    id: 'faq-inquiry',
-    category: 'advocate',
-    badge: 'Direct Connect',
-    question: 'How do client consultation inquiries reach advocates?',
-    answer: 'When a user submits an inquiry, it is securely transmitted directly to the advocate’s encrypted dashboard and verified email. No middleman broker holds or delays communication.'
-  },
-  {
-    id: 'faq-commission',
-    category: 'advocate',
-    badge: 'Zero Commission',
-    question: 'Does LegalConnect take a cut of the advocate’s legal fees?',
-    answer: 'No. LegalConnect operates on a strict zero-commission model. 100% of client legal fees go directly to the practicing lawyer. We do not participate in fee splitting.'
-  },
-  {
-    id: 'faq-privacy',
-    category: 'security',
-    badge: 'DPDP Act 2023',
-    question: 'What data protection rights do I have under the DPDP Act 2023?',
-    answer: 'Under India’s Digital Personal Data Protection (DPDP) Act 2023, you retain full rights to access, correct, erase, or export your personal data dossier at any time through your account settings.'
-  },
-  {
-    id: 'faq-dossier',
-    category: 'security',
-    badge: 'Subject Access Request',
-    question: 'How can I request or download my personal data dossier?',
-    answer: 'Navigate to <em>Privacy Settings &gt; Data Export</em> in your dashboard. Clicking "Export Personal Dossier" generates a password-protected JSON & PDF archive of your activity history.'
-  },
-  {
-    id: 'faq-offline',
-    category: 'library',
-    badge: 'PWA Offline Cache',
-    question: 'Does the Bare Acts law library work offline without internet?',
-    answer: 'Yes. LegalConnect is built as a progressive web app (PWA). Once accessed, statutory Bare Act sections are cached locally in your browser storage for offline legal research.'
-  },
-  {
-    id: 'faq-bns',
-    category: 'library',
-    badge: 'Updated 2026 Acts',
-    question: 'Are the new criminal codes (BNS, BNSS, BSA) updated in the database?',
-    answer: 'Yes. Bharatiya Nyaya Sanhita (BNS 2023), Bharatiya Nagarik Suraksha Sanhita (BNSS 2023), and Bharatiya Sakshya Adhiniyam (BSA 2023) are fully cross-referenced with legacy IPC, CrPC, and Evidence Act sections.'
-  }
-];
+import { faqsSeedCatalog } from '../../data/faqsSeed';
+export const faqs = faqsSeedCatalog;
 
 // Helper for DPDP Act 2023 privacy masking
 const maskEmail = (email: string) => {
@@ -99,32 +39,58 @@ const maskName = (name: string) => {
   return parts[0][0] + '*** ' + parts[parts.length - 1][0] + '.';
 };
 
-// 1. GET /api/info/help - Filter FAQs based on query & category
+// 1. GET /api/info/help - Filter FAQs strictly from MongoDB
 router.get('/help', asyncHandler(async (req: Request, res: Response) => {
   const category = (req.query['category'] as string) || 'all';
-  const query = (req.query['q'] as string) || '';
+  const query = ((req.query['q'] as string) || '').trim();
 
-  const filteredFaqs = faqs.filter(f => {
-    const matchesCat = category === 'all' || f.category === category;
-    const qLower = query.toLowerCase().trim();
-    const matchesQ = !qLower ||
-      f.question.toLowerCase().includes(qLower) ||
-      f.answer.toLowerCase().includes(qLower) ||
-      (f.badge && f.badge.toLowerCase().includes(qLower));
-    return matchesCat && matchesQ;
-  });
+  const filter: any = { isPublished: true };
+  if (category && category !== 'all') {
+    filter.category = category;
+  }
+
+  if (query) {
+    const qRegex = new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+    filter.$or = [
+      { question: qRegex },
+      { answer: qRegex },
+      { badge: qRegex }
+    ];
+  }
+
+  let dbFaqs = await FaqModel.find(filter).sort({ sortOrder: 1, createdAt: 1 }).lean();
+
+  // If no DB FAQs yet, fallback to seed array
+  const activeFaqs = dbFaqs.length > 0
+    ? dbFaqs.map(f => ({
+      id: f.faqId,
+      category: f.category,
+      badge: f.badge,
+      question: f.question,
+      question_hi: f.question_hi,
+      answer: f.answer,
+      answer_hi: f.answer_hi,
+      provenance: f.provenance
+    }))
+    : faqs.filter(f => (category === 'all' || f.category === category) &&
+      (!query || f.question.toLowerCase().includes(query.toLowerCase()) || f.answer.toLowerCase().includes(query.toLowerCase())));
+
+  const allDbFaqs = await FaqModel.find({ isPublished: true }, 'category question answer').lean();
+  const sourceForCounts = allDbFaqs.length > 0
+    ? allDbFaqs.map(f => ({ category: f.category, question: f.question, answer: f.answer }))
+    : faqs;
 
   const categoriesWithCounts = categories.map(cat => ({
     ...cat,
-    count: faqs.filter(f => (cat.id === 'all' || f.category === cat.id) &&
+    count: sourceForCounts.filter(f => (cat.id === 'all' || f.category === cat.id) &&
       (!query || f.question.toLowerCase().includes(query.toLowerCase()) || f.answer.toLowerCase().includes(query.toLowerCase()))).length
   }));
 
   res.json({
     success: true,
-    totalCount: filteredFaqs.length,
+    totalCount: activeFaqs.length,
     categories: categoriesWithCounts,
-    faqs: filteredFaqs,
+    faqs: activeFaqs,
     trendingQueries: ['BCI verification', 'DPDP rights', 'Dossier export', 'Zero commission', 'Offline Bare Acts']
   });
 }));
@@ -166,15 +132,21 @@ router.post('/analytics/search', asyncHandler(async (req: Request, res: Response
 
 // 4. GET /api/info/about - About Page Metrics
 router.get('/about', asyncHandler(async (_req: Request, res: Response) => {
+  const [advocateCount, bareActsCount, rightsCount] = await Promise.all([
+    Lawyer.countDocuments({ isVerified: true }).catch(() => 0),
+    BareAct.countDocuments({}).catch(() => 0),
+    StatutoryRight.countDocuments({ isPublished: true }).catch(() => 0)
+  ]);
+
   res.json({
     success: true,
     stats: {
-      registeredAdvocates: '14,850+',
-      bareActsIndexed: '1,250+',
-      consultationsCount: '89,400+',
-      zeroCommissionSaved: '₹3.4 Cr+'
+      registeredAdvocates: advocateCount > 0 ? `${advocateCount} Verified` : 'Verified Bar Advocates',
+      bareActsIndexed: bareActsCount > 0 ? `${bareActsCount} Central Acts` : '750+ Central Acts',
+      statutoryRightsCodified: `${rightsCount} Citizen Safeguards`,
+      zeroCommissionSaved: '100% Direct Connect'
     },
-    mission: 'Bridging citizens and statutory legal advocates with 100% fee transparency and zero middleman markup.'
+    mission: 'Bridging citizens and statutory legal knowledge with complete source traceability, verified legislation, and zero middleman markup.'
   });
 }));
 
@@ -454,7 +426,7 @@ router.post(['/contact/subscribe-newsletter', '/subscribe-newsletter'], asyncHan
       }
     },
     { upsert: true, returnDocument: 'after' }
-  ).catch(() => {});
+  ).catch(() => { });
 
   res.json({
     success: true,

@@ -1,18 +1,12 @@
-import { Router, Response } from 'express';
+import { Router, Request, Response } from 'express';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { AppError } from '../../utils/AppError';
 import { requireAuth, optionalAuth, AuthenticatedRequest } from '../../middlewares/auth';
 import Draft from '../../models/Draft';
 import CustomTemplate from '../../models/CustomTemplate';
+import LegalTemplateModel from '../../models/LegalTemplate';
 
 const router = Router();
-
-const defaultPublicTemplates = [
-  { id: 'tmpl-1', title: 'RERA Delay Complaint Draft', category: 'Property', downloads: 1420 },
-  { id: 'tmpl-2', title: 'Mutual Consent Divorce Petition Format', category: 'Family', downloads: 980 },
-  { id: 'tmpl-3', title: 'Unpaid Salary Legal Notice Draft', category: 'Labour', downloads: 2150 },
-  { id: 'tmpl-4', title: 'e-Daakhil Consumer Complaint Draft', category: 'Consumer', downloads: 1840 }
-];
 
 // --- DRAFTS CRUD ENDPOINTS (Protected) ---
 
@@ -82,14 +76,67 @@ router.delete('/drafts', requireAuth, asyncHandler(async (req: AuthenticatedRequ
   res.json({ success: true, message: 'All drafts deleted successfully.' });
 }));
 
-// --- CUSTOM & PUBLIC TEMPLATES CRUD ENDPOINTS ---
+// --- SYSTEM & CUSTOM LEGAL TEMPLATES ENDPOINTS ---
 
-// GET /api/legal/templates - Retrieve templates (custom if authenticated, public default if not)
+// GET /api/legal/templates - Retrieve all published system templates + user custom templates
 router.get('/templates', optionalAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { category, search, q } = req.query;
+  const keyword = (search || q) as string;
+
+  // 1. Fetch published standard system templates from MongoDB
+  const systemFilter: any = { isPublished: true };
+  if (category && category !== 'all') {
+    systemFilter.category = category;
+  }
+  if (keyword) {
+    systemFilter.$or = [
+      { title: { $regex: keyword, $options: 'i' } },
+      { description: { $regex: keyword, $options: 'i' } },
+      { actRef: { $regex: keyword, $options: 'i' } }
+    ];
+  }
+
+  const systemTemplates = await LegalTemplateModel.find(systemFilter)
+    .sort({ sortOrder: 1, createdAt: 1 })
+    .lean();
+
+  const formattedSystem = systemTemplates.map(t => ({
+    id: t.templateId,
+    title: t.title,
+    actRef: t.actRef,
+    category: t.category,
+    description: t.description,
+    fields: t.fields.map(f => ({
+      key: f.key,
+      label: f.label,
+      placeholder: f.placeholder,
+      type: f.type,
+      defaultValue: f.defaultValue,
+      helpTip: f.helpTip
+    })),
+    body: t.body,
+    isCustom: false,
+    sortOrder: t.sortOrder,
+    downloadsCount: t.downloadsCount || 0
+  }));
+
+  // 2. Fetch authenticated user's custom templates
+  let formattedCustom: any[] = [];
   if (req.userId) {
     try {
-      const templates = await CustomTemplate.find({ userId: req.userId }).sort({ createdAt: -1 }).lean();
-      const formattedTemplates = templates.map(t => ({
+      const customFilter: any = { userId: req.userId };
+      if (category && category !== 'all') {
+        customFilter.category = category;
+      }
+      if (keyword) {
+        customFilter.$or = [
+          { title: { $regex: keyword, $options: 'i' } },
+          { description: { $regex: keyword, $options: 'i' } },
+          { actRef: { $regex: keyword, $options: 'i' } }
+        ];
+      }
+      const templates = await CustomTemplate.find(customFilter).sort({ createdAt: -1 }).lean();
+      formattedCustom = templates.map(t => ({
         id: t.templateId,
         title: t.title,
         actRef: t.actRef,
@@ -106,13 +153,76 @@ router.get('/templates', optionalAuth, asyncHandler(async (req: AuthenticatedReq
         body: t.body,
         isCustom: true
       }));
-      return res.json({ success: true, count: formattedTemplates.length, data: formattedTemplates });
     } catch (e) {
-      // Fallback to public default templates
+      // Non-fatal if custom templates query errors
     }
   }
 
-  res.json({ success: true, count: defaultPublicTemplates.length, data: defaultPublicTemplates });
+  const allTemplates = [...formattedSystem, ...formattedCustom];
+
+  // Modern HTTP caching: client/CDN can cache for 2 mins, stale-while-revalidate for 24h
+  res.setHeader('Cache-Control', 'public, max-age=120, stale-while-revalidate=86400');
+  res.json({
+    success: true,
+    count: allTemplates.length,
+    systemCount: formattedSystem.length,
+    customCount: formattedCustom.length,
+    data: allTemplates
+  });
+}));
+
+// GET /api/legal/templates/:templateId - Fetch single template by ID
+router.get('/templates/:templateId', optionalAuth, asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  const { templateId } = req.params;
+
+  // Check system template first
+  const system = await LegalTemplateModel.findOne({ templateId, isPublished: true }).lean();
+  if (system) {
+    return res.json({
+      success: true,
+      data: {
+        id: system.templateId,
+        title: system.title,
+        actRef: system.actRef,
+        category: system.category,
+        description: system.description,
+        fields: system.fields,
+        body: system.body,
+        isCustom: false,
+        sortOrder: system.sortOrder,
+        downloadsCount: system.downloadsCount || 0
+      }
+    });
+  }
+
+  // Check user custom template
+  if (req.userId) {
+    const custom = await CustomTemplate.findOne({ templateId, userId: req.userId }).lean();
+    if (custom) {
+      return res.json({
+        success: true,
+        data: {
+          id: custom.templateId,
+          title: custom.title,
+          actRef: custom.actRef,
+          category: custom.category,
+          description: custom.description,
+          fields: custom.fields,
+          body: custom.body,
+          isCustom: true
+        }
+      });
+    }
+  }
+
+  throw AppError.notFound(`Legal template '${templateId}' not found.`);
+}));
+
+// POST /api/legal/templates/:templateId/download - Track template download count
+router.post('/templates/:templateId/download', asyncHandler(async (req: Request, res: Response) => {
+  const { templateId } = req.params;
+  await LegalTemplateModel.updateOne({ templateId }, { $inc: { downloadsCount: 1 } });
+  res.json({ success: true, message: 'Template usage recorded.' });
 }));
 
 // POST /api/legal/templates - Save or update a custom template (Protected)

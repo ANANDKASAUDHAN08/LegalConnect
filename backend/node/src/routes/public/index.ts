@@ -8,6 +8,7 @@ import publicInfoRoutes from './publicInfoRoutes';
 import publicPracticeRoutes from './publicPracticeRoutes';
 import publicRightsRoutes from './publicRightsRoutes';
 import publicNotificationRoutes from './publicNotificationRoutes';
+import publicJudicialRoutes from './publicJudicialRoutes';
 import lawyerCasePackRoutes from '../lawyer/lawyerCasePackRoutes';
 
 const router = Router();
@@ -18,10 +19,12 @@ router.use('/legal', publicActRoutes);
 router.use('/legal', publicSearchRoutes);
 router.use('/legal', publicAiRoutes);
 router.use('/legal', publicTemplateRoutes);
+router.use('/legal', publicJudicialRoutes);
 router.use('/legal', lawyerCasePackRoutes); // Maintains original /api/legal/case-packs contract
 router.use('/info', publicInfoRoutes);
 router.use('/info', publicPracticeRoutes);
 router.use('/info', publicRightsRoutes);
+router.use('/info', publicJudicialRoutes);
 router.use('/info', publicNotificationRoutes);
 router.use('/legal', publicNotificationRoutes);
 

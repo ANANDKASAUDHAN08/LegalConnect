@@ -5,11 +5,14 @@ import BareAct, { SectionModel } from '../../models/BareAct';
 import LegalResource from '../../models/LegalResource';
 import Lawyer from '../../models/Lawyer';
 import HelpCategory from '../../models/HelpCategory';
+import StatutoryRight from '../../models/StatutoryRight';
+import JudicialDecisionModel from '../../models/JudicialDecision';
+import FaqModel from '../../models/Faq';
 import { getCache, setCache } from '../../services/statsService';
 import aiService from '../../services/AiService';
 import { calculateDistance, resolveCityAndStateFromText } from '../../utils/geoUtils';
 import actRegistry from '../../services/actRegistry';
-import { faqs, searchAnalyticsLogs } from './publicInfoRoutes';
+import { searchAnalyticsLogs } from './publicInfoRoutes';
 
 const router = Router();
 
@@ -423,21 +426,55 @@ router.get('/search-hub', asyncHandler(async (req: Request, res: Response) => {
   });
 
   const queryLower = query.toLowerCase();
-  const matchedFaqs = faqs
-    .filter(f =>
-      f.question.toLowerCase().includes(queryLower) ||
-      f.answer.toLowerCase().includes(queryLower) ||
-      (f.badge && f.badge.toLowerCase().includes(queryLower)) ||
-      f.category.toLowerCase().includes(queryLower)
-    )
-    .slice(0, limit)
-    .map(f => ({
-      id: f.id,
-      question: f.question,
-      answer: f.answer,
-      category: f.category,
-      badge: f.badge
-    }));
+  const qRegex = new RegExp(query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
+
+  // Concurrently fetch matching FAQs, Judicial Decisions, and Statutory Citizen Rights
+  const [dbFaqs, judicialDecisions, citizenRights] = await Promise.all([
+    FaqModel.find({
+      isPublished: true,
+      $or: [{ question: qRegex }, { answer: qRegex }, { badge: qRegex }, { category: qRegex }]
+    }).limit(limit).lean().catch(() => []),
+    JudicialDecisionModel.find({
+      $or: [
+        { title: qRegex },
+        { citation: qRegex },
+        { holding: qRegex },
+        { connectedActs: { $in: [qRegex] } },
+        { connectedSections: { $in: [qRegex] } }
+      ]
+    }).limit(limit).lean().catch(() => []),
+    StatutoryRight.find({
+      isPublished: true,
+      $or: [
+        { title: qRegex },
+        { summary: qRegex },
+        { 'statutoryBasis.actName': qRegex },
+        { 'statutoryBasis.shortAct': qRegex },
+        { 'statutoryBasis.sections': { $in: [qRegex] } },
+        { tags: { $in: [qRegex] } }
+      ]
+    }).limit(limit).lean().catch(() => [])
+  ]);
+  const matchedFaqs = dbFaqs.map((f: any) => ({
+    id: f.faqId || f.id,
+    question: f.question,
+    question_hi: f.question_hi,
+    answer: f.answer,
+    answer_hi: f.answer_hi,
+    category: f.category,
+    badge: f.badge,
+    provenance: f.provenance
+  }));
+
+  // Empty result recovery suggestions
+  let searchSuggestions: string[] = [];
+  if (mappedSections.length === 0 && citizenRights.length === 0 && judicialDecisions.length === 0) {
+    searchSuggestions = [
+      'Try searching with the Act abbreviation (e.g. "BNS", "BNSS", "MVA", "POSH")',
+      'Search by section number directly (e.g. "Section 35 BNSS" or "Article 21")',
+      'Browse verified categories in Citizen Safeguards or Bare Acts directory'
+    ];
+  }
 
   const finalResponse = {
     success: true,
@@ -445,7 +482,11 @@ router.get('/search-hub', asyncHandler(async (req: Request, res: Response) => {
       laws: mappedSections,
       lawyers,
       resources,
-      faqs: matchedFaqs
+      faqs: matchedFaqs,
+      judicialDecisions,
+      citizenRights,
+      isEmptyResult: mappedSections.length === 0 && citizenRights.length === 0 && judicialDecisions.length === 0,
+      searchSuggestions
     }
   };
 
@@ -514,6 +555,7 @@ router.get('/search/palette-meta', asyncHandler(async (_req: Request, res: Respo
     },
     quickAccess: [
       { id: 'find-lawyer', label: 'Find Verified Lawyers', route: '/lawyers', icon: 'briefcase', description: 'Consult licensed advocates across high courts & district benches' },
+      { id: 'citizen-rights', label: 'Citizen Rights & Safeguards', route: '/rights', icon: 'shield', description: 'Emergency scripts, arrest protocols, police limits & statutory rights' },
       { id: 'legal-resources', label: 'Legal Aid & DLSA Clinics', route: '/legal-resources', icon: 'landmark', description: 'Free legal aid, Lok Adalats & government legal aid clinics' },
       { id: 'browse-laws', label: 'Browse Bare Acts & Codes', route: '/laws', icon: 'book-open', description: 'Search 1,200+ Indian Acts, sections, penalties & BNS cross-references' },
       { id: 'faqs', label: 'Frequently Asked Questions', route: '/help', icon: 'help-circle', description: 'LegalConnect zero-commission rules, DPDP rights & user guides' },
@@ -540,10 +582,14 @@ router.get('/search/suggestions', asyncHandler(async (req: Request, res: Respons
 
   const queryRegex = new RegExp(q.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&'), 'i');
 
-  const [acts, sections, categories] = await Promise.all([
+  const [acts, sections, categories, rights] = await Promise.all([
     BareAct.find({ $or: [{ shortName: queryRegex }, { actName: queryRegex }] }, 'actName shortName').limit(3).lean(),
     SectionModel.find({ $or: [{ title: queryRegex }, { section_number: queryRegex }] }, 'actShortName section_number title').limit(4).lean(),
-    HelpCategory.find({ $or: [{ name: queryRegex }, { subcategories: queryRegex }] }, 'name subcategories').limit(2).lean()
+    HelpCategory.find({ $or: [{ name: queryRegex }, { subcategories: queryRegex }] }, 'name subcategories').limit(2).lean(),
+    StatutoryRight.find({
+      isPublished: true,
+      $or: [{ title: queryRegex }, { tags: queryRegex }, { emergencyScenario: queryRegex }]
+    }, 'title category statutoryBasis slug').limit(3).lean()
   ]);
 
   const suggestions: Array<{ text: string; type: 'law' | 'section' | 'category' | 'topic'; subtitle?: string; route?: string; queryParams?: any }> = [];
@@ -575,6 +621,18 @@ router.get('/search/suggestions', asyncHandler(async (req: Request, res: Respons
       subtitle: 'Legal Domain',
       route: '/find-help',
       queryParams: { category: cat.name }
+    });
+  }
+
+  for (const right of rights) {
+    const act = (right as any).statutoryBasis?.shortAct || (right as any).statutoryBasis?.act || 'Statutory Code';
+    const sec = (right as any).statutoryBasis?.sections?.length ? ` Sec ${(right as any).statutoryBasis.sections.join(', ')}` : '';
+    suggestions.push({
+      text: right.title,
+      type: 'topic',
+      subtitle: `Citizen Safeguard • ${act}${sec}`,
+      route: '/rights',
+      queryParams: { q: right.title }
     });
   }
 
