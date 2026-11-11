@@ -423,15 +423,99 @@ h6 {
 }
 
 /* Hide scrollbar utility globally */
-.scrollbar-none {
+.scrollbar-none,
+.no-scrollbar {
   -ms-overflow-style: none !important;
-  /* IE and Edge */
   scrollbar-width: none !important;
 
-  /* Firefox */
-  &::-webkit-scrollbar {
+  &::-webkit-scrollbar,
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-button,
+  &::-webkit-scrollbar-corner {
     display: none !important;
-    /* Chrome, Safari and Opera */
+    width: 0 !important;
+    height: 0 !important;
+    background: transparent !important;
+    opacity: 0 !important;
+  }
+}
+
+/* Luxury Neo-Legal Recessed Scrollbar Utility (Starts after rounded edges) */
+.scrollbar-thin {
+  scrollbar-width: thin !important;
+  scrollbar-color: rgba(148, 163, 184, 0.3) transparent !important;
+
+  &::-webkit-scrollbar {
+    width: 5px !important;
+    height: 5px !important;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent !important;
+    /* Recessed starting after top & bottom rounded edges */
+    margin: 16px 0 !important;
+    margin-block: 16px !important;
+    border-radius: 9999px !important;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.28) !important;
+    border-radius: 9999px !important;
+    border: 1px solid transparent !important;
+    background-clip: padding-box !important;
+    transition: background 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+    &:hover {
+      background: rgba(100, 116, 139, 0.6) !important;
+    }
+
+    &:active {
+      background: #2563eb !important;
+    }
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45) !important;
+  }
+
+  &:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7) !important;
+  }
+}
+
+.dark .scrollbar-thin,
+:host-context(.dark) .scrollbar-thin {
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent !important;
+
+  &::-webkit-scrollbar-track {
+    background: transparent !important;
+    margin: 16px 0 !important;
+    margin-block: 16px !important;
+    border-radius: 9999px !important;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.22) !important;
+    border-radius: 9999px !important;
+    border: 1px solid transparent !important;
+    background-clip: padding-box !important;
+
+    &:hover {
+      background: rgba(203, 213, 225, 0.55) !important;
+    }
+
+    &:active {
+      background: #3b82f6 !important;
+    }
+  }
+
+  &:hover::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4) !important;
+  }
+
+  &:hover::-webkit-scrollbar-thumb:hover {
+    background: rgba(203, 213, 225, 0.65) !important;
   }
 }
 
@@ -1300,10 +1384,16 @@ body.mobile-drawer-open .bottom-nav-container {
   -ms-overflow-style: none !important;
   scrollbar-width: none !important;
 
-  &::-webkit-scrollbar {
+  &::-webkit-scrollbar,
+  &::-webkit-scrollbar-track,
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-button,
+  &::-webkit-scrollbar-corner {
     display: none !important;
     width: 0 !important;
     height: 0 !important;
+    background: transparent !important;
+    opacity: 0 !important;
   }
 }
 
@@ -1621,7 +1711,8 @@ input.border-0,
   body:has(.drawer-fab) .footer-bottom-bar,
   body:has(.mobile-filter-fab) .footer-bottom-bar,
   body:has(.fab-animated) .footer-bottom-bar,
-  body:has(.floating-action-bar) .footer-bottom-bar {
+  body:has(.floating-action-bar) .footer-bottom-bar,
+  body:has(.rights-floating-dock) .footer-bottom-bar {
     padding-bottom: calc(82px + env(safe-area-inset-bottom, 12px)) !important;
   }
 
@@ -1629,7 +1720,8 @@ input.border-0,
   body.has-bottom-nav-visible:has(.drawer-fab) .footer-bottom-bar,
   body.has-bottom-nav-visible:has(.mobile-filter-fab) .footer-bottom-bar,
   body.has-bottom-nav-visible:has(.fab-animated) .footer-bottom-bar,
-  body.has-bottom-nav-visible:has(.floating-action-bar) .footer-bottom-bar {
+  body.has-bottom-nav-visible:has(.floating-action-bar) .footer-bottom-bar,
+  body.has-bottom-nav-visible:has(.rights-floating-dock) .footer-bottom-bar {
     padding-bottom: calc(150px + env(safe-area-inset-bottom, 12px)) !important;
   }
 
@@ -1670,6 +1762,16 @@ input.border-0,
   }
 
   body.has-bottom-nav-visible .floating-action-bar {
+    bottom: calc(76px + env(safe-area-inset-bottom, 12px)) !important;
+  }
+
+  /* Floating rights bottom mode dock transitions */
+  .rights-floating-dock {
+    transition: bottom 0.36s cubic-bezier(0.16, 1, 0.3, 1), transform 0.36s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  body.has-bottom-nav-visible .rights-floating-dock {
     bottom: calc(76px + env(safe-area-inset-bottom, 12px)) !important;
   }
 
@@ -1738,4 +1840,16 @@ button[aria-disabled="true"]:focus-visible,
     transform: scale(0.97);
     transition: transform 0.08s ease-out;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   Global Tooltip Formatting Standards (Prevents Full-Width Overflow)
+   ═══════════════════════════════════════════════════════════ */
+.app-tooltip-instance {
+  max-width: min(360px, calc(100vw - 32px)) !important;
+  width: max-content;
+  white-space: normal !important;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  line-height: 1.4;
 }

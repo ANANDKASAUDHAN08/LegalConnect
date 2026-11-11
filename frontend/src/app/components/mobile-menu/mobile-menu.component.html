@@ -280,6 +280,22 @@
               <app-icon name="chevron-right" [size]="14"
                 class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
             </a>
+
+            <!-- Rights Admin Portal (Admin Only) -->
+            <a *ngIf="user.role === 'Admin'" [href]="adminPortalUrl + '/rights'" target="_blank"
+              rel="noopener noreferrer" class="mobile-main-link group stagger-2" (click)="onClose()">
+              <span class="link-icon-container bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400">
+                <app-icon name="shield" [size]="16"></app-icon>
+              </span>
+              <div class="flex flex-col min-w-0">
+                <span class="font-bold leading-tight">Admin Portal</span>
+                <span class="text-[10px] text-slate-400 dark:text-slate-500">
+                  Codify, review &amp; sync statutory safeguards
+                </span>
+              </div>
+              <app-icon name="chevron-right" [size]="14"
+                class="text-slate-300 dark:text-slate-600 ml-auto flex-shrink-0 group-hover:translate-x-1 transition-transform duration-200"></app-icon>
+            </a>
           </ng-container>
 
           <!-- Profile Settings -->

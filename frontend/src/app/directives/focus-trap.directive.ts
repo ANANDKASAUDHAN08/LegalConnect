@@ -33,17 +33,29 @@ export class FocusTrapDirective implements AfterViewInit, OnDestroy {
   constructor(private el: ElementRef<HTMLElement>) { }
 
   ngAfterViewInit() {
-    // Store the previously focused element to restore on destroy
-    this.previousFocus = document.activeElement as HTMLElement;
+    // Store the previously focused element to restore on destroy (ignore body/html to avoid scroll reset)
+    const active = document.activeElement as HTMLElement | null;
+    if (active && active !== document.body && active !== document.documentElement) {
+      this.previousFocus = active;
+    } else {
+      this.previousFocus = null;
+    }
 
     // Listen for Tab key
     this.el.nativeElement.addEventListener('keydown', this.keydownHandler);
 
-    // Auto-focus the first focusable element inside the trap
+    // Auto-focus container or designated element WITHOUT highlighting random header buttons
     setTimeout(() => {
-      const focusable = this.getFocusableElements();
-      if (focusable.length > 0) {
-        focusable[0].focus();
+      const el = this.el.nativeElement;
+      const explicitAutofocus = el.querySelector<HTMLElement>('[autofocus], [data-autofocus]');
+      if (explicitAutofocus) {
+        explicitAutofocus.focus({ preventScroll: true });
+      } else {
+        if (!el.hasAttribute('tabindex')) {
+          el.setAttribute('tabindex', '-1');
+        }
+        el.style.outline = 'none';
+        el.focus({ preventScroll: true });
       }
     }, 50);
   }
@@ -51,9 +63,13 @@ export class FocusTrapDirective implements AfterViewInit, OnDestroy {
   ngOnDestroy() {
     this.el.nativeElement.removeEventListener('keydown', this.keydownHandler);
 
-    // Restore focus to the previously focused element
-    if (this.previousFocus && typeof this.previousFocus.focus === 'function') {
-      setTimeout(() => this.previousFocus?.focus(), 0);
+    // Restore focus to the previously focused element safely without scrolling
+    if (this.previousFocus && this.previousFocus !== document.body && this.previousFocus !== document.documentElement && typeof this.previousFocus.focus === 'function') {
+      setTimeout(() => {
+        try {
+          this.previousFocus?.focus({ preventScroll: true });
+        } catch { }
+      }, 0);
     }
   }
 
@@ -67,14 +83,17 @@ export class FocusTrapDirective implements AfterViewInit, OnDestroy {
     const last = focusable[focusable.length - 1];
 
     if (event.shiftKey) {
-      // Shift+Tab: wrap from first to last
-      if (document.activeElement === first) {
+      // Shift+Tab: wrap from first to last (or if currently on container, go to last)
+      if (document.activeElement === first || document.activeElement === this.el.nativeElement) {
         event.preventDefault();
         last.focus();
       }
     } else {
-      // Tab: wrap from last to first
+      // Tab: wrap from last to first (or if currently on container, go to first)
       if (document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      } else if (document.activeElement === this.el.nativeElement) {
         event.preventDefault();
         first.focus();
       }

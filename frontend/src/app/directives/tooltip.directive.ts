@@ -37,7 +37,23 @@ export class TooltipDirective implements OnDestroy {
 
   @HostListener('click')
   onClick() {
-    this.hide();
+    this.destroyTooltip();
+    const host = this.el?.nativeElement as HTMLElement | undefined;
+    // Never blur editable fields — doing so steals focus and prevents typing.
+    if (!host || this.isEditableElement(host)) return;
+    if (typeof host.blur === 'function') {
+      host.blur();
+    }
+  }
+
+  private isEditableElement(el: HTMLElement): boolean {
+    const tag = el.tagName;
+    if (tag === 'TEXTAREA' || tag === 'SELECT') return true;
+    if (tag === 'INPUT') {
+      const type = ((el as HTMLInputElement).type || 'text').toLowerCase();
+      return !['button', 'submit', 'reset', 'checkbox', 'radio', 'file', 'image', 'range', 'color'].includes(type);
+    }
+    return el.isContentEditable;
   }
 
   private onWindowScrollBound = () => {
@@ -64,23 +80,28 @@ export class TooltipDirective implements OnDestroy {
     this.tooltipEl = this.renderer.createElement('div');
     this.renderer.appendChild(this.tooltipEl, this.renderer.createText(this.tooltipText));
 
+    // Ensure tooltips are always topmost above any modal (z-[2000]-z-[99999]), drawer, or backdrop
+    const zIndex = '100000';
+
     // Tailwind classes for premium UI tooltip design
     const classes = [
-      'fixed', 'z-[9999999]', 'pointer-events-none', 'px-2.5', 'py-1', 
-      'text-[11px]', 'font-medium', 'rounded-md', 'shadow-md', 
-      'border', 'bg-white', 'text-slate-800', 'border-slate-200/90',
-      'dark:bg-slate-950', 'dark:text-slate-200', 'dark:border-slate-800/95',
+      'fixed', 'app-tooltip-instance', 'pointer-events-none', 'px-3', 'py-1.5',
+      'text-[11px]', 'leading-snug', 'font-medium', 'rounded-lg', 'shadow-xl',
+      'border', 'bg-white/95', 'text-slate-800', 'border-slate-200/90',
+      'dark:bg-slate-950/95', 'dark:text-slate-200', 'dark:border-slate-800/95',
+      'backdrop-blur-sm',
+      'max-w-[320px]', 'sm:max-w-[360px]', 'w-max', 'whitespace-normal', 'break-words', 'text-left',
       'opacity-0', 'transition-all', 'duration-150', 'ease-out', 'transform'
     ];
     classes.forEach(cls => this.renderer.addClass(this.tooltipEl, cls));
-    this.renderer.setStyle(this.tooltipEl, 'z-index', '9999999');
+    this.renderer.setStyle(this.tooltipEl, 'z-index', zIndex);
 
     // Add translation offset class based on placement for a premium entrance animation
     let offsetClass = 'translate-y-1';
     if (this.tooltipPlacement === 'bottom') offsetClass = '-translate-y-1';
     if (this.tooltipPlacement === 'left') offsetClass = 'translate-x-1';
     if (this.tooltipPlacement === 'right') offsetClass = '-translate-x-1';
-    
+
     this.renderer.addClass(this.tooltipEl, offsetClass);
     this.renderer.appendChild(document.body, this.tooltipEl);
 
@@ -89,7 +110,7 @@ export class TooltipDirective implements OnDestroy {
 
     // Listen to scroll and resize events outside Angular zone only when tooltip is active
     this.zone.runOutsideAngular(() => {
-      window.addEventListener('scroll', this.onWindowScrollBound, { passive: true });
+      window.addEventListener('scroll', this.onWindowScrollBound, { capture: true, passive: true });
       window.addEventListener('resize', this.onWindowResizeBound, { passive: true });
     });
 
@@ -108,25 +129,25 @@ export class TooltipDirective implements OnDestroy {
   private hide() {
     if (!this.active) return;
     this.active = false;
-    
+
     if (this.tooltipEl) {
       const el = this.tooltipEl;
-      
+
       // Animate out
       this.renderer.removeClass(el, 'opacity-100');
       this.renderer.addClass(el, 'opacity-0');
-      
+
       let offsetClass = 'translate-y-1';
       if (this.tooltipPlacement === 'bottom') offsetClass = '-translate-y-1';
       if (this.tooltipPlacement === 'left') offsetClass = 'translate-x-1';
       if (this.tooltipPlacement === 'right') offsetClass = '-translate-x-1';
       this.renderer.addClass(el, offsetClass);
-      
+
       this.zone.runOutsideAngular(() => {
-        window.removeEventListener('scroll', this.onWindowScrollBound);
+        window.removeEventListener('scroll', this.onWindowScrollBound, true);
         window.removeEventListener('resize', this.onWindowResizeBound);
       });
-      
+
       setTimeout(() => {
         if (!this.active && el.parentNode) {
           this.renderer.removeChild(document.body, el);
@@ -140,7 +161,7 @@ export class TooltipDirective implements OnDestroy {
 
   private destroyTooltip() {
     this.zone.runOutsideAngular(() => {
-      window.removeEventListener('scroll', this.onWindowScrollBound);
+      window.removeEventListener('scroll', this.onWindowScrollBound, true);
       window.removeEventListener('resize', this.onWindowResizeBound);
     });
     if (this.tooltipEl && this.tooltipEl.parentNode) {

@@ -63,9 +63,14 @@ export type IconName =
   | 'trash'
   | 'edit'
   | 'plus'
+  | 'plus-circle'
+  | 'upload-cloud'
+  | 'shield-plus'
   | 'minus'
   | 'arrow-right'
   | 'arrow-left'
+  | 'arrow-up'
+  | 'arrow-down'
   | 'external-link'
   | 'navigation'
   | 'video'
@@ -135,6 +140,8 @@ export type IconName =
   | 'code'
   | 'rocket'
   | 'activity'
+  | 'volume-1'
+  | 'refresh-cw'
   | 'tools';
 
 export interface IconDefinition {

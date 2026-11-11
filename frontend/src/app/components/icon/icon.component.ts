@@ -37,6 +37,11 @@ import { IconName, IconSize } from './icon.types';
       overflow: hidden;
     }
 
+    :host([hidden]),
+    :host.hidden {
+      display: none !important;
+    }
+
     .icon-inner {
       display: inline-flex;
       align-items: center;

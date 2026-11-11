@@ -6,6 +6,7 @@ import { TooltipDirective } from '../../directives/tooltip.directive';
 import { NAV_DROPDOWN_DIRECTIVES } from '../../directives/nav-dropdown.directive';
 import { IconComponent } from '../icon/icon.component';
 import { MediaUrlPipe } from '../../pipes/media-url.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-user-profile-menu',
@@ -20,6 +21,7 @@ export class UserProfileMenuComponent implements OnChanges {
 
   pwaInstall = inject(PwaInstallService);
   avatarImageFailed = false;
+  readonly adminPortalUrl = environment.adminPortalUrl || '';
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['currentUser']) {

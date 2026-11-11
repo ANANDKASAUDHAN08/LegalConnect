@@ -37,11 +37,16 @@ export class ShareMenuComponent implements OnDestroy {
   @Input() tooltipText = 'Share';
   @Input() tooltipPlacement: 'top' | 'bottom' | 'left' | 'right' = 'top';
   @Input() iconClass = 'w-3.5 h-3.5';
+  @Input() iconSize?: number;
   @Input() label = '';
   @Input() description = '';
   @Input() customActionLabel = '';
   @Input() copyLinkLabel = 'Copy Link';
+  @Input() copyText?: string;
+  @Input() copySuccessMessage?: string;
+  @Input() activeClass = '';
   @Output() customActionClicked = new EventEmitter<MouseEvent>();
+  @Output() openChange = new EventEmitter<boolean>();
 
   platforms: SharePlatform[] = [
     {
@@ -195,6 +200,7 @@ export class ShareMenuComponent implements OnDestroy {
     }
 
     this.showShareDropdown = !this.showShareDropdown;
+    this.openChange.emit(this.showShareDropdown);
     this.updateBodyScroll();
     if (this.showShareDropdown) {
       setTimeout(() => this.calculateDropdownPosition(), 0);
@@ -213,6 +219,7 @@ export class ShareMenuComponent implements OnDestroy {
         url: data.url
       }).then(() => {
         this.showShareDropdown = false;
+        this.openChange.emit(false);
         this.cdr.markForCheck();
       }).catch((err) => {
         // Fallback to custom sheet if sharing encounters issues, but NOT if cancelled by the user
@@ -222,6 +229,7 @@ export class ShareMenuComponent implements OnDestroy {
           this.showShareDropdown = true;
           this.updateBodyScroll();
         }
+        this.openChange.emit(this.showShareDropdown);
         this.cdr.markForCheck();
       });
     }
@@ -236,32 +244,32 @@ export class ShareMenuComponent implements OnDestroy {
     if (typeof window === 'undefined') return;
     const el = this.elementRef.nativeElement;
     const rect = el.getBoundingClientRect();
-    
+
     // Measure actual height if rendered, fallback to 360
     const dropdownEl = this.desktopDropdownElement;
     const dropdownHeight = dropdownEl ? dropdownEl.offsetHeight : 320;
     const dropdownWidth = 220;
-    
+
     const spaceBelow = window.innerHeight - rect.bottom;
-    
+
     // Decide direction based on where there is more space
     this.openUpwards = spaceBelow < dropdownHeight && rect.top > dropdownHeight;
-    
+
     const scrollX = window.scrollX || window.pageXOffset;
     const scrollY = window.scrollY || window.pageYOffset;
-    
+
     let top = 0;
     let left = rect.right - dropdownWidth + scrollX;
-    
+
     // Keep horizontally within screen bounds
     if (left < 8) left = 8;
-    
+
     if (this.openUpwards) {
       top = rect.top - dropdownHeight - 8 + scrollY;
     } else {
       top = rect.bottom + 8 + scrollY;
     }
-    
+
     this.dropdownStyles = {
       position: 'absolute',
       top: `${top}px`,
@@ -275,6 +283,7 @@ export class ShareMenuComponent implements OnDestroy {
   closeShareDropdown() {
     if (this.showShareDropdown) {
       this.showShareDropdown = false;
+      this.openChange.emit(false);
       this.updateBodyScroll();
       this.cleanupElements();
       this.cdr.markForCheck();
@@ -328,13 +337,33 @@ export class ShareMenuComponent implements OnDestroy {
       case 'email':
         shareUrl = `mailto:?subject=${encodeURIComponent(data.subject)}&body=${encodeURIComponent(data.fullText)}`;
         break;
-      case 'copy':
-        navigator.clipboard.writeText(data.url).then(() => {
-          this.snackbar.show('Link copied to clipboard');
-        }).catch(() => {
-          this.snackbar.show('Could not copy link');
-        });
+      case 'copy': {
+        const textToCopy = this.copyText || data.url;
+        const successMsg = this.copySuccessMessage || 'Link copied to clipboard';
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            this.snackbar.show(successMsg, 'success');
+          }).catch(() => {
+            this.fallbackCopy(textToCopy, successMsg);
+          });
+        } else {
+          this.fallbackCopy(textToCopy, successMsg);
+        }
         break;
+      }
+      case 'copy-link': {
+        const linkMsg = 'Direct link copied to clipboard';
+        if (navigator.clipboard) {
+          navigator.clipboard.writeText(data.url).then(() => {
+            this.snackbar.show(linkMsg, 'success');
+          }).catch(() => {
+            this.fallbackCopy(data.url, linkMsg);
+          });
+        } else {
+          this.fallbackCopy(data.url, linkMsg);
+        }
+        break;
+      }
       case 'native':
         if (navigator.share) {
           navigator.share({
@@ -365,6 +394,42 @@ export class ShareMenuComponent implements OnDestroy {
     this.showShareDropdown = false;
     this.updateBodyScroll();
     this.cdr.markForCheck();
+  }
+
+  private fallbackCopy(text: string, successMsg: string): void {
+    try {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      textarea.style.pointerEvents = 'none';
+      document.body.appendChild(textarea);
+      textarea.focus();
+      textarea.select();
+      const successful = document.execCommand('copy');
+      document.body.removeChild(textarea);
+      if (successful) {
+        this.snackbar.show(successMsg, 'success');
+      } else {
+        this.snackbar.show('Could not copy to clipboard', 'warning');
+      }
+    } catch {
+      this.snackbar.show('Could not copy to clipboard', 'warning');
+    }
+  }
+
+  getPlatformTooltip(platform: SharePlatform): string {
+    if (platform.id === 'email' || platform.id === 'whatsapp' || platform.id === 'telegram') {
+      return `Share via ${platform.name}`;
+    }
+    return `Share on ${platform.name}`;
+  }
+
+  getCopyTooltip(): string {
+    if (this.copyText) {
+      return 'Copy formal statutory citation to clipboard';
+    }
+    return 'Copy direct web link to clipboard';
   }
 
   getDisplayUrl(): string {

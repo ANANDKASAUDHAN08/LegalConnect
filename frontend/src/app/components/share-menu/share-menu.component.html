@@ -1,11 +1,12 @@
 <div class="relative block share-container w-full">
   <button (click)="toggleShareDropdown($event)" [appTooltip]="tooltipText" [tooltipPlacement]="tooltipPlacement"
-    [class]="buttonClass" [ngClass]="{'active': showShareDropdown}">
+    [class]="buttonClass" [class.active]="showShareDropdown"
+    [ngClass]="showShareDropdown && activeClass ? activeClass : ''">
     <ng-container *ngIf="label; else simpleIcon">
       <div *ngIf="description; else inlineLabel" class="flex items-center gap-3.5 text-left w-full">
         <div
           class="w-9 h-9 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-500 shrink-0 flex items-center justify-center">
-          <app-icon name="share" [class]="iconClass"></app-icon>
+          <app-icon name="share" [size]="iconSize || 14" [class]="iconClass"></app-icon>
         </div>
         <div class="flex flex-col gap-0.5">
           <span class="text-xs font-bold text-text-primary dark:text-white">{{ label }}</span>
@@ -16,13 +17,13 @@
       </div>
       <ng-template #inlineLabel>
         <div class="flex items-center gap-2">
-          <app-icon name="share" [class]="iconClass"></app-icon>
+          <app-icon name="share" [size]="iconSize || 14" [class]="iconClass"></app-icon>
           <span>{{ label }}</span>
         </div>
       </ng-template>
     </ng-container>
     <ng-template #simpleIcon>
-      <app-icon name="share" [class]="iconClass"></app-icon>
+      <app-icon name="share" [size]="iconSize || 14" [class]="iconClass"></app-icon>
     </ng-template>
   </button>
 
@@ -35,7 +36,7 @@
 
     <!-- Custom Action (Primary) -->
     <ng-container *ngIf="customActionLabel">
-      <button (click)="onCustomAction($event)"
+      <button (click)="onCustomAction($event)" [appTooltip]="customActionLabel" tooltipPlacement="left"
         class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-600 dark:text-amber-400 hover:bg-indigo-50/50 dark:hover:bg-amber-500/10 transition-all duration-200 border-none bg-transparent cursor-pointer text-left">
         <app-icon name="file-text" [size]="16"
           class="text-indigo-500 dark:text-amber-400 transition-transform group-hover:scale-110"></app-icon>
@@ -44,17 +45,26 @@
       <div class="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 mx-2"></div>
     </ng-container>
 
-    <!-- Copy Link -->
-    <button (click)="shareTo('copy')"
+    <!-- Copy Action (Citation or Link) -->
+    <button (click)="shareTo('copy')" [appTooltip]="getCopyTooltip()" tooltipPlacement="left"
       class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
       <app-icon name="copy" [size]="16" class="text-emerald-500 transition-transform group-hover:scale-110"></app-icon>
       <span>{{ copyLinkLabel }}</span>
+    </button>
+
+    <!-- If copyText is provided (e.g. Copy Citation), also provide Copy Direct Link if shareUrl is present -->
+    <button *ngIf="copyText && shareUrl" (click)="shareTo('copy-link')" appTooltip="Copy direct web link to clipboard"
+      tooltipPlacement="left"
+      class="group w-full flex items-center gap-3 px-3 py-2 rounded-xl text-xs font-semibold text-slate-500 dark:text-slate-400 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-800 dark:hover:text-slate-200 transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
+      <app-icon name="link" [size]="15" class="text-blue-500 transition-transform group-hover:scale-110"></app-icon>
+      <span>Copy Direct Link</span>
     </button>
 
     <div class="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 mx-2"></div>
 
     <!-- Social Platforms -->
     <button *ngFor="let platform of platforms; trackBy: trackByPlatform" (click)="shareTo(platform.id)"
+      [appTooltip]="getPlatformTooltip(platform)" tooltipPlacement="left"
       class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
       <app-icon [name]="platform.id === 'email' ? 'mail' : (platform.id === 'twitter' ? 'twitter' : platform.id)"
         [size]="16" [class]="platform.desktopIconClass" class="transition-transform group-hover:scale-110"></app-icon>
@@ -64,7 +74,7 @@
     <!-- Native Share (Mobile) -->
     <ng-container *ngIf="hasNativeShare">
       <div class="h-px bg-slate-200/50 dark:bg-slate-800/50 my-1 mx-2"></div>
-      <button (click)="shareTo('native')"
+      <button (click)="shareTo('native')" appTooltip="Open system share dialog" tooltipPlacement="left"
         class="group w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100/50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white transition-all duration-150 border-none bg-transparent cursor-pointer text-left">
         <app-icon name="share" [size]="16" class="text-slate-500 transition-transform group-hover:scale-110"></app-icon>
         <span>More Options...</span>
@@ -136,6 +146,16 @@
             <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">{{ platform.name }}</span>
           </button>
 
+          <!-- Copy Link in Grid when primary copy is Citation -->
+          <button *ngIf="copyText" (click)="shareTo('copy-link')"
+            class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-blue-50 dark:hover:bg-blue-950/20">
+            <div
+              class="w-10 h-10 rounded-full bg-blue-500/10 dark:bg-blue-500/20 border border-blue-500/20 flex items-center justify-center shadow-xs">
+              <app-icon name="link" [size]="18" class="text-blue-500"></app-icon>
+            </div>
+            <span class="text-[9.5px] font-semibold text-slate-600 dark:text-slate-300">Copy Link</span>
+          </button>
+
           <!-- Native Share (More) -->
           <button *ngIf="hasNativeShare" (click)="shareTo('native')"
             class="share-grid-btn flex flex-col items-center gap-1 py-1.5 px-0.5 rounded-2xl border-none cursor-pointer bg-transparent transition-all active:scale-95 hover:bg-indigo-50 dark:hover:bg-indigo-950/20">
@@ -148,17 +168,19 @@
         </div>
       </div>
 
-      <!-- Link Preview Box -->
+      <!-- Link / Citation Preview Box -->
       <div
-        class="bg-slate-50 dark:bg-white/[0.02] p-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-4">
+        class="bg-slate-50 dark:bg-white/[0.02] p-3 border-t border-slate-100 dark:border-white/5 flex items-center justify-between gap-3">
         <div class="min-w-0 flex-1">
           <p class="text-[8.5px] font-extrabold text-slate-400 dark:text-slate-500 uppercase tracking-widest mb-0.5">
-            Direct Link</p>
-          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{{ getDisplayUrl() }}</p>
+            {{ copyText ? 'Citation & Statute' : 'Direct Link' }}</p>
+          <p class="text-xs font-semibold text-slate-600 dark:text-slate-300 truncate">{{ copyText || getDisplayUrl() }}
+          </p>
         </div>
         <button (click)="shareTo('copy')"
-          class="shrink-0 px-2.5 py-1 bg-white dark:bg-white/5 text-amber-600 dark:text-amber-400 text-xs font-bold rounded-lg shadow-sm border border-amber-200/40 dark:border-amber-500/15 hover:bg-amber-600 hover:text-white dark:hover:bg-amber-500 dark:hover:text-white transition-all active:scale-95 cursor-pointer">
-          Copy
+          class="shrink-0 px-3 py-1.5 bg-amber-500 text-slate-950 text-xs font-bold rounded-lg shadow-sm hover:bg-amber-400 transition-all active:scale-95 cursor-pointer border-0 flex items-center gap-1.5">
+          <app-icon name="copy" [size]="12"></app-icon>
+          <span>{{ copyText ? 'Copy Citation' : 'Copy' }}</span>
         </button>
       </div>
 

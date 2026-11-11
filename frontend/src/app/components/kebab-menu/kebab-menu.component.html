@@ -1,0 +1,58 @@
+<div class="kebab-menu-host relative inline-block select-none" (click)="$event.stopPropagation()">
+
+  <!-- Kebab Trigger Button -->
+  <button type="button" (click)="toggle($event)" [class]="buttonClass" [class.active]="isOpen()"
+    [ngClass]="isOpen() && activeClass ? activeClass : ''" [appTooltip]="tooltipText"
+    [tooltipPlacement]="tooltipPlacement" [attr.aria-label]="ariaLabel" [attr.aria-expanded]="isOpen()">
+    <app-icon [name]="icon" [size]="iconSize"></app-icon>
+  </button>
+
+  <!-- Viewport-Fixed Dropdown Card (100% Opaque, No Transparency/Blur, Decoupled from Scroll Containers) -->
+  <div *ngIf="isOpen()" [ngStyle]="menuStyles()" [class]="menuWidth + ' ' + menuClass"
+    class="fixed bg-white dark:bg-[#0c121e] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl p-2 z-[2500] text-left animate-kebab-pop divide-y divide-slate-100 dark:divide-slate-800/80 overflow-y-auto">
+
+    <!-- Projected Content slot for custom page markup if provided -->
+    <ng-content></ng-content>
+
+    <!-- Structured Action Groups -->
+    <ng-container *ngFor="let group of effectiveGroups()">
+      <div class="p-1 space-y-0.5">
+        <div *ngIf="group.title" class="px-2.5 py-1 text-[9px] font-black uppercase tracking-wider text-slate-400">
+          {{ group.title }}
+        </div>
+
+        <button *ngFor="let item of group.items" type="button" (click)="onItemClick(item, $event)"
+          [disabled]="item.disabled" [class.opacity-50]="item.disabled" [class.cursor-not-allowed]="item.disabled"
+          [ngClass]="item.danger ? 'hover:bg-rose-50 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400' : 'hover:bg-blue-50 dark:hover:bg-blue-950/50 text-slate-700 dark:text-slate-200'"
+          class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-xl text-left transition border-0 cursor-pointer group/item">
+
+          <!-- Colored Icon Container -->
+          <div *ngIf="item.icon"
+            [class]="(item.iconBgClass || 'bg-slate-500/10') + ' ' + (item.iconClass || 'text-slate-600 dark:text-slate-300')"
+            class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition">
+            <app-icon [name]="$any(item.icon)" [size]="13"></app-icon>
+          </div>
+
+          <!-- Label & Sublabel -->
+          <div class="min-w-0 flex-1">
+            <div [ngClass]="item.danger ? 'text-rose-600 dark:text-rose-400' : 'text-slate-800 dark:text-slate-100'"
+              class="text-xs font-bold truncate">
+              {{ item.label }}
+            </div>
+            <div *ngIf="item.sublabel" class="text-[10px] text-slate-400 truncate">
+              {{ item.sublabel }}
+            </div>
+          </div>
+
+          <!-- Optional Badge -->
+          <span *ngIf="item.badge" [class]="item.badgeClass || 'bg-blue-500/10 text-blue-600 dark:text-blue-400'"
+            class="text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0">
+            {{ item.badge }}
+          </span>
+        </button>
+      </div>
+    </ng-container>
+
+  </div>
+
+</div>

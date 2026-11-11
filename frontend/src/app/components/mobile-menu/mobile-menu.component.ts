@@ -14,6 +14,7 @@ import { IconComponent } from '../icon/icon.component';
 import { LogoComponent } from '../logo/logo.component';
 
 import { MediaUrlPipe } from '../../pipes/media-url.pipe';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-mobile-menu',
@@ -26,6 +27,7 @@ import { MediaUrlPipe } from '../../pipes/media-url.pipe';
 export class MobileMenuComponent implements OnDestroy {
   private _isOpen = false;
   avatarImageFailed = false;
+  readonly adminPortalUrl = environment.adminPortalUrl || '';
 
   @Input()
   set isOpen(val: boolean) {

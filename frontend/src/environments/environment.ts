@@ -2,6 +2,7 @@ export const environment = {
   production: false,
   authApiUrl: '', // In development, relative paths route through proxy.conf.json
   nodeApiUrl: '',
+  adminPortalUrl: 'http://localhost:4300',
   firebase: {
     apiKey: "AIzaSyAbT7gkJLThxS6OwKp7X98E5ehfpQnBRPY",
     authDomain: "legalconnect-501109.web.app",
