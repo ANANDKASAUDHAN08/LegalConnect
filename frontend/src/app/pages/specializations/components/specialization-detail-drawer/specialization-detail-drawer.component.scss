@@ -1,0 +1,112 @@
+// ==================== DRAWER PANEL RESPONSIVE STYLING & ANIMATIONS ====================
+
+// Desktop: Right slide-over
+@media (min-width: 640px) {
+  .drawer-panel-right {
+    margin-left: auto !important;
+    animation: slideLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform;
+  }
+}
+
+// Mobile: Bottom sheet slide-up
+@media (max-width: 639.98px) {
+  .drawer-panel-right {
+    margin-top: auto !important;
+    max-height: 94vh !important;
+    border-top-left-radius: 1.5rem !important;
+    border-top-right-radius: 1.5rem !important;
+    border-left: none !important;
+    border-top: 1px solid rgba(226, 232, 240, 0.8) !important;
+    animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform;
+    padding-bottom: env(safe-area-inset-bottom, 16px);
+  }
+
+  :host-context(.dark) .drawer-panel-right {
+    border-top-color: rgba(30, 41, 59, 0.8) !important;
+  }
+}
+
+@keyframes slideLeft {
+  from {
+    transform: translate3d(100%, 0, 0);
+    opacity: 0.95;
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.9;
+  }
+
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+// Scrollbar suppression
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+// Glassmorphism enhancements
+.backdrop-blur-md {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+// Card Hover micro-interaction
+.hover\:shadow-md {
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+
+  &:hover {
+    transform: translateY(-1.5px);
+  }
+}
+
+// Accessibility: Respect Reduced Motion
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel-right {
+    animation: none !important;
+  }
+
+  .hover\:shadow-md:hover {
+    transform: none !important;
+  }
+}
+
+// Host alignment and unified sizing for custom action components inside drawer header
+app-bookmark-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 639.98px) {
+  app-bookmark-button button.variant-icon {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 0.5rem !important;
+  }
+}
+
+@media (min-width: 640px) {
+  app-bookmark-button button.variant-icon {
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 0.5rem !important;
+  }
+}

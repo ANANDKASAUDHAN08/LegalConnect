@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy, NgZone, HostListener } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Router, RouterLink, ActivatedRoute } from '@angular/router';
 import { NgFor, NgIf, NgClass } from '@angular/common';
 import { LegalService, BareAct, ApiResponse } from '../../services/legal.service';
 import { DatabaseService } from '../../services/database.service';
@@ -102,12 +102,28 @@ export class BrowseLawsComponent implements OnInit, OnDestroy {
     public notificationService: NotificationService,
     private snackbar: SnackbarService,
     private router: Router,
+    private route: ActivatedRoute,
     private ngZone: NgZone
   ) { }
 
   ngOnInit() {
     this.updateLibraryPageSize(); // Initial check
     this.loadCachedActsStatus();
+
+    // Support deep-linking and search query parameters (e.g. /laws?search=...)
+    this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe(params => {
+      const q = params['search'] || params['q'];
+      if (q && typeof q === 'string') {
+        const query = q.trim();
+        this.searchQuery = query;
+        this.librarySearchQuery = query;
+        this.activeTab = 'library';
+        if (this.acts.length > 0) {
+          this.updateFilteredActs();
+          this.updateLibraryActs();
+        }
+      }
+    });
 
     this.legalService.getActs()
       .pipe(delay(1000))

@@ -1,0 +1,916 @@
+<!-- ==================== SPECIALIZATION DETAIL DRAWER (SLIDE-OVER / BOTTOM SHEET) ==================== -->
+<div *ngIf="isOpen && spec"
+  class="fixed inset-0 z-[2100] flex justify-end bg-slate-950/70 backdrop-blur-md transition-all duration-300"
+  role="dialog" aria-modal="true" [attr.aria-labelledby]="'drawer-title-' + spec.id" (click)="onClose()">
+
+  <!-- Drawer Shell Panel -->
+  <div
+    class="relative ml-auto w-full max-w-2xl lg:max-w-[700px] xl:max-w-[720px] h-full bg-white dark:bg-slate-900 border-l border-slate-200/90 dark:border-slate-800/90 shadow-2xl flex flex-col overflow-hidden drawer-panel-right text-slate-900 dark:text-slate-100"
+    (click)="$event.stopPropagation()">
+
+    <!-- Top Category Gradient Accent Bar -->
+    <div class="h-1 w-full bg-gradient-to-r shrink-0"
+      [ngClass]="theme.topBarGradient || 'from-blue-600 via-indigo-600 to-cyan-500'"></div>
+
+    <!-- Mobile Drag Handle — swipe down to close -->
+    <div
+      class="sm:hidden pt-2 pb-1 flex justify-center shrink-0 bg-slate-50 dark:bg-slate-950/70 cursor-grab active:cursor-grabbing"
+      (touchstart)="onDragStart($event)" (touchmove)="onDragMove($event)" (touchend)="onDragEnd($event)">
+      <div class="w-10 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+    </div>
+
+    <!-- Discreet Browsing Banner — only for sensitive categories -->
+    <div *ngIf="isDiscreetMode() && isSensitiveCategory()"
+      class="bg-amber-50/95 dark:bg-amber-950/50 border-b border-amber-200/80 dark:border-amber-900/50 px-3 sm:px-4 py-1.5 flex items-center justify-between gap-2 text-[11px] shrink-0">
+      <div class="flex items-center gap-1.5 min-w-0 text-amber-900 dark:text-amber-200 font-medium">
+        <app-icon name="eye-off" [size]="12" class="text-amber-600 dark:text-amber-400 shrink-0"></app-icon>
+        <span class="truncate">Discreet Mode Active &mdash; Browsing history paused</span>
+      </div>
+      <button (click)="quickExit()" [appTooltip]="'Instantly leave and redirect to neutral educational portal'"
+        class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-[10px] sm:text-[11px] transition-all cursor-pointer border-0 shrink-0 shadow-xs">
+        <span>Quick Exit</span>
+      </button>
+    </div>
+
+    <!-- Drawer Header -->
+    <div
+      class="pt-3 px-3 sm:pt-4 sm:px-4 pb-0 border-b border-slate-200/80 dark:border-slate-800/80 bg-slate-50/70 dark:bg-slate-950/50 backdrop-blur-sm shrink-0">
+
+      <!-- ==================== MOBILE HEADER (< sm) ==================== -->
+      <div class="sm:hidden flex flex-col gap-2">
+        <!-- Mobile Row 1: Badges & Close Button -->
+        <div class="flex items-center justify-between gap-2">
+          <!-- Badges cluster (Fixed single row, never wraps) -->
+          <div class="flex items-center gap-1.5 flex-nowrap min-w-0 overflow-hidden">
+            <!-- Category Tag -->
+            <span
+              class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border shrink-0"
+              [ngClass]="theme.categoryTagClass">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              <span>{{ spec.category }}</span>
+            </span>
+
+            <!-- Popular Badge -->
+            <span *ngIf="spec.popular"
+              class="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[8px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded border border-amber-500/30 uppercase tracking-wider shrink-0">
+              <app-icon name="sparkles" [size]="8"></app-icon>
+              <span>Popular</span>
+            </span>
+
+            <!-- Live Availability -->
+            <span
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0"
+              [appTooltip]="'Verified empanelled advocates online and available right now'">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>{{ spec.availableNow || spec.advocateCount || 0 }} Online</span>
+            </span>
+          </div>
+
+          <!-- Close Drawer Button (Top-Right thumb target) -->
+          <button (click)="onClose()" aria-label="Close drawer" [appTooltip]="'Close (Esc)'"
+            class="w-7 h-7 rounded-lg bg-slate-200/60 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition flex items-center justify-center shrink-0 border-0 cursor-pointer active:scale-95">
+            <app-icon name="x" [size]="14"></app-icon>
+          </button>
+        </div>
+
+        <!-- Mobile Row 2: Practice Area Identity (Icon + Full-Width Title + Subtitle/Stats) -->
+        <div class="flex items-center gap-2.5">
+          <!-- Compact Icon: 38x38 -->
+          <div
+            class="w-[38px] h-[38px] rounded-xl bg-gradient-to-br flex items-center justify-center border shrink-0 shadow-xs"
+            [ngClass]="[theme.gradientFrom, theme.gradientTo, theme.borderAccent, theme.iconTint]">
+            <app-icon [name]="spec.icon" [size]="18"></app-icon>
+          </div>
+
+          <!-- Full Width Title & Info (No distortion, never clipped to 3 letters) -->
+          <div class="min-w-0 flex-1">
+            <h2 [id]="'drawer-title-' + spec.id"
+              class="font-serif text-lg font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate">
+              {{ getDisplayName() }}
+            </h2>
+
+            <!-- Compact Subline with Hindi + Forums + Acts + Rating -->
+            <div
+              class="flex items-center gap-1.5 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium flex-nowrap overflow-hidden">
+              <span *ngIf="spec.name_hi && !isHindi" class="text-slate-400 flex items-center gap-1 min-w-0 shrink">
+                <span class="text-[8.5px] font-bold uppercase shrink-0">HI</span>
+                <span class="truncate max-w-[100px]">{{ spec.name_hi }}</span>
+                <span class="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+              </span>
+              <span class="flex items-center gap-0.5 shrink-0">
+                <app-icon name="landmark" [size]="10" class="text-slate-400"></app-icon>
+                <span>{{ (spec.typicalForums && spec.typicalForums.length > 0) ? (spec.typicalForums.length +
+                  (spec.typicalForums.length === 1 ? ' Forum' : ' Forums')) : 'N/A' }}</span>
+              </span>
+              <span class="text-slate-300 dark:text-slate-600">•</span>
+              <span class="flex items-center gap-0.5 shrink-0">
+                <app-icon name="book-open" [size]="10" class="text-slate-400"></app-icon>
+                <span>{{ (spec.relevantActs && spec.relevantActs.length > 0) ? (spec.relevantActs.length +
+                  (spec.relevantActs.length === 1 ? ' Act' : ' Acts')) : 'N/A' }}</span>
+              </span>
+              <span class="text-slate-300 dark:text-slate-600">•</span>
+              <span class="flex items-center gap-0.5 shrink-0"
+                [ngClass]="spec.avgRating ? 'text-amber-500 font-bold' : 'text-slate-400 font-medium'">
+                <app-icon name="star" [size]="10"></app-icon>
+                <span>{{ spec.avgRating ? spec.avgRating : 'N/A' }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Row 3: Action Toolbar (Dedicated full-width utility strip) -->
+        <div
+          class="flex items-center justify-between gap-1.5 pt-1.5 border-t border-slate-200/50 dark:border-slate-800/50">
+          <!-- Jargon Mode Pill -->
+          <button (click)="toggleJargonMode()"
+            class="flex-1 h-7 px-2 rounded-lg border text-[10px] font-bold cursor-pointer transition flex items-center justify-center gap-1 active:scale-95"
+            [ngClass]="jargonMode() === 'simple' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+            <app-icon name="languages" [size]="11"></app-icon>
+            <span>{{ jargonMode() === 'simple' ? 'Simple Terms' : 'Legal Terms' }}</span>
+          </button>
+
+          <!-- Audio Read Aloud -->
+          <button (click)="toggleSpeech(displayDescription(), 'drawer_header')"
+            [appTooltip]="isSpeakingItem('drawer_header') ? 'Stop Audio' : 'Read Aloud'" tooltipPlacement="bottom"
+            class="h-7 w-7 rounded-lg border cursor-pointer transition flex items-center justify-center shrink-0 active:scale-95"
+            [ngClass]="isSpeakingItem('drawer_header') ? 'bg-amber-500 text-white border-amber-600 animate-pulse' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'">
+            <app-icon [name]="isSpeakingItem('drawer_header') ? 'volume-x' : 'volume-2'" [size]="13"></app-icon>
+          </button>
+
+          <!-- Compare Tray Pin Button -->
+          <button (click)="onPinToggle()" [appTooltip]="isPinned ? 'Remove from Compare' : 'Add to Compare'"
+            tooltipPlacement="bottom"
+            class="h-7 w-7 rounded-lg border cursor-pointer transition flex items-center justify-center shrink-0 active:scale-95"
+            [ngClass]="isPinned ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'">
+            <app-icon [name]="isPinned ? 'check' : 'plus'" [size]="13"></app-icon>
+          </button>
+
+          <!-- Bookmark Button -->
+          <app-bookmark-button targetType="LegalResource" [targetId]="spec.id" [title]="spec.name"
+            [subtitle]="spec.category" variant="icon" size="sm">
+          </app-bookmark-button>
+
+          <!-- Share Menu -->
+          <app-share-menu [shareUrl]="currentShareUrl()" [title]="spec.name + ' - LegalConnect'"
+            [text]="'Explore verified ' + spec.name + ' advocates, statutory scope, and landmark judgments.'"
+            tooltipText="Share Practice Area" tooltipPlacement="bottom" [iconSize]="13"
+            buttonClass="h-7 w-7 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 flex items-center justify-center cursor-pointer active:scale-95">
+          </app-share-menu>
+
+        </div>
+      </div>
+
+      <!-- ==================== DESKTOP HEADER (sm:flex) ==================== -->
+      <div class="hidden sm:flex items-center justify-between gap-3.5">
+        <!-- Left Identity: Icon + Badges + Title & Stats Inline -->
+        <div class="flex items-center gap-3 min-w-0 flex-1">
+          <!-- Glassmorphic Icon Block: 42x42 -->
+          <div
+            class="w-[42px] h-[42px] rounded-xl bg-gradient-to-br flex items-center justify-center border shrink-0 shadow-xs transition-transform hover:scale-105"
+            [ngClass]="[theme.gradientFrom, theme.gradientTo, theme.borderAccent, theme.iconTint]">
+            <app-icon [name]="spec.icon" [size]="20"></app-icon>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <!-- Line 1: Badges Row + Hindi Name (Single Line, Never Wraps) -->
+            <div class="flex items-center gap-1.5 flex-nowrap leading-none mb-1 overflow-hidden">
+              <!-- Category Pill -->
+              <span
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider border shrink-0"
+                [ngClass]="theme.categoryTagClass">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                <span>{{ spec.category }}</span>
+              </span>
+
+              <!-- Popular Badge -->
+              <span *ngIf="spec.popular"
+                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[8px] font-black bg-amber-500/15 text-amber-600 dark:text-amber-400 rounded border border-amber-500/30 uppercase tracking-wider shrink-0">
+                <app-icon name="sparkles" [size]="8"></app-icon>
+                <span>Popular</span>
+              </span>
+
+              <!-- Live Availability Pulse -->
+              <span
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shrink-0"
+                [appTooltip]="'Verified empanelled advocates online and available right now'">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span>{{ spec.availableNow || spec.advocateCount || 0 }} Online</span>
+              </span>
+
+              <!-- Hindi Subtitle Inline -->
+              <span *ngIf="spec.name_hi && !isHindi"
+                class="text-[11px] text-slate-400 dark:text-slate-500 font-sans ml-1 flex items-center gap-1 min-w-0 shrink">
+                <span class="text-[9px] uppercase font-bold text-slate-400 tracking-wider shrink-0">HI</span>
+                <span class="truncate max-w-[120px]">{{ spec.name_hi }}</span>
+              </span>
+            </div>
+
+            <!-- Line 2: Full Width Title (Unrestricted Horizontal Width) -->
+            <div class="min-w-0 overflow-hidden leading-tight">
+              <h2 [id]="'drawer-title-' + spec.id" [appTooltip]="getDisplayName()" tooltipPlacement="bottom"
+                class="font-serif text-[1.28rem] font-bold text-slate-900 dark:text-white leading-tight tracking-tight truncate block">
+                {{ getDisplayName() }}
+              </h2>
+            </div>
+
+            <!-- Line 3: Metadata Ribbon (Stats underneath title, never competing for title width) -->
+            <div
+              class="flex items-center gap-2 mt-0.5 text-[10px] text-slate-500 dark:text-slate-400 font-medium flex-nowrap overflow-hidden leading-none">
+              <span class="flex items-center gap-0.5 shrink-0">
+                <app-icon name="landmark" [size]="10.5" class="text-slate-400"></app-icon>
+                <span>{{ (spec.typicalForums && spec.typicalForums.length > 0) ? (spec.typicalForums.length +
+                  (spec.typicalForums.length === 1 ? ' Forum' : ' Forums')) : 'N/A' }}</span>
+              </span>
+              <span class="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+              <span class="flex items-center gap-0.5 shrink-0">
+                <app-icon name="book-open" [size]="10.5" class="text-slate-400"></app-icon>
+                <span>{{ (spec.relevantActs && spec.relevantActs.length > 0) ? (spec.relevantActs.length +
+                  (spec.relevantActs.length === 1 ? ' Act' : ' Acts')) : 'N/A' }}</span>
+              </span>
+              <span class="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+              <span class="flex items-center gap-0.5 shrink-0"
+                [ngClass]="spec.avgRating ? 'text-amber-500 font-bold' : 'text-slate-400 font-medium'">
+                <app-icon name="star" [size]="10.5"></app-icon>
+                <span>{{ spec.avgRating ? spec.avgRating + ' Rating' : 'N/A' }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Action Buttons Group (Desktop) -->
+        <div class="flex items-center gap-1 shrink-0">
+          <!-- Jargon Toggle Button (Fixed Width 72px so text toggle never causes CLS/distortion) -->
+          <button (click)="toggleJargonMode()"
+            [appTooltip]="jargonMode() === 'simple' ? 'Switch to Statutory Legal Terms' : 'Switch to Jargon-Free Simple Language'"
+            tooltipPlacement="bottom"
+            class="h-[30px] w-[72px] min-w-[72px] rounded-lg border text-[10.5px] font-bold cursor-pointer transition-all flex items-center justify-center gap-1 shadow-2xs hover:scale-105 active:scale-95 shrink-0"
+            [ngClass]="jargonMode() === 'simple' ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border-blue-200 dark:border-blue-800' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+            <app-icon name="languages" [size]="12" class="shrink-0"></app-icon>
+            <span class="truncate">{{ jargonMode() === 'simple' ? 'Simple' : 'Legal' }}</span>
+          </button>
+
+          <!-- Audio Read Aloud -->
+          <button (click)="toggleSpeech(displayDescription(), 'drawer_header')"
+            [appTooltip]="isSpeakingItem('drawer_header') ? 'Stop Listening' : 'Listen with Audio (TTS)'"
+            tooltipPlacement="bottom"
+            class="h-[30px] w-[30px] rounded-lg border cursor-pointer transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-2xs"
+            [ngClass]="isSpeakingItem('drawer_header') ? 'bg-amber-500 text-white border-amber-600 animate-pulse' : 'bg-white dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700 hover:text-blue-600'">
+            <app-icon [name]="isSpeakingItem('drawer_header') ? 'volume-x' : 'volume-2'" [size]="13.5"></app-icon>
+          </button>
+
+          <!-- Compare Tray Pin Button -->
+          <button (click)="onPinToggle()" [appTooltip]="isPinned ? 'Remove from Compare Tray' : 'Pin to Compare Tray'"
+            tooltipPlacement="bottom"
+            class="h-[30px] w-[30px] rounded-lg border cursor-pointer transition-all flex items-center justify-center hover:scale-105 active:scale-95 shadow-2xs"
+            [ngClass]="isPinned ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700 hover:text-blue-600'">
+            <app-icon [name]="isPinned ? 'check' : 'plus'" [size]="13.5"></app-icon>
+          </button>
+
+          <!-- Universal Bookmark Button -->
+          <app-bookmark-button targetType="LegalResource" [targetId]="spec.id" [title]="spec.name"
+            [subtitle]="spec.category" variant="icon" size="sm">
+          </app-bookmark-button>
+
+          <!-- Share Menu Component -->
+          <app-share-menu [shareUrl]="currentShareUrl()" [title]="spec.name + ' - LegalConnect'"
+            [text]="'Explore verified ' + spec.name + ' advocates, statutory scope, and landmark judgments.'"
+            tooltipText="Share Practice Area" tooltipPlacement="bottom" [iconSize]="13.5"
+            buttonClass="h-[30px] w-[30px] rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-500 hover:text-blue-600 transition-all flex items-center justify-center cursor-pointer hover:scale-105 active:scale-95 shadow-2xs">
+          </app-share-menu>
+
+          <!-- Divider -->
+          <div class="h-4 w-px bg-slate-200 dark:bg-slate-800 mx-0.5"></div>
+
+          <!-- Close Drawer Button -->
+          <button (click)="onClose()" aria-label="Close drawer" [appTooltip]="'Close (Esc)'" tooltipPlacement="bottom"
+            class="h-[30px] w-[30px] text-slate-400 hover:text-slate-700 dark:hover:text-white rounded-lg hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-all bg-transparent border-0 cursor-pointer flex items-center justify-center hover:scale-105 active:scale-95">
+            <app-icon name="x" [size]="16"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Tab Navigation Bar -->
+      <div class="mt-1 -mb-px flex items-center gap-0.5 sm:gap-1 overflow-x-auto no-scrollbar scroll-smooth">
+
+        <!-- Overview Tab -->
+        <button (click)="setTab('overview')" [appTooltip]="'Practice area scope, key metrics & document checklist'"
+          tooltipPlacement="bottom"
+          class="relative px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-transparent flex items-center gap-1.5 border-b-2"
+          [ngClass]="activeTab === 'overview' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'">
+          <app-icon name="layout" [size]="13"></app-icon>
+          <span>Overview</span>
+        </button>
+
+        <!-- Bare Acts Tab -->
+        <button (click)="setTab('acts')" [appTooltip]="'Governing Bare Acts, statutory codes & clauses'"
+          tooltipPlacement="bottom"
+          class="relative px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-transparent flex items-center gap-1.5 border-b-2"
+          [ngClass]="activeTab === 'acts' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'">
+          <app-icon name="book-open" [size]="13"></app-icon>
+          <span>Bare Acts</span>
+          <span *ngIf="spec.relevantActs?.length"
+            class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
+            {{ spec.relevantActs.length }}
+          </span>
+        </button>
+
+        <!-- Landmarks Tab -->
+        <button (click)="setTab('cases')" [appTooltip]="'Binding precedents & landmark court judgments'"
+          tooltipPlacement="bottom"
+          class="relative px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-transparent flex items-center gap-1.5 border-b-2"
+          [ngClass]="activeTab === 'cases' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'">
+          <app-icon name="scale" [size]="13"></app-icon>
+          <span>Landmarks</span>
+          <span *ngIf="spec.landmarkDecisions?.length"
+            class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-purple-500/15 text-purple-600 dark:text-purple-400">
+            {{ spec.landmarkDecisions?.length }}
+          </span>
+        </button>
+
+        <!-- Advocates Tab -->
+        <button (click)="setTab('lawyers')" [appTooltip]="'Verified Bar Council advocates & practitioners'"
+          tooltipPlacement="bottom"
+          class="relative px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-transparent flex items-center gap-1.5 border-b-2"
+          [ngClass]="activeTab === 'lawyers' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'">
+          <app-icon name="users" [size]="13"></app-icon>
+          <span>Advocates</span>
+          <span *ngIf="totalAdvocateCount() > 0"
+            class="px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+            {{ totalAdvocateCount() }}
+          </span>
+        </button>
+
+        <!-- Procedure & FAQs Tab -->
+        <button (click)="setTab('journey')" [appTooltip]="'Procedural roadmap, timelines & common legal FAQs'"
+          tooltipPlacement="bottom"
+          class="relative px-3 sm:px-3.5 py-2 sm:py-2.5 text-xs font-bold transition-all cursor-pointer whitespace-nowrap bg-transparent flex items-center gap-1.5 border-b-2"
+          [ngClass]="activeTab === 'journey' ? 'border-blue-600 text-blue-600 dark:text-blue-400' : 'border-transparent text-slate-500 hover:text-slate-900 dark:hover:text-slate-200'">
+          <app-icon name="help-circle" [size]="13"></app-icon>
+          <span>Procedure &amp; FAQs</span>
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Drawer Scrollable Content -->
+    <div #scrollContainer class="flex-1 p-3 sm:p-4 overflow-y-auto space-y-4 sm:space-y-5">
+
+      <!-- Loading Skeleton -->
+      <div *ngIf="isLoading" class="space-y-5 animate-pulse" role="status" aria-label="Loading practice area details">
+        <!-- Banner Skeleton -->
+        <div
+          class="h-20 rounded-2xl bg-gradient-to-r from-slate-200 via-slate-100 to-slate-200 dark:from-slate-800 dark:via-slate-700/50 dark:to-slate-800 border border-slate-200/50 dark:border-slate-800/80">
+        </div>
+
+        <!-- 4-KPI Grid Skeleton -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div *ngFor="let i of [1, 2, 3, 4]; trackBy: trackByNumber"
+            class="p-3.5 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-2">
+            <div class="h-3 w-16 rounded-md bg-slate-200 dark:bg-slate-700"></div>
+            <div class="h-6 w-20 rounded-md bg-slate-300 dark:bg-slate-600"></div>
+            <div class="h-2.5 w-12 rounded-md bg-slate-200 dark:bg-slate-700"></div>
+          </div>
+        </div>
+
+        <!-- Metric strip skeleton -->
+        <div
+          class="h-16 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+        </div>
+
+        <!-- Body content card skeleton -->
+        <div
+          class="p-4 rounded-2xl bg-slate-100/80 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60 space-y-3">
+          <div class="h-4 w-40 rounded-md bg-slate-200 dark:bg-slate-700"></div>
+          <div class="space-y-2">
+            <div class="h-3 w-full rounded bg-slate-200/80 dark:bg-slate-700/80"></div>
+            <div class="h-3 w-11/12 rounded bg-slate-200/80 dark:bg-slate-700/80"></div>
+            <div class="h-3 w-4/5 rounded bg-slate-200/80 dark:bg-slate-700/80"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 1: OVERVIEW ==================== -->
+      <app-drawer-overview-tab *ngIf="!isLoading && activeTab === 'overview'"></app-drawer-overview-tab>
+
+      <!-- ==================== TAB 2: BARE ACTS ==================== -->
+      <app-drawer-acts-tab *ngIf="!isLoading && activeTab === 'acts'"></app-drawer-acts-tab>
+
+      <!-- ==================== TAB 3: LANDMARKS ==================== -->
+      <app-drawer-landmarks-tab *ngIf="!isLoading && activeTab === 'cases'"></app-drawer-landmarks-tab>
+
+      <!-- ==================== TAB 4: ADVOCATES ==================== -->
+      <app-drawer-advocates-tab *ngIf="!isLoading && activeTab === 'lawyers'"></app-drawer-advocates-tab>
+
+      <!-- ==================== TAB 5: PROCEDURE & FAQS ==================== -->
+      <app-drawer-procedure-tab *ngIf="!isLoading && activeTab === 'journey'"></app-drawer-procedure-tab>
+
+    </div>
+
+    <!-- Availability Alert Modal (Responsive Mobile Bottom-Sheet & Desktop Glassmorphic Modal) -->
+    <div *ngIf="showAlertModal()"
+      class="absolute inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 transition-all duration-300 animate-in fade-in"
+      (click)="showAlertModal.set(false)">
+
+      <!-- Dialog Surface: Bottom Sheet on Mobile, Elevated Floating Card on Desktop -->
+      <div (click)="$event.stopPropagation()"
+        class="w-full sm:max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-t-[28px] sm:rounded-3xl border-t sm:border border-slate-200/80 dark:border-slate-800/80 shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95">
+
+        <!-- Mobile Grab Handle -->
+        <div class="sm:hidden pt-2.5 pb-1 flex justify-center shrink-0">
+          <div class="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+        </div>
+
+        <!-- Sheet Header -->
+        <div
+          class="px-4 sm:px-6 py-3 sm:py-3.5 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-3 shrink-0">
+          <!-- Left: Squircle Icon & Title Stack -->
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <div
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-indigo-500/15 via-blue-500/15 to-cyan-500/15 text-indigo-600 dark:text-indigo-400 border border-indigo-500/25 flex items-center justify-center shrink-0 shadow-2xs">
+              <app-icon name="bell" [size]="15"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+                  Advocate Availability Radar
+                </span>
+                <span class="text-slate-300 dark:text-slate-700">•</span>
+                <span class="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tight">
+                  Real-Time
+                </span>
+              </div>
+              <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white truncate m-0 mt-0.5">
+                {{ spec.name }}
+              </h4>
+            </div>
+          </div>
+
+          <!-- Right: Active Status Pill & Close Button -->
+          <div class="flex items-center gap-2 shrink-0">
+            <div *ngIf="alertSubscribed()"
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[9.5px] font-bold tracking-tight border bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25 transition">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>Radar Active</span>
+            </div>
+
+            <button (click)="showAlertModal.set(false)"
+              class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition border-0 cursor-pointer active:scale-95"
+              [appTooltip]="'Close (Esc)'">
+              <app-icon name="x" [size]="14"></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Sheet Body -->
+        <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3.5 overflow-y-auto">
+
+          <!-- Location Context Banner -->
+          <div
+            class="px-3 py-2 rounded-xl bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between text-xs gap-2">
+            <div class="flex items-center gap-1.5 min-w-0 text-slate-700 dark:text-slate-300">
+              <app-icon name="map-pin" [size]="12" class="text-blue-500 shrink-0"></app-icon>
+              <span class="truncate text-[11px] font-medium">
+                Target Location: <strong class="text-slate-900 dark:text-white">{{ userCityShort() || 'Your City'
+                  }}</strong>
+              </span>
+            </div>
+            <span
+              class="text-[9px] font-mono font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded-full shrink-0 border border-blue-500/20">
+              Geo-Matched
+            </span>
+          </div>
+
+          <!-- Alert Type Options -->
+          <div class="space-y-2">
+            <label
+              class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block px-0.5">
+              Select Alert Trigger
+            </label>
+
+            <!-- Card 1: Immediate Availability (Available Now) -->
+            <div (click)="selectedAlertType.set('available_now')"
+              class="p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer relative flex items-start gap-3 select-none"
+              [ngClass]="selectedAlertType() === 'available_now'
+                ? 'bg-indigo-50/60 dark:bg-indigo-950/30 border-indigo-500/80 ring-2 ring-indigo-500/20 shadow-xs'
+                : 'bg-white/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+
+              <!-- Radio Dot -->
+              <div class="mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition"
+                [ngClass]="selectedAlertType() === 'available_now' ? 'border-indigo-600 bg-indigo-600' : 'border-slate-300 dark:border-slate-600'">
+                <div *ngIf="selectedAlertType() === 'available_now'" class="w-1.5 h-1.5 rounded-full bg-white"></div>
+              </div>
+
+              <!-- Content Stack -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="text-xs sm:text-[12.5px] font-bold text-slate-900 dark:text-white">
+                    Immediate Consultation Availability
+                  </span>
+                  <span
+                    class="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 bg-indigo-500/10 px-1.5 py-0.2 rounded shrink-0 border border-indigo-500/20">
+                    Fast Track
+                  </span>
+                </div>
+                <p class="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">
+                  Notify me the instant a verified Bar Council practitioner in {{ userCityShort() || 'your city' }}
+                  comes online or opens a consultation slot.
+                </p>
+                <!-- Micro badges -->
+                <div class="flex items-center gap-2 mt-2 text-[9.5px] text-slate-400 dark:text-slate-500">
+                  <span class="inline-flex items-center gap-1">
+                    <app-icon name="clock" [size]="10" class="text-indigo-500"></app-icon>
+                    <span>Avg response: 15 min</span>
+                  </span>
+                  <span>&bull;</span>
+                  <span class="inline-flex items-center gap-1">
+                    <app-icon name="shield-check" [size]="10" class="text-emerald-500"></app-icon>
+                    <span>BCI Verified Advocates</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Card 2: Free Consultation / Pro Bono (₹0 Review) -->
+            <div (click)="selectedAlertType.set('free_consult')"
+              class="p-3 sm:p-3.5 rounded-xl border transition-all cursor-pointer relative flex items-start gap-3 select-none"
+              [ngClass]="selectedAlertType() === 'free_consult'
+                ? 'bg-emerald-50/60 dark:bg-emerald-950/30 border-emerald-500/80 ring-2 ring-emerald-500/20 shadow-xs'
+                : 'bg-white/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'">
+
+              <!-- Radio Dot -->
+              <div class="mt-0.5 w-4 h-4 rounded-full border flex items-center justify-center shrink-0 transition"
+                [ngClass]="selectedAlertType() === 'free_consult' ? 'border-emerald-600 bg-emerald-600' : 'border-slate-300 dark:border-slate-600'">
+                <div *ngIf="selectedAlertType() === 'free_consult'" class="w-1.5 h-1.5 rounded-full bg-white"></div>
+              </div>
+
+              <!-- Content Stack -->
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="text-xs sm:text-[12.5px] font-bold text-slate-900 dark:text-white">
+                    Free Case Assessment / Pro Bono (₹0)
+                  </span>
+                  <span
+                    class="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-1.5 py-0.2 rounded shrink-0 border border-emerald-500/20">
+                    100% Free
+                  </span>
+                </div>
+                <p class="text-[10.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 mt-1 leading-relaxed m-0">
+                  Notify me when empanelled advocates offer ₹0 initial consultations or legal aid assessment for {{
+                  spec.name }}.
+                </p>
+                <!-- Micro badges -->
+                <div class="flex items-center gap-2 mt-2 text-[9.5px] text-slate-400 dark:text-slate-500">
+                  <span class="inline-flex items-center gap-1">
+                    <app-icon name="gift" [size]="10" class="text-emerald-500"></app-icon>
+                    <span>Zero upfront consultation fee</span>
+                  </span>
+                  <span>&bull;</span>
+                  <span class="inline-flex items-center gap-1">
+                    <app-icon name="check-circle" [size]="10" class="text-blue-500"></app-icon>
+                    <span>Legal Aid Scheme</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Notification Delivery Channels -->
+          <div class="space-y-1.5 pt-1">
+            <label
+              class="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider block px-0.5">
+              Receive Alerts Via
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <!-- Channel 1: In-App -->
+              <button type="button" (click)="toggleAlertChannel('in_app')"
+                class="p-2 sm:p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between gap-2 active:scale-95"
+                [ngClass]="isChannelSelected('in_app')
+                  ? 'bg-blue-50/60 dark:bg-blue-950/40 border-blue-500/60 text-blue-700 dark:text-blue-300'
+                  : 'bg-white/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                <div class="flex items-center gap-2 min-w-0">
+                  <app-icon name="bell" [size]="13" [class.text-blue-500]="isChannelSelected('in_app')"></app-icon>
+                  <span class="text-[11px] font-bold truncate">In-App Alerts</span>
+                </div>
+                <app-icon [name]="isChannelSelected('in_app') ? 'check' : 'circle'" [size]="12"
+                  [class.text-blue-600]="isChannelSelected('in_app')"></app-icon>
+              </button>
+
+              <!-- Channel 2: Email -->
+              <button type="button" (click)="toggleAlertChannel('email')"
+                class="p-2 sm:p-2.5 rounded-xl border text-left transition cursor-pointer flex items-center justify-between gap-2 active:scale-95"
+                [ngClass]="isChannelSelected('email')
+                  ? 'bg-blue-50/60 dark:bg-blue-950/40 border-blue-500/60 text-blue-700 dark:text-blue-300'
+                  : 'bg-white/60 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-700 text-slate-600 dark:text-slate-400'">
+                <div class="flex items-center gap-2 min-w-0">
+                  <app-icon name="mail" [size]="13" [class.text-blue-500]="isChannelSelected('email')"></app-icon>
+                  <span class="text-[11px] font-bold truncate">Email Dispatch</span>
+                </div>
+                <app-icon [name]="isChannelSelected('email') ? 'check' : 'circle'" [size]="12"
+                  [class.text-blue-600]="isChannelSelected('email')"></app-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Micro-Trust Footer Note -->
+          <div
+            class="flex items-center justify-center gap-1.5 text-[9.5px] text-slate-400 dark:text-slate-500 text-center pt-0.5">
+            <app-icon name="lock" [size]="10"></app-icon>
+            <span>Confidential legal alert &bull; Zero spam &bull; Opt out anytime</span>
+          </div>
+
+        </div>
+
+        <!-- Footer Actions Toolbar -->
+        <div
+          class="px-4 sm:px-6 py-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-slate-50/60 dark:bg-slate-900/40 flex items-center justify-between gap-2 shrink-0">
+          <!-- Left: Unsubscribe if currently subscribed -->
+          <div>
+            <button *ngIf="alertSubscribed()" type="button" (click)="unsubscribeAlert()"
+              [disabled]="isUnsubscribingAlert()" [appTooltip]="'Stop receiving alerts for this area'"
+              class="h-7 sm:h-8 px-2.5 rounded-xl text-[10.5px] font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 active:scale-95 bg-transparent border-0 cursor-pointer inline-flex items-center gap-1 transition">
+              <app-icon name="trash-2" [size]="12"></app-icon>
+              <span>{{ isUnsubscribingAlert() ? 'Turning off...' : 'Turn Off Alert' }}</span>
+            </button>
+          </div>
+
+          <!-- Right: Action CTA -->
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="showAlertModal.set(false)"
+              class="h-7 sm:h-8 px-3 rounded-xl text-[11px] font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer transition active:scale-95">
+              Cancel
+            </button>
+
+            <button type="button" (click)="subscribeAlert()" [disabled]="isSubscribingAlert()"
+              class="h-7 sm:h-8 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 active:scale-95 text-white text-xs font-bold shadow-sm transition border-0 cursor-pointer inline-flex items-center gap-1.5">
+              <app-icon [name]="isSubscribingAlert() ? 'loader' : 'bell'" [size]="12"
+                [class.animate-spin]="isSubscribingAlert()"></app-icon>
+              <span>{{ isSubscribingAlert() ? 'Activating...' : (alertSubscribed() ? 'Update Alert' : 'Activate Alert
+                Radar') }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Guest Soft-Gate Modal -->
+    <div *ngIf="showSoftGateModal()"
+      class="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div
+        class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+              <app-icon name="lock" [size]="14"></app-icon>
+            </div>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+              Sign In to Consult Advocate
+            </h4>
+          </div>
+          <button (click)="showSoftGateModal.set(false)"
+            class="text-slate-400 hover:text-slate-600 bg-transparent border-0 cursor-pointer">
+            <app-icon name="x" [size]="16"></app-icon>
+          </button>
+        </div>
+
+        <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          Sign in or create an account to schedule a secure consultation with verified advocates and save this practice
+          dossier.
+        </p>
+
+        <div class="space-y-2">
+          <a routerLink="/login" [queryParams]="{ returnUrl: currentShareUrl() }"
+            class="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center justify-center gap-2 no-underline shadow-xs transition">
+            <span>Continue to Sign In</span>
+            <app-icon name="arrow-right" [size]="12"></app-icon>
+          </a>
+          <a routerLink="/register" [queryParams]="{ returnUrl: currentShareUrl() }"
+            class="w-full py-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-bold text-xs flex items-center justify-center gap-2 no-underline transition border border-slate-200 dark:border-slate-700">
+            <span>Create Free Account</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Research Notes Editor (Responsive Mobile Bottom-Sheet & Desktop Glassmorphic Modal) -->
+    <div *ngIf="activeNoteKey()"
+      class="absolute inset-0 z-50 bg-slate-950/70 backdrop-blur-md flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-4 transition-all duration-300 animate-in fade-in"
+      (click)="closeNoteEditor()">
+
+      <!-- Dialog Surface: Bottom Sheet on Mobile, Elevated Floating Card on Desktop -->
+      <div (click)="$event.stopPropagation()"
+        class="w-full sm:max-w-lg bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl rounded-t-[28px] sm:rounded-3xl border-t sm:border border-slate-200/80 dark:border-slate-800/80 shadow-2xl flex flex-col max-h-[88vh] sm:max-h-[82vh] overflow-hidden transition-all duration-300 animate-in slide-in-from-bottom sm:slide-in-from-bottom-0 sm:zoom-in-95">
+
+        <!-- Mobile Grab Handle -->
+        <div class="sm:hidden pt-2.5 pb-1 flex justify-center shrink-0">
+          <div class="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700"></div>
+        </div>
+
+        <!-- Sheet Header -->
+        <div
+          class="px-4 sm:px-6 py-3 sm:py-3.5 border-b border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-3 shrink-0">
+          <!-- Left: Squircle Icon & Title Stack -->
+          <div class="flex items-center gap-2.5 min-w-0 flex-1">
+            <div
+              class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-amber-500/15 via-orange-500/15 to-yellow-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/25 flex items-center justify-center shrink-0 shadow-2xs">
+              <app-icon name="edit" [size]="15"></app-icon>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-1.5">
+                <span
+                  class="text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                  {{ noteCategory() === 'case' ? 'Precedent Research Note' : 'Statute Research Note' }}
+                </span>
+                <span class="text-slate-300 dark:text-slate-700">•</span>
+                <span class="text-[9px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-tight">
+                  Private
+                </span>
+              </div>
+              <h4 class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white truncate m-0 mt-0.5"
+                [title]="activeNoteTitle()">
+                {{ activeNoteTitle() }}
+              </h4>
+            </div>
+          </div>
+
+          <!-- Right: Auto-Save Status Pill & Close Button -->
+          <div class="flex items-center gap-2 shrink-0">
+            <!-- Real-World Auto-Save Live Status Indicator -->
+            <div
+              class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[9px] sm:text-[9.5px] font-bold tracking-tight border transition-all duration-200"
+              [ngClass]="{
+                'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25': noteSaveStatus() === 'saved',
+                'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25': noteSaveStatus() === 'saving',
+                'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700': noteSaveStatus() === 'unsaved'
+              }">
+              <span class="w-1.5 h-1.5 rounded-full" [ngClass]="{
+                  'bg-emerald-500': noteSaveStatus() === 'saved',
+                  'bg-amber-500 animate-pulse': noteSaveStatus() === 'saving',
+                  'bg-slate-400': noteSaveStatus() === 'unsaved'
+                }"></span>
+              <span>
+                {{ noteSaveStatus() === 'saving' ? 'Saving...' : (noteSaveStatus() === 'saved' ? (noteLastSavedTime() ?
+                ('Saved ' + noteLastSavedTime()) : 'Saved') : 'Unsaved') }}
+              </span>
+            </div>
+
+            <!-- Close "X" Button -->
+            <button (click)="closeNoteEditor()"
+              class="w-7 h-7 rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-slate-400 flex items-center justify-center transition border-0 cursor-pointer active:scale-95"
+              [appTooltip]="'Close note (Esc)'">
+              <app-icon name="x" [size]="14"></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Body: Auto-Saving Textarea -->
+        <div class="p-4 sm:p-5 flex-1 flex flex-col space-y-3 overflow-y-auto">
+          <!-- Textarea Container with Subtle Ambient Glow -->
+          <div class="relative flex-1 min-h-[140px] sm:min-h-[180px]">
+            <textarea [value]="currentNoteInput()" (input)="onNoteInput($any($event.target).value)"
+              (keydown.ctrl.enter)="closeNoteEditor()" (keydown.meta.enter)="closeNoteEditor()"
+              placeholder="Record statutory notes, case observations, brief arguments, or client advice... Changes auto-save automatically as you type."
+              class="w-full h-full p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/60 border border-slate-200/80 dark:border-slate-700/80 text-xs sm:text-[13px] text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 leading-relaxed font-sans focus:outline-none focus:ring-2 focus:ring-amber-500/40 focus:border-amber-500/50 transition-all resize-none shadow-inner"></textarea>
+          </div>
+
+          <!-- Bottom Micro-Helper / Telemetry -->
+          <div
+            class="flex items-center justify-between text-[9.5px] sm:text-[10px] text-slate-400 dark:text-slate-500 shrink-0 px-0.5">
+            <span class="inline-flex items-center gap-1">
+              <app-icon name="check-circle" [size]="10" class="text-blue-500"></app-icon>
+              <span>Auto-saved to your secure legal vault</span>
+            </span>
+            <span class="font-mono">
+              {{ noteWordCount() }} words &bull; {{ noteCharCount() }} chars
+            </span>
+          </div>
+        </div>
+
+        <!-- Footer Actions Toolbar -->
+        <div
+          class="px-4 sm:px-6 py-3 border-t border-slate-200/60 dark:border-slate-800/60 bg-slate-50/60 dark:bg-slate-900/40 flex items-center justify-between gap-2 shrink-0">
+          <!-- Left: Secondary Tools (Clear, Copy) -->
+          <div class="flex items-center gap-1.5">
+            <button *ngIf="currentNoteInput()" type="button" (click)="clearNote()" [appTooltip]="'Clear this note'"
+              class="h-7 px-2.5 rounded-lg text-[10.5px] font-bold text-rose-500 hover:text-rose-600 hover:bg-rose-500/10 active:scale-95 bg-transparent border-0 cursor-pointer inline-flex items-center gap-1 transition">
+              <app-icon name="trash-2" [size]="11"></app-icon>
+              <span class="hidden sm:inline">Clear</span>
+            </button>
+
+            <button *ngIf="currentNoteInput()" type="button" (click)="copyNoteText()"
+              [appTooltip]="'Copy note to clipboard'"
+              class="h-7 px-2.5 rounded-lg text-[10.5px] font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 active:scale-95 bg-transparent border-0 cursor-pointer inline-flex items-center gap-1 transition">
+              <app-icon [name]="isNoteCopied() ? 'check' : 'copy'" [size]="11"
+                [ngClass]="isNoteCopied() ? 'text-emerald-500' : ''"></app-icon>
+              <span>{{ isNoteCopied() ? 'Copied' : 'Copy' }}</span>
+            </button>
+          </div>
+
+          <!-- Right: Primary "Done" Button -->
+          <button type="button" (click)="closeNoteEditor()"
+            class="h-7 sm:h-8 px-4 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white text-xs font-bold shadow-sm transition border-0 cursor-pointer inline-flex items-center gap-1.5">
+            <app-icon name="check" [size]="12"></app-icon>
+            <span>Done</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Cost Breakdown Transparency Modal -->
+    <div *ngIf="showCostBreakdown()"
+      class="absolute inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+      <div
+        class="w-full max-w-sm rounded-2xl bg-white dark:bg-slate-900 p-5 shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2">
+            <app-icon name="wallet" [size]="16" class="text-purple-500"></app-icon>
+            <h4 class="text-sm font-bold text-slate-900 dark:text-white">
+              Estimated Legal Cost Structure
+            </h4>
+          </div>
+          <button (click)="showCostBreakdown.set(false)"
+            class="text-slate-400 hover:text-slate-600 bg-transparent border-0 cursor-pointer">
+            <app-icon name="x" [size]="16"></app-icon>
+          </button>
+        </div>
+
+        <div class="space-y-2.5 text-xs">
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex justify-between">
+            <span class="text-slate-500">Initial Consultation (30 min)</span>
+            <span class="font-bold text-slate-900 dark:text-white">₹{{ spec.feeRange?.min || '—' }} – ₹{{
+              spec.feeRange?.median || '—' }}</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex justify-between">
+            <span class="text-slate-500">Court Filing &amp; Stamp Duty</span>
+            <span class="font-bold text-slate-900 dark:text-white text-[11px] italic">Varies by court</span>
+          </div>
+          <div class="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 flex justify-between">
+            <span class="text-slate-500">Per-Hearing Representation</span>
+            <span class="font-bold text-slate-900 dark:text-white">₹{{ spec.feeRange?.median || '—' }} – ₹{{
+              spec.feeRange?.max || '—' }}</span>
+          </div>
+        </div>
+
+        <div
+          class="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 text-xs text-purple-800 dark:text-purple-300 flex items-start gap-2">
+          <app-icon name="info" [size]="14" class="text-purple-600 dark:text-purple-400 mt-0.5 shrink-0"></app-icon>
+          <span>Fee ranges are based on platform data from verified advocates. Actual costs vary by case complexity,
+            court jurisdiction, and advocate seniority.</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer Sticky Footer -->
+    <div
+      class="py-2 sm:py-2.5 px-3 sm:px-4 border-t border-slate-200/90 dark:border-slate-800/90 bg-slate-50/95 dark:bg-slate-950/90 backdrop-blur-md space-y-1 sm:space-y-1.5 shrink-0">
+
+      <div class="flex items-center justify-between gap-2 sm:gap-2.5">
+        <!-- Print Button -->
+        <button (click)="onPrint()" [appTooltip]="'Print Complete Statutory Briefing'" tooltipPlacement="top"
+          class="h-8 sm:h-9 px-2.5 sm:px-3 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition cursor-pointer flex items-center justify-center gap-1.5 shadow-2xs shrink-0 active:scale-95">
+          <app-icon name="file-text" [size]="12.5"></app-icon>
+          <span class="hidden sm:inline text-[11.5px]">Print Brief</span>
+        </button>
+
+        <!-- Primary CTA: Find Advocates (Role-Aware) -->
+        <button (click)="onFindAdvocates()"
+          class="flex-1 h-8 sm:h-9 px-3 sm:px-4 rounded-lg bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 hover:from-blue-700 hover:to-indigo-800 active:scale-[0.99] text-white text-[11.5px] sm:text-xs font-bold shadow-xs hover:shadow-sm transition cursor-pointer border-0 flex items-center justify-center gap-1.5 min-w-0">
+          <span class="truncate">{{ isLawyer() ? 'Explore Colleague Network' : 'Find ' + spec.name + ' Advocates'
+            }}</span>
+          <app-icon name="arrow-right" [size]="11.5" class="shrink-0"></app-icon>
+        </button>
+      </div>
+
+      <!-- Advocate Empanelment Link -->
+      <div *ngIf="isGuest()" class="text-center leading-none">
+        <a routerLink="/register" [queryParams]="{ role: 'lawyer', spec: spec.id }"
+          class="text-[10px] text-blue-600 dark:text-blue-400 hover:underline font-medium inline-flex items-center gap-1">
+          <span>Are you an advocate? Empanel your practice &rarr;</span>
+        </a>
+      </div>
+
+      <!-- Statutory Compliance & Disclaimer -->
+      <div
+        class="flex items-center justify-between text-[9px] text-slate-400 dark:text-slate-500 pt-1 border-t border-slate-200/50 dark:border-slate-800/50 gap-2 min-w-0">
+        <div class="flex items-center gap-1 min-w-0 truncate">
+          <app-icon name="scale" [size]="10" class="text-slate-400 shrink-0"></app-icon>
+          <span class="truncate sm:hidden">BCI Rule 36 compliant directory</span>
+          <span class="truncate hidden sm:inline">Directory listing only • BCI Rule 36 compliant • Sources: India Code,
+            e-Courts &amp; Nyaaya</span>
+        </div>
+        <div class="flex items-center gap-2 shrink-0">
+          <button (click)="openReportModal()"
+            [appTooltip]="'Flag statutory inaccuracies or outdated procedural rules for editorial review'"
+            class="hover:text-blue-500 underline bg-transparent border-0 cursor-pointer p-0 text-[9px] text-slate-400 dark:text-slate-500 whitespace-nowrap">
+            Report issue
+          </button>
+          <span class="hidden sm:inline text-slate-400 font-mono text-[8.5px]">[Esc]</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>

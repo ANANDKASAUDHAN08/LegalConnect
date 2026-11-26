@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
+import { PaginationComponent } from '../../components/pagination';
 import { DocumentTemplateService, Template, Draft, TemplateField } from '../../services/document-template.service';
 import { PrintService } from '../../services/print.service';
 import { PrintExportService } from '../../services/print-export.service';
@@ -14,7 +15,7 @@ import { debounceTime } from 'rxjs/operators';
 @Component({
   selector: 'app-document-templates',
   standalone: true,
-  imports: [NgIf, NgFor, NgClass, DatePipe, FormsModule, RouterLink, TooltipDirective, ConfirmDialogComponent],
+  imports: [NgIf, NgFor, NgClass, DatePipe, FormsModule, RouterLink, TooltipDirective, ConfirmDialogComponent, PaginationComponent],
   templateUrl: './document-templates.component.html',
   styleUrls: ['./document-templates.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

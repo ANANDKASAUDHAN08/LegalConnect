@@ -1,0 +1,212 @@
+<div *ngIf="spec" class="space-y-2.5 sm:space-y-3.5">
+
+  <!-- Estimated Case Resolution Timelines -->
+  <div *ngIf="expectedTimelines().length"
+    class="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <app-icon name="clock" [size]="13" class="text-blue-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0 truncate">
+          Typical Duration by Judicial Tier
+        </h4>
+      </div>
+      <span
+        class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+        {{ expectedTimelines().length }} tiers
+      </span>
+    </div>
+
+    <div class="space-y-1.5">
+      <div *ngFor="let t of expectedTimelines(); trackBy: trackByTimeline"
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-start sm:items-center justify-between gap-2.5 text-xs">
+        <div class="min-w-0">
+          <span class="font-bold text-slate-900 dark:text-white text-[11px] sm:text-xs leading-snug block">{{
+            t.court }}</span>
+          <span class="text-[9.5px] sm:text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">{{ t.note
+            }}</span>
+        </div>
+        <span
+          [appTooltip]="'Typical resolution duration in ' + t.court"
+          class="px-1.5 sm:px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-600 dark:text-blue-400 font-bold font-mono text-[10px] sm:text-xs shrink-0 whitespace-nowrap cursor-default">
+          {{ t.duration }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Procedural Escalation Ladder (Timeline Stepper) -->
+  <div *ngIf="spec.forumJourney?.length"
+    class="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <app-icon name="landmark" [size]="13" class="text-indigo-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0 truncate">
+          {{ headings().journeyHeading }}
+        </h4>
+      </div>
+      <span
+        class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+        {{ spec.forumJourney?.length }} stages
+      </span>
+    </div>
+
+    <div
+      class="relative pl-7 space-y-2 before:absolute before:left-[9px] before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-blue-500/50 before:to-indigo-500/20">
+      <div *ngFor="let step of spec.forumJourney; let idx = index; trackBy: trackByStepStage" class="relative">
+        <!-- Numbered Node -->
+        <span
+          class="absolute -left-7 top-2.5 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center ring-[3px] ring-slate-50 dark:ring-slate-900 shadow-xs"
+          [ngClass]="activeMatter()?.hasActiveMatter && activeMatter().currentStageIndex === (idx + 1) ? 'bg-indigo-600' : 'bg-blue-600'">
+          {{ idx + 1 }}
+        </span>
+
+        <div class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl space-y-1 transition" [ngClass]="activeMatter()?.hasActiveMatter && activeMatter().currentStageIndex === (idx + 1)
+            ? 'bg-indigo-500/10 dark:bg-indigo-950/40 border-2 border-indigo-500 shadow-sm'
+            : 'bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60'">
+          <div class="flex items-start justify-between gap-2">
+            <div
+              class="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap leading-snug">
+              <span>{{ step.stage }}: {{ step.forum }}</span>
+              <span *ngIf="activeMatter()?.hasActiveMatter && activeMatter().currentStageIndex === (idx + 1)"
+                class="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-black uppercase bg-indigo-600 text-white animate-pulse inline-flex items-center gap-1">
+                <app-icon name="briefcase" [size]="9"></app-icon>
+                <span>Your Active Stage</span>
+              </span>
+            </div>
+            <span class="hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 rounded font-bold shrink-0" [ngClass]="activeMatter()?.hasActiveMatter && activeMatter().currentStageIndex === (idx + 1)
+                ? 'bg-indigo-600 text-white'
+                : 'bg-blue-500/10 text-blue-600 dark:text-blue-400'">
+              Stage {{ idx + 1 }}
+            </span>
+          </div>
+          <div class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            {{ step.note }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Consultation Lifecycle Workflow -->
+  <div
+    class="p-3 sm:p-3.5 rounded-xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-emerald-500/10 border border-blue-500/20 space-y-2.5">
+    <div class="flex items-center gap-2 sm:gap-2.5">
+      <div
+        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+        <app-icon name="check-circle" [size]="14"></app-icon>
+      </div>
+      <div class="min-w-0">
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-900 dark:text-white m-0 leading-snug">
+          What Happens After You Book a Consultation?
+        </h4>
+        <p class="text-[9.5px] sm:text-[10px] text-slate-500 dark:text-slate-400 m-0 mt-0.5 truncate">
+          Standard client onboarding &amp; statutory workflow on LegalConnect
+        </p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5 sm:gap-2">
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 flex items-start gap-2">
+        <span
+          class="w-5 h-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center justify-center shrink-0">1</span>
+        <div class="min-w-0">
+          <div class="font-bold text-slate-900 dark:text-white text-[11px] leading-snug">Document &amp; Case
+            Review
+          </div>
+          <p class="text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed m-0 mt-0.5">
+            Advocate examines case history, relevant bare act clauses, and primary documentary proofs.
+          </p>
+        </div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 flex items-start gap-2">
+        <span
+          class="w-5 h-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center justify-center shrink-0">2</span>
+        <div class="min-w-0">
+          <div class="font-bold text-slate-900 dark:text-white text-[11px] leading-snug">Legal Notice / Plaint
+            Drafting</div>
+          <p class="text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed m-0 mt-0.5">
+            Statutory notice served or formal petition/bail plea drafted under applicable provisions.
+          </p>
+        </div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 flex items-start gap-2">
+        <span
+          class="w-5 h-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center justify-center shrink-0">3</span>
+        <div class="min-w-0">
+          <div class="font-bold text-slate-900 dark:text-white text-[11px] leading-snug">Judicial Registry &amp;
+            First Hearing</div>
+          <p class="text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed m-0 mt-0.5">
+            Matter listed before the competent Court Bench or Tribunal with vakalatnama filed.
+          </p>
+        </div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 flex items-start gap-2">
+        <span
+          class="w-5 h-5 rounded-full bg-blue-500/15 text-blue-600 dark:text-blue-400 text-[10px] font-black flex items-center justify-center shrink-0">4</span>
+        <div class="min-w-0">
+          <div class="font-bold text-slate-900 dark:text-white text-[11px] leading-snug">Continuous Tracking &amp;
+            Orders</div>
+          <p class="text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed m-0 mt-0.5">
+            Receive certified daily orders, next hearing dates, and milestone progress tracking.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQs Accordion -->
+  <div *ngIf="spec.faqs?.length"
+    class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0">
+        <app-icon name="help-circle" [size]="13" class="text-purple-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0 truncate">
+          Frequently Asked Legal Questions
+        </h4>
+      </div>
+      <span
+        class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60 shrink-0">
+        {{ spec.faqs?.length }} questions
+      </span>
+    </div>
+
+    <div class="space-y-1.5">
+      <div *ngFor="let faq of spec.faqs; let i = index; trackBy: trackByFaq"
+        class="rounded-lg sm:rounded-xl border transition-colors overflow-hidden"
+        [ngClass]="activeFaqIndex() === i ? 'bg-blue-50/60 dark:bg-slate-800/80 border-blue-300 dark:border-blue-800' : 'bg-white dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-700/60 hover:border-slate-300 dark:hover:border-slate-600'">
+
+        <button (click)="toggleFaq(i)" [attr.aria-expanded]="activeFaqIndex() === i"
+          [appTooltip]="activeFaqIndex() === i ? 'Click to collapse answer' : 'Click to expand answer'"
+          class="w-full p-2.5 sm:p-3 text-left flex items-center justify-between gap-2.5 bg-transparent border-0 cursor-pointer">
+          <span class="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white leading-snug">
+            {{ isHindi && faq.q_hi ? faq.q_hi : faq.q }}
+          </span>
+          <app-icon [name]="activeFaqIndex() === i ? 'chevron-up' : 'chevron-down'" [size]="14" class="shrink-0"
+            [ngClass]="activeFaqIndex() === i ? 'text-blue-500' : 'text-slate-400'"></app-icon>
+        </button>
+
+        <div *ngIf="activeFaqIndex() === i"
+          class="px-2.5 sm:px-3 pb-2.5 sm:pb-3 text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+          <p class="m-0">
+            {{ isHindi && faq.a_hi ? faq.a_hi : faq.a }}
+          </p>
+          <!-- Listen with audio -->
+          <div class="mt-2 flex items-center gap-2">
+            <button (click)="toggleSpeech(isHindi && faq.a_hi ? faq.a_hi : faq.a, 'faq_' + i)"
+              [appTooltip]="isSpeakingItem('faq_' + i) ? 'Stop audio readout' : 'Listen to answer using text-to-speech'"
+              class="px-2 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/15 text-[10.5px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400 flex items-center gap-1 border-0 cursor-pointer transition">
+              <app-icon [name]="isSpeakingItem('faq_' + i) ? 'volume-x' : 'volume-2'" [size]="12"></app-icon>
+              <span>{{ isSpeakingItem('faq_' + i) ? 'Stop Listening' : 'Listen Answer' }}</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>

@@ -12,12 +12,14 @@ import { IconComponent } from '../../components/icon/icon.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
 import { GoogleMapsLoaderService } from '../../services/google-maps-loader.service';
 
+import { PaginationComponent } from '../../components/pagination';
+
 declare var google: any;
 
 @Component({
   selector: 'app-lawyers',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent, LocationMapModalComponent, IconComponent, TooltipDirective],
+  imports: [CommonModule, FormsModule, RouterLink, LawyerCardComponent, LocationMapModalComponent, IconComponent, TooltipDirective, PaginationComponent],
   templateUrl: './lawyers.component.html',
   styleUrls: ['./lawyers.component.scss']
 })
@@ -247,7 +249,7 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
   readQueryParamsAndLoad() {
     this.querySub = this.route.queryParams.subscribe(params => {
       this.searchQuery = params['q'] || '';
-      
+
       const cityParam = params['city'] || '';
       if (cityParam) {
         this.locationService.setLocation(cityParam, false);
@@ -360,8 +362,11 @@ export class LawyersComponent implements OnInit, OnDestroy, AfterViewInit {
     this.currentPage = 1;
   }
 
-  get itemsPerPage(): number {
-    return this.isMobile ? 8 : 10;
+  itemsPerPage = 10;
+
+  setPageSize(size: number) {
+    this.itemsPerPage = size;
+    this.currentPage = 1;
   }
 
   get paginatedLawyers(): Lawyer[] {

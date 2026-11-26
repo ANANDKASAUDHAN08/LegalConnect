@@ -291,6 +291,8 @@ export class LawViewerComponent implements OnInit, OnDestroy {
         }] : [])
       ],
       defaultScope: 'section',
+      scopeTitle: 'Statutory Scope',
+      scopeUnit: 'section',
       allowWatermark: true,
       defaultWatermark: 'OFFICIAL COPY',
       onExport: async (params) => {

@@ -1,0 +1,332 @@
+<div *ngIf="spec" class="space-y-2 sm:space-y-2.5">
+
+  <!-- Advocates Tab Header & Filter Command Bar -->
+  <div class="space-y-2 pt-0.5 pb-1">
+
+    <!-- Section Heading Row (Clean, Open & Elevated, Mobile-Optimized) -->
+    <div class="flex items-center justify-between gap-2 px-0.5 min-w-0">
+      <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+        <!-- Radiant Squircle Icon -->
+        <div
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-500 to-cyan-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-500/25 ring-2 ring-emerald-400/20">
+          <app-icon name="users" [size]="13.5"></app-icon>
+        </div>
+
+        <!-- Title & Status Subtitle -->
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <h3
+              class="text-xs sm:text-[13px] font-black text-slate-900 dark:text-white m-0 tracking-tight whitespace-nowrap truncate">
+              <span class="hidden sm:inline">{{ headings().lawyersHeading }}</span>
+              <span class="sm:hidden">{{ lawyersHeadingShort() }}</span>
+            </h3>
+            <span *ngIf="totalAdvocateCount() > 0"
+              [appTooltip]="sortedAdvocates().length + ' verified Bar Council advocates currently available'"
+              class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[8.5px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/25 shrink-0 cursor-default">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span>{{ sortedAdvocates().length }} Active</span>
+            </span>
+            <span *ngIf="totalAdvocateCount() === 0" [appTooltip]="'No advocates currently listed for ' + spec.name"
+              class="inline-flex items-center gap-1 px-1.5 py-0.2 rounded-full text-[8.5px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 shrink-0 cursor-default">
+              <span>0 Listed</span>
+            </span>
+          </div>
+          <p class="text-[9.5px] text-slate-500 dark:text-slate-400 m-0 truncate mt-0.5"
+            [appTooltip]="userCityShort() ? 'Verified Bar Council practitioners • ' + userCityShort() + ' & nationwide' : 'Verified Bar Council practitioners for ' + spec.name">
+            <span class="hidden sm:inline">
+              {{ userCityShort() ? 'Verified Bar Council practitioners • ' + userCityShort() + ' & nationwide' :
+              'Verified Bar Council practitioners for ' + spec.name }}
+            </span>
+            <span class="sm:hidden">
+              {{ userCityShort() ? userCityShort() + ' & nationwide • Bar Council verified' :
+              'Bar Council verified • ' + spec.name }}
+            </span>
+          </p>
+        </div>
+      </div>
+
+      <!-- Advocate Availability Alert Trigger (Sleek Pill) - Hidden when no advocates exist -->
+      <button *ngIf="totalAdvocateCount() > 0" (click)="showAlertModal.set(true)"
+        [appTooltip]="alertSubscribed() ? 'Advocate availability alerts enabled' : 'Notify me when new advocates become available'"
+        class="h-6 sm:h-7 px-2.5 sm:px-3 rounded-full text-[10px] sm:text-[10.5px] font-bold transition flex items-center gap-1 sm:gap-1.5 border cursor-pointer shrink-0 whitespace-nowrap active:scale-95 shadow-2xs backdrop-blur-sm"
+        [ngClass]="alertSubscribed()
+          ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30'
+          : 'bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border-slate-200/80 dark:border-slate-700/80'">
+        <app-icon name="bell" [size]="11" [class.text-emerald-500]="alertSubscribed()"></app-icon>
+        <span class="hidden sm:inline">{{ alertSubscribed() ? 'Alert On' : 'Notify Me' }}</span>
+        <span class="sm:hidden">{{ alertSubscribed() ? 'Alert On' : 'Notify' }}</span>
+      </button>
+    </div>
+
+    <!-- Smart Filter & Sort Bar (Clean & Borderless) - Only displayed when advocates exist -->
+    <div *ngIf="totalAdvocateCount() > 0" class="flex flex-wrap items-center justify-between gap-1.5 py-0.5">
+
+      <!-- Smart Filter Pills: All / Local City / Free Consult -->
+      <div class="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5">
+        <button (click)="setAdvocateFilter('all')"
+          [appTooltip]="'Show all ' + totalAdvocateCount() + ' verified practitioners'"
+          class="h-6 px-2.5 rounded-lg text-[10px] sm:text-[10.5px] font-bold transition-all duration-150 border cursor-pointer inline-flex items-center gap-1 shrink-0 active:scale-95"
+          [ngClass]="advocateFilter() === 'all'
+            ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+            : 'bg-white/80 dark:bg-slate-800/70 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/60 hover:text-slate-900 dark:hover:text-slate-200'">
+          <span>All</span>
+          <span class="text-[9px] opacity-75">({{ totalAdvocateCount() }})</span>
+        </button>
+
+        <button *ngIf="localAdvocateCount() > 0" (click)="setAdvocateFilter('local')"
+          [appTooltip]="'Show advocates practicing in ' + userCityShort()"
+          class="h-6 px-2.5 rounded-lg text-[10px] sm:text-[10.5px] font-bold transition-all duration-150 border cursor-pointer inline-flex items-center gap-1 shrink-0 active:scale-95"
+          [ngClass]="advocateFilter() === 'local'
+            ? 'bg-blue-600 text-white border-blue-600 shadow-2xs'
+            : 'bg-white/80 dark:bg-slate-800/70 text-slate-600 dark:text-slate-400 border-slate-200/60 dark:border-slate-700/60 hover:text-slate-900 dark:hover:text-slate-200'">
+          <app-icon name="map-pin" [size]="9.5"></app-icon>
+          <span>In {{ userCityShort() }}</span>
+          <span class="text-[9px] opacity-75">({{ localAdvocateCount() }})</span>
+        </button>
+
+        <button *ngIf="freeAdvocateCount() > 0" (click)="setAdvocateFilter('free')"
+          [appTooltip]="'Show advocates offering free initial case review'"
+          class="h-6 px-2.5 rounded-lg text-[10px] sm:text-[10.5px] font-bold transition-all duration-150 border cursor-pointer inline-flex items-center gap-1 shrink-0 active:scale-95"
+          [ngClass]="advocateFilter() === 'free'
+            ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+            : 'bg-white/80 dark:bg-slate-800/70 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-500/10'">
+          <app-icon name="zap" [size]="9.5"></app-icon>
+          <span>₹0 Review</span>
+          <span class="text-[9px] opacity-75">({{ freeAdvocateCount() }})</span>
+        </button>
+      </div>
+
+      <!-- Segmented Sort Control (Sleek, low-profile) -->
+      <div
+        class="flex items-center bg-white/70 dark:bg-slate-800/80 p-0.5 rounded-lg border border-slate-200/70 dark:border-slate-700/70 text-[9.5px] sm:text-[10px] font-semibold shrink-0 sm:ml-auto">
+        <button (click)="setAdvocateSort('rating')" [appTooltip]="'Sort advocates by highest client rating'"
+          class="h-5 px-1.5 sm:px-2 rounded-md transition-all duration-150 border-0 cursor-pointer inline-flex items-center gap-1 active:scale-95"
+          [ngClass]="advocateSort() === 'rating' ? 'bg-blue-600 text-white font-bold shadow-2xs' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+          <app-icon name="star" [size]="9" [class.text-amber-300]="advocateSort() === 'rating'"
+            [class.text-amber-500]="advocateSort() !== 'rating'"></app-icon>
+          <span>Rating</span>
+        </button>
+
+        <button (click)="setAdvocateSort('experience')" [appTooltip]="'Sort advocates by years of practice experience'"
+          class="h-5 px-1.5 sm:px-2 rounded-md transition-all duration-150 border-0 cursor-pointer inline-flex items-center gap-1 active:scale-95"
+          [ngClass]="advocateSort() === 'experience' ? 'bg-blue-600 text-white font-bold shadow-2xs' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+          <app-icon name="briefcase" [size]="9"></app-icon>
+          <span>Exp</span>
+        </button>
+
+        <button (click)="setAdvocateSort('fee')" [appTooltip]="'Sort advocates by consultation fee (lowest first)'"
+          class="h-5 px-1.5 sm:px-2 rounded-md transition-all duration-150 border-0 cursor-pointer inline-flex items-center gap-1 active:scale-95"
+          [ngClass]="advocateSort() === 'fee' ? 'bg-blue-600 text-white font-bold shadow-2xs' : 'bg-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'">
+          <app-icon name="wallet" [size]="9"></app-icon>
+          <span>Fee</span>
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- Sleek Section Divider & Directory Counter - Only displayed when advocates exist -->
+  <div *ngIf="totalAdvocateCount() > 0" class="flex items-center gap-2 px-0.5">
+    <div
+      class="flex items-center gap-1.5 shrink-0 text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+      <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+      <span>Matched Practitioners</span>
+    </div>
+    <div
+      class="h-px flex-1 bg-gradient-to-r from-slate-200 via-slate-200/50 to-transparent dark:from-slate-800 dark:via-slate-800/50">
+    </div>
+    <span class="text-[9px] sm:text-[9.5px] font-mono font-medium text-slate-400 dark:text-slate-500 shrink-0">
+      Showing {{ pagedAdvocates().length }} of {{ sortedAdvocates().length }} available
+    </span>
+  </div>
+
+  <!-- Advocates Card List -->
+  <div *ngIf="sortedAdvocates().length; else noAdvocates" class="space-y-1.5 sm:space-y-2">
+    <div *ngFor="let advocate of pagedAdvocates(); trackBy: trackByAdvocateId; let i = index"
+      class="group p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 hover:border-blue-400/50 dark:hover:border-blue-500/40 hover:bg-white dark:hover:bg-slate-800/70 transition-all duration-150 shadow-2xs hover:shadow-xs">
+
+      <div class="flex items-start gap-2.5 sm:gap-3">
+        <!-- Avatar with online dot -->
+        <div [appTooltip]="'Adv. ' + advocate.name + ' (' + advocate.city + ')'"
+          class="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-600 text-white font-bold flex items-center justify-center text-xs shrink-0 relative shadow-2xs ring-1 ring-white/20 mt-0.5 cursor-default">
+          <span>{{ advocate.name.charAt(0) }}</span>
+          <span *ngIf="advocate.isAvailable !== false"
+            class="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white dark:ring-slate-900"
+            [appTooltip]="'Available for consultation'"></span>
+        </div>
+
+        <!-- Main Content: Identity & Meta -->
+        <div class="min-w-0 flex-1">
+          <!-- Top Line: Name & All Key Badges Inline -->
+          <div class="flex flex-wrap items-center gap-1.5 min-w-0">
+            <span class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white truncate">
+              {{ advocate.name }}
+            </span>
+            <app-icon *ngIf="advocate.isVerified" name="badge-check" [size]="13" class="text-emerald-500 shrink-0"
+              [appTooltip]="'Verified Bar Council Advocate'"></app-icon>
+
+            <!-- Top Pick / Best Value Tag -->
+            <span *ngIf="i === 0 && advocateSort() === 'rating'" [appTooltip]="'Highest client rating in ' + spec.name"
+              class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase tracking-wider bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30 shrink-0 cursor-default">
+              Top Rated
+            </span>
+            <span *ngIf="i === 0 && advocateSort() === 'fee'"
+              [appTooltip]="'Most economical consultation fee in ' + spec.name"
+              class="px-1.5 py-0.2 rounded text-[8px] font-extrabold uppercase tracking-wider bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 shrink-0 cursor-default">
+              Best Value
+            </span>
+
+            <!-- In City Badge (Inline) -->
+            <span *ngIf="isAdvocateInUserCity(advocate)" [appTooltip]="'Practicing locally in ' + userCityShort()"
+              class="px-1.5 py-0.2 rounded text-[8px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 inline-flex items-center gap-0.5 shrink-0 cursor-default">
+              <app-icon name="map-pin" [size]="8"></app-icon>
+              <span>In City</span>
+            </span>
+
+            <!-- Strong Practice Match Badge (Inline) -->
+            <span *ngIf="isStrongMatch(advocate)"
+              class="px-1.5 py-0.2 rounded text-[8px] font-bold bg-amber-500/15 text-amber-700 dark:text-amber-300 border border-amber-500/30 inline-flex items-center gap-0.5 shrink-0 cursor-default"
+              [appTooltip]="'Strong overlap with ' + spec.name + ' practice domain'">
+              <app-icon name="shield-check" [size]="8"></app-icon>
+              <span class="truncate">Match</span>
+            </span>
+          </div>
+
+          <!-- Meta Line: City • Exp • Rating • Languages (Single Line, Never Wraps) -->
+          <div
+            class="flex items-center gap-x-1 sm:gap-x-1.5 text-[10px] sm:text-[10.5px] text-slate-500 dark:text-slate-400 mt-1 min-w-0 overflow-hidden whitespace-nowrap">
+            <span class="inline-flex items-center gap-0.5 shrink-0" [appTooltip]="'City: ' + advocate.city">
+              <app-icon name="map-pin" [size]="9.5"></app-icon>
+              <span>{{ advocate.city }}</span>
+            </span>
+            <span class="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+            <span class="shrink-0" [appTooltip]="advocate.experience + ' years of professional Bar practice'"
+              [ngClass]="advocateSort() === 'experience' ? 'text-blue-600 dark:text-blue-400 font-bold' : ''">
+              {{ advocate.experience }}y exp
+            </span>
+            <span class="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+            <span class="inline-flex items-center gap-0.5 font-bold shrink-0"
+              [appTooltip]="'Client rating: ' + (advocate.rating || 4.8) + ' / 5.0'"
+              [ngClass]="advocateSort() === 'rating' ? 'text-amber-500 dark:text-amber-400 font-extrabold' : 'text-amber-500'">
+              <app-icon name="star" [size]="9.5"></app-icon>
+              <span>{{ advocate.rating }}</span>
+            </span>
+            <ng-container *ngIf="advocate.languagesSpoken?.length">
+              <span class="text-slate-300 dark:text-slate-600 shrink-0">•</span>
+              <span class="text-slate-400 dark:text-slate-500 truncate min-w-0 shrink"
+                [appTooltip]="'Languages spoken: ' + (advocate.languagesSpoken?.join(', ') || '')">
+                <span class="hidden sm:inline">{{ advocate.languagesSpoken?.join(', ') }}</span>
+                <span class="sm:hidden">{{ formatLanguagesShort(advocate.languagesSpoken) }}</span>
+              </span>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Right: Fee & Consult CTA Group -->
+        <div class="flex flex-col items-end justify-center gap-1 shrink-0 self-center">
+          <!-- Consultation Fee -->
+          <div class="text-right">
+            <div *ngIf="advocate.consultationFee === 0" [appTooltip]="'Complimentary 30-minute initial case review'"
+              class="px-1.5 py-0.5 rounded text-[10px] sm:text-[10.5px] font-black bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30 cursor-default">
+              Free
+            </div>
+            <div *ngIf="advocate.consultationFee !== 0"
+              [appTooltip]="'₹' + advocate.consultationFee + ' per 30-minute consultation'"
+              class="text-xs sm:text-[13px] font-black leading-tight tracking-tight cursor-default"
+              [ngClass]="advocateSort() === 'fee' ? 'text-emerald-600 dark:text-emerald-400 font-black' : 'text-slate-900 dark:text-white'">
+              ₹{{ advocate.consultationFee || 1500 }}
+              <span class="text-[9px] font-normal text-slate-400 dark:text-slate-500">/ 30m</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons: Refer & Consult -->
+          <div class="flex items-center gap-1.5">
+            <button *ngIf="isLawyer()" (click)="referLawyerViaWhatsApp(advocate)"
+              [appTooltip]="'Refer a client to Adv. ' + advocate.name"
+              class="h-5 px-2 rounded-lg bg-emerald-600 text-white border-0 hover:bg-emerald-700 transition cursor-pointer inline-flex items-center gap-1 text-[10px] font-bold active:scale-95">
+              <app-icon name="whatsapp" [size]="11"></app-icon>
+              <span class="hidden sm:inline">Refer</span>
+            </button>
+
+            <button (click)="handleConsult(advocate)"
+              [appTooltip]="'Book 1-on-1 consultation with Adv. ' + advocate.name"
+              class="h-5 px-2 rounded-lg bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[9.5px] sm:text-[10px] font-bold transition border-0 cursor-pointer shadow-2xs inline-flex items-center justify-center gap-1">
+              <span>Consult</span>
+              <app-icon name="arrow-right" [size]="10.5"></app-icon>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Load More Advocates Pagination Button -->
+    <div *ngIf="hasMoreAdvocates()" class="pt-2 flex justify-center">
+      <button type="button" (click)="loadMoreAdvocates()" [appTooltip]="'Load next batch of verified advocates'"
+        class="px-4 py-2 rounded-xl text-xs font-bold text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-blue-200/80 dark:border-blue-800/80 transition-all cursor-pointer flex items-center gap-1.5 active:scale-95 shadow-2xs">
+        <app-icon name="chevron-down" [size]="13"></app-icon>
+        <span>Load More Advocates ({{ sortedAdvocates().length - pagedAdvocates().length }} remaining)</span>
+      </button>
+    </div>
+  </div>
+
+  <ng-template #noAdvocates>
+    <!-- Scenario A: Zero advocates listed in the entire practice area -->
+    <div *ngIf="totalAdvocateCount() === 0"
+      class="p-6 sm:p-8 text-center rounded-2xl bg-gradient-to-b from-slate-50/80 to-slate-100/40 dark:from-slate-800/40 dark:to-slate-900/40 border border-dashed border-slate-200/90 dark:border-slate-800 space-y-3.5 my-2">
+      <div
+        class="w-12 h-12 mx-auto rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center ring-1 ring-blue-500/20 shadow-2xs">
+        <app-icon name="users" [size]="22"></app-icon>
+      </div>
+
+      <div class="space-y-1 max-w-sm mx-auto">
+        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white m-0">
+          No Advocates Listed Yet for {{ spec.name }}
+        </h4>
+        <p class="text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 leading-relaxed m-0">
+          We are actively onboarding verified Bar Council practitioners for this practice area. Get notified as soon as
+          verified advocates become available, or browse the full directory.
+        </p>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-2 pt-1">
+        <button (click)="showAlertModal.set(true)"
+          [appTooltip]="alertSubscribed() ? 'Advocate availability alerts enabled' : 'Get notified when verified advocates become available in ' + spec.name"
+          class="px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-white text-[11px] font-bold transition-all shadow-2xs flex items-center gap-1.5 cursor-pointer border-0">
+          <app-icon name="bell" [size]="12"></app-icon>
+          <span>{{ alertSubscribed() ? 'Alert Enabled' : 'Notify Me When Available' }}</span>
+        </button>
+
+        <a routerLink="/lawyers" [appTooltip]="'Explore verified advocates across all legal practice areas'"
+          class="px-3.5 py-1.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 text-[11px] font-semibold transition-all flex items-center gap-1.5 no-underline shadow-2xs">
+          <app-icon name="search" [size]="12"></app-icon>
+          <span>Browse All Advocates</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Scenario B: Advocates exist, but currently filtered out (e.g. City or Free Consult) -->
+    <div *ngIf="totalAdvocateCount() > 0"
+      class="p-6 sm:p-8 text-center rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-xs space-y-2.5 my-2">
+      <app-icon name="filter" [size]="22" class="mx-auto text-slate-400"></app-icon>
+      <div class="space-y-1">
+        <div class="font-bold text-slate-700 dark:text-slate-200">
+          {{ advocateFilter() === 'local' ? 'No practitioners found in ' + userCityShort() + ' yet.' : 'No practitioners
+          match this filter.' }}
+        </div>
+        <p class="text-[11px] text-slate-500 dark:text-slate-400 m-0">
+          Try resetting your filter to view all {{ totalAdvocateCount() }} available verified practitioners.
+        </p>
+      </div>
+      <button (click)="setAdvocateFilter('all')"
+        [appTooltip]="'Reset filter to view all ' + totalAdvocateCount() + ' practitioners'"
+        class="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold border-0 cursor-pointer inline-flex items-center gap-1.5 transition active:scale-95 shadow-2xs">
+        <app-icon name="rotate-ccw" [size]="11"></app-icon>
+        <span>View All ({{ totalAdvocateCount() }}) Advocates</span>
+      </button>
+    </div>
+  </ng-template>
+
+</div>

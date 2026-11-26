@@ -10,13 +10,14 @@ import { ReviewCardComponent } from '../../components/review-card/review-card.co
 import { ConfirmDialogComponent } from '../../components/confirm-dialog/confirm-dialog.component';
 import { ShareMenuComponent } from '../../components/share-menu/share-menu.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
+import { PaginationComponent } from '../../components/pagination';
 import { Subject, fromEvent } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
 
 @Component({
   selector: 'app-reviews',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, WriteReviewModalComponent, ReviewCardComponent, ConfirmDialogComponent, ShareMenuComponent, TooltipDirective],
+  imports: [CommonModule, FormsModule, RouterLink, WriteReviewModalComponent, ReviewCardComponent, ConfirmDialogComponent, ShareMenuComponent, TooltipDirective, PaginationComponent],
   templateUrl: './reviews.component.html',
   styleUrls: ['./reviews.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush
@@ -474,6 +475,11 @@ export class ReviewsComponent implements OnInit, OnDestroy, AfterViewInit {
     if (this.currentPage() > 1) {
       this.goToPage(this.currentPage() - 1);
     }
+  }
+
+  setPageSize(size: number) {
+    this.pageSize.set(size);
+    this.currentPage.set(1);
   }
 
   onSearchInput(query: string) {

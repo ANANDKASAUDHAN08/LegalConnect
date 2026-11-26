@@ -1,0 +1,226 @@
+<div [id]="'spec-card-' + spec.id" role="button" tabindex="0"
+  [attr.aria-label]="'View legal statutory dossier for ' + getDisplayName()" (click)="onCardClick($event)"
+  (keydown.enter)="onCardClick($event)" (keydown.space)="onCardClick($event)"
+  class="spec-card h-full w-full bg-white dark:bg-[#0c1022] border border-slate-200/90 dark:border-slate-800/80 hover:border-blue-500/50 dark:hover:border-blue-400/40 rounded-xl sm:rounded-2xl shadow-xs transition-all flex flex-col justify-between group cursor-pointer relative overflow-hidden outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
+  [ngClass]="{'ring-2 ring-blue-500 bg-blue-50/20 dark:bg-blue-950/20 shadow-md': isHighlighted}">
+
+  <!-- Subtle Ambient Top Glow on Hover (Linear / Apple style) -->
+  <div
+    class="absolute top-0 inset-x-0 h-24 bg-gradient-to-b from-blue-500/[0.04] dark:from-blue-400/[0.06] to-transparent pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+  </div>
+
+  <!-- Card Content Body (Compact Mobile & Elegant Desktop) -->
+  <div class="p-3 sm:p-5 flex flex-col justify-between flex-1 relative z-1">
+
+    <div class="space-y-2">
+      <!-- Top Row: Icon + Right Status Badges & Pin Button -->
+      <div class="flex items-center justify-between gap-1.5 sm:gap-2 h-8.5 sm:h-10 shrink-0">
+        <!-- Unified Elegant Icon Squircle -->
+        <div
+          class="w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-100 dark:bg-white/[0.04] border border-slate-200/80 dark:border-white/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 shadow-2xs group-hover:bg-blue-500/10 group-hover:border-blue-500/30 group-hover:scale-105 transition-all duration-300"
+          [appTooltip]="'Statutory Domain: ' + spec.category" tooltipPlacement="top">
+          <app-icon [name]="spec.icon" [size]="16" class="sm:w-[19px] sm:h-[19px]"></app-icon>
+        </div>
+
+        <!-- Right Status Indicators & Pin Action -->
+        <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+          <!-- Emergency Available Now Indicator -->
+          <span *ngIf="spec.availableNow && spec.availableNow > 0"
+            [appTooltip]="spec.availableNow + ' verified advocates on call for immediate night/remand consultation'"
+            tooltipPlacement="top"
+            class="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[8.5px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md border border-blue-500/20 flex items-center gap-1 uppercase tracking-wider">
+            <app-icon name="zap" [size]="8" class="text-blue-500"></app-icon>
+            <span>{{ spec.availableNow }} On Call</span>
+          </span>
+
+          <!-- Advocate Status Pill -->
+          <span *ngIf="spec.advocateCount"
+            [appTooltip]="spec.advocateCount + ' verified active bar members practicing in ' + spec.name"
+            tooltipPlacement="top"
+            class="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[8.5px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-500/20 flex items-center gap-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{{ spec.advocateCount }} Adv</span>
+          </span>
+          <span *ngIf="!spec.advocateCount"
+            [appTooltip]="'No active advocates listed yet. Special advisory panel assigned on request.'"
+            tooltipPlacement="top"
+            class="px-1.5 sm:px-2 py-0.5 text-[8px] sm:text-[8.5px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 rounded-md border border-slate-200 dark:border-slate-700/80">
+            Advisory Panel
+          </span>
+
+          <!-- Pin to Compare -->
+          <button (click)="onPinToggle($event)"
+            [appTooltip]="isPinned ? 'Remove from Compare Tray' : 'Pin to Compare Tray'" tooltipPlacement="top"
+            [attr.aria-label]="isPinned ? 'Remove from compare tray' : 'Add to compare tray'"
+            class="w-5 h-5 sm:w-[22px] sm:h-[22px] rounded-md sm:rounded-lg flex items-center justify-center border cursor-pointer transition-all active:scale-90"
+            [ngClass]="isPinned
+              ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/40'
+              : 'bg-slate-100 dark:bg-slate-800/80 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 border-slate-200 dark:border-slate-700/80 hover:border-blue-400/50'">
+            <app-icon [name]="isPinned ? 'check' : 'plus'" [size]="10" class="sm:w-[8px] sm:h-[8px]"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Grouped Identity Block -->
+      <div class="space-y-0.5 sm:space-y-1">
+        <!-- Category Tag + Popular Badge Row (Clean Minimalist Hierarchy) -->
+        <div class="flex items-center gap-1.5 sm:gap-2 h-4.5 sm:h-5 shrink-0">
+          <span [appTooltip]="'Governing Legal Category: ' + spec.category" tooltipPlacement="top"
+            class="text-[9px] sm:text-[9.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 inline-block truncate max-w-[180px] sm:max-w-[210px]">
+            {{ spec.category }}
+          </span>
+          <span *ngIf="spec.popular" [appTooltip]="'High citizen consultation & litigation demand'"
+            tooltipPlacement="top"
+            class="popular-badge px-1.5 py-0.5 text-[7.5px] sm:text-[8px] font-bold rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 inline-flex items-center gap-1 uppercase tracking-wider shrink-0">
+            <app-icon name="star" [size]="8" class="text-amber-500"></app-icon>
+            <span>Popular</span>
+          </span>
+        </div>
+
+        <!-- Title & Tagline (Locked Fixed Height for Perfect Grid Alignment) -->
+        <div class="h-[52px] sm:h-[60px] flex flex-col justify-start shrink-0">
+          <h3
+            class="font-serif text-[14.5px] sm:text-[16.5px] font-bold text-slate-900 dark:text-white leading-tight sm:leading-snug group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1"
+            [title]="getDisplayName()">
+            {{ getDisplayName() }}
+          </h3>
+          <p class="text-[10.5px] sm:text-[11.5px] text-slate-500 dark:text-slate-400 leading-snug sm:leading-relaxed font-normal line-clamp-2 mt-0.5"
+            [title]="spec.tagline || getDisplayDescription()">
+            {{ spec.tagline || getDisplayDescription() }}
+          </p>
+        </div>
+      </div>
+
+      <!-- HUD Metric Instrument Strip (Unified Monochromatic Elegance) -->
+      <div
+        class="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-xl bg-slate-100/70 dark:bg-white/[0.03] border border-slate-200/60 dark:border-white/10 text-[10px] h-[46px] sm:h-[52px] shrink-0">
+        <!-- Exp Cell -->
+        <div
+          class="hud-cell flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl md:rounded-[10px] bg-white/70 dark:bg-slate-800/60 h-full text-center overflow-hidden"
+          [appTooltip]="'Average litigation court experience of verified counsel: ' + (spec.avgExperience ? spec.avgExperience + ' yrs' : '10+ yrs')"
+          tooltipPlacement="top">
+          <span
+            class="text-[7.5px] sm:text-[8.5px] uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center gap-0.5">
+            <app-icon name="briefcase" [size]="8" class="text-slate-400"></app-icon>
+            Exp
+          </span>
+          <span
+            class="font-bold text-[10.5px] sm:text-[11.5px] text-slate-800 dark:text-slate-200 mt-0.5 leading-tight">
+            {{ spec.avgExperience ? spec.avgExperience + 'y' : '10y+' }}
+          </span>
+        </div>
+
+        <!-- Rating Cell -->
+        <div
+          class="hud-cell flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl md:rounded-[10px] bg-white/70 dark:bg-slate-800/60 h-full text-center overflow-hidden"
+          [appTooltip]="'Verified client satisfaction rating: ' + (spec.avgRating || 4.8) + ' / 5 stars'"
+          tooltipPlacement="top">
+          <span
+            class="text-[7.5px] sm:text-[8.5px] uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center gap-0.5">
+            <app-icon name="star" [size]="8" class="text-amber-500"></app-icon>
+            Rating
+          </span>
+          <span
+            class="font-bold text-[10.5px] sm:text-[11.5px] text-slate-800 dark:text-slate-200 mt-0.5 leading-tight flex items-center gap-0.5">
+            <app-icon name="star" [size]="8.5" class="text-amber-500"></app-icon>
+            <span>{{ spec.avgRating || 4.8 }}</span>
+          </span>
+        </div>
+
+        <!-- Consult Fee Cell (Monochromatic Calm - No Gaudy Purple) -->
+        <div
+          class="hud-cell flex flex-col items-center justify-center p-0.5 sm:p-1 rounded-xl md:rounded-[10px] bg-white/70 dark:bg-slate-800/60 h-full text-center overflow-hidden"
+          [appTooltip]="'Initial legal evaluation session: ' + (spec.feeRange?.median ? '₹' + spec.feeRange?.median : '₹2,500') + ' (typically 30–45 mins). Subsequent litigation fees determined based on matter complexity.'"
+          tooltipPlacement="top">
+          <span
+            class="text-[7.5px] sm:text-[8.5px] uppercase font-bold text-slate-400 dark:text-slate-500 flex items-center gap-0.5 truncate max-w-full">
+            <app-icon name="zap" [size]="8" class="text-slate-400 shrink-0"></app-icon>
+            Consult
+          </span>
+          <span
+            class="font-bold text-[10.5px] sm:text-[11.5px] text-slate-800 dark:text-slate-200 mt-0.5 leading-tight">
+            {{ spec.feeRange?.median ? '₹' + spec.feeRange?.median : '₹2,500' }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Subfield Badges (Clean Professional Tags Without Social Media Hashtags) -->
+      <div class="h-5 sm:h-6 flex items-center gap-1 overflow-hidden shrink-0">
+        <ng-container *ngIf="spec.subfields.length; else fallbackSubfields">
+          <span *ngFor="let field of visibleSubfields; trackBy: trackByString" [appTooltip]="getAcronymTooltip(field)"
+            tooltipPlacement="top"
+            class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/10 text-[8.5px] sm:text-[9.5px] font-medium text-slate-600 dark:text-slate-300 truncate max-w-[95px] sm:max-w-[110px] shrink-0">
+            {{ field }}
+          </span>
+          <span *ngIf="remainingSubfieldsCount > 0" [appTooltip]="(spec.subfields || []).slice(3).join(', ')"
+            tooltipPlacement="top"
+            class="px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.04] border border-slate-200/70 dark:border-white/10 text-[8px] sm:text-[9px] font-bold text-slate-500 dark:text-slate-400 shrink-0">
+            +{{ remainingSubfieldsCount }}
+          </span>
+        </ng-container>
+        <ng-template #fallbackSubfields>
+          <span
+            class="px-2 py-0.5 rounded-md bg-slate-100/60 dark:bg-white/[0.03] border border-slate-200/40 dark:border-white/5 text-[8.5px] sm:text-[9.5px] font-medium text-slate-400 dark:text-slate-500">
+            General Practice
+          </span>
+        </ng-template>
+      </div>
+
+      <!-- Statutory & Forum Citation Strip (Unified Sophisticated Neutrals) -->
+      <div
+        class="h-[34px] sm:h-[38px] space-y-0.5 sm:space-y-1 text-[9px] sm:text-[10px] text-slate-400 dark:text-slate-500 shrink-0">
+        <div class="flex items-center gap-1.5 truncate"
+          [appTooltip]="'Governing Statutory Frameworks: ' + (spec.relevantActs.length ? spec.relevantActs.join(', ') : 'Central & State Statutory Codes')"
+          tooltipPlacement="top">
+          <span
+            class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 shrink-0">
+            <app-icon name="book-open" [size]="9" class="sm:w-[10px] sm:h-[10px]"></app-icon>
+          </span>
+          <span class="truncate font-medium text-slate-600 dark:text-slate-400">
+            {{ getRelevantActsString() || 'Central & State Statutory Codes' }}
+          </span>
+        </div>
+        <div class="flex items-center gap-1.5 truncate"
+          [appTooltip]="'Active Court Jurisdictions: ' + (getTopCitiesString() || 'Pan-India Active Forums')"
+          tooltipPlacement="top">
+          <span
+            class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded flex items-center justify-center bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 shrink-0">
+            <app-icon name="map-pin" [size]="9" class="sm:w-[10px] sm:h-[10px]"></app-icon>
+          </span>
+          <span class="truncate text-slate-500 dark:text-slate-400">
+            {{ getTopCitiesString() || 'Pan-India Active Forums' }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card Bottom Action Deck (Fixed Height, Flush to Bottom) -->
+    <div
+      class="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-1.5 sm:gap-2 shrink-0">
+      <div class="flex items-center gap-1">
+        <span [appTooltip]="'Open complete statutory dossier & procedure ladder for ' + spec.name"
+          tooltipPlacement="top"
+          class="px-2 sm:px-2.5 py-1 sm:py-1.5 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 hover:bg-slate-200/80 dark:hover:bg-slate-750 text-slate-700 dark:text-slate-300 text-[9.5px] sm:text-[10.5px] font-semibold flex items-center gap-1 sm:gap-1.5 transition cursor-pointer border border-slate-200/60 dark:border-slate-700/60">
+          <app-icon name="file-text" [size]="10" class="text-blue-500 sm:w-[11px] sm:h-[11px]"></app-icon>
+          <span>Dossier</span>
+          <app-icon name="arrow-right" [size]="9" class="text-slate-400 sm:w-[10px] sm:h-[10px]"></app-icon>
+        </span>
+        <!-- Print brief (Enhanced thumb-friendly squircle button) -->
+        <button (click)="onPrintClick($event)" [appTooltip]="'Print Professional Statutory Brief'"
+          tooltipPlacement="top" aria-label="Print practice brief"
+          class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-slate-100/80 dark:bg-slate-800/80 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400/50 shadow-2xs flex items-center justify-center cursor-pointer transition active:scale-90 shrink-0">
+          <app-icon name="printer" [size]="13" class="sm:w-[14px] sm:h-[14px]"></app-icon>
+        </button>
+      </div>
+
+      <button (click)="onFindAdvocates($event)" [appTooltip]="'Find advocates in ' + spec.name" tooltipPlacement="top"
+        [attr.aria-label]="'Find advocates practicing in ' + spec.name"
+        class="px-2.5 sm:px-3 py-1 sm:py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[9.5px] sm:text-[10.5px] font-bold rounded-lg shadow-sm shadow-blue-500/30 hover:shadow-md hover:shadow-blue-500/40 transition flex items-center gap-1 sm:gap-1.5 cursor-pointer border-0 active:scale-95">
+        <span>{{ isHindi ? 'वकील खोजें' : 'Advocates' }}</span>
+        <app-icon name="arrow-right" [size]="10" class="sm:w-[11px] sm:h-[11px]"></app-icon>
+      </button>
+    </div>
+
+  </div>
+
+</div>

@@ -17,6 +17,7 @@ import { IconComponent } from '../../../../components/icon/icon.component';
 import { TooltipDirective } from '../../../../directives/tooltip.directive';
 import { ShareMenuComponent } from '../../../../components/share-menu/share-menu.component';
 import { KebabMenuComponent, KebabActionGroup, KebabMenuService } from '../../../../components/kebab-menu';
+import { PaginationComponent } from '../../../../components/pagination';
 import { StatutoryRight } from '../../../../services/rights.service';
 import { ModerationReportService } from '../../../../services/moderation-report.service';
 import { SnackbarService } from '../../../../services/snackbar.service';
@@ -36,7 +37,7 @@ export type TableSortColumn = 'title' | 'act' | 'summary' | 'penalties' | 'forum
 @Component({
   selector: 'app-rights-directory-view',
   standalone: true,
-  imports: [CommonModule, FormsModule, IconComponent, TooltipDirective, ShareMenuComponent, KebabMenuComponent],
+  imports: [CommonModule, FormsModule, IconComponent, TooltipDirective, ShareMenuComponent, KebabMenuComponent, PaginationComponent],
   templateUrl: './rights-directory-view.component.html',
   styleUrls: ['./rights-directory-view.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush

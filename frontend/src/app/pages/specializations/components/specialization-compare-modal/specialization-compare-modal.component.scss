@@ -1,0 +1,97 @@
+.compare-tray-dock {
+  position: fixed;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translate(-50%, 0);
+  z-index: 2000;
+  width: calc(100% - 20px);
+  max-width: 480px;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
+  transition: bottom 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+
+  :host-context(body.has-bottom-nav-visible) & {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+
+  @media (min-width: 640px) {
+    width: max-content;
+    max-width: calc(100vw - 24px);
+    bottom: 24px;
+
+    :host-context(body.has-bottom-nav-visible) & {
+      bottom: 24px;
+    }
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translate(-50%, 20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translate(-50%, 0);
+    opacity: 1;
+  }
+}
+
+.compare-backdrop {
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.compare-modal-card {
+  animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform;
+
+  @media (min-width: 640px) {
+    animation: scaleUp 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes scaleUp {
+  from {
+    transform: scale(0.96) translateY(10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes sheetSlideUp {
+  from {
+    transform: translateY(100%);
+    opacity: 0.5;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Mobile Snap Deck Momentum Scrolling */
+.snap-mandatory {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+.snap-center {
+  scroll-snap-align: center;
+  scroll-snap-stop: always;
+}

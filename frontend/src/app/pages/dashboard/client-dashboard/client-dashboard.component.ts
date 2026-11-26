@@ -1326,6 +1326,8 @@ export class ClientDashboardComponent implements OnInit, OnDestroy {
         }
       ],
       defaultScope,
+      scopeTitle: 'Portfolio Scope',
+      scopeUnit: 'item',
       allowWatermark: true,
       defaultWatermark: 'OFFICIAL COPY',
       allowQrToggle: true,

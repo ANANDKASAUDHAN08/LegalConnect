@@ -942,48 +942,14 @@
         }
       </div>
 
-      <!-- PREMIUM PAGINATION -->
-      @if (filteredReviews().length > pageSize()) {
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
-
-        <span class="text-[11px] text-slate-500 dark:text-slate-400 font-medium tabular-nums order-2 sm:order-1">
-          Page {{ currentPage() }} of {{ totalPages() }}
-        </span>
-
-        <div class="flex items-center gap-1.5 order-1 sm:order-2">
-          <button (click)="prevPage()" [disabled]="currentPage() === 1" [appTooltip]="'Previous'"
-            [tooltipPlacement]="'top'"
-            class="pagination-btn flex items-center justify-center p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 transition-all outline-none shadow-2xs cursor-pointer disabled:cursor-not-allowed border-none">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-          </button>
-
-          <div class="flex items-center gap-1">
-            @for (page of pageNumbers(); track page) {
-            @if (page === -1) {
-            <span
-              class="w-9 h-9 flex items-center justify-center text-slate-400 dark:text-slate-500 text-xs select-none">…</span>
-            } @else {
-            <button (click)="goToPage(page)"
-              [class]="currentPage() === page
-                        ? 'bg-blue-600 text-white font-bold shadow-md'
-                        : 'bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 shadow-2xs'"
-              class="pagination-btn w-9 h-9 rounded-xl border-none text-[11px] font-bold transition-all outline-none flex items-center justify-center cursor-pointer">
-              {{ page }}
-            </button>
-            }
-            }
-          </div>
-
-          <button (click)="nextPage()" [disabled]="currentPage() === totalPages()" [appTooltip]="'Next'"
-            [tooltipPlacement]="'top'"
-            class="pagination-btn flex items-center justify-center p-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 disabled:opacity-30 transition-all outline-none shadow-2xs cursor-pointer disabled:cursor-not-allowed border-none">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-            </svg>
-          </button>
-        </div>
+      <!-- PREMIUM REUSABLE PAGINATION -->
+      @if (filteredReviews().length > 0) {
+      <div class="mt-6 rounded-2xl overflow-visible shadow-xs">
+        <app-pagination [total]="filteredReviews().length" [page]="currentPage()" (pageChange)="goToPage($event)"
+          [pageSize]="pageSize()" (pageSizeChange)="setPageSize($event)" itemName="client reviews"
+          itemNameHindi="समीक्षाएं" variant="pills" color="blue" layout="center" [autoHide]="true"
+          [showQuickJumper]="true" storageKey="legalconnect_reviews_pagesize" [pageSizeOptions]="[5, 10, 20, 50]">
+        </app-pagination>
       </div>
       }
     </div>

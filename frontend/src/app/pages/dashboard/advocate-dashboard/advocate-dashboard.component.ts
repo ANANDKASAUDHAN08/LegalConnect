@@ -462,6 +462,8 @@ export class AdvocateDashboardComponent implements OnInit, OnDestroy {
         }
       ],
       defaultScope: 'analytics',
+      scopeTitle: 'Chambers Audit Scope',
+      scopeUnit: 'record',
       allowWatermark: true,
       defaultWatermark: 'OFFICIAL COPY',
       allowChartsToggle: true,

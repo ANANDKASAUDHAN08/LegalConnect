@@ -1,0 +1,723 @@
+<div *ngIf="spec" class="space-y-2.5 sm:space-y-3.5">
+
+  <!-- Active Client Matter Status Banner -->
+  <div *ngIf="isClient() && activeMatter()?.hasActiveMatter"
+    class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-indigo-500/15 via-blue-500/10 to-indigo-500/15 border border-indigo-500/30 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-3">
+    <div class="flex items-start gap-2.5 sm:gap-3 min-w-0">
+      <div
+        class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+        <app-icon name="briefcase" [size]="16"></app-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-1.5 flex-wrap">
+          <span
+            class="text-[9.5px] sm:text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-300">
+            Your Active Matter
+          </span>
+          <span class="px-1.5 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-indigo-600 text-white">
+            Stage {{ activeMatter().currentStageIndex }} of {{ activeMatter().totalStages }}
+          </span>
+        </div>
+        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate mt-0.5">
+          {{ activeMatter().title }}
+        </h4>
+        <p class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+          Current Milestone: <span class="font-semibold text-indigo-700 dark:text-indigo-400">{{
+            activeMatter().stageName }}</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 self-end sm:self-auto">
+      <button (click)="setTab('journey')"
+        class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-700 dark:text-indigo-300 text-[11px] sm:text-xs font-bold transition border border-indigo-500/30 cursor-pointer">
+        View Journey &rarr;
+      </button>
+      <a routerLink="/client/matters"
+        class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-bold no-underline transition shadow-xs flex items-center gap-1">
+        <span>Open Matter</span>
+        <app-icon name="arrow-right" [size]="11"></app-icon>
+      </a>
+    </div>
+  </div>
+
+  <!-- First-Timer Client Onboarding Guidance -->
+  <div *ngIf="!isFirstTimerDismissed() && !isLawyer()"
+    class="relative p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-cyan-500/10 border border-blue-500/20 shadow-xs">
+    <!-- Dismiss button -->
+    <button (click)="dismissFirstTimerCard()" aria-label="Dismiss guide"
+      class="absolute top-2.5 right-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-1 rounded-md transition hover:bg-blue-500/10">
+      <app-icon name="x" [size]="13"></app-icon>
+    </button>
+    <div class="flex items-start gap-2.5 sm:gap-3">
+      <div
+        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+        <app-icon name="sparkles" [size]="15"></app-icon>
+      </div>
+      <div class="min-w-0 flex-1 pr-4">
+        <h4 class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white leading-tight">
+          New to seeking legal help in {{ spec.name }}?
+        </h4>
+        <p class="text-[11px] sm:text-xs text-slate-600 dark:text-slate-300 mt-0.5 leading-snug">
+          Here is the simple 3-step process:
+        </p>
+
+        <!-- Responsive 3-Step Micro-Grid: 3 columns on both Mobile & Desktop for compact footprint -->
+        <div class="grid grid-cols-3 gap-1.5 sm:gap-2 mt-2">
+          <div
+            class="p-1.5 sm:p-2 rounded-lg bg-white/75 dark:bg-slate-800/75 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 truncate">1.
+              Consult</span>
+            <span
+              class="text-[9px] sm:text-[11px] text-slate-500 dark:text-slate-300 block leading-tight mt-0.5 line-clamp-2">
+              30-min case assessment
+            </span>
+          </div>
+          <div
+            class="p-1.5 sm:p-2 rounded-lg bg-white/75 dark:bg-slate-800/75 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 truncate">2.
+              Documents</span>
+            <span
+              class="text-[9px] sm:text-[11px] text-slate-500 dark:text-slate-300 block leading-tight mt-0.5 line-clamp-2">
+              Prepare essential proof
+            </span>
+          </div>
+          <div
+            class="p-1.5 sm:p-2 rounded-lg bg-white/75 dark:bg-slate-800/75 border border-slate-200/60 dark:border-slate-700/60">
+            <span class="block text-[10px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 truncate">3.
+              Action</span>
+            <span
+              class="text-[9px] sm:text-[11px] text-slate-500 dark:text-slate-300 block leading-tight mt-0.5 line-clamp-2">
+              Court notice or filing
+            </span>
+          </div>
+        </div>
+
+        <!-- Escalation Timeline Link -->
+        <div class="mt-2 flex items-center">
+          <button (click)="setTab('journey')"
+            class="text-[11px] sm:text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer flex items-center gap-1 p-0">
+            <span>View Step-by-Step Escalation Timeline</span>
+            <app-icon name="arrow-right" [size]="10"></app-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Platform Trust & Verification Strip -->
+  <div *ngIf="isGuest()"
+    class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-slate-100 via-slate-50 to-slate-100 dark:from-slate-800/70 dark:via-slate-800/40 dark:to-slate-800/70 border border-slate-200/80 dark:border-slate-700/80 space-y-2 sm:space-y-2.5">
+    <div class="flex items-center justify-between">
+      <span class="text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+        LegalConnect Trust Standard
+      </span>
+      <span
+        class="text-[9.5px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+        <app-icon name="shield-check" [size]="11"></app-icon>
+        <span>{{ spec.verifiedAdvocateCount || spec.advocateCount || 0 }} Bar-Verified Practitioners</span>
+      </span>
+    </div>
+
+    <div class="grid grid-cols-3 gap-1.5 sm:gap-2.5 text-center text-xs">
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+        <div
+          class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-1 font-bold text-[10px] sm:text-[11px]">
+          1</div>
+        <div class="font-bold text-[11px] sm:text-xs text-slate-800 dark:text-slate-200 truncate">Explore Issue
+        </div>
+        <div class="text-[8.5px] sm:text-[9px] text-slate-500 mt-0.5 truncate">Statutes &amp; Laws</div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+        <div
+          class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center mx-auto mb-1 font-bold text-[10px] sm:text-[11px]">
+          2</div>
+        <div class="font-bold text-[11px] sm:text-xs text-slate-800 dark:text-slate-200 truncate">Compare Counsel
+        </div>
+        <div class="text-[8.5px] sm:text-[9px] text-slate-500 mt-0.5 truncate">Fees &amp; Record</div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60">
+        <div
+          class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mx-auto mb-1 font-bold text-[10px] sm:text-[11px]">
+          3</div>
+        <div class="font-bold text-[11px] sm:text-xs text-slate-800 dark:text-slate-200 truncate">Consult Safely
+        </div>
+        <div class="text-[8.5px] sm:text-[9px] text-slate-500 mt-0.5 truncate">Verified &amp; Safe</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advocate Practice Benchmarks & Market Intelligence -->
+  <div *ngIf="isLawyer() && lawyerPosition()"
+    class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-slate-900/10 border border-indigo-500/30 space-y-2.5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-indigo-500"></span>
+        <h4 class="text-xs font-bold uppercase tracking-wider text-indigo-700 dark:text-indigo-300">
+          Practice Benchmark • {{ lawyerPosition()!.city }}
+        </h4>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span *ngIf="lawyerPosition()!.rank"
+          class="px-2 py-0.5 rounded text-[9.5px] font-black bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border border-indigo-500/30">
+          Rank #{{ lawyerPosition()!.rank }} of {{ lawyerPosition()!.totalInCity }}
+        </span>
+        <span class="px-1.5 py-0.5 rounded text-[9.5px] font-bold bg-indigo-600 text-white">
+          {{ lawyerPosition()!.percentile }}
+        </span>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-3 gap-2 sm:gap-2.5 text-center">
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-indigo-200/60 dark:border-indigo-800/60">
+        <div class="text-[9.5px] text-slate-500">Platform Median Fee</div>
+        <div class="text-sm sm:text-base font-black text-slate-900 dark:text-white mt-0.5">₹{{
+          lawyerPosition()!.median }}</div>
+        <div class="text-[8.5px] text-slate-400 truncate">
+          {{ lawyerPosition()!.diff > 0 ? '+₹' + lawyerPosition()!.diff + ' vs median' : 'Within median band' }}
+        </div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-indigo-200/60 dark:border-indigo-800/60">
+        <div class="text-[9.5px] text-slate-500">Area Practice Demand</div>
+        <div
+          class="text-sm sm:text-base font-black text-emerald-600 dark:text-emerald-400 mt-0.5 flex items-center justify-center gap-1">
+          <span>{{ demandIntelligence()?.demandLevel || '—' }}</span>
+          <app-icon name="trending-up" [size]="11" class="text-emerald-500 shrink-0"></app-icon>
+          <span *ngIf="demandIntelligence()?.growthPercentage">+{{ demandIntelligence()!.growthPercentage
+            }}%</span>
+        </div>
+        <div class="text-[8.5px] text-slate-400 truncate">
+          {{ demandIntelligence()?.monthlySearches ? (demandIntelligence()!.monthlySearches | number) + '
+          Interactions' : 'Not yet tracked' }}
+        </div>
+      </div>
+      <div
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white/80 dark:bg-slate-800/80 border border-indigo-200/60 dark:border-indigo-800/60">
+        <div class="text-[9.5px] text-slate-500">Your Status</div>
+        <div class="text-xs font-black text-blue-600 dark:text-blue-400 mt-0.5">Listed Counsel</div>
+        <div class="text-[8.5px] text-slate-400">Specialization active</div>
+      </div>
+    </div>
+
+    <!-- Underserved Practice Gaps (L3) -->
+    <div *ngIf="demandIntelligence()?.underservedCities?.length"
+      class="pt-2 border-t border-indigo-200/50 dark:border-indigo-800/50 text-xs">
+      <div class="flex items-center justify-between mb-1.5">
+        <span
+          class="text-[9.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+          <app-icon name="trending-up" [size]="10" class="text-indigo-500"></app-icon>
+          <span>High-Demand Underserved Markets</span>
+        </span>
+        <span class="text-[9.5px] text-indigo-600 dark:text-indigo-400 font-bold">Opportunity</span>
+      </div>
+      <div class="flex flex-wrap gap-1">
+        <span *ngFor="let g of demandIntelligence().underservedCities; trackBy: trackByCity"
+          [appTooltip]="'High search gap: ' + g.searches + ' monthly requests vs ' + g.advocates + ' verified advocates'"
+          class="px-2 py-0.5 rounded-md text-[9.5px] bg-white/90 dark:bg-slate-800/90 border border-indigo-200/60 dark:border-indigo-700/60 text-slate-700 dark:text-slate-300 font-medium">
+          <strong class="font-bold text-indigo-600 dark:text-indigo-400">{{ g.city }}</strong>: {{ g.searches }}
+          / {{ g.advocates }} {{ g.advocates === 1 ? 'advocate' : 'advocates' }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Real-Time Advocate Availability Banner -->
+  <div *ngIf="availableAdvocatesCount() > 0"
+    class="p-2.5 sm:p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-between gap-2 sm:gap-3">
+    <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+      <span class="relative flex h-2.5 w-2.5 sm:h-3 sm:w-3 shrink-0">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 bg-emerald-500"></span>
+      </span>
+      <div class="min-w-0">
+        <span class="text-xs font-bold text-emerald-800 dark:text-emerald-300 block truncate leading-tight">
+          <span class="sm:hidden">{{ availableAdvocatesCount() }} Verified Advocates Online</span>
+          <span class="hidden sm:inline">{{ availableAdvocatesCount() }} Verified Advocates Ready For
+            Consultation</span>
+        </span>
+        <span class="text-[9.5px] sm:text-[10px] text-slate-500 dark:text-slate-400 block truncate mt-0.5">
+          <span class="sm:hidden">Avg reply ~15m • Audio &amp; video slots</span>
+          <span class="hidden sm:inline">Average reply time ~15 minutes • Immediate audio &amp; video slots</span>
+        </span>
+      </div>
+    </div>
+    <button (click)="setTab('lawyers')"
+      class="px-2.5 sm:px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white text-[11px] sm:text-xs font-bold shrink-0 transition border-0 cursor-pointer shadow-xs flex items-center gap-1 whitespace-nowrap">
+      <span>View</span><span class="hidden sm:inline">&nbsp;Advocates</span>
+      <app-icon name="arrow-right" [size]="10"></app-icon>
+    </button>
+  </div>
+
+  <!-- Key Practice Metrics & Benchmarks Grid -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5">
+    <!-- Card 1: Advocates -->
+    <div
+      class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 hover:shadow-md transition-shadow group">
+      <div class="flex items-center justify-between text-slate-400 mb-0.5">
+        <span class="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider">Advocates</span>
+        <app-icon name="users" [size]="13" class="text-emerald-500"></app-icon>
+      </div>
+      <div class="text-lg sm:text-xl font-black text-emerald-600 dark:text-emerald-400 leading-tight">
+        {{ spec.advocateCount }}
+      </div>
+      <div class="text-[9.5px] sm:text-[10px] text-slate-500 truncate">
+        {{ spec.verifiedAdvocateCount || spec.advocateCount }} Verified
+      </div>
+    </div>
+
+    <!-- Card 2: Court Experience -->
+    <div
+      class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 hover:shadow-md transition-shadow group">
+      <div class="flex items-center justify-between text-slate-400 mb-0.5">
+        <span class="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider">Experience</span>
+        <app-icon name="briefcase" [size]="13" class="text-blue-500"></app-icon>
+      </div>
+      <div class="text-lg sm:text-xl font-black text-blue-600 dark:text-blue-400 leading-tight">
+        {{ spec.avgExperience ? spec.avgExperience + 'y' : 'N/A' }}
+      </div>
+      <div class="text-[9.5px] sm:text-[10px] text-slate-500 truncate">Trial &amp; High Court</div>
+    </div>
+
+    <!-- Card 3: Rating -->
+    <div
+      class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 hover:shadow-md transition-shadow group">
+      <div class="flex items-center justify-between text-slate-400 mb-0.5">
+        <span class="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider">Rating</span>
+        <app-icon name="star" [size]="13" class="text-amber-500"></app-icon>
+      </div>
+      <div class="text-lg sm:text-xl font-black flex items-center gap-1 leading-tight"
+        [ngClass]="spec.avgRating ? 'text-amber-500' : 'text-slate-400 dark:text-slate-500'">
+        <span>{{ spec.avgRating ? spec.avgRating : 'N/A' }}</span>
+        <span *ngIf="spec.avgRating" class="text-[11px] sm:text-xs font-normal text-slate-400">/ 5</span>
+      </div>
+      <div class="text-[9.5px] sm:text-[10px] text-slate-500 truncate">Client Verified</div>
+    </div>
+
+    <!-- Card 4: Median Fee -->
+    <div
+      class="px-2.5 sm:px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/70 dark:border-slate-800 hover:shadow-md transition-shadow group cursor-pointer"
+      (click)="showCostBreakdown.set(true)" [appTooltip]="'Tap for Complete Cost Structure Breakdown'"
+      tooltipPlacement="top">
+      <div class="flex items-center justify-between text-slate-400 mb-0.5">
+        <span class="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-wider">Median Fee</span>
+        <app-icon name="wallet" [size]="13" class="text-purple-500"></app-icon>
+      </div>
+      <div class="text-lg sm:text-xl font-black text-purple-600 dark:text-purple-400 leading-tight">
+        ₹{{ spec.feeRange?.median || 2500 }}
+      </div>
+      <div
+        class="text-[9.5px] sm:text-[10px] text-purple-500 dark:text-purple-400 flex items-center gap-0.5 truncate font-semibold">
+        <span>View Breakdown &rarr;</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Statutory Completeness Score & Demand Trend -->
+  <div
+    class="p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-emerald-500/10 border border-blue-500/20 flex items-center justify-between gap-2.5 sm:gap-3">
+    <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+      <!-- Circular Confidence SVG Gauge -->
+      <div class="relative w-9 h-9 sm:w-10 sm:h-10 shrink-0 flex items-center justify-center cursor-help"
+        [appTooltip]="'Data coverage: ' + confidenceScore() + '% of expected data categories populated'">
+        <svg class="w-9 h-9 sm:w-10 sm:h-10 -rotate-90" viewBox="0 0 36 36">
+          <path class="text-slate-200 dark:text-slate-700" stroke-width="3" stroke="currentColor" fill="none"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path class="text-blue-600 dark:text-blue-400" [attr.stroke-dasharray]="confidenceScore() + ', 100'"
+            stroke-width="3" stroke-linecap="round" stroke="currentColor" fill="none"
+            d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <span class="absolute text-[9px] sm:text-[10px] font-black text-slate-800 dark:text-white">{{
+          confidenceScore() }}%</span>
+      </div>
+      <div class="min-w-0">
+        <div
+          class="text-[11px] sm:text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5 flex-wrap">
+          <span class="truncate">Data Coverage</span>
+          <span
+            class="px-1.5 py-0.2 rounded text-[8.5px] sm:text-[9px] font-bold bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 shrink-0">{{
+            confidenceScore() === 100 ? 'Complete' : 'Partial' }}</span>
+        </div>
+        <div class="text-[9px] sm:text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight">
+          Acts, precedents, forums &amp; verified advocates
+        </div>
+      </div>
+    </div>
+
+    <!-- Verified Data Sources Summary -->
+    <div
+      [appTooltip]="'Real data: ' + dataCompleteness().actsCount + ' statutes, ' + dataCompleteness().casesCount + ' precedents, ' + dataCompleteness().advocateCount + ' advocates'"
+      class="flex items-center gap-2 sm:gap-2.5 bg-white/70 dark:bg-slate-800/70 px-2 py-1 sm:px-2.5 sm:py-1.5 rounded-lg sm:rounded-xl border border-slate-200/50 dark:border-slate-700/50 shrink-0 cursor-help">
+      <div class="flex items-center gap-0.5 text-[9.5px] sm:text-[10px] font-bold text-blue-600 dark:text-blue-400">
+        <app-icon name="book-open" [size]="9"></app-icon>
+        <span>{{ dataCompleteness().actsCount }}</span>
+      </div>
+      <span class="text-slate-300 dark:text-slate-600 text-[8px]">&bull;</span>
+      <div class="flex items-center gap-0.5 text-[9.5px] sm:text-[10px] font-bold text-amber-600 dark:text-amber-400">
+        <app-icon name="scale" [size]="9"></app-icon>
+        <span>{{ dataCompleteness().casesCount }}</span>
+      </div>
+      <span class="text-slate-300 dark:text-slate-600 text-[8px]">&bull;</span>
+      <div
+        class="flex items-center gap-0.5 text-[9.5px] sm:text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+        <app-icon name="users" [size]="9"></app-icon>
+        <span>{{ dataCompleteness().advocateCount }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Quick-Glance Practice Chips -->
+  <div *ngIf="quickGlanceChips().length"
+    class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 -mx-0.5 px-0.5">
+    <span *ngFor="let chip of quickGlanceChips(); trackBy: trackByString" [appTooltip]="'Practice domain: ' + chip"
+      class="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-lg bg-slate-100 dark:bg-slate-800/80 border border-slate-200/70 dark:border-slate-700 text-[9.5px] sm:text-[10px] font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap shrink-0 flex items-center gap-1 cursor-default">
+      <span class="w-1.5 h-1.5 rounded-full bg-blue-500 shrink-0"></span>
+      <span>{{ chip }}</span>
+    </span>
+  </div>
+
+  <!-- Free Consultation Availability Banner -->
+  <div *ngIf="freeConsultLawyers().length > 0"
+    class="p-2.5 sm:p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-blue-500/10 border border-emerald-500/25 flex items-center justify-between gap-2.5 sm:gap-3">
+    <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+      <div
+        class="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-emerald-600/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 shadow-2xs">
+        <app-icon name="gift" [size]="13"></app-icon>
+      </div>
+      <div class="min-w-0">
+        <span class="font-bold text-emerald-800 dark:text-emerald-300 text-xs block truncate leading-tight">
+          Free Consultations Available
+        </span>
+        <span class="text-[9.5px] sm:text-[11px] text-slate-500 dark:text-slate-400 block truncate mt-0.5">
+          <span class="sm:hidden">{{ freeConsultLawyers().length }} lawyer(s) offer ₹0 preliminary review</span>
+          <span class="hidden sm:inline">{{ freeConsultLawyers().length }} practitioner(s) in {{ spec.name }}
+            offer ₹0 initial review sessions</span>
+        </span>
+      </div>
+    </div>
+    <button (click)="advocateSort.set('fee'); setTab('lawyers')"
+      [appTooltip]="'View practitioners offering ₹0 initial consultation in ' + spec.name"
+      class="px-2 sm:px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-[9.5px] sm:text-[10px] shrink-0 border-0 cursor-pointer shadow-xs transition whitespace-nowrap">
+      View Free &rarr;
+    </button>
+  </div>
+
+  <!-- Legal Aid Eligibility Callout -->
+  <div
+    class="p-2.5 sm:p-3 rounded-xl sm:rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-between gap-2.5 sm:gap-3">
+    <div class="flex items-center gap-2 sm:gap-2.5 min-w-0">
+      <div
+        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+        <app-icon name="scale" [size]="14"></app-icon>
+      </div>
+      <div class="min-w-0">
+        <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
+          <span *ngIf="freeAidService.isFreeAidEligible"
+            class="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
+            <app-icon name="check-circle" [size]="12" class="text-emerald-500 shrink-0"></app-icon>
+            <span>You Qualify for Free Legal Aid</span>
+          </span>
+          <span *ngIf="!freeAidService.isFreeAidEligible">Need Financial Assistance? Check Free Legal Aid</span>
+        </div>
+        <div class="text-[9.5px] sm:text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 truncate leading-tight">
+          Article 39A Constitutional Mandate • Free representation for eligible citizens
+        </div>
+      </div>
+    </div>
+    <a routerLink="/find-help"
+      class="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[11px] sm:text-xs font-bold shrink-0 no-underline shadow-xs transition flex items-center gap-1 whitespace-nowrap">
+      <span>Check Aid</span>
+      <app-icon name="arrow-right" [size]="10"></app-icon>
+    </a>
+  </div>
+
+  <!-- Specialization Tagline -->
+  <div *ngIf="displayTagline()"
+    class="p-3.5 rounded-xl bg-blue-500/10 border-l-4 border-blue-600 dark:border-blue-500 text-slate-800 dark:text-slate-200 text-xs font-medium leading-relaxed shadow-2xs flex items-center gap-2.5">
+    <app-icon [name]="jargonMode() === 'simple' ? 'sparkles' : 'scale'" [size]="14"
+      class="text-blue-600 dark:text-blue-400 shrink-0"></app-icon>
+    <span>{{ displayTagline() }}</span>
+  </div>
+
+  <!-- Scope Description & Bilingual Overview -->
+  <div class="space-y-2">
+    <div class="flex items-center justify-between flex-wrap gap-2">
+      <div class="flex items-center gap-2">
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0 flex items-center gap-1.5">
+          <span>{{ headings().scopeHeading }}</span>
+        </h4>
+        <!-- Active Jargon Mode Status Badge -->
+        <span *ngIf="jargonMode() === 'simple'"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/80 shadow-2xs">
+          <app-icon name="sparkles" [size]="10"></app-icon>
+          <span>Plain English</span>
+        </span>
+        <span *ngIf="jargonMode() === 'legal'"
+          class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 border border-indigo-200/80 dark:border-indigo-800/80 shadow-2xs">
+          <app-icon name="scale" [size]="10"></app-icon>
+          <span>Statutory Terms</span>
+        </span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button *ngIf="displayHindiDescription()" (click)="showHindiDesc.set(!showHindiDesc())"
+          class="text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+          {{ showHindiDesc() ? 'Hide Hindi' : 'हिंदी में देखें' }}
+        </button>
+      </div>
+    </div>
+
+    <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans whitespace-pre-line"
+      [ngClass]="readMoreDesc() ? '' : 'line-clamp-4'">
+      {{ displayDescription() }}
+    </p>
+
+    <div *ngIf="displayDescription().length > 200" class="pt-0.5">
+      <button (click)="readMoreDesc.set(!readMoreDesc())"
+        class="text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer inline-flex items-center gap-1">
+        <span>{{ readMoreDesc() ? 'Read Less' : 'Read Full Description' }}</span>
+        <app-icon [name]="readMoreDesc() ? 'chevron-up' : 'chevron-down'" [size]="12"></app-icon>
+      </button>
+    </div>
+
+    <!-- Hindi Translation Accordion -->
+    <div *ngIf="showHindiDesc() && displayHindiDescription()"
+      class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+      <div class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1 flex items-center gap-1.5">
+        <span>{{ jargonMode() === 'simple' ? 'सरल हिंदी विवरण (आसान भाषा में)' : 'वैधानिक हिंदी विवरण' }}</span>
+      </div>
+      {{ displayHindiDescription() }}
+    </div>
+  </div>
+
+  <!-- Fee Fairness & Pricing Transparency -->
+  <div
+    class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5 sm:space-y-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <app-icon name="scale" [size]="13" class="text-blue-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0">
+          Statutory Fee Transparency Meter
+        </h4>
+      </div>
+      <button (click)="showCostBreakdown.set(true)"
+        class="text-[10.5px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline bg-transparent border-0 cursor-pointer">
+        Cost Calculator &rarr;
+      </button>
+    </div>
+
+    <div class="space-y-1.5">
+      <div class="flex justify-between text-xs font-bold">
+        <span class="text-slate-500">Min: ₹{{ spec.feeRange?.min || 1000 }}</span>
+        <span class="text-blue-600 dark:text-blue-400">Typical: ₹{{ spec.feeRange?.median || 2500 }}</span>
+        <span class="text-slate-500">Max: ₹{{ spec.feeRange?.max || 8000 }}</span>
+      </div>
+      <!-- Progress Bar -->
+      <div class="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden relative">
+        <div class="h-full bg-gradient-to-r from-emerald-500 via-blue-500 to-purple-500 rounded-full"
+          style="width: 100%;"></div>
+      </div>
+      <div class="flex items-center justify-between text-[9.5px] sm:text-[10px] text-slate-400">
+        <span>Junior Counsel</span>
+        <span>Senior Advocate Bench</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sub-Specializations & Focus Areas -->
+  <div *ngIf="spec.subfields?.length"
+    class="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <app-icon name="layers" [size]="13" class="text-blue-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0">
+          Core Focus Areas
+        </h4>
+      </div>
+      <span
+        class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60">
+        {{ spec.subfields.length }} topics
+      </span>
+    </div>
+    <div class="flex flex-wrap gap-1.5">
+      <span *ngFor="let field of spec.subfields; trackBy: trackByString"
+        class="px-2.5 py-1 rounded-lg bg-blue-500/10 hover:bg-blue-500/15 border border-blue-500/20 text-blue-700 dark:text-blue-300 text-[11px] sm:text-xs font-medium transition-colors">
+        {{ field }}
+      </span>
+    </div>
+  </div>
+
+  <!-- Applicable Courts & Judicial Forums -->
+  <div *ngIf="spec.typicalForums?.length"
+    class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <app-icon name="landmark" [size]="13" class="text-indigo-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0">
+          {{ headings().forumsHeading }}
+        </h4>
+      </div>
+      <span
+        class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60">
+        {{ spec.typicalForums.length }} forums
+      </span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div *ngFor="let forum of spec.typicalForums; trackBy: trackByString"
+        class="p-2 sm:p-2.5 rounded-lg sm:rounded-xl bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 flex items-center justify-between gap-2.5 text-xs text-slate-800 dark:text-slate-200 hover:border-slate-300 dark:hover:border-slate-600 transition">
+        <div class="flex items-center gap-2 min-w-0">
+          <app-icon name="landmark" [size]="13" class="text-indigo-500 shrink-0"></app-icon>
+          <span class="font-medium truncate">{{ forum }}</span>
+        </div>
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold border shrink-0"
+          [ngClass]="getCourtTier(forum).badgeClass">
+          {{ getCourtTier(forum).tier }}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bento Row: Top Jurisdictions + Consultation Languages -->
+  <div *ngIf="spec.topCities?.length || languagesList().length"
+    class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
+
+    <!-- Card 1: Active Jurisdictions -->
+    <div *ngIf="spec.topCities?.length"
+      class="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <app-icon name="map-pin" [size]="13" class="text-rose-500 shrink-0"></app-icon>
+          <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0">
+            Active Jurisdictions
+          </h4>
+        </div>
+        <span
+          class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60">
+          {{ spec.topCities?.length }} cities
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        <div *ngFor="let c of spec.topCities; trackBy: trackByCity"
+          class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-[11px] sm:text-xs font-medium flex items-center gap-1.5">
+          <app-icon name="map-pin" [size]="10.5" class="text-rose-500"></app-icon>
+          <span>{{ c.city }}</span>
+          <span
+            class="text-[9.5px] px-1.5 py-0.2 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-300 font-bold">
+            {{ c.count }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2: Consultation Languages -->
+    <div *ngIf="languagesList().length"
+      class="p-3 sm:p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5 flex flex-col justify-between">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <app-icon name="languages" [size]="13" class="text-emerald-500 shrink-0"></app-icon>
+          <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0">
+            Consultation Languages
+          </h4>
+        </div>
+        <span
+          class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60">
+          {{ languagesList().length }} available
+        </span>
+      </div>
+      <div class="flex flex-wrap gap-1.5">
+        <span *ngFor="let lang of languagesList(); trackBy: trackByString"
+          class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 text-[11px] sm:text-xs font-medium text-slate-700 dark:text-slate-300">
+          <app-icon name="languages" [size]="11" class="text-emerald-500 shrink-0"></app-icon>
+          <span>{{ lang }}</span>
+        </span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Document Preparation Checklist -->
+  <div *ngIf="spec.documentsChecklist?.length"
+    class="p-3.5 sm:p-4 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5 sm:space-y-3">
+    <div class="flex items-center justify-between gap-2.5">
+      <div class="flex items-center gap-2 min-w-0">
+        <app-icon name="file-check" [size]="13" class="text-teal-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0 truncate">
+          {{ headings().checklistHeading }}
+        </h4>
+      </div>
+      <button (click)="printChecklist()"
+        class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 transition flex items-center gap-1 border border-slate-200 dark:border-slate-700 cursor-pointer shrink-0 shadow-2xs">
+        <app-icon name="printer" [size]="11"></app-icon>
+        <span>Print Checklist</span>
+      </button>
+    </div>
+    <p class="text-[10.5px] sm:text-[11px] text-slate-500 mt-0.5">
+      Check off items you already have (saved to your session)
+    </p>
+
+    <!-- Progress Ring / Bar -->
+    <div class="flex items-center justify-between text-xs font-bold text-slate-600 dark:text-slate-300">
+      <span>Progress: {{ checklistProgress().checked }} of {{ checklistProgress().total }} ready</span>
+      <span class="text-blue-600 dark:text-blue-400">{{ checklistProgress().percent }}%</span>
+    </div>
+    <div class="h-2 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+      <div class="h-full bg-blue-600 rounded-full transition-all duration-300"
+        [style.width.%]="checklistProgress().percent"></div>
+    </div>
+
+    <!-- Checklist Items -->
+    <div class="space-y-1.5">
+      <div *ngFor="let doc of spec.documentsChecklist; trackBy: trackByString" (click)="toggleDocumentCheck(doc)"
+        [appTooltip]="checkedDocuments().has(doc) ? 'Click to uncheck document' : 'Click to mark document ready'"
+        class="p-2 sm:p-2.5 rounded-xl border flex items-center gap-2.5 sm:gap-3 text-xs transition cursor-pointer select-none"
+        [ngClass]="checkedDocuments().has(doc) ? 'bg-blue-500/10 border-blue-500/30 text-slate-900 dark:text-white font-semibold' : 'bg-white dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-700/60 text-slate-600 dark:text-slate-400'">
+        <div class="w-4 h-4 rounded border flex items-center justify-center shrink-0 transition"
+          [ngClass]="checkedDocuments().has(doc) ? 'bg-blue-600 border-blue-600 text-white' : 'border-slate-400 bg-white dark:bg-slate-700'">
+          <app-icon *ngIf="checkedDocuments().has(doc)" name="check" [size]="11"></app-icon>
+        </div>
+        <span class="flex-1">{{ doc }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Practice Areas -->
+  <div *ngIf="relatedPracticeAreas().length"
+    class="p-3 sm:p-3.5 rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 space-y-2.5">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <app-icon name="compass" [size]="13" class="text-purple-500 shrink-0"></app-icon>
+        <h4 class="text-xs sm:text-[12.5px] font-bold text-slate-800 dark:text-slate-200 m-0">
+          Related Practice Areas
+        </h4>
+      </div>
+      <span
+        class="text-[10px] font-semibold text-slate-500 dark:text-slate-400 bg-slate-200/50 dark:bg-slate-700/50 px-2 py-0.5 rounded-full border border-slate-200/60 dark:border-slate-700/60">
+        {{ relatedPracticeAreas().length }} areas
+      </span>
+    </div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <button *ngFor="let area of relatedPracticeAreas(); trackBy: trackByPracticeArea"
+        (click)="handleSelectRelated(area)" [appTooltip]="'Explore ' + area.name + ' practice details'"
+        class="p-2.5 sm:p-3 rounded-xl bg-white dark:bg-slate-900/60 hover:bg-blue-50/50 dark:hover:bg-slate-800/90 border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-400/80 dark:hover:border-blue-500/50 transition-all text-left cursor-pointer flex items-center justify-between group shadow-2xs hover:shadow-xs">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div
+            class="w-7 h-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+            <app-icon [name]="area.icon || 'scale'" [size]="14"></app-icon>
+          </div>
+          <div class="min-w-0">
+            <div
+              class="text-xs font-bold text-slate-800 dark:text-slate-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 truncate">
+              {{ area.name }}
+            </div>
+            <div class="text-[10px] text-slate-400">{{ area.category }}</div>
+          </div>
+        </div>
+        <app-icon name="arrow-right" [size]="12" class="text-slate-400 group-hover:text-blue-600 shrink-0"></app-icon>
+      </button>
+    </div>
+  </div>
+
+</div>

@@ -1312,6 +1312,8 @@ export class LegalResourcesComponent implements OnInit, AfterViewInit, OnDestroy
         }
       ],
       defaultScope: 'page',
+      scopeTitle: 'Directory Scope',
+      scopeUnit: 'record',
       allowWatermark: true,
       defaultWatermark: 'OFFICIAL COPY',
       allowQrToggle: true,

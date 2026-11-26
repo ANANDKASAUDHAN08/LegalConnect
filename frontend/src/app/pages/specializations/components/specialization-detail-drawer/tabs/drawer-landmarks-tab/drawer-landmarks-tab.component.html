@@ -1,0 +1,191 @@
+<div *ngIf="spec" class="space-y-2.5 sm:space-y-3.5">
+
+  <!-- Landmarks Tab Header (Clean, Elevated & Fully Mobile-Responsive) -->
+  <div class="space-y-2 pt-0.5 pb-0.5">
+    <div class="flex items-center gap-2 sm:gap-2.5 px-0.5 min-w-0">
+      <!-- Radiant Squircle Icon with Amber/Orange Glow -->
+      <div
+        class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-rose-500 text-white flex items-center justify-center shrink-0 shadow-sm shadow-amber-500/25 ring-2 ring-amber-400/20">
+        <app-icon name="gavel" [size]="13.5"></app-icon>
+      </div>
+
+      <!-- Title & Subtitle Stack -->
+      <div class="min-w-0 flex-1">
+        <h3 class="text-xs sm:text-[13px] font-black text-slate-900 dark:text-white m-0 tracking-tight truncate">
+          <span>{{ headings().casesHeading }}</span>
+        </h3>
+        <p class="text-[9.5px] text-slate-500 dark:text-slate-400 m-0 truncate mt-0.5">
+          <span class="hidden sm:inline">Authoritative Supreme Court rulings • Precedents & ready-to-paste
+            citations</span>
+          <span class="sm:hidden">Binding rulings • Citations & ratios</span>
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sleek Section Divider & Precedents Counter -->
+  <div class="flex items-center gap-2 px-0.5 select-none" *ngIf="spec.landmarkDecisions?.length">
+    <div
+      class="flex items-center gap-1.5 shrink-0 text-[9.5px] sm:text-[10px] font-extrabold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+      <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+      <span>Binding Precedents</span>
+    </div>
+    <div
+      class="h-px flex-1 bg-gradient-to-r from-amber-500/25 via-slate-200/60 to-transparent dark:from-amber-500/25 dark:via-slate-800/60">
+    </div>
+    <span
+      class="text-[9px] sm:text-[9.5px] font-mono font-medium text-slate-400 dark:text-slate-500 shrink-0 flex items-center gap-1">
+      <app-icon name="scale" [size]="9.5" class="text-amber-500/80"></app-icon>
+      <span class="text-slate-700 dark:text-slate-300">{{ spec.landmarkDecisions?.length }}
+        <span class="hidden sm:inline">rulings</span> cited</span>
+    </span>
+  </div>
+
+  <div *ngIf="spec.landmarkDecisions?.length; else noCases" class="space-y-2 sm:space-y-2.5">
+    <div *ngFor="let item of spec.landmarkDecisions; trackBy: trackByCaseId"
+      class="py-3 px-3.5 sm:p-3.5 rounded-xl bg-slate-50/80 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800 hover:border-amber-300/80 dark:hover:border-slate-700 hover:shadow-md transition space-y-2.5">
+
+      <!-- Precedent Header -->
+      <div class="flex items-start justify-between gap-2.5">
+        <div class="min-w-0">
+          <h5 class="text-xs sm:text-[13px] font-bold text-slate-900 dark:text-white leading-snug m-0">
+            {{ item.title }}
+          </h5>
+          <div
+            class="flex flex-wrap items-center gap-x-1.5 gap-y-1 mt-1 text-[9.5px] sm:text-[10.5px] text-slate-500 dark:text-slate-400">
+            <span class="font-mono font-semibold text-slate-600 dark:text-slate-300">{{ item.citation }}</span>
+            <span class="text-slate-300 dark:text-slate-600">•</span>
+            <span>{{ item.court }}</span>
+            <span class="px-1.5 py-0.5 rounded text-[8.5px] sm:text-[9px] font-bold border"
+              [ngClass]="getCourtTier(item.court).badgeClass">
+              {{ getCourtTier(item.court).label }}
+            </span>
+            <span *ngIf="item.decisionDate" class="inline-flex items-center gap-0.5">
+              <app-icon name="calendar" [size]="9"></app-icon>
+              <span>{{ item.decisionDate }}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Treatment Badge -->
+        <span
+          class="px-1.5 sm:px-2 py-0.5 text-[8.5px] sm:text-[9.5px] font-bold rounded-md uppercase tracking-wider shrink-0 whitespace-nowrap"
+          [ngClass]="(item.treatment || '').toLowerCase().includes('overrule') ? 'bg-red-500/15 text-red-600 dark:text-red-400 border border-red-500/30' : 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'">
+          {{ item.treatment || 'Good Law' }}
+        </span>
+      </div>
+
+      <!-- Landmark Precedent Holding & Expandable Analysis Dossier -->
+      <div class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-sans space-y-1.5">
+        <p class="m-0" [style.display]="isHoldingExpanded(item.caseId || item.citation) ? 'block' : '-webkit-box'"
+          [style.-webkit-line-clamp]="isHoldingExpanded(item.caseId || item.citation) ? 'unset' : '2'"
+          [style.-webkit-box-orient]="'vertical'"
+          [style.overflow]="isHoldingExpanded(item.caseId || item.citation) ? 'visible' : 'hidden'">
+          {{ item.holding }}
+        </p>
+
+        <!-- Action button to toggle full holding & legal dossier -->
+        <button type="button" (click)="$event.stopPropagation(); toggleHolding(item.caseId || item.citation)"
+          class="text-[10.5px] sm:text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 bg-transparent border-0 cursor-pointer p-0 inline-flex items-center gap-1 active:scale-95 transition">
+          <span>{{ isHoldingExpanded(item.caseId || item.citation) ? 'Show Less' : 'Read Full Precedent Analysis'
+            }}</span>
+          <app-icon [name]="isHoldingExpanded(item.caseId || item.citation) ? 'chevron-up' : 'chevron-down'"
+            [size]="11"></app-icon>
+        </button>
+
+        <!-- Expanded Precedent Dossier (Summary, Bench, Legal Issues & Statutory Provisions) -->
+        <div *ngIf="isHoldingExpanded(item.caseId || item.citation)"
+          class="pt-2 border-t border-slate-200/70 dark:border-slate-700/70 space-y-2 text-xs">
+
+          <!-- Background & Constitutional Impact Summary -->
+          <div *ngIf="item.summary && item.summary !== item.holding"
+            class="p-2 sm:p-2.5 rounded-lg bg-blue-50/70 dark:bg-blue-950/40 border border-blue-500/20 text-slate-700 dark:text-slate-300 leading-relaxed text-[11px] sm:text-xs">
+            <div class="font-bold text-blue-700 dark:text-blue-400 mb-0.5 flex items-center gap-1">
+              <app-icon name="info" [size]="11"></app-icon>
+              <span>Judicial Summary & Constitutional Impact:</span>
+            </div>
+            <p class="m-0 leading-relaxed">{{ item.summary }}</p>
+          </div>
+
+          <!-- Coram / Judicial Bench -->
+          <div *ngIf="item.bench"
+            class="flex items-start gap-1.5 text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-400">
+            <span class="font-bold text-slate-800 dark:text-slate-200 shrink-0 flex items-center gap-1">
+              <app-icon name="users" [size]="11" class="text-amber-500"></app-icon>
+              <span>Bench:</span>
+            </span>
+            <span class="italic leading-normal">{{ item.bench }}</span>
+          </div>
+
+          <!-- Key Legal Questions Decided -->
+          <div *ngIf="item.issues && item.issues.length > 0" class="space-y-1">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 block">Key
+              Legal Questions Decided</span>
+            <ul class="m-0 pl-4 space-y-0.5 text-[10.5px] sm:text-[11px] text-slate-600 dark:text-slate-300 list-disc">
+              <li *ngFor="let issue of item.issues">{{ issue }}</li>
+            </ul>
+          </div>
+
+          <!-- Connected Sections -->
+          <div *ngIf="item.connectedSections && item.connectedSections.length > 0"
+            class="flex flex-wrap items-center gap-1 pt-0.5">
+            <span class="text-[10px] font-bold text-slate-400 dark:text-slate-500 mr-1">Statutory
+              Provisions:</span>
+            <span *ngFor="let sec of item.connectedSections"
+              class="px-1.5 py-0.2 rounded font-mono text-[9px] font-bold bg-slate-200/70 dark:bg-slate-700/70 text-slate-700 dark:text-slate-300 border border-slate-300/50 dark:border-slate-600/50">
+              {{ sec }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ratio Decidendi Highlight Box -->
+      <div *ngIf="item.ratioDecidendi"
+        class="p-2.5 sm:p-3 rounded-lg sm:rounded-xl bg-amber-500/10 border-l-4 border-amber-500 text-[11px] sm:text-xs text-slate-800 dark:text-slate-200 leading-relaxed">
+        <span class="font-bold text-amber-700 dark:text-amber-400">{{ headings().ratioLabel }}:</span>
+        <span class="italic"> "{{ item.ratioDecidendi }}"</span>
+      </div>
+
+      <!-- Citation Copy Toolbar -->
+      <div class="flex items-center gap-1.5 flex-wrap">
+        <button (click)="copyCitation(item, 'standard')" [appTooltip]="'Copy official legal citation to clipboard'"
+          class="px-2 py-1 rounded-lg border text-[10.5px] sm:text-[11px] font-bold transition cursor-pointer inline-flex items-center gap-1"
+          [ngClass]="copiedCitationId() === (item.caseId || item.citation) ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' : 'bg-white dark:bg-slate-900/60 border-slate-200/60 dark:border-slate-700/60 text-blue-600 dark:text-blue-400 hover:border-blue-300 dark:hover:border-blue-700'">
+          <app-icon [name]="copiedCitationId() === (item.caseId || item.citation) ? 'check' : 'copy'"
+            [size]="11"></app-icon>
+          <span>{{ copiedCitationId() === (item.caseId || item.citation) ? 'Copied!' : 'Copy Citation' }}</span>
+        </button>
+        <button (click)="copyCitation(item, 'formal')" [appTooltip]="'Copy formal legal precedent with holding summary'"
+          class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300 dark:hover:border-blue-700 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 transition cursor-pointer inline-flex items-center gap-1">
+          <app-icon name="file-text" [size]="11"></app-icon>
+          <span>With Holding</span>
+        </button>
+        <a *ngIf="item.officialDocumentUrl" [href]="item.officialDocumentUrl" target="_blank" rel="noopener noreferrer"
+          [appTooltip]="'View official judicial record / eCourts digest'"
+          class="px-2 py-1 rounded-lg bg-white dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-700/60 hover:border-blue-300 dark:hover:border-blue-700 text-[10.5px] sm:text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400 no-underline transition inline-flex items-center gap-1">
+          <app-icon name="external-link" [size]="10"></app-icon>
+          <span>Full Ruling</span>
+        </a>
+        <button (click)="openNoteEditor('case_' + (item.caseId || item.citation), item.title, 'case')"
+          [appTooltip]="hasNote('case_' + (item.caseId || item.citation)) ? 'Edit private research note or case strategy note' : 'Save private research note or case strategy note'"
+          class="ml-auto px-2 py-1 rounded-lg bg-transparent border-0 text-[10.5px] sm:text-[11px] font-bold active:scale-95 transition cursor-pointer inline-flex items-center gap-1"
+          [ngClass]="hasNote('case_' + (item.caseId || item.citation)) ? 'text-amber-500 dark:text-amber-400' : 'text-slate-500 dark:text-slate-400 hover:text-amber-600 dark:hover:text-amber-400'">
+          <span *ngIf="hasNote('case_' + (item.caseId || item.citation))"
+            class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+          <app-icon name="edit" [size]="11"></app-icon>
+          <span>{{ hasNote('case_' + (item.caseId || item.citation)) ? 'Saved Note' : 'Add Note' }}</span>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <ng-template #noCases>
+    <div
+      class="p-6 sm:p-8 text-center rounded-xl sm:rounded-2xl bg-slate-50/80 dark:bg-slate-800/30 border border-dashed border-slate-200 dark:border-slate-800 text-slate-400 text-xs">
+      <app-icon name="scale" [size]="26" class="mx-auto mb-2 text-slate-300"></app-icon>
+      <div>No landmark judgments currently linked to this specialization catalog entry.</div>
+    </div>
+  </ng-template>
+
+</div>

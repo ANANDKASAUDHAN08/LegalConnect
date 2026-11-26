@@ -345,20 +345,12 @@
               </div>
             </div>
 
-            <!-- Pagination Controls -->
-            <div *ngIf="totalDraftPages > 1"
-              class="flex items-center justify-between pt-2 border-t border-borderSubtle/60 text-[10px] text-textMuted">
-              <button (click)="prevDraftPage()" [disabled]="draftPage === 1"
-                class="px-2.5 py-1 bg-bgBase hover:bg-bgElevated border border-borderSubtle rounded-lg disabled:opacity-40 disabled:hover:bg-bgBase cursor-pointer font-bold transition-colors"
-                [appTooltip]="'Go to previous drafts page'" tooltipPlacement="top">
-                Prev
-              </button>
-              <span class="font-semibold">Page {{ draftPage }} of {{ totalDraftPages }}</span>
-              <button (click)="nextDraftPage()" [disabled]="draftPage === totalDraftPages"
-                class="px-2.5 py-1 bg-bgBase hover:bg-bgElevated border border-borderSubtle rounded-lg disabled:opacity-40 disabled:hover:bg-bgBase cursor-pointer font-bold transition-colors"
-                [appTooltip]="'Go to next drafts page'" tooltipPlacement="top">
-                Next
-              </button>
+            <!-- Standardized Reusable Pagination Controls -->
+            <div *ngIf="filteredDraftsList.length > draftPageSize" class="pt-2 border-t border-borderSubtle/60">
+              <app-pagination [total]="filteredDraftsList.length" [page]="draftPage"
+                (pageChange)="draftPage = $event; updateFiltersAndPagination()" [pageSize]="draftPageSize" size="sm"
+                variant="subtle" layout="compact" [showTotal]="false" [showPageSize]="false" [showPageNumbers]="false">
+              </app-pagination>
             </div>
 
             <!-- Limit warning -->

@@ -1,108 +1,876 @@
 <div
-  class="page-wrapper min-h-screen pt-[90px] sm:pt-[105px] pb-24 bg-slate-50 dark:bg-[#090b14] text-slate-900 dark:text-white transition-colors duration-300">
-  <div class="container max-w-[1240px] mx-auto px-4 sm:px-6">
+  class="page-wrapper min-h-screen pt-[64px] sm:pt-[70px] pb-4 bg-slate-50 dark:bg-[#090b14] text-slate-900 dark:text-white transition-colors duration-300">
 
-    <!-- ==================== HEADER SECTION ==================== -->
-    <header class="mb-7 pb-5 border-b border-slate-200/70 dark:border-slate-800/70">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div>
-          <div class="flex items-center gap-2 mb-1.5">
-            <span
-              class="px-2 py-0.5 text-[10px] font-black bg-blue-500/10 text-blue-600 dark:text-blue-400 rounded-md border border-blue-500/20 uppercase tracking-widest">
-              Statutory Directory Catalog
+  <!-- ==================== FULL-WIDTH AURORA HERO HEADER ==================== -->
+  <header
+    class="w-full relative border-b border-slate-200/80 dark:border-slate-800/80 bg-white/70 dark:bg-[#0c0f1d] overflow-hidden">
+    <!-- Full-Width Background Ambient Glow -->
+    <div
+      class="aurora-blob absolute -top-24 -left-20 w-96 h-96 bg-blue-500/10 dark:bg-blue-600/15 rounded-full blur-3xl pointer-events-none">
+    </div>
+    <div
+      class="aurora-blob-2 absolute -top-20 -right-20 w-96 h-96 bg-indigo-500/10 dark:bg-purple-600/10 rounded-full blur-3xl pointer-events-none">
+    </div>
+
+    <!-- Inner Content Container: 90% width on desktop, edge-to-edge with padding on mobile -->
+    <div class="w-full lg:w-[90%] max-w-[1920px] mx-auto px-4 sm:px-5 lg:px-6 py-4">
+      <!-- ==================== MOBILE HERO SECTION (lg:hidden) ==================== -->
+      <div class="lg:hidden flex flex-col gap-1 relative z-10">
+        <!-- Top Status Bar (NO BREADCRUMBS on mobile): Statutory Badge + Hindi Switcher -->
+        <div class="flex items-center justify-between gap-2">
+          <div
+            class="statutory-pill inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider bg-blue-500/10 dark:bg-blue-500/15 text-blue-600 dark:text-blue-400 border border-blue-500/25 backdrop-blur-md shadow-2xs">
+            <span class="relative flex h-1.5 w-1.5">
+              <span
+                class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
             </span>
+            <app-icon name="landmark" [size]="10"></app-icon>
+            <span>Bare Act Atlas &bull; India</span>
           </div>
-          <h1 class="font-serif text-2xl sm:text-4xl font-bold text-slate-900 dark:text-white leading-tight">
-            Legal Practice Areas &amp; Specializations
+
+          <!-- Hindi Switcher on Mobile -->
+          <button (click)="toggleHindi()" [attr.aria-label]="isHindi() ? 'Switch to English' : 'हिंदी में बदलें'"
+            [appTooltip]="isHindi() ? 'Switch to English' : 'हिंदी में बदलें'" tooltipPlacement="bottom"
+            class="px-2.5 py-1 text-[10px] font-bold rounded-full border cursor-pointer transition-all flex items-center gap-1.5 shadow-2xs backdrop-blur-md active:scale-95"
+            [ngClass]="isHindi()
+              ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40 shadow-orange-500/10'
+              : 'bg-white/90 dark:bg-slate-900/90 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-white/10'">
+            <app-icon name="globe" [size]="11"></app-icon>
+            <span>{{ isHindi() ? 'English (EN)' : 'हिंदी (HI)' }}</span>
+          </button>
+        </div>
+
+        <!-- Mobile Title & Subtitle -->
+        <div>
+          <h1 class="font-serif text-2xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.2]">
+            @if (isHindi()) {
+            कानूनी अभ्यास क्षेत्र और विशेषज्ञताएँ
+            } @else {
+            Legal Practice Areas <span class="text-blue-600 dark:text-blue-400 font-normal text-xs">&amp;</span>
+            Specializations Atlas
+            }
           </h1>
-          <p class="text-slate-500 dark:text-slate-400 text-xs sm:text-sm mt-1 max-w-2xl leading-normal">
-            Explore Indian legal disciplines, statutory Bare Act frameworks, typical court forums, and find verified advocates specialized in your exact matter.
+          <p class="text-slate-600 dark:text-slate-400 text-xs mt-1.5 leading-relaxed line-clamp-2">
+            {{ isHindi()
+            ? 'भारतीय कानूनी विषयों, Bare Act ढाँचों और विशिष्ट न्यायालयों के विशेषज्ञ सत्यापित अधिवक्ता खोजें।'
+            : 'Explore Indian legal disciplines, statutory Bare Act frameworks, and find verified advocates.'
+            }}
           </p>
         </div>
 
-        <!-- Controls: Sort & View Mode (Desktop/Tablet) -->
-        <div class="flex items-center gap-2.5 self-start md:self-end shrink-0">
-          <!-- Mobile Filter Trigger Button (Visible only on mobile) -->
-          <button (click)="openMobileFilter()"
-            class="md:hidden px-3.5 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 cursor-pointer">
-            <app-icon name="filter" [size]="14"></app-icon>
-            <span>Filters &amp; Sort</span>
-          </button>
-
-          <!-- Sort Select (Desktop) -->
-          <div class="hidden md:flex items-center gap-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-1.5 shadow-xs">
-            <app-icon name="sort" [size]="14" class="text-slate-400"></app-icon>
-            <select [ngModel]="selectedSort()" (ngModelChange)="setSort($event)"
-              class="bg-transparent text-xs font-semibold text-slate-700 dark:text-slate-300 border-0 outline-none cursor-pointer pr-2"
-              aria-label="Sort practice areas">
-              <option value="popular">Sort: Most Popular</option>
-              <option value="advocates">Sort: Most Advocates</option>
-              <option value="alpha-asc">Sort: A to Z</option>
-              <option value="alpha-desc">Sort: Z to A</option>
-            </select>
+        <!-- Mobile 4-Column Compact Telemetry Grid (Unified Quiet Luxury Cluster) -->
+        <div class="grid grid-cols-4 gap-1.5 sm:gap-2 my-0.5">
+          <!-- 1. Disciplines -->
+          <div
+            class="flex flex-col items-center justify-center text-center py-2 px-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 shadow-2xs">
+            <div class="flex items-center justify-center gap-1.5 leading-none">
+              <span
+                class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0">
+                <app-icon name="scale" [size]="10.5"></app-icon>
+              </span>
+              <span class="text-sm font-black text-slate-900 dark:text-white">{{ totalAreas() }}</span>
+            </div>
+            <span
+              class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1 truncate">Areas</span>
           </div>
 
-          <!-- View Mode Toggle (Grid vs Grouped) -->
-          <button (click)="toggleViewMode()"
-            [appTooltip]="viewMode() === 'grid' ? 'Switch to Category Grouped View' : 'Switch to Grid View'"
-            tooltipPlacement="top"
-            class="px-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-xl shadow-xs transition cursor-pointer flex items-center gap-1.5">
-            <app-icon [name]="viewMode() === 'grid' ? 'layers' : 'grid'" [size]="14"></app-icon>
-            <span class="hidden sm:inline">{{ viewMode() === 'grid' ? 'Grouped' : 'Grid' }}</span>
+          <!-- 2. Advocates -->
+          <div
+            class="flex flex-col items-center justify-center text-center py-2 px-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 shadow-2xs">
+            <div class="flex items-center justify-center gap-1.5 leading-none">
+              <span
+                class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0 relative">
+                <app-icon name="users" [size]="10.5"></app-icon>
+                <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              </span>
+              <span class="text-sm font-black text-slate-900 dark:text-white">{{ totalAdvocates() }}</span>
+            </div>
+            <span
+              class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1 truncate">Advocates</span>
+          </div>
+
+          <!-- 3. Categories -->
+          <div
+            class="flex flex-col items-center justify-center text-center py-2 px-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 shadow-2xs">
+            <div class="flex items-center justify-center gap-1.5 leading-none">
+              <span
+                class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0">
+                <app-icon name="layers" [size]="10.5"></app-icon>
+              </span>
+              <span class="text-sm font-black text-slate-900 dark:text-white">{{ totalCategories() }}</span>
+            </div>
+            <span
+              class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1 truncate">Groups</span>
+          </div>
+
+          <!-- 4. Bare Acts -->
+          <div
+            class="flex flex-col items-center justify-center text-center py-2 px-1 rounded-xl bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 shadow-2xs">
+            <div class="flex items-center justify-center gap-1.5 leading-none">
+              <span
+                class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0">
+                <app-icon name="book-open" [size]="10.5"></app-icon>
+              </span>
+              <span class="text-sm font-black text-slate-900 dark:text-white">{{ totalActsLinked() }}</span>
+            </div>
+            <span
+              class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mt-1 truncate">Bare
+              Acts</span>
+          </div>
+        </div>
+
+        <!-- Mobile Controls Deck: Full-Width View Mode Segmented Switcher + Export Action -->
+        <div class="flex items-center gap-2 mt-1">
+          <!-- MNC-Grade Full-Width Segmented View Mode Tabs -->
+          <div
+            class="flex-1 h-10 p-1 grid grid-cols-3 bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 rounded-xl shadow-2xs gap-1 backdrop-blur-md">
+            <button (click)="setViewMode('grid')" aria-label="Switch to Grid View" [appTooltip]="'Grid View'"
+              tooltipPlacement="bottom"
+              [class]="viewMode() === 'grid'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs shadow-blue-500/25'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-white/5 font-semibold'"
+              class="h-8 rounded-xl border-0 cursor-pointer transition-all flex items-center justify-center gap-1.5 text-xs active:scale-95 select-none">
+              <app-icon name="grid" [size]="14"></app-icon>
+              <span>Grid</span>
+            </button>
+            <button (click)="setViewMode('grouped')" aria-label="Switch to Grouped View"
+              [appTooltip]="'Grouped by Category'" tooltipPlacement="bottom"
+              [class]="viewMode() === 'grouped'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs shadow-blue-500/25'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-white/5 font-semibold'"
+              class="h-8 rounded-xl border-0 cursor-pointer transition-all flex items-center justify-center gap-1.5 text-xs active:scale-95 select-none">
+              <app-icon name="layers" [size]="14"></app-icon>
+              <span>Grouped</span>
+            </button>
+            <button (click)="setViewMode('compact')" aria-label="Switch to Compact List View"
+              [appTooltip]="'Compact List View'" tooltipPlacement="bottom"
+              [class]="viewMode() === 'compact'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs shadow-blue-500/25'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-white/5 font-semibold'"
+              class="h-8 rounded-xl border-0 cursor-pointer transition-all flex items-center justify-center gap-1.5 text-xs active:scale-95 select-none">
+              <app-icon name="list" [size]="14"></app-icon>
+              <span>List</span>
+            </button>
+          </div>
+
+          <!-- Primary Export Button on Mobile (h-10) -->
+          <button (click)="openExportModal()" [appTooltip]="'Print & Export Catalog'" tooltipPlacement="top"
+            aria-label="Print and export practice areas catalog"
+            class="h-10 px-3 sm:px-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white rounded-xl shadow-sm shadow-blue-500/25 transition-all cursor-pointer flex items-center justify-center gap-1.5 shrink-0 active:scale-95 text-xs font-bold border-0">
+            <app-icon name="download" [size]="13" class="text-white"></app-icon>
+            <span>Export</span>
           </button>
         </div>
       </div>
-    </header>
 
-    <!-- ==================== SEARCH & CATEGORY CHIPS ==================== -->
-    <div class="space-y-3.5 mb-7">
-      <!-- Search Input -->
-      <div class="relative w-full max-w-[560px]">
-        <input type="text" [value]="searchQuery()" (input)="onSearchChange($event)"
-          placeholder="Search specializations, property disputes, bail, tax, consumer law..."
-          class="w-full pl-10 pr-9 py-2.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs sm:text-sm outline-none focus:border-blue-500 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 shadow-xs placeholder-slate-400 transition-colors" />
-        <app-icon name="search" [size]="16" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></app-icon>
-        <button *ngIf="searchQuery()" (click)="clearSearch()" appTooltip="Clear search" tooltipPlacement="top"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-1 flex items-center justify-center">
-          <app-icon name="x" [size]="14"></app-icon>
-        </button>
+      <!-- ==================== DESKTOP HERO SECTION (hidden lg:flex) ==================== -->
+      <div class="hidden lg:flex items-center justify-between gap-6 relative z-10">
+        <!-- Left Column: Breadcrumb Dock + Title + Subtitle -->
+        <div class="flex-1 min-w-0 pr-2">
+          <!-- Breadcrumbs & Statutory Registry Ribbon (Desktop) -->
+          <div class="flex items-center gap-2 mb-2 flex-wrap">
+            <!-- Frosted Glass Breadcrumb Pill -->
+            <nav
+              class="breadcrumb-dock inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 backdrop-blur-md shadow-2xs text-[11px] font-medium text-slate-500 dark:text-slate-400"
+              aria-label="Breadcrumb">
+              <a routerLink="/"
+                class="hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-1.5 no-underline text-slate-600 dark:text-slate-400">
+                <app-icon name="home" [size]="11"></app-icon>
+                <span>Home</span>
+              </a>
+              <app-icon name="chevron-right" [size]="10" class="text-slate-400 dark:text-slate-600"></app-icon>
+              <span class="text-slate-600 dark:text-slate-400">Legal Atlas</span>
+              <app-icon name="chevron-right" [size]="10" class="text-slate-400 dark:text-slate-600"></app-icon>
+              <span class="text-slate-900 dark:text-white font-bold flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+                Practice Areas
+              </span>
+            </nav>
+
+            <!-- Statutory Directory Pill -->
+            <div
+              class="statutory-pill inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider bg-blue-500/10 dark:bg-blue-500/15 text-blue-700 dark:text-blue-300 border border-blue-500/25 backdrop-blur-md shadow-2xs">
+              <span class="relative flex h-2 w-2">
+                <span
+                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+              </span>
+              <app-icon name="landmark" [size]="11" class="text-blue-600 dark:text-blue-400"></app-icon>
+              <span>Statutory Directory &bull; Republic of India</span>
+            </div>
+
+            <!-- Hindi Language Switcher (Desktop) -->
+            <button (click)="toggleHindi()"
+              [appTooltip]="isHindi() ? 'Switch back to English' : 'हिंदी अनुवाद में देखें'" tooltipPlacement="top"
+              class="px-3 py-1.5 text-[11px] font-bold rounded-full border cursor-pointer transition-all duration-200 flex items-center gap-1.5 shadow-2xs backdrop-blur-md hover:scale-105 active:scale-95"
+              [ngClass]="isHindi()
+                ? 'bg-orange-500/15 text-orange-600 dark:text-orange-400 border-orange-500/40 shadow-orange-500/10'
+                : 'bg-white/80 dark:bg-slate-900/80 text-slate-700 dark:text-slate-300 border-slate-200/80 dark:border-white/10 hover:border-orange-400'">
+              <app-icon name="globe" [size]="12"></app-icon>
+              <span>{{ isHindi() ? 'English (EN)' : 'हिंदी (HI)' }}</span>
+            </button>
+          </div>
+
+          <!-- Main Title -->
+          <h1 class="font-serif text-3xl font-bold text-slate-900 dark:text-white tracking-tight leading-[1.2]">
+            @if (isHindi()) {
+            कानूनी अभ्यास क्षेत्र और विशेषज्ञताएँ
+            } @else {
+            Legal Practice Areas <span class="text-blue-600 dark:text-blue-400 font-normal text-sm">&amp;</span>
+            Specializations Atlas
+            }
+          </h1>
+
+          <!-- Subtitle -->
+          <p class="text-slate-600 dark:text-slate-400 text-xs sm:text-[13.5px] mt-2 max-w-2xl leading-relaxed">
+            {{ isHindi()
+            ? 'भारतीय कानूनी विषयों, वैधानिक Bare Act ढाँचों, विशिष्ट न्यायालय फोरमों का अन्वेषण करें और अपने मामले के
+            विशेषज्ञ सत्यापित अधिवक्ता खोजें।'
+            : 'Explore Indian legal disciplines, statutory Bare Act frameworks, typical court forums, and find verified
+            advocates specialized in your exact matter.'
+            }}
+          </p>
+        </div>
+
+        <!-- Right Column: Telemetry & Controls (Desktop - Borderless & Seamless) -->
+        <div class="flex flex-col justify-center gap-2.5 shrink-0 lg:min-w-[480px] xl:min-w-[520px]">
+
+          <!-- Top Row: 4 Precision Compact Glass Telemetry Tiles (Ultra-Compact 48px Height - Cohesive Quiet Luxury Cluster) -->
+          <div class="grid grid-cols-4 gap-2">
+            <!-- 1. Disciplines (AREAS) -->
+            <div
+              class="telemetry-tile group relative py-1.5 px-2 sm:px-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all duration-200 shadow-2xs hover:shadow-md cursor-default backdrop-blur-md flex flex-col justify-between min-h-[48px]">
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                  <app-icon name="scale" [size]="10.5"></app-icon>
+                </span>
+                <span
+                  class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-white/10 text-[7.5px] font-bold uppercase tracking-wider leading-none">AREAS</span>
+              </div>
+              <div class="flex items-baseline justify-between mt-1 gap-1">
+                <span class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-none font-sans">
+                  {{ totalAreas() }}
+                </span>
+                <span
+                  class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 truncate uppercase tracking-wider leading-none">
+                  Disciplines
+                </span>
+              </div>
+            </div>
+
+            <!-- 2. Advocates (LIVE) -->
+            <div
+              class="telemetry-tile group relative py-1.5 px-2 sm:px-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 hover:border-emerald-500/30 dark:hover:border-emerald-400/30 transition-all duration-200 shadow-2xs hover:shadow-md cursor-default backdrop-blur-md flex flex-col justify-between min-h-[48px]">
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform relative">
+                  <app-icon name="users" [size]="10.5"></app-icon>
+                  <span class="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                </span>
+                <span
+                  class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[7px] font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider leading-none"
+                  [appTooltip]="'Live Bar Directory Verified'" tooltipPlacement="top">
+                  <span class="relative flex h-1 w-1">
+                    <span
+                      class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-1 w-1 bg-emerald-500"></span>
+                  </span>
+                  <span>LIVE</span>
+                </span>
+              </div>
+              <div class="flex items-baseline justify-between mt-1 gap-1">
+                <span class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-none font-sans">
+                  {{ totalAdvocates() }}
+                </span>
+                <span
+                  class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 truncate uppercase tracking-wider leading-none">
+                  Advocates
+                </span>
+              </div>
+            </div>
+
+            <!-- 3. Categories (GROUPS) -->
+            <div
+              class="telemetry-tile group relative py-1.5 px-2 sm:px-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all duration-200 shadow-2xs hover:shadow-md cursor-default backdrop-blur-md flex flex-col justify-between min-h-[48px]">
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                  <app-icon name="layers" [size]="10.5"></app-icon>
+                </span>
+                <span
+                  class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-white/10 text-[7.5px] font-bold uppercase tracking-wider leading-none">GROUPS</span>
+              </div>
+              <div class="flex items-baseline justify-between mt-1 gap-1">
+                <span class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-none font-sans">
+                  {{ totalCategories() }}
+                </span>
+                <span
+                  class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 truncate uppercase tracking-wider leading-none">
+                  Categories
+                </span>
+              </div>
+            </div>
+
+            <!-- 4. Bare Acts (LAWS) -->
+            <div
+              class="telemetry-tile group relative py-1.5 px-2 sm:px-2.5 rounded-xl bg-white/80 dark:bg-slate-900/80 hover:bg-white dark:hover:bg-slate-800/90 border border-slate-200/80 dark:border-white/10 hover:border-blue-500/30 dark:hover:border-blue-400/30 transition-all duration-200 shadow-2xs hover:shadow-md cursor-default backdrop-blur-md flex flex-col justify-between min-h-[48px]">
+              <div class="flex items-center justify-between">
+                <span
+                  class="w-5 h-5 rounded-md bg-slate-100 dark:bg-white/[0.05] text-blue-600 dark:text-blue-400 border border-slate-200/60 dark:border-white/10 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
+                  <app-icon name="book-open" [size]="10.5"></app-icon>
+                </span>
+                <span
+                  class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-white/[0.05] text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-white/10 text-[7.5px] font-bold uppercase tracking-wider leading-none">LAWS</span>
+              </div>
+              <div class="flex items-baseline justify-between mt-1 gap-1">
+                <span class="text-sm sm:text-base font-black text-slate-900 dark:text-white leading-none font-sans">
+                  {{ totalActsLinked() }}
+                </span>
+                <span
+                  class="text-[8.5px] font-bold text-slate-400 dark:text-slate-500 truncate uppercase tracking-wider leading-none">
+                  Acts Linked
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: View Mode Segmented Control + Secondary Export Action -->
+          <div class="flex items-center justify-end gap-2.5 pt-0.5">
+            <!-- MNC-Grade Segmented View Switcher (h-10 premium feel) -->
+            <div
+              class="h-10 p-1 flex items-center bg-white/80 dark:bg-slate-900/80 border border-slate-200/80 dark:border-white/10 rounded-xl shadow-2xs gap-1 backdrop-blur-md">
+              <button (click)="setViewMode('grid')" [appTooltip]="'Grid View'" tooltipPlacement="top"
+                aria-label="Switch to Grid View"
+                [class]="viewMode() === 'grid' ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-white/5'"
+                class="h-8 px-3 rounded-xl border-0 cursor-pointer transition-all flex items-center gap-1.5 text-xs font-semibold active:scale-95">
+                <app-icon name="grid" [size]="15"></app-icon>
+                <span>Grid</span>
+              </button>
+              <button (click)="setViewMode('grouped')" [appTooltip]="'Grouped by Category'" tooltipPlacement="top"
+                aria-label="Switch to Grouped View"
+                [class]="viewMode() === 'grouped' ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-white/5'"
+                class="h-8 px-3 rounded-xl border-0 cursor-pointer transition-all flex items-center gap-1.5 text-xs font-semibold active:scale-95">
+                <app-icon name="layers" [size]="15"></app-icon>
+                <span>Grouped</span>
+              </button>
+              <button (click)="setViewMode('compact')" [appTooltip]="'Compact List View'" tooltipPlacement="top"
+                aria-label="Switch to Compact List View"
+                [class]="viewMode() === 'compact' ? 'bg-blue-600 text-white font-bold shadow-sm shadow-blue-500/20' : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-white/5'"
+                class="h-8 px-3 rounded-xl border-0 cursor-pointer transition-all flex items-center gap-1.5 text-xs font-semibold active:scale-95">
+                <app-icon name="list" [size]="15"></app-icon>
+                <span>List</span>
+              </button>
+            </div>
+
+            <!-- Catalog Print & Export Button (Primary Action) -->
+            <button (click)="openExportModal()"
+              [appTooltip]="'Print & Export Practice Areas Catalog (PDF, CSV, JSON, TXT)'" tooltipPlacement="top"
+              aria-label="Print and export practice areas catalog"
+              class="h-10 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-sm shadow-blue-500/25 hover:shadow-md hover:shadow-blue-500/35 transition-all cursor-pointer flex items-center gap-2 shrink-0 active:scale-95 border-0">
+              <app-icon name="download" [size]="14" class="text-white"></app-icon>
+              <span>Export</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- 0-CPU Sticky Header Sentinel Observed via IntersectionObserver -->
+  <div #stickySentinel id="sticky-sentinel" class="h-[1px] w-full pointer-events-none -mb-[1px]"></div>
+
+  <!-- ==================== STICKY COMMAND DECK (Filters & Search) ==================== -->
+  <div class="filter-bar-sticky w-full" [class.is-stuck]="isFilterBarSticky()" id="results-anchor">
+    <div class="w-full lg:w-[90%] max-w-[1920px] mx-auto px-1 sm:px-5 lg:px-6 py-1 sm:py-2">
+
+      <!-- Command Deck Card Shell (Strictly 2 Lines, Mobile Borderless & Full-Width) -->
+      <div
+        class="p-1 sm:p-2 rounded-lg sm:rounded-xl bg-transparent sm:bg-white/90 sm:dark:bg-[#0c1022]/95 border-0 sm:border border-slate-200/90 dark:border-white/10 shadow-none sm:shadow-lg sm:shadow-blue-900/5 sm:dark:shadow-black/50 backdrop-blur-none sm:backdrop-blur-xl space-y-1 sm:space-y-1.5">
+
+        <!-- Line 1: Search + Practice Area Dropdown + Jurisdiction Dropdown + On Call Now + Desktop Filters / Mobile Trigger -->
+        <div class="flex items-center gap-1.5 sm:gap-2">
+
+          <!-- Futuristic Search Input -->
+          <div class="relative flex-1 group">
+            <input #searchInput type="text" [value]="searchQuery()" (input)="onSearchChange($event)"
+              [placeholder]="isHindi() ? 'अभ्यास क्षेत्र, जमानत, संपत्ति, कर, साइबर कानून खोजें...' : 'Search 27+ practice areas, bail, property, cyber, tax...'"
+              class="w-full h-8 sm:h-[34px] pl-8 sm:pl-8.5 pr-12 sm:pr-14 py-1 sm:py-1.5 bg-slate-100/80 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800 rounded-xl text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 dark:focus:border-blue-400 text-slate-800 dark:text-slate-100 placeholder-slate-400 shadow-inner transition-all duration-200" />
+
+            <app-icon name="search" [size]="13"
+              class="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-blue-500 transition-colors"></app-icon>
+
+            <div class="absolute right-2 sm:right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1">
+              <!-- Clear Search -->
+              <button *ngIf="searchQuery()" (click)="clearSearch()" appTooltip="Clear search" tooltipPlacement="top"
+                aria-label="Clear search input"
+                class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 bg-transparent border-0 cursor-pointer p-0.5 flex items-center justify-center transition">
+                <app-icon name="x" [size]="12"></app-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Practice Area / Discipline Dropdown (Desktop ≥ sm) -->
+          <div class="hidden sm:block shrink-0">
+            <app-custom-select [options]="categorySelectOptions()" [value]="selectedCategory()"
+              (valueChange)="setCategory($event)" (opened)="closeFilterShelf()" size="sm" variant="default" rounded="xl"
+              menuRounded="lg" minWidth="125px" width="155px" maxWidth="165px" menuMinWidth="200px" icon="briefcase"
+              placeholder="Practice Area" ariaLabel="Filter by practice area discipline">
+            </app-custom-select>
+          </div>
+
+          <!-- Sort Selector (Desktop ≥ md - Moved from Hero into Sticky Filter Deck) -->
+          <div class="hidden md:block shrink-0">
+            <app-custom-select [options]="sortOptions" [value]="selectedSort()" (valueChange)="setSort($event)"
+              (opened)="closeFilterShelf()" size="sm" variant="default" rounded="xl" menuRounded="xl" minWidth="110px"
+              width="130px" maxWidth="140px" menuMinWidth="160px" icon="sort" iconColor="#3b82f6" placeholder="Sort By"
+              ariaLabel="Sort practice areas">
+            </app-custom-select>
+          </div>
+
+          <!-- Live On Call Now Toggle Button (Desktop ≥ lg) -->
+          <button (click)="toggleAvailableNow()"
+            [appTooltip]="onlyAvailableNow() ? 'Showing all areas' : 'Filter areas with on-call advocates available right now'"
+            tooltipPlacement="top" aria-label="Toggle available now advocates filter"
+            class="hidden lg:flex h-8 sm:h-[34px] px-2.5 text-xs font-bold rounded-xl border transition cursor-pointer items-center gap-1.5 shrink-0"
+            [ngClass]="onlyAvailableNow()
+              ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/30'
+              : 'bg-slate-100/80 dark:bg-slate-900/80 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-blue-400'">
+            <span class="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full"
+              [ngClass]="onlyAvailableNow() ? 'bg-white animate-pulse' : 'bg-emerald-500'"></span>
+            <span class="whitespace-nowrap">On Call Now</span>
+          </button>
+
+          <!-- Consolidated "More Filters" Trigger Button + Right-Stuck Overflowing Popover Panel -->
+          <div class="relative shrink-0" #moreFilterContainerRef>
+            <button (click)="toggleFilterShelf($event)" aria-label="Toggle secondary filter popover"
+              [appTooltip]="isFilterShelfOpen() ? 'Close additional filters' : 'Open additional filters'"
+              tooltipPlacement="top"
+              class="h-8 sm:h-[34px] px-3 rounded-xl border transition cursor-pointer flex items-center gap-1.5 text-xs font-semibold select-none active:scale-95 shadow-2xs backdrop-blur-md shrink-0"
+              [ngClass]="activeSecondaryFilterCount() > 0 || isFilterShelfOpen()
+                ? 'bg-blue-50 dark:bg-blue-950/70 border-blue-400 dark:border-blue-600 text-blue-600 dark:text-blue-400 font-bold'
+                : 'bg-white/80 dark:bg-slate-900/80 border-slate-200/80 dark:border-white/10 text-slate-700 dark:text-slate-300 hover:border-blue-400/60'">
+              <app-icon name="filter" [size]="12"></app-icon>
+              <span class="hidden sm:inline">More Filters</span>
+              <span class="sm:hidden">Filters</span>
+              <span *ngIf="activeSecondaryFilterCount() > 0"
+                class="w-4 h-4 rounded-full bg-blue-600 text-white text-[9px] font-black flex items-center justify-center shadow-xs">
+                {{ activeSecondaryFilterCount() }}
+              </span>
+              <app-icon [name]="isFilterShelfOpen() ? 'chevron-up' : 'chevron-down'" [size]="10"
+                class="text-slate-400 hidden sm:block"></app-icon>
+            </button>
+
+            <!-- Floating Right-Stuck Overflowing Filter Card (Desktop >= sm) -->
+            <div *ngIf="isFilterShelfOpen()" (click)="$event.stopPropagation()"
+              class="hidden sm:block absolute right-0 top-full mt-2 w-[340px] sm:w-[360px] z-[150] bg-white dark:bg-[#0c1022] border border-slate-200/90 dark:border-slate-800 rounded-2xl shadow-2xl p-4 space-y-3.5 animate-[fadeIn_0.15s_ease-out]">
+
+              <!-- Popover Header -->
+              <div
+                class="flex items-center justify-between pb-2.5 border-b border-slate-200/60 dark:border-slate-800/80">
+                <div class="flex items-center gap-2">
+                  <span
+                    class="w-6 h-6 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                    <app-icon name="filter" [size]="12"></app-icon>
+                  </span>
+                  <span class="text-xs font-bold text-slate-900 dark:text-white">Filter Practice Areas</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <button *ngIf="activeSecondaryFilterCount() > 0" (click)="clearSecondaryFilters()"
+                    [appTooltip]="'Reset secondary filters'" tooltipPlacement="top"
+                    class="text-[11px] font-semibold text-red-500 hover:text-red-600 cursor-pointer bg-transparent border-0 p-0 transition">
+                    Reset
+                  </button>
+                  <button (click)="closeFilterShelf()" aria-label="Close filters" [appTooltip]="'Close filter panel'"
+                    tooltipPlacement="top"
+                    class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer border-0 bg-transparent flex items-center justify-center">
+                    <app-icon name="x" [size]="12"></app-icon>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 1. Court Jurisdiction / City -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <app-icon name="map-pin" [size]="11" class="text-blue-500"></app-icon>
+                    <span>Jurisdiction / City</span>
+                  </label>
+                  <button *ngIf="selectedCity() !== 'all'" (click)="setSelectedCity('all')"
+                    [appTooltip]="'Reset jurisdiction filter'" tooltipPlacement="top"
+                    class="text-[9.5px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-0 p-0">
+                    Reset
+                  </button>
+                </div>
+                <app-custom-select [options]="availableCities()" [value]="selectedCity()"
+                  (valueChange)="setSelectedCity($event)" size="sm" variant="default" rounded="xl" menuRounded="xl"
+                  menuClass="more-filter-city-menu" width="100%" icon="map-pin" placeholder="All Jurisdictions"
+                  ariaLabel="Filter by jurisdiction">
+                </app-custom-select>
+              </div>
+
+              <!-- 2. Minimum Rating -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <app-icon name="star" [size]="11" class="text-amber-400"></app-icon>
+                    <span>Minimum Rating</span>
+                  </label>
+                  <button *ngIf="minRating() !== null" (click)="setMinRating(null)" [appTooltip]="'Reset rating filter'"
+                    tooltipPlacement="top"
+                    class="text-[9.5px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-0 p-0">
+                    Reset
+                  </button>
+                </div>
+                <div class="flex gap-1.5">
+                  <button *ngFor="let r of [
+                    { value: null, label: 'All' },
+                    { value: 4, label: '4.0+' },
+                    { value: 4.5, label: '4.5+' }
+                  ]; trackBy: trackByValue" (click)="setMinRating(r.value)"
+                    [class]="minRating() === r.value
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                    class="flex-1 h-8 text-[11px] font-semibold rounded-xl transition cursor-pointer border-0 inline-flex items-center justify-center active:scale-95">
+                    <app-icon *ngIf="r.value !== null" name="star" [size]="11"
+                      class="text-amber-400 mr-1 shrink-0"></app-icon>
+                    <span>{{ r.label }}</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- 3. Consultation Fee Range -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <app-icon name="zap" [size]="11" class="text-amber-500"></app-icon>
+                    <span>Fee Range</span>
+                  </label>
+                  <button *ngIf="feeRangeFilter() !== 'all'" (click)="setFeeRange('all')"
+                    [appTooltip]="'Reset fee filter'" tooltipPlacement="top"
+                    class="text-[9.5px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-0 p-0">
+                    Reset
+                  </button>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5">
+                  <button *ngFor="let f of [
+                    { value: 'all', label: 'All Fees' },
+                    { value: '0-2000', label: '₹0–₹2k' },
+                    { value: '2000-5000', label: '₹2k–₹5k' },
+                    { value: '5000+', label: '₹5k+' }
+                  ]; trackBy: trackByValue" (click)="setFeeRange(f.value)"
+                    [class]="feeRangeFilter() === f.value
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                    class="h-8 text-[10.5px] font-semibold rounded-xl transition cursor-pointer border-0 text-center active:scale-95">
+                    {{ f.label }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4. Court Experience -->
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <label
+                    class="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                    <app-icon name="award" [size]="11" class="text-blue-500"></app-icon>
+                    <span>Court Experience</span>
+                  </label>
+                  <button *ngIf="minExperience() !== null" (click)="setMinExperience(null)"
+                    [appTooltip]="'Reset experience filter'" tooltipPlacement="top"
+                    class="text-[9.5px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer bg-transparent border-0 p-0">
+                    Reset
+                  </button>
+                </div>
+                <div class="flex gap-1.5">
+                  <button *ngFor="let e of [
+                    { value: null, label: 'All' },
+                    { value: 5, label: '5y+' },
+                    { value: 10, label: '10y+' },
+                    { value: 15, label: '15y+' }
+                  ]; trackBy: trackByValue" (click)="setMinExperience(e.value)"
+                    [class]="minExperience() === e.value
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-xs'
+                      : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'"
+                    class="flex-1 h-8 text-[11px] font-semibold rounded-xl transition cursor-pointer border-0 text-center active:scale-95">
+                    {{ e.label }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Popover Footer -->
+              <div
+                class="pt-2.5 border-t border-slate-200/60 dark:border-slate-800/80 flex items-center justify-between gap-2">
+                <span class="text-[10.5px] text-slate-500 dark:text-slate-400">
+                  <strong class="text-slate-900 dark:text-white">{{ filteredPracticeAreas().length }}</strong> areas
+                  match
+                </span>
+                <button (click)="closeFilterShelf()" [appTooltip]="'Apply selected filters'" tooltipPlacement="top"
+                  class="px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold rounded-xl shadow-sm shadow-blue-500/25 cursor-pointer border-0 active:scale-95 transition">
+                  Apply Filters
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Reset All Filters Button (Appears when ANY filter is active) -->
+          <button *ngIf="activeFilterCount() > 0" (click)="clearAllFilters()" aria-label="Reset all filters"
+            [appTooltip]="'Reset all active filters and search'" tooltipPlacement="top"
+            class="h-8 sm:h-[34px] px-2.5 text-[10.5px] font-bold text-red-500 hover:text-red-600 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 rounded-xl cursor-pointer transition flex items-center gap-1 shadow-2xs shrink-0 active:scale-95">
+            <app-icon name="x" [size]="10"></app-icon>
+            <span>Reset</span>
+          </button>
+        </div>
+
+        <!-- Line 2: High-Impact Emergency Shortcuts + Inline Active Filter Badges -->
+        <div
+          class="flex items-center justify-between gap-2 overflow-x-auto scrollbar-none no-scrollbar py-0.5 -mx-1 px-1">
+
+          <!-- Mobile-First Active Filter Chips (Front-Loaded on Mobile for instant visibility & 1-tap reset) -->
+          <div *ngIf="hasActiveFacetedFilters()"
+            class="flex sm:hidden items-center gap-1 shrink-0 pr-1.5 border-r border-slate-200/80 dark:border-slate-800">
+            <button (click)="clearFacetedFilters()" aria-label="Reset active filters"
+              [appTooltip]="'Reset faceted filters'" tooltipPlacement="top"
+              class="h-6 px-1.5 rounded-lg text-[9.5px] font-bold text-red-500 bg-red-500/10 hover:bg-red-500/15 border border-red-500/20 flex items-center gap-1 shrink-0 cursor-pointer active:scale-95 transition-all">
+              <app-icon name="x" [size]="9"></app-icon>
+              <span>Reset</span>
+            </button>
+            <ng-container *ngTemplateOutlet="facetedFilterTags"></ng-container>
+          </div>
+
+          <!-- Shortcuts Container -->
+          <div class="flex items-center gap-1.5 shrink-0">
+            <span
+              class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider shrink-0 flex items-center gap-1 mr-0.5">
+              <app-icon name="help-circle" [size]="10.5" class="text-blue-500"></app-icon>
+              <span class="hidden lg:block">Need Help With:</span>
+              <span class="lg:hidden">Help:</span>
+            </span>
+
+            <!-- Top Emergency & High-Demand Shortcuts -->
+            <button *ngFor="let prob of problemShortcuts; trackBy: trackByShortcut" (click)="applyProblemShortcut(prob)"
+              [appTooltip]="'Instant filter for ' + prob.label" tooltipPlacement="top"
+              class="h-6 sm:h-[26px] px-2 py-0.5 rounded-lg text-[10px] sm:text-[10.5px] font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5 select-none active:scale-95 border"
+              [ngClass]="activeProblemShortcut() === prob.id
+                ? 'bg-blue-600 text-white border-blue-500 shadow-sm shadow-blue-500/30 font-bold'
+                : 'bg-slate-100/70 dark:bg-slate-900/70 border-slate-200/70 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800 hover:border-blue-400/50'">
+              <app-icon [name]="prob.icon" [size]="10.5"
+                [class.text-blue-500]="activeProblemShortcut() !== prob.id"></app-icon>
+              <span>{{ isHindi() ? prob.label_hi : prob.label }}</span>
+              <span *ngIf="prob.badgeText"
+                class="px-1.5 py-0.5 text-[7.5px] font-bold rounded-md uppercase tracking-wider leading-none flex items-center gap-1"
+                [ngClass]="activeProblemShortcut() === prob.id 
+                  ? 'bg-white/20 text-white' 
+                  : prob.id === 'bail' 
+                    ? 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20' 
+                    : 'bg-slate-200/70 dark:bg-white/[0.08] text-slate-600 dark:text-slate-400 border border-slate-300/50 dark:border-white/10'">
+                <span *ngIf="prob.id === 'bail'" class="w-1.5 h-1.5 rounded-full bg-rose-500 shrink-0"></span>
+                <span>{{ prob.badgeText }}</span>
+              </span>
+            </button>
+          </div>
+
+          <!-- Desktop Inline Active Filter Tags (End-Loaded on Desktop) -->
+          <div *ngIf="hasActiveFacetedFilters()"
+            class="hidden sm:flex items-center gap-1.5 shrink-0 pl-1.5 sm:pl-2 border-l border-slate-200/60 dark:border-slate-800/80">
+            <ng-container *ngTemplateOutlet="facetedFilterTags"></ng-container>
+          </div>
+
+          <!-- Shared Faceted Filter Tags Definition (Unified Enterprise Quiet Luxury Tags) -->
+          <ng-template #facetedFilterTags>
+            <span *ngIf="selectedCategory() !== 'All'"
+              class="active-filter-tag px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 font-medium flex items-center gap-1.5 text-[9.5px] whitespace-nowrap shadow-2xs hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <span class="text-slate-400 dark:text-slate-500 font-normal">Category:</span>
+              <span class="font-bold text-slate-900 dark:text-white">{{ selectedCategory() }}</span>
+              <button (click)="setCategory('All')" aria-label="Remove category filter"
+                [appTooltip]="'Remove category filter'" tooltipPlacement="top"
+                class="tag-remove bg-transparent border-0 cursor-pointer p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-0.5 text-xs transition-colors">&times;</button>
+            </span>
+
+            <span *ngIf="selectedCity() !== 'all'"
+              class="active-filter-tag px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 font-medium flex items-center gap-1.5 text-[9.5px] whitespace-nowrap shadow-2xs hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <span class="text-slate-400 dark:text-slate-500 font-normal">Jurisdiction:</span>
+              <span class="font-bold text-slate-900 dark:text-white">{{ selectedCity() }}</span>
+              <button (click)="setSelectedCity('all')" aria-label="Remove city filter"
+                [appTooltip]="'Remove jurisdiction filter'" tooltipPlacement="top"
+                class="tag-remove bg-transparent border-0 cursor-pointer p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-0.5 text-xs transition-colors">&times;</button>
+            </span>
+
+            <span *ngIf="onlyAvailableNow()"
+              class="active-filter-tag px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 font-medium flex items-center gap-1.5 text-[9.5px] whitespace-nowrap shadow-2xs hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="font-bold text-slate-900 dark:text-white">On Call Now</span>
+              <button (click)="toggleAvailableNow()" aria-label="Remove available now filter"
+                [appTooltip]="'Remove on call now filter'" tooltipPlacement="top"
+                class="tag-remove bg-transparent border-0 cursor-pointer p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-0.5 text-xs transition-colors">&times;</button>
+            </span>
+
+            <span *ngIf="minRating() !== null"
+              class="active-filter-tag px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 font-medium flex items-center gap-1.5 text-[9.5px] whitespace-nowrap shadow-2xs hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <app-icon name="star" [size]="9.5" class="text-amber-500"></app-icon>
+              <span class="font-bold text-slate-900 dark:text-white">{{ minRating() }}+ Stars</span>
+              <button (click)="setMinRating(null)" aria-label="Remove rating filter"
+                [appTooltip]="'Remove rating filter'" tooltipPlacement="top"
+                class="tag-remove bg-transparent border-0 cursor-pointer p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-0.5 text-xs transition-colors">&times;</button>
+            </span>
+
+            <span *ngIf="feeRangeFilter() !== 'all'"
+              class="active-filter-tag px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 font-medium flex items-center gap-1.5 text-[9.5px] whitespace-nowrap shadow-2xs hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <span class="text-slate-400 dark:text-slate-500 font-normal">Consult:</span>
+              <span class="font-bold text-slate-900 dark:text-white">{{ feeRangeFilter() === '0-2000' ? '₹0–2K' :
+                feeRangeFilter() === '2000-5000' ? '₹2–5K' : '₹5K+' }}</span>
+              <button (click)="setFeeRange('all')" aria-label="Remove fee filter" [appTooltip]="'Remove fee filter'"
+                tooltipPlacement="top"
+                class="tag-remove bg-transparent border-0 cursor-pointer p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-0.5 text-xs transition-colors">&times;</button>
+            </span>
+
+            <span *ngIf="minExperience() !== null"
+              class="active-filter-tag px-2 py-0.5 rounded-md bg-slate-100 dark:bg-white/[0.06] text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-white/10 font-medium flex items-center gap-1.5 text-[9.5px] whitespace-nowrap shadow-2xs hover:border-slate-300 dark:hover:border-white/20 transition-colors">
+              <span class="text-slate-400 dark:text-slate-500 font-normal">Exp:</span>
+              <span class="font-bold text-slate-900 dark:text-white">{{ minExperience() }}y+</span>
+              <button (click)="setMinExperience(null)" aria-label="Remove experience filter"
+                [appTooltip]="'Remove experience filter'" tooltipPlacement="top"
+                class="tag-remove bg-transparent border-0 cursor-pointer p-0 text-slate-400 hover:text-slate-700 dark:hover:text-white ml-0.5 text-xs transition-colors">&times;</button>
+            </span>
+          </ng-template>
+        </div>
+
       </div>
 
-      <!-- Categories Filter Chips Bar -->
-      <div class="flex items-center gap-1.5 overflow-x-auto scrollbar-none py-1 -mx-4 px-4 sm:mx-0 sm:px-0">
-        <button *ngFor="let cat of practiceService.categories()" (click)="setCategory(cat.name)"
-          [appTooltip]="cat.name === 'All' ? 'View all practice areas' : 'Filter by ' + cat.name" tooltipPlacement="top"
-          [class]="selectedCategory() === cat.name ? 'bg-blue-600 text-white font-bold shadow-xs' : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'"
-          class="px-3.5 py-1.5 border border-transparent rounded-xl text-xs font-semibold whitespace-nowrap shrink-0 transition-all cursor-pointer flex items-center gap-1.5">
-          <span>{{ cat.name }}</span>
-          <span class="px-1.5 py-0.2 text-[10px] rounded-full font-bold"
-            [ngClass]="selectedCategory() === cat.name ? 'bg-white/20 text-white' : 'bg-slate-100 dark:bg-slate-800 text-slate-500'">
-            {{ cat.count }}
-          </span>
-        </button>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN CONTENT CONTAINER (90% width on Desktop) ==================== -->
+  <div id="results-anchor" class="w-full lg:w-[90%] max-w-[1920px] mx-auto px-2 sm:px-5 lg:px-6 pt-1">
+
+    <!-- ==================== ERROR / RETRY BANNER ==================== -->
+    <div *ngIf="practiceService.hasError()"
+      class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-800 dark:text-amber-300 flex items-center justify-between gap-4 text-xs">
+      <div class="flex items-center gap-2">
+        <app-icon name="alert-circle" [size]="15" class="text-amber-500 shrink-0"></app-icon>
+        <span>Live server sync was interrupted. Displaying cached practice taxonomy.</span>
+      </div>
+      <button (click)="retryLoad()" [appTooltip]="'Retry synchronization with server'" tooltipPlacement="top"
+        class="px-3 py-1 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg cursor-pointer border-0 shrink-0 transition">
+        Retry Sync
+      </button>
+    </div>
+
+    <!-- ==================== PREMIUM RESULTS COUNT DIVIDER (Centered) ==================== -->
+    <div *ngIf="!practiceService.isLoading() && filteredPracticeAreas().length > 0"
+      class="relative flex items-center justify-center gap-2 sm:gap-3 mb-4 select-none">
+
+      <!-- Left extending gradient divider rule -->
+      <div
+        class="h-[1px] flex-1 bg-gradient-to-l from-slate-200 via-slate-200/60 to-transparent dark:from-slate-800/80 dark:via-slate-800/40 dark:to-transparent">
+      </div>
+
+      <!-- Premium Glass Count Pill Badge (Centered) -->
+      <div
+        class="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-slate-100/90 dark:bg-[#0c1022]/90 border border-slate-200/90 dark:border-white/10 shadow-2xs backdrop-blur-md text-[10.5px] sm:text-xs text-slate-600 dark:text-slate-300 shrink-0">
+
+        <!-- Live Pulse Indicator -->
+        <span class="relative flex h-2 w-2">
+          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+          <span class="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+        </span>
+
+        <!-- Label -->
+        <span class="text-[9px] sm:text-[9.5px] font-bold tracking-wider uppercase text-slate-400 dark:text-slate-500">
+          {{ isHindi() ? 'परिणाम' : 'Showing' }}
+        </span>
+
+        <!-- Range Badge (e.g. 1–12) -->
+        <span
+          class="font-extrabold text-blue-600 dark:text-blue-400 font-mono text-[10px] sm:text-[11px] px-1.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200/60 dark:border-blue-900/60 shadow-2xs">
+          {{ paginationStart() }}–{{ paginationEnd() }}
+        </span>
+
+        <span class="text-slate-400 dark:text-slate-500 text-[10px]">
+          {{ isHindi() ? 'में से' : 'of' }}
+        </span>
+
+        <!-- Total Count (e.g. 27) -->
+        <span class="font-extrabold text-slate-900 dark:text-white font-mono text-[10px] sm:text-[11px]">
+          {{ filteredPracticeAreas().length }}
+        </span>
+
+        <span class="text-slate-500 dark:text-slate-400">
+          {{ isHindi() ? 'अभ्यास क्षेत्र' : 'practice areas' }}
+        </span>
+
+        <!-- Matching Search Filter Badge if active (Desktop with ellipsis truncation) -->
+        <span *ngIf="searchQuery()"
+          class="hidden sm:inline-flex items-center gap-1 pl-2 border-l border-slate-200 dark:border-slate-800 text-blue-500 text-[10px] font-semibold max-w-[140px] md:max-w-[200px]"
+          [title]="searchQuery()">
+          <app-icon name="search" [size]="10" class="shrink-0"></app-icon>
+          <span class="truncate">"{{ searchQuery() }}"</span>
+        </span>
+      </div>
+
+      <!-- Right extending gradient divider rule -->
+      <div
+        class="h-[1px] flex-1 bg-gradient-to-r from-slate-200 via-slate-200/60 to-transparent dark:from-slate-800/80 dark:via-slate-800/40 dark:to-transparent">
       </div>
     </div>
 
-    <!-- ==================== SKELETON LOADER ==================== -->
-    <div *ngIf="practiceService.isLoading()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 animate-pulse">
-      <div *ngFor="let i of [1,2,3,4,5,6]"
-        class="p-6 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl space-y-4 shadow-xs">
-        <div class="flex items-center justify-between">
-          <div class="w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-800"></div>
-          <div class="h-4 w-20 bg-slate-200 dark:bg-slate-800 rounded"></div>
+    <!-- ==================== SKELETON LOADER (Zero Layout Shift) ==================== -->
+    <div *ngIf="practiceService.isLoading()"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-4.5">
+      <div *ngFor="let i of [1,2,3,4,5,6,7,8,9,10,11,12]; trackBy: trackByPageNumber"
+        class="h-full p-3 sm:p-5 bg-white dark:bg-[#0c1022] border border-slate-200/90 dark:border-slate-800/80 rounded-xl sm:rounded-2xl flex flex-col justify-between shadow-xs skeleton-shimmer">
+        <div class="space-y-2 sm:space-y-3">
+          <!-- Top Row: Icon + Right Badges -->
+          <div class="flex items-center justify-between gap-1.5 sm:gap-2 h-8.5 sm:h-10 shrink-0">
+            <div
+              class="w-8.5 h-8.5 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-slate-200/70 dark:bg-slate-800/80 shrink-0">
+            </div>
+            <div class="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <div class="h-4.5 sm:h-5 w-16 sm:w-20 bg-slate-200/70 dark:bg-slate-800/80 rounded-md"></div>
+              <div class="w-6 h-6 sm:w-7 sm:h-7 bg-slate-200/70 dark:bg-slate-800/80 rounded-md sm:rounded-lg">
+              </div>
+            </div>
+          </div>
+          <!-- Category & Popular -->
+          <div class="flex items-center gap-1 sm:gap-1.5 h-4.5 sm:h-5 shrink-0">
+            <div class="h-3.5 sm:h-4 w-24 sm:w-28 bg-slate-200/70 dark:bg-slate-800/80 rounded-md"></div>
+            <div class="h-3.5 sm:h-4 w-12 sm:w-14 bg-slate-200/70 dark:bg-slate-800/80 rounded-md"></div>
+          </div>
+          <!-- Title & Description -->
+          <div class="h-[52px] sm:h-[60px] space-y-1 sm:space-y-1.5 shrink-0">
+            <div class="h-4 sm:h-5 w-3/4 bg-slate-200/80 dark:bg-slate-800 rounded"></div>
+            <div class="h-2.5 sm:h-3 w-full bg-slate-200/60 dark:bg-slate-800/70 rounded"></div>
+            <div class="h-2.5 sm:h-3 w-5/6 bg-slate-200/60 dark:bg-slate-800/70 rounded"></div>
+          </div>
+          <!-- HUD Metric Strip -->
+          <div
+            class="grid grid-cols-3 gap-1 sm:gap-1.5 p-1 sm:p-1.5 rounded-xl bg-slate-100/60 dark:bg-slate-900/60 border border-slate-200/50 dark:border-slate-800/60 h-[46px] sm:h-[52px] shrink-0">
+            <div class="h-full rounded-lg bg-slate-200/70 dark:bg-slate-800/60"></div>
+            <div class="h-full rounded-lg bg-slate-200/70 dark:bg-slate-800/60"></div>
+            <div class="h-full rounded-lg bg-slate-200/70 dark:bg-slate-800/60"></div>
+          </div>
+          <!-- Subfield Badges -->
+          <div class="flex gap-1 h-5 sm:h-6 items-center shrink-0">
+            <div class="h-3.5 sm:h-4 w-14 sm:w-16 bg-slate-200/60 dark:bg-slate-800/70 rounded-md"></div>
+            <div class="h-3.5 sm:h-4 w-16 sm:w-20 bg-slate-200/60 dark:bg-slate-800/70 rounded-md"></div>
+            <div class="h-3.5 sm:h-4 w-12 sm:w-14 bg-slate-200/60 dark:bg-slate-800/70 rounded-md"></div>
+          </div>
+          <!-- Statutory lines -->
+          <div class="space-y-0.5 sm:space-y-1 h-[34px] sm:h-[38px] shrink-0">
+            <div class="h-2.5 sm:h-3 w-3/4 bg-slate-200/50 dark:bg-slate-800/50 rounded"></div>
+            <div class="h-2.5 sm:h-3 w-1/2 bg-slate-200/50 dark:bg-slate-800/50 rounded"></div>
+          </div>
         </div>
-        <div class="space-y-2">
-          <div class="h-3.5 w-24 bg-slate-200 dark:bg-slate-800 rounded"></div>
-          <div class="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded"></div>
-          <div class="h-3.5 w-full bg-slate-200 dark:bg-slate-800 rounded"></div>
-          <div class="h-3.5 w-5/6 bg-slate-200 dark:bg-slate-800 rounded"></div>
-        </div>
-        <div class="flex gap-1.5 pt-2">
-          <div class="h-5 w-16 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-          <div class="h-5 w-20 bg-slate-200 dark:bg-slate-800 rounded-md"></div>
-        </div>
-        <div class="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-          <div class="h-7 w-28 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+        <!-- Bottom Action Deck -->
+        <div
+          class="mt-2.5 sm:mt-3.5 pt-2 sm:pt-3 border-t border-slate-100 dark:border-slate-800/80 flex justify-between items-center shrink-0">
+          <div class="h-6 sm:h-7 w-16 sm:w-20 bg-slate-200/70 dark:bg-slate-800/80 rounded-lg"></div>
+          <div class="h-6 sm:h-7 w-20 sm:w-24 bg-slate-200/70 dark:bg-slate-800/80 rounded-lg"></div>
         </div>
       </div>
     </div>
@@ -112,222 +880,480 @@
 
       <!-- EMPTY STATE -->
       <div *ngIf="filteredPracticeAreas().length === 0"
-        class="p-12 sm:p-16 rounded-3xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
-        <div class="w-16 h-16 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1">
-          <app-icon name="search" [size]="32"></app-icon>
+        class="p-10 sm:p-14 rounded-2xl bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+        <div
+          class="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center mb-1">
+          <app-icon name="search" [size]="28"></app-icon>
         </div>
-        <h2 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-          No practice areas found
+        <h2 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
+          {{ isHindi() ? 'कोई अभ्यास क्षेत्र नहीं मिला' : 'No practice areas found' }}
         </h2>
-        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
-          We couldn't find any legal disciplines matching "{{ searchQuery() }}". Try clearing terms or selecting another category.
+        <p class="text-xs text-slate-500 dark:text-slate-400 max-w-sm mx-auto leading-relaxed">
+          {{ isHindi()
+          ? 'कोई कानूनी विषय फ़िल्टर से मेल नहीं खाता। फ़िल्टर रीसेट करें।'
+          : 'No legal disciplines match your current filters. Try adjusting or clearing them.'
+          }}
         </p>
-        <button (click)="clearSearch(); setCategory('All')"
-          class="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer border-0">
-          Reset All Filters
+        <button (click)="clearAllFilters()"
+          class="mt-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition cursor-pointer border-0">
+          {{ isHindi() ? 'सभी फ़िल्टर रीसेट करें' : 'Reset All Filters' }}
         </button>
       </div>
 
-      <!-- VIEW MODE 1: FLAT GRID -->
+      <!-- ==================== VIEW MODE 1: GRID VIEW (Decomposed via Component) ==================== -->
       <div *ngIf="viewMode() === 'grid' && filteredPracticeAreas().length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-4.5">
 
-        <div *ngFor="let spec of filteredPracticeAreas()" [id]="spec.name"
-          class="p-6 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 rounded-3xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between group animate-[fadeIn_0.3s_ease-out]"
-          [ngClass]="{'ring-2 ring-blue-500 bg-blue-50/20 dark:bg-blue-950/20': targetCardHighlight() === spec.name}">
+        <app-specialization-card *ngFor="let spec of paginatedAreas(); trackBy: trackBySpecId" [spec]="spec"
+          [theme]="getCategoryTheme(spec.category)" [isPinned]="isPinned(spec)"
+          [isHighlighted]="targetCardHighlight() === spec.name" [isHindi]="isHindi()" viewMode="grid"
+          (cardClick)="openDetail($event)" (pinToggle)="togglePin($event.spec, $event.event)"
+          (printClick)="printAreaBrief($event.spec, $event.event)"
+          (findAdvocatesClick)="findAdvocates($event.spec, $event.event)">
+        </app-specialization-card>
 
-          <div class="space-y-4">
-            <!-- Top Row: Icon + Advocate Count Badge -->
-            <div class="flex items-start justify-between gap-3">
-              <div
-                class="w-11 h-11 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0 shadow-xs">
-                <app-icon [name]="spec.icon" [size]="22"></app-icon>
-              </div>
-
-              <span *ngIf="spec.advocateCount"
-                [appTooltip]="spec.advocateCount + ' verified advocates practicing in ' + spec.name"
-                tooltipPlacement="top"
-                class="px-2.5 py-1 text-[10px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg border border-emerald-500/20 uppercase tracking-wider">
-                {{ spec.advocateCount }} {{ spec.advocateCount === 1 ? 'Advocate' : 'Advocates' }}
-              </span>
-            </div>
-
-            <!-- Category & Title -->
-            <div class="space-y-1.5">
-              <span class="text-[10px] font-extrabold uppercase tracking-widest text-slate-400 dark:text-slate-500 block">
-                {{ spec.category }}
-              </span>
-              <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white leading-tight">
-                {{ spec.name }}
-              </h3>
-              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
-                {{ spec.description }}
-              </p>
-            </div>
-
-            <!-- Subfields Tags -->
-            <div *ngIf="spec.subfields?.length" class="flex flex-wrap gap-1.5 pt-1">
-              <span *ngFor="let field of spec.subfields"
-                class="px-2 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800/80 border border-slate-200/60 dark:border-slate-700/60 text-[10px] font-medium text-slate-600 dark:text-slate-300">
-                #{{ field }}
-              </span>
-            </div>
-
-            <!-- Bare Acts & Forums Meta -->
-            <div *ngIf="spec.relevantActs?.length || spec.typicalForums?.length"
-              class="pt-2.5 border-t border-slate-100 dark:border-slate-800/80 space-y-1 text-[11px]">
-              <div *ngIf="spec.relevantActs?.length" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                <app-icon name="book-open" [size]="12" class="text-slate-400 shrink-0"></app-icon>
-                <span class="truncate">Acts: {{ spec.relevantActs.join(', ') }}</span>
-              </div>
-              <div *ngIf="spec.typicalForums?.length" class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
-                <app-icon name="landmark" [size]="12" class="text-slate-400 shrink-0"></app-icon>
-                <span class="truncate">Forums: {{ spec.typicalForums.join(', ') }}</span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bottom Action Buttons -->
-          <div class="mt-5 pt-3.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2">
-            <a routerLink="/laws"
-              class="text-[11px] font-semibold text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 transition no-underline">
-              Read Statutes
-            </a>
-
-            <button (click)="findAdvocates(spec.name)"
-              [appTooltip]="'Search directory for ' + spec.name + ' advocates'" tooltipPlacement="top"
-              class="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition flex items-center gap-1.5 cursor-pointer border-0">
-              <span>Find Advocates</span>
-              <app-icon name="arrow-right" [size]="12"></app-icon>
-            </button>
-          </div>
-
-        </div>
       </div>
 
-      <!-- VIEW MODE 2: GROUPED BY CATEGORY -->
-      <div *ngIf="viewMode() === 'grouped' && filteredPracticeAreas().length > 0" class="space-y-10">
-        <div *ngFor="let group of groupedPracticeAreas()" class="space-y-4">
-          <!-- Category Section Header -->
-          <div class="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
-            <div class="flex items-center gap-2">
-              <h2 class="font-serif text-lg sm:text-xl font-bold text-slate-900 dark:text-white">
-                {{ group.category }}
-              </h2>
-              <span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-200/60 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
-                {{ group.items.length }}
-              </span>
+      <!-- ==================== VIEW MODE 2: GROUPED BY CATEGORY ==================== -->
+      <div *ngIf="viewMode() === 'grouped' && filteredPracticeAreas().length > 0" class="space-y-6 sm:space-y-8">
+        <div *ngFor="let group of groupedPracticeAreas(); trackBy: trackByGroupCategory" class="space-y-3">
+          <!-- ── Ultra-Slim Luxury Category Header ── -->
+          <div class="relative group/category-header">
+            <!-- Subtle Ambient Flare -->
+            <div
+              class="absolute -inset-x-1 -top-1 h-8 bg-gradient-to-r opacity-20 dark:opacity-15 blur-md pointer-events-none rounded-2xl transition-opacity"
+              [ngClass]="getCategoryTheme(group.category).topBarGradient">
+            </div>
+
+            <!-- Single-Row Compact Glassmorphic Ribbon -->
+            <div
+              class="relative px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200/80 dark:border-slate-800/80 shadow-2xs transition-all flex items-center justify-between gap-2.5">
+
+              <!-- Left: Accent Pill + Icon + Title + Count -->
+              <div class="flex items-center gap-2 sm:gap-2.5 min-w-0 flex-1">
+                <!-- Theme Accent Left Bar -->
+                <div class="w-1 h-5 sm:h-6 rounded-full bg-gradient-to-b shrink-0 shadow-2xs"
+                  [ngClass]="getCategoryTheme(group.category).topBarGradient">
+                </div>
+
+                <!-- Compact Category Icon Tile -->
+                <div
+                  class="w-7 h-7 sm:w-8 sm:h-8 rounded-lg sm:rounded-xl flex items-center justify-center shrink-0 border-0"
+                  [ngClass]="[getCategoryTheme(group.category).bgAccent, getCategoryTheme(group.category).iconTint]">
+                  <app-icon [name]="group.items[0].icon || 'briefcase'" [size]="15"></app-icon>
+                </div>
+
+                <!-- Title & Meta Badges (Inline Single Line) -->
+                <div class="flex items-center gap-2 min-w-0 truncate">
+                  <h2
+                    class="font-serif text-sm sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                    {{ group.category }}
+                  </h2>
+
+                  <!-- Category Disciplines Count Pill -->
+                  <span
+                    class="px-2 py-0.5 text-[9px] sm:text-[10px] font-black rounded-full border shadow-2xs uppercase tracking-wider shrink-0"
+                    [ngClass]="getCategoryTheme(group.category).categoryTagClass">
+                    {{ group.items.length }} {{ group.items.length === 1 ? (isHindi() ? 'अनुशासन' : 'discipline') :
+                    (isHindi() ? 'अनुशासन' : 'disciplines') }}
+                  </span>
+
+                  <!-- Live Advocates Count (Inline on Desktop) -->
+                  <span
+                    class="hidden md:inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400 font-medium shrink-0">
+                    <span class="text-slate-300 dark:text-slate-700">•</span>
+                    <app-icon name="users" [size]="11" class="text-blue-500"></app-icon>
+                    <span>{{ getGroupAdvocatesCount(group.items) }} {{ isHindi() ? 'अधिवक्ता' : 'Advocates' }}</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Right: Sleek Action Button (Same Row) -->
+              <button (click)="setCategory(group.category); setViewMode('grid')"
+                [attr.aria-label]="isHindi() ? 'केवल यह श्रेणी देखें' : 'View only this category'"
+                [appTooltip]="isHindi() ? ('केवल ' + group.category + ' देखें') : ('Filter to ' + group.category)"
+                tooltipPlacement="top"
+                class="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-slate-100/90 hover:bg-blue-600 hover:text-white dark:bg-slate-800/90 dark:hover:bg-blue-600 dark:hover:text-white text-slate-600 dark:text-slate-300 transition-all flex items-center gap-1 active:scale-95 cursor-pointer border border-slate-200/70 dark:border-slate-700/70 shrink-0 whitespace-nowrap">
+                <span>{{ isHindi() ? 'सभी देखें' : 'View all' }}</span>
+                <app-icon name="arrow-right" [size]="10"></app-icon>
+              </button>
+
             </div>
           </div>
 
           <!-- Cards in this group -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <div *ngFor="let spec of group.items" [id]="spec.name"
-              class="p-5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 rounded-3xl shadow-xs hover:shadow-md transition-all flex flex-col justify-between group">
-
-              <div class="space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                  <div
-                    class="w-10 h-10 rounded-2xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center border border-blue-500/20 shrink-0">
-                    <app-icon [name]="spec.icon" [size]="20"></app-icon>
-                  </div>
-                  <span *ngIf="spec.advocateCount"
-                    class="px-2 py-0.5 text-[9px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-md border border-emerald-500/20 uppercase tracking-wider">
-                    {{ spec.advocateCount }} Advocates
-                  </span>
-                </div>
-
-                <h3 class="font-serif text-base font-bold text-slate-900 dark:text-white leading-tight">
-                  {{ spec.name }}
-                </h3>
-                <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-normal">
-                  {{ spec.description }}
-                </p>
-
-                <div *ngIf="spec.subfields?.length" class="flex flex-wrap gap-1 pt-1">
-                  <span *ngFor="let field of spec.subfields"
-                    class="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] font-medium text-slate-600 dark:text-slate-400">
-                    #{{ field }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="mt-4 pt-3 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                <button (click)="findAdvocates(spec.name)"
-                  class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[11px] font-bold rounded-xl transition flex items-center gap-1 cursor-pointer border-0">
-                  <span>Find Advocates</span>
-                  <app-icon name="arrow-right" [size]="11"></app-icon>
-                </button>
-              </div>
-
-            </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <app-specialization-card *ngFor="let spec of group.items; trackBy: trackBySpecId" [spec]="spec"
+              [theme]="getCategoryTheme(spec.category)" [isPinned]="isPinned(spec)"
+              [isHighlighted]="targetCardHighlight() === spec.name" [isHindi]="isHindi()" viewMode="grouped"
+              (cardClick)="openDetail($event)" (pinToggle)="togglePin($event.spec, $event.event)"
+              (printClick)="printAreaBrief($event.spec, $event.event)"
+              (findAdvocatesClick)="findAdvocates($event.spec, $event.event)">
+            </app-specialization-card>
           </div>
         </div>
       </div>
 
+      <!-- ==================== VIEW MODE 3: ADAPTIVE COMPACT VIEW ==================== -->
+      <div *ngIf="viewMode() === 'compact' && filteredPracticeAreas().length > 0"
+        class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+
+        <!-- ── Desktop View (≥ 768px): HTML5 Data Table ── -->
+        <div class="hidden md:block overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr
+                class="border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 text-[10px] uppercase tracking-wider text-slate-400 font-bold">
+                <th class="py-2.5 px-4">Discipline</th>
+                <th class="py-2.5 px-3">Category</th>
+                <th class="py-2.5 px-3">Avg Exp</th>
+                <th class="py-2.5 px-3">Rating</th>
+                <th class="py-2.5 px-3">Consult Fee</th>
+                <th class="py-2.5 px-3">Advocates</th>
+                <th class="py-2.5 px-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+              <tr *ngFor="let spec of paginatedAreas(); trackBy: trackBySpecId" [id]="'spec-row-' + spec.id"
+                class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition cursor-pointer"
+                (click)="openDetail(spec)">
+                <!-- Discipline + Icon -->
+                <td class="py-2.5 px-4">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                      [ngClass]="[getCategoryTheme(spec.category).bgAccent, getCategoryTheme(spec.category).iconTint]">
+                      <app-icon [name]="spec.icon" [size]="13"></app-icon>
+                    </div>
+                    <div>
+                      <div class="font-bold text-slate-900 dark:text-white flex items-center gap-1">
+                        <span>{{ getDisplayName(spec) }}</span>
+                        <app-icon *ngIf="spec.popular" name="star" [size]="11"
+                          class="text-amber-500 shrink-0"></app-icon>
+                      </div>
+                      <div *ngIf="spec.subfields.length" class="text-[9px] text-slate-400 truncate max-w-xs">
+                        {{ spec.subfields.slice(0, 3).join(', ') }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Category -->
+                <td class="py-2.5 px-3 text-slate-600 dark:text-slate-400 font-medium text-[11px]">
+                  {{ spec.category }}
+                </td>
+
+                <!-- Experience -->
+                <td class="py-2.5 px-3 text-slate-700 dark:text-slate-300 font-semibold">
+                  {{ spec.avgExperience ? spec.avgExperience + ' yrs' : '10+ yrs' }}
+                </td>
+
+                <!-- Rating -->
+                <td class="py-2.5 px-3">
+                  <div class="flex items-center gap-1 font-bold text-slate-700 dark:text-slate-200">
+                    <app-icon name="star" [size]="10" class="text-amber-500"></app-icon>
+                    <span>{{ spec.avgRating || 4.8 }}</span>
+                  </div>
+                </td>
+
+                <!-- Consult Fee -->
+                <td class="py-2.5 px-3 font-semibold text-slate-700 dark:text-slate-200">
+                  {{ spec.feeRange?.median ? '₹' + spec.feeRange?.median : '₹2,500' }} / session
+                </td>
+
+                <!-- Advocates -->
+                <td class="py-2.5 px-3">
+                  <span class="px-1.5 py-0.5 text-[9px] font-black rounded-md border"
+                    [ngClass]="spec.advocateCount ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'">
+                    {{ spec.advocateCount ? spec.advocateCount + ' Adv' : 'Advisory Panel' }}
+                  </span>
+                </td>
+
+                <!-- Actions -->
+                <td class="py-2.5 px-3 text-right" (click)="$event.stopPropagation()">
+                  <div class="flex items-center justify-end gap-1">
+                    <button (click)="togglePin(spec, $event)" [appTooltip]="isPinned(spec) ? 'Unpin' : 'Compare'"
+                      aria-label="Pin to compare"
+                      class="p-1 rounded-md border cursor-pointer transition active:scale-95"
+                      [ngClass]="isPinned(spec) ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'">
+                      <app-icon [name]="isPinned(spec) ? 'check' : 'plus'" [size]="11"></app-icon>
+                    </button>
+                    <button (click)="findAdvocates(spec, $event)" aria-label="Find advocates"
+                      [appTooltip]="'Find verified advocates for ' + spec.name" tooltipPlacement="top"
+                      class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-lg cursor-pointer border-0 active:scale-95 transition">
+                      Advocates
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- ── Mobile View (< 768px): Touch-First Dense Stacked List Tiles ── -->
+        <div class="md:hidden divide-y divide-slate-100 dark:divide-slate-800">
+          <div *ngFor="let spec of paginatedAreas(); trackBy: trackBySpecId" [id]="'spec-card-mobile-' + spec.id"
+            (click)="openDetail(spec)"
+            class="p-3.5 flex items-center justify-between gap-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 active:bg-slate-100 dark:active:bg-slate-800 transition-colors cursor-pointer select-none">
+
+            <!-- Left: Icon + Discipline Name & Metadata -->
+            <div class="flex items-center gap-3 min-w-0 flex-1">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-2xs"
+                [ngClass]="[getCategoryTheme(spec.category).bgAccent, getCategoryTheme(spec.category).iconTint]">
+                <app-icon [name]="spec.icon" [size]="18"></app-icon>
+              </div>
+
+              <div class="min-w-0 flex-1">
+                <!-- Title Row -->
+                <div class="font-bold text-xs text-slate-900 dark:text-white flex items-center gap-1.5 truncate">
+                  <span class="truncate">{{ getDisplayName(spec) }}</span>
+                  <app-icon *ngIf="spec.popular" name="star" [size]="10" class="text-amber-500 shrink-0"></app-icon>
+                </div>
+
+                <!-- Subtitle / Metadata Pill Row -->
+                <div class="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                  <span class="truncate">{{ spec.category }}</span>
+                  <span class="text-slate-300 dark:text-slate-600">•</span>
+                  <span class="shrink-0 font-medium text-slate-700 dark:text-slate-300">
+                    {{ spec.feeRange?.median ? '₹' + spec.feeRange?.median : '₹2,500' }}
+                  </span>
+                  <span class="text-slate-300 dark:text-slate-600">•</span>
+                  <span class="flex items-center gap-0.5 shrink-0 font-bold text-amber-500">
+                    <app-icon name="star" [size]="9"></app-icon>
+                    <span>{{ spec.avgRating || 4.8 }}</span>
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Advocate Badge + Quick Actions & Chevron -->
+            <div class="flex items-center gap-2 shrink-0" (click)="$event.stopPropagation()">
+              <span class="px-2 py-0.5 text-[10px] font-black rounded-lg border whitespace-nowrap"
+                [ngClass]="spec.advocateCount ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'">
+                {{ spec.advocateCount ? spec.advocateCount + ' Adv' : 'Panel' }}
+              </span>
+
+              <button (click)="togglePin(spec, $event)" [attr.aria-label]="isPinned(spec) ? 'Unpin' : 'Compare'"
+                [appTooltip]="isPinned(spec) ? 'Remove from compare tray' : 'Add to compare tray'"
+                tooltipPlacement="top"
+                class="w-7 h-7 rounded-lg border flex items-center justify-center cursor-pointer transition active:scale-95"
+                [ngClass]="isPinned(spec) ? 'bg-blue-600 text-white border-blue-600' : 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'">
+                <app-icon [name]="isPinned(spec) ? 'check' : 'plus'" [size]="11"></app-icon>
+              </button>
+
+              <app-icon name="chevron-right" [size]="14" class="text-slate-400 dark:text-slate-500"></app-icon>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ==================== UNIVERSAL REUSABLE PAGINATION ==================== -->
+      <div *ngIf="filteredPracticeAreas().length > 0 && viewMode() !== 'grouped'"
+        class="mt-6 rounded-2xl overflow-visible shadow-xs">
+        <app-pagination [total]="filteredPracticeAreas().length" [page]="currentPage()" (pageChange)="goToPage($event)"
+          [pageSize]="pageSize()" (pageSizeChange)="setPageSize($event)" [isHindi]="isHindi()" itemName="practice areas"
+          itemNameHindi="अभ्यास क्षेत्र" variant="glass" color="blue" layout="between"
+          storageKey="legalconnect_specializations_pagesize" [showQuickJumper]="true"
+          [pageSizeOptions]="[6, 12, 24, 48]" scrollToAnchor="#results-anchor">
+        </app-pagination>
+      </div>
+
     </div>
 
   </div>
-</div>
 
-<!-- ==================== MOBILE FILTER BOTTOM SHEET ==================== -->
-<div *ngIf="isMobileFilterOpen()"
-  class="fixed inset-0 z-[2100] flex items-end sm:items-center justify-center bg-slate-950/60 backdrop-blur-sm animate-[fadeIn_0.2s_ease-out] drawer-backdrop"
-  role="dialog" aria-modal="true" aria-label="Filter & Sort Practice Areas">
-  <div
-    class="drawer-sheet w-full max-w-[500px] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border border-slate-200 dark:border-slate-800 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom,1.5rem))] space-y-5 max-h-[85vh] overflow-y-auto">
+  <!-- ==================== DETAIL DRAWER (Deferred Until Opened) ==================== -->
+  @defer (when drawerOpen()) {
+  <app-specialization-detail-drawer [isOpen]="drawerOpen()" [spec]="selectedSpec()"
+    [theme]="selectedSpec() ? getCategoryTheme(selectedSpec()!.category) : getCategoryTheme('default')"
+    [isLoading]="drawerLoading()" [activeTab]="activeDrawerTab()"
+    [isPinned]="selectedSpec() ? isPinned(selectedSpec()!) : false" [isHindi]="isHindi()" (close)="closeDrawer()"
+    (tabChange)="setDrawerTab($event)" (pinToggle)="togglePin($event)" (printClick)="printAreaBrief($event)"
+    (findAdvocatesClick)="findAdvocates($event); closeDrawer()" (areaSelect)="openDetail($event)">
+  </app-specialization-detail-drawer>
+  }
 
-    <div class="flex items-center justify-between pb-3 border-b border-slate-200/60 dark:border-slate-800/60">
-      <h3 class="font-serif text-lg font-bold text-slate-900 dark:text-white">
-        Filter &amp; Sort Practice Areas
-      </h3>
-      <button (click)="closeMobileFilter()"
-        class="text-slate-400 hover:text-slate-600 p-1 bg-transparent border-0 cursor-pointer">
-        <app-icon name="x" [size]="18"></app-icon>
-      </button>
-    </div>
+  <!-- ==================== COMPARE MODAL & DOCK (Deferred Until Areas Pinned) ==================== -->
+  @defer (when pinnedSpecs().length > 0) {
+  <app-specialization-compare-modal [pinnedSpecs]="pinnedSpecs()" [isCompareOpen]="isCompareOpen()"
+    [isHindi]="isHindi()" (openCompare)="openCompare()" (closeCompare)="closeCompare()" (unpin)="togglePin($event)"
+    (clearCompare)="clearCompare()" (findAdvocatesClick)="findAdvocates($event)" (printClick)="printAreaBrief($event)">
+  </app-specialization-compare-modal>
+  }
 
-    <!-- Sort Options -->
-    <div class="space-y-2">
-      <label class="text-xs font-black uppercase tracking-wider text-slate-400 block">
-        Sort By
-      </label>
-      <div class="grid grid-cols-2 gap-2">
-        <button *ngFor="let s of [
-          { key: 'popular', label: 'Most Popular' },
-          { key: 'advocates', label: 'Most Advocates' },
-          { key: 'alpha-asc', label: 'A to Z' },
-          { key: 'alpha-desc', label: 'Z to A' }
-        ]" (click)="setSort($any(s.key))"
-          [class]="selectedSort() === s.key ? 'bg-blue-600 text-white font-bold' : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-semibold'"
-          class="px-3 py-2 text-xs rounded-xl transition cursor-pointer border-0 text-center">
-          {{ s.label }}
+  <!-- ==================== MOBILE FILTER BOTTOM SHEET (Strictly sm:hidden, Phone Only) ==================== -->
+  <div *ngIf="isMobileFilterOpen()"
+    class="sm:hidden fixed inset-0 z-[2100] flex items-end justify-center bg-slate-950/70 backdrop-blur-md animate-[fadeIn_0.2s_ease-out] drawer-backdrop"
+    role="dialog" aria-modal="true" aria-label="Filter & Sort Practice Areas">
+    <div
+      class="drawer-sheet w-full max-w-[500px] bg-white dark:bg-[#0c1022] rounded-t-3xl sm:rounded-2xl border border-slate-200 dark:border-slate-800/80 p-5 pb-[max(1.75rem,env(safe-area-inset-bottom,1.75rem))] space-y-4 max-h-[88vh] overflow-y-auto shadow-2xl">
+
+      <!-- Drag Handle -->
+      <div class="w-10 h-1 bg-slate-300 dark:bg-slate-700 rounded-full mx-auto -mt-1 mb-1"></div>
+
+      <div class="flex items-center justify-between pb-2.5 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div class="flex items-center gap-2">
+          <app-icon name="filter" [size]="16" class="text-blue-500"></app-icon>
+          <h3 class="font-serif text-base font-bold text-slate-900 dark:text-white">
+            Filter &amp; Refine Atlas
+          </h3>
+        </div>
+        <button (click)="closeMobileFilter()" aria-label="Close filters" [appTooltip]="'Close filter sheet'"
+          tooltipPlacement="bottom"
+          class="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg bg-slate-100 dark:bg-slate-800 border-0 cursor-pointer">
+          <app-icon name="x" [size]="15"></app-icon>
         </button>
       </div>
-    </div>
 
-    <!-- Category Filter List -->
-    <div class="space-y-2">
-      <label class="text-xs font-black uppercase tracking-wider text-slate-400 block">
-        Legal Category
-      </label>
-      <div class="space-y-1.5 max-h-[40vh] overflow-y-auto">
-        <button *ngFor="let cat of practiceService.categories()"
-          (click)="setCategory(cat.name); closeMobileFilter()"
-          [class]="selectedCategory() === cat.name ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 font-bold border-blue-500/50' : 'bg-transparent text-slate-700 dark:text-slate-300 border-transparent'"
-          class="w-full px-3 py-2 text-xs rounded-xl transition cursor-pointer border flex items-center justify-between text-left">
-          <span>{{ cat.name }}</span>
-          <span class="text-[10px] text-slate-400">{{ cat.count }} areas</span>
+      <!-- Problem Matcher Shortcuts on Mobile (Guardrail 1) -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Quick Issue Matcher
+        </label>
+        <div class="flex flex-wrap gap-1">
+          <button *ngFor="let prob of problemShortcuts; trackBy: trackByShortcut"
+            (click)="applyProblemShortcut(prob); closeMobileFilter()"
+            class="px-2.5 py-1 rounded-xl text-[10.5px] font-semibold border flex items-center gap-1 active:scale-95 transition"
+            [ngClass]="activeProblemShortcut() === prob.id
+              ? 'bg-blue-600 text-white border-blue-500 font-bold'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+            <app-icon [name]="prob.icon" [size]="11"></app-icon>
+            <span>{{ isHindi() ? prob.label_hi : prob.label }}</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sort Options -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Sort By
+        </label>
+        <app-custom-select [options]="sortOptions" [value]="selectedSort()" (valueChange)="setSort($event)" size="md"
+          variant="default" rounded="xl" width="100%" icon="sort" placeholder="Sort by..."
+          ariaLabel="Sort practice areas">
+        </app-custom-select>
+      </div>
+
+      <!-- Territorial City / Court Jurisdiction on Mobile (Guardrail 1) -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Court Jurisdiction / Territory
+        </label>
+        <app-custom-select [options]="availableCities()" [value]="selectedCity()"
+          (valueChange)="setSelectedCity($event)" size="md" variant="default" rounded="xl" width="100%" icon="map-pin"
+          placeholder="Select Jurisdiction..." ariaLabel="Filter by jurisdiction">
+        </app-custom-select>
+      </div>
+
+      <!-- Emergency Available Now on Mobile (Guardrail 1) -->
+      <div
+        class="flex items-center justify-between p-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/70 dark:border-slate-800">
+        <div>
+          <div class="text-xs font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <app-icon name="zap" [size]="11" class="text-blue-500"></app-icon>
+            <span>On Call Now</span>
+          </div>
+          <div class="text-[10px] text-slate-400 mt-0.5">Show only disciplines with lawyers ready for immediate call
+          </div>
+        </div>
+        <button (click)="toggleAvailableNow()"
+          class="px-3 py-1.5 rounded-lg text-xs font-bold border transition cursor-pointer"
+          [ngClass]="onlyAvailableNow() ? 'bg-blue-600 text-white border-blue-600' : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700'">
+          {{ onlyAvailableNow() ? 'Active' : 'Off' }}
         </button>
       </div>
-    </div>
 
-    <div class="pt-2">
-      <button (click)="closeMobileFilter()"
-        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs cursor-pointer border-0">
-        Apply Filters
-      </button>
-    </div>
+      <!-- Rating Filter -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Minimum Rating
+        </label>
+        <div class="flex gap-1.5">
+          <button *ngFor="let r of [
+            { value: null, label: 'All' },
+            { value: 4, label: '4.0+' },
+            { value: 4.5, label: '4.5+' }
+          ]; trackBy: trackByValue" (click)="setMinRating(r.value)"
+            [class]="minRating() === r.value ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-sm' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'"
+            class="flex-1 px-3 py-2 text-[11px] font-semibold rounded-xl transition cursor-pointer border-0 inline-flex items-center justify-center active:scale-95">
+            <app-icon *ngIf="r.value !== null" name="star" [size]="11" class="text-amber-400 mr-1 shrink-0"></app-icon>
+            <span>{{ r.label }}</span>
+          </button>
+        </div>
+      </div>
 
+      <!-- Fee Range Filter -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Consultation Fee Range
+        </label>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button *ngFor="let f of [
+            { value: 'all', label: 'All Fees' },
+            { value: '0-2000', label: '₹0 – ₹2,000' },
+            { value: '2000-5000', label: '₹2,000 – ₹5,000' },
+            { value: '5000+', label: '₹5,000+' }
+          ]; trackBy: trackByValue" (click)="setFeeRange(f.value)"
+            [class]="feeRangeFilter() === f.value ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-sm' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'"
+            class="px-3 py-2 text-[11px] font-semibold rounded-xl transition cursor-pointer border-0 text-center active:scale-95">
+            {{ f.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Experience Filter -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Minimum Experience
+        </label>
+        <div class="flex gap-1.5">
+          <button *ngFor="let e of [
+            { value: null, label: 'All' },
+            { value: 5, label: '5y+' },
+            { value: 10, label: '10y+' },
+            { value: 15, label: '15y+' }
+          ]; trackBy: trackByValue" (click)="setMinExperience(e.value)"
+            [class]="minExperience() === e.value ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold shadow-sm' : 'bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300'"
+            class="flex-1 px-3 py-2 text-[11px] font-semibold rounded-xl transition cursor-pointer border-0 text-center active:scale-95">
+            {{ e.label }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Category Filter List -->
+      <div class="space-y-1.5">
+        <label class="text-[10px] font-black uppercase tracking-wider text-slate-400 block">
+          Legal Category
+        </label>
+        <div class="space-y-1 max-h-[25vh] overflow-y-auto">
+          <button *ngFor="let cat of practiceService.categories(); trackBy: trackByCatName"
+            (click)="setCategory(cat.name); closeMobileFilter()"
+            [class]="selectedCategory() === cat.name ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-bold border-blue-500/50 shadow-2xs' : 'bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300 border-slate-200/50 dark:border-slate-800'"
+            class="w-full px-3 py-2 text-[11px] rounded-xl transition cursor-pointer border flex items-center justify-between text-left active:scale-98">
+            <span>{{ cat.name }}</span>
+            <span class="text-[10px] text-slate-400">{{ cat.count }} areas</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="flex gap-2 pt-2 border-t border-slate-200/60 dark:border-slate-800/60">
+        <button *ngIf="activeFilterCount() > 0" (click)="clearAllFilters(); closeMobileFilter()"
+          [appTooltip]="'Reset all applied filters'" tooltipPlacement="top"
+          class="px-4 py-2.5 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300 text-[11px] font-bold rounded-xl cursor-pointer border-0 transition">
+          Reset All
+        </button>
+        <button (click)="closeMobileFilter()" [appTooltip]="'Apply filters and return to catalog'"
+          tooltipPlacement="top"
+          class="flex-1 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-[11px] font-bold rounded-xl shadow-md shadow-blue-500/30 cursor-pointer border-0">
+          Apply Filters
+          <span *ngIf="activeFilterCount() > 0">({{ activeFilterCount() }})</span>
+        </button>
+      </div>
+
+    </div>
   </div>
+
 </div>

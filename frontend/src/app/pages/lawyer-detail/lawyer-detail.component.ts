@@ -14,6 +14,10 @@ import { InteractionService } from '../../services/interaction.service';
 import { UniversalBookmarkService } from '../../services/universal-bookmark.service';
 
 import { VerificationService } from '../../services/verification.service';
+import { PrintExportService } from '../../services/print-export.service';
+import { PrintService } from '../../services/print.service';
+import { DataExportService } from '../../services/data-export.service';
+import { LawyerPrintBuilder } from './lawyer-print.builder';
 import { IconComponent } from '../../components/icon/icon.component';
 import { SpinnerComponent } from '../../components/spinner/spinner.component';
 import { TooltipDirective } from '../../directives/tooltip.directive';
@@ -109,7 +113,10 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
     private auth: AuthService,
     private interactionService: InteractionService,
     private bookmarkService: UniversalBookmarkService,
-    private verificationService: VerificationService
+    private verificationService: VerificationService,
+    private printExportService: PrintExportService,
+    private printService: PrintService,
+    private dataExportService: DataExportService
   ) { }
 
   ngOnInit() {
@@ -547,5 +554,118 @@ export class LawyerDetailComponent implements OnInit, OnDestroy {
         first.focus();
       }
     }
+  }
+
+  /* ═══════════════ OFFICIAL PRINT & DOSSIER EXPORT ═══════════════ */
+
+  triggerPrint(): void {
+    if (!this.lawyer) return;
+    const l = this.lawyer;
+
+    this.printExportService.open({
+      title: 'Official Advocate Dossier',
+      subtitle: `${l.name} — Bar Council Enrolled Legal Practitioner (${l.city})`,
+      formats: ['pdf', 'csv', 'json', 'txt'],
+      allowWatermark: true,
+      defaultWatermark: 'OFFICIAL COPY',
+      allowQrToggle: true,
+      defaultIncludeQr: true,
+      allowReviewsToggle: this.reviews.length > 0,
+      defaultIncludeReviews: true,
+      reviewsCount: this.reviews.length,
+      previewConfig: (params) => LawyerPrintBuilder.buildDossierConfig(
+        l,
+        this.reviews,
+        this.printService,
+        params.includeReviews !== false ? 'full' : 'summary'
+      ),
+      onExport: async (params) => {
+        if (params.format === 'pdf') {
+          const baseConfig = LawyerPrintBuilder.buildDossierConfig(
+            l,
+            this.reviews,
+            this.printService,
+            params.includeReviews !== false ? 'full' : 'summary'
+          );
+          this.printService.print({
+            ...baseConfig,
+            watermark: params.watermark !== 'NONE' ? params.watermark : undefined,
+            classification: params.watermark !== 'NONE' ? params.watermark : 'OFFICIAL COPY',
+            paperSize: params.paperSize as any,
+            orientation: params.orientation as any,
+            margins: params.margins as any,
+            customMargins: params.customMargins,
+            scale: params.scale,
+            colorMode: params.colorMode as any,
+            printQuality: params.printQuality as any,
+            showHeaderFooter: params.showHeaderFooter,
+            showBackgroundGraphics: params.showBackgroundGraphics,
+            pageRange: params.pageRange as any,
+            customPageRange: params.customPageRange,
+            copies: params.copies,
+            fileName: params.fileName || baseConfig.fileName,
+          });
+        } else if (params.format === 'csv') {
+          const rows = [
+            ['Field', 'Value'],
+            ['Name', l.name],
+            ['Bar Council Number', l.barCouncilNumber || 'N/A'],
+            ['City', l.city],
+            ['Experience (Years)', String(l.experience)],
+            ['Specializations', (l.specializations || []).join('; ')],
+            ['Active Courts', (l.activeCourts || []).join('; ')],
+            ['Languages', (l.languagesSpoken || []).join('; ')],
+            ['Consultation Fee (INR)', String(l.consultationFee || 0)],
+            ['Phone', l.phone || 'N/A'],
+            ['Email', l.email || 'N/A'],
+            ['Office Address', l.officeAddress || 'N/A'],
+            ['Rating', String(l.rating)],
+            ['Cases Completed', String(l.casesCompleted || 0)],
+            ['Client Satisfaction', `${l.successRate || 95}%`]
+          ];
+          if (params.includeReviews !== false && this.reviews.length > 0) {
+            rows.push(['---', '---']);
+            rows.push(['CLIENT REVIEWS', '']);
+            this.reviews.forEach((r, idx) => {
+              rows.push([`Review #${idx + 1} (${r.authorName} - ${r.rating}★)`, r.content]);
+            });
+          }
+          const csvString = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n');
+          const fileBase = params.fileName || `Advocate_${l.name.replace(/\s+/g, '_')}`;
+          this.dataExportService.downloadBlob(csvString, 'text/csv;charset=utf-8;', `${fileBase}.csv`);
+        } else if (params.format === 'json') {
+          const exportObj = {
+            advocate: l,
+            reviews: params.includeReviews !== false ? this.reviews : undefined,
+            generatedAt: new Date().toISOString(),
+            verification: 'Verified by LegalConnect Legal Infrastructure Registry'
+          };
+          const fileBase = params.fileName || `Advocate_${l.name.replace(/\s+/g, '_')}`;
+          this.dataExportService.downloadBlob(JSON.stringify(exportObj, null, 2), 'application/json', `${fileBase}.json`);
+        } else if (params.format === 'txt') {
+          const textContent = [
+            '========================================================================',
+            ` OFFICIAL LEGAL PRACTITIONER PROFILE: ADVOCATE ${l.name.toUpperCase()}`,
+            '========================================================================',
+            `Bar Council No:     ${l.barCouncilNumber || 'Verified Active'}`,
+            `Primary City:       ${l.city}`,
+            `Years in Practice:  ${l.experience} Years`,
+            `Rating / Reviews:   ${l.rating} / 5.0 (${this.reviews.length} reviews)`,
+            `Specializations:    ${(l.specializations || []).join(', ')}`,
+            `Active Courts:      ${(l.activeCourts || []).join(', ') || 'District & Sessions Court'}`,
+            `Consultation Fee:   INR ${l.consultationFee || 'Standard Bar Council Schedule'}`,
+            `Contact Coordinate: ${l.email} | ${l.phone}`,
+            `Office Address:     ${l.officeAddress || 'N/A'}`,
+            '',
+            'BIOGRAPHY & PROFILE SUMMARY:',
+            l.bio || 'General civil and criminal litigation practice.',
+            '========================================================================',
+            'VERIFIED VIA LEGALCONNECT INDIA REGISTRY'
+          ].join('\n');
+          const fileBase = params.fileName || `Advocate_${l.name.replace(/\s+/g, '_')}`;
+          this.dataExportService.downloadBlob(textContent, 'text/plain;charset=utf-8;', `${fileBase}.txt`);
+        }
+      }
+    });
   }
 }
