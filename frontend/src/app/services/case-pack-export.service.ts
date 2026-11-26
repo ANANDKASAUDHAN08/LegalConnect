@@ -55,6 +55,8 @@ export class CasePackExportService {
         }
       ],
       defaultScope: 'filtered',
+      scopeTitle: 'Workbench Scope',
+      scopeUnit: 'item',
       allowWatermark: true,
       defaultWatermark: 'LEGALCONNECT CASE PACK',
       allowQrToggle: true,
@@ -116,7 +118,7 @@ export class CasePackExportService {
       csv += row.join(',') + '\n';
     }
     this.dataExportService.downloadBlob(csv, 'text/csv', `LegalConnect_CasePack_${Date.now()}.csv`);
-    this.snackbar.show('Case Pack CSV exported successfully ✓', 'success');
+    this.snackbar.show('Case Pack CSV exported successfully', 'success');
   }
 
   private exportAsJson(items: UnifiedBookmark[], title: string, collectionName: string): void {
@@ -129,7 +131,7 @@ export class CasePackExportService {
     }, null, 2);
 
     this.dataExportService.downloadBlob(payload, 'application/json', `LegalConnect_CasePack_${Date.now()}.json`);
-    this.snackbar.show('Case Pack JSON exported successfully ✓', 'success');
+    this.snackbar.show('Case Pack JSON exported successfully', 'success');
   }
 
   private exportAsTxt(items: UnifiedBookmark[], title: string, collectionName: string): void {
@@ -150,7 +152,7 @@ export class CasePackExportService {
     });
 
     this.dataExportService.downloadBlob(txt, 'text/plain', `LegalConnect_CasePack_${Date.now()}.txt`);
-    this.snackbar.show('Case Pack text dossier exported successfully ✓', 'success');
+    this.snackbar.show('Case Pack text dossier exported successfully', 'success');
   }
 
   private exportAsPdf(items: UnifiedBookmark[], title: string, collectionName: string): void {

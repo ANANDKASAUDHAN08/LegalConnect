@@ -1,294 +1,947 @@
 <div *ngIf="exportService.isOpen()"
-  class="fixed inset-0 z-[99999] flex flex-col justify-end sm:justify-center sm:items-center p-0 sm:p-6 overflow-hidden animate-fade-in"
+  class="fixed inset-0 z-[99999] flex flex-col justify-end md:justify-center md:items-center p-0 md:p-6 overflow-hidden animate-fade-in"
   role="dialog" aria-modal="true" [attr.aria-labelledby]="'export-hub-title'">
 
   <!-- Backdrop -->
-  <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity" (click)="onClose()"></div>
+  <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-xl transition-opacity" (click)="onClose()"></div>
 
-  <!-- Modal Dialog Container (Full bottom-sheet on mobile, wide max-w-4xl card on desktop) -->
+  <!-- Modal Container -->
   <div
-    class="relative w-full sm:max-w-4xl max-h-[92dvh] sm:max-h-[88vh] bg-white dark:bg-slate-900 rounded-t-3xl sm:rounded-3xl border-t sm:border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden z-10 flex flex-col my-0 sm:my-auto transition-all animate-slide-up sm:animate-scale-up">
+    class="modal-bottom-sheet relative w-full md:w-[96vw] md:max-w-6xl xl:max-w-7xl h-[92vh] h-[92dvh] max-h-[92dvh] md:h-[88vh] md:max-h-[860px] bg-white dark:bg-slate-900 rounded-t-[28px] md:rounded-3xl border-t md:border border-slate-200/90 dark:border-slate-800 shadow-2xl overflow-hidden z-10 flex flex-col my-0 md:my-auto transition-all animate-slide-up md:animate-scale-up">
 
-    <!-- Mobile Handle Pill -->
-    <div class="block sm:hidden pt-3 pb-1 shrink-0">
-      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto"></div>
+    <!-- Mobile Handle Pill (with touch drag-down to dismiss) -->
+    <div class="block md:hidden pt-3 pb-2 shrink-0 bg-white dark:bg-slate-900 touch-none select-none cursor-pointer"
+      (touchstart)="onTouchStartHandle($event)" (touchend)="onTouchEndHandle($event)" (click)="onClose()"
+      title="Swipe down or tap to close">
+      <div
+        class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto hover:bg-slate-400 dark:hover:bg-slate-600 transition-colors">
+      </div>
     </div>
 
-    <!-- Top Glow Header -->
+    <!-- ══════════════ MODAL TOP BAR ══════════════ -->
     <div
-      class="px-5 sm:px-7 pt-3 sm:pt-6 pb-3.5 sm:pb-4 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between gap-4 shrink-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm">
+      class="px-5 md:px-7 py-3 md:py-4 border-b border-slate-100 dark:border-slate-800/80 flex items-center justify-between gap-4 shrink-0 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md z-20">
       <div class="flex items-center gap-3.5 min-w-0">
         <div
-          class="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-xs">
-          <app-icon name="printer" [size]="22"></app-icon>
+          class="w-10 h-10 md:w-11 md:h-11 rounded-2xl bg-gradient-to-br from-indigo-500/15 to-blue-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20 shadow-xs">
+          <app-icon name="printer" [size]="20"></app-icon>
         </div>
         <div class="min-w-0">
-          <h3 id="export-hub-title"
-            class="text-base sm:text-lg font-bold text-slate-900 dark:text-white tracking-tight truncate">
-            {{ exportService.config()?.title || 'Universal Print & Export Hub' }}
-          </h3>
+          <div class="flex items-center gap-2">
+            <h3 id="export-hub-title"
+              class="text-sm md:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+              {{ exportService.config()?.title || 'Official Print & Export Studio' }}
+            </h3>
+            <span
+              class="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>
+              Enterprise
+            </span>
+          </div>
           <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5 font-medium truncate">
-            {{ exportService.config()?.subtitle || 'Configure document layout, dataset scope, and export formats.' }}
+            {{ exportService.config()?.subtitle || 'Configure layout, paper specifications, and classification.' }}
           </p>
         </div>
       </div>
 
-      <button type="button" (click)="onClose()" [disabled]="exportService.isExporting()"
-        class="w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
-        aria-label="Close modal">
-        <app-icon name="x" [size]="18"></app-icon>
-      </button>
-    </div>
+      <div class="flex items-center gap-2">
+        <!-- Reset Button -->
+        <button *ngIf="isPdfMode()" type="button" (click)="resetToDefaults()"
+          class="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+          appTooltip="Reset all print settings to defaults">
+          <app-icon name="refresh-cw" [size]="12"></app-icon>
+          <span>Reset Defaults</span>
+        </button>
 
-    <!-- Modal Body (Two-Column Spacious Grid on Desktop, Single-Column Scroll on Mobile) -->
-    <div
-      class="p-5 sm:p-7 space-y-5 sm:space-y-0 sm:grid sm:grid-cols-12 sm:gap-7 overflow-y-auto flex-1 overscroll-contain">
-
-      <!-- LEFT COLUMN: FORMAT SELECTION & SCOPE (7 cols) -->
-      <div class="sm:col-span-7 space-y-5">
-
-        <!-- 1. FORMAT SELECTION GRID -->
-        <div>
-          <div class="flex items-center justify-between mb-2.5">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              1. Output Format
-            </label>
-            <span class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 uppercase">
-              {{ selectedFormat() }} Selected
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-2.5">
-
-            <!-- PDF / Print -->
-            <button *ngIf="isFormatAvailable('pdf')" type="button" (click)="setFormat('pdf')"
-              [class.active-format]="selectedFormat() === 'pdf'"
-              class="format-card flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
-                <app-icon name="printer" [size]="19"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">Court PDF</div>
-                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">Official Print Gazette</div>
-              </div>
-            </button>
-
-            <!-- CSV / Spreadsheet -->
-            <button *ngIf="isFormatAvailable('csv')" type="button" (click)="setFormat('csv')"
-              [class.active-format]="selectedFormat() === 'csv'"
-              class="format-card flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
-                <app-icon name="table" [size]="19"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">Excel / CSV</div>
-                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">Tabular Spreadsheet</div>
-              </div>
-            </button>
-
-            <!-- JSON / Developer -->
-            <button *ngIf="isFormatAvailable('json')" type="button" (click)="setFormat('json')"
-              [class.active-format]="selectedFormat() === 'json'"
-              class="format-card flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
-                <app-icon name="code" [size]="19"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">JSON Data</div>
-                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">Raw API Payload</div>
-              </div>
-            </button>
-
-            <!-- TXT / Plain Text -->
-            <button *ngIf="isFormatAvailable('txt')" type="button" (click)="setFormat('txt')"
-              [class.active-format]="selectedFormat() === 'txt'"
-              class="format-card flex items-start gap-3 p-3.5 rounded-2xl border text-left transition-all cursor-pointer">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
-                <app-icon name="file-text" [size]="19"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <div class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white truncate">Plain Text</div>
-                <div class="text-[11px] text-slate-400 mt-0.5 leading-snug">Clean ASCII Copy</div>
-              </div>
-            </button>
-
-          </div>
-        </div>
-
-        <!-- 2. DATASET SCOPE (Custom Select with Auto-Selection) -->
-        <div *ngIf="scopeOptions().length > 0">
-          <div class="flex items-center justify-between mb-2">
-            <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              2. Dataset Scope
-            </label>
-            <span *ngIf="currentScopeCount() !== undefined"
-              class="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400">
-              {{ currentScopeCount() }} records available
-            </span>
-          </div>
-
-          <!-- Space-Saving Custom Select Dropdown -->
-          <app-custom-select [options]="scopeOptions()" [value]="selectedScope()" (valueChange)="setScope($event)"
-            size="md" variant="glass" rounded="xl" menuRounded="lg" width="100%" menuMinWidth="280px"
-            menuMaxWidth="440px" maxMenuHeight="380px" searchable="auto" [searchThreshold]="5"
-            searchPlaceholder="Filter dataset scopes..." [useBottomSheetOnMobile]="true"
-            sheetTitle="Select Dataset Scope"
-            triggerClass="!bg-slate-50/90 dark:!bg-slate-800/70 !border-slate-200/90 dark:!border-slate-700 !shadow-xs hover:!border-indigo-400/80">
-          </app-custom-select>
-
-          <!-- Selected Scope Context Snapshot Card (Compact 1-Row) -->
-          <div *ngIf="selectedScopeMeta() as meta"
-            class="mt-2.5 px-3 py-2.5 rounded-xl bg-slate-50/70 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between gap-3 animate-fade-in">
-            <div class="flex items-center gap-2.5 min-w-0">
-              <div
-                class="w-7 h-7 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0 border border-indigo-500/20">
-                <app-icon [name]="meta.icon || 'layers'" [size]="15"></app-icon>
-              </div>
-              <div class="min-w-0">
-                <p class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">{{ meta.label }}</p>
-                <p *ngIf="meta.sublabel" class="text-[10px] text-slate-500 dark:text-slate-400 truncate">{{
-                  meta.sublabel }}</p>
-              </div>
-            </div>
-            <span *ngIf="meta.count !== undefined"
-              class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50 shrink-0">
-              {{ meta.count }} items
-            </span>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- RIGHT COLUMN: STYLING, SECURITY & FOOTPRINT (5 cols) -->
-      <div class="sm:col-span-5 space-y-4">
-
-        <!-- 3. DOCUMENT STYLING & SECURITY (Box-Free & Clean List) -->
-        <div
-          *ngIf="selectedFormat() === 'pdf' && (exportService.config()?.allowWatermark !== false || exportService.config()?.allowQrToggle !== false || exportService.config()?.allowChartsToggle === true)">
-          <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-            3. Customization & Security
-          </label>
-
-          <div
-            class="rounded-xl divide-y divide-slate-100 dark:divide-slate-800/80 bg-slate-50/70 dark:bg-slate-800/30 p-1.5 sm:p-2 border border-slate-100 dark:border-slate-800/50">
-
-            <!-- Watermark Row -->
-            <div *ngIf="exportService.config()?.allowWatermark !== false"
-              class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <app-icon name="shield" [size]="16" class="text-indigo-500 dark:text-indigo-400 shrink-0"></app-icon>
-                <div class="min-w-0">
-                  <span class="text-xs font-semibold text-slate-800 dark:text-slate-200 block truncate">Watermark
-                    Stamp</span>
-                  <p class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Security classification</p>
-                </div>
-              </div>
-              <div class="shrink-0 w-[155px]">
-                <app-custom-select [options]="WATERMARK_OPTIONS" [value]="selectedWatermark()"
-                  (valueChange)="selectedWatermark.set($event)" size="sm" variant="glass" rounded="xl" menuRounded="lg"
-                  width="100%" menuMinWidth="220px" menuMaxWidth="280px" menuAlign="right"
-                  sheetTitle="Select Watermark Classification"
-                  triggerClass="!bg-white dark:!bg-slate-900 !border-slate-200/80 dark:!border-slate-700/80 !shadow-none hover:!border-indigo-400/60"
-                  [useBottomSheetOnMobile]="true">
-                </app-custom-select>
-              </div>
-            </div>
-
-            <!-- GPS Directions QR Row -->
-            <div *ngIf="exportService.config()?.allowQrToggle !== false" (click)="includeQr.set(!includeQr())"
-              class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <app-icon name="map-pin" [size]="16" class="text-indigo-500 dark:text-indigo-400 shrink-0"></app-icon>
-                <div class="min-w-0">
-                  <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">GPS Directions QR</div>
-                  <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Scannable Google Maps QRs</div>
-                </div>
-              </div>
-              <div class="toggle-switch" [class.on]="includeQr()">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-
-            <!-- Charts / Visuals Row -->
-            <div *ngIf="exportService.config()?.allowChartsToggle === true"
-              (click)="includeCharts.set(!includeCharts())"
-              class="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100/60 dark:hover:bg-slate-800/50 transition-colors cursor-pointer">
-              <div class="flex items-center gap-2.5 min-w-0">
-                <app-icon name="trending-up" [size]="16"
-                  class="text-indigo-500 dark:text-indigo-400 shrink-0"></app-icon>
-                <div class="min-w-0">
-                  <div class="text-xs font-semibold text-slate-800 dark:text-slate-200 truncate">Analytics Canvases
-                  </div>
-                  <div class="text-[10px] text-slate-500 dark:text-slate-400 truncate">Include chart snapshots</div>
-                </div>
-              </div>
-              <div class="toggle-switch" [class.on]="includeCharts()">
-                <div class="toggle-knob"></div>
-              </div>
-            </div>
-
-          </div>
-        </div>
-
-        <!-- 4. LIVE SUMMARY CARD -->
-        <div
-          class="p-4 rounded-xl bg-gradient-to-br from-indigo-50/70 via-slate-50 to-slate-100 dark:from-indigo-950/30 dark:via-slate-800/50 dark:to-slate-900 border border-indigo-200/50 dark:border-indigo-900/40">
-          <div class="flex items-center gap-2 text-xs font-bold text-indigo-700 dark:text-indigo-400 mb-2">
-            <app-icon name="badge-check" [size]="16"></app-icon>
-            <span>DISPATCH MANIFEST</span>
-          </div>
-
-          <div class="space-y-1.5 text-xs text-slate-600 dark:text-slate-300">
-            <div class="flex justify-between">
-              <span class="text-slate-400">Format:</span>
-              <strong class="uppercase text-slate-900 dark:text-white">{{ selectedFormat() }}</strong>
-            </div>
-            <div class="flex justify-between" *ngIf="activeScopeDetails">
-              <span class="text-slate-400">Scope:</span>
-              <span class="font-medium text-slate-800 dark:text-slate-200 truncate ml-2 text-right">{{
-                activeScopeDetails.label }}</span>
-            </div>
-            <div class="flex justify-between" *ngIf="selectedFormat() === 'pdf' && selectedWatermark() !== 'NONE'">
-              <span class="text-slate-400">Watermark:</span>
-              <span class="font-semibold text-amber-600 dark:text-amber-400">{{ selectedWatermark() }}</span>
-            </div>
-            <div class="flex justify-between">
-              <span class="text-slate-400">Engine:</span>
-              <span class="text-emerald-600 dark:text-emerald-400 font-semibold">Ready to Dispatch</span>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- Modal Sticky Footer (Optimized for Mobile Touch & Desktop Action Bar) -->
-    <div
-      class="px-5 sm:px-7 py-3.5 sm:py-4 bg-slate-50 dark:bg-slate-800/80 border-t border-slate-100 dark:border-slate-800 flex flex-row items-center justify-between gap-3 shrink-0 pb-[max(1rem,env(safe-area-inset-bottom))]">
-
-      <!-- Left Live Badge (Desktop only) -->
-      <div class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-        <app-icon name="sparkles" [size]="14" class="text-indigo-500"></app-icon>
-        <span>Ready to process <strong>{{ selectedFormat().toUpperCase() }}</strong></span>
-      </div>
-
-      <!-- Action Buttons (Responsive width) -->
-      <div class="flex items-center gap-2.5 w-full sm:w-auto">
+        <!-- Close Button -->
         <button type="button" (click)="onClose()" [disabled]="exportService.isExporting()"
-          class="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer text-center">
-          Cancel
+          class="w-8 h-8 md:w-9 md:h-9 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
+          aria-label="Close modal" appTooltip="Close Studio (Esc)" tooltipPlacement="bottom">
+          <app-icon name="x" [size]="18"></app-icon>
         </button>
+      </div>
+    </div>
 
-        <button type="button" (click)="onConfirmExport()" [disabled]="exportService.isExporting()"
-          class="flex-2 sm:flex-initial flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] shadow-md shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-          <app-icon *ngIf="!exportService.isExporting()" [name]="selectedFormat() === 'pdf' ? 'printer' : 'download'"
-            [size]="15"></app-icon>
-          <span *ngIf="exportService.isExporting()"
-            class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-          <span>{{ exportService.isExporting() ? 'Preparing...' : (selectedFormat() === 'pdf' ? 'Print Dossier' :
-            'Download File') }}</span>
+    <!-- ══════════════ MOBILE SEGMENTED VIEW SWITCHER ══════════════ -->
+    <div
+      class="flex md:hidden px-4 py-2 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-900 shrink-0">
+      <div class="grid grid-cols-2 p-1 bg-slate-200/60 dark:bg-slate-800/80 rounded-xl w-full">
+        <button type="button" (click)="mobileTab.set('settings')"
+          class="py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          [class]="mobileTab() === 'settings' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 dark:text-slate-400'">
+          <app-icon name="settings" [size]="13"></app-icon>
+          <span>Configure Options</span>
         </button>
+        <button type="button" (click)="mobileTab.set('preview'); refreshPreview(true)"
+          class="py-2 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          [class]="mobileTab() === 'preview' ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 dark:text-slate-400'">
+          <app-icon name="eye" [size]="13"></app-icon>
+          <span>Live Document</span>
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ══════════════ MAIN WORKSPACE (SPLIT LAYOUT) ══════════════ -->
+    <div class="flex-1 w-full min-h-0 h-full flex flex-col md:flex-row overflow-hidden">
+
+      <!-- ────────────────── LEFT COLUMN: CONTROLS ────────────────── -->
+      <div
+        class="w-full md:w-[470px] lg:w-[490px] xl:w-[510px] flex-1 md:flex-none flex-col md:shrink-0 h-full min-h-0 max-h-full border-r border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-900 overflow-hidden"
+        [ngClass]="mobileTab() === 'settings' ? 'flex' : 'hidden md:flex'">
+
+        <!-- Scrollable Options Area -->
+        <div
+          class="modal-options-scroll flex-1 min-h-0 h-full overflow-y-auto overscroll-contain p-4 md:p-6 space-y-4 md:space-y-5"
+          style="-webkit-overflow-scrolling: touch; touch-action: pan-y;">
+
+          <!-- QUICK PRESETS STRIP -->
+          <div *ngIf="showPresets()" class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                Quick Presets
+              </span>
+              <span *ngIf="activePreset()" class="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                Active: {{ activePreset() }}
+              </span>
+            </div>
+            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button *ngFor="let preset of PRINT_PRESETS" type="button" (click)="applyPreset(preset)"
+                class="preset-chip flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all cursor-pointer shrink-0 border"
+                [class.preset-active]="activePreset() === preset.id" [appTooltip]="preset.description">
+                <app-icon [name]="preset.icon" [size]="13"></app-icon>
+                <span>{{ preset.label }}</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- 1. OUTPUT FORMAT SELECTION -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                1. Output Format
+              </label>
+              <span class="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 uppercase">
+                {{ selectedFormat() }} Selected
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <!-- PDF -->
+              <button *ngIf="isFormatAvailable('pdf')" type="button" (click)="setFormat('pdf')"
+                [class.active-format]="selectedFormat() === 'pdf'"
+                class="format-card flex items-start gap-3 p-3 rounded-2xl border text-left transition-all cursor-pointer group"
+                appTooltip="Official High-Fidelity Court PDF with verified bar metadata, watermark, and seal"
+                tooltipPlacement="bottom">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
+                  <app-icon name="printer" [size]="17"></app-icon>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Court PDF</div>
+                  <div class="text-[10.5px] text-slate-400 leading-snug truncate">Official Print Gazette</div>
+                </div>
+              </button>
+
+              <!-- CSV -->
+              <button *ngIf="isFormatAvailable('csv')" type="button" (click)="setFormat('csv')"
+                [class.active-format]="selectedFormat() === 'csv'"
+                class="format-card flex items-start gap-3 p-3 rounded-2xl border text-left transition-all cursor-pointer group"
+                appTooltip="Tabular comma-separated values compatible with Excel, Google Sheets, and databases"
+                tooltipPlacement="bottom">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
+                  <app-icon name="table" [size]="17"></app-icon>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Excel / CSV</div>
+                  <div class="text-[10.5px] text-slate-400 leading-snug truncate">Tabular Spreadsheet</div>
+                </div>
+              </button>
+
+              <!-- JSON -->
+              <button *ngIf="isFormatAvailable('json')" type="button" (click)="setFormat('json')"
+                [class.active-format]="selectedFormat() === 'json'"
+                class="format-card flex items-start gap-3 p-3 rounded-2xl border text-left transition-all cursor-pointer group"
+                appTooltip="Raw structured JSON payload with full entity metadata and open legal schema"
+                tooltipPlacement="bottom">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
+                  <app-icon name="code" [size]="17"></app-icon>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate">JSON Data</div>
+                  <div class="text-[10.5px] text-slate-400 leading-snug truncate">Raw API Payload</div>
+                </div>
+              </button>
+
+              <!-- TXT -->
+              <button *ngIf="isFormatAvailable('txt')" type="button" (click)="setFormat('txt')"
+                [class.active-format]="selectedFormat() === 'txt'"
+                class="format-card flex items-start gap-3 p-3 rounded-2xl border text-left transition-all cursor-pointer group"
+                appTooltip="Clean, monospace legal draft formatted for court pleadings and ASCII archival"
+                tooltipPlacement="bottom">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center shrink-0 icon-wrap">
+                  <app-icon name="file-text" [size]="17"></app-icon>
+                </div>
+                <div class="min-w-0">
+                  <div class="text-xs font-bold text-slate-900 dark:text-white truncate">Plain Text</div>
+                  <div class="text-[10.5px] text-slate-400 leading-snug truncate">Clean ASCII Copy</div>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- 2. SCOPE SELECTOR (DYNAMIC TITLE & UNIT) -->
+          <div *ngIf="scopeOptions().length > 0" class="space-y-1.5">
+            <div class="flex items-center justify-between">
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                2. {{ scopeTitle() }}
+              </label>
+              <span *ngIf="scopeBadgeText()"
+                class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/50 text-indigo-600 dark:text-indigo-400 border border-indigo-200/50 dark:border-indigo-800/50">
+                {{ scopeBadgeText() }}
+              </span>
+            </div>
+
+            <app-custom-select [options]="scopeOptions()" [value]="selectedScope()" (valueChange)="setScope($event)"
+              size="md" variant="glass" rounded="xl" menuRounded="xl" width="100%" menuMinWidth="280px"
+              menuMaxWidth="440px" maxMenuHeight="360px" searchable="auto" [searchThreshold]="5"
+              [searchPlaceholder]="'Filter ' + scopeTitle().toLowerCase() + '...'" [useBottomSheetOnMobile]="true"
+              [sheetTitle]="'Select ' + scopeTitle()"
+              triggerClass="!bg-slate-50/90 dark:!bg-slate-800/60 !border-slate-200/90 dark:!border-slate-700/80 !shadow-xs hover:!border-indigo-400/80">
+            </app-custom-select>
+          </div>
+
+          <!-- 3. PAGE SETUP ACCORDION -->
+          <div *ngIf="showPageSetup()"
+            class="section-accordion rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+            <button type="button" (click)="toggleSection('pageSetup')"
+              class="section-header w-full flex items-center justify-between gap-3 px-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 transition-colors cursor-pointer">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="w-6 h-6 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <app-icon name="file-text" [size]="14"></app-icon>
+                </div>
+                <div class="min-w-0 text-left">
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Page Setup & Layout</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 truncate block">{{ pageSetupSummary()
+                    }}</span>
+                </div>
+              </div>
+              <app-icon [name]="expandedSection() === 'pageSetup' ? 'chevron-up' : 'chevron-down'" [size]="14"
+                class="text-slate-400 shrink-0"></app-icon>
+            </button>
+
+            <div *ngIf="expandedSection() === 'pageSetup'"
+              class="section-body p-4 space-y-3.5 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+
+              <!-- Paper Size -->
+              <div class="flex items-center justify-between gap-3">
+                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 shrink-0">Paper Size</label>
+                <div class="w-[190px]">
+                  <app-custom-select [options]="PAPER_SIZE_OPTIONS" [value]="paperSize()"
+                    (valueChange)="setPaperSize($event)" size="sm" variant="glass" rounded="lg" menuRounded="lg"
+                    width="100%"
+                    triggerClass="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-700 !shadow-none hover:!border-indigo-400"
+                    [useBottomSheetOnMobile]="true" sheetTitle="Select Paper Size">
+                  </app-custom-select>
+                </div>
+              </div>
+
+              <!-- Orientation -->
+              <div class="flex items-center justify-between gap-3">
+                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 shrink-0">Orientation</label>
+                <div class="flex gap-1.5">
+                  <button type="button" (click)="setOrientation('portrait')"
+                    class="orient-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all cursor-pointer"
+                    [class.orient-active]="orientation() === 'portrait'"
+                    appTooltip="Vertical orientation — Standard for court petitions and legal briefs"
+                    tooltipPlacement="top">
+                    <span class="orient-icon-portrait"></span>
+                    Portrait
+                  </button>
+                  <button type="button" (click)="setOrientation('landscape')"
+                    class="orient-btn flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all cursor-pointer"
+                    [class.orient-active]="orientation() === 'landscape'"
+                    appTooltip="Horizontal orientation — Optimized for comparative tables and analytics matrices"
+                    tooltipPlacement="top">
+                    <span class="orient-icon-landscape"></span>
+                    Landscape
+                  </button>
+                </div>
+              </div>
+
+              <!-- Margins -->
+              <div class="flex items-center justify-between gap-3">
+                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 shrink-0">Margins</label>
+                <div class="w-[190px]">
+                  <app-custom-select [options]="MARGIN_OPTIONS" [value]="margins()" (valueChange)="setMargins($event)"
+                    size="sm" variant="glass" rounded="lg" menuRounded="lg" width="100%"
+                    triggerClass="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-700 !shadow-none hover:!border-indigo-400"
+                    [useBottomSheetOnMobile]="true" sheetTitle="Select Margin Preset">
+                  </app-custom-select>
+                </div>
+              </div>
+
+              <!-- Custom Margins (shown when 'custom') -->
+              <div *ngIf="margins() === 'custom'" class="grid grid-cols-4 gap-2 pt-1 animate-fade-in">
+                <div class="text-center">
+                  <label class="text-[9px] font-semibold text-slate-400 uppercase block mb-1">Top (mm)</label>
+                  <input type="number" [ngModel]="customMargins().top"
+                    (ngModelChange)="updateCustomMargin('top', $event)"
+                    class="custom-margin-input w-full text-center text-[11px]" min="0" max="50" />
+                </div>
+                <div class="text-center">
+                  <label class="text-[9px] font-semibold text-slate-400 uppercase block mb-1">Right (mm)</label>
+                  <input type="number" [ngModel]="customMargins().right"
+                    (ngModelChange)="updateCustomMargin('right', $event)"
+                    class="custom-margin-input w-full text-center text-[11px]" min="0" max="50" />
+                </div>
+                <div class="text-center">
+                  <label class="text-[9px] font-semibold text-slate-400 uppercase block mb-1">Bottom (mm)</label>
+                  <input type="number" [ngModel]="customMargins().bottom"
+                    (ngModelChange)="updateCustomMargin('bottom', $event)"
+                    class="custom-margin-input w-full text-center text-[11px]" min="0" max="50" />
+                </div>
+                <div class="text-center">
+                  <label class="text-[9px] font-semibold text-slate-400 uppercase block mb-1">Left (mm)</label>
+                  <input type="number" [ngModel]="customMargins().left"
+                    (ngModelChange)="updateCustomMargin('left', $event)"
+                    class="custom-margin-input w-full text-center text-[11px]" min="0" max="50" />
+                </div>
+              </div>
+
+              <!-- Scale Slider -->
+              <div class="flex items-center justify-between gap-3 pt-1">
+                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 shrink-0">Scale</label>
+                <div class="flex items-center gap-2"
+                  appTooltip="Adjust print scale percentage (75% recommended for high-density legal dossiers)"
+                  tooltipPlacement="top">
+                  <input type="range" [ngModel]="scale()" (ngModelChange)="setScale($event)" min="25" max="200" step="5"
+                    class="scale-slider w-[110px] accent-indigo-500 cursor-pointer" />
+                  <span class="text-[11px] font-bold text-slate-700 dark:text-slate-300 w-[38px] text-right">{{ scale()
+                    }}%</span>
+                </div>
+              </div>
+
+              <!-- Table Density -->
+              <div
+                class="flex items-center justify-between gap-3 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+                <div>
+                  <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 block">Table Density</span>
+                  <span class="text-[10px] text-slate-400 block">Cell spacing and data compactness</span>
+                </div>
+                <div class="flex gap-1">
+                  <button type="button" (click)="setTableDensity('standard')"
+                    class="quality-pill px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer"
+                    [class.quality-active]="tableDensity() === 'standard'"
+                    appTooltip="Generous cell padding for comfortable executive reading" tooltipPlacement="top">
+                    Standard
+                  </button>
+                  <button type="button" (click)="setTableDensity('compact')"
+                    class="quality-pill px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer"
+                    [class.quality-active]="tableDensity() === 'compact'"
+                    appTooltip="Condensed row height to maximize information density on printed pages"
+                    tooltipPlacement="top">
+                    Compact
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 4. STYLE & CLASSIFICATION ACCORDION -->
+          <div *ngIf="showAppearance()"
+            class="section-accordion rounded-xl border border-slate-200/80 dark:border-slate-800 overflow-hidden">
+            <button type="button" (click)="toggleSection('appearance')"
+              class="section-header w-full flex items-center justify-between gap-3 px-4 py-3 bg-slate-50/60 dark:bg-slate-800/40 transition-colors cursor-pointer">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div
+                  class="w-6 h-6 rounded-lg bg-indigo-500/10 dark:bg-indigo-500/20 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+                  <app-icon name="shield" [size]="14"></app-icon>
+                </div>
+                <div class="min-w-0 text-left">
+                  <span class="text-xs font-bold text-slate-800 dark:text-slate-200 block">Style, Watermark &
+                    Security</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 truncate block">{{ appearanceSummary()
+                    }}</span>
+                </div>
+              </div>
+              <app-icon [name]="expandedSection() === 'appearance' ? 'chevron-up' : 'chevron-down'" [size]="14"
+                class="text-slate-400 shrink-0"></app-icon>
+            </button>
+
+            <div *ngIf="expandedSection() === 'appearance'"
+              class="section-body p-4 space-y-3 bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800 animate-fade-in">
+
+              <!-- Watermark Row -->
+              <div *ngIf="exportService.config()?.allowWatermark !== false"
+                class="flex items-center justify-between gap-3">
+                <label class="text-[11px] font-semibold text-slate-600 dark:text-slate-300 shrink-0">Watermark
+                  Stamp</label>
+                <div class="w-[190px]">
+                  <app-custom-select [options]="WATERMARK_OPTIONS" [value]="selectedWatermark()"
+                    (valueChange)="setWatermark($event)" size="sm" variant="glass" rounded="lg" menuRounded="lg"
+                    width="100%" menuMinWidth="220px" menuMaxWidth="280px" menuAlign="right"
+                    sheetTitle="Select Watermark Classification"
+                    triggerClass="!bg-white dark:!bg-slate-900 !border-slate-200 dark:!border-slate-700 !shadow-none hover:!border-indigo-400"
+                    [useBottomSheetOnMobile]="true">
+                  </app-custom-select>
+                </div>
+              </div>
+
+              <!-- Color / Grayscale toggle -->
+              <div (click)="toggleColorMode()"
+                class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                appTooltip="Toggle between full vibrant color and grayscale ink-saver monochrome"
+                tooltipPlacement="top">
+                <div class="min-w-0">
+                  <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Color Output
+                    Mode</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ colorMode() === 'color' ? 'Full
+                    vibrant color' : 'Grayscale (ink saver)' }}</span>
+                </div>
+                <div
+                  class="color-mode-indicator flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-bold shrink-0"
+                  [class.color-active]="colorMode() === 'color'" [class.grayscale-active]="colorMode() === 'grayscale'">
+                  {{ colorMode() === 'color' ? 'COLOR' : 'B&W' }}
+                </div>
+              </div>
+
+              <!-- Print Quality Pills -->
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-[11px] font-semibold text-slate-600 dark:text-slate-300">Resolution Quality</span>
+                <div class="flex gap-1">
+                  <button *ngFor="let q of QUALITY_OPTIONS" type="button" (click)="setQuality(q.value)"
+                    class="quality-pill px-2.5 py-1 rounded-lg text-[10px] font-semibold transition-all cursor-pointer"
+                    [class.quality-active]="printQuality() === q.value" [appTooltip]="q.sublabel || ''"
+                    tooltipPlacement="top">
+                    {{ q.label }}
+                  </button>
+                </div>
+              </div>
+
+              <!-- Header & Footer Toggle -->
+              <div (click)="toggleHeaderFooter()"
+                class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                appTooltip="Toggle institution brand header, timestamp, reference code, and official verification footer"
+                tooltipPlacement="top">
+                <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Official Headers &
+                  Footers</span>
+                <div class="toggle-switch" [class.on]="showHeaderFooter()">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
+
+              <!-- Background Graphics Toggle -->
+              <div (click)="toggleBackgroundGraphics()"
+                class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                appTooltip="Include background fills, badge backgrounds, and colored KPI card headers"
+                tooltipPlacement="top">
+                <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Print Background Fills</span>
+                <div class="toggle-switch" [class.on]="showBackgroundGraphics()">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
+
+              <!-- GPS Directions QR Toggle -->
+              <div *ngIf="exportService.config()?.allowQrToggle !== false" (click)="toggleQr()"
+                class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                appTooltip="Embed scannable e-Registry verification QR code in document header" tooltipPlacement="top">
+                <div class="min-w-0">
+                  <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">GPS Navigation QR
+                    Code</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">Instant mobile directions to
+                    registry</span>
+                </div>
+                <div class="toggle-switch" [class.on]="includeQr()">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
+
+              <!-- Analytics Charts Toggle -->
+              <div *ngIf="exportService.config()?.allowChartsToggle === true" (click)="toggleCharts()"
+                class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                appTooltip="Include high-resolution vector charts and litigation analytics" tooltipPlacement="top">
+                <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200">Render Analytics
+                  Charts</span>
+                <div class="toggle-switch" [class.on]="includeCharts()">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
+
+              <!-- Client Reviews / Testimonials Toggle -->
+              <div *ngIf="exportService.config()?.allowReviewsToggle === true" (click)="toggleReviews()"
+                class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+                appTooltip="Include verified client reviews and ratings in dossier" tooltipPlacement="top">
+                <div class="min-w-0">
+                  <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Include Client
+                    Reviews</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">
+                    {{ exportService.config()?.reviewsCount ? (exportService.config()?.reviewsCount + ' verified client
+                    review' + (exportService.config()?.reviewsCount === 1 ? '' : 's')) : 'Client ratings & feedback' }}
+                  </span>
+                </div>
+                <div class="toggle-switch" [class.on]="includeReviews()">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 5. COPIES, RANGE & ADVANCED OUTPUT -->
+          <div *ngIf="isPdfMode()"
+            class="rounded-xl border border-slate-200/80 dark:border-slate-800 p-3.5 space-y-3 bg-slate-50/50 dark:bg-slate-800/20">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-800 dark:text-slate-200">5. Output & Dispatch</span>
+              <span class="text-[10px] font-medium text-slate-500 dark:text-slate-400">Print Engine Controls</span>
+            </div>
+
+            <!-- Printed Copies -->
+            <div class="flex items-center justify-between gap-3">
+              <div class="min-w-0">
+                <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">Printed Copies</span>
+                <span class="text-[10px] text-slate-400 block">Physical print copies</span>
+              </div>
+              <div
+                class="copies-stepper flex items-center border border-slate-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-900 shadow-2xs">
+                <button type="button" (click)="adjustCopies(-1)" [disabled]="copies() <= 1"
+                  class="copies-btn w-7 h-7 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-30"
+                  appTooltip="Decrease copy count" tooltipPlacement="top">
+                  <app-icon name="minus" [size]="12"></app-icon>
+                </button>
+                <span
+                  class="copies-value w-9 h-7 flex items-center justify-center text-xs font-bold text-slate-900 dark:text-white border-x border-slate-200 dark:border-slate-700">
+                  {{ copies() }}
+                </span>
+                <button type="button" (click)="adjustCopies(1)" [disabled]="copies() >= 99"
+                  class="copies-btn w-7 h-7 flex items-center justify-center text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer disabled:opacity-30"
+                  appTooltip="Increase copy count" tooltipPlacement="top">
+                  <app-icon name="plus" [size]="12"></app-icon>
+                </button>
+              </div>
+            </div>
+
+            <!-- Page Range -->
+            <div class="space-y-2 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+              <div class="flex items-center justify-between gap-3">
+                <div class="min-w-0">
+                  <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">Pages</span>
+                  <span class="text-[10px] text-slate-400 block">Output page selection</span>
+                </div>
+                <div class="flex gap-1.5">
+                  <button type="button" (click)="setPageRange('all')"
+                    class="range-btn px-2.5 py-1 rounded-xl text-[10.5px] font-semibold transition-all cursor-pointer"
+                    [class.range-active]="pageRange() === 'all'" appTooltip="Print the entire document"
+                    tooltipPlacement="top">
+                    All Pages
+                  </button>
+                  <button type="button" (click)="setPageRange('custom')"
+                    class="range-btn px-2.5 py-1 rounded-xl text-[10.5px] font-semibold transition-all cursor-pointer"
+                    [class.range-active]="pageRange() === 'custom'"
+                    appTooltip="Specify page numbers or spans (e.g. 1-3, 5)" tooltipPlacement="top">
+                    Custom
+                  </button>
+                </div>
+              </div>
+
+              <!-- Custom Range Input -->
+              <div *ngIf="pageRange() === 'custom'" class="pt-1 space-y-1 animate-fade-in">
+                <input type="text" [ngModel]="customPageRange()" (ngModelChange)="setCustomPageRange($event)"
+                  placeholder="e.g. 1-3, 5"
+                  class="w-full px-3 py-1.5 text-[11px] font-mono rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 outline-none transition-all shadow-2xs" />
+                <span class="text-[9.5px] text-slate-400 block">Specify page numbers or spans separated by
+                  commas.</span>
+              </div>
+            </div>
+
+            <!-- Collate Copies (visible when copies > 1) -->
+            <div *ngIf="copies() > 1" (click)="toggleCollate()"
+              class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer animate-fade-in"
+              appTooltip="Print complete multi-page sets sequentially (1,2,3... 1,2,3)" tooltipPlacement="top">
+              <div class="flex items-center gap-2">
+                <app-icon name="layers" [size]="14" class="text-indigo-500"></app-icon>
+                <div class="min-w-0">
+                  <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Collate Copies</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ collate() ? 'Print in sets:
+                    1,2,3... 1,2,3' : 'Group uncollated: 1,1... 2,2...' }}</span>
+                </div>
+              </div>
+              <div class="toggle-switch" [class.on]="collate()">
+                <div class="toggle-knob"></div>
+              </div>
+            </div>
+
+            <!-- Duplex / Two-Sided Printing -->
+            <div (click)="toggleDuplex()"
+              class="toggle-row flex items-center justify-between gap-3 p-2.5 rounded-xl border border-slate-200/60 dark:border-slate-700/60 bg-white dark:bg-slate-900/60 hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors cursor-pointer"
+              appTooltip="Alternate gutter margins for spiral or book binding" tooltipPlacement="top">
+              <div class="flex items-center gap-2">
+                <app-icon name="copy" [size]="14" class="text-indigo-500"></app-icon>
+                <div class="min-w-0">
+                  <span class="text-[11px] font-semibold text-slate-800 dark:text-slate-200 block">Two-Sided
+                    (Duplex)</span>
+                  <span class="text-[10px] text-slate-500 dark:text-slate-400 block">{{ duplexPrint() ? 'Print both
+                    sides with gutter margins' : 'Single-sided standard' }}</span>
+                </div>
+              </div>
+              <div class="toggle-switch" [class.on]="duplexPrint()">
+                <div class="toggle-knob"></div>
+              </div>
+            </div>
+
+            <!-- Custom File Name -->
+            <div
+              class="flex items-center justify-between gap-3 pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
+              <span class="text-[11px] font-semibold text-slate-700 dark:text-slate-300 shrink-0">Custom File
+                Name</span>
+              <input type="text" [ngModel]="fileName()" (ngModelChange)="fileName.set($event)"
+                placeholder="Auto-generated"
+                class="file-name-input w-[180px] px-2.5 py-1.5 text-[11px] rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder:text-slate-400 focus:border-indigo-500 outline-none transition-all" />
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Left Column Footer (Status & Actions) -->
+        <div
+          class="modal-action-footer p-3.5 sm:p-4 md:p-5 border-t border-slate-100 dark:border-slate-800/80 bg-slate-50/90 dark:bg-slate-900/95 shrink-0 space-y-2.5 sm:space-y-3 pb-[max(1rem,env(safe-area-inset-bottom))]">
+
+          <!-- Clean Manifest Status Bar -->
+          <div class="flex items-center justify-between text-[11px] px-1 text-slate-500 dark:text-slate-400">
+            <div class="flex items-center gap-1.5 truncate">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 shrink-0"></span>
+              <span class="font-bold uppercase text-slate-800 dark:text-slate-200">{{ selectedFormat() }}</span>
+              <span>•</span>
+              <span *ngIf="isPdfMode()">{{ paperSize() }} {{ orientation() }}</span>
+              <span *ngIf="selectedWatermark() !== 'NONE'" class="text-amber-500 font-semibold">• {{ selectedWatermark()
+                }}</span>
+            </div>
+            <span class="font-semibold text-indigo-600 dark:text-indigo-400 shrink-0">
+              {{ currentScopeCount() !== undefined ? scopeBadgeText() : 'Ready' }}
+            </span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex items-center gap-2.5">
+            <button type="button" (click)="onClose()" [disabled]="exportService.isExporting()"
+              class="flex-1 py-2.5 px-4 rounded-xl text-xs font-bold bg-slate-200/80 hover:bg-slate-300/80 dark:bg-slate-800 dark:hover:bg-slate-700/90 text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white border border-slate-300/70 dark:border-slate-700/80 shadow-xs hover:shadow-sm active:scale-[0.98] transition-all cursor-pointer text-center flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              appTooltip="Discard changes and exit (Esc)" tooltipPlacement="top">
+              <span>Cancel</span>
+              <span
+                class="hidden sm:inline-block px-1.5 py-0.5 text-[9px] font-mono rounded bg-black/10 dark:bg-white/10 text-slate-600 dark:text-slate-300">Esc</span>
+            </button>
+
+            <button type="button" (click)="onConfirmExport()" [disabled]="exportService.isExporting()"
+              class="flex-2 flex items-center justify-center gap-2 py-2.5 px-5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-500 hover:to-blue-500 active:scale-[0.98] shadow-md shadow-indigo-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              [appTooltip]="selectedFormat() === 'pdf' ? 'Send document directly to printer or save PDF (Enter)' : 'Download exported data file (Enter)'"
+              tooltipPlacement="top">
+              <app-icon *ngIf="!exportService.isExporting()"
+                [name]="selectedFormat() === 'pdf' ? 'printer' : 'download'" [size]="15"></app-icon>
+              <span *ngIf="exportService.isExporting()"
+                class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span>{{ exportService.isExporting() ? 'Preparing...' : (selectedFormat() === 'pdf' ? 'Print Dossier' :
+                'Export ' + selectedFormat().toUpperCase()) }}</span>
+              <span *ngIf="!exportService.isExporting()"
+                class="hidden sm:inline-block ml-1 px-1.5 py-0.5 text-[9px] font-mono rounded bg-white/20 text-white/90">↵
+                Enter</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ────────────────── RIGHT COLUMN: STUDIO CANVAS ────────────────── -->
+      <div
+        class="flex-1 flex-col h-full min-h-0 max-h-full bg-slate-950 border-t md:border-t-0 md:border-l border-slate-200 dark:border-slate-800 relative overflow-hidden min-w-0"
+        [ngClass]="mobileTab() === 'preview' ? 'flex' : 'hidden md:flex'">
+
+        <!-- Studio Header Bar -->
+        <div
+          class="px-3 md:px-5 py-2.5 bg-slate-900 border-b border-slate-800 flex items-center justify-between gap-2 shrink-0 text-slate-300">
+          <div class="flex items-center gap-1.5 min-w-0 shrink-0">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+            <span
+              class="text-[10px] font-bold uppercase tracking-wider text-slate-300 truncate max-w-[110px] sm:max-w-none">
+              <span class="inline sm:hidden">Document</span>
+              <span class="hidden sm:inline">{{ isPdfMode() ? 'Live Document Canvas' : (selectedFormat().toUpperCase() +
+                ' Data Inspector') }}</span>
+            </span>
+            <span class="hidden md:inline text-slate-600">•</span>
+            <span class="hidden md:inline text-[10px] text-slate-400 font-medium">
+              {{ isPdfMode() ? (paperSize() + ' · ' + (orientation() | uppercase)) : 'Real-time sync' }}
+            </span>
+          </div>
+
+          <!-- Studio Toolbar Actions -->
+          <div class="flex items-center gap-1.5 sm:gap-2">
+            <!-- Page Navigation (PDF Mode) -->
+            <div *ngIf="isPdfMode()" class="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700/80">
+              <button type="button" (click)="prevPage()" [disabled]="currentPage() <= 1"
+                class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                appTooltip="Previous Page">
+                <app-icon name="chevron-left" [size]="12"></app-icon>
+              </button>
+              <span class="px-1.5 sm:px-2 text-[10px] font-bold text-slate-300 select-none whitespace-nowrap">
+                <span class="inline sm:hidden">{{ currentPage() }}/{{ estimatedPages() }}</span>
+                <span class="hidden sm:inline">Page {{ currentPage() }} of ~{{ estimatedPages() }}</span>
+              </span>
+              <button type="button" (click)="nextPage()" [disabled]="currentPage() >= estimatedPages()"
+                class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
+                appTooltip="Next Page">
+                <app-icon name="chevron-right" [size]="12"></app-icon>
+              </button>
+            </div>
+
+            <!-- Zoom Controls (PDF Mode) - Desktop Only -->
+            <div *ngIf="isPdfMode()"
+              class="hidden md:flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-700/80">
+              <button type="button" (click)="zoomOut()"
+                class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-700 transition cursor-pointer"
+                appTooltip="Zoom Out">
+                <app-icon name="minus" [size]="11"></app-icon>
+              </button>
+              <button type="button" (click)="resetZoom()"
+                class="px-1.5 text-[10px] font-bold text-slate-300 hover:text-white cursor-pointer"
+                appTooltip="Reset Zoom">
+                {{ previewZoom() }}%
+              </button>
+              <button type="button" (click)="zoomIn()"
+                class="w-6 h-6 flex items-center justify-center text-slate-400 hover:text-white rounded hover:bg-slate-700 transition cursor-pointer"
+                appTooltip="Zoom In">
+                <app-icon name="plus" [size]="11"></app-icon>
+              </button>
+            </div>
+
+            <!-- Width Mode Toggle - Desktop Only -->
+            <button *ngIf="isPdfMode()" type="button" (click)="toggleWidePreview()"
+              class="hidden md:flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700/80 transition cursor-pointer"
+              [appTooltip]="isWidePreview() ? 'Reset to 720px Width' : 'Expand to 920px Wide Mode'">
+              <app-icon [name]="isWidePreview() ? 'minimize' : 'maximize'" [size]="11"></app-icon>
+              <span class="hidden lg:inline">{{ isWidePreview() ? '720px' : 'Wide' }}</span>
+            </button>
+
+            <!-- Refresh Preview Button -->
+            <button type="button" (click)="refreshPreview(true)"
+              class="flex items-center gap-1 px-2 sm:px-2.5 py-1 rounded-lg text-[10px] font-bold bg-slate-800 text-slate-300 hover:text-white hover:bg-slate-700 border border-slate-700/80 transition cursor-pointer"
+              appTooltip="Reload live preview">
+              <app-icon name="refresh-cw" [size]="11" [class.animate-spin]="previewLoading()"></app-icon>
+              <span class="hidden sm:inline">Refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Studio Drafting Canvas -->
+        <div
+          class="studio-canvas modal-canvas-scroll flex-1 min-h-0 overflow-auto flex items-center justify-center p-1 sm:p-3 relative"
+          style="-webkit-overflow-scrolling: touch; touch-action: pan-x pan-y pinch-zoom;">
+
+          <!-- ─── PDF DOCUMENT PREVIEW ─── -->
+          <div *ngIf="isPdfMode()" class="relative flex items-center justify-center w-full h-full min-h-0">
+
+            <!-- Realistic Paper Sheet Container -->
+            <div class="paper-sheet-wrapper relative transition-all duration-300 ease-out origin-center"
+              [style.transform]="'scale(' + (previewZoom() / 100) + ')'"
+              [class.landscape]="orientation() === 'landscape'" [class.portrait]="orientation() === 'portrait'"
+              [class.wide-mode]="isWidePreview()">
+
+              <!-- Enterprise Document Skeleton Loader (shown during preview compilation) -->
+              <div *ngIf="previewLoading()"
+                class="doc-skeleton-container absolute inset-0 z-20 bg-white dark:bg-slate-900 p-5 sm:p-7 md:p-8 flex flex-col justify-between overflow-hidden animate-fade-in pointer-events-none select-none">
+
+                <!-- Skeleton Shimmer Header -->
+                <div class="space-y-3 sm:space-y-4">
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div class="flex items-center gap-3">
+                      <div
+                        class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse shrink-0">
+                      </div>
+                      <div class="space-y-1.5">
+                        <div class="w-28 sm:w-36 h-3 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse"></div>
+                        <div class="w-16 sm:w-20 h-2 bg-slate-100 dark:bg-slate-800/60 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+                    <div class="space-y-1.5 flex flex-col items-end">
+                      <div class="w-24 sm:w-32 h-2.5 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
+                      <div class="w-16 sm:w-20 h-2 bg-slate-100 dark:bg-slate-800/60 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+
+                  <!-- Title Skeleton -->
+                  <div class="space-y-2 pt-1">
+                    <div class="w-3/4 max-w-sm h-4 sm:h-5 bg-slate-200 dark:bg-slate-800 rounded-md animate-pulse">
+                    </div>
+                    <div class="w-1/2 max-w-xs h-2.5 sm:h-3 bg-slate-100 dark:bg-slate-800/60 rounded animate-pulse">
+                    </div>
+                  </div>
+
+                  <!-- 4-Column KPI Skeleton -->
+                  <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 pt-1 sm:pt-2">
+                    <div *ngFor="let k of [1,2,3,4]"
+                      class="p-2.5 sm:p-3 rounded-lg border border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/40 space-y-1.5">
+                      <div class="w-12 h-2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                      <div class="w-16 sm:w-20 h-3.5 sm:h-4 bg-slate-300 dark:bg-slate-600 rounded animate-pulse"></div>
+                      <div class="w-14 h-1.5 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+
+                  <!-- Two-Column Grid Skeleton -->
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3 pt-1 sm:pt-2">
+                    <div
+                      class="p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 space-y-2 sm:space-y-2.5">
+                      <div class="w-28 h-2.5 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                      <div class="flex flex-wrap gap-1.5 pt-1">
+                        <div class="w-16 h-4 sm:h-5 rounded-md bg-indigo-100/60 dark:bg-indigo-950/40 animate-pulse">
+                        </div>
+                        <div class="w-20 h-4 sm:h-5 rounded-md bg-indigo-100/60 dark:bg-indigo-950/40 animate-pulse">
+                        </div>
+                        <div class="w-14 h-4 sm:h-5 rounded-md bg-indigo-100/60 dark:bg-indigo-950/40 animate-pulse">
+                        </div>
+                      </div>
+                      <div class="space-y-1.5 pt-1 sm:pt-2">
+                        <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                        <div class="w-5/6 h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                      </div>
+                    </div>
+
+                    <div
+                      class="p-3 sm:p-4 rounded-xl border border-slate-100 dark:border-slate-800 bg-slate-50/30 dark:bg-slate-800/30 space-y-2 sm:space-y-2.5">
+                      <div class="w-32 h-2.5 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                      <div class="space-y-2 pt-1">
+                        <div class="flex justify-between">
+                          <div class="w-20 h-2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                          <div class="w-24 h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                        </div>
+                        <div class="flex justify-between">
+                          <div class="w-16 h-2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                          <div class="w-28 h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                        </div>
+                        <div class="flex justify-between">
+                          <div class="w-24 h-2 bg-slate-200 dark:bg-slate-700 rounded animate-pulse"></div>
+                          <div class="w-16 h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Text Rows / Paragraph Skeleton -->
+                  <div class="hidden sm:block space-y-2 pt-1 sm:pt-2">
+                    <div class="w-full h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                    <div class="w-11/12 h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                    <div class="w-4/5 h-2 bg-slate-100 dark:bg-slate-800 rounded animate-pulse"></div>
+                  </div>
+                </div>
+
+                <!-- Skeleton Footer Attestation -->
+                <div
+                  class="pt-3 sm:pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <div class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-700 animate-pulse"></div>
+                    <div class="w-36 sm:w-48 h-2 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
+                  </div>
+                  <div class="w-16 sm:w-20 h-2 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
+                </div>
+
+                <!-- Floating Compilation Pill in Center -->
+                <div class="absolute inset-x-0 bottom-5 sm:bottom-7 flex justify-center z-30 pointer-events-none">
+                  <div
+                    class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/90 dark:bg-slate-800/95 text-white backdrop-blur-md shadow-xl border border-indigo-500/30">
+                    <span class="w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+                    <span class="text-[11px] font-semibold tracking-wide">Compiling Legal Print Dossier...</span>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- Real Document Iframe (Sanitized, zero-script execution, same-origin style streaming) -->
+              <iframe #previewIframe *ngIf="previewHtml()" [srcdoc]="safePreviewHtml()"
+                class="paper-iframe w-full h-full border-0 rounded-sm" sandbox="allow-same-origin"
+                (load)="onIframeLoaded()" title="Live Document Preview">
+              </iframe>
+
+              <!-- Empty / Waiting State -->
+              <div *ngIf="!previewHtml() && !previewLoading()"
+                class="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-white text-slate-500 rounded-sm">
+                <app-icon name="printer" [size]="32" class="text-indigo-400 mb-2"></app-icon>
+                <p class="text-xs font-bold text-slate-800">Preview Standby</p>
+                <p class="text-[10px] text-slate-400 mt-1 max-w-xs">Click Refresh to assemble the official document
+                  preview</p>
+                <button (click)="refreshPreview(true)"
+                  class="mt-3 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-bold">
+                  Generate Preview
+                </button>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ─── NON-PDF DATA INSPECTOR ─── -->
+          <div *ngIf="!isPdfMode()"
+            class="w-full max-w-2xl h-full flex flex-col bg-slate-900/90 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl animate-fade-in">
+
+            <!-- Data Inspector Header -->
+            <div
+              class="px-4 py-2.5 bg-slate-800/80 border-b border-slate-700/80 flex items-center justify-between text-xs">
+              <div class="flex items-center gap-2 text-slate-200 font-bold">
+                <app-icon
+                  [name]="selectedFormat() === 'csv' ? 'table' : (selectedFormat() === 'json' ? 'code' : 'file-text')"
+                  [size]="14" class="text-indigo-400"></app-icon>
+                <span>{{ dataPreview().title }}</span>
+              </div>
+              <span
+                class="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-950 text-indigo-300 border border-slate-800">
+                Format: .{{ selectedFormat() }}
+              </span>
+            </div>
+
+            <!-- CSV Table Inspector -->
+            <div *ngIf="selectedFormat() === 'csv'" class="flex-1 overflow-auto p-3">
+              <table class="w-full text-left text-xs border-collapse">
+                <thead>
+                  <tr class="border-b border-slate-700 text-slate-400 font-mono text-[10px] uppercase">
+                    <th *ngFor="let col of dataPreview().columns" class="p-2 font-bold">{{ col }}</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800/60 font-mono text-[11px] text-slate-300">
+                  <tr *ngFor="let row of dataPreview().rows" class="hover:bg-slate-800/40">
+                    <td *ngFor="let cell of row" class="p-2 whitespace-nowrap">{{ cell }}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <div class="p-3 text-center text-[10px] text-slate-500 font-mono">
+                Showing sample rows from {{ currentScopeCount() || 139 }} total records
+              </div>
+            </div>
+
+            <!-- JSON / TXT Code Inspector -->
+            <div *ngIf="selectedFormat() !== 'csv'"
+              class="flex-1 overflow-auto p-4 font-mono text-xs text-emerald-400/90 bg-slate-950/70 select-text leading-relaxed">
+              <pre class="m-0 whitespace-pre-wrap">{{ dataPreview().content }}</pre>
+            </div>
+
+          </div>
+
+        </div>
+
+        <!-- Studio Canvas Bottom Bar -->
+        <div
+          class="modal-action-footer px-4 md:px-5 py-2.5 bg-slate-900 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 shrink-0 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div class="hidden sm:flex items-center gap-2">
+            <app-icon name="shield" [size]="13" class="text-indigo-400"></app-icon>
+            <span>Verified Document Engine • 100% Fidelity Guaranteed</span>
+          </div>
+
+          <div class="flex items-center justify-between w-full sm:w-auto gap-2 md:hidden">
+            <button type="button" (click)="mobileTab.set('settings')"
+              class="flex-1 px-3.5 py-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-700 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5">
+              <span>← Options</span>
+            </button>
+            <button type="button" (click)="onConfirmExport()" [disabled]="exportService.isExporting()"
+              class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white rounded-xl text-xs font-bold transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md shadow-indigo-600/30">
+              <app-icon [name]="selectedFormat() === 'pdf' ? 'printer' : 'download'" [size]="13"></app-icon>
+              <span>{{ selectedFormat() === 'pdf' ? 'Print Dossier' : 'Export' }}</span>
+            </button>
+          </div>
+        </div>
+
       </div>
 
     </div>

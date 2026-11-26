@@ -93,9 +93,11 @@ export class StatuteResolverService {
     'NEGOTIABLE INSTRUMENTS ACT': 'NIA',
     'NEGOTIABLE INSTRUMENTS': 'NIA',
 
-    'ICA': 'ICA',
-    'INDIAN CONTRACT ACT': 'ICA',
-    'CONTRACT ACT': 'ICA',
+    'ICA': 'IC',
+    'IC': 'IC',
+    'INDIAN CONTRACT': 'IC',
+    'INDIAN CONTRACT ACT': 'IC',
+    'CONTRACT ACT': 'IC',
 
     'HMA': 'HMA',
     'HINDU MARRIAGE ACT': 'HMA',
@@ -139,9 +141,11 @@ export class StatuteResolverService {
     'REAL ESTATE REGULATION': 'RERA',
     'REAL ESTATE (REGULATION AND DEVELOPMENT)': 'RERA',
 
-    'PWDVA': 'PWDVA',
-    'DOMESTIC VIOLENCE ACT': 'PWDVA',
-    'PROTECTION OF WOMEN FROM DOMESTIC VIOLENCE': 'PWDVA',
+    'PWDVA': 'DVA',
+    'DVA': 'DVA',
+    'DOMESTIC VIOLENCE ACT': 'DVA',
+    'DOMESTIC VIOLENCE': 'DVA',
+    'PROTECTION OF WOMEN FROM DOMESTIC VIOLENCE': 'DVA',
 
     'RPWD': 'RPwD',
     'RPwD': 'RPwD',
@@ -160,9 +164,25 @@ export class StatuteResolverService {
     'RIGHT TO EDUCATION ACT': 'RTE',
     'RIGHT TO EDUCATION': 'RTE',
 
-    'TPA': 'TPA',
-    'TRANSFER OF PROPERTY ACT': 'TPA',
-    'TRANSFER OF PROPERTY': 'TPA',
+    'TPA': 'TOP',
+    'TOP': 'TOP',
+    'TRANSFER OF PROPERTY ACT': 'TOP',
+    'TRANSFER OF PROPERTY': 'TOP',
+
+    'AAC': 'AAC',
+    'ARBITRATION': 'AAC',
+    'ARBITRATION AND CONCILIATION ACT': 'AAC',
+    'ARBITRATION ACT': 'AAC',
+    'ACA': 'AAC',
+
+    'HSA': 'HSA',
+    'HINDU SUCCESSION': 'HSA',
+    'HINDU SUCCESSION ACT': 'HSA',
+
+    'CP': 'CP',
+
+    'IBC': 'IABC2LU0',
+    'INSOLVENCY AND BANKRUPTCY CODE': 'IABC2LU0',
 
     'STREET VENDORS': 'StreetVendors',
     'STREET VENDORS ACT': 'StreetVendors'
@@ -298,6 +318,16 @@ export class StatuteResolverService {
     // Check direct dictionary match on shortAct
     if (s && this.ACT_ALIASES[s.toUpperCase()]) {
       return this.ACT_ALIASES[s.toUpperCase()];
+    }
+
+    // Check parenthetical abbreviation e.g. "Bharatiya Nyaya Sanhita (BNS)" -> "BNS"
+    const parenMatch = `${s} ${a}`.match(/\(([A-Za-z0-9_-]+)\)/);
+    if (parenMatch) {
+      const parenCandidate = parenMatch[1].toUpperCase();
+      if (this.ACT_ALIASES[parenCandidate]) {
+        return this.ACT_ALIASES[parenCandidate];
+      }
+      return parenMatch[1];
     }
 
     // Check combined text against alias dictionary keys
@@ -500,12 +530,24 @@ export class StatuteResolverService {
 
     const shortName = this.resolveActShortName(basis.shortAct, basis.actName, basis.actUrl);
     if (!shortName) {
-      this.snackbar.show(`⚠️ "${basis.actName || 'This statute'}" is not yet in our Bare Act reader.`, 'info');
+      this.snackbar.show(
+        `⚠️ "${basis.actName || 'This statute'}" is not yet in our Bare Act reader.`,
+        'info',
+        4500,
+        'Search Laws',
+        () => {
+          this.router.navigate(['/laws'], { queryParams: { search: basis.actName || '' } });
+        }
+      );
       return false;
     }
 
     const acts = await this.getAvailableActs();
-    const matched = acts.find(a => a.shortName.toUpperCase() === shortName.toUpperCase());
+    const matched = acts.find(a =>
+      a.shortName.toUpperCase() === shortName.toUpperCase() ||
+      (basis.actName && a.actName.toUpperCase() === basis.actName.toUpperCase()) ||
+      (basis.actName && a.actName.toUpperCase().includes(basis.actName.toUpperCase().replace(/\s*\([A-Za-z0-9_-]+\)/, '').trim()))
+    );
 
     if (!matched) {
       this.snackbar.show(
@@ -514,13 +556,14 @@ export class StatuteResolverService {
         4500,
         'Browse Laws',
         () => {
-          this.router.navigate(['/laws']);
+          this.router.navigate(['/laws'], { queryParams: { search: basis.actName || shortName } });
         }
       );
       return false;
     }
 
-    window.open(`/laws/${matched.shortName}`, '_blank', 'noopener,noreferrer');
+    const targetUrl = `/laws/${matched.shortName}`;
+    window.open(targetUrl, '_blank', 'noopener,noreferrer');
     return true;
   }
 

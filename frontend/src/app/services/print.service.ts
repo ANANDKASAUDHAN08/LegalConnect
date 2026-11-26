@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { IconService } from '../components/icon/icon.service';
+import { PrintExportService, ExportExecutionParams } from './print-export.service';
 
 /* ═══════════════════════════════════════════════════════════════════
    TYPE INTERFACES
@@ -19,6 +20,31 @@ export interface PrintConfig {
   onPopupBlocked?: () => void;
   coverPage?: string;
   suppressDefaultHeader?: boolean;
+  /* Page Setup */
+  paperSize?: 'A4' | 'Letter' | 'Legal' | 'A3' | 'A5';
+  orientation?: 'portrait' | 'landscape';
+  margins?: 'default' | 'none' | 'minimum' | 'narrow' | 'wide' | 'custom';
+  customMargins?: { top: number; right: number; bottom: number; left: number };
+  scale?: number;
+  /* Appearance */
+  colorMode?: 'color' | 'grayscale';
+  printQuality?: 'draft' | 'standard' | 'high';
+  showHeaderFooter?: boolean;
+  showBackgroundGraphics?: boolean;
+  /* Identity */
+  fileName?: string;
+  /* Output */
+  copies?: number;
+  collate?: boolean;
+  pageRange?: 'all' | 'custom';
+  customPageRange?: string;
+  duplexPrint?: boolean;
+  tableDensity?: 'standard' | 'compact';
+  /**
+   * Bypass the universal print dialog and print immediately.
+   * By default every print() call opens the Print & Export dialog with a live preview.
+   */
+  skipDialog?: boolean;
 }
 
 export interface KpiCard {
@@ -43,6 +69,75 @@ export interface TableConfig {
   rows: Record<string, any>[];
 }
 
+export interface PrintableResource {
+  _id?: string;
+  name: string;
+  name_hi?: string;
+  type?: string;
+  address?: string;
+  address_hi?: string;
+  district?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+  phone?: string | string[];
+  phones?: string[];
+  number?: string;
+  alternateNumber?: string;
+  contactNumber?: string[];
+  email?: string[];
+  website?: string;
+  officialPortal?: string;
+  jurisdictionLevel?: string;
+  operatingHours?: string;
+  operatingHours_hi?: string;
+  lunchBreak?: string;
+  executiveChairman?: string;
+  memberSecretary?: string;
+  patronInChief?: string;
+  languages?: string[];
+  latitude?: number;
+  longitude?: number;
+  lat?: number;
+  lng?: number;
+  location?: {
+    type?: string;
+    coordinates?: [number, number] | number[];
+  };
+  coordinates?: { lat?: number; lng?: number } | [number, number];
+  facilities?: {
+    hasEfiling?: boolean;
+    hasLADCS?: boolean;
+    hasVCRoom?: boolean;
+    hasLegalAidClinic?: boolean;
+    isWheelchairAccessible?: boolean;
+  };
+}
+
+export interface PrintableStatuteSection {
+  section_number?: string | number;
+  title?: string;
+  content?: string | { text?: string; content?: string } | Array<string | { text?: string; content?: string }>;
+  introduction_text?: string;
+  snippet?: string;
+  content_blocks?: Array<{ text?: string }>;
+}
+
+export interface PrintableAct {
+  actName?: string;
+  shortName?: string;
+  year?: string | number;
+}
+
+export interface PrintableUserProfile {
+  fullName?: string;
+  FullName?: string;
+  email?: string;
+  Email?: string;
+  role?: string;
+  Role?: string;
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    PRINT SERVICE — Unified Enterprise Print Rendering Engine
    ═══════════════════════════════════════════════════════════════════
@@ -65,6 +160,7 @@ export interface TableConfig {
 @Injectable({ providedIn: 'root' })
 export class PrintService {
   private iconService = inject(IconService);
+  private printHub = inject(PrintExportService);
 
   /* ─────────────── BRAND CONSTANTS ─────────────── */
 
@@ -183,25 +279,109 @@ export class PrintService {
   /* ─────────────── CSS BUILDER ─────────────── */
 
   /** Returns the complete print document stylesheet */
-  private buildStyles(accentColor = '#4f46e5'): string {
-    return `
-@page{size:A4 portrait;margin:12mm 14mm 14mm 14mm}
-*{box-sizing:border-box;margin:0;padding:0}
-*,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+  private buildStyles(styleConfig: { accentColor?: string; paperSize?: string; orientation?: string; margins?: string; customMargins?: { top: number; right: number; bottom: number; left: number }; scale?: number; colorMode?: string; printQuality?: string; showBackgroundGraphics?: boolean; showHeaderFooter?: boolean; preview?: boolean; tableDensity?: 'standard' | 'compact'; duplexPrint?: boolean } = {}): string {
+    const accentColor = styleConfig.accentColor || '#4f46e5';
+    const pageSize = styleConfig.paperSize || 'A4';
+    const orient = styleConfig.orientation || 'portrait';
+    let marginCss = '8mm 10mm 10mm 10mm';
+    if (styleConfig.margins === 'none') marginCss = '0';
+    else if (styleConfig.margins === 'minimum') marginCss = '4mm';
+    else if (styleConfig.margins === 'narrow') marginCss = '5mm';
+    else if (styleConfig.margins === 'wide') marginCss = '18mm';
+    else if (styleConfig.margins === 'custom' && styleConfig.customMargins) {
+      const m = styleConfig.customMargins;
+      marginCss = `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`;
+    }
+    const scaleVal = (styleConfig.scale || 100) / 100;
+    // `zoom` re-flows content (fewer/more pages) instead of clipping it like transform:scale
+    const scaleCss = scaleVal !== 1 ? `zoom:${scaleVal};` : '';
+    // Applied on the root element so position:fixed watermarks still repeat on every page
+    const grayscaleRootCss = styleConfig.colorMode === 'grayscale' ? 'html{filter:grayscale(1)!important}' : '';
+    const printColorAdjust = styleConfig.showBackgroundGraphics !== false ? '-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;' : '';
+    let draftCss = '';
+    if (styleConfig.printQuality === 'draft') {
+      draftCss = '\n.lc-brand-icon{opacity:0.6}\n.lc-section,.lc-kpi,.lc-res-card,.lc-compare-card{box-shadow:none!important}\nimg:not(.lc-chart-img){opacity:0.7}';
+    }
+    let hideHeaderFooterCss = '';
+    if (styleConfig.showHeaderFooter === false) {
+      hideHeaderFooterCss = '\n.lc-header,.lc-footer{display:none!important}';
+    }
+    let densityCss = '';
+    if (styleConfig.tableDensity === 'compact') {
+      densityCss = '\n.lc-table td,.lc-table th{padding:3px 6px!important;font-size:8.5px!important}\n.lc-res-card{padding:6px 8px!important;margin-bottom:6px!important}\n.lc-kpi{padding:5px 8px!important}\n.lc-statute{padding:6px 10px!important;margin-bottom:6px!important}';
+    }
+    let duplexCss = '';
+    if (styleConfig.duplexPrint) {
+      duplexCss = '\n@media print{body{padding-left:18mm!important}}';
+    }
+
+    const previewSheetCss = styleConfig.preview ? `
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+html {
+  --lc-scale: ${scaleVal};
+  --lc-padding: ${marginCss};
+  background: #ffffff !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  color: #0f172a !important;
+  background: #ffffff !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  margin: 0 !important;
+  padding: var(--lc-padding, ${marginCss}) !important;
+  box-sizing: border-box !important;
+  position: relative !important;
+  overflow-x: hidden !important;
+  -webkit-font-smoothing: antialiased !important;
+  -moz-osx-font-smoothing: grayscale !important;
+  zoom: var(--lc-scale, ${scaleVal});
+}
+@media (max-width: 640px) {
+  body {
+    padding: max(4mm, calc(var(--lc-margin-top, 6mm) * 0.7)) max(4mm, calc(var(--lc-margin-right, 6mm) * 0.7)) !important;
+  }
+}
+.lc-watermark {
+  position: fixed !important;
+  top: 45% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) rotate(-35deg) !important;
+  font-size: 3.2rem !important;
+  font-weight: 900 !important;
+  color: rgba(99, 102, 241, 0.08) !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.16em !important;
+  pointer-events: none !important;
+  z-index: 0 !important;
+  white-space: nowrap !important;
+  user-select: none !important;
+}
+` : `
+@page{size:${pageSize} ${orient};margin:${marginCss}}
 body{
   font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
   color:#0f172a;background:#fff;line-height:1.5;font-size:11.5px;
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;
-  position:relative;
+  position:relative;${scaleCss}
 }
-
-/* ── Watermark ── */
 .lc-watermark{
   position:fixed;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);
   font-size:4.2rem;font-weight:900;color:rgba(15,23,42,0.032);
   text-transform:uppercase;letter-spacing:0.18em;pointer-events:none;z-index:0;
   white-space:nowrap;user-select:none;
 }
+`;
+
+    return `
+*{box-sizing:border-box;margin:0;padding:0}
+*,*::before,*::after{${printColorAdjust}}
+${grayscaleRootCss}
+${previewSheetCss}
+.lc-copy-break{break-after:page;page-break-after:always;height:0}
 
 /* ── Classification Pill ── */
 .lc-class-badge{
@@ -494,75 +674,12 @@ body{
 @media print{
   body{margin:0;background:#fff!important;color:#0f172a!important}
   .no-print{display:none!important}
-}
-
-/* ── Comparative Transition Grid (Law Mapper) ── */
-.lc-compare-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;position:relative;z-index:1}
-.lc-compare-card{border:1px solid #e2e8f0;border-radius:8px;padding:12px 14px;background:#f8fafc;page-break-inside:avoid;break-inside:avoid}
-.lc-compare-card.old-act{border-top:3px solid #64748b}
-.lc-compare-card.new-act{border-top:3px solid ${accentColor}}
-.lc-compare-tag{font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:#64748b;margin-bottom:4px}
-.lc-compare-title{font-size:13px;font-weight:700;color:#0f172a;margin-bottom:6px}
-.lc-compare-content{font-size:11px;color:#334155;line-height:1.6}
-
-/* ── Legal Document Draft Formatting (Document Templates) ── */
-.lc-legal-draft{
-  font-family:Georgia,'Times New Roman',serif;font-size:12px;line-height:1.8;
-  color:#1e293b;padding:10px 4px;white-space:pre-wrap;text-align:justify;position:relative;z-index:1;
-}
-.lc-legal-draft h1,.lc-legal-draft h2,.lc-legal-draft h3{font-family:inherit;text-align:center;margin:16px 0 10px;text-transform:uppercase}
-.lc-sig-block{display:flex;justify-content:space-between;margin-top:40px;page-break-inside:avoid;break-inside:avoid}
-.lc-sig-line{width:200px;border-top:1px solid #0f172a;text-align:center;padding-top:6px;font-size:10px;font-weight:700}
-
-/* ── Profile Card ── */
-.lc-profile{
-  background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;
-  padding:12px 14px;margin-bottom:16px;display:flex;gap:12px;align-items:center;
-  page-break-inside:avoid;break-inside:avoid;position:relative;z-index:1;
-}
-.lc-profile-info{flex:1}
-.lc-profile-name{font-size:14px;font-weight:700;color:#0f172a;display:flex;align-items:center;gap:6px}
-.lc-profile-detail{font-size:10px;color:#64748b;margin-top:2px}
-
-/* ── Chart Image ── */
-.lc-chart-img{width:100%;max-width:100%;border-radius:6px;margin-top:6px;page-break-inside:avoid;break-inside:avoid}
-
-/* ── Progress Bar ── */
-.lc-bar-wrap{width:100%;height:6px;background:#f1f5f9;border-radius:4px;overflow:hidden;margin-top:3px}
-.lc-bar-fill{height:100%;border-radius:4px}
-
-/* ── Severity Indicators ── */
-.lc-severity-high{border-left-color:#ef4444!important}
-.lc-severity-medium{border-left-color:#f59e0b!important}
-.lc-severity-low{border-left-color:#10b981!important}
-
-/* ── Status Pills ── */
-.lc-pill{display:inline-block;padding:2px 7px;border-radius:4px;font-size:8px;font-weight:800;text-transform:uppercase}
-.lc-pill-success{background:#ecfdf5;color:#047857;border:1px solid #a7f3d0}
-.lc-pill-warning{background:#fffbeb;color:#b45309;border:1px solid #fde68a}
-.lc-pill-danger{background:#fef2f2;color:#991b1b;border:1px solid #fca5a5}
-.lc-pill-neutral{background:#f1f5f9;color:#64748b}
-
-/* ── Utility ── */
-.lc-mt{margin-top:14px}
-.lc-mb{margin-bottom:14px}
-.lc-text-sm{font-size:10px}
-.lc-text-muted{color:#64748b}
-.lc-text-bold{font-weight:700}
-.lc-text-mono{font-family:'Courier New',monospace}
-.lc-text-green{color:#059669}
-.lc-text-amber{color:#b45309}
-.lc-text-red{color:#dc2626}
-.lc-divider{border:none;border-top:1px solid #e2e8f0;margin:12px 0}
-
-@media print{
-  body{margin:0;background:#fff!important;color:#0f172a!important}
-  .no-print{display:none!important}
   .lc-statute,.lc-section,.lc-res-card,.lc-kpi,.lc-meta-matrix,.lc-toc-wrap,.lc-privilege-notice{
     border-radius:0!important;
     box-shadow:none!important;
   }
-}`;
+}
+${draftCss}${hideHeaderFooterCss}${densityCss}${duplexCss}`;
   }
 
   /* ─────────────── HTML BUILDING BLOCKS ─────────────── */
@@ -842,7 +959,7 @@ body{
   }
 
   /** Build a list of print-optimized resource cards with optional GPS QR codes */
-  buildResourceCards(resources: any[], options: { showQr?: boolean; compact?: boolean } = {}): string {
+  buildResourceCards(resources: PrintableResource[], options: { showQr?: boolean; compact?: boolean } = {}): string {
     if (!resources || resources.length === 0) return '';
     const shouldShowQr = options.showQr != null ? options.showQr : resources.length <= 10;
     const isCompact = !!options.compact;
@@ -856,7 +973,7 @@ body{
   }
 
   /** Build a single resource card for print */
-  private buildSingleResourceCard(r: any, showQr = true, isCompact = false): string {
+  private buildSingleResourceCard(r: PrintableResource, showQr = true, isCompact = false): string {
     const e = this.escapeHtml.bind(this);
     const type = r.type || '';
     const typeClass = type === 'LegalAid' ? 'legal-aid' :
@@ -933,8 +1050,11 @@ body{
    * (Court, DLSA/SLSA Legal Aid Center, Government Office, Police Station, etc.)
    * Includes complete contact details, Section 12 eligibility, 4-step application procedure,
    * citizen document checklist, facilities, and deep GPS QR navigation.
+   *
+   * @param r The printable legal resource entity containing institutional contact details, facilities, and coordinates.
+   * @returns Formatted HTML string ready for injection into print document assembly.
    */
-  buildResourceDossier(r: any): string {
+  buildResourceDossier(r: PrintableResource): string {
     if (!r) return '';
     const e = this.escapeHtml.bind(this);
     const parts: string[] = [];
@@ -942,7 +1062,7 @@ body{
     // 1. Institutional Subject Strip
     parts.push(this.buildSubjectStrip({
       name: r.name,
-      subtitle: `${r.address ? e(r.address) + ' • ' : ''}${r.state ? e(r.state) + ' Registry • ' : ''}${e(this.getTypeLabel(r.type))}`,
+      subtitle: `${r.address ? e(r.address) + ' • ' : ''}${r.state ? e(r.state) + ' Registry • ' : ''}${e(this.getTypeLabel(r.type || ''))}`,
       badge: 'Verified Official Registry Entry'
     }));
 
@@ -950,7 +1070,7 @@ body{
     const kpis: KpiCard[] = [
       {
         label: 'Institutional Body',
-        value: this.getTypeLabel(r.type),
+        value: this.getTypeLabel(r.type || ''),
         sub: 'Statutory Legal Facility',
         accent: 'indigo'
       },
@@ -1165,9 +1285,26 @@ body{
   }
 
   /** Build robust Google Maps directions / search URL from resource */
-  private getResourceMapsUrl(r: any): string {
-    const lat = r.coordinates?.lat ?? r.lat ?? (Array.isArray(r.location?.coordinates) ? r.location.coordinates[1] : null);
-    const lng = r.coordinates?.lng ?? r.lng ?? (Array.isArray(r.location?.coordinates) ? r.location.coordinates[0] : null);
+  private getResourceMapsUrl(r: PrintableResource): string {
+    const coords = r.coordinates;
+    let lat: number | null = null;
+    let lng: number | null = null;
+
+    if (coords) {
+      if (Array.isArray(coords)) {
+        lat = coords[0];
+        lng = coords[1];
+      } else if (typeof coords === 'object') {
+        lat = coords.lat ?? null;
+        lng = coords.lng ?? null;
+      }
+    }
+    if (lat == null && r.lat != null) lat = r.lat;
+    if (lng == null && r.lng != null) lng = r.lng;
+    if (lat == null && lng == null && r.location?.coordinates && Array.isArray(r.location.coordinates)) {
+      lng = r.location.coordinates[0];
+      lat = r.location.coordinates[1];
+    }
     if (lat != null && lng != null && !isNaN(Number(lat)) && !isNaN(Number(lng)) && Number(lat) !== 0 && Number(lng) !== 0) {
       return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
     }
@@ -1176,7 +1313,7 @@ body{
   }
 
   /** Extract facility tags from a resource object */
-  private getResourceFacilityTags(r: any): string[] {
+  private getResourceFacilityTags(r: PrintableResource): string[] {
     const tags: string[] = [];
     const f = r.facilities;
     if (!f) return tags;
@@ -1188,8 +1325,15 @@ body{
     return tags;
   }
 
-  /** Build statute/law section text with scale SVG and optional research notes */
-  buildStatuteText(section: any, act: any, notes?: string): string {
+  /**
+   * Build statute/law section text with scale SVG and optional research notes
+   *
+   * @param section The statutory section model including section number, title, and legal content.
+   * @param act The parent act metadata including official name, short name, and enactment year.
+   * @param notes Optional practitioner research notes or cross-citations to append.
+   * @returns Formatted HTML string ready for document assembly.
+   */
+  buildStatuteText(section: PrintableStatuteSection, act: PrintableAct, notes?: string): string {
     const e = this.escapeHtml.bind(this);
     let rawContent = section?.content || section?.introduction_text || section?.snippet || '';
     let cleanContent = '';
@@ -1200,7 +1344,7 @@ body{
         .filter(Boolean)
         .join('\n\n');
     } else if (typeof rawContent === 'object' && rawContent !== null) {
-      cleanContent = rawContent.text || rawContent.content || '';
+      cleanContent = (rawContent as any).text || (rawContent as any).content || '';
     } else {
       cleanContent = String(rawContent).replace(/<[^>]*>/g, '').trim();
     }
@@ -1229,7 +1373,7 @@ body{
   }
 
   /** Build a profile card (for data exports) */
-  buildProfileCard(profile: any): string {
+  buildProfileCard(profile: PrintableUserProfile): string {
     const e = this.escapeHtml.bind(this);
     const name = profile?.fullName || profile?.FullName || 'User';
     const email = profile?.email || profile?.Email || '';
@@ -1258,10 +1402,15 @@ body{
     return `<div class="lc-bar-wrap"><div class="lc-bar-fill" style="width:${pct}%;background:${color}"></div></div>`;
   }
 
-  /** Build a case pack section (law section + precedents + pro-se guide) */
+  /**
+   * Build a comprehensive case pack section (law section + precedents + pro-se litigation guide)
+   *
+   * @param config The case pack configuration object containing statutory section, parent act, severity level, precedents, and pro-se guide.
+   * @returns Formatted HTML string representing the case pack.
+   */
   buildCasePack(config: {
-    section: any;
-    act: any;
+    section: PrintableStatuteSection;
+    act: PrintableAct;
     severity?: string;
     laymanExplanation?: string;
     precedents?: any[];
@@ -1327,7 +1476,12 @@ body{
     return parts.join('');
   }
 
-  /** Build comparative law transition block (Old Code vs New Criminal Code) */
+  /**
+   * Build comparative law transition block (Old Code vs New Criminal Code)
+   *
+   * @param config Configuration specifying legacy act/section, enacted reform act/section, similarity score, and diff summary.
+   * @returns Formatted HTML string containing side-by-side comparative cards and legislative concordance analysis.
+   */
   buildLawTransition(config: {
     oldAct: string;
     oldSection: any;
@@ -1396,31 +1550,47 @@ body{
   /* ─────────────── DOCUMENT ASSEMBLY ─────────────── */
 
   /** Assemble a complete HTML print document from the config */
-  private assembleDocument(config: PrintConfig): string {
-    const refCode = this.generateRefCode('DOC');
+  private assembleDocument(config: PrintConfig, opts: { preview?: boolean } = {}): string {
+    const refCode = this.generateRefCode(opts.preview ? 'PRV' : 'DOC');
     const accent = config.accentColor || '#4f46e5';
     const seal = config.sealText || `Official ${this.BRAND_NAME} Document`;
+
+    let styles = this.buildStyles({
+      accentColor: accent, paperSize: config.paperSize, orientation: config.orientation,
+      margins: config.margins, customMargins: config.customMargins, scale: config.scale,
+      colorMode: config.colorMode, printQuality: config.printQuality,
+      showBackgroundGraphics: config.showBackgroundGraphics, showHeaderFooter: config.showHeaderFooter,
+      preview: opts.preview,
+      tableDensity: config.tableDensity,
+      duplexPrint: config.duplexPrint,
+    });
+    // On-screen preview: make print-only rules apply so the preview matches the paper output
+    if (opts.preview) styles = styles.replace(/@media print/g, '@media all');
 
     const parts: string[] = [];
     parts.push(`<!DOCTYPE html><html lang="en"><head>`);
     parts.push(`<meta charset="utf-8">`);
-    parts.push(`<title>${this.escapeHtml(config.title)} | ${this.BRAND_NAME}</title>`);
-    parts.push(`<style>${this.buildStyles(accent)}</style>`);
+    const docTitle = opts.preview ? 'Preview' : (config.fileName || `${config.title} | ${this.BRAND_NAME}`);
+    parts.push(`<title>${this.escapeHtml(docTitle)}</title>`);
+    parts.push(`<style>${styles}</style>`);
     parts.push(`</head><body>`);
 
-    // Watermark (if specified)
+    // Watermark (if specified) — position:fixed so it repeats on every printed page
     if (config.watermark) {
       parts.push(`<div class="lc-watermark">${this.escapeHtml(config.watermark)}</div>`);
     }
 
+    // Document body (repeated per copy, collated, each copy starting on a fresh sheet)
+    const body: string[] = [];
+
     // Cover Page (if specified)
     if (config.coverPage) {
-      parts.push(config.coverPage);
+      body.push(config.coverPage);
     }
 
     // Header (if not suppressed by cover page)
-    if (!config.suppressDefaultHeader) {
-      parts.push(this.buildHeader({
+    if (!config.suppressDefaultHeader && config.showHeaderFooter !== false) {
+      body.push(this.buildHeader({
         title: config.title,
         subtitle: config.subtitle,
         refCode,
@@ -1433,34 +1603,56 @@ body{
 
     // Subject strip (optional)
     if (config.subjectStrip) {
-      parts.push(config.subjectStrip);
+      body.push(config.subjectStrip);
     }
 
     // Main content
-    parts.push(config.content);
+    body.push(config.content);
 
     // Footer
-    parts.push(this.buildFooter(seal, refCode));
+    if (config.showHeaderFooter !== false) {
+      body.push(this.buildFooter(seal, refCode));
+    }
 
-    // Auto-print script that waits for all images to load & closes window after print
-    parts.push(`<script>
+    const bodyHtml = body.join('');
+    const copies = opts.preview ? 1 : Math.min(Math.max(Math.floor(config.copies || 1), 1), 50);
+    for (let i = 0; i < copies; i++) {
+      if (i > 0) parts.push(`<div class="lc-copy-break"></div>`);
+      parts.push(bodyHtml);
+    }
+
+    if (!opts.preview) {
+      // Auto-print script that synchronizes image decoding and font readiness before invoking window.print().
+      // Guarded so the dialog can never open twice (load + safety timeout race).
+      parts.push(`<script>
       window.onload=function(){
-        var imgs=document.querySelectorAll('img'),loaded=0,total=imgs.length;
         function doPrint(){
+          if(window.__lcPrinted)return;window.__lcPrinted=true;
           try { window.focus(); window.print(); } catch(e){}
         }
-        if(!total){setTimeout(doPrint,150);return}
-        function check(){loaded++;if(loaded>=total)setTimeout(doPrint,150)}
-        for(var i=0;i<total;i++){
-          if(imgs[i].complete){check()}
-          else{imgs[i].onload=imgs[i].onerror=check}
-        }
-        setTimeout(doPrint,2500);
+        var imgs = Array.prototype.slice.call(document.images);
+        var imgPromises = imgs.map(function(img){
+          if(img.decode){
+            return img.decode().catch(function(){});
+          }
+          return new Promise(function(resolve){
+            if(img.complete) resolve();
+            else { img.onload=img.onerror=resolve; }
+          });
+        });
+        var fontPromise = (document.fonts && document.fonts.ready) ? document.fonts.ready.catch(function(){}) : Promise.resolve();
+        Promise.all([Promise.all(imgPromises), fontPromise]).then(function(){
+          requestAnimationFrame(function(){ setTimeout(doPrint, 80); });
+        }).catch(function(){
+          setTimeout(doPrint, 80);
+        });
+        setTimeout(doPrint, 3500);
       };
       window.onafterprint=function(){
         try { window.close(); } catch(e){}
       };
     </script>`);
+    }
 
     parts.push(`</body></html>`);
     return parts.join('');
@@ -1504,8 +1696,13 @@ body{
         doc.close();
         setTimeout(() => {
           try {
-            iframe.contentWindow?.focus();
-            iframe.contentWindow?.print();
+            // The document's own auto-print script normally fires first; never open the dialog twice
+            const win = iframe.contentWindow as (Window & { __lcPrinted?: boolean }) | null;
+            if (win && !win.__lcPrinted) {
+              win.__lcPrinted = true;
+              win.focus();
+              win.print();
+            }
           } catch { /* silent */ }
           // Cleanup iframe safely
           setTimeout(() => {
@@ -1525,12 +1722,144 @@ body{
   /* ─────────────── PUBLIC API ─────────────── */
 
   /**
-   * Main entry point: Assembles a complete print document from the given
-   * configuration and triggers the browser print dialog.
+   * Main entry point used by every page in the app.
+   *
+   * Smart routing (so no page needs to know about the dialog):
+   *  1. Live-preview capture  → hand the document to the dialog's preview pane (nothing prints)
+   *  2. Inside the dialog     → apply the user's paper/layout/appearance choices and print
+   *  3. Quick print armed     → print immediately with the user's last-used settings (Ctrl+Shift+P)
+   *  4. `skipDialog: true`    → print immediately as configured
+   *  5. Otherwise             → open the universal Print dialog with a real live preview
    */
   print(config: PrintConfig): boolean {
+    if (this.printHub.isCapturing()) {
+      this.printHub.capture(config);
+      return true;
+    }
+
+    const active = this.printHub.activeParams();
+    if (active) {
+      return this.printNow(this.applyPrintParams(config, active, active.applyWatermark));
+    }
+
+    if (this.printHub.consumeQuickPrint()) {
+      return this.printNow(this.applyPrintParams(config, this.printHub.getEffectiveDefaults(), false));
+    }
+
+    if (config.skipDialog || typeof window === 'undefined') {
+      return this.printNow(config);
+    }
+
+    this.openPrintDialog(config);
+    return true;
+  }
+
+  /** Open the universal print dialog for an already-built document. */
+  openPrintDialog(config: PrintConfig): void {
+    this.printHub.open({
+      title: config.title,
+      subtitle: config.subtitle || 'Review the layout, then print or save as PDF.',
+      formats: ['pdf'],
+      allowWatermark: true,
+      defaultWatermark: config.watermark || 'NONE',
+      allowQrToggle: false,
+      allowChartsToggle: false,
+      previewConfig: config,
+      // executeExport() marks params as active, so this re-entrant call takes route #2
+      onExport: () => { this.print(config); },
+    });
+  }
+
+  /** Render and print immediately — no dialog. */
+  private printNow(config: PrintConfig): boolean {
     const html = this.assembleDocument(config);
-    const title = `${this.BRAND_NAME}-${config.title.replace(/\s+/g, '-')}`;
-    return this.renderAndPrint(html, title, config.onPopupBlocked);
+    return this.renderAndPrint(html, this.buildFileName(config), config.onPopupBlocked);
+  }
+
+  /**
+   * Browsers use the document title as the default "Save as PDF" filename.
+   * Produce a clean, descriptive, filesystem-safe name instead of "localhost" or "about:blank".
+   */
+  buildFileName(config: Pick<PrintConfig, 'title' | 'fileName'>): string {
+    const raw = config.fileName?.trim() || this.suggestFileName(config.title);
+    return raw.replace(/\.pdf$/i, '').replace(/[\\/:*?"<>|]+/g, '-').replace(/\s+/g, ' ').trim().slice(0, 120) || this.BRAND_NAME;
+  }
+
+  /** Default filename suggestion: "LegalConnect - <Title> - YYYY-MM-DD" */
+  suggestFileName(title: string): string {
+    const d = new Date();
+    const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const clean = String(title || 'Document').replace(/[\\/:*?"<>|—–]+/g, '-').replace(/\s+/g, ' ').replace(/-+/g, '-').trim();
+    return `${this.BRAND_NAME} - ${clean} - ${date}`.slice(0, 120);
+  }
+
+  /**
+   * Merge the dialog's print settings into a page-built document config.
+   * The user's choices in the dialog always win over page defaults.
+   */
+  applyPrintParams(config: PrintConfig, params: Partial<ExportExecutionParams>, applyWatermark: boolean): PrintConfig {
+    const out: PrintConfig = {
+      ...config,
+      paperSize: params.paperSize ?? config.paperSize,
+      orientation: params.orientation ?? config.orientation,
+      margins: params.margins ?? config.margins,
+      customMargins: params.customMargins ?? config.customMargins,
+      scale: params.scale ?? config.scale,
+      colorMode: params.colorMode ?? config.colorMode,
+      printQuality: params.printQuality ?? config.printQuality,
+      showHeaderFooter: params.showHeaderFooter ?? config.showHeaderFooter,
+      showBackgroundGraphics: params.showBackgroundGraphics ?? config.showBackgroundGraphics,
+      fileName: params.fileName || config.fileName,
+      copies: params.copies ?? config.copies,
+      collate: params.collate ?? config.collate,
+      pageRange: params.pageRange ?? config.pageRange,
+      customPageRange: params.customPageRange ?? config.customPageRange,
+      duplexPrint: params.duplexPrint ?? config.duplexPrint,
+      tableDensity: params.tableDensity ?? config.tableDensity,
+    };
+    if (applyWatermark && params.watermark !== undefined) {
+      out.watermark = params.watermark && params.watermark !== 'NONE' ? params.watermark : undefined;
+    }
+    return out;
+  }
+
+  /**
+   * Convert ExportExecutionParams to Partial<PrintConfig> for use in page callbacks.
+   * Allows one-line spread: `this.printService.print({ ...this.printService.exportParamsToConfig(params), title, content })`
+   */
+  exportParamsToConfig(params: Partial<ExportExecutionParams>): Partial<PrintConfig> {
+    return {
+      paperSize: params.paperSize,
+      orientation: params.orientation,
+      margins: params.margins,
+      customMargins: params.customMargins,
+      scale: params.scale,
+      colorMode: params.colorMode,
+      printQuality: params.printQuality,
+      showHeaderFooter: params.showHeaderFooter,
+      showBackgroundGraphics: params.showBackgroundGraphics,
+      watermark: params.watermark && params.watermark !== 'NONE' ? params.watermark : undefined,
+      classification: params.classification && params.classification !== 'NONE' ? params.classification : undefined,
+      fileName: params.fileName,
+      copies: params.copies,
+      collate: params.collate,
+      pageRange: params.pageRange,
+      customPageRange: params.customPageRange,
+      duplexPrint: params.duplexPrint,
+      tableDensity: params.tableDensity,
+    };
+  }
+
+  /**
+   * Generate preview HTML (without auto-print/auto-close scripts).
+   * Used by the preview panel in the Print & Export modal.
+   */
+  generatePreviewHtml(config: PrintConfig): string {
+    return this.assembleDocument(config, { preview: true });
+  }
+
+  /** Preview HTML for a document with the dialog's current settings applied. */
+  buildPreviewHtml(config: PrintConfig, params: Partial<ExportExecutionParams>, applyWatermark: boolean): string {
+    return this.assembleDocument(this.applyPrintParams(config, params, applyWatermark), { preview: true });
   }
 }

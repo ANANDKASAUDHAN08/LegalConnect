@@ -1,0 +1,467 @@
+<nav *ngIf="!autoHide || (totalSig() > pageSizeSig() && totalPages() > 1)"
+  class="app-pagination-wrapper select-none w-full" [class.variant-glass]="variant === 'glass'"
+  [class.variant-pills]="variant === 'pills'" [class.variant-bordered]="variant === 'bordered'"
+  [class.variant-subtle]="variant === 'subtle'" [class.color-blue]="color === 'blue'"
+  [class.color-amber]="color === 'amber'" [class.color-emerald]="color === 'emerald'"
+  [class.color-purple]="color === 'purple'" [class.color-slate]="color === 'slate'" [class.size-sm]="size === 'sm'"
+  [class.size-md]="size === 'md'" [class.size-lg]="size === 'lg'" [class.layout-between]="layout === 'between'"
+  [class.layout-center]="layout === 'center'" [class.layout-right]="layout === 'right'"
+  [class.layout-compact]="layout === 'compact'" role="navigation"
+  [attr.aria-label]="isHindi ? 'पृष्ठ नेविगेशन' : 'Pagination Navigation'">
+
+  <!-- Screen Reader Live Region for SPA Route Transitions (WCAG 2.1 AA) -->
+  <div class="sr-only" aria-live="polite" aria-atomic="true">
+    {{ isHindi
+    ? ('पृष्ठ ' + pageSig() + ' / ' + totalPages() + ' प्रदर्शित')
+    : ('Showing page ' + pageSig() + ' of ' + totalPages())
+    }}
+  </div>
+
+  <!-- ==================== MODE: LOAD MORE STREAM ==================== -->
+  <div *ngIf="mode === 'load-more'" class="flex flex-col items-center justify-center gap-2.5 py-3 w-full">
+    <button *ngIf="remainingItems() > 0" (click)="onLoadMore()" [disabled]="loading"
+      class="load-more-btn px-6 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+      <app-icon *ngIf="loading" name="loader" [size]="14" [spin]="true"></app-icon>
+      <app-icon *ngIf="!loading" name="refresh" [size]="14"></app-icon>
+      <span>
+        {{ isHindi
+        ? ('और लोड करें (' + remainingItems() + ' शेष)')
+        : ('Load More (' + remainingItems() + ' remaining)')
+        }}
+      </span>
+    </button>
+
+    <div *ngIf="remainingItems() === 0" class="text-xs font-semibold text-slate-400 dark:text-slate-500 py-2">
+      {{ isHindi ? 'सभी परिणाम प्रदर्शित किए गए हैं' : 'All results loaded' }}
+    </div>
+
+    <!-- Mini Progress Pill -->
+    <div *ngIf="totalSig() > 0"
+      class="flex items-center gap-2 text-[11px] text-slate-400 dark:text-slate-500 font-medium">
+      <div class="w-24 sm:w-32 h-1.5 rounded-full bg-slate-200 dark:bg-slate-800 overflow-hidden">
+        <div class="h-full rounded-full transition-all duration-300"
+          [style.width.%]="(visibleRange().end / totalSig()) * 100" [ngClass]="{
+            'bg-blue-600': color === 'blue',
+            'bg-amber-500': color === 'amber',
+            'bg-emerald-500': color === 'emerald',
+            'bg-purple-600': color === 'purple',
+            'bg-slate-700 dark:bg-slate-300': color === 'slate'
+          }">
+        </div>
+      </div>
+      <span>{{ visibleRange().end }} / {{ totalSig() }}</span>
+    </div>
+  </div>
+
+  <!-- ==================== MODE: STANDARD PAGED NAVIGATION ==================== -->
+  <div *ngIf="mode === 'paged'"
+    class="pagination-bar px-4 py-3 sm:px-5 sm:py-3.5 flex flex-wrap items-center gap-3 w-full transition-colors"
+    [ngClass]="{
+      'justify-between': layout === 'between',
+      'justify-center': layout === 'center',
+      'justify-end': layout === 'right',
+      'justify-center sm:justify-between': layout === 'compact'
+    }">
+
+    <!-- ──────────────── DESKTOP LEFT ZONE: Status Range Indicator ──────────────── -->
+    <div *ngIf="showTotal && layout !== 'center'"
+      class="hidden sm:flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400 font-medium shrink-0">
+
+      <!-- Custom Template if provided -->
+      <ng-container *ngIf="customSummaryTemplate">
+        <ng-container
+          *ngTemplateOutlet="customSummaryTemplate; context: { $implicit: visibleRange(), range: visibleRange(), isHindi: isHindi }"></ng-container>
+      </ng-container>
+
+      <ng-container *ngIf="!customSummaryTemplate">
+        <!-- Zero records empty indicator -->
+        <span *ngIf="totalSig() === 0" class="text-slate-400 dark:text-slate-500 font-semibold italic">
+          {{ isHindi ? 'कोई रिकॉर्ड उपलब्ध नहीं' : 'No records found' }}
+        </span>
+
+        <!-- Standard Range Summary -->
+        <span *ngIf="totalSig() > 0">
+          <ng-container *ngIf="!isHindi">
+            Showing <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().start }}</strong>
+            to <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().end }}</strong>
+            of <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().total }}</strong>
+            {{ itemName }}
+          </ng-container>
+
+          <ng-container *ngIf="isHindi">
+            <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().total }}</strong>
+            में से <strong class="text-slate-900 dark:text-white font-black">{{ visibleRange().start }}-{{
+              visibleRange().end }}</strong>
+            {{ itemNameHindi || itemName }} प्रदर्शित
+          </ng-container>
+        </span>
+      </ng-container>
+
+      <!-- Page Badge Pill with Direct Jump Dropdown on Desktop -->
+      <div *ngIf="showPageIndicator && totalSig() > 0" class="flex items-center gap-2 relative">
+        <span class="w-1 h-1 rounded-full bg-slate-300 dark:bg-slate-700"></span>
+        <button type="button" (click)="toggleDesktopPagePicker($event)" [disabled]="loading || totalPages() <= 1"
+          [attr.aria-expanded]="isDesktopPagePickerOpen()"
+          [appTooltip]="totalPages() > 1 ? (isHindi ? 'सीधे पृष्ठ पर जाएं' : 'Click to select page') : ''"
+          tooltipPlacement="top"
+          class="page-indicator-pill px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 active:scale-95 border-0">
+          <span>
+            {{ isHindi
+            ? ('पृष्ठ ' + pageSig() + ' / ' + totalPages())
+            : ('Page ' + pageSig() + ' of ' + totalPages())
+            }}
+          </span>
+          <app-icon *ngIf="totalPages() > 1" name="chevron-down" [size]="9" class="transition-transform text-slate-400"
+            [class.rotate-180]="isDesktopPagePickerOpen()"></app-icon>
+        </button>
+
+        <!-- Custom Floating Desktop Page Jump Dropdown Menu -->
+        <div *ngIf="isDesktopPagePickerOpen() && totalPages() > 1" role="listbox"
+          class="pagesize-menu-popup absolute left-3 bottom-full mb-2 w-32 max-h-48 overflow-y-auto rounded-xl shadow-xl p-1 z-[100] animate-[fadeIn_0.15s_ease-out]">
+          <button *ngFor="let p of mobilePagesArray(); trackBy: trackByNumber"
+            (click)="setPage(p); isDesktopPagePickerOpen.set(false)" role="option"
+            [attr.aria-selected]="pageSig() === p" [class.is-selected]="pageSig() === p"
+            class="pagesize-option-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer transition">
+            <span>{{ isHindi ? 'पृष्ठ ' + p : 'Page ' + p }}</span>
+            <app-icon *ngIf="pageSig() === p" name="check" [size]="12"
+              class="text-blue-600 dark:text-blue-400"></app-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ──────────────── CENTER ZONE: Dynamic Page Numbers & Controls ──────────────── -->
+    <div class="hidden sm:flex items-center gap-1 shrink-0">
+
+      <!-- Fast First Page (⏮) -->
+      <button *ngIf="showFirstLast" (click)="firstPage()" [disabled]="pageSig() === 1 || loading || totalSig() === 0"
+        [appTooltip]="isHindi ? 'पहला पृष्ठ' : 'First Page'" tooltipPlacement="top"
+        [attr.aria-label]="isHindi ? 'पहला पृष्ठ' : 'Go to first page'"
+        class="nav-btn nav-btn-icon flex items-center justify-center transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 active:scale-95">
+        <app-icon name="arrow-left" [size]="12"></app-icon>
+      </button>
+
+      <!-- Previous Page (◀ Prev) -->
+      <button *ngIf="showPrevNext" (click)="prevPage()" [disabled]="pageSig() === 1 || loading || totalSig() === 0"
+        [appTooltip]="isHindi ? 'पिछला पृष्ठ (←)' : 'Previous Page (←)'" tooltipPlacement="top"
+        [attr.aria-label]="isHindi ? 'पिछला पृष्ठ' : 'Go to previous page'"
+        class="nav-btn nav-btn-prev flex items-center gap-1 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 active:scale-95 font-semibold text-xs">
+        <app-icon name="chevron-left" [size]="13"></app-icon>
+        <span class="hidden md:inline">{{ isHindi ? 'पिछला' : 'Prev' }}</span>
+      </button>
+
+      <!-- Dynamic Numbered Pills & Fast-Jump Ellipses -->
+      <div *ngIf="showPageNumbers && totalSig() > 0" class="flex items-center gap-1">
+        <ng-container *ngFor="let item of pageItems(); trackBy: trackByPageItem">
+
+          <!-- Left Fast-Jump Ellipsis (Hover morphs to « 5) -->
+          <button *ngIf="item.type === 'left-ellipsis'" (click)="fastJumpLeft()"
+            (mouseenter)="hoveredLeftEllipsis.set(true)" (mouseleave)="hoveredLeftEllipsis.set(false)"
+            [disabled]="loading"
+            [appTooltip]="isHindi ? ('5 पृष्ठ पीछे जाएं (' + fastJumpStep + ')') : ('Jump back ' + fastJumpStep + ' pages')"
+            tooltipPlacement="top" aria-label="Jump back 5 pages"
+            class="ellipsis-btn flex items-center justify-center transition-all cursor-pointer font-bold text-xs select-none">
+            <span *ngIf="!hoveredLeftEllipsis()">…</span>
+            <span *ngIf="hoveredLeftEllipsis()" class="text-[11px] flex items-center gap-0.5">
+              « {{ fastJumpStep }}
+            </span>
+          </button>
+
+          <!-- Numbered Page Button -->
+          <button *ngIf="item.value !== undefined" (click)="setPage(item.value)" [disabled]="loading"
+            [attr.aria-current]="item.isCurrent ? 'page' : null"
+            [attr.aria-label]="(isHindi ? 'पृष्ठ ' : 'Page ') + item.value"
+            [appTooltip]="item.isCurrent ? (isHindi ? 'वर्तमान पृष्ठ ' + item.value : 'Current page ' + item.value) : (isHindi ? 'पृष्ठ ' + item.value + ' पर जाएं' : 'Go to page ' + item.value)"
+            tooltipPlacement="top"
+            class="page-num-btn flex items-center justify-center transition-all cursor-pointer font-bold text-xs active:scale-95"
+            [class.is-active]="item.isCurrent">
+            <app-icon *ngIf="item.isCurrent && loading" name="loader" [size]="12" [spin]="true" class="mr-1"></app-icon>
+            <span>{{ item.value }}</span>
+          </button>
+
+          <!-- Right Fast-Jump Ellipsis (Hover morphs to 5 ») -->
+          <button *ngIf="item.type === 'right-ellipsis'" (click)="fastJumpRight()"
+            (mouseenter)="hoveredRightEllipsis.set(true)" (mouseleave)="hoveredRightEllipsis.set(false)"
+            [disabled]="loading"
+            [appTooltip]="isHindi ? ('5 पृष्ठ आगे जाएं (' + fastJumpStep + ')') : ('Jump forward ' + fastJumpStep + ' pages')"
+            tooltipPlacement="top" aria-label="Jump forward 5 pages"
+            class="ellipsis-btn flex items-center justify-center transition-all cursor-pointer font-bold text-xs select-none">
+            <span *ngIf="!hoveredRightEllipsis()">…</span>
+            <span *ngIf="hoveredRightEllipsis()" class="text-[11px] flex items-center gap-0.5">
+              {{ fastJumpStep }} »
+            </span>
+          </button>
+
+        </ng-container>
+      </div>
+
+      <!-- Next Page (Next ▶) -->
+      <button *ngIf="showPrevNext" (click)="nextPage()"
+        [disabled]="pageSig() === totalPages() || loading || totalSig() === 0"
+        [appTooltip]="isHindi ? 'अगला पृष्ठ (→)' : 'Next Page (→)'" tooltipPlacement="top"
+        [attr.aria-label]="isHindi ? 'अगला पृष्ठ' : 'Go to next page'"
+        class="nav-btn nav-btn-next flex items-center gap-1 transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 active:scale-95 font-semibold text-xs">
+        <span class="hidden md:inline">{{ isHindi ? 'अगला' : 'Next' }}</span>
+        <app-icon name="chevron-right" [size]="13"></app-icon>
+      </button>
+
+      <!-- Fast Last Page (⏭) -->
+      <button *ngIf="showFirstLast" (click)="lastPage()"
+        [disabled]="pageSig() === totalPages() || loading || totalSig() === 0"
+        [appTooltip]="isHindi ? 'अंतिम पृष्ठ' : 'Last Page'" tooltipPlacement="top"
+        [attr.aria-label]="isHindi ? 'अंतिम पृष्ठ' : 'Go to last page'"
+        class="nav-btn nav-btn-icon flex items-center justify-center transition-all cursor-pointer disabled:cursor-not-allowed disabled:opacity-30 active:scale-95">
+        <app-icon name="arrow-right" [size]="12"></app-icon>
+      </button>
+
+    </div>
+
+    <!-- ──────────────── DESKTOP RIGHT ZONE: Page Size, Quick Jumper, & Actions ──────────────── -->
+    <div class="hidden sm:flex items-center gap-3 shrink-0">
+
+      <!-- Rows Per Page Dropdown -->
+      <div *ngIf="showPageSize && pageSizeOptions.length > 1" class="relative">
+        <div class="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+          <span class="font-medium" id="pagesize-label-desktop">{{ isHindi ? 'दिखाएं:' : 'Show:' }}</span>
+          <button #pageSizeTriggerBtn (click)="togglePageSizeMenu($event)" [disabled]="loading" role="combobox"
+            aria-haspopup="listbox" [attr.aria-expanded]="isPageSizeOpen()" aria-labelledby="pagesize-label-desktop"
+            [appTooltip]="isHindi ? 'प्रति पृष्ठ पंक्तियों की संख्या बदलें' : 'Change rows per page'"
+            tooltipPlacement="top"
+            class="pagesize-trigger-btn px-2.5 py-1 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs">
+            <span>{{ pageSizeSig() }} {{ isHindi ? 'प्रति पृष्ठ' : 'per page' }}</span>
+            <app-icon name="chevron-down" [size]="11" class="transition-transform"
+              [class.rotate-180]="isPageSizeOpen()"></app-icon>
+          </button>
+        </div>
+
+        <!-- Custom Floating Dropdown Menu -->
+        <div *ngIf="isPageSizeOpen()" role="listbox" aria-labelledby="pagesize-label-desktop"
+          class="pagesize-menu-popup absolute right-0 w-36 rounded-xl shadow-xl p-1 z-[100] animate-[fadeIn_0.15s_ease-out]"
+          [ngClass]="menuPosition() === 'up' ? 'bottom-full mb-2' : 'top-full mt-2'">
+          <button *ngFor="let sizeOpt of pageSizeOptions; trackBy: trackByNumber" (click)="selectPageSize(sizeOpt)"
+            role="option" [attr.aria-selected]="pageSizeSig() === sizeOpt"
+            [class.is-selected]="pageSizeSig() === sizeOpt"
+            class="pagesize-option-btn w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-semibold border-0 cursor-pointer transition">
+            <span>{{ sizeOpt }} {{ isHindi ? 'पंक्तियाँ' : 'rows' }}</span>
+            <app-icon *ngIf="pageSizeSig() === sizeOpt" name="check" [size]="12"
+              class="text-blue-600 dark:text-blue-400"></app-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Jump To Page Input (Strictly Numeric) -->
+      <div *ngIf="showQuickJumper && totalPages() > 1"
+        class="hidden sm:flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+        <span>{{ isHindi ? 'पृष्ठ:' : 'Go to:' }}</span>
+        <input type="text" inputmode="numeric" pattern="[0-9]*" [value]="jumperValue()"
+          (keydown)="onJumperKeyDown($event)" (input)="onJumperInput($event)" (paste)="onJumperPaste($event)"
+          (keydown.enter)="submitJumper()" (blur)="submitJumper()" [class.animate-shake]="jumperError()"
+          [attr.aria-label]="isHindi ? 'पृष्ठ संख्या पर जाएं' : 'Go to page number'"
+          class="jumper-input w-11 px-1 py-0.5 rounded-lg text-center font-bold text-xs focus:ring-2 focus:ring-blue-500 outline-none transition" />
+        <span class="text-[11px] font-semibold text-slate-400 dark:text-slate-500">/ {{ totalPages() }}</span>
+      </div>
+
+      <!-- Custom Actions Projection Slot ([pagination-actions]) -->
+      <div class="pagination-extra-actions flex items-center gap-1.5">
+        <ng-content select="[pagination-actions]"></ng-content>
+      </div>
+
+    </div>
+
+    <!-- ──────────────── MOBILE 2-ROW STREAMLINED BAR (< 640px) ──────────────── -->
+    <div class="sm:hidden flex flex-col w-full gap-2.5">
+
+      <!-- ── Row 1: Arrow-Only Prev/Next & Numbered Window (1, 2, 3 ... last) ── -->
+      <div class="flex items-center justify-between w-full gap-1">
+
+        <!-- Mobile Prev (Icon Only Arrow) -->
+        <button (click)="prevPage()" [disabled]="pageSig() === 1 || loading || totalSig() === 0"
+          [attr.aria-label]="isHindi ? 'पिछला पृष्ठ' : 'Previous page'"
+          class="nav-btn mobile-nav-btn w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-2xs">
+          <app-icon name="chevron-left" [size]="14"></app-icon>
+        </button>
+
+        <!-- Mobile Numbered Buttons & Fast-Jump Ellipses -->
+        <div *ngIf="showPageNumbers && totalSig() > 0"
+          class="flex items-center justify-center gap-1 flex-1 overflow-x-auto no-scrollbar">
+          <ng-container *ngFor="let item of pageItems(); trackBy: trackByPageItem">
+
+            <!-- Left Fast-Jump Ellipsis -->
+            <button *ngIf="item.type === 'left-ellipsis'" (click)="fastJumpLeft()" [disabled]="loading"
+              [attr.aria-label]="isHindi ? '5 पृष्ठ पीछे जाएं' : 'Jump back 5 pages'"
+              class="ellipsis-btn mobile-ellipsis-btn w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer font-bold text-xs">
+              <span>…</span>
+            </button>
+
+            <!-- Numbered Page Button -->
+            <button *ngIf="item.value !== undefined" (click)="setPage(item.value)" [disabled]="loading"
+              [attr.aria-current]="item.isCurrent ? 'page' : null"
+              [attr.aria-label]="(isHindi ? 'पृष्ठ ' : 'Page ') + item.value"
+              class="page-num-btn mobile-page-num-btn min-w-[32px] h-8 px-1.5 rounded-lg flex items-center justify-center transition-all cursor-pointer font-bold text-xs active:scale-95"
+              [class.is-active]="item.isCurrent">
+              <app-icon *ngIf="item.isCurrent && loading" name="loader" [size]="11" [spin]="true"
+                class="mr-0.5"></app-icon>
+              <span>{{ item.value }}</span>
+            </button>
+
+            <!-- Right Fast-Jump Ellipsis -->
+            <button *ngIf="item.type === 'right-ellipsis'" (click)="fastJumpRight()" [disabled]="loading"
+              [attr.aria-label]="isHindi ? '5 पृष्ठ आगे जाएं' : 'Jump forward 5 pages'"
+              class="ellipsis-btn mobile-ellipsis-btn w-8 h-8 rounded-lg flex items-center justify-center transition-all cursor-pointer font-bold text-xs">
+              <span>…</span>
+            </button>
+
+          </ng-container>
+        </div>
+
+        <!-- Mobile Next (Icon Only Arrow) -->
+        <button (click)="nextPage()" [disabled]="pageSig() === totalPages() || loading || totalSig() === 0"
+          [attr.aria-label]="isHindi ? 'अगला पृष्ठ' : 'Next page'"
+          class="nav-btn mobile-nav-btn w-9 h-9 shrink-0 rounded-xl flex items-center justify-center transition-all cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed active:scale-95 shadow-2xs">
+          <app-icon name="chevron-right" [size]="14"></app-icon>
+        </button>
+
+      </div>
+
+      <!-- ── Row 2: Items Per Page Dropdown & Go To Page Field ── -->
+      <div *ngIf="(showPageSize && pageSizeOptions.length > 1) || (showQuickJumper && totalPages() > 1)"
+        class="flex items-center justify-between w-full pt-2 border-t border-slate-200/60 dark:border-slate-800/60 text-xs">
+
+        <!-- Mobile Rows Per Page Trigger (Opens Bottom Sheet) -->
+        <div *ngIf="showPageSize && pageSizeOptions.length > 1">
+          <div class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+            <span class="font-medium text-[11px]">{{ isHindi ? 'दिखाएं:' : 'Show:' }}</span>
+            <button (click)="openMobilePageSizeSheet()" [disabled]="loading"
+              [appTooltip]="isHindi ? 'प्रति पृष्ठ परिणाम चुनें' : 'Choose items per page'" tooltipPlacement="top"
+              class="pagesize-trigger-btn px-2.5 py-1 rounded-lg font-bold text-xs flex items-center gap-1 transition-all cursor-pointer shadow-2xs">
+              <span>{{ pageSizeSig() }} / {{ isHindi ? 'पृष्ठ' : 'page' }}</span>
+              <app-icon name="chevron-up" [size]="10" class="text-slate-400"></app-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile Quick Page Jumper -->
+        <div *ngIf="showQuickJumper && totalPages() > 1"
+          class="flex items-center gap-1.5 text-slate-500 dark:text-slate-400 ml-auto">
+          <span class="font-medium text-[11px]">{{ isHindi ? 'पृष्ठ:' : 'Go to:' }}</span>
+          <input type="text" inputmode="numeric" pattern="[0-9]*" [value]="jumperValue()"
+            (keydown)="onJumperKeyDown($event)" (input)="onJumperInput($event)" (paste)="onJumperPaste($event)"
+            (keydown.enter)="submitJumper()" (blur)="submitJumper()" [class.animate-shake]="jumperError()"
+            [attr.aria-label]="isHindi ? 'पृष्ठ संख्या पर जाएं' : 'Go to page number'"
+            class="jumper-input w-11 px-1 py-0.5 rounded-lg text-center font-bold text-xs focus:ring-2 focus:ring-blue-500 outline-none transition" />
+          <span class="text-[11px] font-semibold text-slate-400 dark:text-slate-500">/ {{ totalPages() }}</span>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ──────────────── MOBILE QUICK-PICKER BOTTOM SHEET / MODAL ──────────────── -->
+  <div *ngIf="isMobilePickerOpen()"
+    class="mobile-sheet-backdrop sm:hidden fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex flex-col justify-end"
+    (click)="closeMobilePicker()" (touchmove)="onBackdropTouch($event)">
+
+    <div role="dialog" aria-modal="true" aria-labelledby="mobile-picker-title"
+      class="mobile-sheet-card w-full max-h-[75vh] rounded-t-3xl px-5 pt-3 pb-8 sm:pb-6 shadow-2xl flex flex-col gap-3.5 overflow-hidden"
+      (click)="$event.stopPropagation()" (touchmove)="$event.stopPropagation()">
+
+      <!-- Drag Indicator Pill -->
+      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto opacity-75"></div>
+
+      <!-- Header Handle -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div>
+          <h4 id="mobile-picker-title" class="text-sm font-black text-slate-900 dark:text-white">
+            {{ isHindi ? 'पृष्ठ चुनें' : 'Jump to Page' }}
+          </h4>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">
+            {{ isHindi
+            ? ('कुल ' + totalPages() + ' पृष्ठ उपलब्ध')
+            : ('1 to ' + totalPages() + ' pages available')
+            }}
+          </p>
+        </div>
+
+        <button type="button" (click)="closeMobilePicker()" aria-label="Close"
+          [appTooltip]="isHindi ? 'बंद करें' : 'Close'" tooltipPlacement="bottom"
+          class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 border-0 flex items-center justify-center cursor-pointer active:scale-95 transition-transform">
+          <app-icon name="x" [size]="14"></app-icon>
+        </button>
+      </div>
+
+      <!-- Quick Grid of Numbers -->
+      <div class="mobile-grid-scroll grid grid-cols-5 gap-2.5 overflow-y-auto max-h-[38vh] py-1 pr-1">
+        <button *ngFor="let p of mobilePagesArray(); trackBy: trackByNumber" (click)="selectMobilePage(p)"
+          [class.is-mobile-active]="p === pageSig()"
+          class="mobile-grid-num-btn h-12 rounded-xl text-sm font-bold transition-all border flex items-center justify-center cursor-pointer active:scale-95">
+          {{ p }}
+        </button>
+      </div>
+
+      <!-- Mobile Page Size Quick Select -->
+      <div *ngIf="showPageSize && pageSizeOptions.length > 1"
+        class="pt-2.5 border-t border-slate-200/60 dark:border-slate-800/60 flex items-center justify-between">
+        <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">
+          {{ isHindi ? 'प्रति पृष्ठ पंक्तियाँ:' : 'Items per page:' }}
+        </span>
+        <div class="flex gap-1.5">
+          <button *ngFor="let s of pageSizeOptions; trackBy: trackByNumber"
+            (click)="selectPageSize(s); closeMobilePicker()" [class.bg-blue-600]="pageSizeSig() === s"
+            [class.text-white]="pageSizeSig() === s" [class.border-blue-600]="pageSizeSig() === s"
+            class="px-3 py-1.5 text-xs font-bold rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 cursor-pointer active:scale-95 transition-transform">
+            {{ s }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ──────────────── MOBILE PAGE SIZE BOTTOM SHEET / MODAL ──────────────── -->
+  <div *ngIf="isMobilePageSizeSheetOpen()"
+    class="mobile-sheet-backdrop sm:hidden fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex flex-col justify-end"
+    (click)="closeMobilePageSizeSheet()" (touchmove)="onBackdropTouch($event)">
+
+    <div role="dialog" aria-modal="true" aria-labelledby="mobile-pagesize-title"
+      class="mobile-sheet-card w-full rounded-t-3xl px-5 pt-3 pb-8 sm:pb-6 shadow-2xl flex flex-col gap-3.5 overflow-hidden"
+      (click)="$event.stopPropagation()" (touchmove)="$event.stopPropagation()">
+
+      <!-- Drag Indicator Pill -->
+      <div class="w-12 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700 mx-auto opacity-75"></div>
+
+      <!-- Header Handle -->
+      <div class="flex items-center justify-between pb-2 border-b border-slate-200/60 dark:border-slate-800/60">
+        <div>
+          <h4 id="mobile-pagesize-title" class="text-sm font-black text-slate-900 dark:text-white">
+            {{ isHindi ? 'प्रति पृष्ठ परिणाम चुनें' : 'Items Per Page' }}
+          </h4>
+          <p class="text-[11px] text-slate-500 dark:text-slate-400">
+            {{ isHindi ? 'प्रति पृष्ठ प्रदर्शित होने वाले आइटम की संख्या' : 'Choose how many items to display per page'
+            }}
+          </p>
+        </div>
+
+        <button type="button" (click)="closeMobilePageSizeSheet()" aria-label="Close"
+          [appTooltip]="isHindi ? 'बंद करें' : 'Close'" tooltipPlacement="bottom"
+          class="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 border-0 flex items-center justify-center cursor-pointer active:scale-95 transition-transform">
+          <app-icon name="x" [size]="14"></app-icon>
+        </button>
+      </div>
+
+      <!-- Options Grid -->
+      <div class="grid grid-cols-2 gap-2.5 py-1">
+        <button *ngFor="let sizeOpt of pageSizeOptions; trackBy: trackByNumber" (click)="selectPageSize(sizeOpt)"
+          [class.is-mobile-active]="pageSizeSig() === sizeOpt"
+          class="mobile-grid-num-btn h-12 rounded-xl text-sm font-bold transition-all border flex items-center justify-between px-4 cursor-pointer active:scale-95">
+          <span>{{ sizeOpt }} {{ isHindi ? 'पंक्तियाँ' : 'per page' }}</span>
+          <app-icon *ngIf="pageSizeSig() === sizeOpt" name="check" [size]="14"
+            class="text-blue-600 dark:text-blue-400"></app-icon>
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+</nav>

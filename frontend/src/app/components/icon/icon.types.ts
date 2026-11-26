@@ -12,6 +12,8 @@ export type IconName =
   | 'building'
   | 'landmark'
   | 'globe'
+  | 'graduation-cap'
+  | 'languages'
   | 'phone'
   | 'mail'
   | 'message-square'
@@ -142,6 +144,7 @@ export type IconName =
   | 'activity'
   | 'volume-1'
   | 'refresh-cw'
+  | 'gift'
   | 'tools';
 
 export interface IconDefinition {
