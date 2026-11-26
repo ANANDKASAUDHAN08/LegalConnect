@@ -1,7 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 export interface IContentEditLog extends Document {
-  entityType: 'StatutoryRight' | 'EmergencyScenario' | 'DiagnosticCrisis' | 'DiagnosticRule';
+  entityType: 'StatutoryRight' | 'EmergencyScenario' | 'DiagnosticCrisis' | 'DiagnosticRule' | 'PracticeArea';
   entityId: string;
   editedBy: string;
   editedAt: Date;
@@ -19,7 +19,7 @@ const ContentEditLogSchema = new Schema<IContentEditLog>(
     entityType: {
       type: String,
       required: true,
-      enum: ['StatutoryRight', 'EmergencyScenario', 'DiagnosticCrisis', 'DiagnosticRule'],
+      enum: ['StatutoryRight', 'EmergencyScenario', 'DiagnosticCrisis', 'DiagnosticRule', 'PracticeArea'],
       index: true
     },
     entityId: { type: String, required: true, index: true },

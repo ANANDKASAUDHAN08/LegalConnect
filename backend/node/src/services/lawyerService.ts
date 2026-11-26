@@ -1,21 +1,43 @@
 import Lawyer from '../models/Lawyer';
+import PracticeAreaModel from '../models/PracticeArea';
 import { getCache, setCache } from './statsService';
+import { escapeRegex } from '../utils/escapeRegex';
 
-export async function searchLawyers(params: { specialization?: string; city?: string; q?: string }) {
+export async function searchLawyers(params: {
+  specialization?: string;
+  city?: string;
+  q?: string;
+  practiceArea?: string;
+}) {
   const filter: any = { isVerified: true };
 
-  if (params.specialization) {
-    filter.specializations = { $regex: params.specialization, $options: 'i' };
+  if (params.practiceArea) {
+    const area = await PracticeAreaModel.findOne({
+      id: params.practiceArea,
+      isPublished: true
+    }).lean();
+    if (area) {
+      const terms = [area.name, ...(area.aliases || [])];
+      const escaped = terms.map(t => escapeRegex(t.trim())).filter(t => t.length > 0);
+      if (escaped.length > 0) {
+        filter.specializations = { $regex: new RegExp(escaped.join('|'), 'i') };
+      }
+    }
+  } else if (params.specialization) {
+    filter.specializations = { $regex: new RegExp(escapeRegex(params.specialization), 'i') };
   }
+
   if (params.city) {
-    filter.city = { $regex: params.city, $options: 'i' };
+    filter.city = { $regex: new RegExp(escapeRegex(params.city), 'i') };
   }
+
   if (params.q) {
+    const qRegex = new RegExp(escapeRegex(params.q), 'i');
     filter.$or = [
-      { name: { $regex: params.q, $options: 'i' } },
-      { specializations: { $regex: params.q, $options: 'i' } },
-      { city: { $regex: params.q, $options: 'i' } },
-      { bio: { $regex: params.q, $options: 'i' } }
+      { name: { $regex: qRegex } },
+      { specializations: { $regex: qRegex } },
+      { city: { $regex: qRegex } },
+      { bio: { $regex: qRegex } }
     ];
   }
 
@@ -55,8 +77,9 @@ export async function getLawyerById(id: string) {
 }
 
 export async function syncLawyerProfile(email: string, data: any) {
+  const safeEmail = escapeRegex(email);
   return await Lawyer.findOneAndUpdate(
-    { email: { $regex: new RegExp(`^${email}$`, 'i') } },
+    { email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } },
     {
       name: data.name,
       specializations: data.specializations,
@@ -91,5 +114,6 @@ export async function syncLawyerProfile(email: string, data: any) {
 }
 
 export async function deleteSyncedLawyer(email: string) {
-  return await Lawyer.deleteOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } });
+  const safeEmail = escapeRegex(email);
+  return await Lawyer.deleteOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } });
 }

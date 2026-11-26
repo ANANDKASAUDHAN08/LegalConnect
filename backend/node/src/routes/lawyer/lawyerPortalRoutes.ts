@@ -15,11 +15,12 @@ const router = Router();
 
 // GET /api/lawyers - Get all lawyers with optional filters
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
-  const { specialization, city, q } = req.query;
+  const { specialization, city, q, practiceArea } = req.query;
   const lawyers = await searchLawyers({
     specialization: specialization as string,
     city: city as string,
-    q: q as string
+    q: q as string,
+    practiceArea: practiceArea as string
   });
   res.json({ success: true, count: lawyers.length, data: lawyers });
 }));

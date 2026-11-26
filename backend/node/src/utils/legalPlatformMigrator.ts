@@ -483,7 +483,7 @@ export async function runLegalPlatformMigration(force: boolean = false): Promise
     templatesCount++;
   }
 
-  // 6. Practice Areas Migration
+  // 6. Practice Areas Migration (idempotent – never overwrite admin edits)
   let practiceAreasCount = 0;
   for (const pa of practiceAreasSeedCatalog) {
     const provenance = {
@@ -504,8 +504,11 @@ export async function runLegalPlatformMigration(force: boolean = false): Promise
     await PracticeAreaModel.updateOne(
       { id: pa.id },
       {
-        $set: {
+        $setOnInsert: {
           ...pa,
+          aliases: [],
+          isPublished: true,
+          version: 1,
           provenance
         }
       },

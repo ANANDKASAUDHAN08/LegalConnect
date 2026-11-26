@@ -8,6 +8,7 @@ import adminTemplatesRoutes from './adminTemplatesRoutes';
 import adminStatsRoutes from './adminStatsRoutes';
 import adminRightsRoutes from './adminRightsRoutes';
 import adminContributionsRoutes from './adminContributionsRoutes';
+import adminPracticeAreasRoutes from './adminPracticeAreasRoutes';
 
 const adminRouter = Router();
 
@@ -25,5 +26,6 @@ adminRouter.use('/', adminTemplatesRoutes);
 adminRouter.use('/', adminStatsRoutes);
 adminRouter.use('/', adminRightsRoutes);
 adminRouter.use('/', adminContributionsRoutes);
+adminRouter.use('/', adminPracticeAreasRoutes);
 
 export default adminRouter;
